@@ -349,10 +349,3 @@ function PlayerEscort( ply )
 		CheckRoundEnd()
 	end
 end
-
-concommand.Add( "slc_escort", function( ply )
-	if IsValid( ply ) and ( !ply.NEscort or ply.NEscort < CurTime() ) then
-		ply.NEscort = CurTime() + 10
-		PlayerEscort( ply )
-	end
-end )

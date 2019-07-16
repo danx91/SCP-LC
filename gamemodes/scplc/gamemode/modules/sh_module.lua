@@ -7,10 +7,6 @@ GM.Website 	= ""
 VERSION = "0.1"
 DATE = "19/04/2019"
 
-function GM:Initialize()
-	self.BaseClass.Initialize( self )
-end
-
 SCPS = {}
 CLASSES = {}
 MAP = {}
@@ -28,6 +24,9 @@ ACCESS_ARMORY = bit.lshift( 1, 8 )
 ACCESS_FEMUR = bit.lshift( 1, 9 )
 ACCESS_EC = bit.lshift( 1, 10 )
 
+--[[-------------------------------------------------------------------------
+Convars
+---------------------------------------------------------------------------]]
 CVAR = {
 	minplayers = CreateConVar( "slc_min_players", 2, { FCVAR_SERVER_CAN_EXECUTE, FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
 	pretime = CreateConVar( "slc_time_preparing", 60, { FCVAR_SERVER_CAN_EXECUTE, FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
@@ -99,8 +98,11 @@ if !ConVarExists("br_scp_penalty") then CreateConVar("br_scp_penalty", "3", {FCV
 if !ConVarExists("br_premium_penalty") then CreateConVar("br_premium_penalty", "0", {FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE }, "" ) end*/
 
 --[[-------------------------------------------------------------------------
-GM hooks
+Shared GM hooks
 ---------------------------------------------------------------------------]]
+function GM:Initialize()
+	self.BaseClass.Initialize( self )
+end
 /*function GM:EntityTakeDamage( target, dmginfo ) --TODO
 	if target:IsPlayer() and target:HasWeapon( "item_scp_500" ) then
 		if target:Health() <= dmginfo:GetDamage() then
@@ -135,7 +137,6 @@ end*/
 
 function GM:ScalePlayerDamage( ply, hitgroup, info )
 	if !info:IsDamageType( DMG_DIRECT ) then
-		if SERVER then print( hitgroup, HITGROUP_HEAD, ply:LastHitGroup() ) end
 		if hitgroup == HITGROUP_HEAD then
 			info:ScaleDamage( 2 )
 		elseif hitgroup == HITGROUP_CHEST then
@@ -390,4 +391,24 @@ end
 
 timer.Simple( 0, function()
 	SetupCollide()
+end )
+
+--[[-------------------------------------------------------------------------
+Shared functions
+---------------------------------------------------------------------------]]
+
+
+cmd.AddCommand( "slc_destroy_gatea", function( ply )
+	if SERVER and IsValid( ply ) and ply:GetPos():DistToSqr( POS_EXPLODE_A ) <= 62500 then
+		if ply.ClassData.support then
+			ExplodeGateA( ply )
+		end
+	end
+end )
+
+cmd.AddCommand( "slc_escort", function( ply )
+	if SERVER and IsValid( ply ) and ( !ply.NEscort or ply.NEscort < CurTime() ) then
+		ply.NEscort = CurTime() + 10
+		PlayerEscort( ply )
+	end
 end )

@@ -188,8 +188,8 @@ hook.Add( "RegisterSCP", "RegisterBaseSCPs", function()
 	}, {
 		base_health = 2250,
 		max_health = 2250,
-		base_speed = 140,
-		run_speed = 140,
+		base_speed = 125,
+		run_speed = 125,
 	}, function( ply )
 		ply:SetCustomCollisionCheck( true )
 	end )
@@ -219,10 +219,10 @@ hook.Add( "RegisterSCP", "RegisterBaseSCPs", function()
 		jump_power = 200,
 		no_ragdoll = true,
 	}, {
-		base_health = 10000,
-		max_health = 10000,
-		base_speed = 120,
-		run_speed = 120,
+		base_health = 8000,
+		max_health = 8000,
+		base_speed = 115,
+		run_speed = 115,
 	} )
 
 	/*RegisterSCP( "SCP689", "models/dwdarksouls/models/darkwraith.mdl", "weapon_scp_689", {

@@ -95,6 +95,7 @@ end
 function GM:DoPlayerDeath( ply, attacker, dmginfo ) --TODO
 	--rag
 	ply:CreateRagdoll()
+	ply:DropEQ()
 	
 	if attacker:IsPlayer() then
 		print( "[KILL] Player '"..ply:Nick().."' ["..SCPTeams.getName( ply:SCPTeam() ).."] has been killed by '"..attacker:Nick().."' ["..SCPTeams.getName( attacker:SCPTeam() ).."]" )

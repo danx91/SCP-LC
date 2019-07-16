@@ -28,7 +28,7 @@ end
 
 function ply:Despawn()
 	--TODO reset effects
-	
+
 	self:Freeze( false )
 	self:SetCustomCollisionCheck( false )
 
@@ -37,6 +37,17 @@ function ply:Despawn()
 
 	net.Start( "PlayerDespawn" )
 	net.Send( self )
+end
+
+function ply:DropEQ()
+	self:DropVest()
+
+	for k, wep in pairs( self:GetWeapons() ) do
+		if wep.Droppable != false then
+			self:DropWeapon( wep )
+			wep.Dropped = CurTime()
+		end
+	end
 end
 
 function ply:SetupPlayer( class )

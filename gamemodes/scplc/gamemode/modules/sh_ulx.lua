@@ -88,7 +88,7 @@ function InitializeSCPULX()
 		if silent then
 			ulx.fancyLogAdmin( ply, true, "#A gave #T "..xp.." experience", plyt )
 		else
-			ulx.fancyLogAdmin( ply, "#A gave player #T "..xp.." experience", plyt )
+			ulx.fancyLogAdmin( ply, "#A gave #T "..xp.." experience", plyt )
 		end
 	end
 
@@ -106,9 +106,9 @@ function InitializeSCPULX()
 		plyt:AddLevel( lvl )
 
 		if silent then
-			ulx.fancyLogAdmin( ply, true, "#A gave #T "..xp.." level(s)", plyt )
+			ulx.fancyLogAdmin( ply, true, "#A gave #T "..lvl.." level(s)", plyt )
 		else
-			ulx.fancyLogAdmin( ply, "#A gave player #T "..xp.." level(s)", plyt )
+			ulx.fancyLogAdmin( ply, "#A gave #T "..lvl.." level(s)", plyt )
 		end
 	end
 
@@ -167,7 +167,8 @@ function InitializeSCPULX()
 	requestntf:help( "Spawns support units" )*/
 
 	function ulx.destroygatea( ply, silent )
-		explodeGateA()
+		ExplodeGateA()
+
 		if silent then
 			ulx.fancyLogAdmin( ply, true, "#A triggered Gate A destroy" )
 		else

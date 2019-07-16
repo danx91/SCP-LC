@@ -729,7 +729,8 @@ function ExplodeGateA( ply )
 
 	SetRoundStat( "gatea", true )
 	
-	local snd = CreateSound( game.GetWorld(), "ambient/alarms/alarm_citizen_loop1.wav", filter )
+	local snd = ServerSound( "ambient/alarms/alarm_citizen_loop1.wav" )
+	snd:SetSoundLevel( 0 )
 	snd:Play()
 	snd:ChangeVolume( 0.25 )
 
@@ -739,8 +740,6 @@ function ExplodeGateA( ply )
 	PlayerMessage( "gateexplode$"..time )
 
 	AddTimer( "GateExplode", 1, time, function( self, n )
-		if n > wait then return end
-
 		if isGateAOpen() then 
 			self:Destroy()
 			snd:Stop()
@@ -774,14 +773,6 @@ function ExplodeGateA( ply )
 		end
 	end )
 end
-
-concommand.Add( "slc_explode_gatea", function( ply )
-	if IsValid( ply ) and ply:GetPos():DistToSqr( POS_EXPLODE_A ) <= 62500 then
-		if ply.ClassData.support then
-			ExplodeGateA( ply )
-		end
-	end
-end )
 
 --[[-------------------------------------------------------------------------
 SCP106 Recontain

@@ -115,7 +115,7 @@ function registerClass( name, group, model, data, support )
 
 	CLASSES[string.upper( name )] = name
 
-	data.issupport = support
+	data.support = support
 	data.name = name
 	data.model = model
 

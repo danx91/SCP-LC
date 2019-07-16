@@ -13,6 +13,7 @@ util.AddNetworkString( "PlayerDespawn" )
 util.AddNetworkString( "DropVest" )
 util.AddNetworkString( "CameraDetect" )
 util.AddNetworkString( "CenterMessage" )
+util.AddNetworkString( "PlayerCommand" )
 
 --Receivers
 net.Receive( "PlayerReady", function( len, ply )
@@ -86,6 +87,13 @@ net.Receive( "DropVest", function( len, ply )
 	if ply:GetVest() > 0 then
 		ply:DropVest()
 	end
+end )
+
+net.Receive( "PlayerCommand", function( len, ply )
+	local name = net.ReadString()
+	local args = net.ReadTable()
+
+	cmd.ExecCallback( ply, name, args )
 end )
 
 --Util functions
