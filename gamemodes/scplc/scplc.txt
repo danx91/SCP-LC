@@ -1,0 +1,11 @@
+"scplc"
+{
+	"base"		"base"
+	"title"		"SCP:LC"
+	"maps"		"br_site15"
+	"menusystem"	"1"
+	
+	"settings"
+	{
+	}
+}
