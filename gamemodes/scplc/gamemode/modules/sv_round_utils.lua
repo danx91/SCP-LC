@@ -269,7 +269,7 @@ function CheckEscape()
 				elseif time > 0.8 then
 					xp = max
 				else
-					xp = math.Map( xp, 0.2, 0.8, min, max )
+					xp = math.Map( time, 0.2, 0.8, min, max )
 				end
 
 				xp = math.floor( xp )
@@ -314,7 +314,7 @@ function PlayerEscort( ply )
 		elseif time > 0.8 then
 			xp = max
 		else
-			xp = math.Map( 0.2, 0.8, min, max )
+			xp = math.Map( time, 0.2, 0.8, min, max )
 		end
 
 		xp = math.floor( xp * 1.5 )

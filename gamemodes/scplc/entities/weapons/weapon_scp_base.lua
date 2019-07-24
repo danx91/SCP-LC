@@ -19,7 +19,7 @@ SWEP.Secondary.Automatic	= false
 SWEP.Secondary.Ammo			= ""
 
 SWEP.SCP 					= true
-SWEP.droppable				= false
+SWEP.Droppable				= false
 
 SWEP.ShouldDrawViewModel 	= false
 SWEP.ShouldDrawWorldModel 	= false

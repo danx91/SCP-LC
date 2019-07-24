@@ -188,8 +188,8 @@ hook.Add( "RegisterSCP", "RegisterBaseSCPs", function()
 	}, {
 		base_health = 2250,
 		max_health = 2250,
-		base_speed = 125,
-		run_speed = 125,
+		base_speed = 160,
+		run_speed = 160,
 	}, function( ply )
 		ply:SetCustomCollisionCheck( true )
 	end )
@@ -200,29 +200,28 @@ hook.Add( "RegisterSCP", "RegisterBaseSCPs", function()
 	}, {
 		base_health = 5000,
 		max_health = 5000,
-		base_speed = 500,
-		run_speed = 500,
+		base_speed = 550,
+		run_speed = 550,
 	} )
 
-	/*RegisterSCP( "SCP457", "models/player/corpse1.mdl", "weapon_scp_457", {
+	RegisterSCP( "SCP457", "models/player/corpse1.mdl", "weapon_scp_457", {
 		jump_power = 200,
-		//no_draw = true,
+		no_draw = true,
 	}, {
-		base_health = 2300,
-		max_health = 2300,
-		base_speed = 135,
-		run_speed = 135,
-		max_speed = 135,
-	} )*/
+		base_health = 2500,
+		max_health = 2500,
+		base_speed = 155,
+		run_speed = 155,
+	} )
 
 	RegisterSCP( "SCP682", "models/scp_682/scp_682.mdl", "weapon_scp_682", {
 		jump_power = 200,
 		no_ragdoll = true,
 	}, {
-		base_health = 8000,
-		max_health = 8000,
-		base_speed = 115,
-		run_speed = 115,
+		base_health = 9000,
+		max_health = 9000,
+		base_speed = 150,
+		run_speed = 150,
 	} )
 
 	/*RegisterSCP( "SCP689", "models/dwdarksouls/models/darkwraith.mdl", "weapon_scp_689", {
@@ -241,8 +240,8 @@ hook.Add( "RegisterSCP", "RegisterBaseSCPs", function()
 	}, {
 		base_health = 2250,
 		max_health = 2250,
-		base_speed = 190,
-		run_speed = 190,
+		base_speed = 195,
+		run_speed = 195,
 	} )
 
 	RegisterSCP( "SCP939", "models/scp/939/unity/unity_scp_939.mdl", "weapon_scp_939", {
@@ -252,8 +251,8 @@ hook.Add( "RegisterSCP", "RegisterBaseSCPs", function()
 	}, {
 		base_health = 2000,
 		max_health = 2000,
-		base_speed = 210,
-		run_speed = 210,
+		base_speed = 215,
+		run_speed = 215,
 	} )
 
 	/*RegisterSCP( "SCP957", "models/immigrant/outlast/walrider_pm.mdl", "weapon_scp_957", {

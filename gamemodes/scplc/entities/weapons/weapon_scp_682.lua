@@ -41,7 +41,7 @@ function SWEP:PrimaryAttack()
 			if ent:IsPlayer() then
 				if ent:SCPTeam() == TEAM_SCP or ent:SCPTeam() == TEAM_SPEC then return end
 
-				ent:TakeDamage( math.random( 100, 250 ), self.Owner, self.Owner )
+				ent:TakeDamage( 250, self.Owner, self.Owner )
 			else
 				self:SCPDamageEvent( ent, 50 )
 			end	
@@ -67,7 +67,7 @@ function SWEP:SecondaryAttack()
 end
 
 hook.Add( "EntityTakeDamage", "SCP682Damage", function( ply, dmg )
-	if !ply or !ply:IsPlayer() or !ply:Alive() then return end
+	if !ply:IsPlayer() or !ply:Alive() then return end
 
 	local wep = ply:GetActiveWeapon()
 	if IsValid( wep ) and wep:GetClass() == "weapon_scp_682" then

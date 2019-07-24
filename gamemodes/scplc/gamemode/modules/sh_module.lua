@@ -4,8 +4,8 @@ GM.Author 	= "danx91"
 GM.Email 	= ""
 GM.Website 	= ""
 
-VERSION = "0.1"
-DATE = "19/04/2019"
+VERSION = "ALPHA 0.2"
+DATE = "24/07/2019"
 
 SCPS = {}
 CLASSES = {}

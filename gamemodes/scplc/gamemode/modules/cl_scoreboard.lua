@@ -49,6 +49,11 @@ local customRanks = {
 		color = Color( 115, 25, 155, 100 ),
 		func = "76561198110788144" --Can be either SteamID64, table of SteamID64s or function with player as argument
 	},
+	Tester = {
+		sorting = 19,
+		color = Color( 25, 165, 111 ),
+		func = { "76561198108864618", "76561198152379830" }
+	},
 	vip = {
 		sorting = 1,
 		color = Color( 220, 200, 35, 100 ),

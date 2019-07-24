@@ -210,11 +210,79 @@ Button structure
 }
 */
 
+local NTerror = 0
+hook.Add( "Think", "ApplyTerror", function()
+	if NTerror < CurTime() then
+		NTerror = CurTime() + 5
+
+		for k, v in pairs( player.GetAll() ) do
+			v.TerrorPower = 0
+		end
+
+		for k, v in pairs( SCPTeams.getPlayersByTeam( TEAM_SCP ) ) do
+			for k, ply in pairs( FindInCylinder( v:GetPos(), 1500, -128, 128, { "player" } ) ) do
+				local t = ply:SCPTeam()
+
+				if t != TEAM_SCP and t != TEAM_SPEC then
+					ply.TerrorPower = ply.TerrorPower + 1
+					ply.NDoorLockRem = CurTime() + 15
+				end
+			end
+		end
+	end
+end )
+
+hook.Add( "Think", "DoorLockThink", function()
+	for k, v in pairs( player.GetAll() ) do
+		if !v.NDoorLockRem then v.NDoorLockRem = 0 end
+
+		if v.NDoorLockRem > 0 and v.NDoorLockRem < CurTime() then
+			v.NDoorLockRem = 0
+			v.DoorHistory = 0
+		end
+	end
+end )
+
+function GM:AcceptInput( ent, input, activator, caller, value )
+	if STORED_DOORS and STORED_DOORS[ent] then
+		if IsValid( activator ) and activator:IsPlayer() then
+
+			local t = activator:SCPTeam()
+			if t != TEAM_SCP and t != TEAM_SPEC then
+				for k, ply in pairs( FindInCylinder( activator:GetPos(), 500, -128, 128, { "player" }, nil, player.GetAll() ) ) do
+					if ply.TerrorPower and ply.TerrorPower > 0 then
+						if !ply.DoorHistory then ply.DoorHistory = 0 end
+
+						local pt = ply:SCPTeam()
+						if pt != TEAM_SCP and pt != TEAM_SPEC then
+							ply.DoorHistory = ply.DoorHistory + 1
+
+							if ply.DoorHistory >= 8 then
+								ply.DoorHistory = 0
+
+								ply.DoorLock = CurTime() + 15
+								ply.NUse = CurTime() + 2.5
+							end
+						end
+					end
+				end
+			end
+		end
+	end
+end
+
 function GM:PlayerUse( ply, ent )
 	if ply:SCPTeam() == TEAM_SPEC then return false end
 
 	if !ply.NUse then ply.NUse = 0 end
 	if ply.NUse > CurTime() then return false end
+
+	if ply.DoorLock and ply.DoorLock > CurTime() then
+		ply.NUse = CurTime() + 2.5
+		PlayerMessage( "acc_deny", ply, true )
+
+		return false
+	end
 
 	for k, v in pairs( BUTTONS ) do
 		local pos = ent:GetPos()
@@ -302,6 +370,7 @@ function GM:PlayerSay( ply, text, team )
 end
 
 function GM:PlayerCanSeePlayersChat( text, team, listener, speaker )
+	if speaker == NULL then return true end
 	return hook.Run( "PlayerCanHearPlayersVoice", listener, speaker ) --SLC uses the same rule for voice and chat
 end
 
@@ -338,7 +407,9 @@ function GM:PlayerCanHearPlayersVoice( listener, talker )
 end
 
 function GM:AllowPlayerPickup( ply, ent )
-	return false
+	local t = ply:SCPTeam()
+	if t == TEAM_SPEC or t == TEAM_SCP then return false end
+	return ent:GetName() == "4016" --allow picking up melon
 end
 
 function GM:PlayerCanPickupItem( ply, item )
@@ -349,11 +420,15 @@ function GM:PlayerCanPickupWeapon( ply, wep )
 	local t = ply:SCPTeam()
 	if t == TEAM_SPEC then return end
 
-	if t == TEAM_SCP then
+	if t == TEAM_SCP and !ply.SCPHuman then
 		if wep.SCP then
 			return true
 		end
 
+		return false
+	end
+
+	if wep.SCP then
 		return false
 	end
 

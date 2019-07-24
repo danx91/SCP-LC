@@ -168,10 +168,12 @@ function SWEP:Initialize()
 	self:SetHoldType( self.HoldType )
 	
 	if CLIENT then
-		self.WM = ClientsideModel( self.WorldModel )
-		self.WM:SetParent( self )
-		self.WM:SetPos( self:GetPos() )
-		self.WM:SetNoDraw( true )
+		if !IsValid( self.WM ) then
+			self.WM = ClientsideModel( self.WorldModel )
+			self.WM:SetParent( self )
+			self.WM:SetPos( self:GetPos() )
+			self.WM:SetNoDraw( true )
+		end
 
 		self:InitializeLanguage()
 	else
@@ -356,7 +358,8 @@ function SWEP:DrawWorldModel()
 	else
 		if !IsValid( self.WM ) then
 			print( "INVALID WORLD MODEL!" )
-			return
+			
+			self:Initialize()
 			/*self.WM = ClientsideModel( self.WorldModel )
 			self.WM:SetParent( self )
 			self.WM:SetPos( self:GetPos() )

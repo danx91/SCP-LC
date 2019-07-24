@@ -2,21 +2,21 @@
 Spawn SCPs
 ---------------------------------------------------------------------------]]
 SPAWN_SCPSantaJ = Vector( 4042.9343261719, 389.60006713867, -383.96875 )
-SPAWN_SCP173 = Vector(1170.1145019531, 1646.2163085938, 153.03125)
-SPAWN_SCP689 = Vector(1960.968994, 2160.669922, 46.133434)
-SPAWN_SCP106 = Vector(2216.1745605469, 4706.0395507813, -422.96875)
-SPAWN_SCP066 = Vector(86.938972, 3897.577393, -64.033432)
-SPAWN_SCP049 = Vector(4718.4541015625, -2004.3891601563, 41.03125)
-SPAWN_SCP457 = Vector(2113.2243652344, 1783.6844482422, 25.03125)
-SPAWN_SCP966 = Vector(4385.948730, 2360.432861, 50.031250)
-SPAWN_SCP939 = Vector(1141.1956787109, -782.48986816406, -742.96875)
-SPAWN_SCP682 = Vector(2053.1604003906, 3009.12109375, -358.96875)
-SPAWN_SCP096 = Vector(4750.299316, 3653.488525, 25.031250)
-SPAWN_SCP999 = Vector(-278.488647, 1296.797852, 44.03125)
-SPAWN_SCP082 = Vector(-1447.897461, 319.761749, -54.50270)
-SPAWN_SCP1471 = Vector(2174.361328, 1557.007446, 50.836136)
-SPAWN_SCP1048A = Vector(1732.884521, 3500.440674, 50.865131)
-SPAWN_SCP1048B = Vector(5531.479492, -113.018181, 64.043182)
+SPAWN_SCP173 = Vector( 1170.1145019531, 1646.2163085938, 153.03125 )
+SPAWN_SCP689 = Vector( 1960.968994, 2160.669922, 46.133434 )
+SPAWN_SCP106 = Vector( 2216.1745605469, 4706.0395507813, -422.96875 )
+SPAWN_SCP066 = Vector( 86.938972, 3897.577393, -64.033432 )
+SPAWN_SCP049 = Vector( 4718.4541015625, -2004.3891601563, 41.03125 )
+SPAWN_SCP457 = Vector( 6209.917480, -304.609192, 64.031250 )
+SPAWN_SCP966 = Vector( 4385.948730, 2360.432861, 50.031250 )
+SPAWN_SCP939 = Vector( 1141.1956787109, -782.48986816406, -742.96875 )
+SPAWN_SCP682 = Vector( 2053.1604003906, 3009.12109375, -358.96875 )
+SPAWN_SCP096 = Vector( 4750.299316, 3653.488525, 25.031250 )
+SPAWN_SCP999 = Vector( -278.488647, 1296.797852, 44.03125 )
+SPAWN_SCP082 = Vector( -1447.897461, 319.761749, -54.50270 )
+SPAWN_SCP1471 = Vector( 2174.361328, 1557.007446, 50.836136 )
+SPAWN_SCP1048A = Vector( 1732.884521, 3500.440674, 50.865131 )
+SPAWN_SCP1048B = Vector( 5531.479492, -113.018181, 64.043182 )
 SPAWN_SCP8602 = Vector( 7284.303711, 5608.904785, -1041.298706 )
 
 SPAWN_SCP076 = { 
@@ -592,7 +592,7 @@ BUTTONS = {
 		override = function( ply, ent ) return !ROUND.preparing end,
 	},
 	{
-		name = "173 Control Room Doors",
+		name = "173 Control Room Door",
 		pos = Vector(193.000000, 1768.000000, 309.000000),
 		access = bit.lshift( 1, 1 ),
 		override = function( ply, ent )
@@ -602,20 +602,25 @@ BUTTONS = {
 		end,
 	},
 	{
-		name = "173 Doors",
-		pos = Vector(393.000000, 1288.000000, 181.000000),
+		name = "173 Door",
+		pos = Vector( 393, 1288, 181 ),
 		override = function( ply, ent ) return !ROUND.preparing end,
 	},
 	{
-		name = "106 Doors",
-		pos = Vector(2280.000000, 3959.000000, 53.000000),
+		name = "106 Door",
+		pos = Vector( 2280, 3959, 53 ),
 		override = function( ply, ent ) return !ROUND.preparing end,
 		nosound = true,
 	},
 	{
-		name = "457 Doors",
-		pos = Vector(2441.000000, 1896.000000, 53.000000),
-		override = function( ply, ent ) return !ROUND.preparing end,e,
+		name = "008 Door",
+		pos = Vector( 2441, 1896, 53 ),
+		override = function( ply, ent ) return !ROUND.preparing end,
+	},
+	{
+		name = "457 Door",
+		pos = Vector( 6208.00, -144.00, 53.00 ),
+		override = function( ply, ent ) return !ROUND.preparing end,
 	},
 	{
 		name = "HCZ-LCZ CHECKPOINT 1",
@@ -653,7 +658,7 @@ BUTTONS = {
 		access = bit.lshift( 1, 7 ),
 	},
 	{
-		name = "Armory room",
+		name = "Armory",
 		pos = Vector(1801.000000, -1432.000000, 53.000000),
 		access = bit.lshift( 1, 8 ),
 	},
@@ -917,3 +922,14 @@ CCTV = {
 		ang = Angle( 9.800, 71.294, 0.000 )
 	}
 }
+
+STORED_DOORS = STORED_DOORS or {}
+hook.Add( "EntityKeyValue", "Site19EntityKeyValue", function( ent, key, value )
+	if CLIENT then return end
+
+	if ent:GetClass() == "func_door" and key == "targetname" then
+		if string.match( value, "lcz_door_" ) or string.match( value, "hcz_door_" ) or string.match( value, "ez_door_" ) then
+			STORED_DOORS[ent] = true
+		end
+	end
+end )

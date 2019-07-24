@@ -180,6 +180,7 @@ classes.unknown = "Unknown"
 
 classes.SCP106 = "SCP 106"
 classes.SCP173 = "SCP 173"
+classes.SCP457 = "SCP 457"
 classes.SCP682 = "SCP 682"
 classes.SCP8602 = "SCP 860-2"
 classes.SCP939 = "SCP 939"
@@ -329,11 +330,17 @@ LMB: Teleport humans to pocket dimension
 RMB: Mark teleport destination
 R: Teleport]],
 
-    SCP173 = [[You are SCP 106
+    SCP173 = [[You are SCP 173
 Your objective is to escape from the facility
 You can't move while someone is watching you
 You special ability moves you back to location
 where you were 10s earlier]],
+
+    SCP457 = [[You are SCP 457
+Your objective is to escape from the facility
+You are burning and you will ignite everything
+near you
+You can place up to 5 fire traps]],
 
     SCP682 = [[You are SCP 682
 Your objective is to escape from the facility
@@ -510,6 +517,13 @@ wep.SCP106 = {
 wep.SCP173 = {
     swait = "Special ability cooldown: %is",
     sready = "Special ability is ready!",
+}
+
+wep.SCP457 = {
+    swait = "Special ability cooldown: %is",
+    sready = "Special ability is ready!",
+    placed = "Active traps: %i/%i",
+    nohp = "Not enough HP!"
 }
 
 wep.SCP682 = {

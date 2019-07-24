@@ -105,7 +105,7 @@ function SWEP:Heal( ply, sh )
 				local rnd = math.random() * 2 - 1
 				local hp = math.min( self.Healing:Health() + self.HealDmg + math.ceil( self.HealRand * rnd ), self.Healing:GetMaxHealth() )
 				self.Healing:SetHealth( hp )
-				print( self.Healing, self.Healing:Health(), self.HealDmg + math.ceil( self.HealRand * rnd ) )
+				--print( self.Healing, self.Healing:Health(), self.HealDmg + math.ceil( self.HealRand * rnd ) )
 				self:PopSpeed()
 
 				if SERVER and self.Healing != self.Owner then

@@ -22,6 +22,7 @@ function ply:Cleanup()
 	self:Freeze( false )
 	self:SetNoDraw( false )
 	self:SetCustomCollisionCheck( false )
+	self:StopBurn()
 
 	self:RemoveAllItems()
 end
@@ -31,6 +32,7 @@ function ply:Despawn()
 
 	self:Freeze( false )
 	self:SetCustomCollisionCheck( false )
+	self:StopBurn()
 
 	self.PlayerData:Reset()
 	self:InvalidatePlayerForSpectate()

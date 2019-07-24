@@ -135,6 +135,10 @@ end )
 Timer( "PlayXP", 300, 0, function()
 	local pspec, pplay, pplus = string.match( CVAR.roundxp:GetString(), "(%d+),(%d+),(%d+)" )
 
+	pspec = tonumber( pspec )
+	pplay = tonumber( pplay )
+	pplus = tonumber( pplus )
+
 	local rt = GetTimer( "SLCRound" )
 	if IsValid( rt ) then
 		local plus = rt:GetRemainingTime() <= rt:GetTime() * 0.5

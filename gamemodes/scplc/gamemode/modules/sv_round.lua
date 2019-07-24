@@ -54,6 +54,9 @@ function SetupSupportTimer()
 
 	local time, max = string.match( string.gsub( CVAR.spawnrate:GetString(), "%s", "" ), "(%d+),*(%d*)" )
 
+	time = tonumber( time )
+	max = tonumber( max )
+
 	if max then
 		time = math.random( time, max )
 	end

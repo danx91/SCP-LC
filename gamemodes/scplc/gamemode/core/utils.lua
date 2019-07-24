@@ -21,6 +21,47 @@ function AddTables( tab1, tab2 )
 	end
 end
 
+function FindInCylinder( orig, radius, zmin, zmax, filter, mask, feed )
+	local result = {}
+	radius = radius * radius
+
+	if filter and filter[1] then
+		local f = filter
+		filter = {}
+
+		for i = 1, #f do
+			filter[f[i]] = true
+		end
+	end
+
+	for k, v in pairs( feed or ents.GetAll() ) do
+		if !filter or filter[v:GetClass()] then
+			local pos = v:GetPos() + v:OBBCenter()
+			local zdist = pos.z - orig.z
+			if zdist >= zmin and zdist <= zmax then
+				if math.pow( pos.x - orig.x, 2 ) + math.pow( pos.y - orig.y, 2 ) <= radius then
+					if mask then
+						local trace = util.TraceLine( {
+							start = orig,
+							endpos = pos,
+							mask = mask,
+						} )
+
+						if trace.Hit then
+							continue
+						end
+
+					end
+
+					table.insert( result, v )
+				end
+			end
+		end
+	end
+
+	return result
+end
+
 --[[-------------------------------------------------------------------------
 String builder
 ---------------------------------------------------------------------------]]
@@ -45,8 +86,7 @@ function StringBuilder:New( init )
 end
 
 function StringBuilder:append( str, ... )
-	str = tostring( str )
-	self.str = self.str..str
+	self.str = self.str..tostring( str )
 
 	if ... then
 		local tab = {...}
@@ -64,8 +104,8 @@ function StringBuilder:print( str, ... )
 	self.str = self.str.."\n"
 end
 
-function StringBuilder:trim( e )
-	if e then
+function StringBuilder:trim( endonly )
+	if endonly then
 		self.str = string.match( self.str, "^(.-)%s*$" )
 	else
 		self.str = string.match( self.str, "^%s*(.-)%s*$" )
