@@ -124,14 +124,14 @@ timer.Create( "Credits", 300, 0, function()
 	end
 end )
 
-/*timer.Create("HeartbeatSound", 2, 0, function()
-	if not LocalPlayer().Alive then return end
-	if LocalPlayer():Alive() and LocalPlayer():GTeam() != TEAM_SPEC then
-		if LocalPlayer():Health() < 30 then
-			LocalPlayer():EmitSound("heartbeat.ogg")
+timer.Create( "SLCHeartbeat", 2, 0, function()
+	if !LocalPlayer().Alive then return end
+	if LocalPlayer():SCPTeam() != TEAM_SPEC and LocalPlayer():SCPTeam() != TEAM_SCP then
+		if LocalPlayer():Health() < 25 then
+			LocalPlayer():EmitSound( "heartbeat.ogg" )
 		end
 	end
-end)*/
+end)
 
 /*net.Receive( "689", function( len )
 	if LocalPlayer():GetNClass() == ROLES.ROLE_SCP689 then
@@ -161,31 +161,12 @@ local color_mat = Material( "pp/colour" )
 hook.Add( "RenderScreenspaceEffects", "SCPEffects", function()
 	local ply = LocalPlayer()
 	
-	/*if LocalPlayer().mblur == nil then LocalPlayer().mblur = false end
-	if ( LocalPlayer().mblur == true ) then
-		DrawMotionBlur( 0.3, 0.8, 0.03 )
-	end*/
-	
 	/*if LocalPlayer().n420endtime and LocalPlayer().n420endtime > CurTime() then
 		DrawMotionBlur( 1 - ( LocalPlayer().n420endtime - CurTime() ) / 15 , 0.3, 0.025 )
 		DrawSharpen( ( LocalPlayer().n420endtime - CurTime() ) / 3, ( LocalPlayer().n420endtime - CurTime() ) / 20 )
 		clr_r = ( LocalPlayer().n420endtime - CurTime() ) * 2
 		clr_g = ( LocalPlayer().n420endtime - CurTime() ) * 2
 		clr_b = ( LocalPlayer().n420endtime - CurTime() ) * 2
-	end*/
-
-	/*if IsValid(LocalPlayer():GetActiveWeapon()) then
-		if LocalPlayer():GetActiveWeapon():GetClass() == "item_nvg" then
-			nvgbrightness = 0.2
-			DrawSobel( 0.7 )
-		end
-	end*/
-	
-	/*if LocalPlayer():Health() < 30 and LocalPlayer():Alive() then
-		colour = math.Clamp((LocalPlayer():Health() / LocalPlayer():GetMaxHealth()) * 5, 0, 2)
-		DrawMotionBlur( 0.27, 0.5, 0.01 )
-		DrawSharpen( 1,2 )
-		DrawToyTown( 3, ScrH() / 1.8 )
 	end*/
 
 	local clr = {}
@@ -199,6 +180,19 @@ hook.Add( "RenderScreenspaceEffects", "SCPEffects", function()
 	clr.brightness = 0
 	clr.contrast = 1
 	clr.colour = 1
+
+	local hp = ply:Health()
+	local t = ply:SCPTeam()
+	if ply:Alive() and t != TEAM_SPEC and t != TEAM_SCP and hp < 25 then
+		local scale = math.max( hp / 25, 0.2 )
+		clr.colour = clr.colour * scale
+		clr.add_r = clr.add_r + ( 1 - scale ) * 0.1
+		clr.mul_r = clr.mul_r + ( 1 - scale ) * 0.7
+		clr.brightness = clr.brightness - ( 1 - scale ) * 0.075
+
+		DrawMotionBlur( 0.5, 0.6, 0.01 )
+		DrawSharpen( 0.8, 2.25 )
+	end
 
 	if ply.Stamina then
 		stamina_effects = math.Approach( stamina_effects, ply.Stamina, RealFrameTime() * 20 )
@@ -233,9 +227,6 @@ hook.Add( "RenderScreenspaceEffects", "SCPEffects", function()
 	
 	render.SetMaterial( color_mat )
 	render.DrawScreenQuad()
-
-	//DrawBloom( Darken, Multiply, SizeX, SizeY, Passes, ColorMultiply, Red, Green, Blue )
-	//DrawBloom( 0.65, bloommul, 9, 9, 1, 1, 1, 1, 1 )
 end )
 
 --[[-------------------------------------------------------------------------

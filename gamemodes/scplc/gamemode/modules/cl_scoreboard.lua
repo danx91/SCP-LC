@@ -1,6 +1,6 @@
 local button_next = false
 local next_frame = false
-local function Button( x, y, w, h)
+local function Button( x, y, w, h )
 	local mx, my = input.GetCursorPos()
 	if mx >= x and mx <= x + w and my >= y and my <= y + h then
 		if input.IsMouseDown( MOUSE_LEFT ) and button_next then
@@ -23,8 +23,8 @@ local function Button( x, y, w, h)
 end
 
 local MATS = {
-	arrow_up = GetMaterial( "hud_scp/arrow_up.png" ),
-	arrow_down = GetMaterial( "hud_scp/arrow_down.png" ),
+	arrow_up = GetMaterial( "slc_hud/arrow_up.png" ),
+	arrow_down = GetMaterial( "slc_hud/arrow_down.png" ),
 	muted = Material( "icon32/muted.png" ),
 	unmuted = Material( "icon32/unmuted.png" ),
 }
@@ -49,10 +49,10 @@ local customRanks = {
 		color = Color( 115, 25, 155, 100 ),
 		func = "76561198110788144" --Can be either SteamID64, table of SteamID64s or function with player as argument
 	},
-	Tester = {
+	tester = {
 		sorting = 19,
 		color = Color( 25, 165, 111 ),
-		func = { "76561198108864618", "76561198152379830" }
+		func = { "76561198108864618", "76561198152379830", "76561198179611206" }
 	},
 	vip = {
 		sorting = 1,

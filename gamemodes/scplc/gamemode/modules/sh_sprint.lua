@@ -3,7 +3,7 @@ hook.Add( "StartCommand", "SCPSprint", function( ply, cmd )
 
 	if ply:IsBot() then return end
 	if ply:SCPTeam() == TEAM_SPEC then return end
-	if ply:SCPTeam() == TEAM_SCP /*and !ply.SCPHuman*/ then return end
+	if ply:SCPTeam() == TEAM_SCP then return end
 
 	if cmd:KeyDown( IN_JUMP ) then
 		if ply:OnGround() and !ply:InVehicle() then

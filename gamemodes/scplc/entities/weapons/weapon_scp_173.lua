@@ -3,18 +3,19 @@ SWEP.PrintName		= "SCP-173"
 
 SWEP.HoldType		= "normal"
 
-SWEP.PosLog 		= {}
-SWEP.NextPosLog 	= 0
-SWEP.SpecialCD 		= 120
+SWEP.SpecialCD 		= 60
 SWEP.NextSpecial 	= 0
 SWEP.StopThink  	= false
 SWEP.GBlink 		= 0
+
+function SWEP:SetupDataTables()
+	self:NetworkVar( "Float", 0, "NSpecial" )
+end
 
 function SWEP:Initialize()
 	self:SetHoldType( self.HoldType )
 	self:InitializeLanguage( "SCP173" )
 end
-
  
 function SWEP:Think()
 	if CLIENT or ROUND.post or self.StopThink then return end
@@ -98,16 +99,6 @@ function SWEP:Think()
 	else
 		ply:Freeze( false )
 
-		if self.NextPosLog <= CurTime() then
-			self.NextPosLog = CurTime() + 1
-
-			table.insert( self.PosLog, 1, self:GetPos() )
-
-			if #self.PosLog > 10 then
-				table.remove( self.PosLog )
-			end
-		end
-
 		for k, v in pairs( player.GetAll() ) do
 			if IsValid( v ) and v:Alive() and v:SCPTeam() != TEAM_SPEC and v:SCPTeam() != TEAM_SCP then
 				local dist = ply:GetPos():DistToSqr( v:GetPos() )
@@ -148,25 +139,120 @@ function SWEP:Think()
 			end
 		end )
 
-		local pos = self.PosLog[#self.PosLog]
-		self.Owner:SetPos( pos )
+		self:Teleport()
 	end
 end
 
 function SWEP:SecondaryAttack()
-	if ROUND.preparing then return end
+	if CLIENT or ROUND.preparing then return end
 	if self.NextSpecial > CurTime() then return end
+	if !self:CanTeleport() then return end
 
 	self.NextSpecial = CurTime() + self.SpecialCD
+	self:SetNSpecial( self.NextSpecial )
+
 	self.SpecialUse = true
+end
+
+function SWEP:CanTeleport()
+	for k, v in pairs( FindInCylinder( self.Owner:GetPos(), 3000, -512, 512, "player", nil, player.GetAll() ) ) do
+		local t = v:SCPTeam()
+		if t != TEAM_SPEC and t != TEAM_SCP then
+			return true
+		end
+	end
+
+	return false
+end
+
+function SWEP:Teleport()
+	local near = {}
+	local players = {}
+
+	local ownerpos = self.Owner:GetPos()
+
+	for k, v in pairs( FindInCylinder( ownerpos, 1500, -512, 512, "player", nil, player.GetAll() ) ) do
+		local t = v:SCPTeam()
+		if t != TEAM_SPEC and t != TEAM_SCP then
+			table.insert( players, v )
+			near[v] = 0
+			for k, ply in pairs( FindInCylinder( v:GetPos(), 500, -128, 128, "player", nil, player.GetAll() ) ) do
+				if ply != v then
+					local pt = v:SCPTeam()
+					if pt != TEAM_SPEC and pt != TEAM_SCP then
+						near[v] = near[v] + 1
+					end
+				end
+			end
+		end
+	end
+
+	table.sort( players, function( a, b )
+		if near[a] == near[b] then
+			return a:GetPos():DistToSqr( ownerpos ) < b:GetPos():DistToSqr( ownerpos )
+		end
+
+		return near[a] < near[b]
+	end )
+
+	for i = 1, #players do
+		local ply = players[i]
+
+		local dist = ply:GetVelocity():Length() * 0.9
+
+		if dist < 60 then
+			dist = 60
+		end
+		
+		/*if ply:GetVelocity():LengthSqr() > 22500 then
+			dist = 225
+		end*/
+
+		local plypos = ply:GetPos()
+		local obb = ply:OBBCenter()
+		local point = plypos + obb + ply:GetAngles():Forward() * dist
+
+		if util.IsInWorld( point ) then
+			local point_tr = util.TraceLine{
+				start = plypos + obb,
+				endpos = point,
+				filter = ply
+			}
+
+			if !point_tr.Hit then
+				local trace = util.TraceLine{
+					start = point,
+					endpos = point - Vector( 0, 0, 128 ),
+				}
+
+				if trace.Hit then
+					local pos = trace.HitPos
+
+					if !util.TraceLine( {
+						start = pos,
+						endpos = point + Vector( 0, 0, 72 ),
+					} ).Hit then
+						self.Owner:SetEyeAngles( ( plypos - pos ):Angle() )
+						self.Owner:SetPos( pos )
+						return
+					end
+				end
+			end
+		end
+	end
+
+	self.NextSpecial = CurTime() + 3
+	self:SetNSpecial( self.NextSpecial )
 end
 
 function SWEP:DrawHUD()
 	if hud_disabled or HUDDrawInfo or ROUND.preparing then return end
 
+	local NextSpecial = self:GetNSpecial()
+
 	local txt, color
-	if self.NextSpecial > CurTime() then
-		txt = string.format( self.Lang.swait, math.ceil( self.NextSpecial - CurTime() ) )
+	if NextSpecial > CurTime() then
+		txt = string.format( self.Lang.swait, math.ceil( NextSpecial - CurTime() ) )
 		color = Color( 255, 0, 0 )
 	else
 		txt = self.Lang.sready

@@ -2,7 +2,7 @@
 
 local MATS = {
 	blur = Material( "pp/blurscreen" ),
-	exit = Material( "hud_scp/exit.png" )
+	exit = Material( "slc_hud/exit.png" )
 }
 
 local cache = {}

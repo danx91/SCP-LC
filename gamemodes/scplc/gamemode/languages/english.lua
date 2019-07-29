@@ -34,6 +34,8 @@ lang.NRegistry = {
     levelup = "Player %s leveled up! His current level: %i",
     healplayer = "You received %i points for healing other player",
     detectscp = "You received %i points for detecting SCPs",
+    winxp = "You received %i experience because your initial team won the game",
+    winalivexp = "You received %i experience because your team won the game",
 }
 
 lang.NFailed = "Filed to access NRegistry with key: %s"
@@ -74,6 +76,17 @@ lang.weight = "Weight"
 lang.protection = "Protection"
 
 lang.weight_unit = "kg" --imperial units are useless!
+
+--[[-------------------------------------------------------------------------
+Effects
+---------------------------------------------------------------------------]]
+local effects = {}
+
+effects.permanent = "perm"
+effects.bleeding = "Bleeding"
+effects.doorlock = "Door Lock"
+
+lang.EFFECTS = effects
 
 --[[-------------------------------------------------------------------------
 Class viewer
@@ -126,6 +139,7 @@ lang.scoreboard = {
 lang.ranks = {
     author = "Author",
     vip = "VIP",
+    tester = "Tester",
 }
 
 --[[-------------------------------------------------------------------------
@@ -333,8 +347,7 @@ R: Teleport]],
     SCP173 = [[You are SCP 173
 Your objective is to escape from the facility
 You can't move while someone is watching you
-You special ability moves you back to location
-where you were 10s earlier]],
+Your special ability teleports you to the nearby human]],
 
     SCP457 = [[You are SCP 457
 Your objective is to escape from the facility
@@ -354,7 +367,7 @@ nail him to wall and deal huge damage]],
 
     SCP939 = [[You are SCP 939
 Your objective is to escape from the facility
-You can talk with ]],
+You can talk with humans]],
 }
 /*lang.starttexts = {
     ROLE_SCPSantaJ = {

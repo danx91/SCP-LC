@@ -14,6 +14,8 @@ function ENT:Initialize()
 		self:PhysicsInit( SOLID_NONE )
 
 		self:SetTrigger( true )
+
+		self.ArmTime = CurTime() + 3
 	end
 
 	if CLIENT then
@@ -36,11 +38,15 @@ function ENT:Think()
 		if self.DieTime != -1 and self.DieTime <= CurTime() then
 			self:Remove()
 		end
+
+		if self.ArmTime and self.ArmTime < CurTime() then
+			self.Armed = true
+		end
 	end
 end
 
 function ENT:StartTouch( ent )
-	if ent:IsPlayer() then
+	if self.Armed and ent:IsPlayer() then
 		local t = ent:SCPTeam()
 		if t == TEAM_SPEC or t == TEAM_SCP then return end
 

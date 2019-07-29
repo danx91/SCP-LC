@@ -190,7 +190,7 @@ hook.Add( "RegisterSCP", "RegisterBaseSCPs", function()
 		max_health = 2250,
 		base_speed = 160,
 		run_speed = 160,
-	}, function( ply )
+	}, nil, function( ply )
 		ply:SetCustomCollisionCheck( true )
 	end )
 

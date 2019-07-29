@@ -333,17 +333,31 @@ function GM:SLCPostround( winner )
 	
 
 	local pxp = CVAR.pointsxp:GetInt()
+	local alivexp, winxp = string.match( CVAR.winxp:GetString(), "(%d+),(%d+)" )
+
+	alivexp = tonumber( alivexp )
+	winxp = tonumber( winxp )
+
 	for k, v in pairs( player.GetAll() ) do
 		local frags = v:Frags()
 		v:SetFrags( 0 )
+
 		if frags > 0 then
 			local xp = pxp * frags
 
 			v:AddXP( xp )
 			PlayerMessage( "roundxp$"..xp, v )
 		end
+
+		if v:SCPTeam() == winner then
+			v:AddXP( alivexp )
+			PlayerMessage( "winalivexp$"..alivexp, v )
+		elseif v:GetInitialTeam() == winner then
+			v:AddXP( winxp )
+			PlayerMessage( "winxp$"..winxp, v )
+		end
 	end
-	
+
 	--TODO give exp etc.
 end
 

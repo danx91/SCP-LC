@@ -87,7 +87,7 @@ local EQ = {
 
 EQ.slots = EQ.cols * EQ.rows
 
-local mat_vest = Material( "hud_scp/vest.png" )
+local mat_vest = Material( "slc_hud/vest.png" )
 local function drawVest( x, y, size )
 	surface.SetDrawColor( 150, 150, 150, 50 )
 
@@ -657,7 +657,7 @@ function CanShowEQ()
 	if ScoreboardVisible then return end
 
 	local team = LocalPlayer():SCPTeam()
-	return team != TEAM_SPEC and ( team != TEAM_SCP or LocalPlayer().SCPHuman )
+	return team != TEAM_SPEC
 end
 
 function IsEQVisible()

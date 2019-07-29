@@ -51,6 +51,7 @@ function SetupPlayers( multi )
 
 		print( "Assigning '"..ply:Nick().."' to class '"..obj.name.."' [SCP]" )
 		obj:SetupPlayer( ply )
+		ply:SetInitialTeam( TEAM_SCP )
 
 		all = all - 1
 	end
@@ -148,6 +149,7 @@ function SetupPlayers( multi )
 					print( "Assigning '"..ply:Nick().." to class '"..class.name.."' ["..g_name.."]" )
 
 					ply:SetupPlayer( class )
+					ply:SetInitialTeam( class.team )
 
 					--if class.spawn then
 						--ply:SetPos( istable( class.spawn ) and table.Random( class.spawn ) or class.spawn )

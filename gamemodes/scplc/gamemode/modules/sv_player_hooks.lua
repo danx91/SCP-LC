@@ -25,6 +25,11 @@ function GM:PlayerSpawn( ply )
 	ply:SetCanZoom( false )
 	ply:CrosshairEnable()
 	ply:SetCollisionGroup( COLLISION_GROUP_PASSABLE_DOOR ) //xD???
+	//ply:AddEFlags( EFL_NO_DAMAGE_FORCES ) //Not working :c
+
+	if IsValid( ply._RagEntity ) then
+		ply._RagEntity:Remove()
+	end
 	//ply:Cleanup()
 end
 
@@ -78,6 +83,7 @@ end
 
 function GM:PlayerShouldTakeDamage( ply, attacker )
 	if !attacker:IsPlayer() then return true end
+	if ROUND.post then return false end
 
 	local t_vic = ply:SCPTeam()
 	local t_att = attacker:SCPTeam()
@@ -89,13 +95,15 @@ function GM:PlayerShouldTakeDamage( ply, attacker )
 end
 
 function GM:PlayerHurt( victim, attacker, health, dmg )
-	--handle damage stats
+	--TODO: handle damage stats
 end
 
 function GM:DoPlayerDeath( ply, attacker, dmginfo ) --TODO
 	--rag
-	ply:CreateRagdoll()
+	--ply:CreateRagdoll()
+	ply:CreatePlayerRagdoll()
 	ply:DropEQ()
+	ply:Despawn()
 	
 	if attacker:IsPlayer() then
 		print( "[KILL] Player '"..ply:Nick().."' ["..SCPTeams.getName( ply:SCPTeam() ).."] has been killed by '"..attacker:Nick().."' ["..SCPTeams.getName( attacker:SCPTeam() ).."]" )
@@ -104,8 +112,6 @@ function GM:DoPlayerDeath( ply, attacker, dmginfo ) --TODO
 	else
 		print( "[KILL] Player '"..ply:Nick().."' ["..SCPTeams.getName( ply:SCPTeam() ).."] has been killed by UNKNOWN" )
 	end
-
-	ply:Despawn()
 
 	if !table.HasValue( ROUND.queue, ply ) then
 		table.insert( ROUND.queue, ply )
@@ -225,7 +231,7 @@ hook.Add( "Think", "ApplyTerror", function()
 
 				if t != TEAM_SCP and t != TEAM_SPEC then
 					ply.TerrorPower = ply.TerrorPower + 1
-					ply.NDoorLockRem = CurTime() + 15
+					ply.NDoorLockRem = CurTime() + 10
 				end
 			end
 		end
@@ -260,7 +266,8 @@ function GM:AcceptInput( ent, input, activator, caller, value )
 							if ply.DoorHistory >= 8 then
 								ply.DoorHistory = 0
 
-								ply.DoorLock = CurTime() + 15
+								ply:ApplyEffect( "doorlock" )
+								ply.DoorLock = CurTime() + 10
 								ply.NUse = CurTime() + 2.5
 							end
 						end
@@ -357,7 +364,7 @@ function GM:PlayerUse( ply, ent )
 	end
 
 	if ent:GetClass() == "prop_vehicle_jeep" then
-		if ply:SCPTeam() == TEAM_SCP and !ply.SCPHuman then
+		if ply:SCPTeam() == TEAM_SCP and !ply:GetSCPHuman() then
 			return false
 		end
 	end
@@ -384,7 +391,7 @@ function GM:PlayerCanHearPlayersVoice( listener, talker )
 	end
 
 	--scp
-	if t_tal == TEAM_SCP and t_lis != TEAM_SCP and !talker.SCPHuman and !talker.SCPChat then
+	if t_tal == TEAM_SCP and t_lis != TEAM_SCP and !talker:GetSCPHuman() and !talker:GetSCPChat() then
 		return false
 	end
 
@@ -420,7 +427,7 @@ function GM:PlayerCanPickupWeapon( ply, wep )
 	local t = ply:SCPTeam()
 	if t == TEAM_SPEC then return end
 
-	if t == TEAM_SCP and !ply.SCPHuman then
+	if t == TEAM_SCP and !ply:GetSCPHuman() then
 		if wep.SCP then
 			return true
 		end

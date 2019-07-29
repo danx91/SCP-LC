@@ -105,6 +105,7 @@ function SWEP:Heal( ply, sh )
 				local rnd = math.random() * 2 - 1
 				local hp = math.min( self.Healing:Health() + self.HealDmg + math.ceil( self.HealRand * rnd ), self.Healing:GetMaxHealth() )
 				self.Healing:SetHealth( hp )
+				self.Healing:RemoveEffect( "bleeding", true )
 				--print( self.Healing, self.Healing:Health(), self.HealDmg + math.ceil( self.HealRand * rnd ) )
 				self:PopSpeed()
 

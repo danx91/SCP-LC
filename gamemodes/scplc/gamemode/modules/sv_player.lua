@@ -8,10 +8,11 @@ function ply:SetSCPClass( class )
 	self:Set_SCPPersonaC( class )
 end
 
-function ply:Cleanup()
+function ply:Cleanup( norem )
+	self:RemoveEffect()
+
 	self.ClassData = nil
 	self:ClearSpeedStack()
-	self:SetVest( 0 )
 	self.PlayerData:Reset()
 
 	self:SetColor( Color( 255, 255, 255 ) )
@@ -24,17 +25,14 @@ function ply:Cleanup()
 	self:SetCustomCollisionCheck( false )
 	self:StopBurn()
 
-	self:RemoveAllItems()
+	if !norem then
+		self:SetVest( 0 )
+		self:RemoveAllItems()
+	end
 end
 
 function ply:Despawn()
-	--TODO reset effects
-
-	self:Freeze( false )
-	self:SetCustomCollisionCheck( false )
-	self:StopBurn()
-
-	self.PlayerData:Reset()
+	self:Cleanup()
 	self:InvalidatePlayerForSpectate()
 
 	net.Start( "PlayerDespawn" )
@@ -136,7 +134,7 @@ function ply:EquipVest( vest )
 
 	local t = self:SCPTeam()
 	if t == TEAM_SPEC then return end
-	if t == TEAM_SCP and !self.SCPHuman then return end
+	if t == TEAM_SCP and !self:GetSCPHuman() then return end
 
 	if isstring( vest ) then
 		vest = VEST.getID( vest )
@@ -193,7 +191,66 @@ function ply:DropVest()
 end
 
 function ply:CreatePlayerRagdoll()
+	if self:GetSCPNoRagdoll() then return end
+	if self:GetNoDraw() then return end
 
+	local rag = ents.Create( "prop_ragdoll" )
+	rag:SetPos( self:GetPos() )
+	rag:SetAngles( self:GetAngles() )
+
+	rag:SetModel( self:GetModel() )
+	rag:SetColor( self:GetColor() )
+	rag:SetMaterial( self:GetMaterial() )
+
+	rag:SetOwner( self )
+
+	for i, v in ipairs( rag:GetMaterials() ) do
+		local mat = self:GetSubMaterial( i - 1 )
+
+		if mat != "" then
+			rag:SetSubMaterial( i - 1, mat )
+		end
+	end
+
+	rag:Spawn()
+
+	/*local phys = rag:GetPhysicsObject()
+	if !IsValid( phys ) then
+		print( "Physics Object Invalid", self, self:GetModel() )
+		rag:Remove()
+		return
+	end*/
+
+	rag:SetCollisionGroup( COLLISION_GROUP_DEBRIS_TRIGGER )
+
+	local vel = self:GetVelocity()
+	for i = 0, rag:GetPhysicsObjectCount() do
+		local physobj = rag:GetPhysicsObjectNum( i )
+
+		if IsValid( physobj ) then
+			local pos, ang = self:GetBonePosition( rag:TranslatePhysBoneToBone( i ) )
+
+			if pos and ang then
+				physobj:SetPos( pos )
+				physobj:SetAngles( ang )
+			end
+
+			physobj:SetVelocity( vel )
+		end
+	end
+
+	rag:SetNWInt( "time", CurTime() )
+	rag:SetNWInt( "team", self:SCPTeam() )
+
+	rag.Data = {
+		time = CurTime(),
+		team = self:SCPTeam(),
+		class = self:SCPClass(),
+		persona = { self:SCPPersona() },
+	}
+
+	self._RagEntity = rag
+	return rag
 end
 
 function ply:Blink( dur, nextblink )

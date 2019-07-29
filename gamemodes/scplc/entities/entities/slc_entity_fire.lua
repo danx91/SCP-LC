@@ -111,7 +111,7 @@ function ENT:Think()
 							dmg:SetAttacker( owner )
 
 							if owner:IsPlayer() and owner:SCPClass() == CLASSES.SCP457 then
-								local hp = owner:Health() + 5
+								local hp = owner:Health() + 2
 								local max = owner:GetMaxHealth()
 
 								if hp > max then

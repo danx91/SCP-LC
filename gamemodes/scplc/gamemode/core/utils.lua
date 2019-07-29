@@ -25,7 +25,11 @@ function FindInCylinder( orig, radius, zmin, zmax, filter, mask, feed )
 	local result = {}
 	radius = radius * radius
 
-	if filter and filter[1] then
+	if filter then
+		if !istable( filter ) then
+			filter = { filter }
+		end
+
 		local f = filter
 		filter = {}
 

@@ -271,7 +271,7 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		team = TEAM_MTF,
 		weapons = { "weapon_stunstick", "item_slc_radio", "item_slc_nvg", "cw_m14" },
 		ammo = { cw_m14 = 120 },
-		chip = "mtf",
+		chip = "com",
 		health = 200,
 		walk_speed = 120,
 		run_speed = 260,

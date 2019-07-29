@@ -15,12 +15,12 @@ end
 
 local MATS = {
 	blur = Material( "pp/blurscreen" ),
-	mag = Material( "hud_scp/magicon.png" ),
-	ammo = Material( "hud_scp/ammoicon.png" ),
-	battery = Material( "hud_scp/battery.png" ),
-	blink = Material( "hud_scp/blink" ),
-	sprint = Material( "hud_scp/sprint" ),
-	hp = Material( "hud_scp/hp" ),
+	mag = Material( "slc_hud/magicon.png" ),
+	ammo = Material( "slc_hud/ammoicon.png" ),
+	battery = Material( "slc_hud/battery.png" ),
+	blink = Material( "slc_hud/blink" ),
+	sprint = Material( "slc_hud/sprint" ),
+	hp = Material( "slc_hud/hp" ),
 }
 
 local ammo_color = {

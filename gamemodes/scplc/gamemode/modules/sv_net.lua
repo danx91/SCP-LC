@@ -14,6 +14,7 @@ util.AddNetworkString( "DropVest" )
 util.AddNetworkString( "CameraDetect" )
 util.AddNetworkString( "CenterMessage" )
 util.AddNetworkString( "PlayerCommand" )
+util.AddNetworkString( "PlayerEffect" )
 
 --Receivers
 net.Receive( "PlayerReady", function( len, ply )

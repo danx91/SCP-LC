@@ -130,11 +130,13 @@ function PlayerData:GetSessionStat( name )
 	return stat
 end
 
-function PlayerData:Reset()
+function PlayerData:Reset( roundend )
 	for k, v in pairs( PlayerStatus ) do
 		local reset = true
 
 		if v[3] == false then
+			reset = false
+		elseif v[3] == true and !roundend then
 			reset = false
 		elseif isfunction( v[3] ) then
 			reset = !v[3]( self.Player, self.Status[k] )
@@ -148,7 +150,7 @@ end
 
 function PlayerData:RoundReset()
 	self.Round = {}
-	self:Reset()
+	self:Reset( true )
 end
 
 function PlayerData:SetupData()
@@ -201,11 +203,19 @@ setmetatable( PlayerData, { __call = PlayerData.Create } )
 --------------------------------------------------------------------
 
 ---------------------------- BASE STATUS ----------------------------
+//registerPlayerStatus( "name", <initial value>, func/false, func/ture/false* )
+//* - true: reset only on roundend, false: never reset
 
 registerPlayerStatus( "Premium", false, function( ply, old, new ) ply:Set_SCPPremium( new ) end, false )
 registerPlayerStatus( "Active", false, function( ply, old, new ) ply:Set_SCPActive( new ) end, false )
 
+registerPlayerStatus( "InitialTeam", 0, false, true )
+
 registerPlayerStatus( "Blink", false )
 registerPlayerStatus( "SightLimit", -1 )
+
+registerPlayerStatus( "SCPHuman", false )
+registerPlayerStatus( "SCPChat", false )
+registerPlayerStatus( "SCPNoRagdoll", false )
 
 --------------------------------------------------------------------

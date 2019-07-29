@@ -20,7 +20,6 @@ function PLAYER:SetupDataTables()
 	ply:AddSCPVar( "Sanity", 0, "INT" )
 	ply:AddSCPVar( "MaxSanity", 1, "INT" )
 	ply:AddSCPVar( "Vest", 2, "INT" )
-	ply:AddSCPVar( "Effect", 3, "INT" )
 
 	if SERVER then
 		ply:Set_SCPActive( false )
@@ -39,7 +38,6 @@ function PLAYER:SetupDataTables()
 		ply:SetSanity( 100 )
 		ply:SetMaxSanity( 100 )
 		ply:SetVest( 0 )
-		ply:SetEffect( 0 )
 	end
 
 	if CLIENT then

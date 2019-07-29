@@ -136,7 +136,7 @@ WORLDMODEL-FIXING UTILITY CODE
 ORIGINALLY BY ROBOTBOY
 ----------------*/
     //SWEP.FixWorldModel = false
-	/*SWEP.FixWorldModel = true
+	SWEP.FixWorldModel = true
      
     SWEP.FixWorldModelPos = Vector( -3, 0, 0 )
      
@@ -165,4 +165,4 @@ end
 function SWEP:DrawWorldModel()
             if ( self.FixWorldModel ) then self:DoFixWorldModel() end
             self:DrawModel()
-end*/
+end

@@ -206,11 +206,7 @@ function ObjectSCP:SetupPlayer( ply, ... )
 		end
 	end
 
-	ply:SetColor( Color( 255, 255, 255 ) )
-	ply:SetSubMaterial()
-	ply:SetMaterial( "" )
-
-	ply:ClearSpeedStack()
+	ply:Cleanup( true )
 
 	ply:UnSpectate()
 	ply:GodDisable()
@@ -234,8 +230,11 @@ function ObjectSCP:SetupPlayer( ply, ... )
 	ply:SetSCPTeam( TEAM_SCP )
 	ply:SetSCPClass( CLASSES[self.name] )
 
-	ply.SCPHuman = self.basestats.is_human == true
-	ply.SCPChat = self.basestats.allow_chat == true
+	//ply.SCPHuman = self.basestats.is_human == true
+	//ply.SCPChat = self.basestats.allow_chat == true
+
+	ply:SetSCPHuman( self.basestats.is_human == true )
+	ply:SetSCPChat( self.basestats.allow_chat == true )
 
 	if !self.basestats.no_model then
 		ply:SetModel( self.model )
@@ -264,10 +263,10 @@ function ObjectSCP:SetupPlayer( ply, ... )
 	ply:AllowFlashlight( false )
 	ply:SetNoDraw( self.basestats.no_draw == true )
 
-	//ply.canblink = false
 	//ply.noragdoll = self.basestats.no_ragdoll == true
+	ply:SetSCPNoRagdoll( self.basestats.no_ragdoll == true )
 
-	ply.handsmodel = self.basestats.hands_model
+	//ply.handsmodel = self.basestats.hands_model
 	ply:SetupHands()
 
 	hook.Run( "SLCSCPSetup", ply, self.name )

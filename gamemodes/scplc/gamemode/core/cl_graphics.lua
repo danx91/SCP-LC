@@ -164,7 +164,140 @@ function surface.DrawDifference( v1, v2 )
 	render.SetStencilEnable( false )
 end
 
-function draw.MultilineText( x, y, text, font, color, maxWidth, margin, dist, align, maxRows, simulate )
+function surface.DrawCooldownCircleCW( x, y, radius, pct, pctstep )
+	pct = math.Clamp( 1 - pct, 0, 1 )
+
+	local verts = {}
+	table.insert( verts, { x = x, y = y } )
+
+	local nbreak = false
+	local todraw = math.ceil( ( 1 - pct ) / pctstep )
+	for i = 0, todraw do
+		local ang = 2 * math.pi * pct
+		table.insert( verts, { x = x + math.sin( ang ) * radius, y = y - math.cos( ang ) * radius } )
+
+		if nbreak then
+			break
+		end
+
+		pct = pct + pctstep
+
+		if pct > 1 then
+			pct = 1
+			nbreak = true
+		end
+	end
+
+	surface.DrawPoly( verts )
+end
+
+function surface.DrawCooldownCircleCCW( x, y, radius, pct, pctstep )
+	pct = math.Clamp( pct, 0, 1 )
+
+	local verts = {}
+
+	table.insert( verts, { x = x, y = y } )
+
+	local nbreak = false
+	local npct = 0
+	local todraw = math.ceil( pct / pctstep )
+	for i = 0, todraw do
+		local ang = 2 * math.pi * npct
+		table.insert( verts, { x = x + math.sin( ang ) * radius, y = y - math.cos( ang ) * radius } )
+
+		if nbreak then
+			break
+		end
+
+		npct = npct + pctstep
+
+		if npct > pct then
+			npct = pct
+			nbreak = true
+		end
+	end
+
+	surface.DrawPoly( verts )
+end
+
+function surface.DrawCooldownRectCW( x, y, width, height, pct, pctstep )
+	pct = math.Clamp( 1 - pct, 0, 1 )
+
+	if pct == 1 then
+		surface.DrawRect( x, y, width, height )
+		return
+	end
+
+	local hw = width * 0.5
+	local hh = height * 0.5
+
+	local verts = {}
+
+	table.insert( verts, { x = x + hw, y = y + hh } )
+
+	local ang = 2 * math.pi * pct
+
+	local nx = math.sin( ang )
+	local ny = -math.cos( ang )
+
+	local len = math.max( math.abs( nx ), math.abs( ny ) )
+
+	if len < 1 then
+		nx = nx / len
+		ny = ny / len
+	end
+
+	table.insert( verts, { x = x + ( 1 + nx ) * hw, y = y + ( 1 + ny ) * hh } )
+
+	if pct <= 0.125 then table.insert( verts, { x = x + width, y = y } ) end
+	if pct <= 0.375 then table.insert( verts, { x = x + width, y = y + height } ) end
+	if pct <= 0.625 then table.insert( verts, { x = x, y = y + height } ) end
+	if pct <= 0.875 then table.insert( verts, { x = x, y = y } ) end
+
+	table.insert( verts, { x = x + hw, y = y } )
+
+	surface.DrawPoly( verts )
+end
+
+function surface.DrawCooldownRectCCW( x, y, width, height, pct, pctstep )
+	pct = math.Clamp( pct, 0, 1 )
+
+	if pct == 1 then
+		surface.DrawRect( x, y, width, height )
+		return
+	end
+
+	local hw = width * 0.5
+	local hh = height * 0.5
+
+	local verts = {}
+
+	table.insert( verts, { x = x + hw, y = y + hh } )
+	table.insert( verts, { x = x + hw, y = y } )
+
+	if pct >= 0.125 then table.insert( verts, { x = x + width, y = y } ) end
+	if pct >= 0.375 then table.insert( verts, { x = x + width, y = y + height } ) end
+	if pct >= 0.625 then table.insert( verts, { x = x, y = y + height } ) end
+	if pct >= 0.875 then table.insert( verts, { x = x, y = y } ) end
+
+	local ang = 2 * math.pi * pct
+
+	local nx = math.sin( ang )
+	local ny = -math.cos( ang )
+
+	local len = math.max( math.abs( nx ), math.abs( ny ) )
+
+	if len < 1 then
+		nx = nx / len
+		ny = ny / len
+	end
+
+	table.insert( verts, { x = x + ( 1 + nx ) * hw, y = y + ( 1 + ny ) * hh } )
+
+	surface.DrawPoly( verts )
+end
+
+function draw.MultilineText( x, y, text, font, color, maxWidth, margin, dist, align, maxRows, simulate, calcW )
 	align = align or TEXT_ALIGN_LEFT
 	maxWidth = maxWidth - 2 * margin
 	local texts = string.Split( text , "\n" )
@@ -230,10 +363,13 @@ function draw.MultilineText( x, y, text, font, color, maxWidth, margin, dist, al
 	end
 
 	local n = maxRows or #final
+	local maxw = 0
 
-	if !simulate then
-		for i = 1, n do
-			draw.Text{
+	for i = 1, n do
+		local tw = 0
+
+		if !simulate then
+			tw = draw.Text{
 				text = final[i],
 				pos = { x + margin, y + margin + height * ( i - 1 ) },
 				color = color,
@@ -241,10 +377,16 @@ function draw.MultilineText( x, y, text, font, color, maxWidth, margin, dist, al
 				xalign = align,
 				yalign = TEXT_ALIGN_TOP,
 			}
+		elseif calcW then
+			tw = surface.GetTextSize( final[i] )
+		end
+
+		if tw > maxw then
+			maxw = tw
 		end
 	end
 
-	return margin + height * n
+	return margin + height * n, maxw
 end
 //function draw.LimitedText( x, y, text, font, color, max_width, xalign, yalign )
 function draw.LimitedText( tab )
@@ -278,7 +420,7 @@ function draw.TextSize( text, font )
 	return surface.GetTextSize( text )
 end
 
-_VGUIC = _VGUIC or vgui.Create
+/*_VGUIC = _VGUIC or vgui.Create
 VGUIREG = VGUIREG or {}
 
 
@@ -295,4 +437,4 @@ function RemoveAllDerma()
 			v:Remove()
 		end
 	end
-end
+end*/

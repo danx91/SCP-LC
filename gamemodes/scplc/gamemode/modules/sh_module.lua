@@ -4,8 +4,8 @@ GM.Author 	= "danx91"
 GM.Email 	= ""
 GM.Website 	= ""
 
-VERSION = "ALPHA 0.2"
-DATE = "24/07/2019"
+VERSION = "ALPHA 0.3"
+DATE = "29/07/2019"
 
 SCPS = {}
 CLASSES = {}
@@ -47,6 +47,7 @@ CVAR = {
 	escortpoints = CreateConVar( "slc_points_escort", 6, { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE } ),
 	pointsxp = CreateConVar( "slc_points_xp", 50, { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE } ),
 	roundxp = CreateConVar( "slc_xp_round", "100,200,300", { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE } ),
+	winxp = CreateConVar( "slc_xp_win", "1500,1000", { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE } ),
 }
 
 --TODO
@@ -187,10 +188,12 @@ function GM:EntityTakeDamage( target, info )
 			local attacker = info:GetAttacker()
 			if IsValid( attacker ) then
 				if attacker:IsVehicle() then
-					info:SetDamage( 0 )
+					//info:SetDamage( 0 )
+					return true
 				elseif attacker:IsPlayer() then
 					if attacker:InVehicle() then
-						info:SetDamage( 0 )
+						//info:SetDamage( 0 )
+						return true
 					end
 
 					--nerf melee
@@ -207,12 +210,19 @@ function GM:EntityTakeDamage( target, info )
 
 					if target != attacker and target:SCPTeam() == TEAM_SCP then
 						if attacker:SCPTeam() == TEAM_SCP then
-							info:SetDamage( 0 )
+							--info:SetDamage( 0 )
+							return true
 						else
 							--TODO
 							local buff = getSCPBuff()
 						end
 					end
+				end
+			end
+
+			if info:IsDamageType( DMG_BULLET ) or info:IsDamageType( DMG_SLASH ) then
+				if math.random( 1, 100 ) <= ( vest > 0 and 5 or 20 ) then
+					target:ApplyEffect( "bleeding", 1, attacker )
 				end
 			end
 		end
