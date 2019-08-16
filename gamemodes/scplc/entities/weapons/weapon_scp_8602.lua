@@ -36,9 +36,10 @@ function SWEP:PrimaryAttack()
 			if ent:IsPlayer() then
 				if ent:SCPTeam() == TEAM_SPEC or ent:SCPTeam() == TEAM_SCP then return end
 
+				local range = 80 + ( self:GetUpgradeMod( "range" ) or 0 )
 				local trace2 = util.TraceHull{
 					start = self.Owner:GetShootPos(),
-					endpos = self.Owner:GetShootPos() + self.Owner:GetAimVector() * 80,
+					endpos = self.Owner:GetShootPos() + self.Owner:GetAimVector() * range,
 					mask = MASK_SOLID_BRUSHONLY,
 					maxs = Vector( 10, 10, 10 ),
 					mins = Vector( -10, -10, -10 )
@@ -46,7 +47,7 @@ function SWEP:PrimaryAttack()
 
 				if trace2.Hit then
 					if math.abs( trace2.HitNormal.z ) < 0.5 then --z normal 0 is vertical, 1 or -1 is horizontal. If surface angle to floor is lower than 45 degrees, don't trigger special attack
-						self:SpecialAttack( ent )
+						self:SpecialAttack( ent, trace2.HitPos )
 					else
 						self:NormalAttack( ent )
 					end
@@ -66,9 +67,13 @@ function SWEP:NormalAttack( ent )
 	self.Owner:ViewPunch( table.Random( PunchAngles ) )
 end
 
-function SWEP:SpecialAttack( ent )
-	ent:TakeDamage( math.random( 75, 125 ), self.Owner, self.Owner )
-	self.Owner:TakeDamage( math.random( 50, 100 ), self.Owner, self.Owner )
+function SWEP:SpecialAttack( ent, p )
+	local bonus = self:GetUpgradeMod( "dmg" ) or 0
+
+	local dmg = math.random( 75, 125 ) + bonus
+
+	ent:TakeDamage( dmg, self.Owner, self.Owner )
+	self.Owner:TakeDamage( math.random( 50, 100 ) + bonus * 3, self.Owner, self.Owner )
 	self.Owner:EmitSound( "SCP8602.ImpactHard" )
 
 	self.Owner:ViewPunch( Angle( -30, 0, 0 ) )
@@ -77,7 +82,64 @@ function SWEP:SpecialAttack( ent )
 	local vel = self.Owner:GetAimVector() * 1250
 	self.Owner:SetVelocity( vel )
 	ent:SetVelocity( vel )
+
+	if self:HasUpgrade( "charge31" ) then
+		for k, v in pairs( FindInCylinder( p, 125, -128, 128, "player", MASK_SOLID_BRUSHONLY, player.GetAll() ) ) do
+			if v != self.Owner then
+				local t = v:SCPTeam()
+
+				if t != TEAM_SCP and t != TEAM_SPEC then
+					v:TakeDamage( dmg * 0.2, self.Owner, self.Owner )
+				end
+			end
+		end
+	end
 end
+
+DefineUpgradeSystem( "scp8602", {
+	grid_x = 3,
+	grid_y = 3,
+	upgrades = {
+		{ name = "charge11", cost = 1, req = {}, reqany = false,  pos = { 2, 1 }, mod = { dmg = 5 }, active = false },
+		{ name = "charge12", cost = 3, req = { "charge11" }, reqany = false,  pos = { 2, 2 }, mod = { dmg = 15 }, active = false },
+		{ name = "charge13", cost = 5, req = { "charge12" }, reqany = false,  pos = { 2, 3 }, mod = { dmg = 25 }, active = false },
+
+		{ name = "charge21", cost = 2, req = { "charge11" }, reqany = false,  pos = { 1, 2 }, mod = { range = 15 }, active = false },
+		{ name = "charge22", cost = 3, req = { "charge21" }, reqany = false,  pos = { 1, 3 }, mod = { range = 30 }, active = false },
+
+		{ name = "charge31", cost = 5, req = { "charge12" }, reqany = false,  pos = { 3, 3 }, mod = {}, active = false },
+
+		{ name = "nvmod", cost = 1, req = {}, reqany = false,  pos = { 3, 2 }, mod = {}, active = false },
+	},
+	rewards = {
+		{ 1, 1 },
+		{ 2, 1 },
+		{ 3, 2 },
+		{ 5, 2 },
+		{ 7, 1 },
+		{ 9, 2 },
+		{ 10, 2 }
+	}
+} )
+
+hook.Add( "EntityTakeDamage", "SCP8602Damage", function( ply, dmg )
+	if !ply:IsPlayer() or !ply:Alive() then return end
+
+	local att = dmg:GetAttacker()
+	if !att:IsPlayer() or !att:Alive() then return end
+
+	if att:SCPClass() == CLASSES.SCP8602 then
+		 if dmg:GetDamage() >= ply:Health() then
+		 	local wep = att:GetActiveWeapon()
+
+		 	if IsValid( wep ) then
+		 		wep:AddScore( 1 )
+		 	end
+		 end
+	end
+end )
+
+InstallUpgradeSystem( "scp8602", SWEP )
 
 sound.Add( {
 	name = "SCP8602.ImpactSoft",

@@ -8,7 +8,7 @@ data = {
 	duration = <time>,
 	think = nil'/function( self, ply, tier, args ) return <delay> end,
 	wait = 0//time between thinks
-	begin = nil'/function( ply, tier, args ) end,
+	begin = nil'/function( self, ply, tier, refresh, args ) end,
 	finish = nil'/function( self, ply, tier, args ) end,
 	stacks = 0(nil)/1/2, //0 - don't stack, refresh duration; 1 - stack effects; 2 - increase effect level, refresh duration
 	tiers = { { icon = <material> } },
@@ -34,12 +34,24 @@ hook.Add( "PlayerPostThink", "SLCEffectsThink", function( ply )
 	for k, v in ipairs( ply.EFFECTS ) do
 		local eff = EFFECTS.effects[v.name]
 
-		if v.endtime < CurTime() then
+		if v.endtime != -1 and v.endtime < CurTime() then
 			if eff.finish then
 				eff.finish( v, ply, v.tier, v.args )
 			end
 
 			table.remove( ply.EFFECTS, k )
+
+			local found = false
+			for _, e in pairs( ply.EFFECTS ) do
+				if e.name == v.name then
+					found = true
+					break
+				end
+			end
+
+			if !found then
+				ply.EFFECTS_REG[v.name] = nil
+			end
 		elseif eff.think then
 			if eff.wait then
 				if v.nextthink and v.nextthink > CurTime() then
@@ -60,13 +72,9 @@ if CLIENT then
 		local name = net.ReadString()
 
 		if rem then
-			local all = net.ReadBool()
-
-			LocalPlayer():RemoveEffect( name, all )
+			LocalPlayer():RemoveEffect( name, net.ReadBool() )
 		else
-			local args = net.ReadTable()
-
-			LocalPlayer():ApplyEffect( name, args )
+			LocalPlayer():ApplyEffect( name, net.ReadTable() )
 		end
 	end )
 end
@@ -111,6 +119,10 @@ function PLAYER:ApplyEffect( name, ... )
 						v.tier = ntier
 					end
 
+					if effect.begin then
+						effect.begin( v, self, v.tier, true, args )
+					end
+
 					if SERVER then
 						net.Start( "PlayerEffect" )
 							net.WriteBool( false )
@@ -131,11 +143,13 @@ function PLAYER:ApplyEffect( name, ... )
 		endtime = CurTime() + effect.duration
 	end
 
-	table.insert( self.EFFECTS, { name = name, tier = tier, icon = EFFECTS.registry[name.."_"..tier], endtime = endtime, args = args } )
+	local tab = { name = name, tier = tier, icon = EFFECTS.registry[name.."_"..tier], endtime = endtime, args = args }
+
+	table.insert( self.EFFECTS, tab )
 	self.EFFECTS_REG[name] = true
 
 	if effect.begin then
-		effect.begin( self, tier, args )
+		effect.begin( tab, self, tier, false, args )
 	end
 
 	if SERVER then
@@ -211,7 +225,9 @@ function PLAYER:RemoveEffect( name, all )
 end
 
 function PLAYER:HasEffect( name )
-	return self.EFFECTS_REG[name] == true
+	if self.EFFECTS_REG then
+		return self.EFFECTS_REG[name] == true
+	end
 end
 
 --[[-------------------------------------------------------------------------
@@ -271,7 +287,7 @@ EFFECTS.registerEffect( "doorlock", {
 	tiers = {
 		{ icon = Material( "slc_hud/effects/doorlock.png" ) }
 	},
-	begin = function( ply, tier, args )
+	begin = function( self, ply, tier, refresh, args )
 		if CLIENT then
 			ply:EmitSound( "SLCEffects.DoorLockBeep" )
 		end
@@ -285,4 +301,15 @@ sound.Add( {
 	pitch = 100,
 	sound = "hl1/fvox/beep.wav",
 	channel = CHAN_STATIC,
+} )
+
+--[[-------------------------------------------------------------------------
+AMN-C227
+---------------------------------------------------------------------------]]
+EFFECTS.registerEffect( "amnc227", {
+	duration = 10,
+	stacks = 0,
+	tiers = {
+		{ icon = Material( "slc_hud/effects/amn-c227.png" ) }
+	},
 } )

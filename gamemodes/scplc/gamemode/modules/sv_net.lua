@@ -15,8 +15,11 @@ util.AddNetworkString( "CameraDetect" )
 util.AddNetworkString( "CenterMessage" )
 util.AddNetworkString( "PlayerCommand" )
 util.AddNetworkString( "PlayerEffect" )
+util.AddNetworkString( "SCPUpgrade" )
 
---Receivers
+--[[-------------------------------------------------------------------------
+Receivers
+---------------------------------------------------------------------------]]
 net.Receive( "PlayerReady", function( len, ply )
 	ply:SetActive( true )
 	SendSCPList( ply )
@@ -60,14 +63,16 @@ net.Receive( "SCPForceExhaust", function( len, ply )
 end )
 
 net.Receive( "DropWeapon", function( len, ply )
-	local wep = net.ReadEntity()
+	local class = net.ReadString()
 
-	if IsValid( wep ) then
-		if wep.Droppable != false then
-			ply:DropWeapon( wep )
-			wep.Dropped = CurTime()
-		end
-	end
+	//local wep = ply:GetWeapon( class )
+	//if IsValid( wep ) then
+		//if wep.Droppable != false then
+			ply:PlayerDropWeapon( class )
+			//ply:DropWeapon( wep )
+			//wep.Dropped = CurTime()
+		//end
+	//end
 end )
 
 net.Receive( "WeaponDnD", function( len, ply )
@@ -96,8 +101,6 @@ net.Receive( "PlayerCommand", function( len, ply )
 
 	cmd.ExecCallback( ply, name, args )
 end )
-
---Util functions
 
 --[[-------------------------------------------------------------
 SCP VARS

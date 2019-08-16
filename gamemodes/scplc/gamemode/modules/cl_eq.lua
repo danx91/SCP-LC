@@ -267,9 +267,7 @@ local function drawItem( i, wx, wy, size, offset )
 							local drop_wep = WEAPONS[eq_pos]
 
 							if drop_wep then
-								if drop_wep.DragAndDrop then
-									drop_wep:DragAndDrop( wep )
-
+								if drop_wep.DragAndDrop and drop_wep:DragAndDrop( wep ) != false then
 									net.Start( "WeaponDnD" )
 										net.WriteEntity( wep )
 										net.WriteEntity( drop_wep )
@@ -295,10 +293,13 @@ local function drawItem( i, wx, wy, size, offset )
 	elseif btn == 3 then
 		if wep.Droppable != false then
 			net.Start( "DropWeapon" )
-				net.WriteEntity( wep )
+				net.WriteString( wep:GetClass() )
 			net.SendToServer()
 
-			WEAPONS[i] = nil
+			if !wep.Stacks or wep.Stacks <= 1 or wep:GetCount() <= 1 then
+				if wep.RemoveStack then wep:RemoveStack() end
+				WEAPONS[i] = nil
+			end
 		end
 	elseif btn == 4 then
 		drag = i
@@ -332,7 +333,18 @@ local function drawItem( i, wx, wy, size, offset )
 		drawWepSelectIcon( def_wep, cx, cy, size, c_wep.SelectColor )
 	end
 
-	if LocalPlayer():GetActiveWeapon() == wep then
+	if wep.Stacks and wep.Stacks > 1 then
+		draw.Text{
+			text = wep:GetCount(),
+			pos = { cx + size * 0.95, cy + size * 0.975 },
+			font = "SCPHUDMedium",
+			color = c_wep.SelectColor or Color( 255, 210, 0, 200 ),
+			xalign = TEXT_ALIGN_RIGHT,
+			yalign = TEXT_ALIGN_BOTTOM,
+		}
+	end
+
+	if drag == 0 and LocalPlayer():GetActiveWeapon() == wep then
 		surface.SetDrawColor( Color( 0, 0, 175, 255 ) )
 		surface.DrawOutlinedRect( cx + 1, cy + 1, size - 2, size - 2 )
 		surface.DrawOutlinedRect( cx + 2, cy + 2, size - 4, size - 4 )
@@ -485,6 +497,10 @@ local function DrawEQ()
 			wep_name = SHOW_WEP_INFO:GetPrintName()
 		end
 
+		if SHOW_WEP_INFO.Stacks and SHOW_WEP_INFO.Stacks > 1 then
+			wep_name = wep_name.." ("..SHOW_WEP_INFO:GetCount()..")"
+		end
+
 		local width = w * 0.4
 
 		surface.SetFont( "SCPHUDMedium" )
@@ -502,6 +518,10 @@ local function DrawEQ()
 			if width > w * 0.4 then
 				width = w * 0.4
 			end
+		end
+
+		if mx + width > w then
+			mx = w - width
 		end
 
 		render.SetStencilTestMask( 0xFF )

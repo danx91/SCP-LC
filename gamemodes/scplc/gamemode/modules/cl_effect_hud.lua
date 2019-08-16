@@ -5,12 +5,21 @@ local next_frame = false
 local function Button( x, y, w, h )
 	local mx, my = input.GetCursorPos()
 	if mx >= x and mx <= x + w and my >= y and my <= y + h then
-		if input.IsMouseDown( MOUSE_LEFT ) and button_next then
-			button_next = false
-			return 2 --LMB
-		elseif input.IsMouseDown( MOUSE_RIGHT ) and button_next then
-			button_next = false
-			return 3 --RMB
+		if input.IsMouseDown( MOUSE_LEFT )then
+			
+			if button_next then
+				button_next = false
+				return 2 --LMB
+			end
+
+			return 1 --HOVER
+		elseif input.IsMouseDown( MOUSE_RIGHT ) then
+			if button_next then
+				button_next = false
+				return 3 --RMB
+			end
+
+			return 1 --HOVER
 		else
 			if next_frame then
 				next_frame = false

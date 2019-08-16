@@ -27,7 +27,10 @@ function SWEP:Think()
 				self.Owner:SetHealth( math.max( 1, self.Owner:Health() - 20 ) )
 			end
 		elseif !self.Owner:IsBurning() then
-			self.Owner:Burn( -3, 125, self.Owner, 2 ):SetShouldHurtOwner( false )
+			local rad = 125 + ( self:GetUpgradeMod( "firerad" ) or 0 )
+			local dmg = 2 + ( self:GetUpgradeMod( "firedmg" ) or 0 )
+
+			self.Owner:Burn( -3, rad, self.Owner, dmg ):SetShouldHurtOwner( false )
 		end
 
 		if self.NCheck < CurTime() then
@@ -72,10 +75,16 @@ function SWEP:SecondaryAttack()
 				end
 			end
 
+			local lifetime = 180 + ( self:GetUpgradeMod( "traptime" ) or 0 )
+			local burntime = 1.5 + ( self:GetUpgradeMod( "trapburn" ) or 0 )
+			local dmg = 5 + ( self:GetUpgradeMod( "trapdmg" ) or 0 )
+
 			local trap = ents.Create( "slc_fire_trap" )
 			trap:SetPos( tr.HitPos )
 			trap:SetOwner( self.Owner )
-			trap:SetLifeTime( 180 )
+			trap:SetLifeTime( lifetime )
+			trap:SetBurnTime( burntime )
+			trap:SetDamage( dmg )
 			trap:Spawn()
 
 			table.insert( self.Traps, trap )
@@ -129,3 +138,69 @@ hook.Add( "EntityTakeDamage", "SCP457Damage", function( ply, dmg )
 		end
 	end
 end )
+
+hook.Add( "SLCFireOnBurnPlayer", "SCP457BurnDamage", function( fire, target, dmg )
+	local owner = fire:GetOwner()
+
+	if owner:IsPlayer() and owner:SCPClass() == CLASSES.SCP457 then
+		local heal = 2
+
+		local wep = owner:GetActiveWeapon()
+		if wep.UpgradeSystemMounted then
+			wep:AddScore( dmg:GetDamage() )
+			heal = heal + ( wep:GetUpgradeMod( "heal" ) or 0 )
+		end
+
+		local hp = owner:Health() + heal
+		local max = owner:GetMaxHealth()
+
+		if hp > max then
+			hp = max
+		end
+
+		owner:SetHealth( hp )
+	end
+end )
+
+DefineUpgradeSystem( "scp457", {
+	grid_x = 4,
+	grid_y = 3,
+	upgrades = {
+		{ name = "fire1", cost = 1, req = {}, reqany = false,  pos = { 1, 1 }, mod = { firerad = 50 }, active = true },
+		{ name = "fire2", cost = 3, req = { "fire1" }, reqany = false,  pos = { 1, 2 }, mod = { firedmg = 0.5 }, active = true },
+		{ name = "fire3", cost = 5, req = { "fire2" }, reqany = false,  pos = { 1, 3 }, mod = { firedmg = 1, firerad = 75 }, active = true },
+
+		{ name = "trap1", cost = 1, req = {}, reqany = false,  pos = { 3, 1 }, mod = { traptime = 60, trapburn = 1 }, active = false },
+		{ name = "trap2", cost = 2, req = { "trap1" }, reqany = false,  pos = { 3, 2 }, mod = { traptime = 120, trapburn = 2, trapdmg = 0.5 }, active = false },
+		{ name = "trap3", cost = 4, req = { "trap2" }, reqany = false,  pos = { 3, 3 }, mod = { trapburn = 3, trapdmg = 1 }, active = false },
+
+		{ name = "heal1", cost = 2, req = { "fire1", "trap1" }, reqany = true,  pos = { 2, 2 }, mod = { heal = 1 }, active = false },
+		{ name = "heal2", cost = 4, req = { "heal1" }, reqany = false,  pos = { 2, 3 }, mod = { heal = 2 }, active = false },
+
+		{ name = "speed", cost = 3, req = {}, reqany = false,  pos = { 4, 1 }, mod = {}, active = true },
+		{ name = "nvmod", cost = 1, req = {}, reqany = false,  pos = { 4, 2 }, mod = {}, active = false },
+	},
+	rewards = {
+		{ 50, 1 },
+		{ 100, 1 },
+		{ 200, 1 },
+		{ 300, 1 },
+		{ 400, 1 },
+		{ 500, 1 },
+		{ 750, 2 },
+		{ 1000, 3 },
+		{ 1500, 3 },
+	}
+} )
+
+function SWEP:OnUpgradeBought( name, info, group )
+	if SERVER and IsValid( self.Owner ) then
+		if name == "speed" then
+			self.Owner:PushSpeed( 1.1, 1.1, -1 )
+		else
+			self.Owner:StopBurn()
+		end
+	end
+end
+
+InstallUpgradeSystem( "scp457", SWEP )

@@ -7,6 +7,9 @@ SWEP.ShouldDrawViewModel = false
 
 SWEP.SelectFont = "SCPHUDMedium"
 
+SWEP.HasBattery 	= true
+SWEP.BatteryUsage 	= 0.6
+
 function SWEP:Initialize()
 	self:SetHoldType( self.HoldType )
 	self:SetSkin( 2 )
@@ -24,17 +27,19 @@ hook.Add( "SLCScreenMod", "NVG", function( clr )
 	local ply = LocalPlayer()
 	local wep = ply:GetActiveWeapon()
 	if IsValid( wep ) and wep:GetClass() == "item_slc_nvg" then
-		render.SetMaterial( overlay )
-		render.DrawScreenQuad()
+		if wep:GetBattery() > 0 then
+			render.SetMaterial( overlay )
+			render.DrawScreenQuad()
 
-		DrawBloom( 0.2, 5, 7, 7, 3, 1, 1, 1, 1 )
+			DrawBloom( 0.2, 5, 7, 7, 3, 1, 1, 1, 1 )
 
-		clr.colour = 0.5
-		clr.brightness = clr.brightness
-		clr.contrast = clr.contrast + 2
-		clr.add_g = -0.01
-		clr.add_r = -0.1
-		clr.add_b = -0.1
-		clr.mul_g = 2
+			clr.colour = 0.5
+			clr.brightness = clr.brightness
+			clr.contrast = clr.contrast + 2
+			clr.add_g = -0.01
+			clr.add_r = -0.1
+			clr.add_b = -0.1
+			clr.mul_g = 2
+		end
 	end
 end )

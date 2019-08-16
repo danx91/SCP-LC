@@ -118,28 +118,72 @@ function SWEP:Think()
 						dmginfo:SetDamageType( DMG_DIRECT )
 
 						v:TakeDamageInfo( dmginfo )
-
 						v:EmitSound( "SCP173.Snap" )
+
+						self:AddScore( 1 )
+
+						local heal = self:GetUpgradeMod( "heal" )
+						local cd = self:GetUpgradeMod( "cd" )
+
+						if cd then
+							local scd = self.NextSpecial - CurTime()
+
+							if scd > 0 then
+								scd = scd * cd
+
+								self.NextSpecial = CurTime() + scd
+								self:SetNSpecial( self.NextSpecial )
+							end
+						end
+
+						if heal then
+							local hp = self.Owner:Health() + heal
+							local max = self.Owner:GetMaxHealth()
+
+							if hp > max then
+								hp = max
+							end
+
+							self.Owner:SetHealth( hp )
+						end
 					end
 				end
 			end
 		end
 	end
+	
+	if self.GBlink > CurTime() then
+		if self.SpecialUse then
+			self.SpecialUse = false
 
-	if self.SpecialUse and self.GBlink > CurTime() then
-		self.SpecialUse = false
+			self.Owner:Blink( 0.5, 0 )
+			self.Owner:Freeze( true )
+			self.StopThink = true
 
-		self.Owner:Blink( 0.5, 0 )
-		self.Owner:Freeze( true )
-		self.StopThink = true
+			timer.Simple( 0.75, function()
+				if IsValid( self ) then
+					self.StopThink = false
+				end
+			end )
 
-		timer.Simple( 0.75, function()
-			if IsValid( self ) then
-				self.StopThink = false
-			end
-		end )
+			self:Teleport()
+		end
 
-		self:Teleport()
+		if self.QuickReturnUse then
+			self.QuickReturnUse = false
+
+			self.Owner:Blink( 0.5, 0 )
+			self.Owner:Freeze( true )
+			self.StopThink = true
+
+			timer.Simple( 0.75, function()
+				if IsValid( self ) then
+					self.StopThink = false
+				end
+			end )
+
+			self.Owner:SetPos( self.QuickReturn )
+		end
 	end
 end
 
@@ -152,6 +196,14 @@ function SWEP:SecondaryAttack()
 	self:SetNSpecial( self.NextSpecial )
 
 	self.SpecialUse = true
+end
+
+function SWEP:Reload()
+	if CLIENT or ROUND.preparing then return end
+	if self.QuickReturnTime < CurTime() then return end
+	
+	self.QuickReturnTime = 0
+	self.QuickReturnUse = true
 end
 
 function SWEP:CanTeleport()
@@ -171,7 +223,8 @@ function SWEP:Teleport()
 
 	local ownerpos = self.Owner:GetPos()
 
-	for k, v in pairs( FindInCylinder( ownerpos, 1500, -512, 512, "player", nil, player.GetAll() ) ) do
+	local add = self:GetUpgradeMod( "specdist" ) or 0
+	for k, v in pairs( FindInCylinder( ownerpos, 1500 + add, -512, 512, "player", nil, player.GetAll() ) ) do
 		local t = v:SCPTeam()
 		if t != TEAM_SPEC and t != TEAM_SCP then
 			table.insert( players, v )
@@ -234,6 +287,11 @@ function SWEP:Teleport()
 					} ).Hit then
 						self.Owner:SetEyeAngles( ( plypos - pos ):Angle() )
 						self.Owner:SetPos( pos )
+						self.QuickReturn = ownerpos
+						self.QuickReturnTime = CurTime() + 15
+
+						CenterMessage( "@WEAPONS.SCP173.back;time:5", self.Owner )
+
 						return
 					end
 				end
@@ -295,3 +353,61 @@ hook.Add( "SLCBlink", "SCP173TP", function( time )
 		end
 	end
 end )
+
+DefineUpgradeSystem( "scp173", {
+	grid_x = 4,
+	grid_y = 3,
+	upgrades = {
+		{ name = "specdist1", cost = 1, req = {}, reqany = false,  pos = { 1, 1 }, mod = { specdist = 500 }, active = false },
+		{ name = "specdist2", cost = 2, req = { "specdist1" }, reqany = false,  pos = { 1, 2 }, mod = { specdist = 1200 }, active = false },
+		{ name = "specdist3", cost = 3, req = { "specdist2" }, reqany = false,  pos = { 1, 3 }, mod = { specdist = 2000 }, active = false },
+
+		{ name = "boost1", cost = 1, req = {}, reqany = false,  pos = { 2, 1 }, mod = { cd = 0.9, heal = 150 }, active = false },
+		{ name = "boost2", cost = 2, req = { "boost1" }, reqany = false,  pos = { 2, 2 }, mod = { cd = 0.75, heal = 300 }, active = false },
+		{ name = "boost3", cost = 3, req = { "boost2" }, reqany = false,  pos = { 2, 3 }, mod = { cd = 0.5, heal = 500 }, active = false },
+
+		{ name = "prot1", cost = 1, req = {}, reqany = false,  pos = { 3, 1 }, mod = { dmg = 0.9 }, active = true, group = "prot" },
+		{ name = "prot2", cost = 1, req = { "prot1" }, reqany = false,  pos = { 3, 2 }, mod = { dmg = 0.8 }, active = true, group = "prot" },
+		{ name = "prot3", cost = 4, req = { "prot2" }, reqany = false,  pos = { 3, 3 }, mod = { dmg = 0.6 }, active = true, group = "prot" },
+
+		{ name = "nvmod", cost = 1, req = {}, reqany = false,  pos = { 4, 2 }, mod = {}, active = false },
+	},
+	rewards = {
+		{ 1, 2 },
+		{ 2, 1 },
+		{ 3, 1 },
+		{ 5, 2 },
+		{ 7, 2 },
+		{ 10, 2 }
+	}
+} )
+
+function SWEP:OnUpgradeBought( name, info, group )
+	if group == "prot" and IsValid( self.Owner ) then
+		local hp = self.Owner:Health() + 1000
+		local max = self.Owner:GetMaxHealth()
+
+		if hp > max then
+			hp = max
+		end
+
+		self.Owner:SetHealth( hp )
+	end
+end
+
+hook.Add( "EntityTakeDamage", "SCP173DMGMod", function( ent, dmg )
+	if IsValid( ent ) and ent:IsPlayer() and ent:SCPClass() == CLASSES.SCP173 then
+		local wep = ent:GetActiveWeapon()
+		if IsValid( wep ) and wep.UpgradeSystemMounted then
+			local mod = wep:GetUpgradeMod( "dmg" )
+
+			if mod then
+				if dmg:IsDamageType( DMG_BULLET ) then
+					dmg:ScaleDamage( mod )
+				end
+			end
+		end
+	end
+end )
+
+InstallUpgradeSystem( "scp173", SWEP )

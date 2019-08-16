@@ -4,10 +4,44 @@ SWEP.PrintName 	 = "SCP-939"
 SWEP.HoldType 	 = "melee"
 
 SWEP.AttackDelay = 1
+SWEP.PosLog = {}
+SWEP.NLog = 0
 
 function SWEP:Initialize()
 	self:SetHoldType( self.HoldType )
 	self:InitializeLanguage( "SCP939" )
+end
+
+function SWEP:Think()
+	self:PlayerFreeze()
+
+	if CLIENT or self.NLog > CurTime() then return end
+	self.NLog = CurTime() + 1
+
+	local pos = self.Owner:GetPos()
+
+	local len = #self.PosLog
+	if len == 0 or pos:DistToSqr( self.PosLog[len] ) > 5625 then
+		table.insert( self.PosLog, pos )
+		len = len + 1
+
+		if len >= 10 then
+			table.remove( self.PosLog )
+			len = len - 1
+		end
+	end
+
+	for i = 1, len do
+		local dist = 75 + ( self:GetUpgradeMod( "radius" ) or 0 )
+		for k, v in pairs( FindInCylinder( self.PosLog[i], dist, -32, 128, "player", nil, player.GetAll() ) ) do
+			if v != self.Owner then
+				local team = v:GetSCPTeam()
+				if team != TEAM_SCP and team != TEAM_SPEC then
+					v:ApplyEffect( "amnc227", 1, self:GetUpgradeMod( "damage" ) )
+				end
+			end
+		end
+	end
 end
 
 SWEP.NextPrimary = 0
@@ -36,15 +70,58 @@ function SWEP:PrimaryAttack()
 			if ent:IsPlayer() then
 				if ent:SCPTeam() == TEAM_SCP or ent:SCPTeam() == TEAM_SPEC then return end
 
+				local dmg = math.random( 30, 40 )
+
+				if dmg >= ent:Health() then
+					self:AddScore( 1 )
+				end
+
 				self.Owner:EmitSound( "SCP939.Attack" )
-				ent:TakeDamage( math.random( 30, 40 ), self.Owner, self.Owner )
-				self.Owner:SetHealth( math.Clamp( self.Owner:Health() + math.random( 40, 50 ), 0, self.Owner:GetMaxHealth() ) )
+				ent:TakeDamage( dmg, self.Owner, self.Owner )
+
+				local heal = self:GetUpgradeMod( "heal" )
+				if heal then
+					local hp = self.Owner:Health() + math.ceil( heal * ( 0.75 + math.random() * 0.25 ) )
+					local max = self.Owner:GetMaxHealth()
+
+					if hp > max then
+						hp = max
+					end
+
+					self.Owner:SetHealth( hp )
+				end
 			else
 				self:SCPDamageEvent( ent, 50 )
 			end	
 		end
 	end
 end
+
+DefineUpgradeSystem( "scp939", {
+	grid_x = 4,
+	grid_y = 3,
+	upgrades = {
+		{ name = "heal1", cost = 1, req = {}, reqany = false,  pos = { 1, 1 }, mod = { heal = 30 }, active = false },
+		{ name = "heal2", cost = 2, req = { "heal1" }, reqany = false,  pos = { 1, 2 }, mod = { heal = 50 }, active = false },
+		{ name = "heal3", cost = 3, req = { "heal2" }, reqany = false,  pos = { 1, 3 }, mod = { heal = 70 }, active = false },
+
+		{ name = "amn1", cost = 1, req = {}, reqany = false,  pos = { 2, 1 }, mod = { radius = 25 }, active = false },
+		{ name = "amn2", cost = 3, req = { "amn1" }, reqany = false,  pos = { 2, 2 }, mod = { damage = 2.5 }, active = false },
+		{ name = "amn3", cost = 5, req = { "amn2" }, reqany = false,  pos = { 2, 3 }, mod = { radius = 50, damage = 5 }, active = false },
+
+		{ name = "nvmod", cost = 1, req = {}, reqany = false,  pos = { 4, 2 }, mod = {}, active = false },
+	},
+	rewards = {
+		{ 1, 1 },
+		{ 2, 1 },
+		{ 3, 2 },
+		{ 5, 2 },
+		{ 7, 1 },
+		{ 9, 2 },
+	}
+} )
+
+InstallUpgradeSystem( "scp939", SWEP )
 
 sound.Add( {
 	name = "SCP939.Attack",

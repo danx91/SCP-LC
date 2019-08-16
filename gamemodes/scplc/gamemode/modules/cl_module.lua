@@ -208,6 +208,13 @@ hook.Add( "RenderScreenspaceEffects", "SCPEffects", function()
 		end
 	end
 
+	if ply:HasEffect( "amnc227" ) then
+		DrawMotionBlur( 0.1, 1, 0.01 )
+		clr.colour = 0
+		clr.contrast = clr.contrast + 0.5
+		clr.brightness = clr.brightness - 0.07
+	end
+
 	hook.Run( "SLCScreenMod", clr )
 
 	render.UpdateScreenEffectTexture()
@@ -324,7 +331,7 @@ function PlayerMessage( msg, ply, center )
 				local tab = LANG
 
 				if tabinfo then
-					for subtable in string.gmatch( tabinfo, "[^.]+" ) do
+					for subtable in string.gmatch( tabinfo, "[^%.]+" ) do
 						if !tab[subtable] then
 							break
 						end
@@ -339,9 +346,29 @@ function PlayerMessage( msg, ply, center )
 			end
 		end
 
-		local translated = LANG.NRegistry[name]
-		local text = ""
+		local translated
+		local tabinfo = string.match( name, "@(.+)" )
+		if tabinfo then
+			local tab = LANG
 
+			if tabinfo then
+				for subtable in string.gmatch( tabinfo, "[^%.]+" ) do
+					if !tab[subtable] then
+						break
+					end
+
+					tab = tab[subtable]
+				end
+			end
+
+			if !istable( tab ) then
+				translated = tab
+			end
+		else
+			translated = LANG.NRegistry[name]
+		end
+
+		local text = ""
 		if !translated then
 			text = string.format( LANG.NFailed, name )
 		else
@@ -352,8 +379,32 @@ function PlayerMessage( msg, ply, center )
 		add_text( text, color, center )
 		print( text )
 	else
-		local text = LANG.NRegistry[msg] or string.format( LANG.NFailed, msg )
+		local text
+		local tabinfo = string.match( msg, "@(.+)" )
+		if tabinfo then
+			local tab = LANG
 
+			if tabinfo then
+				for subtable in string.gmatch( tabinfo, "[^%.]+" ) do
+					if !tab[subtable] then
+						break
+					end
+
+					tab = tab[subtable]
+				end
+			end
+
+			if !istable( tab ) then
+				text = tab
+			end
+		else
+			text = LANG.NRegistry[msg]
+		end
+
+		if !text then
+			text = string.format( LANG.NFailed, msg )
+		end
+		
 		add_text( text, color, center )
 		print( text )
 	end
@@ -441,7 +492,7 @@ function CenterMessage( msg, ply )
 					local tab = LANG
 
 					if tabinfo then
-						for subtable in string.gmatch( tabinfo, "[^.]+" ) do
+						for subtable in string.gmatch( tabinfo, "[^%.]+" ) do
 							if !tab[subtable] then
 								break
 							end
@@ -456,14 +507,55 @@ function CenterMessage( msg, ply )
 				end
 			end
 
-			local translated = LANG.NCRegistry[name]
+			local translated
+			local tabinfo = string.match( name, "@(.+)" )
+			if tabinfo then
+				local tab = LANG
+
+				if tabinfo then
+					for subtable in string.gmatch( tabinfo, "[^%.]+" ) do
+						if !tab[subtable] then
+							break
+						end
+
+						tab = tab[subtable]
+					end
+				end
+
+				if !istable( tab ) then
+					translated = tab
+				end
+			else
+				translated = LANG.NCRegistry[name]
+			end
 
 			if translated then
 				translated = string.gsub( translated, "%[RAW%]", rawtext )
 			 	line.txt = string.format( translated, unpack( args ) )
 			end
 		else
-			local text = LANG.NCRegistry[s]
+			local text
+			local tabinfo = string.match( s, "@(.+)" )
+			if tabinfo then
+				local tab = LANG
+
+				if tabinfo then
+					for subtable in string.gmatch( tabinfo, "[^%.]+" ) do
+						if !tab[subtable] then
+							break
+						end
+
+						tab = tab[subtable]
+					end
+				end
+
+				if !istable( tab ) then
+					text = tab
+				end
+			else
+				text = LANG.NCRegistry[s]
+			end
+
 			if text then
 				line.txt = text
 			end
@@ -713,6 +805,14 @@ net.Receive( "957Effect", function( len )
 	end
 end )*/
 
+/*function GM:PreRender()
+	local lp = LocalPlayer()
+
+	for k, v in pairs( player.GetAll() ) do
+
+	end
+end*/
+
 hook.Add( "PreDrawHalos", "PickupWeapon", function()
 	local ply = LocalPlayer()
 
@@ -721,7 +821,13 @@ hook.Add( "PreDrawHalos", "PickupWeapon", function()
 
 	local wep = ply:GetEyeTrace().Entity
 	if IsValid( wep ) and wep:IsWeapon() then
-		if !ply:HasWeapon( wep:GetClass() ) and ( ply:GetPos():DistToSqr( wep:GetPos() ) < 4500 or ply:EyePos():DistToSqr( wep:GetPos() ) < 3700 ) then
+		if ply:HasWeapon( wep:GetClass() ) and wep.Stacks and wep.Stacks <= 1 then return end
+		if wep.Stacks and wep.Stacks > 1 then
+			local pwep = LocalPlayer():GetWeapon( wep:GetClass() )
+			if IsValid( pwep ) and !pwep:CanStack() then return end
+		end
+
+		if ( ply:GetPos():DistToSqr( wep:GetPos() ) < 4500 or ply:EyePos():DistToSqr( wep:GetPos() ) < 3700 ) then
 			if !hook.Run( "WeaponPickupHover", wep ) and hook.Run( "PlayerCanPickupWeapon", ply, wep ) != false then
 				halo.Add( { wep }, Color( 125, 100, 200 ), 2, 2, 1, true, true )
 				HUDPickupHint = wep

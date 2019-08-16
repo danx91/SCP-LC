@@ -25,13 +25,19 @@ function GM:PlayerButtonDown( ply, button )
 	if SERVER then numpad.Activate( ply, button ) end
 
 	if CLIENT and IsFirstTimePredicted() then
-		local key = input.LookupBinding( "+menu" )
-
-		if key then
-			if input.GetKeyCode( key ) == button then
+		local menu_key = input.LookupBinding( "+menu" )
+		if menu_key then
+			if input.GetKeyCode( menu_key ) == button then
 				if CanShowEQ() then
 					ShowEQ()
 				end
+			end
+		end
+
+		local zoom_key = input.LookupBinding( "+zoom" )
+		if zoom_key then
+			if input.GetKeyCode( zoom_key ) == button then
+				ShowSCPUpgrades()
 			end
 		end
 
@@ -45,11 +51,17 @@ function GM:PlayerButtonUp( ply, button )
 	if SERVER then numpad.Deactivate( ply, button ) end
 
 	if CLIENT and IsFirstTimePredicted() then
-		local key = input.LookupBinding( "+menu" )
-
-		if key then
-			if input.GetKeyCode( key ) == button then
+		local menu_key = input.LookupBinding( "+menu" )
+		if menu_key then
+			if input.GetKeyCode( menu_key ) == button then
 				HideEQ()
+			end
+		end
+
+		local zoom_key = input.LookupBinding( "+zoom" )
+		if zoom_key then
+			if input.GetKeyCode( zoom_key ) == button then
+				HideSCPUpgrades()
 			end
 		end
 	end
@@ -63,9 +75,12 @@ function GM:KeyRelease( ply, key )
 
 end
 
-/*function GM:StartCommand( ply, cmd )
-
-end*/
+function GM:StartCommand( ply, cmd )
+	if ply:HasEffect( "amnc227" ) then
+		cmd:RemoveKey( IN_ATTACK )
+		cmd:RemoveKey( IN_ATTACK2 )
+	end
+end
 
 --[[-------------------------------------------------------------------------
 Player functions

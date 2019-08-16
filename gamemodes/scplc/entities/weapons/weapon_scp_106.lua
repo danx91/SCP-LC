@@ -10,6 +10,7 @@ SWEP.Disappear 		= "scp/106/disappear.ogg"
 
 SWEP.NextPrimaryAttack	= 0
 SWEP.AttackDelay		= 1
+SWEP.DMGBoost = 0
 
 function SWEP:Initialize()
 	self:SetHoldType( self.HoldType )
@@ -94,9 +95,17 @@ function SWEP:PrimaryAttack()
 				ang.yaw = math.random( -180, 180 )
 
 				if pos then
-					ent:TakeDamage( math.random( 30, 50 ), self.Owner, self.Owner )
+					local dmg = math.random( 30, 50 )
+
+					if self.DMGBoost > CurTime() then
+						dmg = dmg + ( self:GetUpgradeMod( "dmg" ) or 0 )
+					end
+
+					ent:TakeDamage( dmg, self.Owner, self.Owner )
 					ent:SetPos( pos )
 					ent:SetAngles( ang )
+
+					self:AddScore( 1 )
 				end
 			else
 				self:SCPDamageEvent( ent, 50 )
@@ -131,7 +140,9 @@ end
 SWEP.NextTP = 0
 function SWEP:Reload()
 	if self.NextTP > CurTime() then return end
-	self.NextTP = CurTime() + 90
+
+	local cd = 90 - ( self:GetUpgradeMod( "cd" ) or 0 )
+	self.NextTP = CurTime() + cd
 
 	if SERVER then
 		if self.TPPoint then
@@ -186,6 +197,12 @@ function SWEP:TeleportSequence( point )
 				if IsValid( self ) and IsValid( self.Owner ) then
 					self.Owner:SetPos( point )
 					self.Owner:Freeze( false )
+
+					local boost = self:GetUpgradeMod( "dmgtime" )
+
+					if boost then
+						self.DMGBoost = CurTime() + boost
+					end
 				end	
 			end )
 		end
@@ -242,3 +259,55 @@ sound.Add( {
 	sound = SWEP.Teleport,
 	channel = CHAN_STATIC,
 } )*/
+
+DefineUpgradeSystem( "scp106", {
+	grid_x = 4,
+	grid_y = 3,
+	upgrades = {
+		{ name = "cd1", cost = 1, req = {}, reqany = false,  pos = { 1, 1 }, mod = { cd = 15 }, active = false },
+		{ name = "cd2", cost = 2, req = { "cd1" }, reqany = false,  pos = { 1, 2 }, mod = { cd = 30 }, active = false },
+		{ name = "cd3", cost = 4, req = { "cd2" }, reqany = false,  pos = { 1, 3 }, mod = { cd = 45 }, active = false },
+
+		{ name = "tpdmg1", cost = 1, req = {}, reqany = false,  pos = { 2, 1 }, mod = { dmgtime = 10, dmg = 15 }, active = false },
+		{ name = "tpdmg2", cost = 3, req = { "tpdmg1" }, reqany = false,  pos = { 2, 2 }, mod = { dmgtime = 20, dmg = 20 }, active = false },
+		{ name = "tpdmg3", cost = 5, req = { "tpdmg2" }, reqany = false,  pos = { 2, 3 }, mod = { dmgtime = 30, dmg = 25 }, active = false },
+		
+		{ name = "tank1", cost = 3, req = {}, reqany = false,  pos = { 3, 1 }, mod = { prot = 0.8 }, active = true },
+		{ name = "tank2", cost = 5, req = { "tank1" }, reqany = false,  pos = { 3, 2 }, mod = { prot = 0.6 }, active = true },
+
+		{ name = "nvmod", cost = 1, req = {}, reqany = false,  pos = { 4, 2 }, mod = {}, active = false },
+	},
+	rewards = {
+		{ 1, 1 },
+		{ 3, 1 },
+		{ 5, 2 },
+		{ 7, 1 },
+		{ 9, 1 },
+		{ 10, 2 },
+		{ 12, 2 },
+		{ 15, 3 }
+	}
+} )
+
+function SWEP:OnUpgradeBought( name, info, group )
+	if SERVER and IsValid( self.Owner ) then
+		self.Owner:PushSpeed( 0.9, 0.9, -1 )
+	end
+end
+
+hook.Add( "EntityTakeDamage", "SCP106DMGMod", function( ent, dmg )
+	if IsValid( ent ) and ent:IsPlayer() and ent:SCPClass() == CLASSES.SCP106 then
+		local wep = ent:GetActiveWeapon()
+		if IsValid( wep ) and wep.UpgradeSystemMounted then
+			local mod = wep:GetUpgradeMod( "prot" )
+
+			if mod then
+				if dmg:IsDamageType( DMG_BULLET ) then
+					dmg:ScaleDamage( mod )
+				end
+			end
+		end
+	end
+end )
+
+InstallUpgradeSystem( "scp106", SWEP )

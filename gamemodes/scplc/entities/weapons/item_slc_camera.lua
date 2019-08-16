@@ -16,10 +16,14 @@ SWEP.ShouldDrawWorldModel 	= false
 
 SWEP.SelectFont = "SCPHUDMedium"
 
-function SWEP:SetupDataTables()
-	self:NetworkVar( "Bool", 0, "Enabled" )
-	self:NetworkVar( "Int", 0, "CAM" )
+SWEP.Toggleable = true
+SWEP.HasBattery = true
+SWEP.BatteryUsage = 2
 
+function SWEP:SetupDataTables()
+	self:CallBaseClass( "SetupDataTables" )
+
+	self:AddNetworkVar( "CAM", "Int" )
 	self:SetCAM( 1 )
 end
 
@@ -40,6 +44,8 @@ function SWEP:OnDrop()
 end
 
 function SWEP:Think()
+	self:CallBaseClass( "Think" )
+
 	if #self.CCTV != #CCTV then
 		for k, v in pairs( ents.FindByClass( "item_cctv" ) ) do
 			//print( v, v:GetCam() )
@@ -56,6 +62,7 @@ end
 function SWEP:PrimaryAttack()
 	if !SERVER then return end
 	if self.NextChange > CurTime() then return end
+	if self:GetBattery() <= 0 then return end
 
 	self:SetEnabled( !self:GetEnabled() )
 	self.NextChange = CurTime() + 0.5
@@ -159,15 +166,16 @@ function SWEP:DrawHUD()
 		DisableHUDNextFrame()
 
 		local CAM = self:GetCAM()
+		local w, h = ScrW(), ScrH()
 
 		if !IsValid( self.CCTV[CAM] ) then
 			surface.SetDrawColor( 0, 0, 0 )
-			surface.DrawRect( 0, 0, ScrW(), ScrH() )
+			surface.DrawRect( 0, 0, w, h )
 
 			draw.Text( {
 				text = "NO SIGNAL",
 				font = "SCPHUDBig",
-				pos = { ScrW() * 0.5, ScrH() * 0.5 },
+				pos = { w * 0.5, h * 0.5 },
 				xalign = TEXT_ALIGN_CENTER,
 				yalign = TEXT_ALIGN_CENTER,
 			} )
@@ -175,7 +183,7 @@ function SWEP:DrawHUD()
 			draw.Text( {
 				text = "CAM "..CAM,
 				font = "SCPHUDBig",
-				pos = { ScrW() * 0.5, 50 },
+				pos = { w * 0.5, 50 },
 				xalign = TEXT_ALIGN_CENTER,
 				yalign = TEXT_ALIGN_CENTER,
 			} )
@@ -183,7 +191,7 @@ function SWEP:DrawHUD()
 			draw.Text( {
 				text = CCTV[CAM].name,
 				font = "SCPHUDBig",
-				pos = { ScrW() * 0.5, 100 },
+				pos = { w * 0.5, 100 },
 				xalign = TEXT_ALIGN_CENTER,
 				yalign = TEXT_ALIGN_CENTER,
 			} )
@@ -197,7 +205,7 @@ function SWEP:DrawHUD()
 			draw.Text( {
 				text = "CAM "..CAM,
 				font = "SCPHUDBig",
-				pos = { ScrW() * 0.5, 50 },
+				pos = { w * 0.5, 50 },
 				xalign = TEXT_ALIGN_CENTER,
 				yalign = TEXT_ALIGN_CENTER,
 			} )
@@ -205,34 +213,52 @@ function SWEP:DrawHUD()
 			draw.Text( {
 				text = CCTV[CAM].name,
 				font = "SCPHUDBig",
-				pos = { ScrW() * 0.5, 100 },
+				pos = { w * 0.5, 100 },
 				xalign = TEXT_ALIGN_CENTER,
 				yalign = TEXT_ALIGN_CENTER,
 			} )
 
 			for i = 1, 10 do
-				local ry = math.random( ScrH() )
+				local ry = math.random( h )
 				local h = math.random( 1, 5 )
 				local c = math.random( 100, 200 )
 				local a = math.random( 0, 10 )
 
 				surface.SetDrawColor( Color( c, c, c, a ) )
-				surface.DrawRect( 0, ry, ScrW(), h )
+				surface.DrawRect( 0, ry, w, h )
 			end
 		--end
 
 		if self.ScanEnd != 0 then
 			surface.SetDrawColor( Color( 255, 255, 255 ) )
-			surface.DrawRing( ScrW() * 0.5, ScrH() * 0.5, 40, 5, 360 - 360 * (self.ScanEnd - CurTime()) / 3, 30 )
+			surface.DrawRing( w * 0.5, h * 0.5, 40, 5, 360 - 360 * (self.ScanEnd - CurTime()) / 3, 30 )
 
 			draw.Text( {
 				text = "SCANNING",
 				font = "SCPHUDBig",
 				color = Color( 255, 255, 255, math.TimedSinWave( 0.8, 1, 255 ) ),
-				pos = { ScrW() * 0.5, ScrH() * 0.5 + 55 },
+				pos = { w * 0.5, h * 0.5 + 55 },
 				xalign = TEXT_ALIGN_CENTER,
 				yalign = TEXT_ALIGN_TOP,
 			} )
+		end
+
+		surface.SetDrawColor( Color( 255, 255, 255 ) )
+		surface.DrawOutlinedRect( w * 0.875, h * 0.025, w * 0.09, h * 0.05 )
+		surface.DrawRect( w * 0.87, h * 0.035, w * 0.005, h * 0.03 )
+
+		local battery = self:GetBattery()
+
+		if battery > 0 then
+			local pct = battery * 0.01
+
+			surface.SetDrawColor( Color( 175 * ( 1 - pct ), 175 * pct, 0, 255 ) )
+			surface.DrawRect( w * 0.878, h * 0.029, w * 0.084 * pct, h * 0.043 )
+
+			if battery < 15 then
+				surface.SetDrawColor( Color( 255, 0, 0, math.TimedSinWave( 0.5, 0, 255 ) ) )
+				surface.DrawLine( w * 0.88, h * 0.09, w * 0.96, h * 0.01 )
+			end
 		end
 	end
 end

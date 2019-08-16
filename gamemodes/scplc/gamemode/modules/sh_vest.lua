@@ -131,9 +131,9 @@ end
 -- 	end
 -- end )
 
--- concommand.Add( "getspeed", function( ply )
--- 	print( ply:GetWalkSpeed(), ply:GetRunSpeed() )
--- end )
+concommand.Add( "getspeed", function( ply )
+	print( ply:GetWalkSpeed(), ply:GetRunSpeed() )
+end )
 
 -- timer.Simple( 0, function()
 -- 	hook.Run( "SLCRegisterVests" )

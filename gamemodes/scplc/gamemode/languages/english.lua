@@ -17,7 +17,7 @@ lang.NRegistry = {
     rxpspec = "You received %i experience for playing on this server!",
     rxpplay = "You received %i experience for staying alive in the round!",
     rxpplus = "You received %i experience for surviving more than half of the round!",
-    roundxp = "You received %i experience for you points",
+    roundxp = "You received %i experience for your points",
     gateexplode = "Time to Gate A explosion: %i",
     explodeterminated = "Gate A destruction has been terminated",
     r106used = "SCP 106 recontain procedure can be triggered only once per round",
@@ -36,6 +36,7 @@ lang.NRegistry = {
     detectscp = "You received %i points for detecting SCPs",
     winxp = "You received %i experience because your initial team won the game",
     winalivexp = "You received %i experience because your team won the game",
+    upgradepoints = "You received new upgrade point(s)! Press '%s' to open SCP upgrade menu",
 }
 
 lang.NFailed = "Filed to access NRegistry with key: %s"
@@ -85,6 +86,7 @@ local effects = {}
 effects.permanent = "perm"
 effects.bleeding = "Bleeding"
 effects.doorlock = "Door Lock"
+effects.amnc227 = "AMN-C227"
 
 lang.EFFECTS = effects
 
@@ -140,6 +142,18 @@ lang.ranks = {
     author = "Author",
     vip = "VIP",
     tester = "Tester",
+}
+
+--[[-------------------------------------------------------------------------
+Upgrades
+---------------------------------------------------------------------------]]
+lang.upgrades = {
+    tree = "%s UPGRADE TREE",
+    points = "Points",
+    cost = "Cost",
+    owned = "Owned",
+    requiresall = "Requires",
+    requiresany = "Requires any"
 }
 
 --[[-------------------------------------------------------------------------
@@ -247,7 +261,7 @@ Beware of MTFs and SCPs - they want to kill you]],
 
     ciagent = [[You are CI Agent
 Your objective is to protect Class D Personnel
-Escort them to the esxit
+Escort them to the exit
 Beware of MTFs and SCPs - they want to kill you]],
 
     sciassistant = [[You are Scientist Assistant
@@ -369,183 +383,247 @@ nail him to wall and deal huge damage]],
 Your objective is to escape from the facility
 You can talk with humans]],
 }
-/*lang.starttexts = {
-    ROLE_SCPSantaJ = {
-        "You are the SCP-SANTA-J",
-        {"Your objective is to escape the facility",
-        "You are Santa Claus! Give gifts to everyone!",
-        "Merry Christmas and Happy New Year",
-        "This is special SCP available only in Christmas event!"}
-    },
-    ROLE_SCP173 = {
-        "You are the SCP-173",
-        {"Your objective is to escape the facility",
-        "You cannot move when someone is looking at you",
-        "Remember, humans are blinking",
-        "You have a special ability on RMB: blind everyone around you"}
-    },
-    ROLE_SCP096 = {
-        "You are the SCP-096",
-        {"Your objective is to escape the facility",
-        "You move extremely fast when somebody is looking",
-        "You can scream by using RMB"}
-    },
-    ROLE_SCP066 = {
-        "You are the SCP-066",
-        {"Your objective is to escape the facility",
-        "You can play VERY loud sound",
-        "LMB - attack, RMB - you can destroy windows"}
-    },
-    ROLE_SCP106 = {
-        "You are the SCP-106",
-        {"Your objective is to escape the facility",
-        "When you touch someone, they will teleport",
-        "to your pocket dimension"}
-    },
-    ROLE_SCP966 = {
-        "You are the SCP-966",
-        {"Your objective is to escape the facility",
-        "You are invisible, humans can only see you using a nvg",
-        "You hurt humans when you are near them",
-        "You also disorientate them"}
-    },
-    ROLE_SCP682 = {
-        "You are the SCP-682",
-        {"Your objective is to escape the facility",
-        "You are a Hard-to-Destroy Reptile",
-        "You kill people instantly, although you are very slow",
-        "You have a special ability on RMB"}
-    },
-    ROLE_SCP457 = {
-        "You are the SCP-457",
-        {"Your objective is to escape then facility",
-        "You are always burning",
-        "If you are close enough to a human, you will burn them"}
-    },
-    ROLE_SCP049 = {
-        "You are the SCP-049",
-        {"Your objective is to escape the facility",
-        "If you use your special ability on someone, they will become SCP-049-2"}
-    },
-    ROLE_SCP689 = {
-        "You are the SCP-689",
-        {"Your objective is to escape the facility",
-        "You are extremly slow, but also deadly",
-        "You can kill anyone who look at you",
-        "After you kill someone, you appear on the body",
-        "LMB - attack, RMB - destroy windows"}
-    },
-    ROLE_SCP939 = {
-        "You are the SCP-939",
-        {"Your objective is to escape the facility",
-        "Your are fast and strong",
-        "You can deceive your targets by talking in their voice chat",
-        "LMB - attack, RMB - change voice chat"}
-    },
-    ROLE_SCP999 = {
-        "You are the SCP-999",
-        {"Your objective is to escape the facility",
-        "You can heal anybody you want",
-        "You have to co-operate with other personnel or SCPs"}
-    },
-    ROLE_SCP082 = {
-        "You are the SCP-082",
-        {"Your objective is to escape the facility",
-        "You are a cannibal with a machete",
-        "Your attacks reduces your target's stamina",
-        "When you kill somebody you will gain health"}
-    },
-    ROLE_SCP023 = {
-        "You are the SCP-023",
-        {"Your objective is to escape the facility",
-        "You are a wolf and you ignite everyone who goes through you",
-        "Igniting others regenerate your health",
-        "LMB - attack, RMB - you gain speed but you lose heath"}
-    },
-    ROLE_SCP1471 = {
-        "You are the SCP-1471-A",
-        {"Your objective is to escape the facility",
-        "You can teleport yourself to your target",
-        "LMB - attack, RMB - teleport to your target"}
-    },
-    ROLE_SCP1048A = {
-        "You are the SCP-1048-A",
-        {"Your objective is to escape the facility",
-        "You look like SCP-1048, but you are made entirely out of human ears",
-        "You emit a very loud scream"}
-    },
-    ROLE_SCP1048B = {
-        "You are the SCP-1048-B",
-        {"Your objective is to escape the facility",
-        "Kill'em all"}
-    },
-    ROLE_SCP8602 = {
-        "You are the SCP-860-2",
-        {"Your objective is to escape the facility",
-        "You are forest monster",
-        "When you attack somebody near wall you charging on him"}
-    },
-    ROLE_SCP0492 = {
-        "You are the SCP-049-2",
-        {"Your objective is to escape the facility",
-        "Cooperate with SCP-049 to kill more people"}
-    },
-    ROLE_SCP076 = {
-        "You are the SCP-076-2",
-        {"Your objective is to escape the facility",
-        "You are fast and you have low HP",
-        "You will be respawning until somebody destroy SCP-076-1"}
-    },
-    ROLE_SCP957 = {
-        "You are the SCP-957",
-        {"Your objective is to escape the facility",
-        "You receive less damage, but on SCP-957-1 death you will receive damage",
-        "Use LMB to deal AOE damage",
-        "After attack, you and SCP-957-1 will receive some health"}
-    },
-    ROLE_SCP9571 = {
-        "You are the SCP-957-1",
-        {"Your objective is bring your friends to SCP-957",
-        "Your vision is limited and you can talk with SCP-957",
-        "Nobody knows that you are SCP, don't get exposed",
-        "If you die, SCP-957 will receive damage"}
-    },
-    ROLE_SCP0082 = {
-        "You are the SCP-008-2",
-        {"Your objective is to infect every MTF and D",
-        "If you kill someone, they will become 008-2 aswell"}
-    },
-}*/
 
 --[[-------------------------------------------------------------------------
 Weapons
 ---------------------------------------------------------------------------]]
+lang.GenericUpgrades = {
+    nvmod = {
+        name = "Extra Vision",
+        info = "Brightness of your vision is increased\nDark areas will no longer stop you"
+    }
+}
+
 local wep = {}
 
 wep.SCP106 = {
     swait = "Special ability cooldown: %is",
     sready = "Special ability is ready!",
+    upgrades = {
+        cd1 = {
+            name = "Void Walk I",
+            info = "Special ability cooldown is reduced by 15s"
+        },
+        cd2 = {
+            name = "Void Walk II",
+            info = "Special ability cooldown is reduced by 15s\n\t• Total cooldown: 30s"
+        },
+        cd3 = {
+            name = "Void Walk III",
+            info = "Special ability cooldown is reduced by 15s\n\t• Total cooldown: 45s"
+        },
+        tpdmg1 = {
+            name = "Decaying Touch I",
+            info = "After teleport gain 15 damage for 10s"
+        },
+        tpdmg2 = {
+            name = "Decaying Touch II",
+            info = "After teleport gain 20 damage for 20s"
+        },
+        tpdmg3 = {
+            name = "Decaying Touch III",
+            info = "After teleport gain 25 damage for 30s"
+        },
+        tank1 = {
+            name = "Pocket Shield I",
+            info = "Get 20% bullet damage protection, but you will be 10% slower"
+        },
+        tank2 = {
+            name = "Pocket Shield II",
+            info = "Get 20% bullet damage protection, but you will be 10% slower\n\t• Total protection: 40%\n\t• Total slow: 20%"
+        },
+    }
 }
 
 wep.SCP173 = {
     swait = "Special ability cooldown: %is",
     sready = "Special ability is ready!",
+    upgrades = {
+        specdist1 = {
+            name = "Wraith I",
+            info = "Your special ability distance is increased by 500"
+        },
+        specdist2 = {
+            name = "Wraith II",
+            info = "Your special ability distance is increased by 700\n\t• Total increase: 1200"
+        },
+        specdist3 = {
+            name = "Wraith III",
+            info = "Your special ability distance is increased by 800\n\t• Total increase: 2000"
+        },
+        boost1 = {
+            name = "Bloodthirster I",
+            info = "Each time you kill human you will gain 150 HP and your special ability cooldown will be decreased by 10%"
+        },
+        boost2 = {
+            name = "Bloodthirster II",
+            info = "Each time you kill human you will gain 300 HP and your special ability cooldown will be decreased by 25%"
+        },
+        boost3 = {
+            name = "Bloodthirster III",
+            info = "Each time you kill human you will gain 500 HP and your special ability cooldown will be decreased by 50%"
+        },
+        prot1 = {
+            name = "Concrete Skin I",
+            info = "Instantly heal 1000 HP and get 10% protection against bullet wounds"
+        },
+        prot2 = {
+            name = "Concrete Skin II",
+            info = "Instantly heal 1000 HP and get 10% protection against bullet wounds\n\t• Total protection: 20%"
+        },
+        prot3 = {
+            name = "Concrete Skin III",
+            info = "Instantly heal 1000 HP and get 20% protection against bullet wounds\n\t• Total protection: 40%"
+        },
+    },
+    back = "You can hold R to back to previous position",
 }
 
 wep.SCP457 = {
     swait = "Special ability cooldown: %is",
     sready = "Special ability is ready!",
     placed = "Active traps: %i/%i",
-    nohp = "Not enough HP!"
+    nohp = "Not enough HP!",
+    upgrades = {
+        fire1 = {
+            name = "Live Torch I",
+            info = "Your burn radius is increased by 25"
+        },
+        fire2 = {
+            name = "Live Torch II",
+            info = "Your burn damage is increased by 0.5"
+        },
+        fire3 = {
+            name = "Live Torch III",
+            info = "Your burn radius is increased by 50 and your burn damage is increased by 0.5\n\t• Total radius increase: 75\n\t• Total damage increase: 1"
+        },
+        trap1 = {
+            name = "Little Surprise I",
+            info = "Trap lifetime is increased to 4 minuses and will burn 1s longer"
+        },
+        trap2 = {
+            name = "Little Surprise II",
+            info = "Trap lifetime is increased to 5 minuses and will burn 1s longer and its damage is increased by 0.5\n\t• Total burn time increase: 2s"
+        },
+        trap3 = {
+            name = "Little Surprise III",
+            info = "Trap will burn 1s longer and its damage is increased by 0.5\n\t• Total burn time increase: 3s\n\t• Total damage increase: 1"
+        },
+        heal1 = {
+            name = "Sizzling Snack I",
+            info = "Burning people will heal you for additional 1 health"
+        },
+        heal2 = {
+            name = "Sizzling Snack II",
+            info = "Burning people will heal you for additional 1 health\n\t• Total heal increase: 2"
+        },
+        speed = {
+            name = "Fast Fire",
+            info = "Your speed is increased by 10%"
+        }
+    }
 }
 
 wep.SCP682 = {
     swait = "Special ability cooldown: %is",
     sready = "Special ability is ready!",
     s_on = "You are immune to any damage! %is",
+    upgrades = {
+        time1 = {
+            name = "Unbroken I",
+            info = "Your special ability duration is increased by 2.5s\n\t• Total duration: 12.5s"
+        },
+        time2 = {
+            name = "Unbroken II",
+            info = "Your special ability duration is increased by 2.5s\n\t• Total duration: 15s"
+        },
+        time3 = {
+            name = "Unbroken III",
+            info = "Your special ability duration is increased by 2.5s\n\t• Total duration: 17.5s"
+        },
+        prot1 = {
+            name = "Adaptation I",
+            info = "You take 10% less bullet damage"
+        },
+        prot2 = {
+            name = "Adaptation II",
+            info = "You take 15% less bullet damage\n\t• Total damage reduce: 25%"
+        },
+        prot3 = {
+            name = "Adaptation III",
+            info = "You take 15% less bullet damage\n\t• Total damage reduce: 40%"
+        },
+        speed1 = {
+            name = "Furious Rush I",
+            info = "After using special ability, gain 10% movement speed until receiving damage"
+        },
+        speed2 = {
+            name = "Furious Rush II",
+            info = "After using special ability, gain 20% movement speed until receiving damage"
+        },
+        ult = {
+            name = "Regeneration",
+            info = "5 seconds after receiving damage, regenerate 5% of missing health"
+        },
+    }
+}
+
+wep.SCP8602 = {
+    upgrades = {
+        charge11 = {
+            name = "Brutality I",
+            info = "Damage of strong attack is increased by 5"
+        },
+        charge12 = {
+            name = "Brutality II",
+            info = "Damage of strong attack is increased by 10\n\t• Total damage increase: 15"
+        },
+        charge13 = {
+            name = "Brutality III",
+            info = "Damage of strong attack is increased by 10\n\t• Total damage increase: 25"
+        },
+        charge21 = {
+            name = "Charge I",
+            info = "Range of strong attack is increased by 15"
+        },
+        charge22 = {
+            name = "Charge II",
+            info = "Range of strong attack is increased by 15\n\t• Total range increase: 30"
+        },
+        charge31 = {
+            name = "Shared Pain",
+            info = "When you perform strong attack, everyone nerby impact point will receive 20% of the original damage"
+        },
+    }
 }
 
 wep.SCP939 = {
+    upgrades = {
+        heal1 = {
+            name = "Bloodlust I",
+            info = "Your attacks heal you for at least 22.5 HP (up to 30)"
+        },
+        heal2 = {
+            name = "Bloodlust II",
+            info = "Your attacks heal you for at least 37.5 HP (up to 50)"
+        },
+        heal3 = {
+            name = "Bloodlust III",
+            info = "Your attacks heal you for at least 52.5 HP (up to 70)"
+        },
+        amn1 = {
+            name = "Lethal Breath I",
+            info = "Your posion radius is increased to 100"
+        },
+        amn2 = {
+            name = "Lethal Breath II",
+            info = "Your poison now deals damage: 2.5 dmg/s"
+        },
+        amn3 = {
+            name = "Lethal Breath III",
+            info = "Your posion radius is increased to 125 and your poison damage is increased to 5 dmg/s"
+        },
+    }
 }
 
 wep.HOLSTER = {
@@ -618,6 +696,14 @@ wep.MEDKITPLUS = {
 
 wep.TASER = {
     name = "Taser"
+}
+
+wep.FLASHLIGHT = {
+    name = "Flashlight"
+}
+
+wep.BATTERY = {
+    name = "Battery"
 }
 
 wep.weapon_stunstick = "Stunstick"

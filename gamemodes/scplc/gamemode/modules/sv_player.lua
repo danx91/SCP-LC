@@ -43,10 +43,7 @@ function ply:DropEQ()
 	self:DropVest()
 
 	for k, wep in pairs( self:GetWeapons() ) do
-		if wep.Droppable != false then
-			self:DropWeapon( wep )
-			wep.Dropped = CurTime()
-		end
+		self:PlayerDropWeapon( wep:GetClass(), true )
 	end
 end
 
@@ -190,6 +187,86 @@ function ply:DropVest()
 	hook.Run( "SLCArmorDropped", self )
 end
 
+local function applyDifference( base, tab, new )
+	if !istable( base ) then return end
+
+	for k, v in pairs( base ) do
+		if istable( v ) and istable( tab[k] ) then
+			applyDifference( v, tab[k], new[k] )
+		else
+			if tab[k] != v then
+				new[k] = tab[k]
+			end
+		end
+	end
+end
+
+function ply:PlayerDropWeapon( class, all )
+	local wep = self:GetWeapon( class )
+	if wep.Droppable == false then return end
+
+	local stacks = wep.Stacks and wep.Stacks > 1
+
+	if IsValid( wep ) then
+		if wep.OnDrop then
+			wep:OnDrop()
+		end
+
+		wep:SetOwner( NULL )
+
+		local data = weapons.Get( class )
+
+		for i = 1, all and stacks and wep:GetCount() or 1 do
+			local new = ents.Create( class )
+
+			if IsValid( new ) then
+				applyDifference( data, wep, new )
+
+				local forward = self:EyeAngles():Forward()
+				new:SetPos( self:GetShootPos() + forward * 10 )
+				new:SetAngles( self:GetAngles() )
+				new:Spawn()
+
+				local phys = new:GetPhysicsObject()
+				if IsValid( phys ) then
+					phys:SetVelocity( forward * 300 )
+				end
+
+				if stacks then
+					wep:RemoveStack()
+				end
+
+				if wep.DTRegistry then
+					new.NewDTValues = {}
+					for k, v in pairs( wep.DTRegistry ) do
+						if v != "Count" then
+							if wep["Get"..v] then
+								new.NewDTValues[v] = wep["Get"..v]( wep )
+							end
+						end
+					end
+				end
+
+				timer.Simple( 0.75, function()
+					if IsValid( new ) and new.NewDTValues then
+						for k, v in pairs( new.NewDTValues ) do
+							if new["Set"..k] then
+								new["Set"..k]( new, v )
+							end
+						end
+					end
+				end )
+
+				new.Dropped = CurTime()
+			end
+		end
+
+		if !stacks or wep:GetCount() == 0 then
+			wep:Remove()
+		end
+	end
+end
+
 function ply:CreatePlayerRagdoll()
 	if self:GetSCPNoRagdoll() then return end
 	if self:GetNoDraw() then return end
@@ -235,7 +312,7 @@ function ply:CreatePlayerRagdoll()
 				physobj:SetAngles( ang )
 			end
 
-			physobj:SetVelocity( vel )
+			physobj:SetVelocity( vel * 0.2 )
 		end
 	end
 
@@ -267,6 +344,7 @@ function ply:Blink( dur, nextblink )
 		end
 	end )
 end
+
 --[[-------------------------------------------------------------------------
 Premium
 ---------------------------------------------------------------------------]]
@@ -322,13 +400,13 @@ function ply:PushSpeed( walk, run, crouch )
 		} }
 	end
 
-	if walk > 0 and walk < 1 then
+	if walk > 0 and walk < 2 then
 		self:SetWalkSpeed( swalk * walk )
 	elseif walk != -1 then
 		self:SetWalkSpeed( walk )
 	end
 
-	if run > 0 and run < 1 then
+	if run > 0 and run < 2 then
 		self:SetRunSpeed( srun * run )
 	elseif run != -1 then
 		self:SetRunSpeed( run )

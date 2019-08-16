@@ -25,7 +25,7 @@ function InitializeSCPULX()
 		if !class_n then return end
 		
 		if !plyt:GetActive() then
-			ULib.tsayError( plyc, "Player "..v:Nick().." is inactive! Force spawn failed", true )
+			ULib.tsayError( plyc, "Player "..plyt:Nick().." is inactive! Force spawn failed", true )
 			return
 		end
 

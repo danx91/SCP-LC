@@ -440,7 +440,12 @@ function GM:PlayerCanPickupWeapon( ply, wep )
 	end
 
 	if ply:HasWeapon( wep:GetClass() ) then
-		return false
+		if wep.Stacks <= 1 then return false end
+
+		local pwep = ply:GetWeapon( wep:GetClass() )
+		if IsValid( pwep ) then
+			if !pwep:CanStack() then return false end
+		end
 	end
 
 	if !wep.Dropped then

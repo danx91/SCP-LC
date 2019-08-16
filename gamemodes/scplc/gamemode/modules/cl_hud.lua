@@ -1,3 +1,29 @@
+--[[-------------------------------------------------------------------------
+This part of code was requested by "HUD is too big!11!!!1!"" users
+---------------------------------------------------------------------------]]
+local hudscales = {
+	normal = 1,
+	small = 0.9,
+	vsmall = 0.75,
+	imretard = 0.5,
+}
+
+local hudscalecvar = CreateClientConVar( "cvar_slc_hud_scale", 1, true )
+
+concommand.Add( "slc_hud_scale", function( ply, cmd, args )
+	local size = args[1]
+
+	if !size or size == "" or !hudscales[size] then
+		print( "Unknown HUD size! Available sizes: normal, small, vsmall, imretard" )
+		return
+	end
+
+	RunConsoleCommand( "cvar_slc_hud_scale", hudscales[size] )
+end )
+--[[-------------------------------------------------------------------------
+End of useless code
+---------------------------------------------------------------------------]]
+
 local hide = {
 	CHudHealth = true,
 	CHudBattery = true,
@@ -111,11 +137,23 @@ function GM:HUDPaint()
 	end
 
 	if hud_disabled then return end
+
 	local ply = LocalPlayer()
 
 	local isspec = ply:SCPTeam() == TEAM_SPEC
 	local spectarget = ply:GetObserverTarget()
 	local targetvalid = IsValid( spectarget )
+	local pnum = player.GetCount()
+
+	local scale = hudscalecvar:GetFloat()
+	if !isspec and scale < 1 then
+		local mx = Matrix()
+
+		mx:Translate( Vector( 0, h * ( 1 - scale ), 0 ) )
+		mx:Scale( Vector( scale, scale, 1 ) )
+
+		cam.PushModelMatrix( mx )
+	end
 
 	surface.SetMaterial( MATS.blur )
 
@@ -138,8 +176,14 @@ function GM:HUDPaint()
 			{ x = h * 0.01 + w * 0.35 + 3, y = h * 0.99 + 2 },
 			{ x = h * 0.01 - 2, y = h * 0.99 + 2 }
 		}
-	elseif targetvalid then
-		surface.DrawRect( w * 0.4 - 2, 8, w * 0.2 + 4, h * 0.05 + 4 )
+	else
+		if targetvalid then
+			surface.DrawRect( w * 0.4 - 2, h * 0.06 + 8, w * 0.2 + 4, h * 0.05 + 4 )
+		end
+
+		if pnum > 1 then
+			surface.DrawRect( w * 0.45 - 2, 8, w * 0.1 + 4, h * 0.05 + 4 )
+		end
 	end
 
 	render.SetStencilTestMask( 0xFF )
@@ -162,13 +206,18 @@ function GM:HUDPaint()
 			{ x = h * 0.01 + w * 0.35, y = h * 0.99 },
 			{ x = h * 0.01, y = h * 0.99 }
 		}
-	elseif targetvalid then
-		surface.DrawRect( w * 0.4, 10, w * 0.2, h * 0.05 )
+	else
+		if targetvalid then
+			surface.DrawRect( w * 0.4, h * 0.06 + 10, w * 0.2, h * 0.05 )
+		end
+
+		if pnum > 1 then
+			surface.DrawRect( w * 0.45, 10, w * 0.1, h * 0.05 )
+		end
 	end
 
 	render.SetStencilCompareFunction( STENCIL_EQUAL )
 	render.SetStencilFailOperation( STENCIL_KEEP )
-	render.SetStencilPassOperation( STENCIL_REPLACE )
 
 	surface.SetMaterial( MATS.blur )
 	surface.SetDrawColor( Color( 255, 255, 255, 255 ) )
@@ -186,23 +235,44 @@ function GM:HUDPaint()
 			{ x = h * 0.01 + w * 0.35, y = h * 0.99 },
 			{ x = h * 0.01, y = h * 0.99 }
 		}
-	elseif targetvalid then
-		surface.DrawRect( w * 0.4, 10, w * 0.2, h * 0.05 )
+	else
+		if targetvalid then
+			surface.DrawRect( w * 0.4, h * 0.06 + 10, w * 0.2, h * 0.05 )
+		end
+
+		if pnum > 1 then
+			surface.DrawRect( w * 0.45, 10, w * 0.1, h * 0.05 )
+		end
 	end
 
-	if targetvalid then
-		draw.LimitedText{
-			text = string.sub( spectarget:Nick(), 1, 36 ),
-			pos = {  w * 0.5, 10 + h * 0.025 },
-			color = Color( 255, 255, 255, 100 ),
-			font = "SCPHUDBig",
-			xalign = TEXT_ALIGN_CENTER,
-			yalign = TEXT_ALIGN_CENTER,
-			max_width = w * 0.2 - h * 0.01,
-		}
-	end
+	local time = ROUND.time > 0 and string.ToMinutesSeconds( ROUND.time - CurTime() ) or "00:00"
 
-	if isspec then return end
+	if isspec then
+		if targetvalid then
+			draw.LimitedText{
+				text = string.sub( spectarget:Nick(), 1, 36 ),
+				pos = {  w * 0.5, 10 + h * 0.085 },
+				color = Color( 255, 255, 255, 100 ),
+				font = "SCPHUDBig",
+				xalign = TEXT_ALIGN_CENTER,
+				yalign = TEXT_ALIGN_CENTER,
+				max_width = w * 0.2 - h * 0.01,
+			}
+		end
+
+		if pnum > 1 then
+			draw.Text{
+				text = time,
+				pos = {  w * 0.5, 10 + h * 0.025 },
+				color = Color( 255, 255, 255, 100 ),
+				font = "SCPHUDBig",
+				xalign = TEXT_ALIGN_CENTER,
+				yalign = TEXT_ALIGN_CENTER,
+			}
+		end
+
+		return
+	end
 
 	surface.SetDrawColor( Color( 150, 150, 150, 100 ) )
 	surface.DrawRect( h * 0.01 + w * 0.025, h * 0.795, w * 0.235, 2 )
@@ -219,8 +289,6 @@ function GM:HUDPaint()
 
 	surface.SetDrawColor( Color( 150, 150, 150, 100 ) )
 	surface.DrawRect( h * 0.01 + w * 0.175, h * 0.76, 2, h * 0.025 )
-
-	local time = ROUND.time > 0 and string.ToMinutesSeconds( ROUND.time - CurTime() ) or "00:00"
 
 	draw.Text{
 		text = string.sub( time, 1, 23 ),
@@ -377,9 +445,15 @@ function GM:HUDPaint()
 	surface.SetMaterial( MATS.sprint )
 	surface.DrawTexturedRect( h * -0.005 + w * 0.1475 + 2 * (xoffset + cxo), h * 0.9125, h * 0.03, h * 0.03 )
 
+	local wep = ply:GetActiveWeapon()
 	--BATTERY
-	if false then --TODO battery
-		local battery = 76
+	if IsValid( wep ) and wep.HasBattery then
+		local battery = wep:GetBattery()
+		
+		if battery < 0 then
+			battery = 0
+		end
+
 		local pct = battery / 100
 
 		draw.NoTexture()
@@ -415,8 +489,6 @@ function GM:HUDPaint()
 	end
 
 	--AMMO
-	local wep = ply:GetActiveWeapon()
-
 	if IsValid( wep ) and wep:GetMaxClip1() > 0 then
 		render.PushFilterMag( TEXFILTER.LINEAR )
 		render.PushFilterMin( TEXFILTER.LINEAR )
@@ -449,62 +521,6 @@ function GM:HUDPaint()
 
 		render.PopFilterMag()
 		render.PopFilterMin()
-	end
-
-	--Hint
-	if HUDPickupHint then
-		local key = input.LookupBinding( "+use" )
-
-		if key then
-			key = string.upper( key )
-		else
-			key = "+use"
-		end
-
-		surface.SetFont( "SCPHUDBig" )
-		local tw, th = surface.GetTextSize( key )
-		if tw < th then
-			tw = th
-		end
-
-		surface.SetDrawColor( Color( 115, 115, 115, 215 ) )
-		--surface.SetDrawColor( Color( 175, 175, 175, 255 ) )
-		surface.DrawRect( w * 0.485 - tw * 0.5, h * 0.75 - th * 0.5 - w * 0.015, w * 0.03 + tw, w * 0.03 + th )
-
-		surface.SetDrawColor( Color( 150, 150, 150, 255 ) )
-		--surface.SetDrawColor( Color( 125, 125, 125, 255 ) )
-		surface.DrawRect( w * 0.49 - tw * 0.5, h * 0.75 - th * 0.5 - w * 0.01, w * 0.02 + tw, w * 0.02 + th )
-
-		draw.Text{
-			text = key,
-			pos = { w * 0.5, h * 0.75 },
-			color = Color( 255, 255, 255, 255 ),
-			font = "SCPHUDBig",
-			xalign = TEXT_ALIGN_CENTER,
-			yalign = TEXT_ALIGN_CENTER,
-		}
-
-		local text = LANG.pickup
-
-		local t = type( HUDPickupHint )
-		if t == "table" or  t == "Weapon" then
-			if HUDPickupHint.PrintName then
-				text = HUDPickupHint.PrintName
-			elseif HUDPickupHint.GetPrintName then
-				text = HUDPickupHint:GetPrintName()
-			end
-		end
-
-		draw.Text{
-			text = text,
-			pos = { w * 0.5, h * 0.75 - th - w * 0.02 },
-			color = Color( 255, 255, 255, 255 ),
-			font = "SCPHUDBig",
-			xalign = TEXT_ALIGN_CENTER,
-			yalign = TEXT_ALIGN_CENTER,
-		}
-
-		HUDPickupHint = nil
 	end
 
 	--More info
@@ -619,6 +635,66 @@ function GM:HUDPaint()
 			xalign = TEXT_ALIGN_LEFT,
 			yalign = TEXT_ALIGN_CENTER,
 		}
+	end
+
+	if !isspec and scale < 1 then
+		cam.PopModelMatrix()
+	end
+
+	--Hint
+	if HUDPickupHint then
+		local key = input.LookupBinding( "+use" )
+
+		if key then
+			key = string.upper( key )
+		else
+			key = "+use"
+		end
+
+		surface.SetFont( "SCPHUDBig" )
+		local tw, th = surface.GetTextSize( key )
+		if tw < th then
+			tw = th
+		end
+
+		surface.SetDrawColor( Color( 115, 115, 115, 215 ) )
+		--surface.SetDrawColor( Color( 175, 175, 175, 255 ) )
+		surface.DrawRect( w * 0.485 - tw * 0.5, h * 0.75 - th * 0.5 - w * 0.015, w * 0.03 + tw, w * 0.03 + th )
+
+		surface.SetDrawColor( Color( 150, 150, 150, 255 ) )
+		--surface.SetDrawColor( Color( 125, 125, 125, 255 ) )
+		surface.DrawRect( w * 0.49 - tw * 0.5, h * 0.75 - th * 0.5 - w * 0.01, w * 0.02 + tw, w * 0.02 + th )
+
+		draw.Text{
+			text = key,
+			pos = { w * 0.5, h * 0.75 },
+			color = Color( 255, 255, 255, 255 ),
+			font = "SCPHUDBig",
+			xalign = TEXT_ALIGN_CENTER,
+			yalign = TEXT_ALIGN_CENTER,
+		}
+
+		local text = LANG.pickup
+
+		local t = type( HUDPickupHint )
+		if t == "table" or  t == "Weapon" then
+			if HUDPickupHint.PrintName then
+				text = HUDPickupHint.PrintName
+			elseif HUDPickupHint.GetPrintName then
+				text = HUDPickupHint:GetPrintName()
+			end
+		end
+
+		draw.Text{
+			text = text,
+			pos = { w * 0.5, h * 0.75 - th - w * 0.02 },
+			color = Color( 255, 255, 255, 255 ),
+			font = "SCPHUDBig",
+			xalign = TEXT_ALIGN_CENTER,
+			yalign = TEXT_ALIGN_CENTER,
+		}
+
+		HUDPickupHint = nil
 	end
 
 	--surface.SetDrawColor( Color( math.TimedSinWave( 0.5, 0, 255 ), math.TimedSinWave( 0.1, 0, 255 ), math.TimedSinWave( 0.25, 0, 255 ), 255 ) )

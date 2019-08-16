@@ -68,7 +68,7 @@ function SWEP:PlayerFreeze()
 		//self.Owner:SetRunSpeed( 0 )
 		self.OldJumpPower = self.Owner:GetJumpPower()
 		self.Owner:SetJumpPower( 0 )
-		self.SpeedID = self.Owner:PushSpeed( 1, 1, -1 )
+		self.SpeedID = self.Owner:PushSpeed( 2, 2, -1 )
 	end
 
 	if ROUND.preparing or ROUND.post then return end
@@ -124,3 +124,16 @@ end
 
 function SWEP:Reload()
 end
+
+hook.Add( "SLCScreenMod", "SCPVisionMod", function( clr )
+	local ply = LocalPlayer()
+	local wep = ply:GetActiveWeapon()
+	if IsValid( wep ) and ply:SCPTeam() == TEAM_SCP then
+		if wep.UpgradeSystemMounted then
+			if wep:HasUpgrade( "nvmod" ) then
+				clr.contrast = clr.contrast + 0.75
+				clr.brightness = clr.brightness + 0.01
+			end
+		end
+	end
+end )
