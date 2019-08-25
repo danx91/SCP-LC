@@ -15,3 +15,9 @@ function SWEP:DrawWorldModel()
 		self:DrawModel()
 	end
 end
+
+/*concommand.Add( "spawnbat", function( ply, cmd, args )
+	local bat = ents.Create( "item_slc_battery" )
+	bat:SetPos( ply:GetEyeTrace().HitPos )
+	bat:Spawn()
+end )*/

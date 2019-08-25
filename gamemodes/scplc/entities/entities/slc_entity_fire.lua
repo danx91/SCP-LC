@@ -74,22 +74,13 @@ function ENT:Think()
 
 					if IsValid( owner ) then
 						dmg:SetAttacker( owner )
-
-						if owner:IsPlayer() and owner:SCPClass() == CLASSES.SCP457 then
-							local hp = owner:Health() + 5
-							local max = owner:GetMaxHealth()
-
-							if hp > max then
-								hp = max
-							end
-
-							owner:SetHealth( hp )
-						end
 					else
 						dmg:SetAttacker( self )
 					end
 
-					parent:TakeDamageInfo( dmg )
+					if hook.Run( "SLCFireOnBurnPlayer", self, parent, dmg ) != true then
+						parent:TakeDamageInfo( dmg )
+					end
 				end
 			end
 
@@ -109,22 +100,13 @@ function ENT:Think()
 
 						if IsValid( owner ) then
 							dmg:SetAttacker( owner )
-
-							if owner:IsPlayer() and owner:SCPClass() == CLASSES.SCP457 then
-								local hp = owner:Health() + 2
-								local max = owner:GetMaxHealth()
-
-								if hp > max then
-									hp = max
-								end
-
-								owner:SetHealth( hp )
-							end
 						else
 							dmg:SetAttacker( self )
 						end
 
-						v:TakeDamageInfo( dmg )
+						if hook.Run( "SLCFireOnBurnPlayer", self, v, dmg ) != true then
+							v:TakeDamageInfo( dmg )
+						end
 
 						if self.ShouldSpread then
 							if math.random( 100 ) <= self.Power then
@@ -144,7 +126,7 @@ end
 function ENT:SetBurnTime( time )
 	if !time then return end
 
-	if time > 0 then
+	if time >= 0 then
 		self:Set_BurnTime( time )
 		self:Set_DieTime( CurTime() + time )
 	else

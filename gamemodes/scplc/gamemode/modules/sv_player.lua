@@ -203,12 +203,41 @@ end
 
 function ply:PlayerDropWeapon( class, all )
 	local wep = self:GetWeapon( class )
-	if wep.Droppable == false then return end
-
-	local stacks = wep.Stacks and wep.Stacks > 1
 
 	if IsValid( wep ) then
-		if wep.OnDrop then
+		if wep.Droppable == false then return end
+
+		if wep.Stacks and wep.Stacks > 1 then
+			local count = wep:GetCount()
+			
+			if count > 1 then
+				for i = 1, all and count or 1 do
+					local new = ents.Create( class )
+
+					if IsValid( new ) then
+						local forward = self:EyeAngles():Forward()
+						new:SetPos( self:GetShootPos() + forward * 10 )
+						new:SetAngles( self:GetAngles() )
+						new:Spawn()
+
+						new.Dropped = CurTime()
+
+						local phys = new:GetPhysicsObject()
+						if IsValid( phys ) then
+							phys:SetVelocity( forward * 300 )
+						end
+					end
+
+					wep:RemoveStack()
+				end
+
+				return
+			end
+		end
+
+		self:DropWeapon( wep )
+		wep.Dropped = CurTime()
+		/*if wep.OnDrop then
 			wep:OnDrop()
 		end
 
@@ -239,6 +268,7 @@ function ply:PlayerDropWeapon( class, all )
 				if wep.DTRegistry then
 					new.NewDTValues = {}
 					for k, v in pairs( wep.DTRegistry ) do
+						print( "dt copy", k, v )
 						if v != "Count" then
 							if wep["Get"..v] then
 								new.NewDTValues[v] = wep["Get"..v]( wep )
@@ -251,6 +281,7 @@ function ply:PlayerDropWeapon( class, all )
 					if IsValid( new ) and new.NewDTValues then
 						for k, v in pairs( new.NewDTValues ) do
 							if new["Set"..k] then
+								print( "applaying new var", k, v )
 								new["Set"..k]( new, v )
 							end
 						end
@@ -263,7 +294,7 @@ function ply:PlayerDropWeapon( class, all )
 
 		if !stacks or wep:GetCount() == 0 then
 			wep:Remove()
-		end
+		end*/
 	end
 end
 

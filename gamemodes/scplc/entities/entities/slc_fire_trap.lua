@@ -5,6 +5,9 @@ ENT.DieTime = 0
 ENT.HP = 100
 ENT.Used = false
 
+ENT.BurnTime = 1.5
+ENT.Damage = 5
+
 function ENT:Initialize()
 	self:DrawShadow( false )
 	self:SetModel( "models/hunter/plates/plate05x05.mdl" )
@@ -74,9 +77,9 @@ function ENT:TriggerIgnite()
 		fire:SetOwner( owner )
 	end
 	
-	fire:SetBurnTime( 1.5 )
+	fire:SetBurnTime( self.BurnTime )
 	fire:SetFireRadius( 100 )
-	fire:SetFireDamage( 5 )
+	fire:SetFireDamage( self.Damage )
 	fire:Spawn()
 
 	self:EmitSound( "FireTrap.Ignite" )
@@ -100,6 +103,14 @@ function ENT:SetLifeTime( time )
 	else
 		self.DieTime = CurTime() + time
 	end
+end
+
+function ENT:SetBurnTime( time )
+	self.BurnTime = time
+end
+
+function ENT:SetDamage( dmg )
+	self.Damage = dmg
 end
 
 sound.Add{
