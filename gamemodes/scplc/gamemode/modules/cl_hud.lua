@@ -643,6 +643,10 @@ function GM:HUDPaint()
 
 	--Hint
 	if HUDPickupHint then
+		if !IsValid( HUDPickupHint ) then
+			HUDPickupHint = nil
+		end
+
 		local key = input.LookupBinding( "+use" )
 
 		if key then

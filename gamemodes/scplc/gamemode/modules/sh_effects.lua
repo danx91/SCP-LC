@@ -6,7 +6,7 @@ EFFECTS = {
 /*
 data = {
 	duration = <time>,
-	think = nil'/function( self, ply, tier, args ) return <delay> end,
+	think = nil'/function( self, ply, tier, args ) (return <delay> <- not working, use wait instead) end,
 	wait = 0//time between thinks
 	begin = nil'/function( self, ply, tier, refresh, args ) end,
 	finish = nil'/function( self, ply, tier, args ) end,
@@ -82,6 +82,8 @@ end
 local PLAYER = FindMetaTable( "Player" )
 
 function PLAYER:ApplyEffect( name, ... )
+	if CLIENT and self != LocalPlayer() then return end
+	
  	local args = {...}
 	local effect = EFFECTS.effects[name]
 
@@ -164,6 +166,8 @@ end
 --if name == nil -> remove all effects
 --if all == true -> if effect.stacks == 1: remove all effects with this name instead of oldest one; if effect.stacks == 2: remove effect insetad of decreasing tier
 function PLAYER:RemoveEffect( name, all )
+	if CLIENT and self != LocalPlayer() then return end
+
 	if !name or name == "" then
 		self.EFFECTS = {}
 		self.EFFECTS_REG = {}

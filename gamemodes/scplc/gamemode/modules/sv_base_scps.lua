@@ -133,7 +133,7 @@ hook.Add( "RegisterSCP", "RegisterBaseSCPs", function()
 		max_speed = 160,
 	}, nil, function( ply )
 		WinCheck()
-	end )
+	end )*/
 
 	RegisterSCP( "SCP066", "models/player/mrsilver/scp_066pm/scp_066_pm.mdl", "weapon_scp_066", {
 		jump_power = 200,
@@ -142,12 +142,12 @@ hook.Add( "RegisterSCP", "RegisterBaseSCPs", function()
 	}, {
 		base_health = 2250,
 		max_health = 2250,
-		base_speed = 160,
-		run_speed = 160,
-		max_speed = 160,
+		base_speed = 165,
+		run_speed = 165,
+		max_speed = 165,
 	} )
 
-	RegisterSCP( "SCP076", "models/abel/abel.mdl", "weapon_scp_076", {
+	/*RegisterSCP( "SCP076", "models/abel/abel.mdl", "weapon_scp_076", {
 		jump_power = 200,
 		prep_freeze = true,
 	}, {
@@ -249,10 +249,10 @@ hook.Add( "RegisterSCP", "RegisterBaseSCPs", function()
 		prep_freeze = true,
 		allow_chat = true
 	}, {
-		base_health = 2000,
-		max_health = 2000,
-		base_speed = 215,
-		run_speed = 215,
+		base_health = 2175,
+		max_health = 2175,
+		base_speed = 210,
+		run_speed = 210,
 	} )
 
 	/*RegisterSCP( "SCP957", "models/immigrant/outlast/walrider_pm.mdl", "weapon_scp_957", {

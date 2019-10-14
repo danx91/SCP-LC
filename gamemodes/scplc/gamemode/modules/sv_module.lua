@@ -310,6 +310,66 @@ function OpenSCPs()
 	end
 end
 
+local function applyTable( item, tab )
+	for k, v in pairs( tab ) do
+		if istable( v ) then
+			if v._final then
+				v._final = nil
+				item[k] = v
+			else
+				item[k] = item[k] or {}
+				applyTable( item[k], v )
+			end
+		else
+			item[k] = v
+		end
+	end
+end
+
+local function SpawnGeneric( class, pos, num, post_tab, post_func )
+	local dnc = false
+
+	if isfunction( post_tab ) then
+		post_func = post_tab
+		post_tab = nil
+
+		dnc = post_tab._dnc
+		post_tab._dnc = nil
+	end
+
+	if istable( pos ) then
+		if pos._dnc or post_tab._dnc  then
+			pos._dnc = nil
+		else
+			pos = table.Copy( pos )
+		end
+	else
+		pos = { pos }
+	end
+
+	local seq = false
+
+	if num < 0 then
+		num = #pos
+		seq = true
+	end
+
+	for i = 1, num do
+		local item = ents.Create( istable( class ) and class[math.random( #class )] or class )
+		if IsValid( item ) then
+			item:Spawn()
+			item:SetPos( seq and pos[i] or table.remove( pos, math.random( #pos ) ) )
+
+			if post_tab then
+				applyTable( item, post_tab )
+			end
+
+			if post_func then
+				post_func( item )
+			end
+		end
+	end
+end
 
 function SpawnItems() --TODO
 	--[[-------------------------------------------------------------------------
@@ -357,7 +417,7 @@ function SpawnItems() --TODO
 	--[[-------------------------------------------------------------------------
 	Weapons
 	---------------------------------------------------------------------------]]
-	local pistols = {
+	/*local pistols = {
 		"cw_deagle",
 		"cw_fiveseven",
 	}
@@ -369,9 +429,11 @@ function SpawnItems() --TODO
 			wep:SetPos( v )
 			wep.Dropped = 0
 		end
-	end
+	end*/
 	
-	local smgs = {
+	SpawnGeneric( { "cw_deagle", "cw_fiveseven" }, SPAWN_PISTOLS, -1, { Dropped = 0 } )
+
+	/*local smgs = {
 		"cw_g36c",
 		"cw_ump45",
 		"cw_mp5",
@@ -384,9 +446,11 @@ function SpawnItems() --TODO
 			wep:SetPos( v )
 			wep.Dropped = 0
 		end
-	end
+	end*/
+
+	SpawnGeneric( { "cw_g36c", "cw_ump45", "cw_mp5" }, SPAWN_SMGS, -1, { Dropped = 0 } )
 	
-	local rifles = {
+	/*local rifles = {
 		"cw_ak74",
 		"cw_ar15",
 		"cw_m14",
@@ -400,9 +464,11 @@ function SpawnItems() --TODO
 			wep:SetPos( v )
 			wep.Dropped = 0
 		end
-	end
+	end*/
 	
-	local pumps = {
+	SpawnGeneric( { "cw_ak74", "cw_ar15", "cw_m14", "cw_scarh" }, SPAWN_RIFLES, -1, { Dropped = 0 } )
+
+	/*local pumps = {
 		"cw_shorty",
 		"cw_m3super90",
 	}
@@ -414,30 +480,36 @@ function SpawnItems() --TODO
 			wep:SetPos( v )
 			wep.Dropped = 0
 		end
-	end
+	end*/
 
-	for k,v in pairs( SPAWN_SNIPER ) do
+	SpawnGeneric( { "cw_shorty", "cw_m3super90" }, SPAWN_PUMP, -1, { Dropped = 0 } )
+
+	/*for k,v in pairs( SPAWN_SNIPER ) do
 		local wep = ents.Create( "cw_l115" )
 		if IsValid( wep ) then
 			wep:Spawn()
 			wep:SetPos( v )
 			wep.Dropped = 0
 		end
-	end
+	end*/
 	
-	for k,v in pairs( SPAWN_AMMO_CW ) do
+	SpawnGeneric( "cw_l115", SPAWN_SNIPER, -1, { Dropped = 0 } )
+
+	/*for k,v in pairs( SPAWN_AMMO_CW ) do
 		local wep = ents.Create( "cw_ammo_kit_regular" )
 		if IsValid( wep ) then
 			wep.AmmoCapacity = 15
 			wep:Spawn()
 			wep:SetPos( v )
 		end
-	end
+	end*/
+
+	SpawnGeneric( "cw_ammo_kit_regular", SPAWN_AMMO_CW, -1, { AmmoCapacity = 15 } )
 	
 	--[[-------------------------------------------------------------------------
 	Items
 	---------------------------------------------------------------------------]]
-	local sapwn_melee = table.Copy( SPAWN_MELEE )
+	/*local sapwn_melee = table.Copy( SPAWN_MELEE )
 	for i = 1, 3 do
 		local item = ents.Create( "weapon_crowbar" )
 		if IsValid( item ) then
@@ -446,10 +518,12 @@ function SpawnItems() --TODO
 			item:SetPos( spawn )
 			item.Dropped = 0
 		end
-	end
+	end*/
+
+	SpawnGeneric( "weapon_crowbar", SPAWN_MELEE, 3, { Dropped = 0 } )
 
 	local spawn_items = table.Copy( SPAWN_ITEMS )
-	for i = 1, 2 do
+	/*for i = 1, 2 do
 		local item = ents.Create( "item_slc_radio" )
 		if IsValid( item ) then
 			local spawn = table.remove( spawn_items, math.random( 1, #spawn_items ) )
@@ -466,9 +540,15 @@ function SpawnItems() --TODO
 			item:SetPos( spawn )
 			item.Dropped = 0
 		end
-	end
+	end*/
 
-	local spawn_medkits = table.Copy( SPAWN_MEDKITS )
+	SpawnGeneric( "item_slc_radio", spawn_items, 2, { Dropped = 0, _dnc = true } )
+	SpawnGeneric( "item_slc_nvg", spawn_items, 2, { Dropped = 0, _dnc = true } )
+
+	SpawnGeneric( "item_slc_battery", SPAWN_BATTERY, -1, { Dropped = 0 } )
+	SpawnGeneric( "item_slc_flashlight", SPAWN_FLASHLIGHT, 8, { Dropped = 0 } )
+
+	/*local spawn_medkits = table.Copy( SPAWN_MEDKITS )
 	for i = 1, 4 do
 		local item = ents.Create( "item_slc_medkit" )
 		if IsValid( item ) then
@@ -477,7 +557,9 @@ function SpawnItems() --TODO
 			item:SetPos( spawn )
 			item.Dropped = 0
 		end
-	end
+	end*/
+
+	SpawnGeneric( "item_slc_medkit", SPAWN_MEDKITS, 4, { Dropped = 0 } )
 	
 	--[[-------------------------------------------------------------------------
 	Keycards

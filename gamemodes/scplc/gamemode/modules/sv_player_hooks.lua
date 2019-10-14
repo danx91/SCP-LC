@@ -98,9 +98,7 @@ function GM:PlayerHurt( victim, attacker, health, dmg )
 	--TODO: handle damage stats
 end
 
-function GM:DoPlayerDeath( ply, attacker, dmginfo ) --TODO
-	--rag
-	--ply:CreateRagdoll()
+function GM:DoPlayerDeath( ply, attacker, dmginfo )
 	ply:CreatePlayerRagdoll()
 	ply:DropEQ()
 	ply:Despawn()
@@ -425,7 +423,15 @@ end
 
 function GM:PlayerCanPickupWeapon( ply, wep )
 	local t = ply:SCPTeam()
-	if t == TEAM_SPEC then return end
+	
+	if t == TEAM_SPEC then return false end
+	if #ply:GetWeapons() >= 8 then
+		if wep.Stacks and wep.Stacks <= 1 then return false end
+
+		local pwep = ply:GetWeapon( wep:GetClass() )
+		if !IsValid( pwep ) then return false end
+		if pwep.CanStack and !pwep:CanStack() then return false end
+	end
 
 	if t == TEAM_SCP and !ply:GetSCPHuman() then
 		if wep.SCP then
@@ -444,7 +450,7 @@ function GM:PlayerCanPickupWeapon( ply, wep )
 
 		local pwep = ply:GetWeapon( wep:GetClass() )
 		if IsValid( pwep ) then
-			if !pwep:CanStack() then return false end
+			if pwep.CanStack and !pwep:CanStack() then return false end
 		end
 	end
 

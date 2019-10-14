@@ -825,6 +825,8 @@ hook.Add( "PreDrawHalos", "PickupWeapon", function()
 		if wep.Stacks and wep.Stacks > 1 then
 			local pwep = LocalPlayer():GetWeapon( wep:GetClass() )
 			if IsValid( pwep ) and !pwep:CanStack() then return end
+		--elseif ply: then
+			--return
 		end
 
 		if ( ply:GetPos():DistToSqr( wep:GetPos() ) < 4500 or ply:EyePos():DistToSqr( wep:GetPos() ) < 3700 ) then

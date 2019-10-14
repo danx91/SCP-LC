@@ -350,6 +350,10 @@ Help Class D Personnel
 Kill MTFs and other facility staff
 Give orders to oyher CI soldiers]],
 
+    SCP066 = [[You are SCP 066
+Your objective is to escape from the facility
+You can play very loud music]],
+
     SCP106 = [[You are SCP 106
 Your objective is to escape from the facility
 You can go through doors and teleport to the selected location
@@ -396,6 +400,54 @@ lang.GenericUpgrades = {
 
 local wep = {}
 
+wep.SCP066 = {
+    wait = "Next attack: %is",
+    ready = "Attack is ready!",
+    chargecd = "Charge cooldown: %is",
+    upgrades = {
+        range1 = {
+            name = "Resonance I",
+            info = "Damage radius is increased by 75",
+        },
+        range2 = {
+            name = "Resonance II",
+            info = "Damage radius is increased by 75\n\t• Total increase: 150",
+        },
+        range3 = {
+            name = "Resonance III",
+            info = "Damage radius is increased by 75\n\t• Total increase: 225",
+        },
+        damage1 = {
+            name = "Bass I",
+            info = "Damage is increased to 112.5%, but radius is reduced to 90%",
+        },
+        damage2 = {
+            name = "Bass II",
+            info = "Damage is increased to 135%, but radius is reduced to 75%",
+        },
+        damage3 = {
+            name = "Bass III",
+            info = "Damage is increased to 200%, but radius is reduced to 50%",
+        },
+        def1 = {
+            name = "Negation Wave I",
+            info = "While playing music, you negate 10% of incoming damage",
+        },
+        def2 = {
+            name = "Negation Wave II",
+            info = "While playing music, you negate 25% of incoming damage",
+        },
+        charge = {
+            name = "Dash",
+            info = "Unlocks ability to dash forward by pressing reload key\n\t• Ability cooldown: 20s",
+        },
+        sticky = {
+            name = "Sticky",
+            info = "After dashing into another player (either enemy or ally), you stick to him for the next 10s",
+        }
+    }
+}
+
 wep.SCP106 = {
     swait = "Special ability cooldown: %is",
     sready = "Special ability is ready!",
@@ -414,15 +466,15 @@ wep.SCP106 = {
         },
         tpdmg1 = {
             name = "Decaying Touch I",
-            info = "After teleport gain 15 damage for 10s"
+            info = "After teleport gain 15 additional damage for 10s"
         },
         tpdmg2 = {
             name = "Decaying Touch II",
-            info = "After teleport gain 20 damage for 20s"
+            info = "After teleport gain 20 additional damage for 20s"
         },
         tpdmg3 = {
             name = "Decaying Touch III",
-            info = "After teleport gain 25 damage for 30s"
+            info = "After teleport gain 25 additional damage for 30s"
         },
         tank1 = {
             name = "Pocket Shield I",

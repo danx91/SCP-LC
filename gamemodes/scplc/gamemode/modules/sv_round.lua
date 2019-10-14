@@ -16,14 +16,15 @@ ROUNDSTAT_NUMBER = 1
 
 --RegisterRoundStat( name, init, ref, type )
 -- 	name - name of stat
--- 	init - iniatial value, it will be reseted to this value every round
--- 	ref - refernce - number: how important whis value is. true: transmit always if changed. false:transmit if not changed. nil: never transmit
+-- 	init - iniatial value, stat will be reset to this value every round
+-- 	ref - refernce - number: how important this value is. true: transmit if changed. false: transmit if not changed. nil: never transmit
 function RegisterRoundStat( name, init, ref, type )
 	ROUND.stats[name] = { init, init, type or 0, ref }
 end
 
 function AddRoundStat( name, val )
 	local tab = ROUND.stats[name]
+	if !tab then return end
 
 	if tab[3] == ROUNDSTAT_NUMBER then
 		tab[1] = tab[1] + ( val or 1 )
@@ -34,6 +35,7 @@ end
 
 function SetRoundStat( name, val, comp )
 	local tab = ROUND.stats[name]
+	if !tab then return end
 
 	if tab[3] == ROUNDSTAT_NUMBER then
 		if !comp or comp == "h" and val > tab[1] or comp == "l" and val < tab[1] then
@@ -45,8 +47,10 @@ function SetRoundStat( name, val, comp )
 end
 
 function GetRoundStat( name )
-	if !ROUND.stats[name] then return end
-	return ROUND.stats[name][1]
+	local tab = ROUND.stats[name]
+	if !tab then return end
+	
+	return tab[1]
 end
 
 function SetupSupportTimer()
@@ -369,7 +373,7 @@ RegisterRoundStat( "rdm", 0, 3, ROUNDSTAT_NUMBER )
 RegisterRoundStat( "rdmdmg", 0, 250, ROUNDSTAT_NUMBER )
 //RegisterRoundStat( "", 0, ROUNDSTAT_NUMBER )
 
---Stats can be used as info about round beause they will be reset on round restart, just don't transmit them
+--Stats can be used as info about round because they will be reset on round restart, just don't transmit them
 RegisterRoundStat( "gatea", false, nil, ROUNDSTAT_OTHER )
 RegisterRoundStat( "106recontain", false, nil, ROUNDSTAT_OTHER )
 RegisterRoundStat( "914use", false, nil, ROUNDSTAT_OTHER )

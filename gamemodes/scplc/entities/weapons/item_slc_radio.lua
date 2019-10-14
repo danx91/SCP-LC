@@ -9,6 +9,8 @@ SWEP.ShouldDrawViewModel 	= false
 SWEP.ShouldDrawWorldModel 	= false
 
 SWEP.Toggleable 	= true
+--SWEP.HasBattery 	= true
+--SWEP.BatteryUsage 	= 0.6
 
 SWEP.SelectFont = "SCPHUDMedium"
 

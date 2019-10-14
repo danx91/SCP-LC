@@ -452,7 +452,7 @@ local function OpenViewer()
 								local wep = weapons.GetStored( data )
 
 								if wep and wep.Language then
-									local name = LANG.WEAPONS[wep.Language] and LANG.WEAPONS[wep.Language].name or data
+									local name = LANG.WEAPONS[wep.Language] and ( LANG.WEAPONS[wep.Language].showname or LANG.WEAPONS[wep.Language].name ) or data
 									txt = txt..name
 								elseif wep and wep.PrintName then
 									txt = txt..wep.PrintName

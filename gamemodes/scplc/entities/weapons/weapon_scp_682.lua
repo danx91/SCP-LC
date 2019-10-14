@@ -113,7 +113,7 @@ hook.Add( "EntityTakeDamage", "SCP682Damage", function( ply, dmg )
 
 			dmg:ScaleDamage( 5 )
 		elseif dmg:IsDamageType( DMG_BULLET ) then
-			local scale = self:GetUpgradeMod( "prot" )
+			local scale = wep:GetUpgradeMod( "prot" )
 
 			if scale then
 				dmg:ScaleDamage( scale )

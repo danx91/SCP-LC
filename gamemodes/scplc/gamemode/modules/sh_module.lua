@@ -4,8 +4,8 @@ GM.Author 	= "danx91"
 GM.Email 	= ""
 GM.Website 	= ""
 
-VERSION = "ALPHA 0.4"
-DATE = "16/08/2019"
+VERSION = "ALPHA 0.5"
+DATE = "14/10/2019"
 
 SCPS = {}
 CLASSES = {}
@@ -163,7 +163,7 @@ local function getSCPBuff()
 	end
 end
 
---It's server side function, but lets leave it here, next to ScalePlayerDamage
+--It's serverside function, but lets leave it here, next to ScalePlayerDamage
 function GM:EntityTakeDamage( target, info )
 	if !info:IsDamageType( DMG_DIRECT ) then
 		--scale convar?
