@@ -52,6 +52,7 @@ function SWEP:PrimaryAttack()
 					if IsValid( v ) and v:IsPlayer() then
 						if v:SCPTeam() != TEAM_SCP and  v:SCPTeam() != TEAM_SPEC then
 							v:TakeDamage( damage, self.Owner, self.Owner )
+							self:AddScore( damage )
 						end
 					end
 				end
@@ -253,15 +254,15 @@ DefineUpgradeSystem( "scp066", {
 		{ name = "nvmod", cost = 1, req = {}, reqany = false,  pos = { 4, 3 }, mod = {}, active = false },
 	},
 	rewards = {
-		{ 1, 2 },
-		{ 2, 1 },
-		{ 3, 1 },
-		{ 5, 2 },
-		{ 6, 2 },
-		{ 7, 2 },
-		{ 8, 2 },
-		{ 9, 2 },
-		{ 10, 2 }
+		{ 100, 2 },
+		{ 200, 1 },
+		{ 300, 1 },
+		{ 500, 2 },
+		{ 600, 2 },
+		{ 700, 2 },
+		{ 800, 2 },
+		{ 900, 2 },
+		{ 1000, 2 }
 	}
 } )
 
