@@ -98,24 +98,26 @@ function SWEP:Reload()
 				if IsValid( ent ) and ent:IsPlayer() then
 					timer.Simple( 0.5, function()
 						if IsValid( self ) and IsValid( self.Owner ) and IsValid( ent ) then
-							self.Owner:SetPos( ent:GetPos() + ang:Forward() * 15 + Vector( 0, 0, 15 ) )
-							self.Attached = ent
-							ent.SCP066Attached = self.Owner
+							if ent:SCPTeam() != TEAM_SPEC and ( ent:SCPTeam() != TEAM_SCP or ent:GetSCPHuman() ) then
+								self.Owner:SetPos( ent:GetPos() + ang:Forward() * 15 + Vector( 0, 0, 15 ) )
+								self.Attached = ent
+								ent.SCP066Attached = self.Owner
 
-							self.Owner:SetMoveType( MOVETYPE_CUSTOM )
-							self.Owner:SetParent( ent )
+								self.Owner:SetMoveType( MOVETYPE_CUSTOM )
+								self.Owner:SetParent( ent )
 
-							timer.Simple( 10, function()
-								self.Owner:SetParent( nil )
-								self.Owner:SetMoveType( MOVETYPE_WALK )
+								timer.Simple( 10, function()
+									self.Owner:SetParent( nil )
+									self.Owner:SetMoveType( MOVETYPE_WALK )
 
-								if IsValid( self.Attached ) then
-									self.Attached.SCP066Attached = nil
-									self.Owner:SetPos( self.Attached:GetPos() )
-								end
+									if IsValid( self.Attached ) then
+										self.Attached.SCP066Attached = nil
+										self.Owner:SetPos( self.Attached:GetPos() )
+									end
 
-								self.Attached = nil
-							end )
+									self.Attached = nil
+								end )
+							end
 						end
 					end )
 				end
