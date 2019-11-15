@@ -162,6 +162,12 @@ hook.Add( "SLCFireOnBurnPlayer", "SCP457BurnDamage", function( fire, target, dmg
 	end
 end )
 
+hook.Add( "DoPlayerDeath", "SCP457Damage", function( ply, attacker, info )
+	if attacker:IsPlayer() and attacker:SCPClass() == CLASSES.SCP457 then
+	 	AddRoundStat( "457" )
+	end
+end )
+
 DefineUpgradeSystem( "scp457", {
 	grid_x = 4,
 	grid_y = 3,

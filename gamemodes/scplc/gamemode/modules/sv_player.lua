@@ -4,12 +4,17 @@ local ply = FindMetaTable( "Player" )
 General Functions
 ---------------------------------------------------------------------------]]
 function ply:SetSCPClass( class )
+	if !self.Set_SCPClass then
+		self:DataTables()
+	end
+	
 	self:Set_SCPClass( class )
 	self:Set_SCPPersonaC( class )
 end
 
 function ply:Cleanup( norem )
 	self:RemoveEffect()
+	self:RemoveEFlags( EFL_NO_DAMAGE_FORCES )
 
 	self.ClassData = nil
 	self:ClearSpeedStack()
@@ -40,7 +45,7 @@ function ply:Despawn()
 end
 
 function ply:DropEQ()
-	self:DropVest()
+	self:DropVest( true )
 
 	for k, wep in pairs( self:GetWeapons() ) do
 		self:PlayerDropWeapon( wep:GetClass(), true )
@@ -117,16 +122,16 @@ function ply:SetupPlayer( class )
 	hook.Run( "SLCPlayerSetup", self )
 
 	if class.vest then
-		self:EquipVest( class.vest )
+		self:EquipVest( class.vest, true )
 	end
 
 	self.ClassData = class
 
-	net.Start("PlayerSetup")
+	net.Start( "PlayerSetup" )
 	net.Send( self )
 end
 
-function ply:EquipVest( vest )
+function ply:EquipVest( vest, silent )
 	if self:GetVest() > 0 then return end
 
 	local t = self:SCPTeam()
@@ -145,8 +150,10 @@ function ply:EquipVest( vest )
 
 		self.VestSpeed = self:PushSpeed( data.mobility, data.mobility, -1 )
 
-		PlayerMessage( "vestpickup", self )
-		self:EmitSound( "Player.Vest" )
+		if !silent then
+			PlayerMessage( "vestpickup", self )
+			self:EmitSound( "Player.Vest" )
+		end
 
 		hook.Run( "SLCArmorPickedUp", self )
 
@@ -154,7 +161,7 @@ function ply:EquipVest( vest )
 	end
 end
 
-function ply:DropVest()
+function ply:DropVest( silent )
 	local vest = self:GetVest()
 	if vest == 0 then return end
 
@@ -181,13 +188,15 @@ function ply:DropVest()
 		self.VestSpeed = nil
 	end
 
-	PlayerMessage( "vestdrop", self )
-	self:EmitSound( "Player.Vest" )
+	if !silent then
+		PlayerMessage( "vestdrop", self )
+		self:EmitSound( "Player.Vest" )
+	end
 
 	hook.Run( "SLCArmorDropped", self )
 end
 
-local function applyDifference( base, tab, new )
+/*local function applyDifference( base, tab, new )
 	if !istable( base ) then return end
 
 	for k, v in pairs( base ) do
@@ -199,7 +208,7 @@ local function applyDifference( base, tab, new )
 			end
 		end
 	end
-end
+end*/
 
 function ply:PlayerDropWeapon( class, all )
 	local wep = self:GetWeapon( class )
@@ -517,12 +526,15 @@ end
 --[[-------------------------------------------------------------------------
 Helper functions
 ---------------------------------------------------------------------------]]
-/*Player_AddFrags = Player_AddFrags or ply.AddFrags
+Player_AddFrags = Player_AddFrags or ply.AddFrags
 
 function ply:AddFrags( f )
-	SCPTeams.addScore( self:SCPTeam(), f )
+	if f > 0 then
+		SCPTeams.addScore( self:SCPTeam(), f )
+	end
+	
 	Player_AddFrags( self, f )
-end*/
+end
 
 function ply:SetSCPLevel( lvl )
 	self:Set_SCPLevel( lvl )

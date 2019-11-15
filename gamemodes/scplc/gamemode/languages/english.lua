@@ -50,10 +50,25 @@ lang.NCRegistry = {
     escapexp = "You received %i experience",
     escort = "You have been escorted!",
     roundend = "Round ended!",
-    timesup = "Time's up!",
+    nowinner = "No winner in this round!",
     roundnep = "Not enough players!",
     roundwin = "Round winner: %s",
     roundwinmulti = "Round winners: [RAW]",
+
+    mvp = "MVP: %s with score: %i",
+    stat_kill = "Players killed: %i",
+    stat_rdm = "RDM kills: %i",
+    stat_rdmdmg = "RDM damage: %i",
+    stat_dmg = "Damage dealt: %i",
+    stat_escapes = "Escaped players: %i",
+    stat_escorts = "Players escroted: %i",
+    stat_066 = "Played masterpieces: %i",
+    stat_106 = "Players teleported to Pocket Dimension: %i",
+    stat_173 = "Snapped necks: %i",
+    stat_457 = "Incinerated players: %i",
+    stat_682 = "Players killed by overgrown reptile: %i",
+    stat_8602 = "Players nailed to wall: %i",
+    stat_939 = "SCP 939 preys: %i",
 }
 
 --[[-------------------------------------------------------------------------
@@ -76,7 +91,7 @@ lang.mobility = "Mobility"
 lang.weight = "Weight"
 lang.protection = "Protection"
 
-lang.weight_unit = "kg" --imperial units are useless!
+lang.weight_unit = "kg"
 
 --[[-------------------------------------------------------------------------
 Effects
@@ -108,6 +123,8 @@ lang.details = {
     persona = "Fake ID",
     weapons = "Weapons",
     class = "Class",
+    hp = "Health",
+    speed = "Speed"
 }
 
 lang.headers = {
@@ -206,12 +223,14 @@ local classes = {}
 
 classes.unknown = "Unknown"
 
+classes.SCP066 = "SCP 066"
 classes.SCP106 = "SCP 106"
 classes.SCP173 = "SCP 173"
 classes.SCP457 = "SCP 457"
 classes.SCP682 = "SCP 682"
 classes.SCP8602 = "SCP 860-2"
 classes.SCP939 = "SCP 939"
+classes.SCP966 = "SCP966"
 
 classes.classd = "Class D"
 classes.veterand = "Class D Veteran"
@@ -247,81 +266,71 @@ lang.CLASS_INFO = {
     classd = [[You are Class D Personnel
 Your objective is to escape from the facility
 Cooperate with others and look for keycards
-Beware of MTFs and SCPs - they want to kill you]],
+Beware of facility staff and SCPs]],
 
     veterand = [[You are Class D Veteran
 Your objective is to escape from the facility
 Cooperate with others
-Beware of MTFs and SCPs - they want to kill you]],
+Beware of facility staff and SCPs]],
 
     kleptod = [[You are Class D Kleptomaniac
 Your objective is to escape from the facility
 You stole something from the staff
-Beware of MTFs and SCPs - they want to kill you]],
+Beware of facility staff and SCPs]],
 
     ciagent = [[You are CI Agent
 Your objective is to protect Class D Personnel
 Escort them to the exit
-Beware of MTFs and SCPs - they want to kill you]],
+Beware of facility staff and SCPs]],
 
     sciassistant = [[You are Scientist Assistant
 Your objective is to escape from the facility
 Cooperate with other scientists and security staff
-Beware of Chaos Insurgency and SCPs - they want to kill you]],
+Beware of Chaos Insurgency and SCPs]],
 
     sci = [[You are Scientist
 Your objective is to escape from the facility
 Cooperate with other scientists and security staff
-Beware of Chaos Insurgency and SCPs - they want to kill you]],
+Beware of Chaos Insurgency and SCPs]],
 
     seniorsci = [[You are Senior Scientist
 Your objective is to escape from the facility
 Cooperate with other scientists and security staff
-Beware of Chaos Insurgency and SCPs - they want to kill you]],
+Beware of Chaos Insurgency and SCPs]],
 
     headsci = [[You are Head Scientist
 Your objective is to escape from the facility
 Cooperate with other scientists and security staff
-Beware of Chaos Insurgency and SCPs - they want to kill you]],
+Beware of Chaos Insurgency and SCPs]],
 
     guard = [[You are Security Guard
 Your objective is to rescue all scientist
-Kill all Class D Personnel and SCPs
-Cooperate with others and listen security chief]],
+Kill all Class D Personnel and SCPs]],
 
     chief = [[You are Security Chief
 Your objective is to rescue all scientist
-Kill all Class D Personnel and SCPs
-Cooperate with others, listen to MTFs
-Give orders to guards]],
+Kill all Class D Personnel and SCPs]],
 
     private = [[You are MTF Private
 Your objective is to rescue all scientist
-Kill all Class D Personnel and SCPs
-Cooperate with others, listen to your superiors]],
+Kill all Class D Personnel and SCPs]],
 
     sergeant = [[You are MTF Sergeant
 Your objective is to rescue all scientist
-Kill all Class D Personnel and SCPs
-Cooperate with others, listen to your superiors
-Give orders to subordinates]],
+Kill all Class D Personnel and SCPs]],
 
     lieutenant = [[You are MTF Lieutenant
-Your objective is to rescue all scientist and
-kill all Class D Personnel and SCPs
-Cooperate with others, listen to your superiors
-Give orders to subordinates]],
+Your objective is to rescue all scientist
+Kill all Class D Personnel and SCPs]],
 
     alpha1 = [[You are MTF Alpha 1
 You work directly for O5 Council
 Protect foundation at all cost
-Your mission is to [REDACTED]
-Give orders to staff]],
+Your mission is to [REDACTED] ]],
 
     medic = [[You are MTF Medic
 Your objective is to rescue all scientist and
 kill all Class D Personnel and SCPs
-Cooperate with others, listen to your superiors
 Use your medkit to help other MTFs]],
 
     cispy = [[You are CI Spy
@@ -334,11 +343,10 @@ Don't let Class D Personnel and SCPs escape]],
 
     ntfcom = [[You are MTF NTF Commander
 Help MTFs inside facility
-Don't let Class D Personnel and SCPs escape
-Give orders to other NTFs]],
+Don't let Class D Personnel and SCPs escape]],
 
     ntfsniper = [[You are MTF NTF Sniper
-Protect you team from a distance
+Protect your team from a distance
 Don't let Class D Personnel and SCPs escape]],
 
     ci = [[You are Chaos Insurgency Soldier
@@ -347,8 +355,7 @@ Kill MTFs and other facility staff]],
 
     cicom = [[You are Chaos Insurgency Commander
 Help Class D Personnel
-Kill MTFs and other facility staff
-Give orders to oyher CI soldiers]],
+Kill MTFs and other facility staff]],
 
     SCP066 = [[You are SCP 066
 Your objective is to escape from the facility
@@ -386,6 +393,10 @@ nail him to wall and deal huge damage]],
     SCP939 = [[You are SCP 939
 Your objective is to escape from the facility
 You can talk with humans]],
+
+    SCP966 = [[You are SCP 966
+Your objective is to escape from the facility
+You are invisible]],
 }
 
 --[[-------------------------------------------------------------------------
@@ -443,7 +454,7 @@ wep.SCP066 = {
         },
         sticky = {
             name = "Sticky",
-            info = "After dashing into another player (either enemy or ally), you stick to him for the next 10s",
+            info = "After dashing into human, you stick to him for the next 10s",
         }
     }
 }
@@ -669,11 +680,52 @@ wep.SCP939 = {
         },
         amn2 = {
             name = "Lethal Breath II",
-            info = "Your poison now deals damage: 2.5 dmg/s"
+            info = "Your poison now deals damage: 1.5 dmg/s"
         },
         amn3 = {
             name = "Lethal Breath III",
-            info = "Your posion radius is increased to 125 and your poison damage is increased to 5 dmg/s"
+            info = "Your posion radius is increased to 125 and your poison damage is increased to 3 dmg/s"
+        },
+    }
+}
+
+wep.SCP966 = {
+    upgrades = {
+        lockon1 = {
+            name = "Frenzy I",
+            info = "Time required to attack is reduced to 2.5s"
+        },
+        lockon2 = {
+            name = "Frenzy II",
+            info = "Time required to attack is reduced to 2s"
+        },
+        dist1 = {
+            name = "Call of the Hunter I",
+            info = "Attack range is increased by 10"
+        },
+        dist2 = {
+            name = "Call of the Hunter II",
+            info = "Attack range is increased by 10\n\t• Total range increase: 20"
+        },
+        dist3 = {
+            name = "Call of the Hunter III",
+            info = "Attack range is increased by 10\n\t• Total range increase: 30"
+        },
+        dmg1 = {
+            name = "Sharp Claws I",
+            info = "Attack damage is increased by 5"
+        },
+        dmg2 = {
+            name = "Sharp Claws II",
+            info = "Attack damage is increased by 5\n\t• Total damage increase: 10"
+        },
+        bleed1 = {
+            name = "Deep Wounds I",
+            info = "Your attacks have 25% chance of inflicting higher tier bleeding"
+        },
+        bleed2 = {
+            name = "Deep Wounds II",
+            info = "Your attacks have 50% chance of inflicting higher tier bleeding"
         },
     }
 }
@@ -700,7 +752,14 @@ wep.RADIO = {
 }
 
 wep.NVG = {
-    name = "NVG"
+    name = "NVG",
+    info = "Night Vision Goggles - Device that makes dark areas brighter and makes bright areas even more brighter.\nSometimes you can see anomalous things through them."
+}
+
+wep.NVGPLUS = {
+    name = "Enhanced NVG",
+    showname = "NVG+",
+    info = "Enhanced version of NVG, allows you to use it while holding other items in hands.\nUnfortunately battery lasts only for 10 seconds"
 }
 
 wep.KEYCARD = {
@@ -756,6 +815,10 @@ wep.FLASHLIGHT = {
 
 wep.BATTERY = {
     name = "Battery"
+}
+
+wep.GASMASK = {
+    name = "Gas Mask"
 }
 
 wep.weapon_stunstick = "Stunstick"

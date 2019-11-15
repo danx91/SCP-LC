@@ -113,7 +113,8 @@ function GM:HUDPaint()
 		end
 	end
 
-	if HUDDrawSpawnInfo > CurTime() then
+	if HUDDrawSpawnInfo > CurTime() and !ROUND.post then
+
 		local ply = LocalPlayer()
 
 		local team = ply:SCPTeam()
@@ -142,8 +143,9 @@ function GM:HUDPaint()
 
 	local isspec = ply:SCPTeam() == TEAM_SPEC
 	local spectarget = ply:GetObserverTarget()
-	local targetvalid = IsValid( spectarget )
+	local drawtarget = IsValid( spectarget ) and ROUND.active
 	local pnum = player.GetCount()
+	local showtime = pnum > 1 and ROUND.active
 
 	local scale = hudscalecvar:GetFloat()
 	if !isspec and scale < 1 then
@@ -177,11 +179,11 @@ function GM:HUDPaint()
 			{ x = h * 0.01 - 2, y = h * 0.99 + 2 }
 		}
 	else
-		if targetvalid then
+		if drawtarget then
 			surface.DrawRect( w * 0.4 - 2, h * 0.06 + 8, w * 0.2 + 4, h * 0.05 + 4 )
 		end
 
-		if pnum > 1 then
+		if showtime then
 			surface.DrawRect( w * 0.45 - 2, 8, w * 0.1 + 4, h * 0.05 + 4 )
 		end
 	end
@@ -207,11 +209,11 @@ function GM:HUDPaint()
 			{ x = h * 0.01, y = h * 0.99 }
 		}
 	else
-		if targetvalid then
+		if drawtarget then
 			surface.DrawRect( w * 0.4, h * 0.06 + 10, w * 0.2, h * 0.05 )
 		end
 
-		if pnum > 1 then
+		if showtime then
 			surface.DrawRect( w * 0.45, 10, w * 0.1, h * 0.05 )
 		end
 	end
@@ -236,11 +238,11 @@ function GM:HUDPaint()
 			{ x = h * 0.01, y = h * 0.99 }
 		}
 	else
-		if targetvalid then
+		if drawtarget then
 			surface.DrawRect( w * 0.4, h * 0.06 + 10, w * 0.2, h * 0.05 )
 		end
 
-		if pnum > 1 then
+		if showtime then
 			surface.DrawRect( w * 0.45, 10, w * 0.1, h * 0.05 )
 		end
 	end
@@ -248,7 +250,7 @@ function GM:HUDPaint()
 	local time = ROUND.time > 0 and string.ToMinutesSeconds( ROUND.time - CurTime() ) or "00:00"
 
 	if isspec then
-		if targetvalid then
+		if drawtarget then
 			draw.LimitedText{
 				text = string.sub( spectarget:Nick(), 1, 36 ),
 				pos = {  w * 0.5, 10 + h * 0.085 },
@@ -260,7 +262,7 @@ function GM:HUDPaint()
 			}
 		end
 
-		if pnum > 1 then
+		if showtime then
 			draw.Text{
 				text = time,
 				pos = {  w * 0.5, 10 + h * 0.025 },
@@ -446,6 +448,7 @@ function GM:HUDPaint()
 	surface.DrawTexturedRect( h * -0.005 + w * 0.1475 + 2 * (xoffset + cxo), h * 0.9125, h * 0.03, h * 0.03 )
 
 	local wep = ply:GetActiveWeapon()
+
 	--BATTERY
 	if IsValid( wep ) and wep.HasBattery then
 		local battery = wep:GetBattery()
@@ -524,7 +527,7 @@ function GM:HUDPaint()
 	end
 
 	--More info
-	if HUDDrawInfo or HUDDrawSpawnInfo > CurTime() then
+	if HUDDrawInfo or HUDDrawSpawnInfo > CurTime() or ROUND.post then
 		--render.UpdateScreenEffectTexture()
 		surface.SetMaterial( MATS.blur )
 

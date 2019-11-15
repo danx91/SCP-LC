@@ -21,6 +21,7 @@ SCP_VALID_ENTRIES = {
 	no_draw = true,
 	allow_chat = true,
 	is_human = true,
+	no_damage_forces = true,
 }
 
 SCP_DYNAMIC_VARS = {}
@@ -206,16 +207,17 @@ function ObjectSCP:SetupPlayer( ply, ... )
 		end
 	end
 
-	ply:Cleanup( true )
+	ply:Cleanup( self.basestats.no_strip == true )
 
 	ply:UnSpectate()
 	ply:GodDisable()
 
-	if !self.basestats.no_strip then
+	/*if !self.basestats.no_strip then
 		ply:SetVest( 0 )
-		ply:StripWeapons()
-		ply:RemoveAllAmmo()
-	end
+		ply:RemoveAllItems()
+		//ply:StripWeapons()
+		//ply:RemoveAllAmmo()
+	end*/
 
 	local pos = self.spawnpos
 	if pos and !self.basestats.no_spawn then
@@ -261,7 +263,12 @@ function ObjectSCP:SetupPlayer( ply, ... )
 
 	ply:Flashlight( false )
 	ply:AllowFlashlight( false )
+
 	ply:SetNoDraw( self.basestats.no_draw == true )
+
+	if self.basestats.no_damage_forces == true then
+		ply:AddEFlags( EFL_NO_DAMAGE_FORCES )
+	end
 
 	//ply.noragdoll = self.basestats.no_ragdoll == true
 	ply:SetSCPNoRagdoll( self.basestats.no_ragdoll == true )

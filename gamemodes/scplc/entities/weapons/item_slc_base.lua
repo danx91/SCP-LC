@@ -34,7 +34,10 @@ SWEP.Lang 					= {}
 SWEP.Stacks 				= 0
 
 SWEP.Toggleable 			= false
+SWEP.Selectable 			= true
+SWEP.EnableHolsterThink 	= false
 SWEP.HasBattery 			= false
+SWEP.HolsterBatteryUsage 	= false
 SWEP.BatteryUsage 			= 2.5
 SWEP.NBatteryTake 			= 0
 
@@ -62,6 +65,10 @@ function SWEP:Initialize()
 	self:InitializeLanguage()
 end
 
+function SWEP:OnSelect()
+	
+end
+
 function SWEP:Deploy()
 	if IsValid( self.Owner ) then
 		self.Owner:DrawViewModel( self.ShouldDrawViewModel )
@@ -76,7 +83,17 @@ function SWEP:Holster( wep )
 	return true
 end
 
+function SWEP:HolsterThink()
+	if self.HolsterBatteryUsage then
+		self:BatteryTick()
+	end
+end
+
 function SWEP:Think()
+	self:BatteryTick()
+end
+
+function SWEP:BatteryTick()
 	if SERVER and self.HasBattery then
 		if !self.Toggleable or self:GetEnabled() then
 			if self.NBatteryTake < CurTime() then

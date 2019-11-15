@@ -144,7 +144,6 @@ hook.Add( "RegisterSCP", "RegisterBaseSCPs", function()
 		max_health = 2250,
 		base_speed = 165,
 		run_speed = 165,
-		max_speed = 165,
 	} )
 
 	/*RegisterSCP( "SCP076", "models/abel/abel.mdl", "weapon_scp_076", {
@@ -197,6 +196,7 @@ hook.Add( "RegisterSCP", "RegisterBaseSCPs", function()
 	RegisterSCP( "SCP173", "models/jqueary/scp/unity/scp173/scp173unity.mdl", "weapon_scp_173", {
 		jump_power = 200,
 		no_ragdoll = true,
+		no_damage_forces = true,
 	}, {
 		base_health = 5000,
 		max_health = 5000,
@@ -217,6 +217,7 @@ hook.Add( "RegisterSCP", "RegisterBaseSCPs", function()
 	RegisterSCP( "SCP682", "models/scp_682/scp_682.mdl", "weapon_scp_682", {
 		jump_power = 200,
 		no_ragdoll = true,
+		no_damage_forces = true,
 	}, {
 		base_health = 9000,
 		max_health = 9000,
@@ -247,7 +248,8 @@ hook.Add( "RegisterSCP", "RegisterBaseSCPs", function()
 	RegisterSCP( "SCP939", "models/scp/939/unity/unity_scp_939.mdl", "weapon_scp_939", {
 		jump_power = 200,
 		prep_freeze = true,
-		allow_chat = true
+		allow_chat = true,
+		no_damage_forces = true,
 	}, {
 		base_health = 2175,
 		max_health = 2175,
@@ -290,19 +292,18 @@ hook.Add( "RegisterSCP", "RegisterBaseSCPs", function()
 		net.Send( ply )
 
 		return true
-	end )
+	end )*/
 
 	RegisterSCP( "SCP966", "models/player/mishka/966_new.mdl", "weapon_scp_966", {
 		jump_power = 200,
 	}, {
-		base_health = 800,
-		max_health = 800,
-		base_speed = 140,
-		run_speed = 140,
-		max_speed = 140,
+		base_health = 1300,
+		max_health = 1300,
+		base_speed = 180,
+		run_speed = 180,
 	} )
 
-	RegisterSCP( "SCP999", "models/scp/999/jq/scp_999_pmjq.mdl", "weapon_scp_999", {
+	/*RegisterSCP( "SCP999", "models/scp/999/jq/scp_999_pmjq.mdl", "weapon_scp_999", {
 		jump_power = 200,
 	}, {
 		base_health = 1000,

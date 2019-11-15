@@ -9,6 +9,7 @@ SWEP.ShouldDrawWorldModel 	= true
 
 SWEP.SelectFont = "SCPHUDMedium"
 SWEP.Stacks 	= 3
+SWEP.Selectable = false
 
 function SWEP:DrawWorldModel()
 	if !IsValid( self.Owner ) then

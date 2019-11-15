@@ -3,14 +3,14 @@ IDs = IDs or {}
 function updatePlayerID( ply )
 	local lp = LocalPlayer()
 
+	local lpt = lp:SCPTeam()
 	local wep = ply:GetActiveWeapon()
+	local class, team = ply:SCPClass(), ply:SCPTeam()
+	local pclass, pteam = ply:SCPPersona()
+
+	local tc, tt
+
 	if IsValid( wep ) and wep:GetClass() == "item_slc_id" then
-		local lpt = lp:SCPTeam()
-		local class, team = ply:SCPClass(), ply:SCPTeam()
-		local pclass, pteam = ply:SCPPersona()
-
-		local tc, tt
-
 		if SCPTeams.isAlly( lpt, team ) then
 			tc = class
 			tt = team
@@ -18,7 +18,12 @@ function updatePlayerID( ply )
 			tc = pclass
 			tt = pteam
 		end
-		
+	elseif lpt == TEAM_SCP and team == TEAM_SCP or pteam == TEAM_SCP then
+		tc = class
+		tt = TEAM_SCP
+	end
+
+	if tc and tt then
 		local saved = IDs[ply]
 		if !saved or saved.class != tc or saved.team != tt then
 			print( "Updating ID:", ply, tc )
@@ -49,7 +54,7 @@ function GM:HUDDrawTargetID()
 	if hud_disabled then return end
 
 	local lp = LocalPlayer()
-	//if lp:SCPTeam() == TEAM_SPEC then return end
+	if lp:SCPTeam() == TEAM_SPEC then return end
 
 	local ply = lp:GetEyeTrace().Entity
 

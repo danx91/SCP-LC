@@ -9,8 +9,10 @@ SWEP.ShouldDrawViewModel 	= false
 SWEP.ShouldDrawWorldModel 	= false
 
 SWEP.Toggleable 	= true
---SWEP.HasBattery 	= true
---SWEP.BatteryUsage 	= 0.6
+SWEP.EnableHolsterThink	= true
+SWEP.HasBattery 	= true
+SWEP.HolsterBatteryUsage = true
+SWEP.BatteryUsage 	= 1.8
 
 SWEP.SelectFont = "SCPHUDMedium"
 
@@ -34,6 +36,7 @@ end
 
 function SWEP:PrimaryAttack()
 	if self.NextUse > CurTime() then return end
+	if self:GetBattery() <= 0 then return end
 	self.NextUse = CurTime() + 0.25
 
 	local enabled = !self:GetEnabled()

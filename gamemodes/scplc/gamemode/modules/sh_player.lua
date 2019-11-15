@@ -82,6 +82,78 @@ function GM:StartCommand( ply, cmd )
 	end
 end
 
+function GM:PlayerSwitchWeapon( ply, old, new )
+	if IsValid( new ) then
+		if new.OnSelect then
+			new:OnSelect()
+		end
+
+		if new.Selectable == false then
+			return true
+		end
+	end
+end
+
+function GM:PlayerCanPickupWeapon( ply, wep )
+	local t = ply:SCPTeam()
+	
+	if t == TEAM_SPEC then return false end
+	if #ply:GetWeapons() >= 8 then
+		if wep.Stacks and wep.Stacks <= 1 then return false end
+
+		local pwep = ply:GetWeapon( wep:GetClass() )
+		if !IsValid( pwep ) then return false end
+		if pwep.CanStack and !pwep:CanStack() then return false end
+	end
+
+	if t == TEAM_SCP and !ply:GetSCPHuman() then
+		if wep.SCP then
+			return true
+		end
+
+		return false
+	end
+
+	if wep.SCP then
+		return false
+	end
+
+	local class = wep:GetClass()
+
+	local has = false
+
+	for k, v in pairs( ply:GetWeapons() ) do
+		if v:GetClass() == class then
+			has = true
+			break
+		elseif v.Group and v.Group == wep.Group then
+			return false
+		end
+	end
+
+	if has then
+		if !wep.Stacks or wep.Stacks <= 1 then return false end
+
+		local pwep = ply:GetWeapon( wep:GetClass() )
+		if IsValid( pwep ) then
+			if pwep.CanStack and !pwep:CanStack() then return false end
+		end
+	end
+	if !wep.Dropped then
+		return true
+	elseif wep.Dropped > CurTime() - 1 then
+		return false
+	end
+
+	if ply:KeyDown( IN_USE ) then
+		if wep == ply:GetEyeTrace().Entity then
+			return true
+		end
+	end
+
+	return false
+end
+
 --[[-------------------------------------------------------------------------
 Player functions
 ---------------------------------------------------------------------------]]

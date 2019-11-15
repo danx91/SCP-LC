@@ -11,48 +11,6 @@ ROUND = ROUND or {
 --[[-------------------------------------------------------------------------
 Global functions
 ---------------------------------------------------------------------------]]
-ROUNDSTAT_OTHER = 0
-ROUNDSTAT_NUMBER = 1
-
---RegisterRoundStat( name, init, ref, type )
--- 	name - name of stat
--- 	init - iniatial value, stat will be reset to this value every round
--- 	ref - refernce - number: how important this value is. true: transmit if changed. false: transmit if not changed. nil: never transmit
-function RegisterRoundStat( name, init, ref, type )
-	ROUND.stats[name] = { init, init, type or 0, ref }
-end
-
-function AddRoundStat( name, val )
-	local tab = ROUND.stats[name]
-	if !tab then return end
-
-	if tab[3] == ROUNDSTAT_NUMBER then
-		tab[1] = tab[1] + ( val or 1 )
-	else
-		tab[1] = val
-	end
-end
-
-function SetRoundStat( name, val, comp )
-	local tab = ROUND.stats[name]
-	if !tab then return end
-
-	if tab[3] == ROUNDSTAT_NUMBER then
-		if !comp or comp == "h" and val > tab[1] or comp == "l" and val < tab[1] then
-			tab[1] = val
-		end
-	else
-		tab[1] = val
-	end
-end
-
-function GetRoundStat( name )
-	local tab = ROUND.stats[name]
-	if !tab then return end
-	
-	return tab[1]
-end
-
 function SetupSupportTimer()
 	local values = {}
 
@@ -100,6 +58,7 @@ end
 local function CleanupPlayers()
 	for k, v in pairs( player.GetAll() ) do
 		v.PlayerData:RoundReset()
+		v.Logger:Reset()
 		v:Cleanup()
 	end
 end
@@ -111,12 +70,6 @@ local function ResetEvents()
 	ROUND.freeze = false
 	ROUND.queue = {}
 	ROUND.roundtype = ROUNDS.dull
-end
-
-local function ResetStats()
-	for k, v in pairs( ROUND.stats ) do
-		v[1] = v[2]
-	end
 end
 
 --[[-------------------------------------------------------------------------
@@ -134,7 +87,7 @@ function RestartRound()
 	print( "Players cleaned!" )
 
 	ResetEvents()
-	ResetStats()
+	ResetRoundStats()
 	print( "Round data reset!" )
 
 	game.CleanUpMap()
@@ -191,6 +144,11 @@ function RestartRound()
 
 		AddTimer( "SLCRound", round, 1, function( self, n, winner )
 			print( "Round end, starting postround..." )
+
+			if !winner then
+				winner = ROUND.roundtype:getwinner()
+			end
+
 			ROUND.post = true
 			ROUND.roundtype:postround( winner )
 
@@ -302,12 +260,35 @@ function GM:SLCPostround( winner )
 		net.WriteString( "Bell1.ogg" )
 	net.Broadcast()*/
 
+	local specialinfo
+
+	if winner and winner != true then
+		local sb = StringBuilder()
+
+		local mvp, points = GetRoundMVP()
+		if mvp then
+			sb:append( ";mvp$", mvp:Nick(), ",", points )
+		end
+
+		for i, v in ipairs( GetRoundSummary() ) do
+			if !v or v == true then
+				sb:append( ";stat_", v[1] )
+			else
+				sb:append( ";stat_", v[1], "$", v[2] )
+			end
+		end
+
+		specialinfo = tostring( sb )
+	end
+
+	local time = CVAR.posttime:GetInt()
+
 	if !winner then
-		print( "Round has ended! Time's up" )
-		CenterMessage( "roundend#255,0,0,SCPHUDVBig;timesup" )
+		print( "Round has ended! Nobody wins" )
+		CenterMessage( "time:"..time..";roundend#255,0,0,SCPHUDVBig;nowinner" )
 	elseif winner == true then
 		print( "Round has ended due to not enough players!" )
-		CenterMessage( "roundend#255,0,0,SCPHUDVBig;roundnep" )
+		CenterMessage( "time:"..time..";roundend#255,0,0,SCPHUDVBig;roundnep" )
 	elseif istable( winner ) then
 		local txt = ""
 		local raw = ""
@@ -316,7 +297,7 @@ function GM:SLCPostround( winner )
 		for k, v in pairs( winner ) do
 			local name = SCPTeams.getName( v )
 
-			txt = txt.."@TEAMS:"..name..","
+			txt = txt.."@TEAMS."..name..","
 			raw = raw.."%%s. "
 			show = show..name..", "
 		end
@@ -326,15 +307,33 @@ function GM:SLCPostround( winner )
 		show = string.sub( show, 1, string.len( show ) - 2 )
 
 		print( "Round has ended! Winners: "..show )
-		CenterMessage( "roundend#255,0,0,SCPHUDVBig;roundwinmulti$"..txt..",raw:"..raw )
+
+		local msg = "time:"..time..";roundend#255,0,0,SCPHUDVBig;roundwinmulti$"..txt..",raw:"..raw
+
+		if specialinfo and specialinfo != "" then
+			msg = msg..specialinfo
+		end
+
+		CenterMessage( msg )
 	else
 		local name = SCPTeams.getName( winner )
 
 		print( "Round has ended! Winner: "..name )
-		CenterMessage( "roundend#255,0,0,SCPHUDVBig;roundwin$@TEAMS:"..name )
+
+		local msg = "time:"..time..";roundend#255,0,0,SCPHUDVBig;roundwin$@TEAMS."..name
+
+		if specialinfo and specialinfo != "" then
+			msg = msg..specialinfo
+		end
+
+		CenterMessage( msg )
 	end
 
-	
+	local wintab
+
+	if winner and winner != true and !istable( winner ) then
+		wintab = { winner }
+	end
 
 	local pxp = CVAR.pointsxp:GetInt()
 	local alivexp, winxp = string.match( CVAR.winxp:GetString(), "(%d+),(%d+)" )
@@ -353,28 +352,20 @@ function GM:SLCPostround( winner )
 			PlayerMessage( "roundxp$"..xp, v )
 		end
 
-		if v:SCPTeam() == winner then
-			v:AddXP( alivexp )
-			PlayerMessage( "winalivexp$"..alivexp, v )
-		elseif v:GetInitialTeam() == winner then
-			v:AddXP( winxp )
-			PlayerMessage( "winxp$"..winxp, v )
+		if wintab then
+			for _, t in pairs( wintab ) do
+				if v:SCPTeam() == t then
+					v:AddXP( alivexp )
+					PlayerMessage( "winalivexp$"..alivexp, v )
+					break
+				elseif v:GetInitialTeam() == t then
+					v:AddXP( winxp )
+					PlayerMessage( "winxp$"..winxp, v )
+					break
+				end
+			end
 		end
 	end
 
 	--TODO give exp etc.
 end
-
---[[-------------------------------------------------------------------------
-Base round stats
----------------------------------------------------------------------------]]
-RegisterRoundStat( "kill", 0, 10, ROUNDSTAT_NUMBER )
-RegisterRoundStat( "rdm", 0, 3, ROUNDSTAT_NUMBER )
-RegisterRoundStat( "rdmdmg", 0, 250, ROUNDSTAT_NUMBER )
-//RegisterRoundStat( "", 0, ROUNDSTAT_NUMBER )
-
---Stats can be used as info about round because they will be reset on round restart, just don't transmit them
-RegisterRoundStat( "gatea", false, nil, ROUNDSTAT_OTHER )
-RegisterRoundStat( "106recontain", false, nil, ROUNDSTAT_OTHER )
-RegisterRoundStat( "914use", false, nil, ROUNDSTAT_OTHER )
-//RegisterRoundStat( "omega_active", false, nil, ROUNDSTAT_OTHER )

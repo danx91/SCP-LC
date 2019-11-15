@@ -62,3 +62,18 @@ function ent:InstallDataTable()
 		self:OldNetworkVar( type, slot, name, ex )
 	end
 end
+
+function ent:GetNameEx( pname_limit, blacklist, rep )
+	if !IsValid( self ) then return end
+	local name = self.GetName and self:GetName() or self:GetClass()
+
+	if self:IsPlayer() and isnumber( pname_limit ) and string.len( name ) > pname_limit then
+		name = string.sub( name, 1, pname_limit )
+
+		if blacklist then
+			name = string.gsub( name, blacklist, rep or "?" )
+		end
+	end
+
+	return name
+end

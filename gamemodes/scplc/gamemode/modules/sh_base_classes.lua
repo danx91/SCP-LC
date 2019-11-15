@@ -108,7 +108,7 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 
 	registerClass( "kleptod", "classd", CLASSD_MODELS, {
 		team = TEAM_CLASSD,
-		weapons = { { "item_slc_radio", "item_slc_camera", "item_slc_nvg", "item_slc_medkit" } },
+		weapons = { { "item_slc_radio", "item_slc_camera", "item_slc_nvg", "item_slc_medkit", "item_slc_flashlight", "item_slc_gasmask" }, "item_slc_battery" },
 		ammo = {},
 		chip = "",
 		health = 80,
@@ -365,7 +365,7 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		chip = "ci",
 		health = 100,
 		walk_speed = 100,
-		run_speed = 225,
+		run_speed = 235,
 		sanity = 90,
 		vest = "ci",
 		level = 3,
@@ -379,7 +379,7 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		chip = "ci",
 		health = 100,
 		walk_speed = 100,
-		run_speed = 225,
+		run_speed = 240,
 		sanity = 90,
 		vest = "ci",
 		level = 9,

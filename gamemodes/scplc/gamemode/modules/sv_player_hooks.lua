@@ -1,5 +1,6 @@
 function GM:PlayerInitialSpawn( ply )
 	PlayerData( ply )
+	DamageLogger( ply )
 	ply:DataTables()
 
 	ply:CheckPremium()
@@ -25,11 +26,12 @@ function GM:PlayerSpawn( ply )
 	ply:SetCanZoom( false )
 	ply:CrosshairEnable()
 	ply:SetCollisionGroup( COLLISION_GROUP_PASSABLE_DOOR ) //xD???
-	//ply:AddEFlags( EFL_NO_DAMAGE_FORCES ) //Not working :c
+	//ply:RemoveEFlags( EFL_NO_DAMAGE_FORCES ) //moved to PLAYER:Cleanup()
 
 	if IsValid( ply._RagEntity ) then
 		ply._RagEntity:Remove()
 	end
+
 	//ply:Cleanup()
 end
 
@@ -99,6 +101,12 @@ function GM:PlayerHurt( victim, attacker, health, dmg )
 end
 
 function GM:DoPlayerDeath( ply, attacker, dmginfo )
+	ply.Logger:Dump( attacker, dmginfo:GetInflictor() )
+
+	if IsValid( attacker ) and attacker:IsPlayer() then
+		attacker.Logger:AddKill( ply )
+	end
+
 	ply:CreatePlayerRagdoll()
 	ply:DropEQ()
 	ply:Despawn()
@@ -121,7 +129,7 @@ end
 function GM:PlayerDeath( victim, inflictor, attacker )
 	--TODO handle scp events
 
-	--AddRoundStat( "kill" )
+	AddRoundStat( "kill" )
 
 	if IsValid( attacker ) and attacker:IsPlayer() and victim != attacker then
 		local t_vic = victim:SCPTeam()
@@ -134,14 +142,16 @@ function GM:PlayerDeath( victim, inflictor, attacker )
 		local score = attacker:Frags()
 
 		if rdm then
-			--AddRoundStat( "rdm" )
+			AddRoundStat( "rdm" )
 
 			local n = math.min( reward, score )
-			PlayerMessage( string.format( "rdm$%d,%s,%s", reward, "@TEAMS:"..tname, victim:Nick() ), attacker )
-			attacker:SetFrags( score - n )
+			PlayerMessage( string.format( "rdm$%d,%s,%s", reward, "@TEAMS."..tname, victim:Nick() ), attacker ) --':' changed to '.'
+			//attacker:SetFrags( score - n )
+			attacker:AddFrags( -n )
 		else
-			PlayerMessage( string.format( "kill$%d,%s,%s", reward, "@TEAMS:"..tname, victim:Nick() ), attacker )
-			attacker:SetFrags( score + reward )
+			PlayerMessage( string.format( "kill$%d,%s,%s", reward, "@TEAMS."..tname, victim:Nick() ), attacker ) --':' changed to '.'
+			//attacker:SetFrags( score + reward )
+			attacker:AddFrags( reward )
 		end
 	end
 
@@ -197,22 +207,6 @@ end
 function GM:PlayerSwitchFlashlight( ply, enabled )
 	return !enabled
 end
-
-/*
-Button structure
-{
-	name = "name of button",
-	pos = Vector( 0, 0, 0 ),
-	access = ACCESS_*, --optional, keycard access required to open door
-	nosound = true, --optional, if true game will not play keycard sound
-	tolerance = <number or table>, --optional, tolerance in which game should look for button
-	override = function( ply, ent ) end, --optional, return true to allow, false to disallow and nil to do access check
-	access_msg = "", --optional, custom message for player when access is granted
-	deny_msg = "", --optional, custom message for player when access is denied
-	nocard_msg = "", --optional, custom message for player when he has no keycard
-	access_granted = function( ply )  end, --optional, called when access is granted for player, return false to suppress use event
-}
-*/
 
 local NTerror = 0
 hook.Add( "Think", "ApplyTerror", function()
@@ -276,6 +270,22 @@ function GM:AcceptInput( ent, input, activator, caller, value )
 	end
 end
 
+/*
+Button structure
+{
+	name = "name of button",
+	pos = Vector( 0, 0, 0 ),
+	access = ACCESS_*, --optional, keycard access required to open door
+	nosound = true, --optional, if true game will not play keycard sound
+	tolerance = <number or table>, --optional, tolerance in which game should look for button
+	override = function( ply, ent ) end, --optional, return true to allow, false to disallow and nil to do access check
+	access_msg = "", --optional, custom message for player when access is granted
+	deny_msg = "", --optional, custom message for player when access is denied
+	nocard_msg = "", --optional, custom message for player when he has no keycard
+	access_granted = function( ply )  end, --optional, called when access is granted for player, return false to suppress use event
+}
+*/
+
 function GM:PlayerUse( ply, ent )
 	if ply:SCPTeam() == TEAM_SPEC then return false end
 
@@ -311,7 +321,7 @@ function GM:PlayerUse( ply, ent )
 					local wep = ply:GetActiveWeapon()
 					if IsValid( wep ) and wep:GetClass() == "item_slc_keycard" then
 						keycard = true
-						if bit.band( v.access, wep.Access ) > 0 then
+						if bit.band( v.access, wep.Access ) == v.access then
 							access = true
 						end
 					else
@@ -421,53 +431,10 @@ function GM:PlayerCanPickupItem( ply, item )
 	return false
 end
 
-function GM:PlayerCanPickupWeapon( ply, wep )
-	local t = ply:SCPTeam()
+--moved to sh_player.lua
+/*function GM:PlayerCanPickupWeapon( ply, wep )
 	
-	if t == TEAM_SPEC then return false end
-	if #ply:GetWeapons() >= 8 then
-		if wep.Stacks and wep.Stacks <= 1 then return false end
-
-		local pwep = ply:GetWeapon( wep:GetClass() )
-		if !IsValid( pwep ) then return false end
-		if pwep.CanStack and !pwep:CanStack() then return false end
-	end
-
-	if t == TEAM_SCP and !ply:GetSCPHuman() then
-		if wep.SCP then
-			return true
-		end
-
-		return false
-	end
-
-	if wep.SCP then
-		return false
-	end
-
-	if ply:HasWeapon( wep:GetClass() ) then
-		if wep.Stacks and wep.Stacks <= 1 then return false end
-
-		local pwep = ply:GetWeapon( wep:GetClass() )
-		if IsValid( pwep ) then
-			if pwep.CanStack and !pwep:CanStack() then return false end
-		end
-	end
-
-	if !wep.Dropped then
-		return true
-	elseif wep.Dropped > CurTime() - 1 then
-		return false
-	end
-
-	if ply:KeyDown( IN_USE ) then
-		if wep == ply:GetEyeTrace().Entity then
-			return true
-		end
-	end
-
-	return false
-end
+end*/
 
 hook.Add( "PlayerSay", "SCPPenaltyShow", function( ply, msg, teamonly )
 	if string.lower( msg ) == "!scp" then

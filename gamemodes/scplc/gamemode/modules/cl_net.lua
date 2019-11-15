@@ -74,18 +74,27 @@ net.Receive( "RoundInfo", function( len )
 		ROUND.name = ""
 		ROUND.time = 0
 	elseif status == "live" then
+		ROUND.active = true
 		ROUND.time = data.time
 		ROUND.preparing = false
 		ROUND.post = false
 	elseif status == "pre" then
+		ROUND.active = true
 		ROUND.time = data.time
 		ROUND.preparing = true
 		ROUND.post = false
 	elseif status == "post" then
+		ROUND.active = true
 		ROUND.time = data.time
 		ROUND.preparing = false
 		ROUND.post = true
 	end
+end )
+
+net.Receive( "DeathInfo", function( len )
+	local data = net.ReadTable()
+
+	DamageLogger.Print( data )
 end )
 
 --[[-------------------------------------------------------------

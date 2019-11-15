@@ -63,11 +63,12 @@ function ENT:Think()
 			self.NextDamage = CurTime() + 0.333
 
 			local owner = self:GetOwner()
-
 			local parent = self:GetParent()
+
 			if IsValid( parent ) then
 				if self.HurtOwner or parent != owner then
 					local dmg = DamageInfo()
+
 					dmg:SetDamage( self.Damage )
 					dmg:SetDamageType( DMG_BURN )
 					dmg:SetInflictor( self )
@@ -94,6 +95,7 @@ function ENT:Think()
 						end
 
 						local dmg = DamageInfo()
+						
 						dmg:SetDamage( self.Damage * 0.5 )
 						dmg:SetDamageType( DMG_BURN )
 						dmg:SetInflictor( self )

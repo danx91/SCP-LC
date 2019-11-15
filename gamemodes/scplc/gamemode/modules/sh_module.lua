@@ -165,10 +165,15 @@ end
 
 --It's serverside function, but lets leave it here, next to ScalePlayerDamage
 function GM:EntityTakeDamage( target, info )
+	local dmg_type = info:GetDamageType()
+	local dmg_orig = info:GetDamage()
+	local hp = target:Health()
+
 	if !info:IsDamageType( DMG_DIRECT ) then
 		--scale convar?
 
 		if target:IsPlayer() then
+			local t_trg = target:SCPTeam()
 			--vest
 			local vest = target:GetVest()
 
@@ -191,6 +196,8 @@ function GM:EntityTakeDamage( target, info )
 					//info:SetDamage( 0 )
 					return true
 				elseif attacker:IsPlayer() then
+					local t_att = attacker:SCPTeam()
+
 					if attacker:InVehicle() then
 						//info:SetDamage( 0 )
 						return true
@@ -208,13 +215,21 @@ function GM:EntityTakeDamage( target, info )
 						end
 					end
 
-					if target != attacker and target:SCPTeam() == TEAM_SCP then
-						if attacker:SCPTeam() == TEAM_SCP then
-							--info:SetDamage( 0 )
-							return true
-						else
-							--TODO
-							local buff = getSCPBuff()
+					if target != attacker then
+						if t_att == TEAM_SCP then
+							if t_trg == TEAM_SCP then
+								--info:SetDamage( 0 )
+								return true
+							else
+								--TODO
+								local buff = getSCPBuff()
+							end
+						end
+
+						AddRoundStat( "dmg", dmg_orig )
+
+						if SCPTeams.isAlly( t_att, t_trg ) then
+							AddRoundStat( "rdmdmg", dmg_orig )
 						end
 					end
 				end
@@ -222,12 +237,23 @@ function GM:EntityTakeDamage( target, info )
 
 			if info:IsDamageType( DMG_BULLET ) or info:IsDamageType( DMG_SLASH ) then
 				if math.random( 1, 100 ) <= ( vest > 0 and 5 or 20 ) then
-					target:ApplyEffect( "bleeding", 1, attacker )
+					target:ApplyEffect( "bleeding", attacker )
 				end
 			end
 		end
 
 		--SCP buff
+	end
+
+	if target:IsPlayer() then
+		local attacker = info:GetAttacker()
+		local dmg = info:GetDamage()
+
+		target.Logger:DamageTaken( dmg, attacker, { dmg_type = dmg_type, dmg_orig = dmg_orig, inflictor = info:GetInflictor(), hp = hp } )
+
+		if IsValid( attacker ) and attacker:IsPlayer() then
+			attacker.Logger:DamageDealt( dmg_orig, target, { dmg_type = dmg_type, dmg_final = dmg, hp = hp } )
+		end
 	end
 end
 
@@ -406,8 +432,6 @@ end )
 --[[-------------------------------------------------------------------------
 Shared functions
 ---------------------------------------------------------------------------]]
-
-
 cmd.AddCommand( "slc_destroy_gatea", function( ply )
 	if SERVER and IsValid( ply ) and ply:GetPos():DistToSqr( POS_EXPLODE_A ) <= 62500 then
 		if ply.ClassData.support then

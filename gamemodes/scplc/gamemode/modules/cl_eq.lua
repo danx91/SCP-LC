@@ -344,6 +344,17 @@ local function drawItem( i, wx, wy, size, offset )
 		}
 	end
 
+	if wep.HasBattery then
+		local pct = wep:GetBattery() * 0.01
+
+
+		surface.SetDrawColor( Color( 255, 255, 255 ) )
+		surface.DrawOutlinedRect( cx + size * 0.85 + 2 - 2, cy + size * 0.7 + 2 - 2, size * 0.15 - 4, size * 0.3 - 4 )
+
+		surface.SetDrawColor( Color( 255 * ( 1 - pct ), 255 * pct, 0 ) )
+		surface.DrawRect( cx + size * 0.85 + 4 - 2, cy + size * 0.7 + 4 - 2 + ( size * 0.3 - 8 ) * ( 1 - pct ), size * 0.15 - 8, ( size * 0.3 - 8 ) * pct )
+	end
+
 	if drag == 0 and LocalPlayer():GetActiveWeapon() == wep then
 		surface.SetDrawColor( Color( 0, 0, 175, 255 ) )
 		surface.DrawOutlinedRect( cx + 1, cy + 1, size - 2, size - 2 )

@@ -68,8 +68,9 @@ function SWEP:NormalAttack( ent )
 end
 
 function SWEP:SpecialAttack( ent, p )
-	local bonus = self:GetUpgradeMod( "dmg" ) or 0
+	AddRoundStat( "8602" )
 
+	local bonus = self:GetUpgradeMod( "dmg" ) or 0
 	local dmg = math.random( 75, 125 ) + bonus
 
 	ent:TakeDamage( dmg, self.Owner, self.Owner )
@@ -96,6 +97,16 @@ function SWEP:SpecialAttack( ent, p )
 	end
 end
 
+hook.Add( "DoPlayerDeath", "SCP8602Damage", function( ply, attacker, info )
+	if attacker:IsPlayer() and attacker:SCPClass() == CLASSES.SCP8602 then
+	 	local wep = attacker:GetActiveWeapon()
+
+	 	if IsValid( wep ) then
+	 		wep:AddScore( 1 )
+	 	end
+	end
+end )
+
 DefineUpgradeSystem( "scp8602", {
 	grid_x = 3,
 	grid_y = 3,
@@ -121,23 +132,6 @@ DefineUpgradeSystem( "scp8602", {
 		{ 10, 2 }
 	}
 } )
-
-hook.Add( "EntityTakeDamage", "SCP8602Damage", function( ply, dmg )
-	if !ply:IsPlayer() or !ply:Alive() then return end
-
-	local att = dmg:GetAttacker()
-	if !att:IsPlayer() or !att:Alive() then return end
-
-	if att:SCPClass() == CLASSES.SCP8602 then
-		 if dmg:GetDamage() >= ply:Health() then
-		 	local wep = att:GetActiveWeapon()
-
-		 	if IsValid( wep ) then
-		 		wep:AddScore( 1 )
-		 	end
-		 end
-	end
-end )
 
 InstallUpgradeSystem( "scp8602", SWEP )
 

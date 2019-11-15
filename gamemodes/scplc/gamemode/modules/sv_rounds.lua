@@ -1,4 +1,5 @@
 ROUNDS = {}
+local select_info = {}
 
 ROUNDS.dull = {
 	name = "dull",
@@ -6,9 +7,10 @@ ROUNDS.dull = {
 	roundstart = function( self ) end,
 	postround = function( self, winner ) end,
 	endcheck = function( self ) return false end,
+	getwinner = function( self ) return false end,
 }
 
-function addRoundType( name, tab, base )
+function addRoundType( name, tab, base, chance )
 	if base then
 		local bc = ROUNDS[base]
 
@@ -18,7 +20,15 @@ function addRoundType( name, tab, base )
 		end
 	end
 
+	if isnumber( chance ) and number > 0 then
+		select_info[name] = chance
+	end
+
 	ROUNDS[name] = tab
+end
+
+function selectRoundType()
+
 end
 
 addRoundType( "normal", {
@@ -26,10 +36,9 @@ addRoundType( "normal", {
 	init = function( self, multi )
 		SetupPlayers( multi )
 		SpawnItems()
-
 	end,
 	roundstart = function( self )
-		AddTimer( "EscapeTimer", 3, 0, CheckEscape )
+		AddTimer( "EscapeTimer", 2, 0, CheckEscape )
 		SetupSupportTimer()
 		OpenSCPs()
 	end,
@@ -67,22 +76,20 @@ addRoundType( "normal", {
 		elseif num == 1 then
 			return lt
 		else
-			local ret = {}
 			for t1, v in pairs( teams ) do
 				for t2, v in pairs( teams ) do
 					if !SCPTeams.isAlly( t1, t2 ) then
 						return false
 					end
 				end
-
-				table.insert( ret, t1 )
 			end
 
-			return ret
+			return SCPTeams.highestScore()
 		end
 
 		return false
 	end,
+
 }, "dull" )
 
 addRoundType( "multi", {

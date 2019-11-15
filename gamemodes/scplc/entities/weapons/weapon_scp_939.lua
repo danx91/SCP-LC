@@ -25,8 +25,8 @@ function SWEP:Think()
 		table.insert( self.PosLog, pos )
 		len = len + 1
 
-		if len >= 10 then
-			table.remove( self.PosLog )
+		if len > 6 then
+			table.remove( self.PosLog, 1 )
 			len = len - 1
 		end
 	end
@@ -37,7 +37,13 @@ function SWEP:Think()
 			if v != self.Owner then
 				local team = v:SCPTeam()
 				if team != TEAM_SCP and team != TEAM_SPEC then
-					v:ApplyEffect( "amnc227", 1, self:GetUpgradeMod( "damage" ) )
+					local mask = v:GetWeapon( "item_slc_gasmask" )
+
+					if IsValid( mask ) and mask:GetEnabled() then
+						continue
+					end
+
+					v:ApplyEffect( "amnc227", self.Owner, self:GetUpgradeMod( "damage" ) )
 				end
 			end
 		end
@@ -72,12 +78,13 @@ function SWEP:PrimaryAttack()
 
 				local dmg = math.random( 30, 40 )
 
-				if dmg >= ent:Health() then
-					self:AddScore( 1 )
-				end
-
 				self.Owner:EmitSound( "SCP939.Attack" )
 				ent:TakeDamage( dmg, self.Owner, self.Owner )
+
+				if ent:Health() <= 0 then
+					self:AddScore( 1 )
+					AddRoundStat( "939" )
+				end
 
 				local heal = self:GetUpgradeMod( "heal" )
 				if heal then
@@ -97,6 +104,17 @@ function SWEP:PrimaryAttack()
 	end
 end
 
+if CLIENT then
+	hook.Add( "SLCScreenMod", "939ScreenMod", function( clr )
+		if LocalPlayer():HasEffect( "amnc227" ) then
+			DrawMotionBlur( 0.1, 1, 0.01 )
+			clr.colour = 0
+			clr.contrast = clr.contrast + 0.5
+			clr.brightness = clr.brightness - 0.07
+		end
+	end )
+end
+
 DefineUpgradeSystem( "scp939", {
 	grid_x = 4,
 	grid_y = 3,
@@ -106,8 +124,8 @@ DefineUpgradeSystem( "scp939", {
 		{ name = "heal3", cost = 3, req = { "heal2" }, reqany = false,  pos = { 1, 3 }, mod = { heal = 70 }, active = false },
 
 		{ name = "amn1", cost = 1, req = {}, reqany = false,  pos = { 2, 1 }, mod = { radius = 25 }, active = false },
-		{ name = "amn2", cost = 3, req = { "amn1" }, reqany = false,  pos = { 2, 2 }, mod = { damage = 2.5 }, active = false },
-		{ name = "amn3", cost = 5, req = { "amn2" }, reqany = false,  pos = { 2, 3 }, mod = { radius = 50, damage = 5 }, active = false },
+		{ name = "amn2", cost = 3, req = { "amn1" }, reqany = false,  pos = { 2, 2 }, mod = { damage = 1.5 }, active = false },
+		{ name = "amn3", cost = 5, req = { "amn2" }, reqany = false,  pos = { 2, 3 }, mod = { radius = 50, damage = 3 }, active = false },
 
 		{ name = "nvmod", cost = 1, req = {}, reqany = false,  pos = { 4, 2 }, mod = {}, active = false },
 	},

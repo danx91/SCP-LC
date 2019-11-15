@@ -295,7 +295,7 @@ local function basicText( text, x, y, maxw )
 	return th
 end
 
-local function OpenViewer()
+local function openViewer()
 	local w, h = ScrW(), ScrH()
 
 	local window = vgui.Create( "DFrame" )
@@ -523,7 +523,7 @@ function OpenClassViever()
 	showinfo.class = 0
 	showinfo.details = nil
 
-	OpenViewer()
+	openViewer()
 end
 
 /*timer.Simple( 0, function()

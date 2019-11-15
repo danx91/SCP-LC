@@ -2,7 +2,7 @@ local roman_tab = { "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X" 
 
 local button_next = false
 local next_frame = false
-local function Button( x, y, w, h )
+local function button( x, y, w, h )
 	local mx, my = input.GetCursorPos()
 	if mx >= x and mx <= x + w and my >= y and my <= y + h then
 		if input.IsMouseDown( MOUSE_LEFT )then
@@ -64,7 +64,7 @@ local function DrawEffectsHUD()
 				yalign = TEXT_ALIGN_CENTER,
 			}
 
-			local btn = Button( w * 0.97, h * 0.55 + w * 0.035 * ( i - 1 ), w * 0.025, w * 0.025 )
+			local btn = button( w * 0.97, h * 0.55 + w * 0.035 * ( i - 1 ), w * 0.025, w * 0.025 )
 
 			if btn > 0 then
 				showtext = {}
@@ -103,7 +103,7 @@ local function DrawEffectsHUD()
 				draw.NoTexture()
 				surface.DrawCooldownRectCCW( w * 0.97, h * 0.55 + w * 0.035 * ( i - 1 ), w * 0.025, w * 0.025, 1 - timepct, 0.05 )
 
-				local btn = Button( w * 0.97, h * 0.55 + w * 0.035 * ( i - 1 ), w * 0.025, w * 0.025 )
+				local btn = button( w * 0.97, h * 0.55 + w * 0.035 * ( i - 1 ), w * 0.025, w * 0.025 )
 
 				if btn > 0 then
 					local name = LANG.EFFECTS[effect.name] or effect.name

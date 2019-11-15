@@ -11,8 +11,13 @@ hook.Add( "StartCommand", "SCPSprint", function( ply, cmd )
 				cmd:RemoveKey( IN_JUMP )
 			elseif !ply.Jumping then
 				ply.Jumping = true
-				ply.Stamina = math.max( ply.Stamina - 10, 0 )
 				ply.StaminaRegen = CurTime() + 1.5
+
+				local mask = ply:GetWeapon( "item_slc_gasmas" )
+
+				if !IsValid( mask ) or !mask:GetEnabled() or !mask:GetUpgraded() or ply.Stamina - 10 > 30 then
+					ply.Stamina = math.max( ply.Stamina - 10, 0 )
+				end
 			end
 		end
 	else
@@ -76,8 +81,13 @@ local function CalcStamina( ply )
 
 		if ply.Running then
 			ply.Running = false
-			ply.Stamina = math.max( ply.Stamina - 1, 0 )
 			ply.StaminaRegen = CurTime() + 1
+
+			local mask = ply:GetWeapon( "item_slc_gasmask" )
+
+			if !IsValid( mask ) or !mask:GetEnabled() or !mask:GetUpgraded() or ply.Stamina > 30 then
+				ply.Stamina = math.max( ply.Stamina - 1, 0 )
+			end
 		end
 	end
 

@@ -16,6 +16,7 @@ util.AddNetworkString( "CenterMessage" )
 util.AddNetworkString( "PlayerCommand" )
 util.AddNetworkString( "PlayerEffect" )
 util.AddNetworkString( "SCPUpgrade" )
+util.AddNetworkString( "DeathInfo" )
 
 --[[-------------------------------------------------------------------------
 Receivers

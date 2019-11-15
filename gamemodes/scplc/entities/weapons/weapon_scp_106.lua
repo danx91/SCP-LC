@@ -106,6 +106,7 @@ function SWEP:PrimaryAttack()
 					ent:SetAngles( ang )
 
 					self:AddScore( 1 )
+					AddRoundStat( "106" )
 				end
 			else
 				self:SCPDamageEvent( ent, 50 )
@@ -280,12 +281,12 @@ DefineUpgradeSystem( "scp106", {
 	rewards = {
 		{ 1, 1 },
 		{ 3, 1 },
-		{ 5, 2 },
-		{ 7, 1 },
+		{ 6, 2 },
 		{ 9, 1 },
-		{ 10, 2 },
-		{ 12, 2 },
-		{ 15, 3 }
+		{ 12, 1 },
+		{ 15, 2 },
+		{ 18, 2 },
+		{ 21, 3 }
 	}
 } )
 

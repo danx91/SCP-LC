@@ -3,7 +3,7 @@ INI Library
 ---------------------------------------------------------------------------]]
 INI_LOADER_VERSION = "GMOD 1.0"
 
-local function WriteSections( f, tab, c )
+local function writeSections( f, tab, c )
 	local d = file.Open( f, "w", "DATA" )
 	if !d then 
 		error( "Failed to open "..f )
@@ -28,19 +28,19 @@ local function WriteSections( f, tab, c )
 	d:Close()
 end
 
-local function CreateSections( tab, name, prefix, sections, char )
+local function createSections( tab, name, prefix, sections, char )
 	local n = prefix..char..name
 	sections[n] = {}
 	for k, v in pairs( tab ) do
 		if type( v ) == "table" then
-			CreateSections( v, k, n, sections, char )
+			createSections( v, k, n, sections, char )
 		elseif type( v ) != "function" and type( v ) != "userdata" then
 			sections[n][k] = v
 		end
 	end
 end
 
-local function ParseFile( path )
+local function parseFile( path )
 	f = file.Open( path, "r", "DATA" )
 	if !f then
 		error( "Failed to open "..path )
@@ -95,7 +95,7 @@ local function ParseFile( path )
 end
 
 function LoadINI( f, target )
-	local data = ParseFile( f )
+	local data = parseFile( f )
 	if !data._ini or !data._GLOBAL then return end
 
 	local char = data._ini.char
@@ -160,11 +160,11 @@ function WriteINI( f, data, ignoretables, customchar, c )
 				if type( _v ) != "table" and type( _v ) != "function" and type( _v ) != "userdata" then
 					sections[k][_k] = _v
 				elseif type( _v ) == "table" and !ignoretables then
-					CreateSections( _v, _k, k, sections, customchar )
+					createSections( _v, _k, k, sections, customchar )
 				end
 			end
 		end
 	end
 	--PrintTable( sections )
-	WriteSections( f, sections, c )
+	writeSections( f, sections, c )
 end

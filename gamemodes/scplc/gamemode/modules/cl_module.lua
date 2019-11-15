@@ -133,18 +133,6 @@ timer.Create( "SLCHeartbeat", 2, 0, function()
 	end
 end)
 
-/*net.Receive( "689", function( len )
-	if LocalPlayer():GetNClass() == ROLES.ROLE_SCP689 then
-		local targets = net.ReadTable()
-		if targets then
-			local swep = LocalPlayer():GetWeapon( "weapon_scp_689" )
-			if IsValid( swep ) then
-				swep.Targets = targets
-			end
-		end
-	end
-end )*/
-
 --[[-------------------------------------------------------------------------
 Screen effects
 ---------------------------------------------------------------------------]]
@@ -206,13 +194,6 @@ hook.Add( "RenderScreenspaceEffects", "SCPEffects", function()
 			surface.SetMaterial( exhaust_mat )
 			surface.DrawTexturedRect( 0, 0, ScrW(), ScrH() )
 		end
-	end
-
-	if ply:HasEffect( "amnc227" ) then
-		DrawMotionBlur( 0.1, 1, 0.01 )
-		clr.colour = 0
-		clr.contrast = clr.contrast + 0.5
-		clr.brightness = clr.brightness - 0.07
 	end
 
 	hook.Run( "SLCScreenMod", clr )
@@ -278,377 +259,13 @@ hook.Add( "PostDrawHUD", "Blink", function()
 	end
 end )
 
---[[-------------------------------------------------------------------------
-Player message
----------------------------------------------------------------------------]]
-CENTERINFO = {}
-
-local function add_text( txt, clr, c )
-	if c then
-		CENTERINFO = { text = txt, color = clr or Color( 255, 255, 255 ), time = CurTime() + 3 }
-	else
-		if color then
-			chat.AddText( clr, txt )
-		else
-			chat.AddText( txt )
-		end
-	end
-end
-
-function PlayerMessage( msg, ply, center )
-	if ply and ply != LocalPlayer() then return end
-
-	//print( msg )
-	local color = nil
-	local nmsg, cr, cg, cb = string.match( msg, "^(.+)%#(%d+)%,(%d*)%,(%d*)$" )
-	if nmsg then
-		cg = tonumber( cg ) or cr
-		cb = tonumber( cb ) or cr
-
-		msg = nmsg
-		color = Color( cr, cg, cb )
-	end
-
-	local name, func = string.match( msg, "^(.+)$(.+)" )
-	local rawtext = ""
-	
-	if name then
-		local args = {}
-
-		for v in string.gmatch( func, "[^,]+" ) do
-			local raw = string.match( v, "raw:(.+)" )
-			if raw then
-				rawtext = string.gsub( raw, "%.", "," )
-				continue
-			end
-
-			local tabinfo, key = string.match( v, "^@(.+):(.+)$" )
-			if !tabinfo then
-				key = string.match( v, "@(.+)" )
-			end
-
-			if tabinfo or key then
-				local tab = LANG
-
-				if tabinfo then
-					for subtable in string.gmatch( tabinfo, "[^%.]+" ) do
-						if !tab[subtable] then
-							break
-						end
-
-						tab = tab[subtable]
-					end
-				end
-
-				table.insert( args, tab[key] or key )
-			else
-				table.insert( args, v )
-			end
-		end
-
-		local translated
-		local tabinfo = string.match( name, "@(.+)" )
-		if tabinfo then
-			local tab = LANG
-
-			if tabinfo then
-				for subtable in string.gmatch( tabinfo, "[^%.]+" ) do
-					if !tab[subtable] then
-						break
-					end
-
-					tab = tab[subtable]
-				end
-			end
-
-			if !istable( tab ) then
-				translated = tab
-			end
-		else
-			translated = LANG.NRegistry[name]
-		end
-
-		local text = ""
-		if !translated then
-			text = string.format( LANG.NFailed, name )
-		else
-			translated = string.gsub( translated, "%[RAW%]", rawtext )
-		 	text = string.format( translated, unpack( args ) )
-		end
-
-		add_text( text, color, center )
-		print( text )
-	else
-		local text
-		local tabinfo = string.match( msg, "@(.+)" )
-		if tabinfo then
-			local tab = LANG
-
-			if tabinfo then
-				for subtable in string.gmatch( tabinfo, "[^%.]+" ) do
-					if !tab[subtable] then
-						break
-					end
-
-					tab = tab[subtable]
-				end
-			end
-
-			if !istable( tab ) then
-				text = tab
-			end
-		else
-			text = LANG.NRegistry[msg]
-		end
-
-		if !text then
-			text = string.format( LANG.NFailed, msg )
-		end
-		
-		add_text( text, color, center )
-		print( text )
-	end
-end
-
-hook.Add( "HUDPaint", "CenterPlayerMessage", function()
-	if CENTERINFO.text then
-		if CENTERINFO.time < CurTime() then
-			CENTERINFO = {}
-			return
-		end
-
-		draw.Text{
-			text = CENTERINFO.text,
-			pos = { ScrW() * 0.5, ScrH() * 0.2 },
-			color = CENTERINFO.color,
-			font = "SCPHUDSmall",
-			xalign = TEXT_ALIGN_CENTER,
-			yalign = TEXT_ALIGN_CENTER,
-		}
-	end
-end )
 
 --[[-------------------------------------------------------------------------
-CenterMessage
+-
 ---------------------------------------------------------------------------]]
-CENTERMESSAGES = {}
-function CenterMessage( msg, ply )
-	if ply and ply != LocalPlayer() then return end
-
-	local gfont = "SCPHUDMedium"
-	local time = 10
-	local lines = {}
-
-	for s in string.gmatch( msg, "[^;]+" ) do
-		local line = {}
-
-		local g = string.match( s, "^font:([%w%p]+)$" )
-		if g then
-			gfont = g
-			continue
-		end
-
-		local t = string.match( s, "^time:(%d+)$" )
-		if t then
-			time = t
-			continue
-		end
-
-		local nmsg, cr, cg, cb, f = string.match( s, "^(.+)%#(%d*),(%d*),(%d*),([%w%p]*)$" )
-
-		if nmsg then
-			cr = tonumber( cr )
-
-			if cr then
-				line.color = Color( cr, tonumber( cg ) or cr, tonumber( cb ) or cr )
-			end
-
-			if f and f != "" then
-				line.font = f or font
-			end
-
-			s = nmsg
-		end
-
-		local name, func = string.match( s, "^(.+)$(.+)" )
-		local rawtext = ""
-	
-		if name then
-			local args = {}
-
-			for v in string.gmatch( func, "[^,]+" ) do
-				local raw = string.match( v, "raw:(.+)" )
-				if raw then
-					rawtext = string.gsub( raw, "%.", "," )
-					continue
-				end
-
-				local tabinfo, key = string.match( v, "^@(.+):(.+)$" )
-				if !tabinfo then
-					key = string.match( v, "@(.+)" )
-				end
-
-				if tabinfo or key then
-					local tab = LANG
-
-					if tabinfo then
-						for subtable in string.gmatch( tabinfo, "[^%.]+" ) do
-							if !tab[subtable] then
-								break
-							end
-
-							tab = tab[subtable]
-						end
-					end
-
-					table.insert( args, tab[key] or key )
-				else
-					table.insert( args, v )
-				end
-			end
-
-			local translated
-			local tabinfo = string.match( name, "@(.+)" )
-			if tabinfo then
-				local tab = LANG
-
-				if tabinfo then
-					for subtable in string.gmatch( tabinfo, "[^%.]+" ) do
-						if !tab[subtable] then
-							break
-						end
-
-						tab = tab[subtable]
-					end
-				end
-
-				if !istable( tab ) then
-					translated = tab
-				end
-			else
-				translated = LANG.NCRegistry[name]
-			end
-
-			if translated then
-				translated = string.gsub( translated, "%[RAW%]", rawtext )
-			 	line.txt = string.format( translated, unpack( args ) )
-			end
-		else
-			local text
-			local tabinfo = string.match( s, "@(.+)" )
-			if tabinfo then
-				local tab = LANG
-
-				if tabinfo then
-					for subtable in string.gmatch( tabinfo, "[^%.]+" ) do
-						if !tab[subtable] then
-							break
-						end
-
-						tab = tab[subtable]
-					end
-				end
-
-				if !istable( tab ) then
-					text = tab
-				end
-			else
-				text = LANG.NCRegistry[s]
-			end
-
-			if text then
-				line.txt = text
-			end
-		end
-
-		if line.txt and line.txt != "" then
-			table.insert( lines, line )
-		end
-	end
-
-	table.insert( CENTERMESSAGES, { time = CurTime() + time, font = gfont, lines = lines } )
-end
-
-hook.Add( "HUDPaint", "CenterMessage", function()
-	if #CENTERMESSAGES > 0 then
-		local msg = CENTERMESSAGES[1]
-		if msg.time < CurTime() then
-			table.remove( CENTERMESSAGES, 1 )
-			return
-		end
-
-		local w, h = ScrW(), ScrH()
-
-		local y = h * 0.075
-		for k, v in pairs( msg.lines ) do
-			local _, th = draw.Text{
-				text = v.txt,
-				pos = { w * 0.5, y },
-				color = v.color or Color( 255, 255, 255 ),
-				font = v.font or msg.font,
-				xalign = TEXT_ALIGN_CENTER,
-				yalign = TEXT_ALIGN_TOP,
-			}
-
-			y = y + th
-		end
-	end
-end )
---[[-------------------------------------------------------------------------
-?
----------------------------------------------------------------------------]]
-/*function DropCurrentWeapon()
-	if dropnext > CurTime() then return true end
-	dropnext = CurTime() + 0.5
-	net.Start("DropCurWeapon")
-	net.SendToServer()
-	if LocalPlayer().channel != nil then
-		LocalPlayer().channel:EnableLooping( false )
-		LocalPlayer().channel:Stop()
-		LocalPlayer().channel = nil
-	end
-	return true
-end*/
-
 hook.Add( "HUDWeaponPickedUp", "DonNotShowCards", function( weapon )
 	//EQHUD.weps = LocalPlayer():GetWeapons()
 	//if weapon:GetClass() == "br_keycard" then return false end
-end )
-
---[[-------------------------------------------------------------------------
-Sound functions
----------------------------------------------------------------------------]]
-local PrecachedSounds = {}
-function ClientsideSound( file, ent )
-	ent = ent or game.GetWorld()
-	local sound
-
-	if !PrecachedSounds[file] then
-		sound = CreateSound( ent, file, nil )
-		PrecachedSounds[file] = sound
-
-		return sound
-	else
-		sound = PrecachedSounds[file]
-		sound:Stop()
-
-		return sound
-	end
-end
-
-net.Receive( "PlaySound", function( len )
-	local com = net.ReadBool()
-	local vol = net.ReadFloat()
-	local f = net.ReadString()
-
-	if com then
-		local snd = ClientsideSound( f )
-		snd:SetSoundLevel( 0 )
-		snd:Play()
-		snd:ChangeVolume( vol )
-	else
-		ClientsideSound( f )
-	end
 end )
 
 --[[-------------------------------------------------------------------------
@@ -721,30 +338,10 @@ function GM:CalcView( ply, origin, angles, fov )
 		end
 	end
 
-	/*if CamEnable then
-		--print( "enabled" )
-		if !timer.Exists( "CamViewChange" ) then
-			timer.Create( "CamViewChange", 1, 1, function()
-				CamEnable = false
-			end )
-		end
-		data.drawviewer = true
-		dir = dir or Vector( 0, 0, 0 )
-		--print( dir )
-		data.origin = ply:GetPos() - dir - dir:GetNormalized() * 30 + Vector( 0, 0, 80 )
-		data.angles = Angle( 10, dir:Angle().y, 0 )
-	end*/
-
 	//data = HeadBob( ply, data )
 
 	return data
 end
-
-/*function GetWeaponLang()
-	if cwlang then
-		return cwlang
-	end
-end*/
 
 function  GM:SetupWorldFog()
 	/*if LocalPlayer():GetNClass() == ROLES.ROLE_SCP9571 then
@@ -805,13 +402,18 @@ net.Receive( "957Effect", function( len )
 	end
 end )*/
 
-/*function GM:PreRender()
+--TODO test
+function GM:PreRender()
 	local lp = LocalPlayer()
 
 	for k, v in pairs( player.GetAll() ) do
-
+		if hook.Run( "CanPlayerSeePlayer", lp, v ) == false then
+			v:SetNoDraw( true )
+		else
+			v:SetNoDraw( false )
+		end
 	end
-end*/
+end
 
 hook.Add( "PreDrawHalos", "PickupWeapon", function()
 	local ply = LocalPlayer()
@@ -821,13 +423,13 @@ hook.Add( "PreDrawHalos", "PickupWeapon", function()
 
 	local wep = ply:GetEyeTrace().Entity
 	if IsValid( wep ) and wep:IsWeapon() then
-		if ply:HasWeapon( wep:GetClass() ) and wep.Stacks and wep.Stacks <= 1 then return end
+		/*if ply:HasWeapon( wep:GetClass() ) and ( !wep.Stacks or wep.Stacks <= 1 ) then return end
 		if wep.Stacks and wep.Stacks > 1 then
 			local pwep = LocalPlayer():GetWeapon( wep:GetClass() )
 			if IsValid( pwep ) and !pwep:CanStack() then return end
 		--elseif ply: then
 			--return
-		end
+		end*/
 
 		if ( ply:GetPos():DistToSqr( wep:GetPos() ) < 4500 or ply:EyePos():DistToSqr( wep:GetPos() ) < 3700 ) then
 			if !hook.Run( "WeaponPickupHover", wep ) and hook.Run( "PlayerCanPickupWeapon", ply, wep ) != false then
@@ -840,6 +442,7 @@ end )
 
 timer.Simple( 0, function()
 	ChangeLang( cur_lang, true )
+	DamageLogger( LocalPlayer() )
 
 	net.Start( "PlayerReady" )
 	net.SendToServer()

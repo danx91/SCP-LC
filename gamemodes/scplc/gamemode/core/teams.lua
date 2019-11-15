@@ -46,6 +46,22 @@ function SCPTeams.isAlly( team1, team2 )
 	end
 end
 
+function SCPTeams.getAllies( team )
+	local t = SCPTeams.REG[team]
+	
+	if t and t.relations then
+		local allies = {}
+
+		for k, v in pairs( t.relations ) do
+			if v == true then
+				table.insert( allies, k )
+			end
+		end
+
+		return allies
+	end
+end
+
 function SCPTeams.canEscort( team1, team2 )
 	if !SCPTeams.REG[team1] then return end
 	if !SCPTeams.REG[team1].escort then return end
@@ -95,6 +111,22 @@ function SCPTeams.addScore( team, score )
 	end
 
 	SCPTeams.SCORE[team] = SCPTeams.SCORE[team] + score
+end
+
+function SCPTeams.highestScore()
+	local score = 0
+	local team
+
+	for k, v in pairs( SCPTeams.SCORE ) do
+		if v > score then
+			score = v
+			team = { k }
+		elseif v > 0 and v == score then
+			table.insert( team, k )
+		end
+	end
+
+	return #team == 1 and team[1] or team
 end
 
 function SCPTeams.resetScore()

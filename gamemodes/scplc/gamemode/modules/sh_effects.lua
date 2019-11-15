@@ -92,7 +92,7 @@ function PLAYER:ApplyEffect( name, ... )
 
 	local tier = 1
 
-	if effect.tiers > 1 and isnumber( args[1] ) then
+	if isnumber( args[1] ) and args[1] > 0 then
 		if args[1] > effect.tiers then
 			tier = effect.tiers
 		else
@@ -316,4 +316,25 @@ EFFECTS.registerEffect( "amnc227", {
 	tiers = {
 		{ icon = Material( "slc_hud/effects/amn-c227.png" ) }
 	},
+	cantarget = function( ply )
+		return ply:SCPTeam() != TEAM_SPEC and ply:SCPTeam() != TEAM_SCP
+	end,
+	think = function( self, ply, tier, args )
+		if SERVER then
+			if ply:SCPTeam() == TEAM_SPEC or ply:SCPTeam() == TEAM_SCP or !args[2] then return end
+
+			local att = args[1]
+			local dmg = DamageInfo()
+
+			dmg:SetDamage( args[2] )
+			dmg:SetDamageType( DMG_POISON )
+
+			if IsValid( att ) then
+				dmg:SetAttacker( att )
+			end
+
+			ply:TakeDamageInfo( dmg )
+		end
+	end,
+	wait = 2,
 } )

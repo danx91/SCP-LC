@@ -42,6 +42,8 @@ function SWEP:PrimaryAttack()
 			local damage = 2 * ( self:GetUpgradeMod( "dmgmul" ) or 1 )
 
 			self.Owner:EmitSound( "SCP066.Music" )
+			AddRoundStat( "066" )
+
 			Timer( "SCP066_"..self.Owner:SteamID64(), 1, self.MusicLength, function( t, n )
 				if !IsValid( self ) or !IsValid( self.Owner ) then
 					t:Destroy()

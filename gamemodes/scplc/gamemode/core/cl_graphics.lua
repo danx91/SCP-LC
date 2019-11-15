@@ -1,11 +1,22 @@
 local mat_cache = {}
 
-function GetMaterial( name )
+/*---------------------------------------------------------------------------
+GetMaterial( name, args )
+
+Gets and caches material, if material doesn't exist, uses 'null' material.
+Use command 'slc_mat_clear_cache' to clear material cache
+
+@param 		[string] 		name 		Path to the material
+@param 		[string] 		args 		PNG parameters
+
+@return 	[IMaterial] 	material 	Requested material
+---------------------------------------------------------------------------*/
+function GetMaterial( name, args )
 	if mat_cache[name] then
 		return mat_cache[name]
 	end
 
-	local mat = Material( name )
+	local mat = Material( name, args )
 
 	if mat:IsError() then
 		mat = Material( "null" )
@@ -19,6 +30,26 @@ concommand.Add( "slc_mat_clear_cache", function()
 	mat_cache = {}
 end )
 
+/*---------------------------------------------------------------------------
+surface.DrawRing( x, y, radius, thick, angle, segments, fill, rotation )
+
+Draws ring with specified radius, thickness, etc. in specified position.
+You have to set draw color with surface.SetDrawColor() and remove current
+texture by calling draw.NoTexture()
+
+@param 		[number] 		x 			X coordinate of the ring center
+@param 		[number] 		y 			Y coordinate of the ring center
+@param  	[number] 		radius  	Distance from center to place where ring begins
+@param 		[number] 		thick 		Thickness of ring
+@param 		[number] 		angle 		360 by default - use it if you want only part of ring
+@param  	[number] 		segments  	How many segments to draw - more segments = smoother ring
+										If this value is lower than 3, ring will not appear
+@param 		[number] 		fill 		Number from 0 to 1, specifies visible part of the ring
+										1(default) - whole ring is visible, 0 - ring is invisible
+@param 		[number] 		rotation 	Rotation of the ring, by deafult 0
+
+@return 	[nil] 			- 		  	-
+---------------------------------------------------------------------------*/
 function surface.DrawRing( x, y, radius, thick, angle, segments, fill, rotation )
 	angle = math.Clamp( angle or 360, 1, 360 )
 	fill = math.Clamp( fill or 1, 0, 1 )
@@ -50,6 +81,27 @@ function surface.DrawRing( x, y, radius, thick, angle, segments, fill, rotation 
 	end
 end
 
+/*---------------------------------------------------------------------------
+surface.DrawRingDC( x, y, radius, thick, angle, segments, fill, rotation, dist, func )
+
+Works like surface.DrawRing, but you can specify distance between segments of ring and
+function that will be called before each segment is drawn - for example to set color of next segment
+
+@param 		[number] 		x 			X coordinate of the ring center
+@param 		[number] 		y 			Y coordinate of the ring center
+@param  	[number] 		radius  	Distance from center to place where ring begins
+@param 		[number] 		thick 		Thickness of ring
+@param 		[number] 		angle 		360 by default - use it if you want only part of ring
+@param  	[number] 		segments  	How many segments to draw - more segments = smoother ring
+										If this value is lower than 3, ring will not appear
+@param 		[number] 		fill 		Number from 0 to 1, specifies visible part of the ring
+										1(default) - whole ring is visible, 0 - ring is invisible
+@param 		[number] 		rotation 	Rotation of the ring, by deafult 0
+@param 		[number] 		dist 	 	Distance in degrees between each ring segment
+@param 		[function] 		func 	 	Called before each segment is drawn
+
+@return 	[nil] 			- 		  	-
+---------------------------------------------------------------------------*/
 function surface.DrawRingDC( x, y, radius, thick, angle, segments, fill, rotation, dist, func )
 	angle = math.Clamp( angle or 360, 1, 360 )
 	fill = math.Clamp( fill or 1, 0, 1 )
@@ -84,6 +136,24 @@ function surface.DrawRingDC( x, y, radius, thick, angle, segments, fill, rotatio
 	end
 end
 
+/*-------------------------------------------------------------------------
+surface.DrawSubTexturedRect( x, y, w, h, subx, suby, subw, subh, txw, txh )
+
+Draws rectangle using only part of texture
+
+@param 		[number] 		x 			X coordinate of rectangle
+@param 		[number] 		y 			Y coordinate of rectangle
+@param  	[number] 		w 		  	Width of rectangle
+@param 		[number] 		h 	 		Height of rectangle
+@param 		[number] 		subx 		X coordinate of sub-texture
+@param  	[number] 		suby 	  	Y coordinate of sub-texture
+@param 		[number] 		subw 		Width of sub-texture
+@param 		[number] 		subh 		Height of sub-texture
+@param 		[number] 		txw 	 	Width of texture
+@param 		[number] 		txh 	 	Height of texture
+
+@return 	[nil] 			- 		  	-
+---------------------------------------------------------------------------*/
 function surface.DrawSubTexturedRect( x, y, w, h, subx, suby, subw, subh, txw, txh )
 	local ustart = subx / txw
 	local vstart = suby / txh
@@ -118,26 +188,64 @@ function surface.DrawSubTexturedRect( x, y, w, h, subx, suby, subw, subh, txw, t
 	} )
 end
 
+/*-------------------------------------------------------------------------
+surface.DrawFilledCircle( x, y, radius, seg )
+
+Draws filled circle
+
+@param 		[number] 		x 			X coordinate of circle
+@param 		[number] 		y 			Y coordinate of circle
+@param  	[number] 		radius 		Radius of circle
+@param 		[number] 		seg			Segments to draw - more segments = smoother circle, but less performance
+
+@return 	[nil] 			- 		  	-
+---------------------------------------------------------------------------*/
 function surface.DrawFilledCircle( x, y, radius, seg )
 	seg = math.Round( seg )
 	local verts = {}
+
 	for i = 0, seg do
 		local a = math.rad( ( i / seg ) * -360 )
 		table.insert( verts, { x = x + math.sin( a ) * radius, y = y + math.cos( a ) * radius } )
 	end
+
 	surface.DrawPoly( verts )
 end
 
+/*-------------------------------------------------------------------------
+surface.DrawTriangle( x, y, height, rotation )
+
+Draws triangle, in fact it draws 'circle' but with only 3 segments
+
+@param 		[number] 		x 			X coordinate of triangle
+@param 		[number] 		y 			Y coordinate of triangle
+@param  	[number] 		height 		height (distance to each vertex from center)
+@param 		[number] 		rotaion 	Rotation of triangle
+
+@return 	[nil] 			- 		  	-
+---------------------------------------------------------------------------*/
 function surface.DrawTriangle( x, y, height, rotation )
 	rotation = rotation or 0
 	local verts = {}
+
 	for i = 0, 2 do
 		local ang  = math.rad( i * 120 + rotation )
 		table.insert( verts, { x = x + math.sin( ang ) * height, y = y + math.cos( ang ) * height } )
 	end
+
 	surface.DrawPoly( verts )
 end
 
+/*-------------------------------------------------------------------------
+surface.DrawDifference( v1, v2 )
+
+Draws difference between two polygons
+
+@param 		[table] 		v1 			Data of first polygon (same as surface.DrawPoly)
+@param 		[table] 		v2 			Data of second polygon (same as surface.DrawPoly)
+
+@return 	[nil] 			- 		  	-
+---------------------------------------------------------------------------*/
 function surface.DrawDifference( v1, v2 )
 	render.ClearStencil()
 
@@ -164,6 +272,19 @@ function surface.DrawDifference( v1, v2 )
 	render.SetStencilEnable( false )
 end
 
+/*-------------------------------------------------------------------------
+surface.DrawCooldownCircleCW( x, y, radius, pct, pctstep )
+
+Draws clockwise circle cooldown timer
+
+@param 		[number] 		x 			X coordinate of center
+@param 		[number] 		y 			Y coordinate of center
+@param  	[number] 		radius 		Radius of circle
+@param 		[number] 		pct 		Percentage of cooldown
+@param 		[number] 		pctstep 	Step of draw - more steps = better quality and worse performance
+
+@return 	[nil] 			- 		  	-
+---------------------------------------------------------------------------*/
 function surface.DrawCooldownCircleCW( x, y, radius, pct, pctstep )
 	pct = math.Clamp( 1 - pct, 0, 1 )
 
@@ -191,6 +312,19 @@ function surface.DrawCooldownCircleCW( x, y, radius, pct, pctstep )
 	surface.DrawPoly( verts )
 end
 
+/*-------------------------------------------------------------------------
+surface.DrawCooldownCircleCCW( x, y, radius, pct, pctstep )
+
+Draws counterclockwise circle cooldown timer
+
+@param 		[number] 		x 			X coordinate of center
+@param 		[number] 		y 			Y coordinate of center
+@param  	[number] 		radius 		Radius of circle
+@param 		[number] 		pct 		Percentage of cooldown
+@param 		[number] 		pctstep 	Step of draw - more steps = better quality and worse performance
+
+@return 	[nil] 			- 		  	-
+---------------------------------------------------------------------------*/
 function surface.DrawCooldownCircleCCW( x, y, radius, pct, pctstep )
 	pct = math.Clamp( pct, 0, 1 )
 
@@ -220,7 +354,20 @@ function surface.DrawCooldownCircleCCW( x, y, radius, pct, pctstep )
 	surface.DrawPoly( verts )
 end
 
-function surface.DrawCooldownRectCW( x, y, width, height, pct, pctstep )
+/*-------------------------------------------------------------------------
+surface.DrawCooldownRectCW( x, y, width, height, pct )
+
+Draws clockwise rectangle cooldown timer
+
+@param 		[number] 		x 			X coordinate of rectangle
+@param 		[number] 		y 			Y coordinate of rectangle
+@param  	[number] 		width 		Width of rectangle
+@param  	[number] 		height 		Height of rectangle
+@param 		[number] 		pct 		Percentage of cooldown
+
+@return 	[nil] 			- 		  	-
+---------------------------------------------------------------------------*/
+function surface.DrawCooldownRectCW( x, y, width, height, pct )
 	pct = math.Clamp( 1 - pct, 0, 1 )
 
 	if pct == 1 then
@@ -259,7 +406,20 @@ function surface.DrawCooldownRectCW( x, y, width, height, pct, pctstep )
 	surface.DrawPoly( verts )
 end
 
-function surface.DrawCooldownRectCCW( x, y, width, height, pct, pctstep )
+/*-------------------------------------------------------------------------
+surface.DrawCooldownRectCCW( x, y, width, height, pct )
+
+Draws counterclockwise rectangle cooldown timer
+
+@param 		[number] 		x 			X coordinate of rectangle
+@param 		[number] 		y 			Y coordinate of rectangle
+@param  	[number] 		width 		Width of rectangle
+@param  	[number] 		height 		Height of rectangle
+@param 		[number] 		pct 		Percentage of cooldown
+
+@return 	[nil] 			- 		  	-
+---------------------------------------------------------------------------*/
+function surface.DrawCooldownRectCCW( x, y, width, height, pct )
 	pct = math.Clamp( pct, 0, 1 )
 
 	if pct == 1 then
@@ -297,6 +457,28 @@ function surface.DrawCooldownRectCCW( x, y, width, height, pct, pctstep )
 	surface.DrawPoly( verts )
 end
 
+/*-------------------------------------------------------------------------
+draw.MultilineText( x, y, text, font, color, maxWidth, margin, dist, align, maxRows, simulate, calcW )
+
+Draws multiline text with parameters: maximum width, maximum rows count, margin and distance.
+Function can be used to simulate drawing and get final text params
+
+@param 		[number] 		x 			X coordinate of text
+@param 		[number] 		y 			Y coordinate of text
+@param  	[string] 		text 		Text to draw
+@param 		[string] 		font 		Font to use
+@param 		[Color] 		color 		Color of text
+@param  	[number] 		maxWidth 	Maximum width of text
+@param 		[number] 		margin 		Margin of text
+@param 		[number] 		dist 		Distance between text rows
+@param 		[number] 		align 		Text align on X axis (TEXT_ALIGN_ enum)
+@param 		[number] 		maxRows 	Maximum amount of rows
+@param 		[boolean] 		simulate 	Don't draw text but calculate height of text
+@param 		[boolean] 		calcW 		If true, width of text will be also calculated instead of returning maxWidth
+
+@return 	[number] 		height 		Final height of text including margin and distance
+			[number]		width 		Width of the widest line. If simulate == true and calcW == false, maxWidth will be returned instead
+---------------------------------------------------------------------------*/
 function draw.MultilineText( x, y, text, font, color, maxWidth, margin, dist, align, maxRows, simulate, calcW )
 	align = align or TEXT_ALIGN_LEFT
 	maxWidth = maxWidth - 2 * margin
@@ -386,8 +568,29 @@ function draw.MultilineText( x, y, text, font, color, maxWidth, margin, dist, al
 		end
 	end
 
-	return margin + height * n, maxw
+	return margin + height * n, maxw --TODO margin * 2?
 end
+
+/*-------------------------------------------------------------------------
+draw.LimitedText( tab )
+
+Draws text, but obeys maximum width
+
+@param 		[table] 		tab 		text data
+{
+	[number]		x 			X position of text
+	[number]		y 			Y position of text
+	[string]		text 		Text to draw
+	[string]		font 		Font to use
+	[Color]			color 		Color of text
+	[number]		max_width 	Maximum width of text
+	[number]		xalign 		Text align on X axis (TEXT_ALIGN_ enum)
+	[number]		yalign 		Text align on Y axis (TEXT_ALIGN_ enum)
+}
+
+@return 	[number] 		width 		Width of drawn text
+			[number]		height 		Height of drawn text
+---------------------------------------------------------------------------*/
 //function draw.LimitedText( x, y, text, font, color, max_width, xalign, yalign )
 function draw.LimitedText( tab )
 	tab.text = tostring( tab.text )

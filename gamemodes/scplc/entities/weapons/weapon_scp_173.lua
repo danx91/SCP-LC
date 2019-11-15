@@ -7,6 +7,7 @@ SWEP.SpecialCD 		= 60
 SWEP.NextSpecial 	= 0
 SWEP.StopThink  	= false
 SWEP.GBlink 		= 0
+SWEP.QuickReturnTime = 0
 
 function SWEP:SetupDataTables()
 	self:NetworkVar( "Float", 0, "NSpecial" )
@@ -120,6 +121,7 @@ function SWEP:Think()
 						v:TakeDamageInfo( dmginfo )
 						v:EmitSound( "SCP173.Snap" )
 
+						AddRoundStat( "173" )
 						self:AddScore( 1 )
 
 						local heal = self:GetUpgradeMod( "heal" )
@@ -328,7 +330,7 @@ function SWEP:DrawHUD()
 end
 
 addSounds( "SCP173.Horror", "scp/173/Horror/Horror%i.ogg", 0, 1, 100, CHAN_STATIC, 0, 9 )
-addSounds( "SCP173.Rattle", "scp/173/Rattle%i.ogg", 90, 1, 100, CHAN_STATIC, 1, 3 )
+addSounds( "SCP173.Rattle", "scp/173/Rattle%i.ogg", 100, 1, 100, CHAN_STATIC, 1, 3 )
 addSounds( "SCP173.Snap", "scp/173/NeckSnap%i.ogg", 511, 1, 100, CHAN_STATIC, 1, 3 )
 
 hook.Add( "PlayerFootstep", "173Rattle", function( ply, pos, foot, sound, vol, filter )
@@ -372,7 +374,7 @@ DefineUpgradeSystem( "scp173", {
 
 		{ name = "nvmod", cost = 1, req = {}, reqany = false,  pos = { 4, 2 }, mod = {}, active = false },
 	},
-	rewards = {
+	rewards = { -- ~55%-60%
 		{ 1, 2 },
 		{ 2, 1 },
 		{ 3, 1 },

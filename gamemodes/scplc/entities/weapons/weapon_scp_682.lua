@@ -41,11 +41,12 @@ function SWEP:PrimaryAttack()
 			if ent:IsPlayer() then
 				if ent:SCPTeam() == TEAM_SCP or ent:SCPTeam() == TEAM_SPEC then return end
 
-				if ent:Health() <= 250 then
-					self:AddScore( 1 )
-				end
-
 				ent:TakeDamage( 250, self.Owner, self.Owner )
+
+				if ent:Health() <= 0 then
+					self:AddScore( 1 )
+					AddRoundStat( "682" )
+				end
 			else
 				self:SCPDamageEvent( ent, 50 )
 			end	

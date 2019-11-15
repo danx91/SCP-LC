@@ -191,9 +191,11 @@ local function createPlayerTab( ply, pnl )
 
 		self:SetZPos( sorting * 1500 - ply:SCPPrestige() * 10 - ply:SCPLevel() + ply:EntIndex() )
 	end
+
 	tab.PerformLayout = function( self, pw, ph )
-		tab:SetTall( ScrH() * 0.04 )
+		self:SetTall( ScrH() * 0.04 ) --tab:SetTall( ScrH() * 0.04 )
 	end
+
 	tab.BackgroundAlpha = 0
 	tab._Color = Color( 200, 200, 200, 200 )
 	tab._TextColor = Color( 255, 255, 255, 255 )
@@ -227,6 +229,7 @@ local function createPlayerTab( ply, pnl )
 	name:SetFont( "SCPHUDMedium" )
 	name:SetText( LANG.unconnected or "" )
 	name:SetContentAlignment( 5 )
+	name:SetTextInset( 10, 0 )
 	name.Paint = function( self, pw, ph ) 
 		surface.SetDrawColor( tab.Color )
 		surface.DrawOutlinedRect( 0, 0, pw, ph )
@@ -535,6 +538,9 @@ local function createScoreboard()
 	container:MakePopup()
 	container:SetKeyboardInputEnabled( false )
 	container.Paint = function( self, pw, ph )
+		//surface.SetDrawColor( Color( 255, 255, 255, 20 ) )
+		//surface.DrawRect( 0, 0, pw, ph )
+
 		render.SetStencilTestMask( 0xFF )
 		render.SetStencilWriteMask( 0xFF )
 		render.SetStencilPassOperation( STENCIL_INCR )
@@ -572,7 +578,7 @@ local function createScoreboard()
 
 		render.SetStencilEnable( false )
 
-		local lx = ScrH() * 0.045 + 7
+		local lx = ScrH() * 0.04 + 7
 		local lw = pw * 0.2
 
 		draw.LimitedText{
@@ -587,7 +593,7 @@ local function createScoreboard()
 
 		lx = lx + lw + 8
 
-		local rx = pw - ScrH() * 0.045 - 7
+		local rx = pw - ScrH() * 0.04 - 7
 		local rw = pw * 0.05
 
 		draw.LimitedText{
