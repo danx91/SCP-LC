@@ -68,8 +68,10 @@ local function ResetEvents()
 	ROUND.post = false
 	ROUND.preparing = false
 	ROUND.freeze = false
-	ROUND.queue = {}
 	ROUND.roundtype = ROUNDS.dull
+
+	//ROUND.queue = {}
+	ClearQueue()
 end
 
 --[[-------------------------------------------------------------------------
@@ -366,6 +368,4 @@ function GM:SLCPostround( winner )
 			end
 		end
 	end
-
-	--TODO give exp etc.
 end

@@ -17,6 +17,9 @@ util.AddNetworkString( "PlayerCommand" )
 util.AddNetworkString( "PlayerEffect" )
 util.AddNetworkString( "SCPUpgrade" )
 util.AddNetworkString( "DeathInfo" )
+util.AddNetworkString( "ClassUnlock" )
+
+net.AddTableChannel( "SLCPlayerMeta" )
 
 --[[-------------------------------------------------------------------------
 Receivers
@@ -54,6 +57,18 @@ net.Receive( "PlayerReady", function( len, ply )
 			net.Send( ply )
 		end
 	end
+
+	//ply.playermeta = ply.playermeta or {}
+	//hook.Run( "SLCPlayerMeta", ply, ply.playermeta )
+	if !ply.playermeta then
+		ErrorNoHalt( "Error! Player.playermeta is nil!\n", ply )
+	end
+
+	/*net.Start( "PlayerReady" )
+		net.WriteTable( ply.playermeta or {} )
+	net.Send( ply )*/
+
+	net.SendTable( "SLCPlayerMeta", ply.playermeta or {}, ply )
 end )
 
 net.Receive( "SCPForceExhaust", function( len, ply )
@@ -101,6 +116,14 @@ net.Receive( "PlayerCommand", function( len, ply )
 	local args = net.ReadTable()
 
 	cmd.ExecCallback( ply, name, args )
+end )
+
+net.Receive( "ClassUnlock", function( len, ply )
+	local class = net.ReadString()
+
+	if class then
+		ply:UnlockClass( class )
+	end
 end )
 
 --[[-------------------------------------------------------------

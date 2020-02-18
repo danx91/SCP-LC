@@ -58,7 +58,7 @@ function VEST.register( name, data, randomvest )
 	if !data.mobility then data.mobility = 0.9 end
 
 	data.weight = math.Clamp( data.weight, 0, 10 )
-	data.mobility = math.Clamp( data.mobility, 0.2, 1 )
+	data.mobility = math.Clamp( data.mobility, 0.2, 1.9 )
 	data.HIDE = data.HIDE or {}
 
 	local id = table.insert( VEST.vid, name )
@@ -84,7 +84,7 @@ function VEST.create( id, pos )
 
 	assert( VEST.vid[id], "Tried to create invalid vest: "..id )
 
-	local vest = ents.Create( "item_vest" )
+	local vest = ents.Create( "slc_vest" )
 	vest:Spawn()
 
 	vest:SetVest( id )
@@ -124,16 +124,17 @@ end
 -- concommand.Add( "spawnvest", function( ply )
 -- 	//VEST.create( "com", ply:GetPos() )
 
--- 	local vest = ents.Create( "item_vest" )
+-- 	local vest = ents.Create( "slc_vest" )
 -- 	if IsValid( vest ) then
 -- 		vest:Spawn()
 -- 		vest:SetPos( ply:GetEyeTrace().HitPos )
 -- 	end
 -- end )
 
-concommand.Add( "getspeed", function( ply )
+--TODO remove
+/*concommand.Add( "getspeed", function( ply )
 	print( ply:GetWalkSpeed(), ply:GetRunSpeed() )
-end )
+end )*/
 
 -- timer.Simple( 0, function()
 -- 	hook.Run( "SLCRegisterVests" )

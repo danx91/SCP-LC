@@ -446,8 +446,8 @@ if CLIENT then
 
 			surface.SetDrawColor( color )
 
-			surface.DrawRect( cx, cy, width, h * 0.04 )
-			local cur_y = cy + h * 0.04
+			surface.DrawRect( cx, cy, width, math.ceil( h * 0.04 ) )
+			local cur_y = cy + math.ceil( h * 0.04 )
 
 			draw.LimitedText{
 				text = clang.name or info.name,
@@ -460,31 +460,31 @@ if CLIENT then
 			}
 
 			local owned = wep:HasUpgrade( info.name )
-			surface.DrawRect( cx, cur_y, width, h * 0.04 )
-			cur_y = cur_y + h * 0.04
+			surface.DrawRect( cx, cur_y, width, math.ceil( h * 0.04 ) )
+			cur_y = cur_y + math.ceil( h * 0.04 )
 
 			draw.Text{
 				text = owned and ( LANG.upgrades.owned.." ✓" ) or ( LANG.upgrades.cost..": "..info.cost ),
 				pos = { cx + w * 0.01, cur_y - h * 0.025 },
-				font = "SCPHUDMedium",
+				font = "SCPHUDSmall",
 				color = Color( 255, 255, 255, 255 ),
 				xalign = TEXT_ALIGN_LEFT,
 				yalign = TEXT_ALIGN_CENTER,
 			}
 
 			if clang.info then
-				local height = draw.MultilineText( cx + w * 0.01, cur_y + h * 0.01, clang.info, "SCPHUDMedium", nil, w * 0.28, 0, 0, TEXT_ALIGN_LEFT, nil, true )
+				local height = draw.MultilineText( cx + w * 0.01, cur_y + h * 0.01, clang.info, "SCPHUDSmall", nil, w * 0.28, 0, 0, TEXT_ALIGN_LEFT, nil, true )
 
-				surface.DrawRect( cx, cur_y, width, height + h * 0.015 )
+				surface.DrawRect( cx, cur_y, width, math.ceil( height + h * 0.015 ) )
 
-				draw.MultilineText( cx + w * 0.01, cur_y + h * 0.01, clang.info, "SCPHUDMedium", Color( 255, 255, 255, 255 ), w * 0.28, 0, 0, TEXT_ALIGN_LEFT )
+				draw.MultilineText( cx + w * 0.01, cur_y + h * 0.01, clang.info, "SCPHUDSmall", Color( 255, 255, 255, 255 ), w * 0.28, 0, 0, TEXT_ALIGN_LEFT )
 
-				cur_y = cur_y + height + h * 0.015
+				cur_y = cur_y + math.ceil( height + h * 0.015 )
 			end
 
 			if #info.req > 0 and !wep:UpgradeUnlocked( info.name ) then
-				surface.DrawRect( cx, cur_y, width, h * 0.05 )
-				cur_y = cur_y + h * 0.05
+				surface.DrawRect( cx, cur_y, width, math.ceil( h * 0.05 ) )
+				cur_y = cur_y + math.ceil( h * 0.05 )
 
 				draw.Text{
 					text = ( info.reqany and LANG.upgrades.requiresany or LANG.upgrades.requiresall )..":",
@@ -498,13 +498,13 @@ if CLIENT then
 				for i, v in ipairs( info.req ) do
 					local owned = wep:HasUpgrade( v )
 
-					surface.DrawRect( cx, cur_y, width, h * 0.03 )
-					cur_y = cur_y + h * 0.03
+					surface.DrawRect( cx, cur_y, width, math.ceil( h * 0.03 ) )
+					cur_y = cur_y + math.ceil( h * 0.03 )
 
 					draw.LimitedText{
 						text = "\t"..( lang[v] and lang[v].name or v )..( owned and " ✓" or " ✗" ),
 						pos = { cx + w * 0.01, cur_y - h * 0.02 },
-						font = "SCPHUDMedium",
+						font = "SCPHUDSmall",
 						color = owned and Color( 255, 255, 255, 255 ) or Color( 225, 55, 55, 255 ),
 						xalign = TEXT_ALIGN_LEFT,
 						yalign = TEXT_ALIGN_CENTER,
@@ -517,7 +517,7 @@ if CLIENT then
 			render.SetStencilPassOperation( STENCIL_KEEP )
 
 			surface.SetDrawColor( Color( 150, 150, 150, 50 ) )
-			surface.DrawRect( cx - 2, cy - 2, width + 4, cur_y - cy + 4 )
+			surface.DrawRect( cx - 2, cy - 2, width + 4, math.ceil( cur_y - cy + 4 ) )
 
 			render.SetStencilEnable( false )
 		end

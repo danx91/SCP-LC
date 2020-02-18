@@ -1,4 +1,20 @@
 --[[-------------------------------------------------------------------------
+rpairs
+---------------------------------------------------------------------------]]
+local function rpairs_iter( tab, i )
+	i = i - 1
+	local v = tab[i]
+
+	if v then
+		return i, v
+	end
+end
+
+function rpairs( tab, i )
+	return rpairs_iter, tab, (i or #tab) + 1
+end
+
+--[[-------------------------------------------------------------------------
 General functions
 ---------------------------------------------------------------------------]]
 function RoundTable( tab )
@@ -117,6 +133,99 @@ function StringBuilder:trim( endonly )
 end
 
 setmetatable( StringBuilder, { __call = StringBuilder.New } )
+
+--[[-------------------------------------------------------------------------
+Wheel menu
+---------------------------------------------------------------------------]]
+local wheel_visible = false
+local wheel_options = {}
+local wheel_cb
+function OpenWheelMenu( options, cb )
+	if wheel_visible then return end
+
+	wheel_options = { { "exit", LANG.nothing, "" } }
+	for i, v in ipairs( options ) do
+		table.insert( wheel_options, { v[1], v[2], v[3] } )
+	end
+
+	wheel_cb = cb
+	wheel_visible = true
+	gui.EnableScreenClicker( true )
+end
+
+function CloseWheelMenu()
+	if !wheel_visible then return end
+
+	local x, y = input.GetCursorPos()
+	local ca = math.deg( math.atan2( x - ScrW() * 0.5, -y + ScrH() * 0.5 ) )
+
+	if ca < 0 then
+		ca = 360 + ca
+	end
+
+	local selected = math.floor( ca * #wheel_options / 360 ) + 1
+
+	if wheel_cb then
+		wheel_cb( wheel_options[selected][3] )
+	end
+
+	wheel_visible = false
+	wheel_options = {}
+	gui.EnableScreenClicker( false )
+end
+
+hook.Add( "HUDPaint", "SLCWheelMenu", function()
+	if !wheel_visible then return end
+
+	local w, h = ScrW(), ScrH()
+
+	local x, y = input.GetCursorPos()
+	local ca = math.deg( math.atan2( x - w * 0.5, -y + h * 0.5 ) )
+
+	if ca < 0 then
+		ca = 360 + ca
+	end
+
+	local seg = #wheel_options
+	local ang = 360 / seg
+	local segang = ang - 4
+	for i = 1, seg do
+		draw.NoTexture()
+		surface.SetDrawColor( Color( 200, 200, 200 ) )
+		surface.DrawRing( w * 0.5, h * 0.5, w * 0.099, w * 0.057, segang + 2, 40, 1, 1 + ang * (i - 1) )
+
+		local selected =ca > ang * (i - 1) and ca <= ang * i
+
+		if selected then
+			surface.SetDrawColor( Color( 100, 100, 100 ) )
+		else
+			surface.SetDrawColor( Color( 50, 50, 50 ) )
+		end
+
+		surface.DrawRing( w * 0.5, h * 0.5, w * 0.1, w * 0.055, segang, 40, 2, 2 + ang * (i - 1) )
+
+		surface.SetDrawColor( Color( 255, 255, 255 ) )
+		surface.SetMaterial( GetMaterial( wheel_options[i][1] ) )
+
+		local dist = w * 0.1275
+		local a = math.rad( ang * 0.5 + ang * (i - 1) )
+		local dx, dy = math.sin( a ) * dist, -math.cos( a ) * dist
+
+		local size = w * 0.035
+		surface.DrawTexturedRect( w * 0.5 + dx - size * 0.5, h * 0.5 + dy - size * 0.5, size, size )
+
+		if selected then
+			draw.LimitedText{
+				text = wheel_options[i][2],
+				pos = { w * 0.5, h * 0.5 },
+				color = Color( 255, 255, 255, 100 ),
+				font = "SCPHUDSmall",
+				xalign = TEXT_ALIGN_CENTER,
+				yalign = TEXT_ALIGN_CENTER,
+			}
+		end
+	end
+end )
 
 --[[-------------------------------------------------------------------------
 StringTable --TODO do it better

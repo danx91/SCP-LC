@@ -2,6 +2,16 @@ UTF8_CHARSET = "[\1-\127\194-\244][\128-\191]*"
 UTF8_MAX3B_CHARSET = "[\1-\127\194-\239][\128-\191]*"
 UTF8_4B_CHARSET = "[\240-\244][\128-\191]*"
 
+timer.Simple( 0, function()
+	net.AddTableChannel( "DeathInfo" )
+
+	if CLIENT then
+		net.ReceiveTable( "DeathInfo", function( data )
+			DamageLogger.Print( data )
+		end )
+	end
+end )
+
 DamageLogger = {}
 
 function DamageLogger:New( ply ) --TODO Test memory usage
@@ -91,7 +101,7 @@ function DamageLogger:Dump( killer, inflictor )
 	end
 
 	if SERVER then
-		net.Start( "DeathInfo" )
+		/*net.Start( "DeathInfo" )
 			net.WriteTable( {
 				Killer = data.Killer,
 				Weapon = data.Weapon,
@@ -99,7 +109,14 @@ function DamageLogger:Dump( killer, inflictor )
 				TakenLog = lastlogs,
 				TakenSourceLog = data.TakenSourceLog,
 			} )
-		net.Send( self.Player )
+		net.Send( self.Player )*/
+		net.SendTable( "DeathInfo", {
+				Killer = data.Killer,
+				Weapon = data.Weapon,
+				Taken = data.Taken,
+				TakenLog = lastlogs,
+				TakenSourceLog = data.TakenSourceLog,
+			}, self.Player )
 	end
 end
 
@@ -113,7 +130,7 @@ function DamageLogger:Reset()
 end
 
 function DamageLogger.Print( data )
-	local killer = data.Killer and IsValid( data.Killer ) and data.Killer:GetName() or "Unknown"
+	local killer = data.Killer and IsValid( data.Killer ) and data.Killer.GetName and data.Killer:GetName() or "Unknown"
 	local n = "Killer: "..killer
 
 	local tab = {}
@@ -174,17 +191,13 @@ function DamageLogger.Print( data )
 	t2:Print()
 end
 
--- timer.Simple( 0.1, function() DamageLogger.Print( { Killer = { GetName = function() return "Player1" end }, Taken = "356", TakenLog = {
--- 	{ attacker = { GetName = function() return "Player1" end }, damage = 10, data = { dmg_orig = 15, hp = 100 } },
--- 	{ attacker = { GetName = function() return "Player1" end }, damage = 20, data = { dmg_orig = 20, hp = 90 } },
--- 	{ attacker = { GetName = function() return "Player2" end }, damage = 15, data = { dmg_orig = 25, hp = 70 } },
--- 	{ attacker = { GetName = function() return "Player1" end }, damage = 20, data = { dmg_orig = 20, hp = 55 } },
--- 	{ attacker = { GetName = function() return "Player3" end }, damage = 17, data = { dmg_orig = 30, hp = 35 } },
--- 	{ attacker = { GetName = function() return "Player3" end }, damage = 17, data = { dmg_orig = 30, hp = 18 } },
--- 	{ attacker = { GetName = function() return "Player1" end }, damage = 10, data = { dmg_orig = 15, hp = 1 } },
--- } } ) end )
-
 setmetatable( DamageLogger, { __call = DamageLogger.New } )
+
+/*net.Receive( "DeathInfo", function( len )
+	local data = net.ReadTable()
+
+	DamageLogger.Print( data )
+end )*/
 
 /*for k, v in pairs( player.GetAll() ) do
 	DamageLogger( v )

@@ -1,8 +1,7 @@
 SWEP.Base 			= "item_slc_base"
+SWEP.Language  		= "CAMERA"
 
 SWEP.WorldModel		= "models/props_junk/cardboard_box004a.mdl"
-
-SWEP.Language  		= "CAMERA"
 
 SWEP.NextChange 	= 0
 SWEP.CCTV 			= {}
@@ -30,7 +29,6 @@ end
 function SWEP:Initialize()
 	self:SetHoldType( self.HoldType )
 	self:InitializeLanguage()
-	self:SetSkin( 1 )
 end
 
 function SWEP:Holster()
@@ -47,7 +45,7 @@ function SWEP:Think()
 	self:CallBaseClass( "Think" )
 
 	if #self.CCTV != #CCTV then
-		for k, v in pairs( ents.FindByClass( "item_cctv" ) ) do
+		for k, v in pairs( ents.FindByClass( "slc_cctv" ) ) do
 			//print( v, v:GetCam() )
 			self.CCTV[v:GetCam()] = v
 		end
@@ -253,7 +251,8 @@ function SWEP:DrawHUD()
 			local pct = battery * 0.01
 
 			surface.SetDrawColor( Color( 175 * ( 1 - pct ), 175 * pct, 0, 255 ) )
-			surface.DrawRect( w * 0.878, h * 0.029, w * 0.084 * pct, h * 0.043 )
+			//surface.DrawRect( w * 0.878, h * 0.029, w * 0.084 * pct, h * 0.043 )
+			surface.DrawRect( w * 0.875 + 4, h * 0.025 + 4, (w * 0.09 - 8) * pct, h * 0.05 - 8 )
 
 			if battery < 15 then
 				surface.SetDrawColor( Color( 255, 0, 0, math.TimedSinWave( 0.5, 0, 255 ) ) )

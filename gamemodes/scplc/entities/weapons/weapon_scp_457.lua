@@ -36,7 +36,7 @@ function SWEP:Think()
 		if self.NCheck < CurTime() then
 			self.NCheck = CurTime() + 1
 
-			for i = 1, #self.Traps do
+			for i = #self.Traps, 1, -1 do
 				if !IsValid( self.Traps[i] ) then
 					table.remove( self.Traps, i )
 				end

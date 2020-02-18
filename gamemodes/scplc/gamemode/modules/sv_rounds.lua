@@ -27,7 +27,7 @@ function addRoundType( name, tab, base, chance )
 	ROUNDS[name] = tab
 end
 
-function selectRoundType()
+function selectRoundType() --TODO
 
 end
 
@@ -43,7 +43,7 @@ addRoundType( "normal", {
 		OpenSCPs()
 	end,
 	postround = function( self, winner )
-		/*for k, v in pairs( GetActivePlayers() ) do
+		/*for k, v in pairs( GetActivePlayers() ) do --TODO
 			local r = tonumber( v:GetPData( "scp_penalty", 0 ) ) - 1
 			r = math.max( r, 0 )
 

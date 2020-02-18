@@ -28,7 +28,6 @@ end
 
 function SWEP:Initialize()
 	self:SetHoldType( self.HoldType )
-	self:SetSkin( 2 )
 	self:InitializeLanguage()
 end
 

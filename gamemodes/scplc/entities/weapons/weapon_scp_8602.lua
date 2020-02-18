@@ -85,7 +85,7 @@ function SWEP:SpecialAttack( ent, p )
 	ent:SetVelocity( vel )
 
 	if self:HasUpgrade( "charge31" ) then
-		for k, v in pairs( FindInCylinder( p, 125, -128, 128, "player", MASK_SOLID_BRUSHONLY, player.GetAll() ) ) do
+		for k, v in pairs( FindInCylinder( p, 125, -128, 128, nil, MASK_SOLID_BRUSHONLY, player.GetAll() ) ) do
 			if v != self.Owner then
 				local t = v:SCPTeam()
 

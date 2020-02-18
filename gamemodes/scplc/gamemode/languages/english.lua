@@ -5,7 +5,7 @@ NRegistry
 ---------------------------------------------------------------------------]]
 lang.NRegistry = {
     scpready = "You can be selected as SCP in next round",
-    scpwait = "You have to wait %s rounds to be able to play as SCP",
+    scpwait = "You have to wait %i rounds to be able to play as SCP",
     abouttostart = "Game will start in 10 seconds!",
     kill = "You received %d points for killing %s: %s!",
     rdm = "You lost %d points for killing %s: %s!",
@@ -74,7 +74,18 @@ lang.NCRegistry = {
 --[[-------------------------------------------------------------------------
 HUD
 ---------------------------------------------------------------------------]]
-lang.pickup = "Pickup"
+local hud = {}
+
+hud.pickup = "Pickup"
+hud.class = "Class"
+hud.team = "Team"
+hud.prestige_points = "Prestige Points"
+hud.hp = "HP"
+hud.stamina = "STAMINA"
+hud.sanity = "SANITY"
+hud.xp = "XP"
+
+lang.HUD = hud
 
 --[[-------------------------------------------------------------------------
 EQ
@@ -102,6 +113,8 @@ effects.permanent = "perm"
 effects.bleeding = "Bleeding"
 effects.doorlock = "Door Lock"
 effects.amnc227 = "AMN-C227"
+effects.insane = "Insane"
+effects.gas_choke = "Choking"
 
 lang.EFFECTS = effects
 
@@ -111,12 +124,14 @@ Class viewer
 lang.classviewer = "Class Viewer"
 lang.preview = "Preview"
 lang.random = "Random"
+lang.price = "Price"
+lang.buy = "Buy"
 
 lang.details = {
     details = "Details",
     name = "Name",
     team = "Team",
-    level = "Required Level",
+    price = "Prestige Points price",
     walk_speed = "Walk Speed",
     run_speed = "Run Speed",
     chip = "Access Chip",
@@ -159,6 +174,7 @@ lang.ranks = {
     author = "Author",
     vip = "VIP",
     tester = "Tester",
+    countbob = "Count Bob"
 }
 
 --[[-------------------------------------------------------------------------
@@ -172,6 +188,11 @@ lang.upgrades = {
     requiresall = "Requires",
     requiresany = "Requires any"
 }
+
+--[[-------------------------------------------------------------------------
+Generic
+---------------------------------------------------------------------------]]
+lang.nothing = "Nothing"
 
 --[[-------------------------------------------------------------------------
 Vests
@@ -223,6 +244,8 @@ local classes = {}
 
 classes.unknown = "Unknown"
 
+classes.SCP049 = "SCP 049"
+classes.SCP0492 = "SCP 049-2"
 classes.SCP066 = "SCP 066"
 classes.SCP106 = "SCP 106"
 classes.SCP173 = "SCP 173"
@@ -356,6 +379,15 @@ Kill MTFs and other facility staff]],
     cicom = [[You are Chaos Insurgency Commander
 Help Class D Personnel
 Kill MTFs and other facility staff]],
+    
+    SCP049 = [[You are SCP 049
+Your objective is to escape from the facility
+Your touch is deadly to humans
+You can perform surgery to "cure" people]],
+
+    SCP0492 = [[You are SCP 049-2
+Your objective is to escape from the facility
+Listen to SCP 049's orders and protect him]],
 
     SCP066 = [[You are SCP 066
 Your objective is to escape from the facility
@@ -410,6 +442,66 @@ lang.GenericUpgrades = {
 }
 
 local wep = {}
+
+wep.SCP049 = {
+    surgery = "Performing surgery",
+    surgery_failed = "Surgery failed!",
+    zombies = {
+        normal = "Standard Zombie",
+        light = "Light Zombie",
+        heavy = "Heavy Zombie"
+    },
+    upgrades = {
+        cure1 = {
+            name = "I am the Cure I",
+            info = "Get 40% bullet protection",
+        },
+        cure2 = {
+            name = "I am the Cure II",
+            info = "Get 300HP every 180 seconds",
+        },
+        merci = {
+            name = "Act of Merci",
+            info = "Primary attack cooldown is reduced by 2.5 seconds\nYou no longer apply the 'Door Lock' effect to nearby humans",
+        },
+        symbiosis1 = {
+            name = "Symbiosis I",
+            info = "After performing surgery, you are healed by 2.5% of your maximum health",
+        },
+        symbiosis2 = {
+            name = "Symbiosis II",
+            info = "After performing surgery, you are healed by 5% of your maximum health\nNearby SCP 049-2 instances are healed by 2.5% of their maximum helath",
+        },
+        symbiosis3 = {
+            name = "Symbiosis III",
+            info = "After performing surgery, you are healed by 7.5% of your maximum health\nNearby SCP 049-2 instances are healed by 5% of their maximum helath",
+        },
+        hidden = {
+            name = "Hidden Potential",
+            info = "You gain 1 token for every successful surgery\nEach token increases HP of zombies by 2.5%\n\t• This ability only affects newly created zombies",
+        },
+        trans = {
+            name = "Transfusion",
+            info = "You zombies have their HP increased by 15%\nYou zombies gain 10% of life steal\n\t• This ability only affects newly created zombies",
+        },
+        rm = {
+            name = "Radical Measures",
+            info = "Whenever it's possible, you create 2 zombies from 1 body\n\t• If only 1 spectator is available, you create only 1 zombie\n\t• Both zombies are of the same type\n\t• Second zombie has HP reduced by 50%\n\t• Second zombie has damage reduced by 25%",
+        },
+        doc1 = {
+            name = "Surgical Precision I",
+            info = "Surgery time is reduced by 5s",
+        },
+        doc2 = {
+            name = "Surgical Precision II",
+            info = "Surgery time is reduced by 5s\n\t• Total surgery time reduction: 10s",
+        },
+    }
+}
+
+wep.SCP0492 = {
+    too_far = "You are becoming weaker!"
+}
 
 wep.SCP066 = {
     wait = "Next attack: %is",
@@ -701,15 +793,15 @@ wep.SCP966 = {
         },
         dist1 = {
             name = "Call of the Hunter I",
-            info = "Attack range is increased by 10"
+            info = "Attack range is increased by 15"
         },
         dist2 = {
             name = "Call of the Hunter II",
-            info = "Attack range is increased by 10\n\t• Total range increase: 20"
+            info = "Attack range is increased by 15\n\t• Total range increase: 30"
         },
         dist3 = {
             name = "Call of the Hunter III",
-            info = "Attack range is increased by 10\n\t• Total range increase: 30"
+            info = "Attack range is increased by 15\n\t• Total range increase: 45"
         },
         dmg1 = {
             name = "Sharp Claws I",
@@ -728,6 +820,10 @@ wep.SCP966 = {
             info = "Your attacks have 50% chance of inflicting higher tier bleeding"
         },
     }
+}
+
+wep.SCP714 = {
+    name = "SCP 714"
 }
 
 wep.HOLSTER = {

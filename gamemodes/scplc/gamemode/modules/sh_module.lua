@@ -4,8 +4,9 @@ GM.Author 	= "danx91"
 GM.Email 	= ""
 GM.Website 	= ""
 
-VERSION = "ALPHA 0.5"
-DATE = "14/10/2019"
+SIGNATURE = "a7"
+VERSION = "ALPHA 0.7"
+DATE = "16/11/2019"
 
 SCPS = {}
 CLASSES = {}
@@ -97,6 +98,29 @@ if !ConVarExists("br_scale_human_damage") then CreateConVar("br_scale_human_dama
 if !ConVarExists("br_scale_scp_damage") then CreateConVar("br_scale_scp_damage", "1", {FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE }, "Scales damage dealt by SCP" ) end
 if !ConVarExists("br_scp_penalty") then CreateConVar("br_scp_penalty", "3", {FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE }, "" ) end
 if !ConVarExists("br_premium_penalty") then CreateConVar("br_premium_penalty", "0", {FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE }, "" ) end*/
+
+--[[-------------------------------------------------------------------------
+Update Handler
+---------------------------------------------------------------------------]]
+timer.Simple( 0, function()
+	if !file.Exists( "slc", "DATA" ) then
+		file.CreateDir( "slc" )
+	end
+
+	local cur = file.Read( "slc/version.dat" ) or "x"
+
+	if cur != SIGNATURE then
+		hook.Run( "SLCVersionChanged", cur, SIGNATURE )
+		file.Write( "slc/version.dat", SIGNATURE )
+	end
+end )
+
+/*hook.Add( "SLCVersionChanged", "VCBase", function( old, new )
+	if SERVER and old == "x" then --Delete databases created before ALPHA 0.7 version
+		MsgC( Color( 255, 50, 50 ), "WARNING! Database is outdated, deleting...\n" )
+		sql.Query( "DROP TABLE scpplayerdata" )
+	end
+end )*/
 
 --[[-------------------------------------------------------------------------
 Shared GM hooks

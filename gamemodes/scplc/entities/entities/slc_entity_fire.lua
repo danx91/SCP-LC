@@ -86,7 +86,7 @@ function ENT:Think()
 			end
 
 			if self.Power >= 20 then
-				for k, v in pairs( FindInCylinder( self:GetPos() + Vector( 0, 0, 32 ), self.Radius, -32, 32, { "player" }, MASK_SOLID_BRUSHONLY ) ) do
+				for k, v in pairs( FindInCylinder( self:GetPos() + Vector( 0, 0, 32 ), self.Radius, -32, 32, nil, MASK_SOLID_BRUSHONLY, player.GetAll() ) ) do
 					if v:IsPlayer() and v != parent and v:SCPTeam() != TEAM_SPEC then
 						if IsValid( owner ) and owner:IsPlayer() then
 							if owner:SCPTeam() == TEAM_SCP and v:SCPTeam() == TEAM_SCP then

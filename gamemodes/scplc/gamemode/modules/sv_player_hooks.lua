@@ -1,16 +1,21 @@
 function GM:PlayerInitialSpawn( ply )
+	ply.playermeta = {}
+
+	PlayerInfo( ply )
 	PlayerData( ply )
 	DamageLogger( ply )
 	ply:DataTables()
 
 	ply:CheckPremium()
+	hook.Run( "SLCPlayerMeta", ply, ply.playermeta )
 
 	if ply:IsBot() then
 		ply:SetActive( true )
 		CheckRoundStart()
 	end
 
-	table.insert( ROUND.queue, ply )
+	//table.insert( ROUND.queue, ply )
+	QueueInsert( ply )
 end
 
 function GM:PlayerSpawn( ply )
@@ -24,9 +29,9 @@ function GM:PlayerSpawn( ply )
 	end
 
 	ply:SetCanZoom( false )
+	//ply:CrosshairDisable()
 	ply:CrosshairEnable()
 	ply:SetCollisionGroup( COLLISION_GROUP_PASSABLE_DOOR ) //xD???
-	//ply:RemoveEFlags( EFL_NO_DAMAGE_FORCES ) //moved to PLAYER:Cleanup()
 
 	if IsValid( ply._RagEntity ) then
 		ply._RagEntity:Remove()
@@ -107,6 +112,10 @@ function GM:DoPlayerDeath( ply, attacker, dmginfo )
 		attacker.Logger:AddKill( ply )
 	end
 
+	if SCPTeams.hasInfo( ply:SCPTeam(), SCPTeams.INFO_HUMAN ) then
+		SanityEvent( 10, SANITY_TYPE.DEATH, ply:GetPos(), 750, attacker, ply )
+	end
+
 	ply:CreatePlayerRagdoll()
 	ply:DropEQ()
 	ply:Despawn()
@@ -119,9 +128,7 @@ function GM:DoPlayerDeath( ply, attacker, dmginfo )
 		print( "[KILL] Player '"..ply:Nick().."' ["..SCPTeams.getName( ply:SCPTeam() ).."] has been killed by UNKNOWN" )
 	end
 
-	if !table.HasValue( ROUND.queue, ply ) then
-		table.insert( ROUND.queue, ply )
-	end
+	QueueInsert( ply )
 
 	ply:AddDeaths( 1 )
 end
@@ -208,6 +215,9 @@ function GM:PlayerSwitchFlashlight( ply, enabled )
 	return !enabled
 end
 
+--[[-------------------------------------------------------------------------
+SCP "chase" effect
+---------------------------------------------------------------------------]]
 local NTerror = 0
 hook.Add( "Think", "ApplyTerror", function()
 	if NTerror < CurTime() then
@@ -218,12 +228,14 @@ hook.Add( "Think", "ApplyTerror", function()
 		end
 
 		for k, v in pairs( SCPTeams.getPlayersByTeam( TEAM_SCP ) ) do
-			for k, ply in pairs( FindInCylinder( v:GetPos(), 1500, -128, 128, { "player" } ) ) do
-				local t = ply:SCPTeam()
+			if v:GetSCPTerror() then
+				for k, ply in pairs( FindInCylinder( v:GetPos(), 1500, -128, 128, nil, nil, player.GetAll() ) ) do
+					local t = ply:SCPTeam()
 
-				if t != TEAM_SCP and t != TEAM_SPEC then
-					ply.TerrorPower = ply.TerrorPower + 1
-					ply.NDoorLockRem = CurTime() + 10
+					if t != TEAM_SCP and t != TEAM_SPEC then
+						ply.TerrorPower = ply.TerrorPower + 1
+						ply.NDoorLockRem = CurTime() + 10
+					end
 				end
 			end
 		end
@@ -247,7 +259,7 @@ function GM:AcceptInput( ent, input, activator, caller, value )
 
 			local t = activator:SCPTeam()
 			if t != TEAM_SCP and t != TEAM_SPEC then
-				for k, ply in pairs( FindInCylinder( activator:GetPos(), 500, -128, 128, { "player" }, nil, player.GetAll() ) ) do
+				for k, ply in pairs( FindInCylinder( activator:GetPos(), 500, -128, 128, nil, nil, player.GetAll() ) ) do
 					if ply.TerrorPower and ply.TerrorPower > 0 then
 						if !ply.DoorHistory then ply.DoorHistory = 0 end
 

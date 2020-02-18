@@ -172,6 +172,8 @@ RegisterRoundStat( "dmg", { init = 0, ref = 5000, importance = 30 } )
 RegisterRoundStat( "escapes", { init = 0, ref = 10, importance = 60 } )
 RegisterRoundStat( "escorts", { init = 0, ref = 12, importance = 65 } )
 
+RegisterRoundStat( "049", { init = 0, ref = 8, importance = 30 } )
+RegisterRoundStat( "0492", { init = 0, ref = 12, importance = 30 } )
 RegisterRoundStat( "066", { init = 0, ref = 25, importance = 30 } )
 RegisterRoundStat( "106", { init = 0, ref = 15, importance = 30 } )
 RegisterRoundStat( "173", { init = 0, ref = 6, importance = 30 } )

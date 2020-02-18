@@ -88,6 +88,7 @@ function SWEP:Think()
 
 					if ( !v.SCP173Horror or v.SCP173Horror < CurTime() ) and dist < 90000 then
 						v.SCP173Horror = CurTime() + 15
+						v:TakeSanity( 15, SANITY_TYPE.ANOMALY )
 						v:SendLua( "LocalPlayer():EmitSound( 'SCP173.Horror' )" )
 					end
 				end
@@ -209,7 +210,7 @@ function SWEP:Reload()
 end
 
 function SWEP:CanTeleport()
-	for k, v in pairs( FindInCylinder( self.Owner:GetPos(), 3000, -512, 512, "player", nil, player.GetAll() ) ) do
+	for k, v in pairs( FindInCylinder( self.Owner:GetPos(), 3000, -512, 512, nil, nil, player.GetAll() ) ) do
 		local t = v:SCPTeam()
 		if t != TEAM_SPEC and t != TEAM_SCP then
 			return true
@@ -226,12 +227,12 @@ function SWEP:Teleport()
 	local ownerpos = self.Owner:GetPos()
 
 	local add = self:GetUpgradeMod( "specdist" ) or 0
-	for k, v in pairs( FindInCylinder( ownerpos, 1500 + add, -512, 512, "player", nil, player.GetAll() ) ) do
+	for k, v in pairs( FindInCylinder( ownerpos, 1500 + add, -512, 512, nil, nil, player.GetAll() ) ) do
 		local t = v:SCPTeam()
 		if t != TEAM_SPEC and t != TEAM_SCP then
 			table.insert( players, v )
 			near[v] = 0
-			for k, ply in pairs( FindInCylinder( v:GetPos(), 500, -128, 128, "player", nil, player.GetAll() ) ) do
+			for k, ply in pairs( FindInCylinder( v:GetPos(), 500, -128, 128, nil, nil, player.GetAll() ) ) do
 				if ply != v then
 					local pt = v:SCPTeam()
 					if pt != TEAM_SPEC and pt != TEAM_SCP then
@@ -356,6 +357,21 @@ hook.Add( "SLCBlink", "SCP173TP", function( time )
 	end
 end )
 
+hook.Add( "EntityTakeDamage", "SCP173DMGMod", function( ent, dmg )
+	if IsValid( ent ) and ent:IsPlayer() and ent:SCPClass() == CLASSES.SCP173 then
+		local wep = ent:GetActiveWeapon()
+		if IsValid( wep ) and wep.UpgradeSystemMounted then
+			local mod = wep:GetUpgradeMod( "dmg" )
+
+			if mod then
+				if dmg:IsDamageType( DMG_BULLET ) then
+					dmg:ScaleDamage( mod )
+				end
+			end
+		end
+	end
+end )
+
 DefineUpgradeSystem( "scp173", {
 	grid_x = 4,
 	grid_y = 3,
@@ -396,20 +412,5 @@ function SWEP:OnUpgradeBought( name, info, group )
 		self.Owner:SetHealth( hp )
 	end
 end
-
-hook.Add( "EntityTakeDamage", "SCP173DMGMod", function( ent, dmg )
-	if IsValid( ent ) and ent:IsPlayer() and ent:SCPClass() == CLASSES.SCP173 then
-		local wep = ent:GetActiveWeapon()
-		if IsValid( wep ) and wep.UpgradeSystemMounted then
-			local mod = wep:GetUpgradeMod( "dmg" )
-
-			if mod then
-				if dmg:IsDamageType( DMG_BULLET ) then
-					dmg:ScaleDamage( mod )
-				end
-			end
-		end
-	end
-end )
 
 InstallUpgradeSystem( "scp173", SWEP )

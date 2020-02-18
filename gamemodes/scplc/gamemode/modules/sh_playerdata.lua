@@ -139,7 +139,7 @@ function PlayerData:Reset( roundend )
 		elseif v[3] == true and !roundend then
 			reset = false
 		elseif isfunction( v[3] ) then
-			reset = !v[3]( self.Player, self.Status[k] )
+			reset = !v[3]( self.Player, self.Status[k], v[1] )
 		end
 
 		if reset then
@@ -189,8 +189,10 @@ function PlayerData:SetStatus( name, value )
 	assert( value != nil, "Bad argument #2 to SetStatus, any value expected got nil" )
 	assert( self.Status[name] != nil, "Tried to set invalid player status: "..name )
 
-	if !PlayerStatus[name][2] or PlayerStatus[name][2]( self.Player, self.Status[name], value ) != true then
-		self.Status[name] = value
+	if self.Status[name] != value then
+		if !PlayerStatus[name][2] or PlayerStatus[name][2]( self.Player, self.Status[name], value ) != true then
+			self.Status[name] = value
+		end
 	end
 end
 
@@ -203,8 +205,8 @@ setmetatable( PlayerData, { __call = PlayerData.Create } )
 --------------------------------------------------------------------
 
 ---------------------------- BASE STATUS ----------------------------
-//registerPlayerStatus( "name", <initial value>, func/false, func/ture/false* )
-//* - true: reset only on roundend, false: never reset
+//registerPlayerStatus( "name", <initial value>, func/false[nil], nil/func/ture/false* )
+//* - true: only on roundend, false: never, nil: always, func: return true to suppress
 
 registerPlayerStatus( "Premium", false, function( ply, old, new ) ply:Set_SCPPremium( new ) end, false )
 registerPlayerStatus( "Active", false, function( ply, old, new ) ply:Set_SCPActive( new ) end, false )
@@ -217,5 +219,10 @@ registerPlayerStatus( "SightLimit", -1 )
 registerPlayerStatus( "SCPHuman", false )
 registerPlayerStatus( "SCPChat", false )
 registerPlayerStatus( "SCPNoRagdoll", false )
+registerPlayerStatus( "SCPTerror", true )
 
+registerPlayerStatus( "SCP714", false )
 --------------------------------------------------------------------
+-- for k, v in pairs( player.GetAll() ) do
+-- 	PlayerData( v )
+-- end

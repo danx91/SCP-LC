@@ -66,6 +66,11 @@ local function Button( x, y, w, h, id )
 	return 0
 end
 
+local MATS = {
+	vest = Material( "slc_hud/vest.png" ),
+	gear = Material( "slc_hud/gear.png" ),
+}
+
 local TEXTURES = {
 	weapon_stunstick = { SelectFont = "SCPHLIcons", IconLetter = "n" },
 	weapon_crowbar = { SelectFont = "SCPHLIcons", IconLetter = "c" }
@@ -87,7 +92,6 @@ local EQ = {
 
 EQ.slots = EQ.cols * EQ.rows
 
-local mat_vest = Material( "slc_hud/vest.png" )
 local function drawVest( x, y, size )
 	surface.SetDrawColor( 150, 150, 150, 50 )
 
@@ -123,7 +127,7 @@ local function drawVest( x, y, size )
 		render.PushFilterMin( TEXFILTER.LINEAR )
 
 		surface.SetDrawColor( Color( 255, 255, 255, 255 ) )
-		surface.SetMaterial( mat_vest )
+		surface.SetMaterial( MATS.vest )
 		surface.DrawTexturedRect( x + size * 0.1, y + size * 0.1, size * 0.8, size * 0.8 )
 
 		render.PopFilterMag()
@@ -344,9 +348,16 @@ local function drawItem( i, wx, wy, size, offset )
 		}
 	end
 
+	if wep.Toggleable and wep:GetEnabled() then
+		PushFilters( TEXFILTER.LINEAR )
+			surface.SetMaterial( MATS.gear )
+			surface.SetDrawColor( Color( 155, 155, 155 ) )
+			surface.DrawTexturedRect( cx + size * 0.75 - 2, cy + 2, size * 0.25, size * 0.25 )
+		PopFilters()
+	end
+
 	if wep.HasBattery then
 		local pct = wep:GetBattery() * 0.01
-
 
 		surface.SetDrawColor( Color( 255, 255, 255 ) )
 		surface.DrawOutlinedRect( cx + size * 0.85 + 2 - 2, cy + size * 0.7 + 2 - 2, size * 0.15 - 4, size * 0.3 - 4 )
@@ -355,7 +366,7 @@ local function drawItem( i, wx, wy, size, offset )
 		surface.DrawRect( cx + size * 0.85 + 4 - 2, cy + size * 0.7 + 4 - 2 + ( size * 0.3 - 8 ) * ( 1 - pct ), size * 0.15 - 8, ( size * 0.3 - 8 ) * pct )
 	end
 
-	if drag == 0 and LocalPlayer():GetActiveWeapon() == wep then
+	if drag != i and LocalPlayer():GetActiveWeapon() == wep then
 		surface.SetDrawColor( Color( 0, 0, 175, 255 ) )
 		surface.DrawOutlinedRect( cx + 1, cy + 1, size - 2, size - 2 )
 		surface.DrawOutlinedRect( cx + 2, cy + 2, size - 4, size - 4 )

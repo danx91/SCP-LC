@@ -56,12 +56,12 @@ local customRanks = {
 	author = {
 		sorting = -20,
 		color = Color( 115, 25, 155, 100 ),
-		func = "76561198110788144" --Can be either SteamID64, table of SteamID64s or function with player as argument
+		func = { "76561198110788144", "76561198108864618" } --Can be either SteamID64, table of SteamID64s or function with player as argument
 	},
 	tester = {
 		sorting = 19,
 		color = Color( 25, 165, 111 ),
-		func = { "76561198108864618", "76561198152379830", "76561198179611206" }
+		func = { "76561198152379830", "76561198179611206" }
 	},
 	vip = {
 		sorting = 1,
@@ -70,6 +70,11 @@ local customRanks = {
 			return ply:IsPremium()
 		end,
 	},
+	countbob = {
+		sorting = 19,
+		color = Color( 0, 255, 0 ),
+		func = "76561198108864618"
+	}
 }
 
 local playerRanks = {

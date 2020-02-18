@@ -81,16 +81,12 @@ function SWEP:SecondaryAttack()
 end
 
 function SWEP:PopSpeed()
-	if CLIENT then return end
+	if SERVER then
+		if IsValid( self.Healing ) then
+			self.Healing:PopSpeed( "SLC_Medkit" )
+		end
 
-	if IsValid( self.Healing ) and self.HealingSpd then
-		self.Healing:PopSpeed( self.HealingSpd )
-		self.HealingSpd = nil
-	end
-
-	if self.OwnerSpd then
-		self.Owner:PopSpeed( self.OwnerSpd )
-		self.OwnerSpd = nil
+		self.Owner:PopSpeed( "SLC_Medkit" )
 	end
 end
 
@@ -140,8 +136,15 @@ function SWEP:Heal( ply, sh )
 		end
 	elseif ply:Health() < ply:GetMaxHealth() * 0.9 then
 		self.Healing = ply
-		if SERVER then self.OwnerSpd = self.OwnerSpd or self.Owner:PushSpeed( 0.2, 0.2, -1 ) end
-		if SERVER and !sh then self.HealingSpd = ply:PushSpeed( 0.2, 0.2, -1 ) end
+
+		if SERVER then
+			self.Owner:PushSpeed( 0.2, 0.2, -1, "SLC_Medkit" )
+
+			if !sh then
+				ply:PushSpeed( 0.2, 0.2, -1, "SLC_Medkit" )
+			end
+		end
+		
 		self.NextCheck = CurTime() + 0.3
 		self.HealEnd = CurTime() + self.HealTime
 	end

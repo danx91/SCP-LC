@@ -10,7 +10,7 @@ SWEP.Disappear 		= "scp/106/disappear.ogg"
 
 SWEP.NextPrimaryAttack	= 0
 SWEP.AttackDelay		= 1
-SWEP.DMGBoost = 0
+SWEP.DMGBoost			= 0
 
 function SWEP:Initialize()
 	self:SetHoldType( self.HoldType )
@@ -87,7 +87,6 @@ function SWEP:PrimaryAttack()
 		if IsValid( ent ) then
 			if ent:IsPlayer() then
 				if ent:SCPTeam() == TEAM_SCP or ent:SCPTeam() == TEAM_SPEC then return end
-				--TODO 714
 
 				local pos = GetPocketPos()
 				local ang = ent:GetAngles()

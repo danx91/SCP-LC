@@ -1,7 +1,7 @@
 --[[-------------------------------------------------------------------------
 INI Library
 ---------------------------------------------------------------------------]]
-INI_LOADER_VERSION = "GMOD 1.0"
+INI_LOADER_VERSION = "v1.0"
 
 local function writeSections( f, tab, c )
 	local d = file.Open( f, "w", "DATA" )

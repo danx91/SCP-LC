@@ -16,7 +16,6 @@ SWEP.BatteryUsage 	= 0.1
 
 function SWEP:Initialize()
 	self:SetHoldType( self.HoldType )
-	self:SetSkin( 2 )
 	self:InitializeLanguage()
 end
 

@@ -18,7 +18,7 @@ function GetMaterial( name, args )
 
 	local mat = Material( name, args )
 
-	if mat:IsError() then
+	if !mat or mat:IsError() then
 		mat = Material( "null" )
 	end
 
@@ -621,6 +621,16 @@ function draw.TextSize( text, font )
 	surface.SetFont( font )
 	
 	return surface.GetTextSize( text )
+end
+
+function PushFilters( min, mag )
+	render.PushFilterMin( min )
+	render.PushFilterMag( mag or min )
+end
+
+function PopFilters()
+	render.PopFilterMin()
+	render.PopFilterMag()
 end
 
 /*_VGUIC = _VGUIC or vgui.Create

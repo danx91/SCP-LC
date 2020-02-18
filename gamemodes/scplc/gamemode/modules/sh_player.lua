@@ -1,10 +1,6 @@
 --[[-------------------------------------------------------------------------
 Gamemode hooks
 ---------------------------------------------------------------------------]]
-function GM:KeyPress( ply, key )
-	
-end
-
 function GM:PlayerNoClip( ply, on )
 	return ply:SCPTeam() == TEAM_SPEC and on == true
 end
@@ -204,6 +200,14 @@ function ply:SCPPrestige()
 	return self:Get_SCPPrestige()
 end
 
+function ply:SCPPrestigePoints()
+	if !self.Get_SCPPrestigePoints then
+		self:DataTables()
+	end
+
+	return self:Get_SCPPrestigePoints()
+end
+
 function ply:SCPClass()
 	if !self.Get_SCPClass then
 		self:DataTables()
@@ -218,4 +222,24 @@ function ply:SCPPersona()
 	end
 
 	return self:Get_SCPPersonaC(), self:Get_SCPPersonaT()
+end
+
+function ply:GetPlayermeta()
+	return self.playermeta
+end
+
+function ply:TimeSignature()
+	if !self.GetTimeSignature then
+		self:DataTables()
+	end
+
+	return self:GetTimeSignature()
+end
+
+function ply:CheckSignature( time )
+	return self:TimeSignature() == time
+end
+
+function ply:IsSpectator()
+	return !self:Alive() and self:SCPTeam() == TEAM_SPEC
 end

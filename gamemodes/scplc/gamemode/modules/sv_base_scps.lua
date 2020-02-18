@@ -24,7 +24,7 @@ Basic infotmations about RegisterSCP():
 		model (String) - full path to model. If you put wrong path you will see error instead of model!
 
 
-		weapon (String) - SWEP call name. If you put wrong name your scp will not receive weapon and you
+		weapon (String) - SWEP class name. If you put wrong name your scp will not receive weapon and you
 			will see red error in console
 
 
@@ -34,7 +34,7 @@ Basic infotmations about RegisterSCP():
 
 
 		dynamic_stats (Table) - this table contains entries for your SCP that can be accessed and changed in
-			'garrysmod/data/breach/scp.txt' file. So everybody can customize them. These stats will be overwritten
+			'garrysmod/data/slc/scp_override.txt' file. So everybody can customize them. These stats will be overwritten
 			by statc_stats. This table cotains keys and values (key = "value") or tables that contains value and
 			clamping info (num values only!) (key = "value" or key = { var = num_value, max = max_value, min = minimum_value }).
 			List of valid keys is below. 
@@ -59,15 +59,16 @@ Basic infotmations about RegisterSCP():
 
 
 		callback (Function) - called on beginning of SetupPlayer, return true to override default actions (post callback will not be called).
-			function( ply, basestats, ... ) - 3 arguments are passed:
+			function( ply, basestats, ... )
 				ply - player
 				basestats - result of static_stats and dynamic_stats
 				... - (varargs) passsed from SetupPlayer
 		
 
 		post_callback (Function) - called on end of SetupPlayer. Only player is passed as argument:
-			function( ply )
+			function( ply, ... )
 				ply - player
+				... - (varargs) passsed from SetupPlayer
 
 
 To get registered SCP:
@@ -111,29 +112,50 @@ hook.Add( "RegisterSCP", "RegisterBaseSCPs", function()
 		run_speed = 250,
 	} )*/
 
-	/*RegisterSCP( "SCP049", "models/vinrax/player/scp049_player.mdl", "weapon_scp_049", {
+	RegisterSCP( "SCP049", "models/vinrax/player/scp049_player.mdl", "weapon_scp_049", {
 		jump_power = 200,
 	}, {
 		base_health = 1600,
 		max_health = 1600,
-		base_speed = 135,
-		run_speed = 135,
-		allow_chat = true
-	} )*/
+		base_speed = 190,
+		run_speed = 190,
+		allow_chat = true,
+	} )
 
-	/*RegisterSCP( "SCP0492", "models/player/zombie_classic.mdl", "weapon_br_zombie", {
+	RegisterSCP( "SCP0492", "models/player/zombie_classic.mdl", "weapon_scp_0492", {
 		jump_power = 200,
-		no_spawn = true,
+		//no_spawn = true,
+		dynamic_spawn = true,
 		no_select = true,
+		//no_model = true,
+		no_terror = true,
 	}, {
 		base_health = 750,
 		max_health = 750,
-		base_speed = 160,
-		run_speed = 160,
-		max_speed = 160,
-	}, nil, function( ply )
-		WinCheck()
-	end )*/
+		base_speed = 165,
+		run_speed = 165,
+	}, function( ply, basestats, pos, scp049, hp, speed, damage, ls, model )
+		if hp and speed and damage then --TODO remove check?
+			basestats.base_health = math.floor( basestats.base_health * hp )
+			basestats.max_health = math.floor( basestats.max_health * hp )
+
+			basestats.base_speed = math.floor( basestats.base_speed * speed )
+			basestats.run_speed = math.floor( basestats.run_speed * speed )
+		end
+
+		if model then
+			ply:SetModel( model )
+		end
+	end, function( ply, pos, scp049, hp, speed, damage, ls, model )
+			local wep = ply:GetWeapon( "weapon_scp_0492" )
+			if IsValid( wep ) then
+				wep.DamageMult = damage
+				wep.LifeSteal = ls
+				wep:SetSCP049( scp049 )
+			end
+
+		CheckRoundEnd()
+	end )
 
 	RegisterSCP( "SCP066", "models/player/mrsilver/scp_066pm/scp_066_pm.mdl", "weapon_scp_066", {
 		jump_power = 200,
@@ -142,8 +164,8 @@ hook.Add( "RegisterSCP", "RegisterBaseSCPs", function()
 	}, {
 		base_health = 2250,
 		max_health = 2250,
-		base_speed = 165,
-		run_speed = 165,
+		base_speed = 170,
+		run_speed = 170,
 	} )
 
 	/*RegisterSCP( "SCP076", "models/abel/abel.mdl", "weapon_scp_076", {
@@ -210,8 +232,8 @@ hook.Add( "RegisterSCP", "RegisterBaseSCPs", function()
 	}, {
 		base_health = 2500,
 		max_health = 2500,
-		base_speed = 155,
-		run_speed = 155,
+		base_speed = 160,
+		run_speed = 160,
 	} )
 
 	RegisterSCP( "SCP682", "models/scp_682/scp_682.mdl", "weapon_scp_682", {
@@ -221,8 +243,8 @@ hook.Add( "RegisterSCP", "RegisterBaseSCPs", function()
 	}, {
 		base_health = 9000,
 		max_health = 9000,
-		base_speed = 150,
-		run_speed = 150,
+		base_speed = 160,
+		run_speed = 160,
 	} )
 
 	/*RegisterSCP( "SCP689", "models/dwdarksouls/models/darkwraith.mdl", "weapon_scp_689", {
@@ -299,8 +321,8 @@ hook.Add( "RegisterSCP", "RegisterBaseSCPs", function()
 	}, {
 		base_health = 1300,
 		max_health = 1300,
-		base_speed = 180,
-		run_speed = 180,
+		base_speed = 190,
+		run_speed = 190,
 	} )
 
 	/*RegisterSCP( "SCP999", "models/scp/999/jq/scp_999_pmjq.mdl", "weapon_scp_999", {

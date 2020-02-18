@@ -1,3 +1,16 @@
+net.AddTableChannel( "SLCPlayerMeta" )
+
+--[[-------------------------------------------------------------------------
+Receivers
+---------------------------------------------------------------------------]]
+net.ReceiveTable( "SLCPlayerMeta", function( data )
+	LocalPlayer().playermeta = data
+end )
+
+net.Receive( "PlayerReady", function( len )
+	LocalPlayer().playermeta = net.ReadTable()
+end )
+
 net.Receive( "SCPList", function( len )
 	//SCPS = net.ReadTable()
 	local data = net.ReadTable()
@@ -91,16 +104,9 @@ net.Receive( "RoundInfo", function( len )
 	end
 end )
 
-net.Receive( "DeathInfo", function( len )
-	local data = net.ReadTable()
-
-	DamageLogger.Print( data )
-end )
-
 --[[-------------------------------------------------------------
 SCP VARS
 ---------------------------------------------------------------]]
-
 local ply = FindMetaTable( "Player" )
 local _type = type
 

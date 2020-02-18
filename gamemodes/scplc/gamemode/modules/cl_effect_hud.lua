@@ -78,9 +78,7 @@ local function DrawEffectsHUD()
 				end
 			end
 		else
-
 			local ico = reg.icon
-
 			if ico then
 				surface.SetDrawColor( Color( 25, 25, 25, 255 ) )
 				surface.DrawRect( w * 0.97, h * 0.55 + w * 0.035 * ( i - 1 ), w * 0.025, w * 0.025 )
@@ -102,16 +100,16 @@ local function DrawEffectsHUD()
 				surface.SetDrawColor( Color( 0, 0, 0, 235 ) )
 				draw.NoTexture()
 				surface.DrawCooldownRectCCW( w * 0.97, h * 0.55 + w * 0.035 * ( i - 1 ), w * 0.025, w * 0.025, 1 - timepct, 0.05 )
+			end
 
-				local btn = button( w * 0.97, h * 0.55 + w * 0.035 * ( i - 1 ), w * 0.025, w * 0.025 )
+			local btn = button( w * 0.97, h * 0.55 + w * 0.035 * ( i - 1 ), w * 0.025, w * 0.025 )
 
-				if btn > 0 then
-					local name = LANG.EFFECTS[effect.name] or effect.name
-					local tier = eff.tiers > 1 and roman_tab[effect.tier] or ""
-					local time = effect.endtime == -1 and LANG.EFFECTS.permanent or math.floor( effect.endtime - CurTime() )
+			if btn > 0 then
+				local name = LANG.EFFECTS[effect.name] or effect.name
+				local tier = eff.tiers > 1 and roman_tab[effect.tier] or ""
+				local time = effect.endtime == -1 and LANG.EFFECTS.permanent or math.floor( effect.endtime - CurTime() )
 
-					showtext = name.." "..tier.." ("..time..")"
-				end
+				showtext = name.." "..tier.." ("..time..")"
 			end
 		end
 	end

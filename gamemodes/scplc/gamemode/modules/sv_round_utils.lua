@@ -1,3 +1,122 @@
+local queueReg = {}
+
+/*local queue_iter = {}
+function queue_iter:New( tab )
+	local t = setmetatable( {}, { __index = queue_iter } )
+
+	t.tab = tab
+	t.index = 1
+
+	return t
+end
+
+function queue_iter:Next()
+	local item = self.tab[self.index]
+
+	if !item then
+		self.index = 1
+		return nil
+	else
+		self.index = self.index + 1
+
+	end
+
+	return item[1]
+end
+
+function queue_iter:Remove()
+	table.remove( self.tab, self.index )
+end
+
+function queue_iter:Finish()
+	for i, v in rpairs( self.tab ) do
+
+	end
+end
+
+setmetatable( queue_iter, { __call = queue_iter.New } )*/
+
+function CheckQueue()
+	queueReg = {}
+	local queue = {}
+	
+	for i, v in ipairs( ROUND.queue ) do
+		if IsValid( v ) and !v:Alive() and v:SCPTeam() == TEAM_SPEC and !queueReg[v] then
+			table.insert( queue, v )
+			queueReg[v] = true
+		end
+	end
+
+	for i, v in ipairs( SCPTeams.getPlayersByTeam( TEAM_SPEC ) ) do
+		if !queueReg[v] and !v:Alive() then
+			table.insert( queue, v )
+			queueReg[v] = true
+		end
+	end
+
+	ROUND.queue = queue
+end
+
+function QueueInsert( ply, num )
+	if !queueReg[ply] then
+		queueReg[ply] = true
+
+		if num then
+			table.insert( ROUND.queue, num, ply )
+		else
+			table.insert( ROUND.queue, ply )
+		end
+	end
+end
+
+function QueueRemove( num )
+	local ply
+
+	if num == -1 then
+		ply = table.remove( ROUND.queue )
+	else
+		ply = table.remove( ROUND.queue, num or 1 )
+	end
+
+	if ply then
+		queueReg[ply] = nil
+		return ply
+	end
+end
+
+function GetQueuePlayers( num, norem )
+	CheckQueue()
+
+	if !num or num == -1 then
+		return ROUND.queue
+	end
+
+	local plys = {}
+
+	local len = #ROUND.queue
+	if num > len then
+		num = len
+	end
+
+	if num > 0 then
+		for i = 1, num do
+			local ply = norem and ROUND.queue[i] or table.remove( ROUND.queue, 1 )
+			plys[i] = ply
+
+			if !norem then
+				queueReg[ply] = nil
+			end
+		end
+	end
+
+	return plys
+end
+
+function ClearQueue()
+	ROUND.queue = {}
+	queueReg = {}
+end
+
 local function levelsort( a, b )
 	return a:SCPLevel() > b:SCPLevel()
 end
@@ -63,7 +182,7 @@ function SetupPlayers( multi )
 	for k, ply in pairs( plys ) do
 		playertab[ply] = {}
 
-		local lvl = ply:SCPLevel()
+		//local lvl = ply:SCPLevel()
 		for g_name, group in pairs( groups ) do
 			if g_name != "SUPPORT" then
 				playertab[ply][g_name] = {}
@@ -81,7 +200,8 @@ function SetupPlayers( multi )
 					end
 
 					if owned == nil then
-						owned = lvl >= class.level
+						//owned = lvl >= class.level
+						owned = ply:IsClassUnlocked( class.name )
 					end
 
 					if owned then
@@ -165,14 +285,11 @@ function SetupPlayers( multi )
 end
 
 function SpawnSupport()
-	local plys = ROUND.queue
-	if #plys == 0 then
-		local tab = SCPTeams.getPlayersByTeam( TEAM_SPEC )
+	CheckQueue()
 
-		if #tab == 0 then return end
-		plys = tab
+	if #ROUND.queue == 0 then
+		return
 	end
-
 
 	local group, callback = selectSupportGroup()
 	local classes, spawninfo = getSupportGroup( group )
@@ -181,18 +298,19 @@ function SpawnSupport()
 	local num = 0
 	local inuse = {}
 	local max = CVAR.maxsupport:GetInt()
+	local unused = {}
 
 	repeat
-		local ply
+		local ply = QueueRemove()
 
-		repeat
+		/*repeat
 			local p = table.remove( plys, 1 )
 
-			if IsValid( p ) and !p:Alive() and p:SCPTeam() == TEAM_SPEC then
+			if IsValid( p ) then
 				ply = p
 				break
 			end
-		until #plys == 0
+		until #plys == 0*/
 
 		if !IsValid( ply ) then break end
 
@@ -214,7 +332,8 @@ function SpawnSupport()
 				end
 
 				if owned == nil then
-					owned = ply:SCPLevel() >= v.level
+					//owned = ply:SCPLevel() >= v.level
+					owned = ply:IsClassUnlocked( v.name )
 				end
 
 				if owned then
@@ -236,8 +355,16 @@ function SpawnSupport()
 
 			inuse[class.name] = inuse[class.name] + 1
 			num = num + 1
+		else
+			table.insert( unused, ply )
 		end
 	until num >= max
+
+	if #unused > 0 then
+		for i, v in rpairs( unused ) do
+			QueueInsert( v, 1 )
+		end
+	end
 
 	if num > 0 then
 		if callback then
@@ -286,6 +413,7 @@ function CheckEscape()
 
 				v:KillSilent()
 				v:SetupSpectator()
+				QueueInsert( v )
 
 				AddRoundStat( "escapes" )
 
@@ -348,6 +476,8 @@ function PlayerEscort( ply )
 
 			v:KillSilent()
 			v:SetupSpectator()
+
+			QueueInsert( v )
 		end
 
 		AddRoundStat( "escorts", num )
@@ -361,6 +491,9 @@ function PlayerEscort( ply )
 	end
 end
 
+--[[-------------------------------------------------------------------------
+Map functions
+---------------------------------------------------------------------------]]
 function UseAll()
 	for k, v in pairs( FORCE_USE ) do
 		local enttab = ents.FindInSphere( v, 3 )
@@ -422,18 +555,35 @@ function OpenSCPs()
 	end
 end
 
+--[[-------------------------------------------------------------------------
+Item spawn
+---------------------------------------------------------------------------]]
+local GAS_TABLE = {
+	Touch = function( self, ent )
+		if ent:IsPlayer() then
+			if !ent.NextGasChoke or ent.NextGasChoke < CurTime() then
+				ent.NextGasChoke = CurTime() + 2.5
+
+				ent:ApplyEffect( "gas_choke" )
+			end
+		end
+	end
+}
+
+local function GAS_POST( item, i )
+	local data = GAS_DIM[i]
+	item:SetTriggerBounds( data.mins, data.maxs, data.bounds )
+end
+
 local function applyTable( item, tab )
 	for k, v in pairs( tab ) do
-		if istable( v ) then
-			if v._final then
-				v._final = nil
-				item[k] = v
-			else
+		if k != "_dnc" then
+			if istable( v ) then
 				item[k] = item[k] or {}
 				applyTable( item[k], v )
+			else
+				item[k] = v
 			end
-		else
-			item[k] = v
 		end
 	end
 end
@@ -445,9 +595,7 @@ function SpawnGeneric( class, pos, num, post_tab, post_func )
 	end
 
 	if istable( pos ) then
-		if pos._dnc or post_tab and post_tab._dnc  then
-			pos._dnc = nil
-		else
+		if !post_tab or !post_tab._dnc  then
 			pos = table.Copy( pos )
 		end
 	else
@@ -472,7 +620,7 @@ function SpawnGeneric( class, pos, num, post_tab, post_func )
 			end
 
 			if post_func then
-				post_func( item )
+				post_func( item, i )
 			end
 		end
 	end
@@ -513,7 +661,7 @@ function SpawnItems() --TODO
 	Vests
 	---------------------------------------------------------------------------]]
 	for k,v in pairs( SPAWN_VEST ) do
-		local vest = ents.Create( "item_vest" )
+		local vest = ents.Create( "slc_vest" )
 		if IsValid( vest ) then
 			vest:Spawn()
 			vest:SetPos( v - Vector( 0, 0, 10 ) )
@@ -592,7 +740,7 @@ function SpawnItems() --TODO
 	Cameras
 	---------------------------------------------------------------------------]]
 	for i, v in ipairs( CCTV ) do
-		local cctv = ents.Create( "item_cctv" )
+		local cctv = ents.Create( "slc_cctv" )
 
 		if IsValid( cctv ) then
 			cctv:Spawn()
@@ -603,6 +751,11 @@ function SpawnItems() --TODO
 			v.ent = cctv
 		end
 	end
+
+	--[[-------------------------------------------------------------------------
+	Gas 
+	---------------------------------------------------------------------------]]
+	SpawnGeneric( "slc_trigger", GAS_POS, -1, GAS_TABLE, GAS_POST )
 
 	--[[-------------------------------------------------------------------------
 	Vechicles

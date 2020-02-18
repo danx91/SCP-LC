@@ -76,7 +76,7 @@ function InitializeSCPULX()
 	forcespawn:addParam{ type = ULib.cmds.PlayerArg }
 	forcespawn:addParam{ type = ULib.cmds.StringArg, hint = "class name", completes = class_names, ULib.cmds.takeRestOfLine }
 	forcespawn:addParam{ type = ULib.cmds.BoolArg, invisible = true }
-	forcespawn:setOpposite( "ulx silent force_spawn", { _, _, _, true }, "!sforcespawn" )
+	forcespawn:setOpposite( "ulx silent force_spawn", { nil, nil, nil, true }, "!sforcespawn" )
 	forcespawn:defaultAccess( ULib.ACCESS_SUPERADMIN )
 	forcespawn:help( "Sets player to specific class and spawns him" )
 
@@ -96,7 +96,7 @@ function InitializeSCPULX()
 	slcxp:addParam{ type = ULib.cmds.PlayerArg }
 	slcxp:addParam{ type = ULib.cmds.NumArg, hint = "XP" }
 	slcxp:addParam{ type = ULib.cmds.BoolArg, invisible = true }
-	slcxp:setOpposite( "ulx silent xp", { _, _, _, true }, "!sxp" )
+	slcxp:setOpposite( "ulx silent xp", { nil, nil, nil, true }, "!sxp" )
 	slcxp:defaultAccess( ULib.ACCESS_SUPERADMIN )
 	slcxp:help( "Gives XP to specified player" )
 
@@ -116,7 +116,7 @@ function InitializeSCPULX()
 	level:addParam{ type = ULib.cmds.PlayerArg }
 	level:addParam{ type = ULib.cmds.NumArg, hint = "Level" }
 	level:addParam{ type = ULib.cmds.BoolArg, invisible = true }
-	level:setOpposite( "ulx silent level", { _, _, _, true }, "!slevel" )
+	level:setOpposite( "ulx silent level", { nil, nil, nil, true }, "!slevel" )
 	level:defaultAccess( ULib.ACCESS_SUPERADMIN )
 	level:help( "Gives level to specified player" )
 
@@ -147,7 +147,7 @@ function InitializeSCPULX()
 
 	local adminmode = ulx.command( ULX_CAT, "ulx admin_mode", ulx.adminmode, "!adminmode" )
 	adminmode:addParam{ type = ULib.cmds.BoolArg, invisible = true }
-	adminmode:setOpposite( "ulx silent admin_mode", { _, true }, "!sadminmode" )
+	adminmode:setOpposite( "ulx silent admin_mode", { nil, true }, "!sadminmode" )
 	adminmode:defaultAccess( ULib.ACCESS_ADMIN )
 	adminmode:help( "Toggles admin mode" )*/
 
@@ -162,7 +162,7 @@ function InitializeSCPULX()
 
 	local requestntf = ulx.command( ULX_CAT, "ulx request_ntf", ulx.requestntf, "!ntf" )
 	requestntf:addParam{ type = ULib.cmds.BoolArg, invisible = true }
-	requestntf:setOpposite( "ulx silent request_ntf", { _, true }, "!sntf" )
+	requestntf:setOpposite( "ulx silent request_ntf", { nil, true }, "!sntf" )
 	requestntf:defaultAccess( ULib.ACCESS_SUPERADMIN )
 	requestntf:help( "Spawns support units" )*/
 
@@ -178,7 +178,7 @@ function InitializeSCPULX()
 
 	local destroygatea = ulx.command( ULX_CAT, "ulx destroy_gate_a", ulx.destroygatea, "!destroygatea" )
 	destroygatea:addParam{ type = ULib.cmds.BoolArg, invisible = true }
-	destroygatea:setOpposite( "ulx silent destroy_gate_a", { _, true }, "!sdestroygatea" )
+	destroygatea:setOpposite( "ulx silent destroy_gate_a", { nil, true }, "!sdestroygatea" )
 	destroygatea:defaultAccess( ULib.ACCESS_ADMIN )
 	destroygatea:help( "Destroys Gate A" )
 
@@ -193,7 +193,7 @@ function InitializeSCPULX()
 
 	local restartround = ulx.command( ULX_CAT, "ulx restart_round", ulx.restartround, "!restart" )
 	restartround:addParam{ type = ULib.cmds.BoolArg, invisible = true }
-	restartround:setOpposite( "ulx silent restart_round", { _, true }, "!srestart" )
+	restartround:setOpposite( "ulx silent restart_round", { nil, true }, "!srestart" )
 	restartround:defaultAccess( ULib.ACCESS_SUPERADMIN )
 	restartround:help( "Restarts round" )
 end
@@ -230,7 +230,7 @@ function SetupForceSCP()
 	forcescp:addParam{ type = ULib.cmds.PlayerArg }
 	forcescp:addParam{ type = ULib.cmds.StringArg, hint = "SCP name", completes = SCPS, ULib.cmds.takeRestOfLine }
 	forcescp:addParam{ type = ULib.cmds.BoolArg, invisible = true }
-	forcescp:setOpposite( "ulx silent force_scp", { _, _, _, true }, "!sforcescp" )
+	forcescp:setOpposite( "ulx silent force_scp", { nil, nil, nil, true }, "!sforcescp" )
 	forcescp:defaultAccess( ULib.ACCESS_SUPERADMIN )
 	forcescp:help( "Sets player to specific SCP and spawns him" )
 end

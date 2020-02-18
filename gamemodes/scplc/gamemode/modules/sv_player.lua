@@ -19,6 +19,7 @@ function ply:Cleanup( norem )
 	self.ClassData = nil
 	self:ClearSpeedStack()
 	self.PlayerData:Reset()
+	self:SetStaminaLimit( 100 )
 
 	self:SetColor( Color( 255, 255, 255 ) )
 	self:SetSubMaterial()
@@ -34,6 +35,8 @@ function ply:Cleanup( norem )
 		self:SetVest( 0 )
 		self:RemoveAllItems()
 	end
+
+	self:SetTimeSignature( math.floor( CurTime() ) )
 end
 
 function ply:Despawn()
@@ -148,7 +151,7 @@ function ply:EquipVest( vest, silent )
 		self.OldModel = self:GetModel()
 		self:SetModel( data.model )
 
-		self.VestSpeed = self:PushSpeed( data.mobility, data.mobility, -1 )
+		self:PushSpeed( data.mobility, data.mobility, -1, "SLC_Vest" )
 
 		if !silent then
 			PlayerMessage( "vestpickup", self )
@@ -181,12 +184,13 @@ function ply:DropVest( silent )
 	self:SetModel( self.OldModel )
 	self.OldModel = nil
 
-	if !self.VestSpeed then
+	/*if !self.VestSpeed then
 		print( "ERROR! Failed to restore player speed! It can cause speed errors!" )
 	else
 		self:PopSpeed( self.VestSpeed )
 		self.VestSpeed = nil
-	end
+	end*/
+	self:PopSpeed( "SLC_Vest" )
 
 	if !silent then
 		PlayerMessage( "vestdrop", self )
@@ -220,11 +224,12 @@ function ply:PlayerDropWeapon( class, all )
 			local count = wep:GetCount()
 			
 			if count > 1 then
+				local forward = self:EyeAngles():Forward()
+
 				for i = 1, all and count or 1 do
 					local new = ents.Create( class )
 
 					if IsValid( new ) then
-						local forward = self:EyeAngles():Forward()
 						new:SetPos( self:GetShootPos() + forward * 10 )
 						new:SetAngles( self:GetAngles() )
 						new:Spawn()
@@ -233,7 +238,7 @@ function ply:PlayerDropWeapon( class, all )
 
 						local phys = new:GetPhysicsObject()
 						if IsValid( phys ) then
-							phys:SetVelocity( forward * 300 )
+							phys:SetVelocity( forward * 300 + VectorRand() * 10 )
 						end
 					end
 
@@ -248,61 +253,6 @@ function ply:PlayerDropWeapon( class, all )
 		wep.Dropped = CurTime()
 		/*if wep.OnDrop then
 			wep:OnDrop()
-		end
-
-		wep:SetOwner( NULL )
-
-		local data = weapons.Get( class )
-
-		for i = 1, all and stacks and wep:GetCount() or 1 do
-			local new = ents.Create( class )
-
-			if IsValid( new ) then
-				applyDifference( data, wep, new )
-
-				local forward = self:EyeAngles():Forward()
-				new:SetPos( self:GetShootPos() + forward * 10 )
-				new:SetAngles( self:GetAngles() )
-				new:Spawn()
-
-				local phys = new:GetPhysicsObject()
-				if IsValid( phys ) then
-					phys:SetVelocity( forward * 300 )
-				end
-
-				if stacks then
-					wep:RemoveStack()
-				end
-
-				if wep.DTRegistry then
-					new.NewDTValues = {}
-					for k, v in pairs( wep.DTRegistry ) do
-						print( "dt copy", k, v )
-						if v != "Count" then
-							if wep["Get"..v] then
-								new.NewDTValues[v] = wep["Get"..v]( wep )
-							end
-						end
-					end
-				end
-
-				timer.Simple( 0.75, function()
-					if IsValid( new ) and new.NewDTValues then
-						for k, v in pairs( new.NewDTValues ) do
-							if new["Set"..k] then
-								print( "applaying new var", k, v )
-								new["Set"..k]( new, v )
-							end
-						end
-					end
-				end )
-
-				new.Dropped = CurTime()
-			end
-		end
-
-		if !stacks or wep:GetCount() == 0 then
-			wep:Remove()
 		end*/
 	end
 end
@@ -371,18 +321,22 @@ function ply:CreatePlayerRagdoll()
 end
 
 function ply:Blink( dur, nextblink )
-	self:SetBlink( true )
+	if !self:GetBlink() then
+		self:SetBlink( true )
 
-	net.Start( "PlayerBlink" )
-		net.WriteFloat( dur )
-		net.WriteUInt( nextblink, 6 )
-	net.Send( self )
+		net.Start( "PlayerBlink" )
+			net.WriteFloat( dur )
+			net.WriteUInt( nextblink, 6 )
+		net.Send( self )
 
-	Timer( "PlayerUnBlink"..self:SteamID64(), math.max( dur, 0.4 ), 1, function()
-		if IsValid( self ) then
-			self:SetBlink( false )
-		end
-	end )
+		Timer( "PlayerUnBlink"..self:SteamID64(), math.max( dur, 0.4 ), 1, function()
+			if IsValid( self ) then
+				self:SetBlink( false )
+			end
+		end )
+
+		hook.Run( "SLCBlink", dur, nextblink )
+	end
 end
 
 --[[-------------------------------------------------------------------------
@@ -426,7 +380,20 @@ end
 --[[-------------------------------------------------------------------------
 SPEED SYSTEM
 ---------------------------------------------------------------------------]]
-function ply:PushSpeed( walk, run, crouch )
+function ply:PushSpeed( walk, run, crouch, id )
+	if self.SpeedStack then
+		if type( id ) == "string" then
+			for i, v in ipairs( self.SpeedStack ) do
+				if v.id == id then
+					v.stacks = v.stacks + 1
+					return true
+				end
+			end
+		else
+			id = nil
+		end
+	end
+
 	local swalk = self:GetWalkSpeed()
 	local srun = self:GetRunSpeed()
 	local scrouch = self:GetCrouchedWalkSpeed()
@@ -434,6 +401,7 @@ function ply:PushSpeed( walk, run, crouch )
 	if !self.SpeedStack then
 		self.SpeedStack = { {
 			id = 0,
+			spid = 0,
 			walk = swalk,
 			run = srun,
 			crouch = scrouch,
@@ -457,8 +425,12 @@ function ply:PushSpeed( walk, run, crouch )
 		self:SetCrouchedWalkSpeed( crouch )
 	end
 
-	local id = self.SpeedStack[#self.SpeedStack].id + 1
-	table.insert( self.SpeedStack, { id = id, walk = walk, run = run, crouch = crouch } )
+	local spid = self.SpeedStack[#self.SpeedStack].spid + 1
+	if !id then
+		id = spid
+	end
+
+	table.insert( self.SpeedStack, { id = id, spid = spid, walk = walk, run = run, crouch = crouch, stacks = 1 } )
 
 	return id
 end
@@ -466,7 +438,7 @@ end
 local function getFirstValue( ply, id )
 	for i = #ply.SpeedStack - 1, 1, -1 do
 		local var = ply.SpeedStack[i][id]
-
+		
 		if var != -1 then
 			if id != "crouch" and var > 0 and var <= 1 then
 				local tmp = table.remove( ply.SpeedStack, i )
@@ -488,15 +460,20 @@ function ply:PopSpeed( id )
 
 	for i, v in ipairs( self.SpeedStack ) do
 		if v.id == id then
-			if i == #self.SpeedStack then
-				local run = getFirstValue( self, "run" ) 
+			v.stacks = v.stacks - 1
 
-				self:SetWalkSpeed( getFirstValue( self, "walk" ) )
-				self:SetRunSpeed( run )
-				self:SetCrouchedWalkSpeed( getFirstValue( self, "crouch" ) )
+			if v.stacks <= 0 then
+				if i == #self.SpeedStack then
+					self:SetWalkSpeed( getFirstValue( self, "walk" ) )
+					self:SetRunSpeed( getFirstValue( self, "run" )  )
+					self:SetCrouchedWalkSpeed( getFirstValue( self, "crouch" ) )
+				end
+
+				table.remove( self.SpeedStack, i )
+				return true
 			end
 
-			table.remove( self.SpeedStack, i )
+			return false
 		end
 	end
 end
@@ -508,6 +485,7 @@ function ply:SetBaseSpeed( walk, run, crouch )
 
 	self.SpeedStack[1] = {
 		id = 0,
+		spid = 0,
 		walk = walk,
 		run = run,
 		crouch = crouch
@@ -536,6 +514,25 @@ function ply:AddFrags( f )
 	Player_AddFrags( self, f )
 end
 
+function ply:SetPrestigePoints( pp )
+	self:Set_SCPPrestigePoints( pp )
+	self:SetSCPData( "prestige_points", pp )
+end
+
+function ply:AddPrestigePoints( pp )
+	self:SetPrestigePoints( self:Get_SCPPrestigePoints() + pp )
+end
+
+function ply:SetPrestige( p )
+	self:Set_SCPPrestige( p )
+	self:SetSCPData( "prestige", p )
+end
+
+function ply:AddPrestige( p )
+	self:SetPrestige( self:Get_SCPPrestige() + p )
+	self:AddPrestigePoints( p * 10 )
+end
+
 function ply:SetSCPLevel( lvl )
 	self:Set_SCPLevel( lvl )
 	self:SetSCPData( "level", lvl )
@@ -544,7 +541,16 @@ end
 function ply:AddLevel( lvl )
 	local level = self:Get_SCPLevel() + lvl
 
+	if level >= 10 then
+		local p = math.floor( level / 10 )
+		level = level - p * 10
+
+		self:AddPrestige( p )
+		PlayerMessage( "prestigeup$"..self:SCPPrestige(), self )
+	end
+
 	self:SetSCPLevel( level )
+	self:AddPrestigePoints( lvl )
 end
 
 function ply:AddXP( xp )
@@ -578,4 +584,26 @@ function ply:AddXP( xp )
 	--print( "adding exp", self, xp, plyxp )
 
 	return xp
+end
+
+function ply:AddSanity( s )
+	local sanity = self:GetSanity()
+	local maxsanity = self:GetMaxSanity()
+
+	self:SetSanity( math.Clamp( sanity + s, 0, maxsanity ) )
+
+	/*if sanity / maxsanity < 0.1 and !self:HasEffect( "insane" ) then
+		self:ApplyEffect( "insane" )
+	end*/
+end
+
+function ply:AddHealth( num )
+	local max = self:GetMaxHealth()
+	local hp = self:Health() + num
+
+	if hp > max then
+		hp = max
+	end
+
+	self:SetHealth( hp )
 end

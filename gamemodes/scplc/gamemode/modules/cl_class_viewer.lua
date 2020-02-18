@@ -16,8 +16,9 @@ local showinfo = {
 local showdetails = {
 	"name",
 	"team",
-	"level",
+	"price",
 	"health",
+	"sanity",
 	"walk_speed",
 	"run_speed",
 	"chip",
@@ -120,21 +121,22 @@ local function addClass( tab, p, h )
 	local name = LANG.CLASSES[tab.name] or tab.name
 
 	local ply = LocalPlayer()
-	local owned = nil
+	local override = nil
 
 	if tab.override then
 		local result = tab.override( ply )
 
 		if result then
-			owned = true
+			override = true
 		elseif result == false then
-			owned = false
+			override = false
 		end
 	end
 
-	if owned == nil then
-		owned = ply:SCPLevel() >= tab.level
-	end
+	/*if owned == nil then
+		//owned = ply:SCPLevel() >= tab.level
+		owned = ply:IsClassUnlocked( tab.name )
+	end*/
 
 	local button = vgui.Create( "DButton", p )
 	button:Dock( TOP )
@@ -145,7 +147,13 @@ local function addClass( tab, p, h )
 		surface.SetDrawColor( Color( 150, 150, 150, 100 ) )
 		surface.DrawOutlinedRect( pw * 0.1, 0, pw * 0.8, ph )
 
-		surface.SetDrawColor( owned and Color( 120, 150, 120, 75 ) or Color( 150, 120, 120, 75 ) )
+		if override == true or override == nil and ply:IsClassUnlocked( tab.name ) then
+			surface.SetDrawColor( Color( 120, 150, 120, 75 ) )
+		else
+			surface.SetDrawColor( Color( 150, 120, 120, 75 ) )
+		end
+
+		//surface.SetDrawColor( owned and Color( 120, 150, 120, 75 ) or Color( 150, 120, 120, 75 ) )
 		surface.DrawRect( pw * 0.1, 0, pw * 0.8, ph )
 
 		draw.Text{
@@ -177,6 +185,7 @@ local function addClass( tab, p, h )
 		end
 
 		showinfo.mvp:SetModel( model )
+		showinfo.mvp:Update( tab.name )
 	end
 end
 
@@ -225,6 +234,7 @@ local function addSCP( tab, p, h )
 		end
 
 		showinfo.mvp:SetModel( model )
+		showinfo.mvp:Update( tab.name )
 	end
 end
 
@@ -268,7 +278,7 @@ function rebuildView()
 								table.insert( class_tab, v )
 							end
 
-							table.sort( class_tab, function( a, b ) return a.level < b.level end )
+							table.sort( class_tab, function( a, b ) return a.price < b.price end )
 
 							for _, class in pairs( class_tab ) do
 								addClass( class, panel, h * 0.05 )
@@ -296,6 +306,7 @@ local function basicText( text, x, y, maxw )
 end
 
 local function openViewer()
+	local ply = LocalPlayer()
 	local w, h = ScrW(), ScrH()
 
 	local window = vgui.Create( "DFrame" )
@@ -328,8 +339,17 @@ local function openViewer()
 
 		draw.Text{
 			text = LANG.classviewer,
-			pos = { w * 0.01, ph * 0.02 },
+			pos = { pw * 0.01, ph * 0.02 },
 			font = "SCPHUDMedium",
+			color = Color( 255, 255, 255, 255 ),
+			xalign = TEXT_ALIGN_LEFT,
+			yalign = TEXT_ALIGN_CENTER,
+		}
+
+		draw.Text{
+			text = LANG.HUD.prestige_points..": "..ply:SCPPrestigePoints(),
+			pos = { pw * 0.48, ph * 0.02 },
+			font = "SCPHUDSmall",
 			color = Color( 255, 255, 255, 255 ),
 			xalign = TEXT_ALIGN_LEFT,
 			yalign = TEXT_ALIGN_CENTER,
@@ -393,6 +413,44 @@ local function openViewer()
 		}
 	end
 
+	mv.Update = function( self, name )
+		-- if name == "SCP106" then
+		-- 	self.buy:SetVisible( false )
+		-- else
+		-- 	self.buy:SetVisible( true )
+		-- end
+		self.buy.cur = name
+		self.buy:SetVisible( !ply:IsClassUnlocked( name ) )
+	end
+
+	local buy = vgui.Create( "DButton", mv )
+	buy:Dock( BOTTOM )
+	buy:DockMargin( 4, 4, 4, 4 )
+	buy:SetTall( h * 0.04 )
+	buy:SetText( "" )
+	buy.Paint = function( self, pw, ph )
+		surface.SetDrawColor( Color( 150, 150, 150, 100 ) )
+		surface.DrawOutlinedRect( 0, 0, pw, ph )
+
+		if self.cur then
+			draw.Text{
+				text = LANG.buy.." ("..showinfo.details.price..")",
+				pos = { pw * 0.5, ph * 0.5 },
+				font = "SCPHUDSmall",
+				color = ply:CanUnlockClass( self.cur ) and Color( 255, 255, 255, 255 ) or Color( 255, 120, 120, 255 ),
+				xalign = TEXT_ALIGN_CENTER,
+				yalign = TEXT_ALIGN_CENTER,
+			}
+		end
+	end
+	buy.DoClick = function( self )
+		if ply:UnlockClass( self.cur ) then
+			self:SetVisible( false )
+		end
+	end
+	buy:SetVisible( false )
+
+	mv.buy = buy
 	showinfo.mvp = mv
 
 	local details = vgui.Create( "DPanel", c )

@@ -173,8 +173,8 @@ hook.Add( "Tick", "TimersTick", function()
 		end
 	end
 
-	for i, v in ipairs( _TickTimersCache ) do
-		if v[1] == 0 then
+	for i, v in rpairs( _TickTimersCache ) do
+		if v[1] <= 0 then
 			table.remove( _TickTimersCache, i )
 			v[2]()
 		else
@@ -182,3 +182,11 @@ hook.Add( "Tick", "TimersTick", function()
 		end
 	end
 end )
+
+function ZeroTimer( func )
+	TickTimer( 0, func )
+end
+--[[-------------------------------------------------------------------------
+Player Timers
+---------------------------------------------------------------------------]]
+--TODO player/ent timers with string keys like NThink

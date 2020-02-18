@@ -1,24 +1,50 @@
 SCPTeams = {
-	INFO_ALIVE = bit.lshift( 1, 0 ),
-	INFO_HUMAN = bit.lshift( 1, 1 ),
-	INFO_SCP = bit.lshift( 1, 2 ),
 	REG = {},
 	SCORE = {}
 }
+
+local info_num = 0
+function SCPTeams.addTeamInfo( name )
+	local key = "INFO_"..string.upper( name )
+
+	if SCPTeams[key] then
+		return SCPTeams[key]
+	end
+
+	if info_num > 31 then
+		ErrorNoHalt( "Cannot add new TeamInfo! Maximum amount is 32\n" )
+		return
+	end
+
+	local info = bit.lshift( 1, info_num )
+	info_num = info_num + 1
+
+	SCPTeams[key] = info
+	
+	return info
+end
 
 function SCPTeams.register( name, info, clr, reward, canescape )
 	_G["TEAM_"..name] = table.insert( SCPTeams.REG, { info = info or 0, color = clr, name = name, reward = reward, canescape = canescape } )
 end
 
-function SCPTeams.setupAllies( tab1, tab2 )
-	tab1 = istable( tab1 ) and tab1 or { tab1 }
-	tab2 = tab2 or tab1
+function SCPTeams.addInfo( team, info )
+	local t = SCPTeams.REG[team]
+	if t then
+		t.info = bit.bor( t.info, info )
+	end
+end
 
-	for k, v in pairs( tab1 ) do
+function SCPTeams.setupAllies( tab )
+	if !istable( tab ) then
+		tab = { tab }
+	end
+
+	for k, v in pairs( tab ) do
 		local t = SCPTeams.REG[v]
 		t.relations = t.relations or {}
 		
-		for _k, _v in pairs( tab2 ) do
+		for _k, _v in pairs( tab ) do
 			if v != _v then
 				t.relations[_v] = true
 			end
@@ -190,12 +216,16 @@ function ply:SetSCPTeam( team )
 	self:Set_SCPPersonaT( team )
 end
 
+SCPTeams.addTeamInfo( "ALIVE" )
+SCPTeams.addTeamInfo( "HUMAN" )
+SCPTeams.addTeamInfo( "SCP" )
+
 SCPTeams.register( "SPEC", 0, Color( 150, 150, 150 ), 0 )
-SCPTeams.register( "CLASSD", SCPTeams.INFO_ALIVE + SCPTeams.INFO_HUMAN, Color( 242, 125, 25 ), 1, true )
-SCPTeams.register( "SCIENT", SCPTeams.INFO_ALIVE + SCPTeams.INFO_HUMAN, Color( 60, 200, 215 ), 2, true )
-SCPTeams.register( "MTF", SCPTeams.INFO_ALIVE + SCPTeams.INFO_HUMAN, Color( 30, 50, 180 ), 3, false )
-SCPTeams.register( "CI", SCPTeams.INFO_ALIVE + SCPTeams.INFO_HUMAN, Color( 10, 80, 5 ), 3, false )
-SCPTeams.register( "SCP", SCPTeams.INFO_ALIVE + SCPTeams.INFO_SCP, Color( 100, 0, 0 ), 10, true )
+SCPTeams.register( "CLASSD", bit.bor( SCPTeams.INFO_ALIVE, SCPTeams.INFO_HUMAN ), Color( 242, 125, 25 ), 1, true )
+SCPTeams.register( "SCIENT", bit.bor(  SCPTeams.INFO_ALIVE, SCPTeams.INFO_HUMAN ), Color( 60, 200, 215 ), 2, true )
+SCPTeams.register( "MTF", bit.bor(  SCPTeams.INFO_ALIVE, SCPTeams.INFO_HUMAN ), Color( 30, 50, 180 ), 3, false )
+SCPTeams.register( "CI", bit.bor(  SCPTeams.INFO_ALIVE, SCPTeams.INFO_HUMAN ), Color( 10, 80, 5 ), 3, false )
+SCPTeams.register( "SCP", bit.bor(  SCPTeams.INFO_ALIVE, SCPTeams.INFO_SCP ), Color( 100, 0, 0 ), 10, true )
 
 SCPTeams.setupAllies( { TEAM_CLASSD, TEAM_CI } )
 SCPTeams.setupAllies( { TEAM_SCIENT, TEAM_MTF } )

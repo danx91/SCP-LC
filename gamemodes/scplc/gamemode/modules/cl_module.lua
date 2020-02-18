@@ -190,7 +190,7 @@ hook.Add( "RenderScreenspaceEffects", "SCPEffects", function()
 		clr.colour = clr.colour - staminamul * 2
 
 		if stamina_effects <= 30 then
-			surface.SetDrawColor( Color( 255, 255, 255, math.Map( math.min( stamina_effects, 30 ), 0, 30, 511, 0 ) ) )
+			surface.SetDrawColor( Color( 255, 255, 255, math.Map( math.min( stamina_effects, 30 ), 0, 30, 511, 0 ) ) ) --TODO: why 511?
 			surface.SetMaterial( exhaust_mat )
 			surface.DrawTexturedRect( 0, 0, ScrW(), ScrH() )
 		end
@@ -238,6 +238,8 @@ net.Receive( "PlayerBlink", function( len )
 
 	HUDNextBlink = nextblink 
 	HUDBlink = delay - duration
+
+	hook.Run( "SLCBlink", duration, delay )
 end )
 
 hook.Add( "Tick", "BlinkTick", function()
@@ -251,7 +253,7 @@ local blink_mat = CreateMaterial( "mat_SCP_blink", "UnlitGeneric", {
 	["$color"] = "{ 0 0 0 }"
 } )
 
-hook.Add( "PostDrawHUD", "Blink", function()
+hook.Add( "PostDrawHUD", "SLCBlink", function()
 	if blink then
 		surface.SetDrawColor( 0, 0, 0, 255 )
 		surface.SetMaterial( blink_mat )
@@ -333,8 +335,8 @@ function GM:CalcView( ply, origin, angles, fov )
 			local vec, ang, nfov, dw = item:CalcView( ply, origin, angles, fov )
 			if vec then data.origin = vec end
 			if ang then data.angles = ang end
-			if nfov then data.fov = ifov end
-			if dw != nil then data.drawviewer = dw end
+			if nfov then data.fov = nfov end
+			if dw == true then data.drawviewer = dw end
 		end
 	end
 
@@ -402,7 +404,6 @@ net.Receive( "957Effect", function( len )
 	end
 end )*/
 
---TODO test
 function GM:PreRender()
 	local lp = LocalPlayer()
 

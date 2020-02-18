@@ -21,6 +21,9 @@ SWEP.Secondary.Ammo			= ""
 SWEP.SCP 					= true
 SWEP.Droppable				= false
 
+SWEP.WorldModel 			= ""
+SWEP.ViewModel 				= ""
+
 SWEP.ShouldDrawViewModel 	= false
 SWEP.ShouldDrawWorldModel 	= false
 
@@ -43,8 +46,6 @@ function SWEP:Deploy()
 			self.Owner:DrawWorldModel( self.ShouldDrawWorldModel )
 		end
 	end
-
-	return false
 end
 
 function SWEP:Holster( wep )
@@ -68,7 +69,7 @@ function SWEP:PlayerFreeze()
 		//self.Owner:SetRunSpeed( 0 )
 		self.OldJumpPower = self.Owner:GetJumpPower()
 		self.Owner:SetJumpPower( 0 )
-		self.SpeedID = self.Owner:PushSpeed( 2, 2, -1 )
+		self.Owner:PushSpeed( 2, 2, -1, "SLC_SCPFreeze" )
 	end
 
 	if ROUND.preparing or ROUND.post then return end
@@ -76,7 +77,7 @@ function SWEP:PlayerFreeze()
 	if self.FreezePlayer then
 		self.FreezePlayer = false
 
-		self.Owner:PopSpeed( self.SpeedID )
+		self.Owner:PopSpeed( "SLC_SCPFreeze" )
 		self.Owner:SetJumpPower( self.OldJumpPower )
 		/*self.Owner:SetCrouchedWalkSpeed( self.OldStats.crouch )
 		self.Owner:SetJumpPower( self.OldStats.jump )

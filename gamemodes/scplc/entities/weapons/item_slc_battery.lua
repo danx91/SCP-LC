@@ -1,5 +1,4 @@
 SWEP.Base 		= "item_slc_base"
-SWEP.Droppable 	= true
 SWEP.Language 	= "BATTERY"
 
 SWEP.WorldModel 			= "models/mishka/models/battery.mdl"

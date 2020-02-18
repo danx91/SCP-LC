@@ -22,9 +22,13 @@ SCP_VALID_ENTRIES = {
 	allow_chat = true,
 	is_human = true,
 	no_damage_forces = true,
+	dynamic_spawn = true,
+	no_terror = true,
+	//disable_crosshair = true,
 }
 
 SCP_DYNAMIC_VARS = {}
+SCP_DYNAMIC_DEFAULT = {}
 
 local lua_override = false
 
@@ -45,19 +49,22 @@ function UpdateDynamicVars()
 		local override = LoadINI( "slc/scp_override.txt" )
 
 		for k, v in pairs( override ) do
-			for _k, _v in pairs( v ) do
-				if !SCP_DYNAMIC_VARS[k] then
-					SCP_DYNAMIC_VARS[k] = {}
-				end
+			if istable( v ) then
+				for _k, _v in pairs( v ) do
+					if !SCP_DYNAMIC_VARS[k] then
+						SCP_DYNAMIC_VARS[k] = {}
+					end
 
-				SCP_DYNAMIC_VARS[k][_k] = _v
+					SCP_DYNAMIC_VARS[k][_k] = _v
+				end
 			end
 		end
 	end
 end
 
 function SaveDynamicVars()
-	WriteINI( "slc/scp_default.txt", SCP_DYNAMIC_VARS, false, ".", "For reference use only (this file is not used anywhere)! Use scp_override.txt instead!\n# Changes in scp_override.txt will affect this file so 'real' default values are gone!" )
+	//WriteINI( "slc/scp_default.txt", SCP_DYNAMIC_VARS, false, ".", "For reference use only (this file is not used anywhere)! Use scp_override.txt instead!\n# Changes in scp_override.txt will affect this file so 'real' default values are gone!" )
+	WriteINI( "slc/scp_default.txt", SCP_DYNAMIC_DEFAULT, false, ".", "For reference use only (this file is not used anywhere)! Use scp_override.txt instead.\n# Copy and paste SCP header (e.g. [SCP173]), then just below it paste attribute that you want to edit and change its value" )
 end
 
 function SendSCPList( ply )
@@ -93,7 +100,7 @@ function RegisterSCP( name, model, weapon, static_stats, dynamic_stats, custom_c
 	end
 
 	local spawn = _G["SPAWN_"..name]
-	if !static_stats.no_spawn and !dynamic_stats.no_spawn then
+	if !static_stats.no_spawn and !dynamic_stats.no_spawn and !static_stats.dynamic_spawn and !dynamic_stats.dynamic_spawn then
 		if !spawn or ( !isvector( spawn ) and !istable( spawn ) ) then
 			error( "No spawn position entry for: "..name )
 		end
@@ -145,12 +152,17 @@ function ObjectSCP:Create( name, model, weapon, pos, static_stats, dynamic_stats
 		SCP_DYNAMIC_VARS[name] = {}
 	end
 
+	SCP_DYNAMIC_DEFAULT[name] = SCP_DYNAMIC_DEFAULT[name] or {}
+
 	local dv = SCP_DYNAMIC_VARS[name]
+	local dd = SCP_DYNAMIC_DEFAULT[name]
 
 	for k, v in pairs( dynamic_stats ) do
 		if SCP_VALID_ENTRIES[k] then
 			local istab = istable( v )
 			local var = istab and v.var or v
+
+			dd[k] = var --TODO TEST
 
 			if dv[k] then
 				var = dv[k]
@@ -201,13 +213,16 @@ function ObjectSCP:SetCallback( cb, post )
 end
 
 function ObjectSCP:SetupPlayer( ply, ... )
+	local args = {...}
+	local basestats = table.Copy( self.basestats )
+
 	if self.callback then
-		if self.callback( ply, self.basestats, ... ) then
+		if self.callback( ply, basestats, ... ) then
 			return
 		end
 	end
 
-	ply:Cleanup( self.basestats.no_strip == true )
+	ply:Cleanup( basestats.no_strip == true )
 
 	ply:UnSpectate()
 	ply:GodDisable()
@@ -220,42 +235,46 @@ function ObjectSCP:SetupPlayer( ply, ... )
 	end*/
 
 	local pos = self.spawnpos
-	if pos and !self.basestats.no_spawn then
+	if pos and !basestats.no_spawn then
 		if istable( pos ) then
 			pos = table.Random( pos )
 		end
 		
 		ply:Spawn()
 		ply:SetPos( pos )
+	elseif basestats.dynamic_spawn and isvector( args[1] ) then
+		ply:Spawn()
+		ply:SetPos( args[1] )
 	end
 
 	ply:SetSCPTeam( TEAM_SCP )
 	ply:SetSCPClass( CLASSES[self.name] )
 
-	//ply.SCPHuman = self.basestats.is_human == true
-	//ply.SCPChat = self.basestats.allow_chat == true
+	//ply.SCPHuman = basestats.is_human == true
+	//ply.SCPChat = basestats.allow_chat == true
 
-	ply:SetSCPHuman( self.basestats.is_human == true )
-	ply:SetSCPChat( self.basestats.allow_chat == true )
+	ply:SetSCPHuman( basestats.is_human == true )
+	ply:SetSCPChat( basestats.allow_chat == true )
+	ply:SetSCPTerror( basestats.no_terror != true )
 
-	if !self.basestats.no_model then
+	if !basestats.no_model then
 		ply:SetModel( self.model )
 	end
 
-	ply:SetModelScale( self.basestats.model_scale or 1 )
+	ply:SetModelScale( basestats.model_scale or 1 )
 
-	ply:SetHealth( self.basestats.base_health or 1500 )
-	ply:SetMaxHealth( self.basestats.max_health or 1500 )
+	ply:SetHealth( basestats.base_health or 1500 )
+	ply:SetMaxHealth( basestats.max_health or 1500 )
 	
-	ply:SetBaseSpeed( self.basestats.base_speed or 200, self.basestats.run_speed or self.basestats.base_speed or 200, 0.4 )
-	ply:SetJumpPower( self.basestats.jump_power or 200 )
+	ply:SetBaseSpeed( basestats.base_speed or 200, basestats.run_speed or basestats.base_speed or 200, 0.4 )
+	ply:SetJumpPower( basestats.jump_power or 200 )
 
-	if !self.basestats.no_swep then
+	if !basestats.no_swep then
 		local wep = ply:Give( self.swep )
 		ply:SelectWeapon( self.swep )
 
 		if IsValid( wep ) then
-			wep.ShouldFreezePlayer = self.basestats.prep_freeze == true
+			wep.ShouldFreezePlayer = basestats.prep_freeze == true
 		end
 	end
 
@@ -264,16 +283,22 @@ function ObjectSCP:SetupPlayer( ply, ... )
 	ply:Flashlight( false )
 	ply:AllowFlashlight( false )
 
-	ply:SetNoDraw( self.basestats.no_draw == true )
+	/*if basestats.disable_crosshair == true then
+		ply:CrosshairDisable()
+	else
+		ply:CrosshairEnable()
+	end*/
 
-	if self.basestats.no_damage_forces == true then
+	ply:SetNoDraw( basestats.no_draw == true )
+
+	if basestats.no_damage_forces == true then
 		ply:AddEFlags( EFL_NO_DAMAGE_FORCES )
 	end
 
-	//ply.noragdoll = self.basestats.no_ragdoll == true
-	ply:SetSCPNoRagdoll( self.basestats.no_ragdoll == true )
+	//ply.noragdoll = basestats.no_ragdoll == true
+	ply:SetSCPNoRagdoll( basestats.no_ragdoll == true )
 
-	//ply.handsmodel = self.basestats.hands_model
+	//ply.handsmodel = basestats.hands_model
 	ply:SetupHands()
 
 	hook.Run( "SLCSCPSetup", ply, self.name )
@@ -282,7 +307,7 @@ function ObjectSCP:SetupPlayer( ply, ... )
 	net.Send( ply )
 
 	if self.post then
-		self.post( ply )
+		self.post( ply, ... )
 	end
 end
 

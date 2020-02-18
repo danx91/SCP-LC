@@ -10,7 +10,8 @@
 		sanity = 100,
 		max_sanity = 100 --can be nil
 		vest = nil,
-		level = 0,
+		level = 0, --deprecated
+		price = 1,
 		max = 0,
 		persona = { class = <fake_class>, team = <fake_team> },
 		override = function( ply ) end, --return false to disallow, nil to do nothing (check level), true to allow
@@ -29,6 +30,8 @@ local SuppWeightList = {}
 local SelectInfo = {}
 local SelectClasses = {}
 SelectClasses.SUPPORT = {}
+
+local AllClasses = {}
 
 local SpawnInfo = {}
 SpawnInfo.SUPPORT = {}
@@ -107,18 +110,21 @@ function registerClass( name, group, model, data, support )
 
 	local usetab = support and SelectClasses.SUPPORT or SelectClasses
 
-	assert( name != "SUPPORT", "Forbidden group name: 'SUPPORT'! To register support class use 'registerSupportClass' function instead" )
+	assert( group != "SUPPORT", "Forbidden group name: 'SUPPORT'! To register support class use 'registerSupportClass' function instead" )
 	assert( !string.match( name, "%s" ), "Class name can not contain any whitespace characters!" )
 	assert( usetab[group] != nil, "Invalid group: "..group )
-	assert( usetab[group][name] == nil, "Class '"..name.."' is already registered!" )
+	--assert( usetab[group][name] == nil, "Class '"..name.."' is already registered!" )
+	assert( AllClasses[name] == nil, "Class '"..name.."' is already registered!" )
 	assert_warn( _LANG["english"]["CLASSES"][name] != nil and _LANG["english"]["CLASS_INFO"][name] != nil, "No language entry for: "..name )
 
 	CLASSES[string.upper( name )] = name
 
 	data.support = support
 	data.name = name
+	//data.group = group
 	data.model = model
 
+	AllClasses[name] = data
 	usetab[group][name] = data
 end
 
@@ -199,3 +205,55 @@ timer.Simple( 0, function()
 end )
 
 fully_registered = CurTime() + 1
+
+local ply = FindMetaTable( "Player" )
+function ply:IsClassUnlocked( name )
+	if self:IsBot() then return true end
+
+	local class = AllClasses[name]
+	if class then
+		return !class.price or class.price == 0 or self.playermeta.classes[name]
+	end
+
+	return true
+end
+
+function ply:CanUnlockClass( name )
+	local class = AllClasses[name]
+	if class and class.price and class.price > 0 then
+		return self:SCPPrestigePoints() >= class.price
+	end
+
+	return false
+end
+
+function ply:UnlockClass( name )
+	if self:CanUnlockClass( name ) then
+		if SERVER then
+			self:AddPrestigePoints( -AllClasses[name].price )
+			self.PlayerInfo:Get( "unlocked_classes" )[name] = true
+			self.PlayerInfo:Update()
+		end
+
+		self.playermeta.classes[name] = true
+
+		if CLIENT then
+			net.Start( "ClassUnlock" )
+				net.WriteString( name )
+			net.SendToServer()
+		end
+		return true
+	end
+
+	return false
+end
+
+hook.Add( "SLCPlayerMeta", "SLCClassInfo", function( ply, playermeta )
+	local classinfo = ply.PlayerInfo:Get( "unlocked_classes" )
+	if !classinfo then
+		classinfo = {}
+		ply.PlayerInfo:Set( "unlocked_classes", classinfo )
+	end
+
+	playermeta.classes = classinfo
+end )

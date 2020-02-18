@@ -88,7 +88,7 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		run_speed = 225,
 		sanity = 75,
 		vest = nil,
-		level = 0,
+		price = 0,
 		max = 0,
 	} )
 
@@ -102,7 +102,7 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		run_speed = 240,
 		sanity = 100,
 		vest = nil,
-		level = 2,
+		price = 2,
 		max = 3,
 	} )
 
@@ -116,7 +116,7 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		run_speed = 260,
 		sanity = 50,
 		vest = nil,
-		level = 5,
+		price = 5,
 		max = 1,
 	} )
 
@@ -130,7 +130,7 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		run_speed = 250,
 		sanity = 100,
 		vest = nil,
-		level = 7,
+		price = 7,
 		max = 1,
 		persona = { team = TEAM_CLASSD, class = "classd" },
 	} )
@@ -148,7 +148,7 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		run_speed = 225,
 		sanity = 100,
 		vest = nil,
-		level = 3,
+		price = 3,
 		max = 0,
 	} )
 
@@ -162,7 +162,7 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		run_speed = 225,
 		sanity = 50,
 		vest = nil,
-		level = 0,
+		price = 0,
 		max = 0,
 	} )
 
@@ -176,7 +176,7 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		run_speed = 225,
 		sanity = 125,
 		vest = nil,
-		level = 6,
+		price = 6,
 		max = 1,
 	} )
 
@@ -190,7 +190,7 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		run_speed = 240,
 		sanity = 150,
 		vest = nil,
-		level = 9,
+		price = 9,
 		max = 1,
 	} )
 
@@ -207,7 +207,7 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		run_speed = 230,
 		sanity = 100,
 		vest = "guard",
-		level = 0,
+		price = 0,
 		max = 0,
 	} )
 
@@ -221,7 +221,7 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		run_speed = 235,
 		sanity = 125,
 		vest = "chief",
-		level = 3,
+		price = 3,
 		max = 1,
 	} )
 
@@ -235,7 +235,7 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		run_speed = 240,
 		sanity = 125,
 		vest = "private",
-		level = 1,
+		price = 1,
 		max = 3,
 	} )
 
@@ -249,7 +249,7 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		run_speed = 250,
 		sanity = 150,
 		vest = "sergeant",
-		level = 5,
+		price = 5,
 		max = 1,
 	} )
 
@@ -263,7 +263,7 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		run_speed = 260,
 		sanity = 100,
 		vest = "medic",
-		level = 6,
+		price = 6,
 		max = 3,
 	} )
 
@@ -277,7 +277,7 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		run_speed = 260,
 		sanity = 175,
 		vest = "lieutenant",
-		level = 8,
+		price = 8,
 		max = 1,
 	} )
 
@@ -291,7 +291,7 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		run_speed = 275,
 		sanity = 200,
 		vest = "alpha1",
-		level = 10,
+		price = 10,
 		max = 1,
 	} )
 
@@ -305,7 +305,7 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		run_speed = 230,
 		sanity = 100,
 		vest = "guard",
-		level = 4,
+		price = 4,
 		max = 2,
 		persona = { team = TEAM_MTF, class = "guard" },
 	} )
@@ -325,7 +325,7 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		run_speed = 250,
 		sanity = 125,
 		vest = "ntf",
-		level = 2,
+		price = 2,
 		max = 0,
 	} )
 
@@ -339,7 +339,7 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		run_speed = 255,
 		sanity = 150,
 		vest = "ntf",
-		level = 5,
+		price = 5,
 		max = 1,
 	} )
 
@@ -353,7 +353,7 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		run_speed = 225,
 		sanity = 100,
 		vest = "ntf",
-		level = 7,
+		price = 7,
 		max = 1,
 	} )
 
@@ -368,7 +368,7 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		run_speed = 235,
 		sanity = 90,
 		vest = "ci",
-		level = 3,
+		price = 3,
 		max = 0,
 	} )
 
@@ -382,7 +382,7 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		run_speed = 240,
 		sanity = 90,
 		vest = "ci",
-		level = 9,
+		price = 9,
 		max = 1,
 	} )
 end )

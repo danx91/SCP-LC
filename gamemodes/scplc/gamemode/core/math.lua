@@ -32,15 +32,15 @@ function angle:Approach( ang, inc )
 	local angle = self:To360()
 	local target = ang:To360()
 
-	return Angle360ToAngle( ApproachAngle360( angle, target, inc ) )
+	return math.Angle360ToAngle( math.ApproachAngle360( angle, target, inc ) )
 end
 
 function angle:To360()
-	return AngleTo360( self )
+	return math.AngleTo360( self )
 end
 
 
-function AngleTo360( ang )
+function math.AngleTo360( ang )
 	ang:Normalize()
 
 	local a360 = { p = ang.p, y = ang.y, r = ang.r }
@@ -60,8 +60,8 @@ function AngleTo360( ang )
 	return a360
 end
 
-function Angle360ToAngle( ang )
-	NormalizeAngle360( ang )
+function math.Angle360ToAngle( ang )
+	math.NormalizeAngle360( ang )
 
 	if ang.p > 180 then
 		ang.p = -360 + ang.p
@@ -78,9 +78,9 @@ function Angle360ToAngle( ang )
 	return Angle( ang.p, ang.y, ang.r )
 end
 
-function ApproachAngle360( angle, target, inc )
-	NormalizeAngle360( angle )
-	NormalizeAngle360( target )
+function math.ApproachAngle360( angle, target, inc )
+	math.NormalizeAngle360( angle )
+	math.NormalizeAngle360( target )
 
 	inc = math.abs( inc )
 	local result = { p = 0, y = 0, r = 0 }
@@ -114,7 +114,7 @@ function ApproachAngle360( angle, target, inc )
 	return result
 end
 
-function NormalizeAngle360( ang )
+function math.NormalizeAngle360( ang )
 	ang.p = ang.p % 360
 	ang.y = ang.y % 360
 	ang.r = ang.r % 360
@@ -153,6 +153,67 @@ function math.Map( num, min, max, newmin, newmax )
 	return newmin + ( num - min ) / ( max - min ) * ( newmax - newmin )
 end
 
+local po2 = setmetatable( {}, { __index = function( tab, key )
+	if !isnumber( key ) then return end
+
+	local num = math.pow( 2, key )
+	tab[key] = num
+
+	return num
+end } )
+
+function math.PowerOf2( pow ) --Memoizing po2 values is almost useless (for values up to 2^32 this function is 7% faster and for values up to 2^512 is about 11% faster)
+	return po2[pow]
+end
+/*function math.Bin2Dec( bin, unsigned )
+	local bytes = { string.byte( bin, 1, string.len( bin ) ) }
+	local num = 0
+
+	for i = 1, 4 do
+		num = num + bit.lshift( bytes[i], (4 - i) * 8 )
+	end
+	
+	if num < 0 and unsigned then
+		num = num + 4294967296 --2^32
+	end
+
+	return num
+end*/
+
+function math.Bin2Dec( bin, unsigned ) --this version is about 400% faster
+	local num = bit.lshift( string.byte( bin, 1 ), 24 ) +
+				bit.lshift( string.byte( bin, 2 ), 16 ) +
+				bit.lshift( string.byte( bin, 3 ), 8 ) +
+							string.byte( bin, 4 )
+
+	if num < 0 and unsigned then
+		num = num + 4294967296 --2^32
+	end
+
+	return num
+end
+
+/*function math.Dec2Bin( dec )
+	local bytes = ""
+
+	for i = 1, 4 do
+		bytes = string.char( bit.band( dec, 255 ) )..bytes
+		dec = bit.rshift( dec, 8 )
+	end
+
+	return bytes
+end*/
+
+function math.Dec2Bin( dec ) --this version is about 30% faster
+	return string.char( bit.rshift( bit.band( dec, -16777216 ), 24 ) )..
+		   string.char( bit.rshift( bit.band( dec, 16711680 ), 16 ) )..
+		   string.char( bit.rshift( bit.band( dec, 65280 ), 8 ) )..
+		   string.char( bit.band( dec, 255 ) )
+end
+
+--[[-------------------------------------------------------------------------
+Simple Matrix
+---------------------------------------------------------------------------]]
 SimpleMatrix = {}
 
 function SimpleMatrix:New( w, h, init )

@@ -66,13 +66,19 @@ local function CalcStamina( ply )
 		ply.Stamina = 100
 	end
 
+	local max_stamina = ply:GetStaminaLimit()
+
+	if max_stamina > 100 then
+		max_stamina = 100
+	end
+
 	if ply.StaminaRegen < CurTime() then
 		if ply.Exhausted then
 			ply.StaminaRegen = CurTime() + 0.2
-			ply.Stamina = math.min( ply.Stamina + 1, 100 )
+			ply.Stamina = math.min( ply.Stamina + 1, max_stamina )
 		else
 			ply.StaminaRegen = CurTime() + 0.15
-			ply.Stamina = math.min( ply.Stamina + 2, 100 )
+			ply.Stamina = math.min( ply.Stamina + 2, max_stamina )
 		end
 	end
 
@@ -95,7 +101,7 @@ local function CalcStamina( ply )
 		ply.Exhausted = true
 
 		if SERVER then
-			ply.StaminaSpeed = ply:PushSpeed( 0.2, -1, -1 )
+			ply:PushSpeed( 0.2, -1, -1, "SLC_Exhaust" )
 			
 			net.Start( "SCPForceExhaust" )
 			net.Send( ply )
@@ -109,7 +115,7 @@ local function CalcStamina( ply )
 		ply.Exhausted = false
 
 		if SERVER then
-			ply:PopSpeed( ply.StaminaSpeed )
+			ply:PopSpeed( "SLC_Exhaust" )
 			ply.StaminaSpeed = 0
 		end
 	end

@@ -4,6 +4,8 @@ function ply:SetupSpectator()
 	self:SetSCPTeam( TEAM_SPEC )
 	self:SetSCPClass( "spectator" )
 
+	self:CrosshairEnable()
+
 	local plys = SCPTeams.getPlayersByInfo( SCPTeams.INFO_HUMAN )
 
 	if #plys < 1 then

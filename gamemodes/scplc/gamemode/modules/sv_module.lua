@@ -52,8 +52,9 @@ end
 end*/
 
 hook.Add( "PlayerPostThink", "WeaponHolsterThink", function( ply )
+	local active = ply:GetActiveWeapon()
 	for k, v in pairs( ply:GetWeapons() ) do
-		if IsValid( v ) then
+		if IsValid( v ) and v != active then
 			if v.EnableHolsterThink and v.HolsterThink then
 				v:HolsterThink()
 			end
@@ -139,7 +140,7 @@ Timer( "PlayerBlink", blinkdelay, 0, function( self, n )
 		end
 	end )
 
-	hook.Run( "SLCBlink", 0.25 )
+	hook.Run( "SLCBlink", 0.25, blinkdelay )
 end )
 
 Timer( "PlayXP", 300, 0, function()

@@ -8,8 +8,8 @@ data = {
 	duration = <time>,
 	think = nil'/function( self, ply, tier, args ) (return <delay> <- not working, use wait instead) end,
 	wait = 0//time between thinks
-	begin = nil'/function( self, ply, tier, refresh, args ) end,
-	finish = nil'/function( self, ply, tier, args ) end,
+	begin = nil'/function( self, ply, tier, args, refresh ) end,
+	finish = nil'/function( self, ply, tier, args, interrupt ) end,
 	stacks = 0(nil)/1/2, //0 - don't stack, refresh duration; 1 - stack effects; 2 - increase effect level, refresh duration
 	tiers = { { icon = <material> } },
 	cantarget = nil'/function( ply ) end //return false to disallow
@@ -31,15 +31,15 @@ end
 hook.Add( "PlayerPostThink", "SLCEffectsThink", function( ply )
 	if !ply.EFFECTS then ply.EFFECTS = {} end
 
-	for k, v in ipairs( ply.EFFECTS ) do
+	for i, v in rpairs( ply.EFFECTS ) do
 		local eff = EFFECTS.effects[v.name]
 
 		if v.endtime != -1 and v.endtime < CurTime() then
 			if eff.finish then
-				eff.finish( v, ply, v.tier, v.args )
+				eff.finish( v, ply, v.tier, v.args, false )
 			end
 
-			table.remove( ply.EFFECTS, k )
+			table.remove( ply.EFFECTS, i )
 
 			local found = false
 			for _, e in pairs( ply.EFFECTS ) do
@@ -74,7 +74,7 @@ if CLIENT then
 		if rem then
 			LocalPlayer():RemoveEffect( name, net.ReadBool() )
 		else
-			LocalPlayer():ApplyEffect( name, net.ReadTable() )
+			LocalPlayer():ApplyEffect( name, unpack( net.ReadTable() ) )
 		end
 	end )
 end
@@ -109,7 +109,9 @@ function PLAYER:ApplyEffect( name, ... )
 		if self.EFFECTS_REG[name] then
 			for k, v in pairs( self.EFFECTS ) do
 				if v.name == name then
-					v.endtime = CurTime() + effect.duration
+					if effect.duration >= 0 then
+						v.endtime = CurTime() + effect.duration
+					end
 
 					if effect.stacks == 2 then
 						local ntier = v.tier + tier
@@ -119,17 +121,18 @@ function PLAYER:ApplyEffect( name, ... )
 						end
 
 						v.tier = ntier
+						//v.icon = EFFECTS.registry[name.."_"..ntier]
 					end
 
 					if effect.begin then
-						effect.begin( v, self, v.tier, true, args )
+						effect.begin( v, self, v.tier, args, true )
 					end
 
 					if SERVER then
 						net.Start( "PlayerEffect" )
 							net.WriteBool( false )
 							net.WriteString( name )
-							net.WriteTable( args )
+							net.WriteTable( {...} )
 						net.Send( self )
 					end
 
@@ -145,20 +148,21 @@ function PLAYER:ApplyEffect( name, ... )
 		endtime = CurTime() + effect.duration
 	end
 
-	local tab = { name = name, tier = tier, icon = EFFECTS.registry[name.."_"..tier], endtime = endtime, args = args }
+	//local tab = { name = name, tier = tier, icon = EFFECTS.registry[name.."_"..tier], endtime = endtime, args = args }
+	local tab = { name = name, tier = tier, endtime = endtime, args = args }
 
-	table.insert( self.EFFECTS, tab )
+	table.insert( self.EFFECTS, 1, tab )
 	self.EFFECTS_REG[name] = true
 
 	if effect.begin then
-		effect.begin( tab, self, tier, false, args )
+		effect.begin( tab, self, tier, args, false )
 	end
 
 	if SERVER then
 		net.Start( "PlayerEffect" )
 			net.WriteBool( false )
 			net.WriteString( name )
-			net.WriteTable( args )
+			net.WriteTable( {...} )
 		net.Send( self )
 	end
 end
@@ -169,6 +173,14 @@ function PLAYER:RemoveEffect( name, all )
 	if CLIENT and self != LocalPlayer() then return end
 
 	if !name or name == "" then
+		for k, v in pairs( self.EFFECTS ) do
+			local effect = EFFECTS.effects[v.name]
+
+			if effect and effect.finish then
+				effect.finish( v, self, v.tier, v.args, true )
+			end
+		end
+
 		self.EFFECTS = {}
 		self.EFFECTS_REG = {}
 
@@ -187,10 +199,14 @@ function PLAYER:RemoveEffect( name, all )
 		local effect = EFFECTS.effects[name]
 		if !effect then return end
 
-		for i, v in ipairs( self.EFFECTS ) do
+		for i, v in rpairs( self.EFFECTS ) do
 			if v.name == name then
 				if effect.stacks != 2 or all or v.tier == 1 then
 					table.remove( self.EFFECTS, i )
+
+					if effect.finish then
+						effect.finish( v, self, v.tier, v.args, true )
+					end
 
 					if effect.stacks != 1 or all then
 						self.EFFECTS_REG[name] = nil
@@ -246,7 +262,8 @@ EFFECTS.registerEffect( "bleeding", {
 		{ icon = Material( "slc_hud/effects/bleeding3.png" ) },
 	},
 	cantarget = function( ply )
-		return ply:SCPTeam() != TEAM_SPEC and ply:SCPTeam() != TEAM_SCP
+		local team = ply:SCPTeam()
+		return team != TEAM_SPEC and team != TEAM_SCP
 	end,
 	think = function( self, ply, tier, args )
 		if SERVER then
@@ -291,7 +308,7 @@ EFFECTS.registerEffect( "doorlock", {
 	tiers = {
 		{ icon = Material( "slc_hud/effects/doorlock.png" ) }
 	},
-	begin = function( self, ply, tier, refresh, args )
+	begin = function( self, ply, tier, args, refresh )
 		if CLIENT then
 			ply:EmitSound( "SLCEffects.DoorLockBeep" )
 		end
@@ -317,7 +334,22 @@ EFFECTS.registerEffect( "amnc227", {
 		{ icon = Material( "slc_hud/effects/amn-c227.png" ) }
 	},
 	cantarget = function( ply )
-		return ply:SCPTeam() != TEAM_SPEC and ply:SCPTeam() != TEAM_SCP
+		local team = ply:SCPTeam()
+
+		if team == TEAM_SPEC or team == TEAM_SCP then
+			return false
+		end
+
+		if CLIENT then
+			return true
+		end
+
+		local mask = ply:GetWeapon( "item_slc_gasmask" )
+		if IsValid( mask ) and mask:GetEnabled() or ply:GetSCP714() then
+			return false
+		end
+
+		return true
 	end,
 	think = function( self, ply, tier, args )
 		if SERVER then
@@ -338,3 +370,97 @@ EFFECTS.registerEffect( "amnc227", {
 	end,
 	wait = 2,
 } )
+
+--[[-------------------------------------------------------------------------
+Insane
+---------------------------------------------------------------------------]]
+EFFECTS.registerEffect( "insane", {
+	duration = -1,
+	stacks = 0,
+	tiers = {
+		{ icon = Material( "slc_hud/effects/insane.png" ) }
+	},
+	cantarget = function( ply )
+		local team = ply:SCPTeam()
+		return team != TEAM_SPEC and team != TEAM_SCP
+	end,
+	think = function( self, ply, tier, args )
+		if SERVER then
+			if ply:SCPTeam() == TEAM_SPEC or ply:SCPTeam() == TEAM_SCP then return end
+
+			if ply:GetSanity() / ply:GetMaxSanity() > 0.1 then
+				ply:RemoveEffect( "insane" )
+			end
+		else
+			InsaneTick( ply )
+		end
+	end,
+	wait = 3,
+} )
+
+--[[-------------------------------------------------------------------------
+Gas Choke
+---------------------------------------------------------------------------]]
+EFFECTS.registerEffect( "gas_choke", {
+	duration = 10,
+	stacks = 0,
+	tiers = {
+		{ icon = Material( "slc_hud/effects/amn-c227.png" ) }
+	},
+	cantarget = function( ply )
+		local team = ply:SCPTeam()
+
+		if team == TEAM_SPEC or team == TEAM_SCP then
+			return false
+		end
+
+		local mask = ply:GetWeapon( "item_slc_gasmask" )
+
+		if IsValid( mask ) and mask:GetEnabled() or SERVER and ply:GetSCP714() then
+			return false
+		end
+
+		return true
+	end,
+	begin = function( self, ply, tier, args, refresh )
+		if SERVER and !refresh then
+			ply:PushSpeed( 0.65, 0.65, -1, "SLC_Choke" )
+		end
+
+		if CLIENT then
+			ply.choke = true
+		end
+	end,
+	finish = function( self, ply, tier, args, interrupt )
+		if SERVER then
+			ply:PopSpeed( "SLC_Choke" )
+		end
+
+		if CLIENT then
+			ply.choke = false
+		end
+	end,
+	think = function( self, ply, tier, args )
+		if CLIENT then
+			ply:EmitSound( "SLCEffects.Choke" )
+		end
+	end,
+	wait = 2.75
+} )
+
+if CLIENT then
+	local choke_mat = GetMaterial( "slc/exhaust.png" )
+	hook.Add( "SLCScreenMod", "ChokeEffect", function( clr )
+		if LocalPlayer().choke then
+			clr.colour = 0
+			clr.contrast = clr.contrast * 0.65
+			clr.brightness = clr.brightness - 0.04
+
+			surface.SetDrawColor( 0, 0, 0, 245 )
+			surface.SetMaterial( choke_mat )
+			surface.DrawTexturedRect( 0, 0, ScrW(), ScrH() )
+		end
+	end )
+
+	addSounds( "SLCEffects.Choke", "effects/choke/cough%i.ogg", 0, 1, { 90, 110 }, CHAN_STATIC, 1, 3 )
+end

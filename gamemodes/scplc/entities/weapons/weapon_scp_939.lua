@@ -33,18 +33,18 @@ function SWEP:Think()
 
 	for i = 1, len do
 		local dist = 75 + ( self:GetUpgradeMod( "radius" ) or 0 )
-		for k, v in pairs( FindInCylinder( self.PosLog[i], dist, -32, 128, "player", nil, player.GetAll() ) ) do
+		for k, v in pairs( FindInCylinder( self.PosLog[i], dist, -32, 128, nil, nil, player.GetAll() ) ) do
 			if v != self.Owner then
-				local team = v:SCPTeam()
+				/*local team = v:SCPTeam()
 				if team != TEAM_SCP and team != TEAM_SPEC then
 					local mask = v:GetWeapon( "item_slc_gasmask" )
 
-					if IsValid( mask ) and mask:GetEnabled() then
+					if IsValid( mask ) and mask:GetEnabled() or v:GetSCP714() then
 						continue
-					end
+					end*/
 
 					v:ApplyEffect( "amnc227", self.Owner, self:GetUpgradeMod( "damage" ) )
-				end
+				//end
 			end
 		end
 	end

@@ -40,7 +40,7 @@ function SWEP:Think()
 		self.LastOK = true
 		local t = target:SCPTeam()
 
-		if target:GetPos():Distance( owner:GetPos() ) > 80 + ( self:GetUpgradeMod( "dist" ) or 0 ) or t == TEAM_SPEC or t == TEAM_SCP then
+		if target:GetPos():Distance( owner:GetPos() ) > 110 + ( self:GetUpgradeMod( "dist" ) or 0 ) or t == TEAM_SPEC or t == TEAM_SCP then
 			self.LockOnEnd = 0
 			self:SetTarget( NULL )
 		end
@@ -69,13 +69,14 @@ function SWEP:PrimaryAttack()
 	if self.NextAttack > CurTime() then return end
 	self.NextAttack = CurTime() + self.AttackCD
 
-	local owner = self:GetOwner()
+	if self.LockOnEnd > CurTime() then return end
 
+	local owner = self:GetOwner()
 	local start = owner:GetShootPos()
 
 	local trace = util.TraceHull( {
 		start = start,
-		endpos = start + owner:GetAimVector() * 75,
+		endpos = start + owner:GetAimVector() * 90,
 		mask = MASK_SHOT,
 		filter = owner,
 		mins = Vector( -5, -5, -5 ),
@@ -110,7 +111,7 @@ function SWEP:DrawHUD()
 
 		draw.NoTexture()
 
-		local crl = math.Clamp( target:GetPos():Distance( self.Owner:GetPos() ) / ( 80 + ( self:GetUpgradeMod( "dist" ) or 0 ) ) * 225, 0, 225 )
+		local crl = math.Clamp( target:GetPos():Distance( self.Owner:GetPos() ) / ( 110 + ( self:GetUpgradeMod( "dist" ) or 0 ) ) * 225, 0, 225 )
 		surface.SetDrawColor( Color( 15 + crl, 240 - crl, 0 ) )
 		surface.DrawRing( x, y, 16, 4, 360, 16 )
 
@@ -146,7 +147,10 @@ end )
 hook.Add( "DoPlayerDeath", "SCP966Damage", function( ply, attacker, info )
 	if attacker:IsPlayer() and attacker:SCPClass() == CLASSES.SCP966 then
 	 	AddRoundStat( "966" )
-	 	self:AddScore( 1 )
+	 	local wep = attacker:GetWeapon( "weapon_scp_966" )
+	 	if IsValid( wep ) then
+	 		wep:AddScore( 1 )
+	 	end
 	end
 end )
 
@@ -157,9 +161,9 @@ DefineUpgradeSystem( "scp966", {
 		{ name = "lockon1", cost = 2, req = {}, reqany = false,  pos = { 1, 1 }, mod = { time = 0.5 }, active = false },
 		{ name = "lockon2", cost = 4, req = { "lockon1" }, reqany = false,  pos = { 1, 2 }, mod = { time = 1 }, active = false },
 
-		{ name = "dist1", cost = 2, req = {}, reqany = false,  pos = { 2, 1 }, mod = { dist = 10 }, active = false },
-		{ name = "dist2", cost = 3, req = { "dist1" }, reqany = false,  pos = { 2, 2 }, mod = { dist = 20 }, active = false },
-		{ name = "dist3", cost = 4, req = { "dist2" }, reqany = false,  pos = { 2, 3 }, mod = { dist = 30 }, active = false },
+		{ name = "dist1", cost = 2, req = {}, reqany = false,  pos = { 2, 1 }, mod = { dist = 15 }, active = false },
+		{ name = "dist2", cost = 3, req = { "dist1" }, reqany = false,  pos = { 2, 2 }, mod = { dist = 30 }, active = false },
+		{ name = "dist3", cost = 4, req = { "dist2" }, reqany = false,  pos = { 2, 3 }, mod = { dist = 45 }, active = false },
 
 		{ name = "dmg1", cost = 3, req = {}, reqany = false,  pos = { 3, 1 }, mod = { dmg = 5 }, active = false },
 		{ name = "dmg2", cost = 3, req = { "dmg1" }, reqany = false,  pos = { 3, 2 }, mod = { dmg = 10 }, active = false },
