@@ -2,6 +2,10 @@
 SCP: Lost Control is a Garry's mod gamemode. This gamemode is based on SCP universe.
 
 
+# Important
+Development of SCP:LC has been moved to the private repo. If you are interested in hosting server and receiving further updates, contact me on discord: https://discord.gg/fAsEAYZ
+
+
 # Legal
 You are not allowed to:
 * Redistributing and reuploading this gamemode (except forking on GitHub)
