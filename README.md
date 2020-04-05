@@ -7,7 +7,7 @@ Development of SCP:LC has been moved to the private repo. If you are interested 
 
 
 # Legal
-This gamemode have to be released under CC-BY-SA license, therefore I can't forbid you anything. I can only please you to don't be a jerk and to respect my work.
+This gamemode has to be released under CC-BY-SA license, therefore I can't forbid you anything. I can only ask you to don't be a jerk and to respect my work.
 
 You have to:
 * Redistribute copy of this gamemode under the same licence
