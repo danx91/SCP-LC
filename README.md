@@ -7,12 +7,14 @@ Development of SCP:LC has been moved to the private repo. If you are interested 
 
 
 # Legal
-You are not allowed to:
-* Redistributing and reuploading this gamemode (except forking on GitHub)
-* Claiming copyrights of this gamemode or any part of it
-* Sharing this gamemode or any part of it under name other than "SCP: Lost Control" (Note: Garry's mod server also shares gamemode files to anyone connecting to the server)
-* Receiving any financial benefits (includes: selling VIPs, unbans and other ranks)
+This gamemode have to be released under CC-BY-SA license, therefore I can't forbid you anything. I can only please you to don't be a jerk and to respect my work.
+
+You have to:
+* Redistribute copy of this gamemode under the same licence
+* Credit me as author of original content and include URL to this page
 
 You are allowed to:
-* Copying, modifying and redistributing this gamemode under "SCP: Lost Control" name while referring to original gamemode, author and this page
-* Doing other things after receiving explicit permission from author
+* Copying, modifying and redistributing this gamemode while referring to original gamemode, author and this page
+
+You are NOT allowed to:
+* Claiming copyrights of this gamemode or any part of it
