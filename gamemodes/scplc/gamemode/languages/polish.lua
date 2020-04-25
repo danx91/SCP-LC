@@ -850,7 +850,7 @@ wep.RADIO = {
 
 wep.NVG = {
     name = "NVG",
-    info = "Gogle noktowizyjne - urządzenie, które rozjaśnia ciemne obszary i jeszcze bardziej rozjaśnia jasne obszary.\cCzasami można przez nie dostrzec anomalne rzeczy."
+    info = "Gogle noktowizyjne - urządzenie, które rozjaśnia ciemne obszary i jeszcze bardziej rozjaśnia jasne obszary.\nCzasami można przez nie dostrzec anomalne rzeczy."
 }
 
 wep.NVGPLUS = {
