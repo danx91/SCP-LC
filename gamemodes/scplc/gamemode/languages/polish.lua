@@ -7,7 +7,7 @@ lang.NRegistry = {
     scpready = "Możesz zostać wybrany jako SCP w następnej rundzie",
     scpwait = "Musisz poczekać %i rund, aby móc grać jako SCP",
     abouttostart = "Gra rozpocznie się za 10 sekund!",
-    kill = "Otrzymaliście %d punkty za zabicie %s: %s!",
+    kill = "Otrzymałeś %d punkty za zabicie %s: %s!",
     rdm = "Przegrałeś %d punkty za zabicie %s: %s!",
     acc_nocard = "Do obsługi tych drzwi wymagana jest karta dostępu",
     acc_wrongcard = "Do obsługi tych drzwi wymagana jest karta o wyższym poziomie uprawnień",
@@ -25,18 +25,18 @@ lang.NRegistry = {
     r106sound = "Włącz transmisję dźwięku, aby rozpocząć procedurę zabezpieczania SCP 106",
     r106human = "W klatce wymagany jest żywy człowiek, aby rozpocząć procedurę ponownego zebezpieczania SCP 106",
     r106already = "SCP 106 jest już zabezpieczony",
-    r106success = "Otrzymaliście %i punkty za zabezpieczenie SCP 106!",
+    r106success = "Otrzymałeś %i punkty za zabezpieczenie SCP 106!",
     vestpickup = "Podniosłeś kamizelkę",
     vestdrop = "Upuściłeś kamizelkę",
     hasvest = "Masz już kamizelkę! Użyj EQ, aby go upuścić",
-    escortpoints = "Otrzymaliście %i punkty za eskortowanie sojuszników",
+    escortpoints = "Otrzymałeś %i punkty za eskortowanie sojuszników",
     femur_act = "Aktywowany Łamacz kości udowej ...",
     levelup = "Gracz %s awansował! Jego obecny poziom to: %i",
-    healplayer = "Otrzymaliście %i punkty za uzdrowienie innego gracza",
-    detectscp = "Otrzymaliście %i punkty za wykrycie SCP",
-    winxp = "Otrzymaliście %i doświadczenie, ponieważ Twoja początkowa drużyna wygrała grę",
-    winalivexp = "Otrzymaliście %i doświadczenie, ponieważ Twoja drużyna wygrała grę",
-    upgradepoints = "Otrzymaliście nowe punkty aktualizacji! naciśnij '%s' aby otworzyć menu aktualizacji SCP",
+    healplayer = "Otrzymałeś %i punkty za uzdrowienie innego gracza",
+    detectscp = "Otrzymałeś %i punkty za wykrycie SCP",
+    winxp = "Otrzymałeś %i doświadczenie, ponieważ Twoja początkowa drużyna wygrała grę",
+    winalivexp = "Otrzymałeś %i doświadczenie, ponieważ Twoja drużyna wygrała grę",
+    upgradepoints = "Otrzymałeś nowe punkty aktualizacji! naciśnij '%s' aby otworzyć menu aktualizacji SCP",
 }
 
 lang.NFailed = "Nie można uzyskać dostępu do rejestru za pomocą klucza: %s"
@@ -47,7 +47,7 @@ NCRegistry
 lang.NCRegistry = {
     escaped = "Uciekłeś z placówki!",
     escapeinfo = "Dobra robota! Uciekłeś %s",
-    escapexp = "Otrzymaliście %i doświadczenia",
+    escapexp = "Otrzymałeś %i doświadczenia",
     escort = "Zostałeś eskortowany!",
     roundend = "Runda zakończona!",
     nowinner = "Brak zwycięzcy w tej rundzie!",
@@ -667,7 +667,7 @@ wep.SCP457 = {
         },
         heal1 = {
             name = "Skwiercząca Przekąska I.",
-            info = "Płonący ludzie wyleczy cię o 1 dodatkowe zdrowie"
+            info = "Podpaleni ludzie wyleczy cię o 1 dodatkowe zdrowie"
         },
         heal2 = {
             name = "Skwiercząca Przekąska II",
@@ -841,7 +841,7 @@ wep.ID = {
 wep.CAMERA = {
     name = "Monitoring",
     showname = "Aparaty fotograficzne",
-    info = "Kamery pozwalają zobaczyć, co dzieje się w obiekcie.\NDają także możliwość skanowania SCP i przesyłania tych informacji do bieżącego kanału radiowego",
+    info = "Kamery pozwalają zobaczyć, co dzieje się w obiekcie.\nDają także możliwość skanowania SCP i przesyłania tych informacji do bieżącego kanału radiowego",
 }
 
 wep.RADIO = {
@@ -850,13 +850,13 @@ wep.RADIO = {
 
 wep.NVG = {
     name = "NVG",
-    info = "Gogle noktowizyjne - urządzenie, które rozjaśnia ciemne obszary i jeszcze bardziej rozjaśnia jasne obszary.\Czasami można przez nie dostrzec anomalne rzeczy."
+    info = "Gogle noktowizyjne - urządzenie, które rozjaśnia ciemne obszary i jeszcze bardziej rozjaśnia jasne obszary.\cCzasami można przez nie dostrzec anomalne rzeczy."
 }
 
 wep.NVGPLUS = {
     name = "Ulepszony NVG",
     showname = "NVG+",
-    info = "Ulepszona wersja NVG pozwala na używanie jej podczas trzymania innych przedmiotów w rękach.\N Niestety bateria wystarcza tylko na 10 sekund"
+    info = "Ulepszona wersja NVG pozwala na używanie jej podczas trzymania innych przedmiotów w rękach.\nNiestety bateria wystarcza tylko na 10 sekund"
 }
 
 wep.KEYCARD = {
