@@ -922,4 +922,4 @@ wep.weapon_stunstick = "Pałka"
 
 lang.WEAPONS = wep
 
-registerLanguage( lang, "polish", "pl", )
+registerLanguage( lang, "polish", "pl" )
