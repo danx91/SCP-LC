@@ -1,82 +1,111 @@
+--[[-------------------------------------------------------------------------
+Language: English
+Date: 15.02.2021
+Translated by: danx91 (aka ZGFueDkx)
+---------------------------------------------------------------------------]]
+
 local lang = {}
 
 --[[-------------------------------------------------------------------------
 NRegistry
 ---------------------------------------------------------------------------]]
 lang.NRegistry = {
-    scpready = "You can be selected as SCP in next round",
-    scpwait = "You have to wait %i rounds to be able to play as SCP",
-    abouttostart = "Game will start in 10 seconds!",
-    kill = "You received %d points for killing %s: %s!",
-    rdm = "You lost %d points for killing %s: %s!",
-    acc_nocard = "A keycard is required to operate this door",
-    acc_wrongcard = "A keycard with higher clearence level is required to operate this door",
-    acc_deny = "Access denied",
-    acc_granted = "Access granted",
-    device_nocard = "A keycard is required to operate this device",
-    rxpspec = "You received %i experience for playing on this server!",
-    rxpplay = "You received %i experience for staying alive in the round!",
-    rxpplus = "You received %i experience for surviving more than half of the round!",
-    roundxp = "You received %i experience for your points",
-    gateexplode = "Time to Gate A explosion: %i",
-    explodeterminated = "Gate A destruction has been terminated",
-    r106used = "SCP 106 recontain procedure can be triggered only once per round",
-    r106eloiid = "Power down ELO-IID electromagnet in order to start SCP 106 recontain procedure",
-    r106sound = "Enable sound transmission in order to start SCP 106 recontain procedure",
-    r106human = "Alive human is required in cage in order to start SCP 106 recontain procedure",
-    r106already = "SCP 106 is already recontained",
-    r106success = "You received %i points for recontaining SCP 106!",
-    vestpickup = "You picked up vest",
-    vestdrop = "You dropped your vest",
-    hasvest = "You already has vest! Use your EQ to drop it",
-    escortpoints = "You received %i points for escroting your allies",
-    femur_act = "Femur Breaker activated...",
-    levelup = "Player %s leveled up! His current level: %i",
-    healplayer = "You received %i points for healing other player",
-    detectscp = "You received %i points for detecting SCPs",
-    winxp = "You received %i experience because your initial team won the game",
-    winalivexp = "You received %i experience because your team won the game",
-    upgradepoints = "You received new upgrade point(s)! Press '%s' to open SCP upgrade menu",
+	scpready = "You can be selected as SCP in next round",
+	scpwait = "You have to wait %i rounds to be able to play as SCP",
+	abouttostart = "Game will start in %i seconds!",
+	kill = "You received %d points for killing %s: %s!",
+	assist = "You received %d points for assisting in kill of player: %s!",
+	rdm = "You lost %d points for killing %s: %s!",
+	//acc_nocard = "A keycard is required to operate this door",
+	//acc_wrongcard = "A keycard with higher clearence level is required to operate this door",
+	acc_denied = "Access denied",
+	acc_granted = "Access granted",
+	//device_nocard = "A keycard is required to operate this device",
+	acc_omnitool = "An Omnitool is required to operate this door",
+	device_noomni = "An Omnitool is required to operate this device",
+	elevator_noomni = "An Omnitool is required to operate this elevator",
+	acc_wrong = "Higher clearance level is required to perform this action",
+	rxpspec = "You received %i experience for playing on this server!",
+	rxpplay = "You received %i experience for staying alive in the round!",
+	rxpplus = "You received %i experience for surviving more than half of the round!",
+	roundxp = "You received %i experience for your points",
+	gateexplode = "Time to Gate A explosion: %i",
+	explodeterminated = "Gate A destruction has been terminated",
+	r106used = "SCP 106 recontain procedure can be triggered only once per round",
+	r106eloiid = "Power down ELO-IID electromagnet in order to start SCP 106 recontain procedure",
+	r106sound = "Enable sound transmission in order to start SCP 106 recontain procedure",
+	r106human = "Alive human is required in cage in order to start SCP 106 recontain procedure",
+	r106already = "SCP 106 is already recontained",
+	r106success = "You received %i points for recontaining SCP 106!",
+	vestpickup = "You picked up vest",
+	vestdrop = "You dropped your vest",
+	hasvest = "You already has vest! Use your EQ to drop it",
+	escortpoints = "You received %i points for escroting your allies",
+	femur_act = "Femur Breaker activated...",
+	levelup = "You leveled up! Your current level: %i",
+	healplayer = "You received %i points for healing other player",
+	detectscp = "You received %i points for detecting SCPs",
+	winxp = "You received %i experience because your initial team won the game",
+	winalivexp = "You received %i experience because your team won the game",
+	upgradepoints = "You received new upgrade point(s)! Press '%s' to open SCP upgrade menu",
+	prestigeup = "Player %s earned higher prestige! Their current prestige level: %i",
+	omega_detonation = "OMEGA Warhead detonation in %i seconds. Get on the surface or proceed to the blast shelter immediately!",
+	alpha_detonation = "ALPHA Warhead detonation in %i seconds. Get in the facility or proceed to the evacuation immediately!",
+	alpha_card = "You've inserted ALPHA Warhead nuclear card",
+	destory_scp = "You received %i points for destroying SCP object!",
 }
 
-lang.NFailed = "Filed to access NRegistry with key: %s"
+lang.NFailed = "Failed to access NRegistry with key: %s"
 
 --[[-------------------------------------------------------------------------
 NCRegistry
 ---------------------------------------------------------------------------]]
 lang.NCRegistry = {
-    escaped = "You escaped!",
-    escapeinfo = "Good job! You escaped in %s",
-    escapexp = "You received %i experience",
-    escort = "You have been escorted!",
-    roundend = "Round ended!",
-    nowinner = "No winner in this round!",
-    roundnep = "Not enough players!",
-    roundwin = "Round winner: %s",
-    roundwinmulti = "Round winners: [RAW]",
+	escaped = "You escaped!",
+	escapeinfo = "Good job! You escaped in %s",
+	escapexp = "You received %i experience",
+	escort = "You have been escorted!",
+	roundend = "Round ended!",
+	nowinner = "No winner in this round!",
+	roundnep = "Not enough players!",
+	roundwin = "Round winner: %s",
+	roundwinmulti = "Round winners: [RAW]",
+	shelter_escape = "You survived explosion in blast shelter",
+	alpha_escape = "You escaped before warhead exploded",
 
-    mvp = "MVP: %s with score: %i",
-    stat_kill = "Players killed: %i",
-    stat_rdm = "RDM kills: %i",
-    stat_rdmdmg = "RDM damage: %i",
-    stat_dmg = "Damage dealt: %i",
-    stat_escapes = "Escaped players: %i",
-    stat_escorts = "Players escroted: %i",
-    stat_066 = "Played masterpieces: %i",
-    stat_106 = "Players teleported to Pocket Dimension: %i",
-    stat_173 = "Snapped necks: %i",
-    stat_457 = "Incinerated players: %i",
-    stat_682 = "Players killed by overgrown reptile: %i",
-    stat_8602 = "Players nailed to wall: %i",
-    stat_939 = "SCP 939 preys: %i",
+	mvp = "MVP: %s with score: %i",
+	stat_kill = "Players killed: %i",
+	stat_rdm = "RDM kills: %i",
+	stat_rdmdmg = "RDM damage: %i",
+	stat_dmg = "Damage dealt: %i",
+	stat_bleed = "Bleeding damage: %i",
+	stat_106recontain = "SCP 106 has been recontained",
+	stat_escapes = "Escaped players: %i",
+	stat_escorts = "Players escroted: %i",
+	stat_023 = "Sudden deaths caused by SCP 023: %i",
+	stat_049 = "Cured people: %i",
+	stat_066 = "Played masterpieces: %i",
+	stat_096 = "Players killed by shy guy: %i",
+	stat_106 = "Players teleported to Pocket Dimension: %i",
+	stat_173 = "Snapped necks: %i",
+	stat_457 = "Incinerated players: %i",
+	stat_682 = "Players killed by overgrown reptile: %i",
+	stat_8602 = "Players nailed to wall: %i",
+	stat_939 = "SCP 939 preys: %i",
+	stat_966 = "Insidious cuts: %i",
+	stat_3199 = "Assassinations by SCP 3199: %i",
+	stat_24273 = "People judged by SCP 2427-3: %i",
 }
+
+lang.NCFailed = "Failed to access NCRegistry with key: %s"
 
 --[[-------------------------------------------------------------------------
 HUD
 ---------------------------------------------------------------------------]]
 local hud = {}
+lang.HUD = hud
 
-hud.pickup = "Pickup"
+hud.pickup = "Pick up"
 hud.class = "Class"
 hud.team = "Team"
 hud.prestige_points = "Prestige Points"
@@ -84,8 +113,6 @@ hud.hp = "HP"
 hud.stamina = "STAMINA"
 hud.sanity = "SANITY"
 hud.xp = "XP"
-
-lang.HUD = hud
 
 --[[-------------------------------------------------------------------------
 EQ
@@ -103,11 +130,16 @@ lang.weight = "Weight"
 lang.protection = "Protection"
 
 lang.weight_unit = "kg"
+lang.eq_buttons = {
+	escort = "Escort",
+	gatea = "Destroy Gate A"
+}
 
 --[[-------------------------------------------------------------------------
 Effects
 ---------------------------------------------------------------------------]]
 local effects = {}
+lang.EFFECTS = effects
 
 effects.permanent = "perm"
 effects.bleeding = "Bleeding"
@@ -115,8 +147,8 @@ effects.doorlock = "Door Lock"
 effects.amnc227 = "AMN-C227"
 effects.insane = "Insane"
 effects.gas_choke = "Choking"
-
-lang.EFFECTS = effects
+effects.radiation = "Radiation"
+effects.deep_wounds = "Deep Wounds"
 
 --[[-------------------------------------------------------------------------
 Class viewer
@@ -126,33 +158,40 @@ lang.preview = "Preview"
 lang.random = "Random"
 lang.price = "Price"
 lang.buy = "Buy"
+lang.refound = "Refound"
+lang.none = "None"
+lang.refounded = "All removed classes has been refounded. You've recived %d prestige points."
 
 lang.details = {
-    details = "Details",
-    name = "Name",
-    team = "Team",
-    price = "Prestige Points price",
-    walk_speed = "Walk Speed",
-    run_speed = "Run Speed",
-    chip = "Access Chip",
-    persona = "Fake ID",
-    weapons = "Weapons",
-    class = "Class",
-    hp = "Health",
-    speed = "Speed"
+	details = "Details",
+	name = "Name",
+	team = "Team",
+	price = "Prestige Points price",
+	walk_speed = "Walk Speed",
+	run_speed = "Run Speed",
+	chip = "Access Chip",
+	persona = "Fake ID",
+	weapons = "Weapons",
+	class = "Class",
+	hp = "Health",
+	speed = "Speed",
+	health = "Health",
+	sanity = "Sanity"
 }
 
 lang.headers = {
-    support = "SUPPORT",
-    classes = "CLASSES",
-    scp = "SCPs"
+	support = "SUPPORT",
+	classes = "CLASSES",
+	scp = "SCPs"
 }
 
 lang.view_cat = {
-    classd = "Class D",
-    sci = "Scientists",
-    mtf = "MTF",
-    ci = "CI",
+	classd = "Class D",
+	sci = "Scientists",
+	mtf = "Security",
+	mtf_ntf = "MTF Epsilon-11",
+	mtf_alpha = "MTF Alpha-1",
+	ci = "Chaos Insurgency",
 }
 
 --[[-------------------------------------------------------------------------
@@ -161,71 +200,149 @@ Scoreboard
 lang.unconnected = "Unconnected"
 
 lang.scoreboard = {
-    name = "Scoreboard",
-    playername = "Name",
-    ping = "Ping",
-    prestige = "Prestige",
-    level = "Level",
-    score = "Score",
-    ranks = "Ranks",
+	name = "Scoreboard",
+	playername = "Name",
+	ping = "Ping",
+	prestige = "Prestige",
+	level = "Level",
+	score = "Score",
+	ranks = "Ranks",
 }
 
 lang.ranks = {
-    author = "Author",
-    vip = "VIP",
-    tester = "Tester",
-    countbob = "Count Bob"
+	author = "Author",
+	vip = "VIP",
+	tester = "Tester",
+	contributor = "Contributor"
 }
 
 --[[-------------------------------------------------------------------------
 Upgrades
 ---------------------------------------------------------------------------]]
 lang.upgrades = {
-    tree = "%s UPGRADE TREE",
-    points = "Points",
-    cost = "Cost",
-    owned = "Owned",
-    requiresall = "Requires",
-    requiresany = "Requires any"
+	tree = "%s UPGRADE TREE",
+	points = "Points",
+	cost = "Cost",
+	owned = "Owned",
+	requiresall = "Requires",
+	requiresany = "Requires any",
+	blocked = "Blocked by"
+}
+
+--[[-------------------------------------------------------------------------
+Info screen
+---------------------------------------------------------------------------]]
+lang.info_screen = {
+	subject = "Subject",
+	class = "Class",
+	team = "Team",
+	status = "Status",
+	objectives = "Objectives",
+	details = "Details",
+	registry_failed = "info_screen_registry failed"
+}
+
+lang.info_screen_registry = {
+	escape_time = "Escaped in %s minutes",
+	escape_xp = "You received %s expereince",
+	escape1 = "You escaped from facility",
+	escape2 = "You escaped during Alpha countdown",
+	escape3 = "You survived in blast shelter",
+	escorted = "You have been escorted",
+	killed_by = "You have been killed by: %s",
+	suicide = "You've commited suicide",
+	unknown = "Cause of your death is unknown",
+	hazard = "You have been killed by hazard",
+	alpha_mia = "Last known location: Surface",
+	omega_mia = "Last known location: Facility",
+}
+
+lang.info_screen_type = {
+	alive = "Alive",
+	escaped = "Escaped",
+	dead = "Deceased",
+	mia = "Missed in action",
+	unknown = "Unknown",
+}
+
+lang.info_screen_macro = {
+	time = function( args )
+		local t = tonumber( args[1] )
+		return t and string.ToMinutesSeconds( t ) or "--:--"
+	end
 }
 
 --[[-------------------------------------------------------------------------
 Generic
 ---------------------------------------------------------------------------]]
 lang.nothing = "Nothing"
+lang.exit = "Exit"
+
+--[[-------------------------------------------------------------------------
+Misc
+---------------------------------------------------------------------------]]
+local misc = {}
+lang.MISC = misc
+
+misc.content_checker = {
+	title = "Gamemode Content",
+	msg = [[It looks like you don't have some addons. It may cause errors like missing content (textures/models/sounds) and may break your gameplay expereince.
+You don't have %i addons out of %i. Would you like to download it now? (you can either download it through game or do it manually on workshop page)]],
+	no = "No",
+	download = "Download now",
+	workshop = "Show workshop page",
+	downloading = "Downloading",
+	mounting = "Mounting",
+	processing = "Processing addon: %s\nStatus: %s",
+	cancel = "Cancel"
+}
+
+misc.omega_warhead = {
+	idle = "OMEGA Warhead is idle\n\nWaiting for input...",
+	waiting = "OMEGA Warhead is idle\n\nInput accepted!\nWaiting for second input...",
+	failed = "OMEGA Warhead is locked\n\nNo second input detected!\nWait %is",
+	no_remote = "OMEGA Warhead failed\n\nFailed to establish connection to warhead!\t",
+	active = "OMEGA Warhead is engaged\n\nPreceed to evacuation immediately!\nDetonation in %.2fs",
+}
+
+misc.alpha_warhead = {
+	idle = "ALPHA Warhead is idle\n\nWaiting for nuclear codes...",
+	ready = "ALPHA Warhead is idle\n\nCodes accepted!\nWaiting for activation...",
+	no_remote = "ALPHA Warhead failed\n\nFailed to establish connection to warhead!\t",
+	active = "ALPHA Warhead is engaged\n\nPreceed to evacuation immediately!\nDetonation in %.2fs",
+}
 
 --[[-------------------------------------------------------------------------
 Vests
 ---------------------------------------------------------------------------]]
 local vest = {}
+lang.VEST = vest
 
 vest.guard = "Security Guard Vest"
-vest.chief = "Security Chief Vest"
-vest.private = "MTF Private Vest"
-vest.sergeant = "MTF Sergeant Vest"
-vest.lieutenant = "MTF Lieutenant Vest"
-vest.alpha1 = "MTF Alpha 1 Vest"
-vest.medic = "MTF Medic Vest"
+vest.heavyguard = "Heavy Guard Vest"
+vest.specguard = "Special Guard Vest"
+vest.guard_medic = "Medic Guard Vest"
 vest.ntf = "MTF NTF Vest"
+vest.mtf_medic = "MTF NTF Medic Vest"
+vest.ntf_com = "MTF NTF Commander Vest"
+vest.alpha1 = "MTF Alpha-1 Vest"
 vest.ci = "Chaos Insurgency Vest"
 vest.fire = "Fireproof Vest"
 vest.electro = "Electroproof Vest"
 
-lang.VEST = vest
-
 local dmg = {}
+lang.DMG = dmg
 
 dmg.BURN = "Fire Damage"
 dmg.SHOCK = "Electrical Damage"
 dmg.BULLET = "Bullet Damage"
 dmg.FALL = "Fall Damage"
 
-lang.DMG = dmg
-
 --[[-------------------------------------------------------------------------
 Teams
 ---------------------------------------------------------------------------]]
 local teams = {}
+lang.TEAMS = teams
 
 teams.SPEC = "Spectators"
 teams.CLASSD = "Class D"
@@ -234,26 +351,28 @@ teams.MTF = "MTF"
 teams.CI = "CI"
 teams.SCP = "SCP"
 
-lang.TEAMS = teams
-
-
 --[[-------------------------------------------------------------------------
 Classes
 ---------------------------------------------------------------------------]]
 local classes = {}
+lang.CLASSES = classes
 
 classes.unknown = "Unknown"
 
+classes.SCP023 = "SCP 023"
 classes.SCP049 = "SCP 049"
 classes.SCP0492 = "SCP 049-2"
 classes.SCP066 = "SCP 066"
+classes.SCP096 = "SCP 096"
 classes.SCP106 = "SCP 106"
 classes.SCP173 = "SCP 173"
 classes.SCP457 = "SCP 457"
 classes.SCP682 = "SCP 682"
 classes.SCP8602 = "SCP 860-2"
 classes.SCP939 = "SCP 939"
-classes.SCP966 = "SCP966"
+classes.SCP966 = "SCP 966"
+classes.SCP3199 = "SCP 3199"
+classes.SCP24273 = "SCP 2427-3"
 
 classes.classd = "Class D"
 classes.veterand = "Class D Veteran"
@@ -267,133 +386,304 @@ classes.headsci = "Head Scientist"
 
 classes.guard = "Security Guard"
 classes.chief = "Security Chief"
-classes.private = "MTF Private"
-classes.sergeant = "MTF Sergeant"
-classes.lieutenant = "MTF Lieutenant"
-classes.alpha1 = "MTF Alpha 1"
-classes.medic = "MTF Medic"
+classes.lightguard = "Light Security Guard"
+classes.heavyguard = "Heavy Security Guard"
+classes.specguard = "Security Guard Specialist"
+classes.guardmedic = "Security Guard Medic"
+classes.tech = "Security Guard Technician"
 classes.cispy = "CI Spy"
 
-classes.ntf = "MTF NTF"
+classes.ntf_1 = "MTF NTF - SMG"
+classes.ntf_2 = "MTF NTF - Shotgun"
+classes.ntf_3 = "MTF NTF - Rifle"
 classes.ntfcom = "MTF NTF Commander"
 classes.ntfsniper = "MTF NTF Sniper"
+classes.ntfmedic = "MTF NTF Medic"
+classes.alpha1 = "MTF Alpha-1"
+classes.alpha1sniper = "MTF Alpha-1 Marksman"
 classes.ci = "Chaos Insurgency"
 classes.cicom = "Chaos Insurgency Commander"
 
-lang.CLASSES = classes
+--[[-------------------------------------------------------------------------
+Class Info - NOTE: Each line is limited to 45 characters!
+Screen is designed to hold max of 4 lines of text and THERE IS NO internal protection!
+---------------------------------------------------------------------------]]
+local generic_classd = [[- Escape from the facility
+- Avoid staff and SCP objects
+- Cooperate with others]]
+
+local generic_sci = [[- Escape from the facility
+- Avoid Class D and SCP objects
+- Cooperate with guards and MTFs]]
+
+local generic_guard = [[- Rescue scientists
+- Terminate all Class D and SCPs
+- Listen to your supervisor]]
+
+local generic_ntf = [[- Get to the facility
+- Help the remaining staff inside
+- Don't let Class D and SCPs escape]]
+
+local generic_scp = [[- Escape from the facility
+- Kill everyone you meet
+- Cooperate with other SCPs]]
+
+local generic_scp_friendly = [[- Escape from the facility
+- You may cooperate with humans
+- Cooperate with other SCPs]]
+
+lang.CLASS_OBJECTIVES = {
+	classd = generic_classd,
+
+	veterand = generic_classd,
+
+	kleptod = generic_classd,
+
+	ciagent = [[- Escort Class D memebers
+- Avoid staff and SCP objects
+- Cooperate with others]],
+
+	sciassistant = generic_sci,
+
+	sci = generic_sci,
+
+	seniorsci = generic_sci,
+
+	headsci = generic_sci,
+
+	guard = generic_guard,
+
+	lightguard = generic_guard,
+
+	heavyguard = generic_guard,
+
+	specguard = generic_guard,
+
+	chief = [[- Rescue scientists
+- Terminate all Class D and SCPs
+- Give orders to other guards]],
+
+	guardmedic = [[- Rescue scientists
+- Terminate all Class D and SCPs
+- Support other guards with your medkit]],
+
+	tech = [[- Rescue scientists
+- Terminate all Class D and SCPs
+- Support other guards with your turret]],
+
+	cispy = [[- Pretend to be a guard
+- Help remaining Class D Personnel
+- Sabotage security actions]],
+
+	ntf_1 = generic_ntf,
+
+	ntf_2 = generic_ntf,
+
+	ntf_3 = generic_ntf,
+
+	ntfmedic = [[- Help the remaining staff inside
+- Support other NTFs with your medkit
+- Don't let Class D and SCPs escape]],
+
+	ntfcom = [[- Help the remaining staff inside
+- Don't let Class D and SCPs escape
+- Give orders to other NTFs]],
+
+	ntfsniper = [[- Help the remaining staff inside
+- Don't let Class D and SCPs escape
+- Protect your team from behind]],
+
+	alpha1 = [[- Protect foundation at all cost
+- Stop SCPs and Class D
+- You are authorized to ]].."[REDACTED]",
+
+	alpha1sniper = [[- Protect foundation at all cost
+- Stop SCPs and Class D
+- You are authorized to ]].."[REDACTED]",
+
+	ci = [[- Help Class D Personnel
+- Eliminate all facility staff
+- Listen to your supervisor]],
+
+	cicom = [[- Help Class D Personnel
+- Eliminate all facility staff
+- Give orders to other CIs]],
+
+	SCP023 = generic_scp,
+
+	SCP049 = [[- Escape from the facility
+- Cooperate with other SCPs
+- Cure people]],
+
+	SCP023 = generic_scp,
+
+	SCP066 = generic_scp_friendly,
+
+	SCP096 = generic_scp,
+
+	SCP106 = generic_scp,
+
+	SCP173 = generic_scp,
+
+	SCP457 = generic_scp,
+
+	SCP682 = generic_scp,
+
+	SCP8602 = generic_scp,
+
+	SCP939 = generic_scp,
+
+	SCP966 = generic_scp,
+
+	SCP24273 = generic_scp,
+
+	SCP3199 = generic_scp,
+}
 
 --[[-------------------------------------------------------------------------
-Class Info
+DON'T EDIT - UNUSED
 ---------------------------------------------------------------------------]]
-lang.CLASS_INFO = {
-    classd = [[You are Class D Personnel
+/*lang.CLASS_INFO = {
+	classd = [[You are Class D Personnel
 Your objective is to escape from the facility
 Cooperate with others and look for keycards
 Beware of facility staff and SCPs]],
 
-    veterand = [[You are Class D Veteran
+	veterand = [[You are Class D Veteran
 Your objective is to escape from the facility
 Cooperate with others
 Beware of facility staff and SCPs]],
 
-    kleptod = [[You are Class D Kleptomaniac
+	kleptod = [[You are Class D Kleptomaniac
 Your objective is to escape from the facility
 You stole something from the staff
 Beware of facility staff and SCPs]],
 
-    ciagent = [[You are CI Agent
+	ciagent = [[You are CI Agent
 Your objective is to protect Class D Personnel
 Escort them to the exit
 Beware of facility staff and SCPs]],
 
-    sciassistant = [[You are Scientist Assistant
+	sciassistant = [[You are Scientist Assistant
 Your objective is to escape from the facility
 Cooperate with other scientists and security staff
 Beware of Chaos Insurgency and SCPs]],
 
-    sci = [[You are Scientist
+	sci = [[You are Scientist
 Your objective is to escape from the facility
 Cooperate with other scientists and security staff
 Beware of Chaos Insurgency and SCPs]],
 
-    seniorsci = [[You are Senior Scientist
+	seniorsci = [[You are Senior Scientist
 Your objective is to escape from the facility
 Cooperate with other scientists and security staff
 Beware of Chaos Insurgency and SCPs]],
 
-    headsci = [[You are Head Scientist
+	headsci = [[You are Head Scientist
 Your objective is to escape from the facility
 Cooperate with other scientists and security staff
 Beware of Chaos Insurgency and SCPs]],
 
-    guard = [[You are Security Guard
+	guard = [[You are Security Guard
 Your objective is to rescue all scientist
 Kill all Class D Personnel and SCPs]],
 
-    chief = [[You are Security Chief
+	lightguard = [[You are Security Guard
 Your objective is to rescue all scientist
 Kill all Class D Personnel and SCPs]],
 
-    private = [[You are MTF Private
+	heavyguard = [[You are Security Guard
 Your objective is to rescue all scientist
 Kill all Class D Personnel and SCPs]],
 
-    sergeant = [[You are MTF Sergeant
+	specguard = [[You are Security Guard Specialist
 Your objective is to rescue all scientist
 Kill all Class D Personnel and SCPs]],
 
-    lieutenant = [[You are MTF Lieutenant
+	chief = [[You are Security Chief
 Your objective is to rescue all scientist
 Kill all Class D Personnel and SCPs]],
 
-    alpha1 = [[You are MTF Alpha 1
+	guardmedic = [[You are Security Guard Medic
+Your objective is to rescue all scientist
+Use your medkit to help your temmates
+Kill all Class D Personnel and SCPs]],
+
+	tech = [[You are Security Technician
+Your objective is to rescue all scientist
+You can place portable turret
+Kill all Class D Personnel and SCPs]],
+
+	cispy = [[You are CI Spy
+Your objective is to help Class D Personnel
+Pretend to be a security guard]],
+
+	ntf_1 = [[You are MTF NTF
+Help staff inside facility
+Don't let Class D Personnel and SCPs escape]],
+
+	ntf_2 = [[You are MTF NTF
+Help staff inside facility
+Don't let Class D Personnel and SCPs escape]],
+
+	ntf_3 = [[You are MTF NTF
+Help staff inside facility
+Don't let Class D Personnel and SCPs escape]],
+
+	ntfmedic = [[You are MTF NTF Medic
+Help staff inside facility
+Use your medkit to help other MTFs]],
+
+	ntfcom = [[You are MTF NTF Commander
+Help staff inside facility
+Don't let Class D Personnel and SCPs escape]],
+
+	ntfsniper = [[You are MTF NTF Sniper
+Protect your team from a distance
+Don't let Class D Personnel and SCPs escape]],
+
+	alpha1 = [[You are MTF Alpha 1
 You work directly for O5 Council
 Protect foundation at all cost
 Your mission is to [REDACTED] ]],
 
-    medic = [[You are MTF Medic
-Your objective is to rescue all scientist and
-kill all Class D Personnel and SCPs
-Use your medkit to help other MTFs]],
+	alpha1sniper = [[You are MTF Alpha 1 Marksman
+You work directly for O5 Council
+Protect foundation at all cost
+Your mission is to [REDACTED] ]],
 
-    cispy = [[You are CI Spy
-Your objective is to help Class D Personnel
-Pretend to be a security guard]],
-
-    ntf = [[You are MTF NTF
-Help MTFs inside facility
-Don't let Class D Personnel and SCPs escape]],
-
-    ntfcom = [[You are MTF NTF Commander
-Help MTFs inside facility
-Don't let Class D Personnel and SCPs escape]],
-
-    ntfsniper = [[You are MTF NTF Sniper
-Protect your team from a distance
-Don't let Class D Personnel and SCPs escape]],
-
-    ci = [[You are Chaos Insurgency Soldier
+	ci = [[You are Chaos Insurgency Soldier
 Help Class D Personnel
 Kill MTFs and other facility staff]],
 
-    cicom = [[You are Chaos Insurgency Commander
+	cicom = [[You are Chaos Insurgency Commander
 Help Class D Personnel
 Kill MTFs and other facility staff]],
-    
-    SCP049 = [[You are SCP 049
+	
+	SCP023 = [[You are SCP 023
+Your objective is to escape from the facility
+You will kill one of the people who saw you
+Click RMB to place spectre]],
+
+	SCP049 = [[You are SCP 049
 Your objective is to escape from the facility
 Your touch is deadly to humans
 You can perform surgery to "cure" people]],
 
-    SCP0492 = [[You are SCP 049-2
+	SCP0492 = [[You are SCP 049-2
 Your objective is to escape from the facility
 Listen to SCP 049's orders and protect him]],
 
-    SCP066 = [[You are SCP 066
+	SCP066 = [[You are SCP 066
 Your objective is to escape from the facility
 You can play very loud music]],
 
-    SCP106 = [[You are SCP 106
+	SCP096 = [[You are SCP 096
+Your objective is to escape from the facility
+You become enraged when someone looks at you
+You can regenerate HP by pressing R]],
+
+	SCP106 = [[You are SCP 106
 Your objective is to escape from the facility
 You can go through doors and teleport to the selected location
 
@@ -401,524 +691,1230 @@ LMB: Teleport humans to pocket dimension
 RMB: Mark teleport destination
 R: Teleport]],
 
-    SCP173 = [[You are SCP 173
+	SCP173 = [[You are SCP 173
 Your objective is to escape from the facility
 You can't move while someone is watching you
 Your special ability teleports you to the nearby human]],
 
-    SCP457 = [[You are SCP 457
+	SCP457 = [[You are SCP 457
 Your objective is to escape from the facility
 You are burning and you will ignite everything
 near you
 You can place up to 5 fire traps]],
 
-    SCP682 = [[You are SCP 682
+	SCP682 = [[You are SCP 682
 Your objective is to escape from the facility
 You have a lot of health
 Your special ability makes you immune to any damage]],
 
-    SCP8602 = [[You are SCP 860-2
+	SCP8602 = [[You are SCP 860-2
 Your objective is to escape from the facility
 If you attack someone near wall, you will
 nail him to wall and deal huge damage]],
 
-    SCP939 = [[You are SCP 939
+	SCP939 = [[You are SCP 939
 Your objective is to escape from the facility
 You can talk with humans]],
 
-    SCP966 = [[You are SCP 966
+	SCP966 = [[You are SCP 966
 Your objective is to escape from the facility
 You are invisible]],
+
+	SCP3199 = [[You are SCP 3199
+Your objective is to escape from the facility
+You are agile and deadly hunter
+You can sense heartbeat of nearby humans]],
+}*/
+--[[-------------------------------------------------------------------------
+END OF UNUSED PART
+---------------------------------------------------------------------------]]
+
+lang.CLASS_DESCRIPTION = {
+	classd = [[Difficulty: Easy
+Toughness: Normal
+Agility: Normal
+Combat potential: Low
+Can escape: Yes
+Can escort: None
+Escorted by: CI
+
+Overview:
+Basic class. Cooperate with others to face SCPs and facility staff. You can be escorted by CI memebers.
+]],
+
+	veterand = [[Difficulty: Easy
+Toughness: High
+Agility: High
+Combat potential: Normal
+Can escape: Yes
+Can escort: None
+Escorted by: CI
+
+Overview:
+More advanced class. You have basic access in facility. Cooperate with others to face SCPs and facility staff. You can be escorted by CI memebers.
+]],
+
+	kleptod = [[Difficulty: Hard
+Toughness: Low
+Agility: Very High
+Combat potential: Low
+Can escape: Yes
+Can escort: None
+Escorted by: CI
+
+Overview:
+Hight utility class. Starts with one random item. Cooperate with others to face SCPs and facility staff. You can be escorted by CI memebers.
+]],
+
+	ciagent = [[Difficulty: Medium
+Toughness: Very High
+Agility: High
+Combat potential: Normal
+Can escape: Yes
+Can escort: None
+Escorted by: CI
+
+Overview:
+Armed with taser CI unit. Provide help to Class D and cooperate with them. You can escort Class D memebers.
+]],
+
+	sciassistant = [[Difficulty: Medium
+Toughness: Normal
+Agility: Normal
+Combat potential: Low
+Can escape: Yes
+Can escort: None
+Escorted by: Security, MTF
+
+Overview:
+Basic class. Cooperate with facility staff and stay away from SCPs. You can be escorted by MTFs memebers.
+]],
+
+	sci = [[Difficulty: Medium
+Toughness: Normal
+Agility: Normal
+Combat potential: Low
+Can escape: Yes
+Can escort: None
+Escorted by: Security, MTF
+
+Overview:
+One of the scientists. Cooperate with facility staff and stay away from SCPs. You can be escorted by MTFs memebers.
+]],
+
+	seniorsci = [[Difficulty: Easy
+Toughness: High
+Agility: High
+Combat potential: Normal
+Can escape: Yes
+Can escort: None
+Escorted by: Security, MTF
+
+Overview:
+One of the scientists. You have higher access level. Cooperate with facility staff and stay away from SCPs. You can be escorted by MTFs memebers.
+]],
+
+	headsci = [[Difficulty: Easy
+Toughness: High
+Agility: High
+Combat potential: Normal
+Can escape: Yes
+Can escort: None
+Escorted by: Security, MTF
+
+Overview:
+Best of the scientists. You have higher utility and HP. Cooperate with facility staff and stay away from SCPs. You can be escorted by MTFs memebers.
+]],
+
+	guard = [[Difficulty: Easy
+Toughness: Normal
+Agility: Normal
+Combat potential: Normal
+Can escape: No
+Can escort: Scientists
+Escorted by: None
+
+Overview:
+Basic security guard. Utilize your weapon and tools to help other staff members and to kill SCPs and Class D. You can escort Scientists.
+]],
+
+	lightguard = [[Difficulty: Hard
+Toughness: Low
+Agility: Very High
+Combat potential: Low
+Can escape: No
+Can escort: Scientists
+Escorted by: None
+
+Overview:
+One of the guards. High utility, no armor and lower helth. Utilize your weapon and tools to help other staff members and to kill SCPs and Class D. You can escort Scientists.
+]],
+
+	heavyguard = [[Difficulty: Medium
+Toughness: High
+Agility: Low
+Combat potential: High
+Can escape: No
+Can escort: Scientists
+Escorted by: None
+
+Overview:
+One of the guards. Lower utility, better armor and higher helth. Utilize your weapon and tools to help other staff members and to kill SCPs and Class D. You can escort Scientists.
+]],
+
+	specguard = [[Difficulty: Hard
+Toughness: High
+Agility: Low
+Combat potential: Very High
+Can escape: No
+Can escort: Scientists
+Escorted by: None
+
+Overview:
+One of the guards. Not so high utility, higher helth and strong combat potential. Utilize your weapon and tools to help other staff members and to kill SCPs and Class D. You can escort Scientists.
+]],
+
+	chief = [[Difficulty: Easy
+Toughness: Normal
+Agility: Normal
+Combat potential: Normal
+Can escape: No
+Can escort: Scientists
+Escorted by: None
+
+Overview:
+One of the guards. Slightly better combat potential, has taser. Utilize your weapon and tools to help other staff members and to kill SCPs and Class D. You can escort Scientists.
+]],
+
+	guardmedic = [[Difficulty: Hard
+Toughness: High
+Agility: High
+Combat potential: Low
+Can escape: No
+Can escort: Scientists
+Escorted by: None
+
+Overview:
+One of the guards. You have medkit and taser. Utilize your weapon and tools to help other staff members and to kill SCPs and Class D. You can escort Scientists.
+]],
+
+	tech = [[Difficulty: Hard
+Toughness: Normal
+Agility: Normal
+Combat potential: High
+Can escape: No
+Can escort: Scientists
+Escorted by: None
+
+Overview:
+One of the guards. Has placeable turret, with 3 fire modes (Hold E on turret to see its menu). Utilize your weapon and tools to help other staff members and to kill SCPs and Class D. You can escort Scientists.
+]],
+
+	cispy = [[Difficulty: Very Hard
+Toughness: Normal
+Agility: High
+Combat potential: Normal
+Can escape: No
+Can escort: Class D
+Escorted by: None
+
+Overview:
+CI spy. High utility. Try to blend in Security Guards and help Class D.
+]],
+
+	ntf_1 = [[Difficulty: Medium
+Toughness: Normal
+Agility: High
+Combat potential: Normal
+Can escape: No
+Can escort: Scientists
+Escorted by: None
+
+Overview:
+MTF NTF Unit. Armed with SMG. Get into facility and secure it. Help staff inside and kill SCPs and Class D.
+]],
+
+	ntf_2 = [[Difficulty: Medium
+Toughness: Normal
+Agility: High
+Combat potential: Normal
+Can escape: No
+Can escort: Scientists
+Escorted by: None
+
+Overview:
+MTF NTF Unit. Armed with shotgun. Get into facility and secure it. Help staff inside and kill SCPs and Class D.
+]],
+
+	ntf_3 = [[Difficulty: Medium
+Toughness: Normal
+Agility: High
+Combat potential: Normal
+Can escape: No
+Can escort: Scientists
+Escorted by: None
+
+Overview:
+MTF NTF Unit. Armed with rifle. Get into facility and secure it. Help staff inside and kill SCPs and Class D.
+]],
+
+	ntfmedic = [[Difficulty: Hard
+Toughness: High
+Agility: High
+Combat potential: Low
+Can escape: No
+Can escort: Scientists
+Escorted by: None
+
+Overview:
+MTF NTF Unit. Armed with pistol, has medkit. Get into facility and secure it. Help staff inside and kill SCPs and Class D.
+]],
+
+	ntfcom = [[Difficulty: Hard
+Toughness: High
+Agility: Very High
+Combat potential: High
+Can escape: No
+Can escort: Scientists
+Escorted by: None
+
+Overview:
+MTF NTF Unit. Armed with marksman rifle. Get into facility and secure it. Help staff inside and kill SCPs and Class D.
+]],
+
+	ntfsniper = [[Difficulty: Hard
+Toughness: Normal
+Agility: Normal
+Combat potential: High
+Can escape: No
+Can escort: Scientists
+Escorted by: None
+
+Overview:
+MTF NTF Unit. Armed with sniper rifle. Get into facility and secure it. Help staff inside and kill SCPs and Class D.
+]],
+
+	alpha1 = [[Difficulty: Medium
+Toughness: Extreme
+Agility: Very High
+Combat potential: High
+Can escape: No
+Can escort: Scientists
+Escorted by: None
+
+Overview:
+MTF Alpha-1 Unit. Heavly armored, high utility unit, armed with rifle. Get into facility and secure it. Help staff inside and kill SCPs and Class D.
+]],
+
+	alpha1sniper = [[Difficulty: Hard
+Toughness: Very High
+Agility: Very High
+Combat potential: Very High
+Can escape: No
+Can escort: Scientists
+Escorted by: None
+
+Overview:
+MTF Alpha-1 Unit. Heavly armored, high utility unit, armed with marksman rifle. Get into facility and secure it. Help staff inside and kill SCPs and Class D.
+]],
+
+	ci = [[Difficulty: Medium
+Toughness: High
+Agility: High
+Combat potential: Normal
+Can escape: No
+Can escort: Class D
+Escorted by: None
+
+Overview:
+Chaos Insurgency unit. Get into facility and help Class D and kill facility staff.
+]],
+
+	cicom = [[Difficulty: Medium
+Toughness: Very High
+Agility: High
+Combat potential: High
+Can escape: No
+Can escort: Class D
+Escorted by: None
+
+Overview:
+Chaos Insurgency unit. Higher combat potential. Get into facility, help Class D and kill facility staff.
+]],
+	
+	SCP023 = [[Difficulty: Hard
+Toughness: Low
+Agility: High
+Damage: Instant Death
+
+Overview:
+You can walk through walls. If someone sees you, they will be put on your list. Once in a while you teleport to one player on list and burn them to death. You can place your clone.
+]],
+
+	SCP049 = [[Difficulty: Hard
+Toughness: Low
+Agility: High
+Damage: Instant Death after 3 attacks
+
+Overview:
+Attack player 3 times to kill them. You can create zombies out of bodies (reload key).
+]],
+
+	SCP0492 = [[]],
+
+	SCP066 = [[Difficulty: Normal
+Toughness: High
+Agility: Normal
+Damage: Low / AoE
+
+Overview:
+You play very loud music damaging all players near you.
+]],
+
+	SCP096 = [[Difficulty: Hard
+Toughness: High
+Agility: Very Low / Extreme when enraged
+Damage: Instant Death
+
+Overview:
+If someone sees you, you will become enraged. While in rage, you run extremely fast and you can kill your targets.
+]],
+
+	SCP106 = [[Difficulty: Medium
+Toughness: Normal
+Agility: Low
+Damage: Medium / Instant death in Pocket Dimension
+
+Overview:
+You can walk through walls. Attack somebody to teleport them to pocket dimension. While in pocket dimension you instantly kill your targets.
+]],
+
+	SCP173 = [[Difficulty: Easy
+Toughness: Extreme
+Agility: Super Extreme
+Damage: Instant Death
+
+Overview:
+You are extremely fast, but you can't move if someone sees you. You automatically kill nearby players. You can use special attack to teleport to one player in range.
+]],
+
+	SCP457 = [[Difficulty: Easy
+Toughness: Normal
+Agility: Normal
+Damage: Medium / Fire can spread
+
+Overview:
+You are burning and you can burn nearby players. You can also place traps that activate when someone steps on them.
+]],
+
+	SCP682 = [[Difficulty: Hard
+Toughness: Super Extreme
+Agility: Normal
+Damage: High
+
+Overview:
+Extremely tough  and deadly. Use special ability to gain damage immunity for short period of time.
+]],
+
+	SCP8602 = [[Difficulty: Medium
+Toughness: High
+Agility: High
+Damage: Low / High (strong attack)
+
+Overview:
+If someone is near a wall, you can pin them against this wall, dealing massive damage to them. You will also lose some health.
+]],
+
+	SCP939 = [[Difficulty: Medium
+Toughness: Normal
+Agility: High
+Damage: Medium
+
+Overview:
+You leave trail of invisible, toxic cloud. Intoxicated players can't use LMB and RMB.
+]],
+
+	SCP966 = [[Difficulty: Medium
+Toughness: Low
+Agility: High
+Damage: Low / Bleeding
+
+Overview:
+You are invisible. Your attacks always inflict bleeding.
+]],
+
+	SCP24273 = [[Difficulty: Hard
+Toughness: Medium
+Agility: Medium
+Damage: High / Instant death in Mind Control
+
+Overview:
+You can dash forward to deal damage to first hit player. Special ability allows you to control other player for a short time. Bringing controlled player to you, will allow you to kill him instantly. Commiting suicide while controlling player will cause health loss.
+]],
+
+	SCP3199 = [[Difficulty: Very Hard
+Toughness: Low
+Agility: Very High
+Damage: Low / Medium
+
+Overview:
+Attacking the player grants you frenzy and inflicts deep wounds. While in fenzy, you move slightly faster and you can see location of nearby players. Missing an attack or attacking a player who already has deep wounds, stops frenzy and applies penalty. Having at least 5 frenzy tokens allows you to use special attack. Special attack kills player after short preparation.
+]],
 }
 
 --[[-------------------------------------------------------------------------
 Weapons
 ---------------------------------------------------------------------------]]
 lang.GenericUpgrades = {
-    nvmod = {
-        name = "Extra Vision",
-        info = "Brightness of your vision is increased\nDark areas will no longer stop you"
-    }
+	nvmod = {
+		name = "Extra Vision",
+		info = "Brightness of your vision is increased\nDark areas will no longer stop you"
+	}
 }
 
 local wep = {}
+lang.WEAPONS = wep
+
+wep.SCP023 = {
+	editMode1 = "Press LMB to place spectre",
+	editMode2 = "RMB - cancel, R - Rotate",
+	preys = "Available preys: %i",
+	attack = "Next attack: %s",
+	trapActive = "Trap is active!",
+	trapInactive = "Press RMB to place trap",
+	upgrades = {
+		attack1 = {
+			name = "Lust I",
+			info = "Your attack cooldown is reduced by 20 seconds",
+		},
+		attack2 = {
+			name = "Lust II",
+			info = "Your attack cooldown is reduced by 20 seconds\n\t• Total cooldown: 40s",
+		},
+		attack3 = {
+			name = "Lust III",
+			info = "Your attack cooldown is reduced by 20 seconds\n\t• Total cooldown: 60s",
+		},
+		trap1 = {
+			name = "Bad Omen I",
+			info = "Your trap cooldown is reduced to 40 seconds",
+		},
+		trap2 = {
+			name = "Bad Omen II",
+			info = "Your trap cooldown is reduced to 20 seconds\nSpectre travel distance is increased by 25 units",
+		},
+		trap3 = {
+			name = "Bad Omen III",
+			info = "Spectre travel distance is increased by 25 units\n\t• Total increase: 50 units",
+		},
+		hp = {
+			name = "Alpha male I",
+			info = "You gain 1000 HP (also maximum HP) and 10% bullet protection, but trap cooldown is increased by 30 seconds",
+		},
+		speed = {
+			name = "Alpha male II",
+			info = "You gain 10% movement speed and additional 15% bullet protection, but trap cooldown is increased by 30 seconds\n\t• Total protection: 25%, total cooldown increase: 60s",
+		},
+		alt = {
+			name = "Alpha male III",
+			info = "Yor attack cooldown is reduced by 30 seconds and you gain 15% bullet protection, but you can no longer use your trap\n\t• Total protection: 40%",
+		},
+	}
+}
 
 wep.SCP049 = {
-    surgery = "Performing surgery",
-    surgery_failed = "Surgery failed!",
-    zombies = {
-        normal = "Standard Zombie",
-        light = "Light Zombie",
-        heavy = "Heavy Zombie"
-    },
-    upgrades = {
-        cure1 = {
-            name = "I am the Cure I",
-            info = "Get 40% bullet protection",
-        },
-        cure2 = {
-            name = "I am the Cure II",
-            info = "Get 300HP every 180 seconds",
-        },
-        merci = {
-            name = "Act of Merci",
-            info = "Primary attack cooldown is reduced by 2.5 seconds\nYou no longer apply the 'Door Lock' effect to nearby humans",
-        },
-        symbiosis1 = {
-            name = "Symbiosis I",
-            info = "After performing surgery, you are healed by 2.5% of your maximum health",
-        },
-        symbiosis2 = {
-            name = "Symbiosis II",
-            info = "After performing surgery, you are healed by 5% of your maximum health\nNearby SCP 049-2 instances are healed by 2.5% of their maximum helath",
-        },
-        symbiosis3 = {
-            name = "Symbiosis III",
-            info = "After performing surgery, you are healed by 7.5% of your maximum health\nNearby SCP 049-2 instances are healed by 5% of their maximum helath",
-        },
-        hidden = {
-            name = "Hidden Potential",
-            info = "You gain 1 token for every successful surgery\nEach token increases HP of zombies by 2.5%\n\t• This ability only affects newly created zombies",
-        },
-        trans = {
-            name = "Transfusion",
-            info = "You zombies have their HP increased by 15%\nYou zombies gain 10% of life steal\n\t• This ability only affects newly created zombies",
-        },
-        rm = {
-            name = "Radical Measures",
-            info = "Whenever it's possible, you create 2 zombies from 1 body\n\t• If only 1 spectator is available, you create only 1 zombie\n\t• Both zombies are of the same type\n\t• Second zombie has HP reduced by 50%\n\t• Second zombie has damage reduced by 25%",
-        },
-        doc1 = {
-            name = "Surgical Precision I",
-            info = "Surgery time is reduced by 5s",
-        },
-        doc2 = {
-            name = "Surgical Precision II",
-            info = "Surgery time is reduced by 5s\n\t• Total surgery time reduction: 10s",
-        },
-    }
+	surgery = "Performing surgery",
+	surgery_failed = "Surgery failed!",
+	zombies = {
+		normal = "Standard Zombie",
+		light = "Light Zombie",
+		heavy = "Heavy Zombie"
+	},
+	upgrades = {
+		cure1 = {
+			name = "I am the Cure I",
+			info = "Get 40% bullet protection",
+		},
+		cure2 = {
+			name = "I am the Cure II",
+			info = "Recover 300HP every 180 seconds",
+		},
+		merci = {
+			name = "Act of Merci",
+			info = "Primary attack cooldown is reduced by 2.5 seconds\nYou no longer apply the 'Door Lock' effect to nearby humans",
+		},
+		symbiosis1 = {
+			name = "Symbiosis I",
+			info = "After performing surgery, you are healed by 10% of your maximum health",
+		},
+		symbiosis2 = {
+			name = "Symbiosis II",
+			info = "After performing surgery, you are healed by 15% of your maximum health\nNearby SCP 049-2 instances are healed by 10% of their maximum helath",
+		},
+		symbiosis3 = {
+			name = "Symbiosis III",
+			info = "After performing surgery, you are healed by 20% of your maximum health\nNearby SCP 049-2 instances are healed by 20% of their maximum helath",
+		},
+		hidden = {
+			name = "Hidden Potential",
+			info = "You gain 1 token for every successful surgery\nEach token increases HP of zombies by 5%\n\t• This ability only affects newly created zombies",
+		},
+		trans = {
+			name = "Transfusion",
+			info = "You zombies have their HP increased by 15%\nYou zombies gain 20% of life steal\n\t• This ability only affects newly created zombies",
+		},
+		rm = {
+			name = "Radical Therapy",
+			info = "Whenever it's possible, you create 2 zombies from 1 body\n\t• If only 1 spectator is available, you create only 1 zombie\n\t• Both zombies are of the same type\n\t• Second zombie has HP reduced by 50%\n\t• Second zombie has damage reduced by 25%",
+		},
+		doc1 = {
+			name = "Surgical Precision I",
+			info = "Surgery time is reduced by 5s",
+		},
+		doc2 = {
+			name = "Surgical Precision II",
+			info = "Surgery time is reduced by 5s\n\t• Total surgery time reduction: 10s",
+		},
+	}
 }
 
 wep.SCP0492 = {
-    too_far = "You are becoming weaker!"
+	too_far = "You are becoming weaker!"
 }
 
 wep.SCP066 = {
-    wait = "Next attack: %is",
-    ready = "Attack is ready!",
-    chargecd = "Charge cooldown: %is",
-    upgrades = {
-        range1 = {
-            name = "Resonance I",
-            info = "Damage radius is increased by 75",
-        },
-        range2 = {
-            name = "Resonance II",
-            info = "Damage radius is increased by 75\n\t• Total increase: 150",
-        },
-        range3 = {
-            name = "Resonance III",
-            info = "Damage radius is increased by 75\n\t• Total increase: 225",
-        },
-        damage1 = {
-            name = "Bass I",
-            info = "Damage is increased to 112.5%, but radius is reduced to 90%",
-        },
-        damage2 = {
-            name = "Bass II",
-            info = "Damage is increased to 135%, but radius is reduced to 75%",
-        },
-        damage3 = {
-            name = "Bass III",
-            info = "Damage is increased to 200%, but radius is reduced to 50%",
-        },
-        def1 = {
-            name = "Negation Wave I",
-            info = "While playing music, you negate 10% of incoming damage",
-        },
-        def2 = {
-            name = "Negation Wave II",
-            info = "While playing music, you negate 25% of incoming damage",
-        },
-        charge = {
-            name = "Dash",
-            info = "Unlocks ability to dash forward by pressing reload key\n\t• Ability cooldown: 20s",
-        },
-        sticky = {
-            name = "Sticky",
-            info = "After dashing into human, you stick to him for the next 10s",
-        }
-    }
+	wait = "Next attack: %is",
+	ready = "Attack is ready!",
+	chargecd = "Dash cooldown: %is",
+	upgrades = {
+		range1 = {
+			name = "Resonance I",
+			info = "Damage radius is increased by 75",
+		},
+		range2 = {
+			name = "Resonance II",
+			info = "Damage radius is increased by 75\n\t• Total increase: 150",
+		},
+		range3 = {
+			name = "Resonance III",
+			info = "Damage radius is increased by 75\n\t• Total increase: 225",
+		},
+		damage1 = {
+			name = "Bass I",
+			info = "Damage is increased to 112.5%, but radius is reduced to 90%",
+		},
+		damage2 = {
+			name = "Bass II",
+			info = "Damage is increased to 135%, but radius is reduced to 75%",
+		},
+		damage3 = {
+			name = "Bass III",
+			info = "Damage is increased to 200%, but radius is reduced to 50%",
+		},
+		def1 = {
+			name = "Negation Wave I",
+			info = "While playing music, you negate 10% of incoming damage",
+		},
+		def2 = {
+			name = "Negation Wave II",
+			info = "While playing music, you negate 25% of incoming damage",
+		},
+		charge = {
+			name = "Dash",
+			info = "Unlocks ability to dash forward by pressing reload key\n\t• Ability cooldown: 20s",
+		},
+		sticky = {
+			name = "Sticky",
+			info = "After dashing into human, you stick to him for the next 10s",
+		}
+	}
+}
+
+wep.SCP096 = {
+	charges = "Regeneration charges: %i",
+	regen = "Regenerating HP - charges: %i",
+	upgrades = {
+		sregen1 = {
+			name = "Calm Spirit I",
+			info = "You gain one regenration charge each 4 seconds instead of 5 seconds"
+		},
+		sregen2 = {
+			name = "Calm Spirit II",
+			info = "Your regenration charges heal you for 6 HP instead of 5 HP"
+		},
+		sregen3 = {
+			name = "Calm Spirit III",
+			info = "Your regenration rate is 66% faster"
+		},
+		kregen1 = {
+			name = "Hannibal I",
+			info = "You regenerate additional 90 HP fo successful kill"
+		},
+		kregen2 = {
+			name = "Hannibal II",
+			info = "You regenerate additional 90 HP fo successful kill\n\t• Total heal increase: 180HP"
+		},
+		hunt1 = {
+			name = "Shy I",
+			info = "Hunting area is increased to 4250 units"
+		},
+		hunt2 = {
+			name = "Shy II",
+			info = "Hunting area is increased to 5500 units"
+		},
+		hp = {
+			name = "Goliath",
+			info = "Your maximum healt is increased to 4000 HP\n\t• Your current health is not increased"
+		},
+		def = {
+			name = "Persistent",
+			info = "You gain 30% bullet protection"
+		}
+	}
 }
 
 wep.SCP106 = {
-    swait = "Special ability cooldown: %is",
-    sready = "Special ability is ready!",
-    upgrades = {
-        cd1 = {
-            name = "Void Walk I",
-            info = "Special ability cooldown is reduced by 15s"
-        },
-        cd2 = {
-            name = "Void Walk II",
-            info = "Special ability cooldown is reduced by 15s\n\t• Total cooldown: 30s"
-        },
-        cd3 = {
-            name = "Void Walk III",
-            info = "Special ability cooldown is reduced by 15s\n\t• Total cooldown: 45s"
-        },
-        tpdmg1 = {
-            name = "Decaying Touch I",
-            info = "After teleport gain 15 additional damage for 10s"
-        },
-        tpdmg2 = {
-            name = "Decaying Touch II",
-            info = "After teleport gain 20 additional damage for 20s"
-        },
-        tpdmg3 = {
-            name = "Decaying Touch III",
-            info = "After teleport gain 25 additional damage for 30s"
-        },
-        tank1 = {
-            name = "Pocket Shield I",
-            info = "Get 20% bullet damage protection, but you will be 10% slower"
-        },
-        tank2 = {
-            name = "Pocket Shield II",
-            info = "Get 20% bullet damage protection, but you will be 10% slower\n\t• Total protection: 40%\n\t• Total slow: 20%"
-        },
-    }
+	swait = "Special ability cooldown: %is",
+	sready = "Special ability is ready!",
+	upgrades = {
+		cd1 = {
+			name = "Void Walk I",
+			info = "Special ability cooldown is reduced by 15s"
+		},
+		cd2 = {
+			name = "Void Walk II",
+			info = "Special ability cooldown is reduced by 15s\n\t• Total cooldown: 30s"
+		},
+		cd3 = {
+			name = "Void Walk III",
+			info = "Special ability cooldown is reduced by 15s\n\t• Total cooldown: 45s"
+		},
+		tpdmg1 = {
+			name = "Decaying Touch I",
+			info = "After teleport gain 15 additional damage for 10s"
+		},
+		tpdmg2 = {
+			name = "Decaying Touch II",
+			info = "After teleport gain 20 additional damage for 20s"
+		},
+		tpdmg3 = {
+			name = "Decaying Touch III",
+			info = "After teleport gain 25 additional damage for 30s"
+		},
+		tank1 = {
+			name = "Pocket Shield I",
+			info = "Get 20% bullet damage protection, but you will be 10% slower"
+		},
+		tank2 = {
+			name = "Pocket Shield II",
+			info = "Get 20% bullet damage protection, but you will be 10% slower\n\t• Total protection: 40%\n\t• Total slow: 20%"
+		},
+	}
 }
 
 wep.SCP173 = {
-    swait = "Special ability cooldown: %is",
-    sready = "Special ability is ready!",
-    upgrades = {
-        specdist1 = {
-            name = "Wraith I",
-            info = "Your special ability distance is increased by 500"
-        },
-        specdist2 = {
-            name = "Wraith II",
-            info = "Your special ability distance is increased by 700\n\t• Total increase: 1200"
-        },
-        specdist3 = {
-            name = "Wraith III",
-            info = "Your special ability distance is increased by 800\n\t• Total increase: 2000"
-        },
-        boost1 = {
-            name = "Bloodthirster I",
-            info = "Each time you kill human you will gain 150 HP and your special ability cooldown will be decreased by 10%"
-        },
-        boost2 = {
-            name = "Bloodthirster II",
-            info = "Each time you kill human you will gain 300 HP and your special ability cooldown will be decreased by 25%"
-        },
-        boost3 = {
-            name = "Bloodthirster III",
-            info = "Each time you kill human you will gain 500 HP and your special ability cooldown will be decreased by 50%"
-        },
-        prot1 = {
-            name = "Concrete Skin I",
-            info = "Instantly heal 1000 HP and get 10% protection against bullet wounds"
-        },
-        prot2 = {
-            name = "Concrete Skin II",
-            info = "Instantly heal 1000 HP and get 10% protection against bullet wounds\n\t• Total protection: 20%"
-        },
-        prot3 = {
-            name = "Concrete Skin III",
-            info = "Instantly heal 1000 HP and get 20% protection against bullet wounds\n\t• Total protection: 40%"
-        },
-    },
-    back = "You can hold R to back to previous position",
+	swait = "Special ability cooldown: %is",
+	sready = "Special ability is ready!",
+	upgrades = {
+		specdist1 = {
+			name = "Wraith I",
+			info = "Your special ability distance is increased by 500"
+		},
+		specdist2 = {
+			name = "Wraith II",
+			info = "Your special ability distance is increased by 700\n\t• Total increase: 1200"
+		},
+		specdist3 = {
+			name = "Wraith III",
+			info = "Your special ability distance is increased by 800\n\t• Total increase: 2000"
+		},
+		boost1 = {
+			name = "Bloodthirster I",
+			info = "Each time you kill human you will gain 150 HP and your special ability cooldown will be decreased by 10%"
+		},
+		boost2 = {
+			name = "Bloodthirster II",
+			info = "Each time you kill human you will gain 300 HP and your special ability cooldown will be decreased by 25%"
+		},
+		boost3 = {
+			name = "Bloodthirster III",
+			info = "Each time you kill human you will gain 500 HP and your special ability cooldown will be decreased by 50%"
+		},
+		prot1 = {
+			name = "Concrete Skin I",
+			info = "Instantly heal 1000 HP and get 10% protection against bullet wounds"
+		},
+		prot2 = {
+			name = "Concrete Skin II",
+			info = "Instantly heal 1000 HP and get 10% protection against bullet wounds\n\t• Total protection: 20%"
+		},
+		prot3 = {
+			name = "Concrete Skin III",
+			info = "Instantly heal 1000 HP and get 20% protection against bullet wounds\n\t• Total protection: 40%"
+		},
+	},
+	back = "You can hold R to back to previous position",
 }
 
 wep.SCP457 = {
-    swait = "Special ability cooldown: %is",
-    sready = "Special ability is ready!",
-    placed = "Active traps: %i/%i",
-    nohp = "Not enough HP!",
-    upgrades = {
-        fire1 = {
-            name = "Live Torch I",
-            info = "Your burn radius is increased by 25"
-        },
-        fire2 = {
-            name = "Live Torch II",
-            info = "Your burn damage is increased by 0.5"
-        },
-        fire3 = {
-            name = "Live Torch III",
-            info = "Your burn radius is increased by 50 and your burn damage is increased by 0.5\n\t• Total radius increase: 75\n\t• Total damage increase: 1"
-        },
-        trap1 = {
-            name = "Little Surprise I",
-            info = "Trap lifetime is increased to 4 minuses and will burn 1s longer"
-        },
-        trap2 = {
-            name = "Little Surprise II",
-            info = "Trap lifetime is increased to 5 minuses and will burn 1s longer and its damage is increased by 0.5\n\t• Total burn time increase: 2s"
-        },
-        trap3 = {
-            name = "Little Surprise III",
-            info = "Trap will burn 1s longer and its damage is increased by 0.5\n\t• Total burn time increase: 3s\n\t• Total damage increase: 1"
-        },
-        heal1 = {
-            name = "Sizzling Snack I",
-            info = "Burning people will heal you for additional 1 health"
-        },
-        heal2 = {
-            name = "Sizzling Snack II",
-            info = "Burning people will heal you for additional 1 health\n\t• Total heal increase: 2"
-        },
-        speed = {
-            name = "Fast Fire",
-            info = "Your speed is increased by 10%"
-        }
-    }
+	swait = "Special ability cooldown: %is",
+	sready = "Special ability is ready!",
+	placed = "Active traps: %i/%i",
+	nohp = "Not enough HP!",
+	upgrades = {
+		fire1 = {
+			name = "Live Torch I",
+			info = "Your burn radius is increased by 25"
+		},
+		fire2 = {
+			name = "Live Torch II",
+			info = "Your burn damage is increased by 0.5"
+		},
+		fire3 = {
+			name = "Live Torch III",
+			info = "Your burn radius is increased by 50 and your burn damage is increased by 0.5\n\t• Total radius increase: 75\n\t• Total damage increase: 1"
+		},
+		trap1 = {
+			name = "Little Surprise I",
+			info = "Trap lifetime is increased to 4 minutes and will burn 1s longer"
+		},
+		trap2 = {
+			name = "Little Surprise II",
+			info = "Trap lifetime is increased to 5 minutes and will burn 1s longer and its damage is increased by 0.5\n\t• Total burn time increase: 2s"
+		},
+		trap3 = {
+			name = "Little Surprise III",
+			info = "Trap will burn 1s longer and its damage is increased by 0.5\n\t• Total burn time increase: 3s\n\t• Total damage increase: 1"
+		},
+		heal1 = {
+			name = "Sizzling Snack I",
+			info = "Burning people will heal you for additional 1 health"
+		},
+		heal2 = {
+			name = "Sizzling Snack II",
+			info = "Burning people will heal you for additional 1 health\n\t• Total heal increase: 2"
+		},
+		speed = {
+			name = "Fast Fire",
+			info = "Your speed is increased by 10%"
+		}
+	}
 }
 
 wep.SCP682 = {
-    swait = "Special ability cooldown: %is",
-    sready = "Special ability is ready!",
-    s_on = "You are immune to any damage! %is",
-    upgrades = {
-        time1 = {
-            name = "Unbroken I",
-            info = "Your special ability duration is increased by 2.5s\n\t• Total duration: 12.5s"
-        },
-        time2 = {
-            name = "Unbroken II",
-            info = "Your special ability duration is increased by 2.5s\n\t• Total duration: 15s"
-        },
-        time3 = {
-            name = "Unbroken III",
-            info = "Your special ability duration is increased by 2.5s\n\t• Total duration: 17.5s"
-        },
-        prot1 = {
-            name = "Adaptation I",
-            info = "You take 10% less bullet damage"
-        },
-        prot2 = {
-            name = "Adaptation II",
-            info = "You take 15% less bullet damage\n\t• Total damage reduce: 25%"
-        },
-        prot3 = {
-            name = "Adaptation III",
-            info = "You take 15% less bullet damage\n\t• Total damage reduce: 40%"
-        },
-        speed1 = {
-            name = "Furious Rush I",
-            info = "After using special ability, gain 10% movement speed until receiving damage"
-        },
-        speed2 = {
-            name = "Furious Rush II",
-            info = "After using special ability, gain 20% movement speed until receiving damage"
-        },
-        ult = {
-            name = "Regeneration",
-            info = "5 seconds after receiving damage, regenerate 5% of missing health"
-        },
-    }
+	swait = "Special ability cooldown: %is",
+	sready = "Special ability is ready!",
+	s_on = "You are immune to any damage! %is",
+	upgrades = {
+		time1 = {
+			name = "Unbroken I",
+			info = "Your special ability duration is increased by 2.5s\n\t• Total duration: 12.5s"
+		},
+		time2 = {
+			name = "Unbroken II",
+			info = "Your special ability duration is increased by 2.5s\n\t• Total duration: 15s"
+		},
+		time3 = {
+			name = "Unbroken III",
+			info = "Your special ability duration is increased by 2.5s\n\t• Total duration: 17.5s"
+		},
+		prot1 = {
+			name = "Adaptation I",
+			info = "You take 10% less bullet damage"
+		},
+		prot2 = {
+			name = "Adaptation II",
+			info = "You take 15% less bullet damage\n\t• Total damage reduction: 25%"
+		},
+		prot3 = {
+			name = "Adaptation III",
+			info = "You take 15% less bullet damage\n\t• Total damage reduction: 40%"
+		},
+		speed1 = {
+			name = "Furious Rush I",
+			info = "After using special ability, gain 10% movement speed until receiving damage"
+		},
+		speed2 = {
+			name = "Furious Rush II",
+			info = "After using special ability, gain 20% movement speed until receiving damage"
+		},
+		ult = {
+			name = "Regeneration",
+			info = "5 seconds after receiving damage, regenerate 5% of missing health"
+		},
+	}
 }
 
 wep.SCP8602 = {
-    upgrades = {
-        charge11 = {
-            name = "Brutality I",
-            info = "Damage of strong attack is increased by 5"
-        },
-        charge12 = {
-            name = "Brutality II",
-            info = "Damage of strong attack is increased by 10\n\t• Total damage increase: 15"
-        },
-        charge13 = {
-            name = "Brutality III",
-            info = "Damage of strong attack is increased by 10\n\t• Total damage increase: 25"
-        },
-        charge21 = {
-            name = "Charge I",
-            info = "Range of strong attack is increased by 15"
-        },
-        charge22 = {
-            name = "Charge II",
-            info = "Range of strong attack is increased by 15\n\t• Total range increase: 30"
-        },
-        charge31 = {
-            name = "Shared Pain",
-            info = "When you perform strong attack, everyone nerby impact point will receive 20% of the original damage"
-        },
-    }
+	upgrades = {
+		charge11 = {
+			name = "Brutality I",
+			info = "Damage of strong attack is increased by 5"
+		},
+		charge12 = {
+			name = "Brutality II",
+			info = "Damage of strong attack is increased by 10\n\t• Total damage increase: 15"
+		},
+		charge13 = {
+			name = "Brutality III",
+			info = "Damage of strong attack is increased by 10\n\t• Total damage increase: 25"
+		},
+		charge21 = {
+			name = "Charge I",
+			info = "Range of strong attack is increased by 15"
+		},
+		charge22 = {
+			name = "Charge II",
+			info = "Range of strong attack is increased by 15\n\t• Total range increase: 30"
+		},
+		charge31 = {
+			name = "Shared Pain",
+			info = "When you perform strong attack, everyone nerby impact point will receive 20% of the original damage"
+		},
+	}
 }
 
 wep.SCP939 = {
-    upgrades = {
-        heal1 = {
-            name = "Bloodlust I",
-            info = "Your attacks heal you for at least 22.5 HP (up to 30)"
-        },
-        heal2 = {
-            name = "Bloodlust II",
-            info = "Your attacks heal you for at least 37.5 HP (up to 50)"
-        },
-        heal3 = {
-            name = "Bloodlust III",
-            info = "Your attacks heal you for at least 52.5 HP (up to 70)"
-        },
-        amn1 = {
-            name = "Lethal Breath I",
-            info = "Your posion radius is increased to 100"
-        },
-        amn2 = {
-            name = "Lethal Breath II",
-            info = "Your poison now deals damage: 1.5 dmg/s"
-        },
-        amn3 = {
-            name = "Lethal Breath III",
-            info = "Your posion radius is increased to 125 and your poison damage is increased to 3 dmg/s"
-        },
-    }
+	upgrades = {
+		heal1 = {
+			name = "Bloodlust I",
+			info = "Your attacks heal you for at least 22.5 HP (up to 30)"
+		},
+		heal2 = {
+			name = "Bloodlust II",
+			info = "Your attacks heal you for at least 37.5 HP (up to 50)"
+		},
+		heal3 = {
+			name = "Bloodlust III",
+			info = "Your attacks heal you for at least 52.5 HP (up to 70)"
+		},
+		amn1 = {
+			name = "Lethal Breath I",
+			info = "Your posion radius is increased to 100"
+		},
+		amn2 = {
+			name = "Lethal Breath II",
+			info = "Your poison now deals damage: 1.5 dmg/s"
+		},
+		amn3 = {
+			name = "Lethal Breath III",
+			info = "Your posion radius is increased to 125 and your poison damage is increased to 3 dmg/s"
+		},
+	}
 }
 
 wep.SCP966 = {
-    upgrades = {
-        lockon1 = {
-            name = "Frenzy I",
-            info = "Time required to attack is reduced to 2.5s"
-        },
-        lockon2 = {
-            name = "Frenzy II",
-            info = "Time required to attack is reduced to 2s"
-        },
-        dist1 = {
-            name = "Call of the Hunter I",
-            info = "Attack range is increased by 15"
-        },
-        dist2 = {
-            name = "Call of the Hunter II",
-            info = "Attack range is increased by 15\n\t• Total range increase: 30"
-        },
-        dist3 = {
-            name = "Call of the Hunter III",
-            info = "Attack range is increased by 15\n\t• Total range increase: 45"
-        },
-        dmg1 = {
-            name = "Sharp Claws I",
-            info = "Attack damage is increased by 5"
-        },
-        dmg2 = {
-            name = "Sharp Claws II",
-            info = "Attack damage is increased by 5\n\t• Total damage increase: 10"
-        },
-        bleed1 = {
-            name = "Deep Wounds I",
-            info = "Your attacks have 25% chance of inflicting higher tier bleeding"
-        },
-        bleed2 = {
-            name = "Deep Wounds II",
-            info = "Your attacks have 50% chance of inflicting higher tier bleeding"
-        },
-    }
+	upgrades = {
+		lockon1 = {
+			name = "Frenzy I",
+			info = "Time required to attack is reduced to 2.5s"
+		},
+		lockon2 = {
+			name = "Frenzy II",
+			info = "Time required to attack is reduced to 2s"
+		},
+		dist1 = {
+			name = "Call of the Hunter I",
+			info = "Attack range is increased by 15"
+		},
+		dist2 = {
+			name = "Call of the Hunter II",
+			info = "Attack range is increased by 15\n\t• Total range increase: 30"
+		},
+		dist3 = {
+			name = "Call of the Hunter III",
+			info = "Attack range is increased by 15\n\t• Total range increase: 45"
+		},
+		dmg1 = {
+			name = "Sharp Claws I",
+			info = "Attack damage is increased by 5"
+		},
+		dmg2 = {
+			name = "Sharp Claws II",
+			info = "Attack damage is increased by 5\n\t• Total damage increase: 10"
+		},
+		bleed1 = {
+			name = "Deep Wounds I",
+			info = "Your attacks have 25% chance of inflicting higher tier bleeding"
+		},
+		bleed2 = {
+			name = "Deep Wounds II",
+			info = "Your attacks have 50% chance of inflicting higher tier bleeding"
+		},
+	}
+}
+
+wep.SCP24273 = {
+	mind_control = "Mind Cotntrol is ready! Press RMB",
+	mind_control_cd = "Mind Control is on cooldown! Wait: %is",
+	dash = "Attack is ready!",
+	dash_cd = "Attack is on cooldown! Wait: %is",
+	upgrades = {
+		dash1 = {
+			name = "Ruthles Charge I",
+			info = "Your attack cooldown is reduced by 1 second and its power is increased by 15%"
+		},
+		dash2 = {
+			name = "Ruthles Charge II",
+			info = "Penalty time after attack is reduced by 1 second and speed prnalty is reduced from 40% to 25%"
+		},
+		dash3 = {
+			name = "Ruthles Charge III",
+			info = "Your attack damage is increased by 50"
+		},
+		mc11 = {
+			name = "Persistent Hunter I",
+			info = "Your Mind Control duration is increased by 10s, but cooldown is increased by 20s"
+		},
+		mc12 = {
+			name = "Persistent Hunter II",
+			info = "Your Mind Control duration is increased by 10s, but cooldown is increased by 25s\n\t• Total duration increase: 20s\n\t• Total cooldown increase: 45s"
+		},
+		mc21 = {
+			name = "Impatient Hunter I",
+			info = "Your Mind Control duration is reduced by 5s and cooldown is reduced by 10s"
+		},
+		mc22 = {
+			name = "Impatient Hunter II",
+			info = "Your Mind Control duration is reduced by 10s and cooldown is reduced by 15s"
+		},
+		mc3 = {
+			name = "Unbroken Hunter",
+			info = "During Mind Control gain 50% reduction for all types of damage"
+		},
+		mc13 = {
+			name = "Strict Judge",
+			info = "Killing your prey during Mind Control, reduces its cooldown by 40%. Mind Control range is increased by 1000 units"
+		},
+		mc23 = {
+			name = "Crimson Judge",
+			info = "Killing your prey during Mind Control, heals you by 400 HP. Mind Control range is increased by 500 units"
+		},
+	}
+}
+
+wep.SCP3199 = {
+	special = "Special attack is ready! Press RMB",
+	upgrades = {
+		regen1 = {
+			name = "Taste of Blood I",
+			info = "Regenrate 2 HP per second while in Frenzy"
+		},
+		regen2 = {
+			name = "Taste of Blood II",
+			info = "Health regenration ratio is increased by 10% for each Frenzy token"
+		},
+		frenzy1 = {
+			name = "Hunter's Game I",
+			info = "Your maximum Frenzy tokens are increased by 1\nYour Frenzy duration is increased by 20%"
+		},
+		frenzy2 = {
+			name = "Hunter's Game II",
+			info = "Your maximum Frenzy tokens are increased by 1\nYour Frenzy duration is increased by 30%\nYour special attack is disabled\n\t• Total Frenzy tokens increase: 2\n\t• Total duration increase: 50%"
+		},
+		ch = {
+			name = "Blind Fury",
+			info = "Your speed is increased by 25%\nYou can no longer detect heartbeat of nearby humans"
+		},
+		egg1 = {
+			name = "Another One",
+			info = "You create 1 new inactive egg upon buying this upgrade\n\t• Egg will not be created if there is no empty spot for egg in map"
+		},
+		egg2 = {
+			name = "Legacy",
+			info = "One of inactive eggs will be activated once this upgrade is bought\n\t• This won't have effect is there is no inactive egg on map"
+		},
+		egg3 = {
+			name = "Ester Egg",
+			info = "Your respawn time is decreased to 20 seconds"
+		},
+	}
 }
 
 wep.SCP714 = {
-    name = "SCP 714"
+	name = "SCP 714"
 }
 
 wep.HOLSTER = {
-    name = "Holster",
+	name = "Holster",
 }
 
 wep.ID = {
-    author = "Kerry",
-    name = "ID",
-    pname = "Name:",
-    server = "Server:",
+	name = "ID",
+	pname = "Name:",
+	server = "Server:",
 }
 
 wep.CAMERA = {
-    name = "Surveillance System",
-    showname = "Cameras",
-    info = "Cameras allow you to see what is happening in the facility.\nThey also provide you an ability to scan SCPs and transmit this information to your current radio channel",
+	name = "Surveillance System",
+	showname = "Cameras",
+	info = "Cameras allow you to see what is happening in the facility.\nThey also provide you an ability to scan SCPs and transmit this information to your current radio channel",
 }
 
 wep.RADIO = {
-    name = "Radio",
+	name = "Radio",
 }
 
 wep.NVG = {
-    name = "NVG",
-    info = "Night Vision Goggles - Device that makes dark areas brighter and makes bright areas even more brighter.\nSometimes you can see anomalous things through them."
+	name = "NVG",
+	info = "Night Vision Goggles - Device that makes dark areas brighter and makes bright areas even more brighter.\nSometimes you can see anomalous things through them."
 }
 
 wep.NVGPLUS = {
-    name = "Enhanced NVG",
-    showname = "NVG+",
-    info = "Enhanced version of NVG, allows you to use it while holding other items in hands.\nUnfortunately battery lasts only for 10 seconds"
+	name = "Enhanced NVG",
+	showname = "NVG+",
+	info = "Enhanced version of NVG, allows you to use it while holding other items in hands.\nUnfortunately battery lasts only for 10 seconds"
+}
+
+wep.ACCESS_CHIP = {
+	name = "Access Chip",
+	cname = "Access Chip - %s",
+	showname = "CHIP",
+	pickupname = "CHIP",
+	clearance = "Clearance level: %i",
+	hasaccess = "Grants access to:",
+	NAMES = {
+		general = "General",
+		jan1 = "Janitor",
+		jan = "Janitor",
+		jan2 = "Senior Janitor",
+		acc = "Accountant",
+		log = "Logistician",
+		sci1 = "Researcher level 1",
+		sci2 = "Researcher level 2",
+		sci3 = "Researcher level 3",
+		spec = "Containment Specialist",
+		guard = "Security",
+		chief = "Security Chief",
+		mtf = "MTF",
+		com = "MTF Commander",
+		hacked3 = "Hacked 3",
+		hacked4 = "Hacked 4",
+		hacked5 = "Hacked 5",
+		director = "Site Director",
+		o5 = "O5"
+	},
+	ACCESS = {
+		GENERAL = "General",
+		SAFE = "Safe",
+		EUCLID = "Euclid",
+		KETER = "Keter",
+		OFFICE = "Office",
+		MEDBAY = "MedBay",
+		GENERAL = "General",
+		CHECKPOINT_LCZ = "Checkpoint LCZ-HCZ",
+		CHECKPOINT_EZ = "Checkpoint EZ-HCZ",
+		WARHEAD_ELEVATOR = "Warhead Elevator",
+		EC = "Electrical Center",
+		ARMORY = "Armory",
+		GATE_A = "Gate A",
+		GATE_B = "Gate B",
+		FEMUR = "Femur Breaker",
+		ALPHA = "Alpha Warhead",
+		OMEGA = "Omega Warhead",
+		PARTICLE = "Particle Cannon",
+	},
+}
+
+wep.OMNITOOL = {
+	name = "Omnitool",
+	cname = "Omnitool - %s",
+	showname = "OMNITOOL",
+	pickupname = "OMNITOOL",
+	none = "NONE",
+	chip = "Installed Chip: %s",
+	clearance = "Clearance level: %i",
+	SCREEN = {
+		loading = "Loading",
+		name = "Omnitool v4.78",
+		installing = "Installing new chip...",
+		ejecting = "Ejecting access chip...",
+		ejectwarn = "Are you sure to eject chip?",
+		ejectconfirm = "Press again to confirm...",
+		chip = "Installed Chip:",
+	},
 }
 
 wep.KEYCARD = {
-    author = "danx91",
-    instructions = "Access:",
-    ACC = {
-        "SAFE",
-        "EUCLID",
-        "KETER",
-        "Checkpoints",
-        "OMEGA Warhead",
-        "General Access",
-        "Gate A",
-        "Gate B",
-        "Armory",
-        "Femur Breaker",
-        "EC",
-    },
-    STATUS = {
-        "ACCESS",
-        "NO ACCESS",
-    },
-    NAMES = {
-        "Keycard Level 1",
-        "Keycard Level 2",
-        "Keycard Level 3",
-        "Researcher Keycard",
-        "MTF Guard Keycard",
-        "MTF Commander Keycard",
-        "Keycard Level OMNI",
-        "Checkpoint Security Keycard",
-        "Hacked CI Keycard",
-    },
+	author = "danx91",
+	instructions = "Access:",
+	ACC = {
+		"SAFE",
+		"EUCLID",
+		"KETER",
+		"Checkpoints",
+		"OMEGA Warhead",
+		"General Access",
+		"Gate A",
+		"Gate B",
+		"Armory",
+		"Femur Breaker",
+		"EC",
+	},
+	STATUS = {
+		"ACCESS",
+		"NO ACCESS",
+	},
+	NAMES = {
+		"Keycard Level 1",
+		"Keycard Level 2",
+		"Keycard Level 3",
+		"Researcher Keycard",
+		"MTF Guard Keycard",
+		"MTF Commander Keycard",
+		"Keycard Level OMNI",
+		"Checkpoint Security Keycard",
+		"Hacked CI Keycard",
+	},
 }
 
 wep.MEDKIT = {
-    name = "Medkit (Charges Left: %d)",
-    showname = "Medkit",
+	name = "Medkit (Charges Left: %d)",
+	showname = "Medkit",
+	pickupname = "Medkit",
 }
 
 wep.MEDKITPLUS = {
-    name = "Big Medkit (Charges Left: %d)",
-    showname = "Medkit+",
+	name = "Big Medkit (Charges Left: %d)",
+	showname = "Medkit+",
+	pickupname = "Medkit+",
 }
 
 wep.TASER = {
-    name = "Taser"
+	name = "Taser"
 }
 
 wep.FLASHLIGHT = {
-    name = "Flashlight"
+	name = "Flashlight"
 }
 
 wep.BATTERY = {
-    name = "Battery"
+	name = "Battery"
 }
 
 wep.GASMASK = {
-    name = "Gas Mask"
+	name = "Gas Mask"
+}
+
+wep.TURRET = {
+	name = "Turret",
+	pickup = "Pick up",
+	MODES = {
+		off = "Disable",
+		filter = "Filter staff",
+		all = "Target everything",
+		supp = "Suppressing fire"
+	}
+}
+
+wep.ALPHA_CARD1 = {
+	name = "ALPHA Warhead Codes #1"
+}
+
+wep.ALPHA_CARD2 = {
+	name = "ALPHA Warhead Codes #2"
 }
 
 wep.weapon_stunstick = "Stunstick"
-
-lang.WEAPONS = wep
 
 registerLanguage( lang, "english", "en", "default" )
