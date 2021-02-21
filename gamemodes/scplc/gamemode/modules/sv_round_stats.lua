@@ -1,8 +1,8 @@
 /*
 data = {
 	init = initial_value
-	ref = num, func(return inportance 0-100; 0 most inportant), true(if changed), false(if not changed), nil(never transmit)
-	importance = 0-100; 0 most impotant
+	ref = num, func(return importance 0-100; 0 most important), true(if changed), false(if not changed), nil(never transmit)
+	importance = 0-100; 0 most important
 	player_entry = playerstat name; use player stats
 	NOT USED! - single_target = boolean; if player_entry is used: if true and multiple player has same score, this stat will be omited; if false, table will be passed; if nil, first player will be used
 }
@@ -140,6 +140,10 @@ function GetRoundSummary( stats )
 		elseif isfunction( v.ref ) then
 			imp = v.ref( k, value )
 		elseif v.numerical and isnumber( v.ref ) and isnumber( value ) then
+			if value == v.init then
+				continue --skip unchanged values!
+			end
+
 			imp = math.Clamp( math.Map( value, v.init, v.ref, 100, 0 ), 0, 100 )
 		else
 			continue --sth else?
@@ -167,22 +171,33 @@ Base round stats
 ---------------------------------------------------------------------------]]
 RegisterRoundStat( "kill", { init = 0, ref = 30, importance = 80 } )
 RegisterRoundStat( "rdm", { init = 0, ref = 5, importance = 60 } )
-RegisterRoundStat( "rdmdmg", { init = 0, ref = 750, importance = 50 } )
-RegisterRoundStat( "dmg", { init = 0, ref = 5000, importance = 30 } )
-RegisterRoundStat( "escapes", { init = 0, ref = 10, importance = 60 } )
-RegisterRoundStat( "escorts", { init = 0, ref = 12, importance = 65 } )
+RegisterRoundStat( "rdmdmg", { init = 0, ref = 1250, importance = 50 } )
+RegisterRoundStat( "dmg", { init = 0, ref = 7500, importance = 30 } )
+RegisterRoundStat( "escapes", { init = 0, ref = 12, importance = 60 } )
+RegisterRoundStat( "escorts", { init = 0, ref = 9, importance = 60 } )
+RegisterRoundStat( "bleed", { init = 0, ref = 300, importance = 80 } )
 
-RegisterRoundStat( "049", { init = 0, ref = 8, importance = 30 } )
-RegisterRoundStat( "0492", { init = 0, ref = 12, importance = 30 } )
+RegisterRoundStat( "023", { init = 0, ref = 10, importance = 30 } )
+RegisterRoundStat( "049", { init = 0, ref = 20, importance = 30 } )
+//RegisterRoundStat( "0492", { init = 0, ref = 12, importance = 30 } )
 RegisterRoundStat( "066", { init = 0, ref = 25, importance = 30 } )
+RegisterRoundStat( "096", { init = 0, ref = 10, importance = 30 } )
 RegisterRoundStat( "106", { init = 0, ref = 15, importance = 30 } )
-RegisterRoundStat( "173", { init = 0, ref = 6, importance = 30 } )
-RegisterRoundStat( "457", { init = 0, ref = 7, importance = 30 } )
-RegisterRoundStat( "682", { init = 0, ref = 10, importance = 30 } )
+RegisterRoundStat( "173", { init = 0, ref = 10, importance = 30 } )
+RegisterRoundStat( "457", { init = 0, ref = 8, importance = 30 } )
+RegisterRoundStat( "682", { init = 0, ref = 15, importance = 30 } )
 RegisterRoundStat( "8602", { init = 0, ref = 6, importance = 30 } )
-RegisterRoundStat( "939", { init = 0, ref = 20, importance = 30 } )
+RegisterRoundStat( "939", { init = 0, ref = 15, importance = 30 } )
+RegisterRoundStat( "966", { init = 0, ref = 40, importance = 30 } )
+RegisterRoundStat( "3199", { init = 0, ref = 6, importance = 30 } )
+RegisterRoundStat( "24273", { init = 0, ref = 8, importance = 30 } )
 
 --Stats can be used as info about round because they will be reset on round restart, just don't transmit them
 RegisterRoundStat( "gatea", { init = false } )
 RegisterRoundStat( "106recontain", { init = false, ref = true, importance = 25 } )
 RegisterRoundStat( "914use", { init = false } )
+RegisterRoundStat( "mtfalphaspawned", { init = false } )
+
+RegisterRoundStat( "omega_warhead", { init = false, ref = true, importance = 10 } )
+RegisterRoundStat( "alpha_warhead", { init = false, ref = true, importance = 10 } )
+RegisterRoundStat( "warhead_lockdown", { init = false } )

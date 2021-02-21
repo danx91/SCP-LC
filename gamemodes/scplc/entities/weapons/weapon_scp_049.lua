@@ -4,19 +4,39 @@ SWEP.PrintName			= "SCP-049"
 
 SWEP.HoldType 			= "normal"
 
-SWEP.Zombies = {
-	{ name = "normal", speed = 1, health = 1, damage = 1, mdl = nil, material = "" }, --standard zombie
-	{ name = "light", speed = 1.3, health = 0.7, damage = 0.6, mdl = nil, material = "" }, --fast zombie
-	{ name = "heavy", speed = 0.7, health = 1.4, damage = 1.3, mdl = nil, material = "" }, --heavy zombie
+local zombies = {
+	{ name = "normal", speed = 1, health = 1, damage = 1, material = "" }, --standard zombie
+	{ name = "light", speed = 1.3, health = 0.7, damage = 0.6, material = "" }, --fast zombie
+	{ name = "heavy", speed = 0.8, health = 1.4, damage = 1.3, material = "" }, --heavy zombie
 }
+
+local function translateZombieModel( ply )
+	local team = ply:GetProperty( "last_team" )
+	//print( "zombie translate", team )
+	if team == TEAM_CLASSD then
+		return "models/player/alski/scp049-2.mdl", math.random( 0, 4 )
+	elseif team == TEAM_MTF then
+		local random = math.random( 1, 2 )
+
+		if random == 1 then
+			return "models/player/alski/scp049-2mtf.mdl", math.random( 0, 4 )
+		else
+			return "models/player/alski/scp049-2mtf2.mdl", math.random( 0, 4 )
+		end
+	elseif team == TEAM_SCI then
+		return "models/player/alski/scp049-2_scientist.mdl", math.random( 0, 4 )
+	end
+end
 
 function SWEP:Initialize()
 	self:SetHoldType( self.HoldType )
 	self:InitializeLanguage( "SCP049" )
+
+	self.Targets = {}
 end
 
 --SWEP.Target = NULL
-SWEP.Targets = {}
+//SWEP.Targets = {}
 SWEP.LastAttack = 0
 
 SWEP.NCheck = 0
@@ -43,17 +63,18 @@ function SWEP:Think()
 		end
 	end
 
-	if self.NCheck > CurTime() then return end
-	self.NCheck = CurTime() + 0.1
+	if self.NCheck <= CurTime() then
+		self.NCheck = CurTime() + 0.1
 
-	for k, v in pairs( self.Targets ) do
-		if !IsValid( k ) or !k:CheckSignature( v[2] ) then
-			self.Targets[k] = nil
+		for k, v in pairs( self.Targets ) do
+			if !IsValid( k ) or !k:CheckSignature( v[2] ) then
+				self.Targets[k] = nil
+			end
 		end
 	end
 
 	if SERVER and self.NHeal < CurTime() then
-		self.NHeal = CurTime() + 180
+		self.NHeal = CurTime() + 90
 
 		local heal = self:GetUpgradeMod( "heal" )
 		if heal then
@@ -89,17 +110,20 @@ function SWEP:PrimaryAttack()
 				self.Targets[ent] = { 0, ent:TimeSignature(), 0 }
 			end
 
-			local tab = self.Targets[ent]
-			tab[3] = CurTime() + 2
-			tab[1] = tab[1] + 1
-
-			if tab[1] >= 3 then
-				self.Targets[ent] = nil
-
+			if ent:GetSCP714() then
 				if SERVER then
-					if ent:GetSCP714() then
-						ent:PlayerDropWeapon( "item_scp_714" )
-					else
+					owner:EmitSound( "SCP049.Remove714" )
+					ent:PlayerDropWeapon( "item_scp_714" )
+				end
+			else
+				local tab = self.Targets[ent]
+				tab[3] = CurTime() + 2
+				tab[1] = tab[1] + 1
+
+				if tab[1] >= 3 then
+					self.Targets[ent] = nil
+
+					if SERVER then
 						local dmginfo = DamageInfo()
 
 						dmginfo:SetDamage( ent:Health() )
@@ -111,17 +135,17 @@ function SWEP:PrimaryAttack()
 						self:AddScore( 1 )
 					end
 				end
-			end
 
-			if SERVER then
-				owner:EmitSound( "SCP049.Attack" )
-				
-				owner:PushSpeed( 0.6, 0.6, -1, "SLC_SCP049Speed" )
-				timer.Simple( 5, function()
-					if IsValid( self ) and IsValid( owner ) then
-						owner:PopSpeed( "SLC_SCP049Speed" )
-					end
-				end )
+				if SERVER then
+					owner:EmitSound( "SCP049.Attack" )
+					
+					owner:PushSpeed( 0.6, 0.6, -1, "SLC_SCP049" )
+					timer.Simple( 5, function()
+						if IsValid( self ) and self:CheckOwner() then
+							owner:PopSpeed( "SLC_SCP049" )
+						end
+					end )
+				end
 			end
 		end
 	end
@@ -152,8 +176,8 @@ function SWEP:Reload()
 				if ent:GetNWInt( "team", TEAM_SCP ) != TEAM_SCP then
 					local options = {}
 
-					for i, v in ipairs( self.Zombies ) do
-						table.insert( options, { v.material, self.Lang.zombies[v.name] or v.name, tostring( i ) } )
+					for i, v in ipairs( zombies ) do
+						table.insert( options, { v.material, self.Lang.zombies[v.name] or v.name, i } )
 					end
 
 					OpenWheelMenu( options, function( selected )
@@ -161,6 +185,8 @@ function SWEP:Reload()
 							net.Ping( "SLC_SCP049", selected )
 							self:Zombify( selected, ent )
 						end
+					end, function()
+						return !IsValid( owner ) or owner:SCPClass() != "SCP049"
 					end )
 				end
 			end
@@ -171,6 +197,8 @@ function SWEP:Reload()
 end
 
 function SWEP:Zombify( t, ent )
+	if ROUND.post then return end
+
 	t = tonumber( t )
 
 	if t then
@@ -183,13 +211,15 @@ end
 
 SWEP.SurgeryStacks = 0
 function SWEP:FinishSurgery( t, ent )
+	if ROUND.post then return end
+	
 	if SERVER then
 		local owner = self:GetOwner()
 		local ply
-		local spawnent
+		local spawnent = owner
 
 		if IsValid( ent ) and ent.Data then
-			spawnent = ent
+			//spawnent = ent
 			if ent.Data.team != TEAM_SCP then
 				local bodyOwner = ent:GetOwner()
 
@@ -198,7 +228,9 @@ function SWEP:FinishSurgery( t, ent )
 				end
 			end
 		else
-			spawnent = owner
+			CenterMessage( "@WEAPONS.SCP049.surgery_failed#255,0,0;time:5", owner )
+			return
+			//spawnent = owner
 		end
 
 		if !ply then
@@ -209,17 +241,21 @@ function SWEP:FinishSurgery( t, ent )
 		end
 
 		if ply then
-			local hpbonus = ( self:GetUpgradeMod( "hp" ) or 0 ) + self.SurgeryStacks * 0.025
+			local hpbonus = ( self:GetUpgradeMod( "hp" ) or 0 ) + self.SurgeryStacks * 0.05
 
-			local stats = self.Zombies[t] or {}
+			local stats = zombies[t] or {}
 			local scp = GetSCP( "SCP0492" )
-			scp:SetupPlayer( ply, spawnent:GetPos(), owner, (stats.health or 1) + hpbonus, stats.speed or 1, stats.damage or 1, self:GetUpgradeMod( "steal" ) or 0, stats.model )
+			local model, skin = translateZombieModel( ply )
+			scp:SetupPlayer( ply, true, spawnent:GetPos(), owner, (stats.health or 1) + hpbonus, stats.speed or 1, stats.damage or 1, self:GetUpgradeMod( "steal" ) or 0,
+								model, skin )
 
 			if self:HasUpgrade( "rm" ) then
 				local qp = GetQueuePlayers( 1 )[1]
 
 				if qp then
-					scp:SetupPlayer( qp, spawnent:GetPos(), owner, ((stats.health or 1) + hpbonus) * 0.5, stats.speed or 1, (stats.damage or 1) * 0.75, self:GetUpgradeMod( "steal" ) or 0, stats.model )
+					local model, skin = translateZombieModel( qp )
+					scp:SetupPlayer( qp, true, spawnent:GetPos(), owner, ((stats.health or 1) + hpbonus) * 0.5, stats.speed or 1, (stats.damage or 1) * 0.75,
+										self:GetUpgradeMod( "steal" ) or 0, model, skin )
 				end
 			end
 
@@ -229,6 +265,7 @@ function SWEP:FinishSurgery( t, ent )
 
 			AddRoundStat( "049" )
 			self:AddScore( 3 )
+			owner:AddFrags( 3 )
 
 			if self:HasUpgrade( "hidden" ) then
 				self.SurgeryStacks = self.SurgeryStacks + 1
@@ -257,8 +294,8 @@ function SWEP:FinishSurgery( t, ent )
 	end
 end
 
-function SWEP:DrawHUD()
-	if hud_disabled or HUDDrawInfo or ROUND.preparing then return end
+function SWEP:DrawSCPHUD()
+	//if hud_disabled or HUDDrawInfo or ROUND.preparing then return end
 
 	local owner = self:GetOwner()
 	local ply = owner:GetEyeTrace().Entity
@@ -267,22 +304,25 @@ function SWEP:DrawHUD()
 		if owner:GetPos():DistToSqr( ply:GetPos() ) < 14400 then
 			if self.Targets[ply] then
 				local tab = self.Targets[ply]
-				local progress = 0
 
-				if tab[3] > CurTime() then
-					progress = math.Map( tab[3] - CurTime(), 2, 0, 0, 1 )
-				else
-					progress = 1
-				end
+				if tab[1] > 0 then
+					local progress = 0
 
-				local w, h = ScrW(), ScrH()
+					if tab[3] > CurTime() then
+						progress = math.Map( tab[3] - CurTime(), 2, 0, 0, 1 )
+					else
+						progress = 1
+					end
 
-				draw.NoTexture()
-				surface.SetDrawColor( Color( 100, 100, 100 ) )
-				surface.DrawRing( w * 0.5, h * 0.5, 40, 10, 160, 30, tab[1] == 1 and progress or 1, 10 )
+					local w, h = ScrW(), ScrH()
 
-				if tab[1] > 1 then
-					surface.DrawRing( w * 0.5, h * 0.5, 40, 10, 160, 30, tab[1] == 2 and progress or 1, 190 )
+					draw.NoTexture()
+					surface.SetDrawColor( Color( 100, 100, 100 ) )
+					surface.DrawRing( w * 0.5, h * 0.5, 40, 10, 160, 30, tab[1] == 1 and progress or 1, 10 )
+
+					if tab[1] > 1 then
+						surface.DrawRing( w * 0.5, h * 0.5, 40, 10, 160, 30, tab[1] == 2 and progress or 1, 190 )
+					end
 				end
 			end
 		end
@@ -309,7 +349,15 @@ function SWEP:DrawHUD()
 	end
 end
 
-addSounds( "SCP049.Attack", "scp/049/attack%i.ogg", 120, 1, 100, CHAN_STATIC, 0, 4 )
+addSounds( "SCP049.Attack", "scp/049/attack%i.ogg", 100, 1, 100, CHAN_STATIC, 0, 7 )
+sound.Add{
+	name = "SCP049.Remove714",
+	sound = "scp/049/remove714_1.ogg",
+	volume = 1,
+	level = 100,
+	pitch = 100,
+	channel = CHAN_STATIC,
+}
 
 if SERVER then
 	net.ReceivePing( "SLC_SCP049", function( data, ply )
@@ -394,12 +442,12 @@ DefineUpgradeSystem( "scp049", {
 		{ name = "cure2", cost = 3, req = { "cure1" }, reqany = false, pos = { 1, 2 }, mod = { heal = 300 }, active = false },
 		{ name = "merci", cost = 5, req = { "cure2" }, reqany = false, pos = { 1, 3 }, mod = { cd = 2.5 }, active = true },
 
-		{ name = "symbiosis1", cost = 1, req = {}, reqany = false, pos = { 2, 1 }, mod = { sh = 0.025 }, active = false },
-		{ name = "symbiosis2", cost = 3, req = { "symbiosis1" }, reqany = false, pos = { 2, 2 }, mod = { sh = 0.05, zh = 0.025 }, active = false },
-		{ name = "symbiosis3", cost = 5, req = { "symbiosis2" }, reqany = false, pos = { 2, 3 }, mod = { sh = 0.075, zh = 0.05 }, active = false },
+		{ name = "symbiosis1", cost = 1, req = {}, reqany = false, pos = { 2, 1 }, mod = { sh = 0.1 }, active = false },
+		{ name = "symbiosis2", cost = 3, req = { "symbiosis1" }, reqany = false, pos = { 2, 2 }, mod = { sh = 0.15, zh = 0.1 }, active = false },
+		{ name = "symbiosis3", cost = 5, req = { "symbiosis2" }, reqany = false, pos = { 2, 3 }, mod = { sh = 0.20, zh = 0.2 }, active = false },
 
-		{ name = "hidden", cost = 5, req = {}, reqany = false, pos = { 3, 1 }, mod = {}, active = false },
-		{ name = "trans", cost = 3, req = { "hidden" }, reqany = false, pos = { 3, 2 }, mod = { hp = 0.15, steal = 0.1 }, active = false },
+		{ name = "hidden", cost = 3, req = {}, reqany = false, pos = { 3, 1 }, mod = {}, active = false },
+		{ name = "trans", cost = 5, req = { "hidden" }, reqany = false, pos = { 3, 2 }, mod = { hp = 0.15, steal = 0.2 }, active = false },
 		{ name = "rm", cost = 7, req = { "trans", "doc2" }, reqany = true, pos = { 3, 3 }, mod = {}, active = false },
 
 		{ name = "doc1", cost = 1, req = {}, reqany = false, pos = { 4, 1 }, mod = { surgery_time = 5 }, active = false },

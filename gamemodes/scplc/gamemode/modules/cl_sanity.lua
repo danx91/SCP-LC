@@ -3,9 +3,11 @@ function InsaneTick( ply )
 	if !ply.NextSanityEffect then ply.NextSanityEffect = 0 end
 	if ply.NextSanityEffect < CurTime() then
 		if math.random( 1, 2 ) == 1 then
-			local eff = insane_effects[math.random( #insane_effects )]
+			local id = math.random( #insane_effects )
+			local eff = insane_effects[id]
 
 			if eff then
+				ply.InsaneEffectID = id
 				ply.NextSanityEffect = CurTime() + eff[1]
 				eff[2]( ply )
 			end
@@ -13,8 +15,18 @@ function InsaneTick( ply )
 	end
 end
 
-function AddInsaneEffect( delay, func )
-	table.insert( insane_effects, { delay, func } )
+function InterruptInsane( ply )
+	local id = ply.InsaneEffectID
+	ply.InsaneEffectID = nil
+
+	local eff = insane_effects[id]
+	if eff and eff[3] then
+		eff[3]( ply )
+	end
+end
+
+function AddInsaneEffect( delay, func, stop )
+	table.insert( insane_effects, { delay, func, stop } )
 end
 
 --[[-------------------------------------------------------------------------
@@ -24,6 +36,8 @@ addSounds( "SLCEffects.Whispers", "effects/insane/whispers%i.ogg", 0, { 0.75, 1 
 
 AddInsaneEffect( 12, function( ply )
 	ply:EmitSound( "SLCEffects.Whispers" )
+end, function( ply )
+	ply:StopSound( "SLCEffects.Whispers" )
 end )
 
 --[[-------------------------------------------------------------------------
@@ -32,6 +46,8 @@ Insane Screen Effect
 AddInsaneEffect( 5, function( ply )
 	ply.InsaneScreenEffect = CurTime() + 5
 	ply.InsaneKickViewNext = 0
+end, function( ply )
+	ply.InsaneScreenEffect = 0
 end )
 
 hook.Add( "RenderScreenspaceEffects", "InsaneBlur", function()
@@ -79,6 +95,8 @@ sound.Add{
 
 AddInsaneEffect( 11, function( ply )
 	ply.InsaneBlinkChange = 1
+end, function( ply )
+	ply.InsaneBlinkChangeOn = false
 end )
 
 hook.Add( "SLCBlink", "SLCInsaneBlink", function( duration, delay )

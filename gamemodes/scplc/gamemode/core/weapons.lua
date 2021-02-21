@@ -1,22 +1,49 @@
 local wep = FindMetaTable( "Weapon" )
 
+--[[-------------------------------------------------------------------------
+ResetViewModelBones
+---------------------------------------------------------------------------]]
+function wep:ResetViewModelBones()
+	if CLIENT then
+		local owner = self:GetOwner()
+
+		if IsValid( owner ) then
+			local vm = owner:GetViewModel()
+			if IsValid( vm ) then
+				vm:ResetBones()
+			end
+		end
+	end
+end
 
 --[[-------------------------------------------------------------------------
 CW 2.0 DMG Mod
 ---------------------------------------------------------------------------]]
 local CW_WEP_DMG = {
+	--pistol
 	cw_fiveseven = 20,
+	cw_makarov = 18,
 	cw_deagle = 30,
-	cw_mp5 = 10,
-	cw_ump45 = 12.5,
+	cw_mr96 = 45,
+
+	--pm
+	cw_mp5 = 11,
+	cw_ump45 = 13,
 	cw_g36c = 15,
+
+	--rifle
 	cw_scarh = 17,
-	cw_m14 = 19,
-	cw_ar15 = 8,
-	cw_ak74 = 11,
-	cw_l115 = 90,
-	cw_shorty = 5,
-	cw_m3super90 = 3,
+	cw_m14 = 21,
+	cw_ar15 = 9,
+	cw_ak74 = 11.5,
+	cw_l85a2 = 13,
+
+	--pump
+	cw_shorty = 8,
+	cw_m3super90 = 5.5,
+
+	--sniper
+	cw_l115 = 150,
 }
 
 timer.Simple( 0, function()

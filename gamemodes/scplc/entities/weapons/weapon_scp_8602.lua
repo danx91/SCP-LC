@@ -97,7 +97,7 @@ function SWEP:SpecialAttack( ent, p )
 	end
 end
 
-hook.Add( "DoPlayerDeath", "SCP8602Damage", function( ply, attacker, info )
+hook.Add( "DoPlayerDeath", "SCP8602Damage", function( ply, attacker, info ) --TODO move to after dmg
 	if attacker:IsPlayer() and attacker:SCPClass() == CLASSES.SCP8602 then
 	 	local wep = attacker:GetActiveWeapon()
 
@@ -144,11 +144,12 @@ sound.Add( {
 	channel = CHAN_STATIC,
 } )
 
-sound.Add( {
-	name = "SCP8602.ImpactHard",
-	volume = 1,
-	level = 75,
-	pitch = 100,
-	sound = "npc/antlion/shell_impact4.wav",
-	channel = CHAN_STATIC,
-} )
+-- sound.Add( {
+-- 	name = "SCP8602.ImpactHard",
+-- 	volume = 1,
+-- 	level = 75,
+-- 	pitch = 100,
+-- 	sound = "npc/antlion/shell_impact4.wav",
+-- 	channel = CHAN_STATIC,
+-- } )
+addSounds( "SCP8602.ImpactHard", "scp/8602/attack%i.ogg", 75, 1, 100, CHAN_STATIC, 1, 3 )

@@ -15,9 +15,11 @@ SWEP.DMGBoost			= 0
 function SWEP:Initialize()
 	self:SetHoldType( self.HoldType )
 	self:InitializeLanguage( "SCP106" )
+
+	self.SoundPlayers = {}
 end
 
-SWEP.SoundPlayers = {}
+//SWEP.SoundPlayers = {}
 SWEP.NThink = 0
 function SWEP:Think()
 	if self.NThink > CurTime() then return end
@@ -88,24 +90,41 @@ function SWEP:PrimaryAttack()
 			if ent:IsPlayer() then
 				if ent:SCPTeam() == TEAM_SCP or ent:SCPTeam() == TEAM_SPEC then return end
 
-				local pos = GetPocketPos()
-				local ang = ent:GetAngles()
+				if ent:GetPos():WithinAABox( POCKETD_MINS, POCKETD_MAXS ) then
+					self:AddScore( 1 )
+					
+					local dmg = DamageInfo()
+					dmg:SetDamage( ent:Health() )
+					dmg:SetDamageType( DMG_DIRECT )
+					dmg:SetAttacker( self.Owner )
+					dmg:SetInflictor( self.Owner )
 
-				ang.yaw = math.random( -180, 180 )
+					ent:TakeDamageInfo( dmg )
+				else
+					local pos
 
-				if pos then
-					local dmg = math.random( 30, 50 )
-
-					if self.DMGBoost > CurTime() then
-						dmg = dmg + ( self:GetUpgradeMod( "dmg" ) or 0 )
+					if istable( POS_POCKETD ) then
+						pos = table.Random( POS_POCKETD )
+					else
+						pos = POS_POCKETD
 					end
 
-					ent:TakeDamage( dmg, self.Owner, self.Owner )
-					ent:SetPos( pos )
-					ent:SetAngles( ang )
+					if pos then
+						local dmg = math.random( 30, 50 )
+						if self.DMGBoost > CurTime() then
+							dmg = dmg + ( self:GetUpgradeMod( "dmg" ) or 0 )
+						end
 
-					self:AddScore( 1 )
-					AddRoundStat( "106" )
+						ent:TakeDamage( dmg, self.Owner, self.Owner )
+						ent:SetPos( pos )
+
+						local ang = ent:GetAngles()
+						ang.yaw = math.random( -180, 180 )
+						ent:SetAngles( ang )
+
+						self:AddScore( 1 )
+						AddRoundStat( "106" )
+					end
 				end
 			else
 				self:SCPDamageEvent( ent, 50 )
@@ -152,6 +171,8 @@ function SWEP:Reload()
 end
 
 function SWEP:TeleportSequence( point )
+	//if ROUND.post then return end
+
 	self.NextAttackW = CurTime() + 8
 	self.NextPlace = CurTime() + 15
 
@@ -172,7 +193,7 @@ function SWEP:TeleportSequence( point )
 
 	local ppos = self.Owner:GetPos()
 	Timer( "106TP_1"..self.Owner:SteamID64(), 0.1, 40, function( this, n )
-		if IsValid( self ) and IsValid( self.Owner ) then
+		if IsValid( self ) and self:CheckOwner() then
 			if n < 40 and n % 20 == 1 then
 				--self:EmitSound( "SCP106.Disappear" )
 				TransmitSound( self.Disappear, true, ppos, 750 )
@@ -181,11 +202,11 @@ function SWEP:TeleportSequence( point )
 			self.Owner:SetPos( ppos - Vector( 0, 0, 2 * n ) )
 		end
 	end, function()
-		if IsValid( self ) and IsValid( self.Owner ) then
+		if IsValid( self ) and self:CheckOwner() then
 			self.Owner:SetPos( point - Vector( 0, 0, 80 ) )
 
 			Timer( "106TP_2"..self.Owner:SteamID64(), 0.1, 41, function( this, n )
-				if IsValid( self ) and IsValid( self.Owner ) then
+				if IsValid( self ) and self:CheckOwner() then
 					if n == 1 or n == 30 then
 						//self:EmitSound( "SCP106.Teleport" )
 						TransmitSound( self.Teleport, true, point, 750 )
@@ -194,7 +215,7 @@ function SWEP:TeleportSequence( point )
 					self.Owner:SetPos( point - Vector( 0, 0, 82 - 2 * n ) )
 				end
 			end, function()
-				if IsValid( self ) and IsValid( self.Owner ) then
+				if IsValid( self ) and self:CheckOwner() then
 					self.Owner:SetPos( point )
 					self.Owner:Freeze( false )
 
@@ -209,8 +230,8 @@ function SWEP:TeleportSequence( point )
 	end )
 end
 
-function SWEP:DrawHUD()
-	if hud_disabled or HUDDrawInfo or ROUND.preparing then return end
+function SWEP:DrawSCPHUD()
+	//if hud_disabled or HUDDrawInfo or ROUND.preparing then return end
 
 	local txt, color
 	if self.NextTP > CurTime() then
@@ -229,6 +250,56 @@ function SWEP:DrawHUD()
 		xalign = TEXT_ALIGN_CENTER,
 		yalign = TEXT_ALIGN_CENTER,
 	}
+end
+
+--[[-------------------------------------------------------------------------
+106 Collision
+---------------------------------------------------------------------------]]
+if SERVER then --TODO: do shared version
+	hook.Add( "ShouldCollide", "SCP106Collision", function ( ent1, ent2 )
+		if ent1:IsPlayer() and ent1:SCPClass() == CLASSES.SCP106 or ent2:IsPlayer() and ent2:SCPClass() == CLASSES.SCP106 then
+			if ent1.ignorecollide106 or ent2.ignorecollide106 then
+				return false
+			end
+		end
+	end )
+
+	local function Setup106Collision()
+		for k, v in pairs( ents.GetAll() ) do
+			if v and v:GetClass() == "func_door" or v:GetClass() == "prop_dynamic" then
+				if v:GetClass() == "prop_dynamic" then
+					local ennt = ents.FindInSphere( v:GetPos(), 5 )
+					local neardors = false
+					for k, v in pairs( ennt ) do
+						if v:GetClass() == "func_door" then
+							neardors = true
+							break
+						end
+					end
+					if !neardors then 
+						v.ignorecollide106 = false
+						continue
+					end
+				end
+
+				local changed
+				for _, pos in pairs( DOOR_RESTRICT106 ) do
+					if v:GetPos():Distance( pos ) < 100 then
+						v.ignorecollide106 = false
+						changed = true
+						break
+					end
+				end
+				
+				if !changed then
+					v.ignorecollide106 = true
+				end
+			end
+		end
+	end
+
+	hook.Add( "PostCleanupMap", "SCP106Collision", Setup106Collision )
+	timer.Simple( 0, Setup106Collision )
 end
 
 game.AddDecal( "Decal106", "decals/decal106" )
@@ -290,8 +361,8 @@ DefineUpgradeSystem( "scp106", {
 } )
 
 function SWEP:OnUpgradeBought( name, info, group )
-	if SERVER and IsValid( self.Owner ) then
-		self.Owner:PushSpeed( 0.9, 0.9, -1 )
+	if SERVER and self:CheckOwner() then
+		self.Owner:PushSpeed( 0.9, 0.9, -1, "SLC_SCP106" )
 	end
 end
 

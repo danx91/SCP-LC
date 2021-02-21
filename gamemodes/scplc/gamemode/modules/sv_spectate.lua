@@ -6,7 +6,8 @@ function ply:SetupSpectator()
 
 	self:CrosshairEnable()
 
-	local plys = SCPTeams.getPlayersByInfo( SCPTeams.INFO_HUMAN )
+	//local plys = SCPTeams.getPlayersByInfo( SCPTeams.INFO_HUMAN )
+	local plys = self:GetValidSpectateTargets()
 
 	if #plys < 1 then
 		self:UnSpectate()
@@ -20,8 +21,10 @@ end
 
 function ply:SpectatePlayerNext()
 	if self:SCPTeam() != TEAM_SPEC then return end
+	if self.DeathScreen or self.SetupAsSpectator then return end
 
-	local plys = SCPTeams.getPlayersByInfo( SCPTeams.INFO_HUMAN )
+	//local plys = SCPTeams.getPlayersByInfo( SCPTeams.INFO_HUMAN )
+	local plys = self:GetValidSpectateTargets()
 	if self:GetObserverMode() == OBS_MODE_ROAMING then
 		if #plys > 0 then
 			self:Spectate( OBS_MODE_CHASE )
@@ -67,8 +70,10 @@ end
 
 function ply:SpectatePlayerPrev()
 	if self:SCPTeam() != TEAM_SPEC then return end
+	if self.DeathScreen or self.SetupAsSpectator then return end
 
-	local plys = SCPTeams.getPlayersByInfo( SCPTeams.INFO_HUMAN )
+	//local plys = SCPTeams.getPlayersByInfo( SCPTeams.INFO_HUMAN )
+	local plys = self:GetValidSpectateTargets()
 
 	if self:GetObserverMode() == OBS_MODE_ROAMING then
 		if #plys > 0 then
@@ -114,9 +119,13 @@ function ply:SpectatePlayerPrev()
 end
 
 function ply:ChangeSpectateMode()
+	if self:SCPTeam() != TEAM_SPEC then return end
+	if self.DeathScreen or self.SetupAsSpectator then return end
+	
 	local cur_mode = self:GetObserverMode()
 
-	if #SCPTeams.getPlayersByInfo( SCPTeams.INFO_HUMAN ) < 1 then
+	//if #SCPTeams.getPlayersByInfo( SCPTeams.INFO_HUMAN ) < 1 then
+	if #self:GetValidSpectateTargets() < 1 then
 		if cur_mode != OBS_MODE_ROAMING then
 			--print( "SpecMode - foce roam", self )
 			self:UnSpectate()
@@ -138,8 +147,19 @@ function ply:ChangeSpectateMode()
 	--print( "change spec mode", self )
 end
 
+function ply:GetValidSpectateTargets()
+	local info = SCPTeams.INFO_HUMAN
+
+	if CVAR.spectatescp:GetBool() == true or hook.Run( "SLCCanSpectateSCP", self ) == true then
+		info = SCPTeams.INFO_ALIVE
+	end
+
+	return SCPTeams.getPlayersByInfo( info )
+end
+
 function ply:InvalidatePlayerForSpectate()
-	local roam = #SCPTeams.getPlayersByInfo( SCPTeams.INFO_HUMAN ) < 1
+	//local roam = #SCPTeams.getPlayersByInfo( SCPTeams.INFO_HUMAN ) < 1
+	local roam = #self:GetValidSpectateTargets() < 1
 	--print( "ivalidate", self, roam )
 
 	for k, v in pairs( SCPTeams.getPlayersByTeam( TEAM_SPEC ) ) do

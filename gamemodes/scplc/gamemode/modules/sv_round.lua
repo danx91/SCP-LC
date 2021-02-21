@@ -2,9 +2,11 @@ ROUND = ROUND or {
 	preparing = false,
 	post = false,
 	active = false,
-	timers = {},
+	aftermatch = false,
+	timers = setmetatable( {}, { __mode = "v" } ),
 	stats = {},
 	queue = {},
+	properties = {},
 	freeze = false,
 }
 
@@ -34,9 +36,6 @@ function SetupSupportTimer()
 	end )
 end
 
---[[-------------------------------------------------------------------------
-Local util functions
----------------------------------------------------------------------------]]
 function AddTimer( name, time, rep, func )
 	local t = Timer( name, time, rep, func )
 	table.insert( ROUND.timers, t )
@@ -44,6 +43,20 @@ function AddTimer( name, time, rep, func )
 	return t
 end
 
+function SetRoundProperty( key, value )
+	if !ROUND.active then return end
+
+	ROUND.properties[key] = value
+end
+
+function GetRoundProperty( key )
+	if !ROUND.active then return end
+
+	return ROUND.properties[key]
+end
+--[[-------------------------------------------------------------------------
+Local util functions
+---------------------------------------------------------------------------]]
 local function UpdateRoundType()
 	ROUND.roundtype = ROUNDS.normal
 end
@@ -58,7 +71,7 @@ end
 local function CleanupPlayers()
 	for k, v in pairs( player.GetAll() ) do
 		v.PlayerData:RoundReset()
-		v.Logger:Reset()
+		v.Logger:Reset( true )
 		v:Cleanup()
 	end
 end
@@ -67,8 +80,11 @@ local function ResetEvents()
 	ROUND.active = true
 	ROUND.post = false
 	ROUND.preparing = false
+	ROUND.aftermatch = false
 	ROUND.freeze = false
 	ROUND.roundtype = ROUNDS.dull
+
+	ROUND.properties = {}
 
 	//ROUND.queue = {}
 	ClearQueue()
@@ -77,6 +93,44 @@ end
 --[[-------------------------------------------------------------------------
 Core functions
 ---------------------------------------------------------------------------]]
+function FinishRoundInternal( winner, endcheck )
+	print( "Round end, starting postround..." )
+
+	if winner == nil then
+		winner = ROUND.roundtype:getwinner()
+
+		if winner == nil then
+			winner = false
+		end
+	end
+
+	ROUND.post = true
+	ROUND.roundtype:postround( winner )
+
+	print( "Destroying timers!" )
+	DestroyTimers()
+
+	if IsValid( endckeck ) then
+		endcheck:Destroy()
+	end
+	
+	hook.Run( "SLCPostround", winner )
+
+	local post = CVAR.posttime:GetInt()
+
+	net.Start( "RoundInfo" )
+		net.WriteTable{
+			status = "post",
+			time = CurTime() + post,
+		}
+	net.Broadcast()
+
+	AddTimer( "SLCPostround", post, 1, function( self, n )
+		ROUND.post = false
+		RestartRound()
+	end )
+end
+
 function RestartRound()
 	assert( MAP_LOADED, "Map config is not loaded and game will not start! Change map to supported one in order to play this gamemode!" )
 
@@ -94,6 +148,8 @@ function RestartRound()
 
 	game.CleanUpMap()
 	print( "Map cleaned!" )
+
+	hook.Run( "SLCRoundCleanup" )
 	print( "Everything is ready!" )
 
 	if #GetActivePlayers() < CVAR.minplayers:GetInt() then
@@ -106,6 +162,12 @@ function RestartRound()
 			v:SetupSpectator()
 		end
 
+		net.Start( "RoundInfo" )
+			net.WriteTable{
+				status = "off",
+			}
+		net.Broadcast()
+
 		return
 	end
 
@@ -115,75 +177,58 @@ function RestartRound()
 	ROUND.roundtype:init()
 
 	ROUND.preparing = true
-	hook.Run( "SLCPreround" )
 
 	local prep = CVAR.pretime:GetInt()
 
 	net.Start( "RoundInfo" )
 		net.WriteTable{
 			status = "pre",
-			time = CurTime() + prep,
+			time = CurTime() + prep + INFO_SCREEN_DURATION,
 			name = ROUND.roundtype.name,
 		}
 	net.Broadcast()
 
-	AddTimer( "SLCPreround", prep, 1, function( self, n )
-		print( "Preparing end, starting round..." )
-		ROUND.preparing = false
-		ROUND.roundtype:roundstart()
+	AddTimer( "SLCSetup", INFO_SCREEN_DURATION, 1, function( self, n )
+		hook.Run( "SLCPreround" )
 
-		hook.Run( "SLCRound" )
+		AddTimer( "SLCPreround", prep, 1, function( self, n )
+			print( "Preparing end, starting round..." )
+			ROUND.preparing = false
+			ROUND.roundtype:roundstart()
 
-		local endcheck = AddTimer( "SLCRoundEndCheck", 10, 0, CheckRoundEnd )
-		local round = CVAR.roundtime:GetInt()
+			hook.Run( "SLCRound" )
 
-		net.Start( "RoundInfo" )
-			net.WriteTable{
-				status = "live",
-				time = CurTime() + round,
-			}
-		net.Broadcast()
-
-		AddTimer( "SLCRound", round, 1, function( self, n, winner )
-			print( "Round end, starting postround..." )
-
-			if !winner then
-				winner = ROUND.roundtype:getwinner()
-			end
-
-			ROUND.post = true
-			ROUND.roundtype:postround( winner )
-
-			print( "Destroying timers!" )
-			DestroyTimers()
-
-			endcheck:Destroy()
-			hook.Run( "SLCPostround", winner )
-
-			local post = CVAR.posttime:GetInt()
+			local endcheck = AddTimer( "SLCRoundEndCheck", 10, 0, CheckRoundEnd )
+			local round = CVAR.roundtime:GetInt()
 
 			net.Start( "RoundInfo" )
 				net.WriteTable{
-					status = "post",
-					time = CurTime() + post,
+					status = "live",
+					time = CurTime() + round,
 				}
 			net.Broadcast()
 
-			AddTimer( "SLCPostround", post, 1, function( self, n )
-				ROUND.post = false
-				RestartRound()
+			AddTimer( "SLCRound", round, 1, function( self, n, winner )
+				if winner != nil or ESCAPE_STATUS == 0 then
+					FinishRoundInternal( winner, endcheck )
+				else
+					StartAftermatch( endcheck )
+				end
 			end )
 		end )
 	end )
 end
 
-local function interruptRound( winner )
-	local t = GetTimer( "SLCRound" )
-
+function InterruptRound( winner )
 	if winner == nil then
-		winner = false
+		winner = ROUND.roundtype:getwinner()
+
+		if winner == nil then
+			winner = false
+		end
 	end
 
+	local t = GetTimer( "SLCRound" )
 	if t then
 		print( "Interrupring round..." )
 
@@ -204,10 +249,8 @@ end
 function CheckRoundEnd()
 	if !ROUND.active or ROUND.post or ROUND.freeze then return end
 
-	local winner = ROUND.roundtype:endcheck()
-
-	if winner then
-		interruptRound( winner )
+	if ROUND.roundtype:endcheck() then
+		InterruptRound()
 	end
 end
 
@@ -216,12 +259,19 @@ function CheckRoundStart()
 	if !ROUND.active and #GetActivePlayers() >= CVAR.minplayers:GetInt() then
 		if !abouttostart then
 			abouttostart = true
-			PlayerMessage( "abouttostart" )
 
-			timer.Simple( 10, function()
+			local time = CVAR.waittime:GetInt()
+			PlayerMessage( "abouttostart$"..time )
+
+			timer.Simple( time, function()
 				abouttostart = false
 
 				if !ROUND.active then
+					if #GetActivePlayers() < CVAR.minplayers:GetInt() then
+						MsgC( Color( 255, 50, 50 ), "Round start terminated due to not enough players!" )
+						return
+					end
+
 					RestartRound()
 				end
 			end )
@@ -232,8 +282,6 @@ end
 cvars.AddChangeCallback( CVAR.minplayers:GetName(), function()
 	CheckRoundStart()
 end, "CheckRoundStart" )
-
-
 --[[-------------------------------------------------------------------------
 GM hooks
 ---------------------------------------------------------------------------]]
@@ -264,16 +312,16 @@ function GM:SLCPostround( winner )
 
 	local specialinfo
 
-	if winner and winner != true then
+	if /*winner and*/ winner != true then
 		local sb = StringBuilder()
 
 		local mvp, points = GetRoundMVP()
 		if mvp then
-			sb:append( ";mvp$", mvp:Nick(), ",", points )
+			sb:append( ";mvp$", EscapeMessage( mvp:Nick() ), ",", points )
 		end
 
 		for i, v in ipairs( GetRoundSummary() ) do
-			if !v or v == true then
+			if !v[2] or v[2] == true then
 				sb:append( ";stat_", v[1] )
 			else
 				sb:append( ";stat_", v[1], "$", v[2] )
@@ -287,10 +335,10 @@ function GM:SLCPostround( winner )
 
 	if !winner then
 		print( "Round has ended! Nobody wins" )
-		CenterMessage( "time:"..time..";roundend#255,0,0,SCPHUDVBig;nowinner" )
+		CenterMessage( "time:"..time..";offset:75;roundend#255,0,0,SCPHUDVBig;nowinner"..specialinfo )
 	elseif winner == true then
 		print( "Round has ended due to not enough players!" )
-		CenterMessage( "time:"..time..";roundend#255,0,0,SCPHUDVBig;roundnep" )
+		CenterMessage( "time:"..time..";offset:75;roundend#255,0,0,SCPHUDVBig;roundnep" )
 	elseif istable( winner ) then
 		local txt = ""
 		local raw = ""
@@ -310,7 +358,7 @@ function GM:SLCPostround( winner )
 
 		print( "Round has ended! Winners: "..show )
 
-		local msg = "time:"..time..";roundend#255,0,0,SCPHUDVBig;roundwinmulti$"..txt..",raw:"..raw
+		local msg = "time:"..time..";offset:75;roundend#255,0,0,SCPHUDVBig;roundwinmulti$"..txt..",raw:"..raw
 
 		if specialinfo and specialinfo != "" then
 			msg = msg..specialinfo
@@ -322,7 +370,7 @@ function GM:SLCPostround( winner )
 
 		print( "Round has ended! Winner: "..name )
 
-		local msg = "time:"..time..";roundend#255,0,0,SCPHUDVBig;roundwin$@TEAMS."..name
+		local msg = "time:"..time..";offset:75;roundend#255,0,0,SCPHUDVBig;roundwin$@TEAMS."..name
 
 		if specialinfo and specialinfo != "" then
 			msg = msg..specialinfo
@@ -333,8 +381,12 @@ function GM:SLCPostround( winner )
 
 	local wintab
 
-	if winner and winner != true and !istable( winner ) then
-		wintab = { winner }
+	if winner and winner != true then
+		if istable( winner ) then
+			wintab = winner
+		else
+			wintab = { winner }
+		end
 	end
 
 	local pxp = CVAR.pointsxp:GetInt()
@@ -355,15 +407,26 @@ function GM:SLCPostround( winner )
 		end
 
 		if wintab then
+			local rewarded = false
+
+			local vteam = v:SCPTeam()
 			for _, t in pairs( wintab ) do
-				if v:SCPTeam() == t then
+				if vteam == t then
 					v:AddXP( alivexp )
 					PlayerMessage( "winalivexp$"..alivexp, v )
+					rewarded = true
 					break
-				elseif v:GetInitialTeam() == t then
-					v:AddXP( winxp )
-					PlayerMessage( "winxp$"..winxp, v )
-					break
+				end
+			end
+
+			if !rewarded then
+				local viteam = v:GetInitialTeam()
+				for _, t in pairs( wintab ) do
+					if viteam == t then
+						v:AddXP( winxp )
+						PlayerMessage( "winxp$"..winxp, v )
+						break
+					end
 				end
 			end
 		end

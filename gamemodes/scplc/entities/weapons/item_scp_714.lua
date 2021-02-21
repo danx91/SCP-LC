@@ -9,6 +9,7 @@ SWEP.SelectFont = "SCPHUDMedium"
 
 SWEP.Toggleable = true
 SWEP.Selectable = false
+SWEP.EnableHolsterThink = true
 
 function SWEP:Initialize()
 	self:SetHoldType( self.HoldType )
@@ -16,13 +17,15 @@ function SWEP:Initialize()
 end
 
 SWEP.NThink = 0
-function SWEP:Think()
+function SWEP:HolsterThink()
 	if self.NThink < CurTime() and self:GetEnabled() then
-		self.NThink = CurTime() + 3
+		self.NThink = CurTime() + 5
 
-		local owner = self:GetOwner()
-		if IsValid( owner ) then
-			owner:TakeSanity( -1, SANITY_TYPE.ANOMALY )
+		if SERVER then
+			local owner = self:GetOwner()
+			if IsValid( owner ) then
+				owner:TakeSanity( -1, SANITY_TYPE.ANOMALY, "scp714" )
+			end
 		end
 	end
 end
@@ -52,24 +55,41 @@ function SWEP:OnSelect()
 end
 
 function SWEP:StateChanged( ply, enabled )
-	ply:SetSCP714( enabled )
+	if SERVER then
+		ply:SetSCP714( enabled )
 
-	if enabled then
-		ply:SetStaminaLimit( 20 )
-	else
-		ply:SetStaminaLimit( 100 )
+		if enabled then
+			ply:SetStaminaLimit( 51 )
+		else
+			ply:SetStaminaLimit( 100 )
+		end
 	end
 end
 
 if SERVER then
-	local func = function( ply )
-		local scp = ply:GetWeapon( "item_scp_714" )
+	local func = function( ply, arg1, arg2, data )
+		if data != "scp714" then
+			local scp = ply:GetWeapon( "item_scp_714" )
 
-		if IsValid( scp ) and scp:GetEnabled() then
-			return true
+			if IsValid( scp ) and scp:GetEnabled() then
+				return true
+			end
 		end
 	end
 
 	hook.Add( "SLCCalcSanity", "SLCSCP714Sanity", func )
 	hook.Add( "SLCPlayerSanityChange", "SLCSCP714Sanity", func )
+end
+
+if CLIENT then
+	local ply = FindMetaTable( "Player" )
+
+	function ply:GetSCP714() --for clientside usage purpose
+		local scp = self:GetWeapon( "item_scp_714" )
+		if IsValid( scp ) then
+			return scp:GetEnabled()
+		end
+
+		return false
+	end
 end

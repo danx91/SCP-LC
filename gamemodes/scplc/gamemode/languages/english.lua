@@ -16,11 +16,8 @@ lang.NRegistry = {
 	kill = "You received %d points for killing %s: %s!",
 	assist = "You received %d points for assisting in kill of player: %s!",
 	rdm = "You lost %d points for killing %s: %s!",
-	//acc_nocard = "A keycard is required to operate this door",
-	//acc_wrongcard = "A keycard with higher clearence level is required to operate this door",
 	acc_denied = "Access denied",
 	acc_granted = "Access granted",
-	//device_nocard = "A keycard is required to operate this device",
 	acc_omnitool = "An Omnitool is required to operate this door",
 	device_noomni = "An Omnitool is required to operate this device",
 	elevator_noomni = "An Omnitool is required to operate this elevator",
@@ -158,9 +155,9 @@ lang.preview = "Preview"
 lang.random = "Random"
 lang.price = "Price"
 lang.buy = "Buy"
-lang.refound = "Refound"
+lang.refound = "Refund"
 lang.none = "None"
-lang.refounded = "All removed classes has been refounded. You've recived %d prestige points."
+lang.refounded = "All removed classes has been refunded. You've recived %d prestige points."
 
 lang.details = {
 	details = "Details",
@@ -243,10 +240,10 @@ lang.info_screen = {
 }
 
 lang.info_screen_registry = {
-	escape_time = "Escaped in %s minutes",
-	escape_xp = "You received %s expereince",
+	escape_time = "You escaped in %s minutes",
+	escape_xp = "You received %s experience",
 	escape1 = "You escaped from facility",
-	escape2 = "You escaped during Alpha countdown",
+	escape2 = "You escaped during warhead countdown",
 	escape3 = "You survived in blast shelter",
 	escorted = "You have been escorted",
 	killed_by = "You have been killed by: %s",
@@ -286,7 +283,7 @@ lang.MISC = misc
 
 misc.content_checker = {
 	title = "Gamemode Content",
-	msg = [[It looks like you don't have some addons. It may cause errors like missing content (textures/models/sounds) and may break your gameplay expereince.
+	msg = [[It looks like you don't have some addons. It may cause errors like missing content (textures/models/sounds) and may break your gameplay experience.
 You don't have %i addons out of %i. Would you like to download it now? (you can either download it through game or do it manually on workshop page)]],
 	no = "No",
 	download = "Download now",
@@ -302,14 +299,14 @@ misc.omega_warhead = {
 	waiting = "OMEGA Warhead is idle\n\nInput accepted!\nWaiting for second input...",
 	failed = "OMEGA Warhead is locked\n\nNo second input detected!\nWait %is",
 	no_remote = "OMEGA Warhead failed\n\nFailed to establish connection to warhead!\t",
-	active = "OMEGA Warhead is engaged\n\nPreceed to evacuation immediately!\nDetonation in %.2fs",
+	active = "OMEGA Warhead is engaged\n\nProceed to evacuation immediately!\nDetonation in %.2fs",
 }
 
 misc.alpha_warhead = {
 	idle = "ALPHA Warhead is idle\n\nWaiting for nuclear codes...",
 	ready = "ALPHA Warhead is idle\n\nCodes accepted!\nWaiting for activation...",
 	no_remote = "ALPHA Warhead failed\n\nFailed to establish connection to warhead!\t",
-	active = "ALPHA Warhead is engaged\n\nPreceed to evacuation immediately!\nDetonation in %.2fs",
+	active = "ALPHA Warhead is engaged\n\nProceed to evacuation immediately!\nDetonation in %.2fs",
 }
 
 --[[-------------------------------------------------------------------------
@@ -320,7 +317,7 @@ lang.VEST = vest
 
 vest.guard = "Security Guard Vest"
 vest.heavyguard = "Heavy Guard Vest"
-vest.specguard = "Special Guard Vest"
+vest.specguard = "Specialist Guard Vest"
 vest.guard_medic = "Medic Guard Vest"
 vest.ntf = "MTF NTF Vest"
 vest.mtf_medic = "MTF NTF Medic Vest"
@@ -405,8 +402,9 @@ classes.ci = "Chaos Insurgency"
 classes.cicom = "Chaos Insurgency Commander"
 
 --[[-------------------------------------------------------------------------
-Class Info - NOTE: Each line is limited to 45 characters!
-Screen is designed to hold max of 4 lines of text and THERE IS NO internal protection!
+Class Info - NOTE: Each line is limited to 48 characters!
+Screen is designed to hold max of 5 lines of text and THERE IS NO internal protection!
+Note that last (5th) line should be shorter to prevent text overlaping (about 38 characters)
 ---------------------------------------------------------------------------]]
 local generic_classd = [[- Escape from the facility
 - Avoid staff and SCP objects
@@ -514,6 +512,8 @@ lang.CLASS_OBJECTIVES = {
 	SCP049 = [[- Escape from the facility
 - Cooperate with other SCPs
 - Cure people]],
+
+	SCP0492 = [[]],
 
 	SCP023 = generic_scp,
 
@@ -770,9 +770,9 @@ Hight utility class. Starts with one random item. Cooperate with others to face 
 Toughness: Very High
 Agility: High
 Combat potential: Normal
-Can escape: Yes
-Can escort: None
-Escorted by: CI
+Can escape: No
+Can escort: Class D
+Escorted by: None
 
 Overview:
 Armed with taser CI unit. Provide help to Class D and cooperate with them. You can escort Class D memebers.
@@ -847,7 +847,7 @@ Can escort: Scientists
 Escorted by: None
 
 Overview:
-One of the guards. High utility, no armor and lower helth. Utilize your weapon and tools to help other staff members and to kill SCPs and Class D. You can escort Scientists.
+One of the guards. High utility, no armor and lower health. Utilize your weapon and tools to help other staff members and to kill SCPs and Class D. You can escort Scientists.
 ]],
 
 	heavyguard = [[Difficulty: Medium
@@ -859,7 +859,7 @@ Can escort: Scientists
 Escorted by: None
 
 Overview:
-One of the guards. Lower utility, better armor and higher helth. Utilize your weapon and tools to help other staff members and to kill SCPs and Class D. You can escort Scientists.
+One of the guards. Lower utility, better armor and higher health. Utilize your weapon and tools to help other staff members and to kill SCPs and Class D. You can escort Scientists.
 ]],
 
 	specguard = [[Difficulty: Hard
@@ -871,7 +871,7 @@ Can escort: Scientists
 Escorted by: None
 
 Overview:
-One of the guards. Not so high utility, higher helth and strong combat potential. Utilize your weapon and tools to help other staff members and to kill SCPs and Class D. You can escort Scientists.
+One of the guards. Not so high utility, higher health and strong combat potential. Utilize your weapon and tools to help other staff members and to kill SCPs and Class D. You can escort Scientists.
 ]],
 
 	chief = [[Difficulty: Easy
@@ -1062,7 +1062,7 @@ Attack player 3 times to kill them. You can create zombies out of bodies (reload
 
 	SCP0492 = [[]],
 
-	SCP066 = [[Difficulty: Normal
+	SCP066 = [[Difficulty: Medium
 Toughness: High
 Agility: Normal
 Damage: Low / AoE
@@ -1113,7 +1113,7 @@ Agility: Normal
 Damage: High
 
 Overview:
-Extremely tough  and deadly. Use special ability to gain damage immunity for short period of time.
+Extremely tough and deadly. Use special ability to gain damage immunity for short period of time.
 ]],
 
 	SCP8602 = [[Difficulty: Medium
@@ -1144,9 +1144,9 @@ You are invisible. Your attacks always inflict bleeding.
 ]],
 
 	SCP24273 = [[Difficulty: Hard
-Toughness: Medium
-Agility: Medium
-Damage: High / Instant death in Mind Control
+Toughness: Normal
+Agility: Normal
+Damage: High / Instant death during Mind Control
 
 Overview:
 You can dash forward to deal damage to first hit player. Special ability allows you to control other player for a short time. Bringing controlled player to you, will allow you to kill him instantly. Commiting suicide while controlling player will cause health loss.
@@ -1158,7 +1158,7 @@ Agility: Very High
 Damage: Low / Medium
 
 Overview:
-Attacking the player grants you frenzy and inflicts deep wounds. While in fenzy, you move slightly faster and you can see location of nearby players. Missing an attack or attacking a player who already has deep wounds, stops frenzy and applies penalty. Having at least 5 frenzy tokens allows you to use special attack. Special attack kills player after short preparation.
+Attacking the player grants you frenzy and inflicts deep wounds. While in frenzy, you move slightly faster and you can see location of nearby players. Missing an attack or attacking a player who already has deep wounds, stops frenzy and applies penalty. Having at least 5 frenzy tokens allows you to use special attack. Special attack kills player after short preparation.
 ]],
 }
 
@@ -1217,7 +1217,7 @@ wep.SCP023 = {
 		},
 		alt = {
 			name = "Alpha male III",
-			info = "Yor attack cooldown is reduced by 30 seconds and you gain 15% bullet protection, but you can no longer use your trap\n\t• Total protection: 40%",
+			info = "Your attack cooldown is reduced by 30 seconds and you gain 15% bullet protection, but you can no longer use your trap\n\t• Total protection: 40%",
 		},
 	}
 }
@@ -1240,7 +1240,7 @@ wep.SCP049 = {
 			info = "Recover 300HP every 180 seconds",
 		},
 		merci = {
-			name = "Act of Merci",
+			name = "Act of Mercy",
 			info = "Primary attack cooldown is reduced by 2.5 seconds\nYou no longer apply the 'Door Lock' effect to nearby humans",
 		},
 		symbiosis1 = {
@@ -1249,11 +1249,11 @@ wep.SCP049 = {
 		},
 		symbiosis2 = {
 			name = "Symbiosis II",
-			info = "After performing surgery, you are healed by 15% of your maximum health\nNearby SCP 049-2 instances are healed by 10% of their maximum helath",
+			info = "After performing surgery, you are healed by 15% of your maximum health\nNearby SCP 049-2 instances are healed by 10% of their maximum health",
 		},
 		symbiosis3 = {
 			name = "Symbiosis III",
-			info = "After performing surgery, you are healed by 20% of your maximum health\nNearby SCP 049-2 instances are healed by 20% of their maximum helath",
+			info = "After performing surgery, you are healed by 20% of your maximum health\nNearby SCP 049-2 instances are healed by 20% of their maximum health",
 		},
 		hidden = {
 			name = "Hidden Potential",
@@ -1261,7 +1261,7 @@ wep.SCP049 = {
 		},
 		trans = {
 			name = "Transfusion",
-			info = "You zombies have their HP increased by 15%\nYou zombies gain 20% of life steal\n\t• This ability only affects newly created zombies",
+			info = "Your zombies have their HP increased by 15%\nYour zombies gain 20% of life steal\n\t• This ability only affects newly created zombies",
 		},
 		rm = {
 			name = "Radical Therapy",
@@ -1340,19 +1340,19 @@ wep.SCP096 = {
 		},
 		sregen2 = {
 			name = "Calm Spirit II",
-			info = "Your regenration charges heal you for 6 HP instead of 5 HP"
+			info = "Your regeneration charges heal you for 6 HP instead of 5 HP"
 		},
 		sregen3 = {
 			name = "Calm Spirit III",
-			info = "Your regenration rate is 66% faster"
+			info = "Your regeneration rate is 66% faster"
 		},
 		kregen1 = {
 			name = "Hannibal I",
-			info = "You regenerate additional 90 HP fo successful kill"
+			info = "You regenerate additional 90 HP for successful kill"
 		},
 		kregen2 = {
 			name = "Hannibal II",
-			info = "You regenerate additional 90 HP fo successful kill\n\t• Total heal increase: 180HP"
+			info = "You regenerate additional 90 HP for successful kill\n\t• Total heal increase: 180HP"
 		},
 		hunt1 = {
 			name = "Shy I",
@@ -1364,7 +1364,7 @@ wep.SCP096 = {
 		},
 		hp = {
 			name = "Goliath",
-			info = "Your maximum healt is increased to 4000 HP\n\t• Your current health is not increased"
+			info = "Your maximum health is increased to 4000 HP\n\t• Your current health is not increased"
 		},
 		def = {
 			name = "Persistent",
@@ -1569,7 +1569,7 @@ wep.SCP8602 = {
 		},
 		charge31 = {
 			name = "Shared Pain",
-			info = "When you perform strong attack, everyone nerby impact point will receive 20% of the original damage"
+			info = "When you perform strong attack, everyone nearby impact point will receive 20% of the original damage"
 		},
 	}
 }
@@ -1590,7 +1590,7 @@ wep.SCP939 = {
 		},
 		amn1 = {
 			name = "Lethal Breath I",
-			info = "Your posion radius is increased to 100"
+			info = "Your poison radius is increased to 100"
 		},
 		amn2 = {
 			name = "Lethal Breath II",
@@ -1598,7 +1598,7 @@ wep.SCP939 = {
 		},
 		amn3 = {
 			name = "Lethal Breath III",
-			info = "Your posion radius is increased to 125 and your poison damage is increased to 3 dmg/s"
+			info = "Your poison radius is increased to 125 and your poison damage is increased to 3 dmg/s"
 		},
 	}
 }
@@ -1645,21 +1645,21 @@ wep.SCP966 = {
 }
 
 wep.SCP24273 = {
-	mind_control = "Mind Cotntrol is ready! Press RMB",
+	mind_control = "Mind Control is ready! Press RMB",
 	mind_control_cd = "Mind Control is on cooldown! Wait: %is",
 	dash = "Attack is ready!",
 	dash_cd = "Attack is on cooldown! Wait: %is",
 	upgrades = {
 		dash1 = {
-			name = "Ruthles Charge I",
+			name = "Ruthless Charge I",
 			info = "Your attack cooldown is reduced by 1 second and its power is increased by 15%"
 		},
 		dash2 = {
-			name = "Ruthles Charge II",
-			info = "Penalty time after attack is reduced by 1 second and speed prnalty is reduced from 40% to 25%"
+			name = "Ruthless Charge II",
+			info = "Penalty time after attack is reduced by 1 second and speed penalty is reduced from 40% to 25%"
 		},
 		dash3 = {
-			name = "Ruthles Charge III",
+			name = "Ruthless Charge III",
 			info = "Your attack damage is increased by 50"
 		},
 		mc11 = {
@@ -1698,11 +1698,11 @@ wep.SCP3199 = {
 	upgrades = {
 		regen1 = {
 			name = "Taste of Blood I",
-			info = "Regenrate 2 HP per second while in Frenzy"
+			info = "Regenerate 2 HP per second while in Frenzy"
 		},
 		regen2 = {
 			name = "Taste of Blood II",
-			info = "Health regenration ratio is increased by 10% for each Frenzy token"
+			info = "Health regeneration ratio is increased by 10% for each Frenzy token"
 		},
 		frenzy1 = {
 			name = "Hunter's Game I",
@@ -1725,7 +1725,7 @@ wep.SCP3199 = {
 			info = "One of inactive eggs will be activated once this upgrade is bought\n\t• This won't have effect is there is no inactive egg on map"
 		},
 		egg3 = {
-			name = "Ester Egg",
+			name = "Easter Egg",
 			info = "Your respawn time is decreased to 20 seconds"
 		},
 	}

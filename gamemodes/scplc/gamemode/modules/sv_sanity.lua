@@ -58,10 +58,10 @@ end
 
 local ply = FindMetaTable( "Player" )
 
-function ply:TakeSanity( num, sanitytype )
+function ply:TakeSanity( num, sanitytype, data )
 	if !SCPTeams.hasInfo( self:SCPTeam(), SCPTeams.INFO_HUMAN ) then return end
 
-	local new = hook.Run( "SLCPlayerSanityChange", self, sanitytype, num )
+	local new = hook.Run( "SLCPlayerSanityChange", self, sanitytype, num, data )
 
 	if new == true then
 		return
@@ -79,8 +79,14 @@ function ply:TakeSanity( num, sanitytype )
 	self:AddSanity( -math.ceil( num ) )
 end
 
+local suppress = false
 local fov = 53 -- = math.deg( math.atan( math.tan( math.rad( ply:GetFOV() ) / 2 ) * ( 16 / 9 ) / ( 4 / 3 ) ) ) // player fov is almost always 90
 function SanityEvent( amount, sanitytype, origin, distance, inflictor, victim )
+	if suppress then
+		suppress = false
+		return
+	end
+
 	local tab = {}
 
 	for k, v in pairs( FindInCylinder( origin, distance, -1000, 1000, nil, MASK_SOLID_BRUSHONLY, SCPTeams.getPlayersByInfo( SCPTeams.INFO_HUMAN ) ) ) do
@@ -88,11 +94,11 @@ function SanityEvent( amount, sanitytype, origin, distance, inflictor, victim )
 		local eang = v:EyeAngles().yaw
 		local tang = (pos - origin):Angle().yaw
 
-		if eang < 180 then eang = 360 + eang end
-		if tang < 180 then tang = 360 + tang end
+		if eang < 0 then eang = 360 + eang end
+		if tang < 0 then tang = 360 + tang end
 
 		local diff = eang - tang
-		if diff < 180 then diff = 360 + diff end
+		if diff < 0 then diff = 360 + diff end
 
 		if math.abs( diff - 180 ) < fov then
 			table.insert( tab, { ply = v, amount = amount, sanitytype = sanitytype } )
@@ -111,6 +117,14 @@ function SanityEvent( amount, sanitytype, origin, distance, inflictor, victim )
 			v.ply:TakeSanity( v.amount, v.sanitytype )
 		end
 	end
+end
+
+function SuppressNextSanityEvent()
+	suppress = true
+end
+
+function UnsuppressSanityEvent()
+	suppress = false
 end
 
 AddSanityType( "DEATH", function( data, inflictor, victim )
@@ -134,7 +148,7 @@ AddSanityType( "KILL" )
 AddSanityType( "ANOMALY" )
 
 SCPTeams.addInfo( TEAM_CLASSD, SCPTeams.INFO_SANITY_VULNERABLE_TO_ANOMALY )
-SCPTeams.addInfo( TEAM_SCIENT, SCPTeams.INFO_SANITY_VULNERABLE_TO_KILL )
+SCPTeams.addInfo( TEAM_SCI, SCPTeams.INFO_SANITY_VULNERABLE_TO_KILL )
 
 //print( SANITY_TYPE.DEATH, SANITY_TYPE.KILL, SANITY_TYPE.ANOMALY )
 

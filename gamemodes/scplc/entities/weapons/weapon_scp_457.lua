@@ -30,7 +30,8 @@ function SWEP:Think()
 			local rad = 125 + ( self:GetUpgradeMod( "firerad" ) or 0 )
 			local dmg = 2 + ( self:GetUpgradeMod( "firedmg" ) or 0 )
 
-			self.Owner:Burn( -3, rad, self.Owner, dmg ):SetShouldHurtOwner( false )
+			local fire = self.Owner:Burn( -3, rad, self.Owner, dmg )
+			fire:SetShouldHurtOwner( false )
 		end
 
 		if self.NCheck < CurTime() then
@@ -77,7 +78,7 @@ function SWEP:SecondaryAttack()
 
 			local lifetime = 180 + ( self:GetUpgradeMod( "traptime" ) or 0 )
 			local burntime = 1.5 + ( self:GetUpgradeMod( "trapburn" ) or 0 )
-			local dmg = 5 + ( self:GetUpgradeMod( "trapdmg" ) or 0 )
+			local dmg = 4 + ( self:GetUpgradeMod( "trapdmg" ) or 0 )
 
 			local trap = ents.Create( "slc_fire_trap" )
 			trap:SetPos( tr.HitPos )
@@ -96,8 +97,8 @@ function SWEP:SecondaryAttack()
 	end
 end
 
-function SWEP:DrawHUD()
-	if hud_disabled or HUDDrawInfo or ROUND.preparing then return end
+function SWEP:DrawSCPHUD()
+	//if hud_disabled or HUDDrawInfo or ROUND.preparing then return end
 
 	local txt, color
 	if self.TrapCD > CurTime() then
@@ -131,7 +132,7 @@ function SWEP:DrawHUD()
 end
 
 hook.Add( "EntityTakeDamage", "SCP457Damage", function( ply, dmg )
-	if !ply:IsPlayer() or !ply:Alive() then return end
+	if !ply:IsPlayer() then return end
 	if ply:SCPClass() == CLASSES.SCP457 then
 		if dmg:IsDamageType( DMG_BURN ) then
 			return true
@@ -168,6 +169,20 @@ hook.Add( "DoPlayerDeath", "SCP457Damage", function( ply, attacker, info )
 	end
 end )
 
+hook.Add( "SLCOnEntityIgnited", "SCP457Fire", function( ent, fire )
+	if CLIENT and ent == LocalPlayer() then
+		if ent:SCPClass() == CLASSES.SCP457 then
+			fire:SetShouldCreateParticles( false )
+		end
+	end
+end )
+
+hook.Add( "CanPlayerSeePlayer", "SCP457Visibility", function( ply, target )
+	if target:SCPClass() == CLASSES.SCP457 then
+		return false
+	end
+end )
+
 DefineUpgradeSystem( "scp457", {
 	grid_x = 4,
 	grid_y = 3,
@@ -200,9 +215,9 @@ DefineUpgradeSystem( "scp457", {
 } )
 
 function SWEP:OnUpgradeBought( name, info, group )
-	if SERVER and IsValid( self.Owner ) then
+	if SERVER and self:CheckOwner() then
 		if name == "speed" then
-			self.Owner:PushSpeed( 1.1, 1.1, -1 )
+			self.Owner:PushSpeed( 1.1, 1.1, -1, "SLC_SCP457" )
 		else
 			self.Owner:StopBurn()
 		end

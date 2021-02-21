@@ -9,8 +9,8 @@ SWEP.HoldType 			= "knife"
 SWEP.PrimarySpeed 		= 1.4
 SWEP.AttackDelay 		= 0.1
 
-SWEP.SecondarySpeed 	= 0.6
-SWEP.StrongDelay 		= 0.75
+SWEP.SecondarySpeed 	= 0.85
+SWEP.StrongDelay 		= 0.8
 
 SWEP.SoundMiss 			= "npc/zombie/claw_miss1.wav"
 SWEP.SoundHitWall		= "npc/zombie/claw_strike1.wav"
@@ -85,8 +85,8 @@ function SWEP:DoAttack( strong )
 	vm:SetPlaybackRate( speed )
 
 	if SERVER then
-		timer.Simple( dur * 0.4, function()
-			if IsValid( self ) and IsValid( owner ) then
+		timer.Simple( dur * 0.25, function()
+			if IsValid( self ) and self:CheckOwner() then
 				self:ApplyDamage( strong )
 			end
 		end )
@@ -124,7 +124,6 @@ function SWEP:ApplyDamage( strong )
 				local dmginfo = DamageInfo()
 
 				dmginfo:SetAttacker( owner )
-				dmginfo:SetInflictor( owner )
 				dmginfo:SetDamageType( DMG_SLASH )
 
 				local dmg = ( strong and math.random( 50, 80 ) or math.random( 20, 40 ) ) * self.DamageMult
@@ -168,15 +167,15 @@ if SERVER then
 		end
 	end )
 
-	hook.Add( "DoPlayerDeath", "SCP0492Kill", function( ply, attacker, info )
+	/*hook.Add( "DoPlayerDeath", "SCP0492Kill", function( ply, attacker, info )
 		if attacker:IsPlayer() and attacker:SCPClass() == CLASSES.SCP0492 then
 		 	AddRoundStat( "0492" )
 		end
-	end )
+	end )*/
 end
 
-function SWEP:DrawHUD()
-	if hud_disabled or HUDDrawInfo or ROUND.preparing then return end
+function SWEP:DrawSCPHUD()
+	//if hud_disabled or HUDDrawInfo or ROUND.preparing then return end
 
 	local shouldDraw = true
 	local owner = self:GetOwner()

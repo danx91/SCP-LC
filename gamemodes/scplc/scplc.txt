@@ -1,11 +1,8 @@
 "scplc"
 {
 	"base"		"base"
-	"title"		"SCP:LC"
-	"maps"		"br_site15"
+	"title"		"SCP: Lost Control"
+	"maps"		"gm_site19"
 	"menusystem"	"1"
-	
-	"settings"
-	{
-	}
+	"workshopid"	"2402059605"
 }

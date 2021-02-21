@@ -36,6 +36,9 @@ end
 
 setmetatable( queue_iter, { __call = queue_iter.New } )*/
 
+--[[-------------------------------------------------------------------------
+Queue
+---------------------------------------------------------------------------]]
 function CheckQueue()
 	queueReg = {}
 	local queue = {}
@@ -117,6 +120,9 @@ function ClearQueue()
 	queueReg = {}
 end
 
+--[[-------------------------------------------------------------------------
+Spawning players
+---------------------------------------------------------------------------]]
 local function levelsort( a, b )
 	return a:SCPLevel() > b:SCPLevel()
 end
@@ -220,13 +226,33 @@ function SetupPlayers( multi )
 		local classplayers = {}
 
 		local num = n == #tab and all or v[2]
-		for i = 1, num do
-			local index = math.random( #plys )
-			local ply = plys[index]
 
+		local len = #plys
+		local playerindices = PopulateTable( len )
+		local torem = {}
+
+		local i = 1
+		repeat --TODO test
+			local index = table.remove( playerindices, math.random( len ) )
+			len = len - 1
+
+			local ply = plys[index]
+			//print( "aaa", index, ply )
 			if playertab[ply][g_name].any then
-				table.remove( plys, index )
+				torem[index] = true
+				//table.remove( plys, index )
 				table.insert( classplayers, ply )
+
+				i = i + 1
+			end
+		until i > num or len < 1
+		//print( "end", i > num, len < 1 )
+
+		for i, v in rpairs( plys ) do
+			if torem[i] then
+				table.remove( plys, i )
+				//local a = table.remove( plys, i )
+				//print( "rem", i, a )
 			end
 		end
 
@@ -234,10 +260,13 @@ function SetupPlayers( multi )
 
 		local classes, spawninfo = getClassGroup( g_name )
 		local spawns = table.Copy( spawninfo )
+
+		local classspawns = {}
 		local inuse = {}
 
 		local len = #classplayers
 		local num = 0
+
 		if len == 0 then
 			print( "Failed to assign any player to group: "..g_name )
 		else
@@ -266,16 +295,26 @@ function SetupPlayers( multi )
 						spawns = table.Copy( spawninfo )
 					end
 
-					print( "Assigning '"..ply:Nick().." to class '"..class.name.."' ["..g_name.."]" )
+					local cname = class.name
+					print( "Assigning '"..ply:Nick().."' to class '"..cname.."' ["..g_name.."]" )
 
-					ply:SetupPlayer( class )
+					local pos
+					if class.spawn then
+						if istable( class.spawn ) then
+							if !classspawns[cname] or #classspawns[cname] == 0 then
+								classspawns[cname] = table.Copy( cname )
+							end
+
+							pos = table.remove( classspawns[cname], math.random( #classspawns[cname] ) )
+						else
+							pos = class.spawn
+						end
+					else
+						pos = table.remove( spawns, math.random( #spawns ) )
+					end
+
+					ply:SetupPlayer( class, pos )
 					ply:SetInitialTeam( class.team )
-
-					--if class.spawn then
-						--ply:SetPos( istable( class.spawn ) and table.Random( class.spawn ) or class.spawn )
-					--else
-						ply:SetPos( table.remove( spawns, math.random( #spawns ) ) )
-					--end
 
 					all = all - 1
 				end
@@ -291,7 +330,7 @@ function SpawnSupport()
 		return
 	end
 
-	local group, callback = selectSupportGroup()
+	local group, data = selectSupportGroup()
 	local classes, spawninfo = getSupportGroup( group )
 	local spawns = table.Copy( spawninfo )
 
@@ -300,9 +339,13 @@ function SpawnSupport()
 	local max = CVAR.maxsupport:GetInt()
 	local unused = {}
 
+	if data.max > 0 and data.max < max then
+		max = data.max
+	end
+
 	repeat
 		local ply = QueueRemove()
-
+		if !ply then break end --no more players in queue
 		/*repeat
 			local p = table.remove( plys, 1 )
 
@@ -312,51 +355,51 @@ function SpawnSupport()
 			end
 		until #plys == 0*/
 
-		if !IsValid( ply ) then break end
+		if IsValid( ply ) and ply:SCPTeam() == TEAMS_SPEC and !ply:GetProperty( "spawning" ) and !ply:GetProperty( "spawning_scp" ) then
+			local plytab = {}
 
-		local plytab = {}
+			for k, v in pairs( classes ) do
+				if !inuse[k] then inuse[k] = 0 end
+				if v.max == 0 or inuse[k] < v.max then
+					local owned
 
-		for k, v in pairs( classes ) do
-			if !inuse[k] then inuse[k] = 0 end
-			if v.max == 0 or inuse[k] < v.max then
-				local owned
+					if v.override then
+						local result = v.override( ply )
 
-				if v.override then
-					local result = v.override( ply )
+						if result then
+							owned = true
+						elseif result == false then
+							owned = false
+						end
+					end
 
-					if result then
-						owned = true
-					elseif result == false then
-						owned = false
+					if owned == nil then
+						//owned = ply:SCPLevel() >= v.level
+						owned = ply:IsClassUnlocked( v.name )
+					end
+
+					if owned then
+						table.insert( plytab, v )
 					end
 				end
-
-				if owned == nil then
-					//owned = ply:SCPLevel() >= v.level
-					owned = ply:IsClassUnlocked( v.name )
-				end
-
-				if owned then
-					table.insert( plytab, v )
-				end
-			end
-		end
-
-		if #plytab > 0 then
-			if #spawns == 0 then
-				spawns = table.Copy( spawninfo )
 			end
 
-			local class = table.Random( plytab )
+			if #plytab > 0 then
+				if #spawns == 0 then
+					spawns = table.Copy( spawninfo )
+				end
 
-			print( "Assigning '"..ply:Nick().."' to support class '"..class.name.."' ["..group.."]" )
-			ply:SetupPlayer( class )
-			ply:SetPos( table.remove( spawns, math.random( #spawns ) ) )
+				local class = table.Random( plytab )
 
-			inuse[class.name] = inuse[class.name] + 1
-			num = num + 1
-		else
-			table.insert( unused, ply )
+				print( "Assigning '"..ply:Nick().."' to support class '"..class.name.."' ["..group.."]" )
+				ply:SetupPlayer( class )
+				ply:SetPos( table.remove( spawns, math.random( #spawns ) ) )
+
+				inuse[class.name] = inuse[class.name] + 1
+				num = num + 1
+			else
+				table.insert( unused, ply )
+			end
 		end
 	until num >= max
 
@@ -367,62 +410,340 @@ function SpawnSupport()
 	end
 
 	if num > 0 then
-		if callback then
-			callback()
+		if data.callback then
+			data.callback()
 		end
 
 		return true
 	end
 end
 
-function CheckEscape()
-	if ROUND.post then return end
+--[[-------------------------------------------------------------------------
+Escape system
+---------------------------------------------------------------------------]]
+/*function CheckEscape()
+	CheckEscape1()
+end*/
+
+ESCAPE_STATUS = ESCAPE_STATUS or 0 -- 0 - no escape; 1 - escape; 2 - blocked;
+ESCAPE_TIMER = ESCAPE_TIMER or 0
+LAST_ESCAPE = LAST_ESCAPE or {}
+
+local function TransmitEscapeInfo( plys, override )
+	net.Start( "SLCEscape" )
+		net.WriteUInt( override or ESCAPE_STATUS, 2 )
+		net.WriteFloat( ESCAPE_TIMER )
+	net.Send( plys )
+end
+
+local function GetEscapeData()
+	local teams = {}
+	local players = {}
+	local all = {}
+
+	local ist = istable( POS_ESCAPE )
 	for k, v in pairs( player.GetAll() ) do
 		local team = v:SCPTeam()
-		if v:GetPos():DistToSqr( POS_ESCAPE ) <= 22500 and SCPTeams.canEscape( team ) then
-			local t = GetTimer( "SLCRound" )
 
-			if IsValid( t ) then
-				local rtime = t:GetRemainingTime()
-				local ttime = t:GetTime()
-
-				local diff = math.floor( ttime - rtime )
-				local time = rtime / ttime
-				local min, max = string.match( CVAR.escapexp:GetString(), "^(%d+),(%d+)$" )
-				local xp = 0
-
-				min = tonumber( min )
-				max = tonumber( max )
-
-				if time < 0.2 then
-					xp = min
-				elseif time > 0.8 then
-					xp = max
-				else
-					xp = math.Map( time, 0.2, 0.8, min, max )
+		if team != TEAM_SPEC then
+			if ist and v:GetPos():WithinAABox( POS_ESCAPE[1], POS_ESCAPE[2] ) or !ist and v:GetPos():DistToSqr( POS_ESCAPE ) <= 22500 then
+				if SCPTeams.canEscape( team ) or GetRoundStat( "alpha_warhead" ) then
+					table.insert( players, v )
 				end
 
-				xp = math.floor( xp )
+				table.insert( all, v )
 
-				CenterMessage( string.format( "escaped#255,0,0,SCPHUDVBig;escapeinfo$%s;escapexp$%d", string.ToMinutesSeconds( diff ), xp ), v )
+				teams[team] = true
+			end
+		end
+	end	
+
+	for t1, v1 in pairs( teams ) do
+		for t2, v2 in pairs( teams ) do
+			if !SCPTeams.isAlly( t1, t2 ) then
+				return players, true, all
+			end
+		end
+	end
+
+	return players, false, all
+end
+
+function CheckEscape()
+	if ROUND.post then return end
+
+	local t = GetTimer( "SLCRound" )
+	if IsValid( t ) and ESCAPE_STATUS == 0 then
+		local tab, blocked, all = GetEscapeData()
+
+		if #tab > 0 then
+			ESCAPE_STATUS = blocked and 2 or 1
+			ESCAPE_TIMER = blocked and 0 or CurTime() + 20
+			LAST_ESCAPE = blocked and all or tab
+
+			//print( "Starting Escape", ESCAPE_STATUS )
+
+			TransmitEscapeInfo( blocked and all or tab )
+		end
+
+		/*local players = {}
+		local teams = {}
+
+		for k, v in pairs( player.GetAll() ) do
+			local team = v:SCPTeam()
+			if SCPTeams.canEscape( team ) then
+				local ist = istable( POS_ESCAPE )
+				if ist and v:GetPos():WithinAABox( POS_ESCAPE[1], POS_ESCAPE[2] ) or !ist and v:GetPos():DistToSqr( POS_ESCAPE ) <= 22500 then
+					table.insert( players, v )
+					teams[team] = true*/
+
+
+
+					/*local rtime = t:GetRemainingTime()
+					local ttime = t:GetTime()
+
+					local diff = math.floor( ttime - rtime )
+					hook.Run( "SLCPlayerEscaped", v, diff, rtime )
+
+					local time = rtime / ttime
+					local min, max = string.match( CVAR.escapexp:GetString(), "^(%d+),(%d+)$" )
+					local xp = 0
+
+					min = tonumber( min )
+					max = tonumber( max )
+
+					if time < 0.2 then
+						xp = min
+					elseif time > 0.8 then
+						xp = max
+					else
+						xp = math.Map( time, 0.2, 0.8, min, max )
+					end
+
+					xp = math.floor( xp )
+
+					CenterMessage( string.format( "offset:75;escaped#255,0,0,SCPHUDVBig;escapeinfo$%s;escapexp$%d", string.ToMinutesSeconds( diff ), xp ), v )
+
+					v:AddXP( xp )
+					SCPTeams.addScore( team, SCPTeams.getReward( team ) * 3 )
+
+					v:Despawn()
+
+					v:KillSilent()
+					v:SetupSpectator()
+					QueueInsert( v )
+
+					AddRoundStat( "escapes" )
+
+					CheckRoundEnd()*/
+				--end
+			--end
+		--end
+	end
+end
+
+local NEscape = 0
+hook.Add( "Tick", "SLCEscapeCheck", function() --TODO remove timer on escape / exit
+	if ROUND.post or ESCAPE_STATUS == 0 then return end
+	if NEscape > CurTime() then return end
+	NEscape = CurTime() + 0.5
+
+	local tab, blocked, all = GetEscapeData()
+
+	if #tab == 0 then
+		ESCAPE_STATUS = 0
+		ESCAPE_TIMER = 0
+
+		TransmitEscapeInfo( LAST_ESCAPE )
+		LAST_ESCAPE = {}
+
+		//print( "Escape aborted!" )
+		return
+	else
+		local ls = ESCAPE_STATUS
+		ESCAPE_STATUS = blocked and 2 or 1
+
+		if ESCAPE_STATUS != ls then
+			ESCAPE_TIMER = blocked and 0 or CurTime() + 20
+
+			//print( "status changed", ESCAPE_STATUS, ls )
+			TransmitEscapeInfo( blocked and all or tab )
+		end
+		--else
+			local done = {}
+			local transmit = {}
+			local ntransmit = {}
+
+			local lookup = CreateLookupTable( LAST_ESCAPE )
+
+			for k, v in pairs( blocked and all or tab ) do
+				if !lookup[v] then
+					table.insert( transmit, v )
+					//print( "player added to escape", v )
+				end
+
+				done[v] = true
+			end
+
+			for k, v in pairs( LAST_ESCAPE ) do
+				if !done[v] then
+					table.insert( ntransmit, v )
+					//print( "player removed from escape", v )
+				end
+			end
+
+			if #transmit > 0 then
+				TransmitEscapeInfo( transmit )
+			end
+
+			if #ntransmit > 0 then
+				TransmitEscapeInfo( ntransmit, 0 )
+			end
+		--end
+
+		LAST_ESCAPE = blocked and all or tab
+	end
+
+	//print( "EscapeTick", ESCAPE_STATUS )
+
+	if ESCAPE_STATUS == 1 and ESCAPE_TIMER > 0 and ESCAPE_TIMER <= CurTime() then
+		//print( "EscapePlayers" )
+		//PrintTable( tab )
+
+		ESCAPE_STATUS = 0
+		ESCAPE_TIMER = 0
+
+		TransmitEscapeInfo( tab )
+
+		if GetRoundStat( "alpha_warhead" ) then
+			local xp = CVAR.alpha_escape_xp:GetInt()
+
+			for k, v in pairs( tab ) do
+				CenterMessage( string.format( "offset:75;escaped#255,0,0,SCPHUDVBig;alpha_escape;escapexp$%d", xp ), v )
+
+				InfoScreen( v, "escaped", INFO_SCREEN_DURATION, {
+					"escape2",
+					{ "escape_xp", "text;"..xp }
+				} )
 
 				v:AddXP( xp )
-				SCPTeams.addScore( team, SCPTeams.getReward( team ) * 3 )
+
+				local team = v:SCPTeam()
+				SCPTeams.addScore( team, SCPTeams.getReward( team ) * 2 )
 
 				v:Despawn()
 
 				v:KillSilent()
-				v:SetupSpectator()
-				QueueInsert( v )
+				v:SetSCPTeam( TEAM_SPEC )
+				v:SetSCPClass( "spectator" )
+				v.DeathScreen = CurTime() + INFO_SCREEN_DURATION
+
+				//v:SetupSpectator()
+				//QueueInsert( v )
 
 				AddRoundStat( "escapes" )
+			end
+		else
+			local t = GetTimer( "SLCRound" )
+			if IsValid( t ) or ROUND.aftermatch then
+				local min, max = string.match( CVAR.escapexp:GetString(), "^(%d+),(%d+)$" )
+				min = tonumber( min )
+				max = tonumber( max )
+
+				local rtime = t:GetRemainingTime()
+				local ttime = t:GetTime()
+
+				local diff = math.floor( ttime - rtime )
+				local xp = 0
+
+				if ROUND.aftermatch then
+					xp = min
+				else
+					local time = rtime / ttime
+					if time < 0.2 then
+						xp = min
+					elseif time > 0.8 then
+						xp = max
+					else
+						xp = math.Map( time, 0.2, 0.8, min, max )
+					end
+
+					xp = math.floor( xp )
+				end
+
+				local msg = {
+					"escape1",
+					{ "escape_time", "time;"..diff },
+					{ "escape_xp", "text;"..xp }
+				}
+
+				for k, v in pairs( tab ) do
+					hook.Run( "SLCPlayerEscaped", v, diff, rtime )
+
+					//CenterMessage( string.format( "offset:75;escaped#255,0,0,SCPHUDVBig;escapeinfo$%s;escapexp$%d", string.ToMinutesSeconds( diff ), xp ), v )
+					InfoScreen( v, "escaped", INFO_SCREEN_DURATION, msg )
+
+					v:AddXP( xp )
+
+					local team = v:SCPTeam()
+					SCPTeams.addScore( team, SCPTeams.getReward( team ) * 3 )
+
+					v:Despawn()
+
+					v:KillSilent()
+					v:SetSCPTeam( TEAM_SPEC )
+					v:SetSCPClass( "spectator" )
+					v.DeathScreen = CurTime() + INFO_SCREEN_DURATION
+
+					//v:SetupSpectator()
+					//QueueInsert( v )
+
+					AddRoundStat( "escapes" )
+				end
 
 				CheckRoundEnd()
 			end
 		end
 	end
+
+end )
+
+--[[-------------------------------------------------------------------------
+Round aftermatch
+---------------------------------------------------------------------------]]
+local ecc
+function StartAftermatch( endcheck )
+	if ROUND.post then return end
+
+	print( "Starting aftermatch" )
+	//PlayerMessage( "aftermatch", LAST_ESCAPE )
+
+	ecc = endcheck
+	ROUND.aftermatch = true
 end
 
+local NACheck = 0
+hook.Add( "Tick", "SLCRoundAftermatch", function()
+	if ROUND.post or !ROUND.aftermatch then return end
+
+	if NACheck > CurTime() then return end
+	NACheck = CurTime() + 1
+
+	//print( "Aftermatch tick" )
+
+	if ESCAPE_STATUS == 0 then
+		local cb = ecc
+
+		ecc = nil
+		ROUND.aftermatch = false
+
+		FinishRoundInternal( nil, cb )
+	end
+end )
+
+--[[-------------------------------------------------------------------------
+Escort
+---------------------------------------------------------------------------]]
 function PlayerEscort( ply )
 	if ROUND.post then return end
 
@@ -431,7 +752,7 @@ function PlayerEscort( ply )
 	if ply:GetPos():DistToSqr( pos ) > 62500 then return end
 
 	local t = GetTimer( "SLCRound" )
-	if IsValid( timer ) then
+	if IsValid( t ) then
 		local rtime = t:GetRemainingTime()
 		local ttime = t:GetTime()
 
@@ -464,30 +785,61 @@ function PlayerEscort( ply )
 		local num = #plys
 		if num == 0 then return end
 
-		local msg = string.format( "escorted#255,0,0,SCPHUDVBig;escapeinfo$%s;escapexp$%d", string.ToMinutesSeconds( diff ), xp )
+		//local msg = string.format( "offset:75;escorted#255,0,0,SCPHUDVBig;escapeinfo$%s;escapexp$%d", string.ToMinutesSeconds( diff ), xp )
+		local msg = {
+			"escorted",
+			{ "escape_time", "time;"..diff },
+			{ "escape_xp", "text;"..xp }
+		}
 		for k, v in pairs( plys ) do
-			CenterMessage( msg, v )
+			//CenterMessage( msg, v )
+			InfoScreen( v, "escaped", INFO_SCREEN_DURATION, msg )
+			hook.Run( "SLCPlayerEscorted", v, ply )
 
 			v:AddXP( xp )
 			local vteam = v:SCPTeam()
-			SCPTeams.addScore( vteam, SCPTeams.getReward( vteam ) * 5 )
+			SCPTeams.addScore( vteam, SCPTeams.getReward( vteam ) * 3 )
 
 			v:Despawn()
 
 			v:KillSilent()
-			v:SetupSpectator()
+			v:SetSCPTeam( TEAM_SPEC )
+			v:SetSCPClass( "spectator" )
+			v.DeathScreen = CurTime() + INFO_SCREEN_DURATION
 
-			QueueInsert( v )
+			//v:SetupSpectator()
+			//QueueInsert( v )
 		end
 
 		AddRoundStat( "escorts", num )
 
 		local points = num * CVAR.escortpoints:GetInt()
 		
-		PlayerMessage( "escortpoints$"..points )
+		PlayerMessage( "escortpoints$"..points, ply )
 		ply:AddFrags( points )
 
 		CheckRoundEnd()
+	end
+end
+
+--[[-------------------------------------------------------------------------
+Misc functions
+---------------------------------------------------------------------------]]
+function PrintSCPNotice( tab )
+	if !tab then
+		tab = GetActivePlayers()
+	elseif !istable( tab ) then
+		tab = { tab }
+	end
+
+	for k, v in pairs( tab ) do
+		local r = tonumber( v:GetSCPData( "scp_penalty", 0 ) )
+
+		if r == 0 then
+			PlayerMessage( "scpready#50,200,50", v )
+		else
+			PlayerMessage( "scpwait$"..r.."#200,50,50", v )
+		end
 	end
 end
 
@@ -612,12 +964,13 @@ function SpawnGeneric( class, pos, num, post_tab, post_func )
 	for i = 1, num do
 		local item = ents.Create( istable( class ) and class[math.random( #class )] or class )
 		if IsValid( item ) then
-			item:Spawn()
 			item:SetPos( seq and pos[i] or table.remove( pos, math.random( #pos ) ) )
 
 			if post_tab then
 				applyTable( item, post_tab )
 			end
+
+			item:Spawn()
 
 			if post_func then
 				post_func( item, i )
@@ -630,13 +983,14 @@ function SpawnItems() --TODO
 	--[[-------------------------------------------------------------------------
 	SCPs
 	---------------------------------------------------------------------------]]
-	/*local item = ents.Create( "item_scp_714" )
+	local item = ents.Create( "item_scp_714" )
 	if IsValid( item ) then
 		item:SetPos( SPAWN_714 )
 		item:Spawn()
+		item.Dropped = CurTime()
 	end
 	
-	local pos500 = table.Copy( SPAWN_500 )
+	/*local pos500 = table.Copy( SPAWN_500 )
 	
 	for i = 1, 2 do
 		local item = ents.Create( "item_scp_500" )
@@ -672,30 +1026,51 @@ function SpawnItems() --TODO
 	--[[-------------------------------------------------------------------------
 	Weapons
 	---------------------------------------------------------------------------]]
-	SpawnGeneric( { "cw_deagle", "cw_fiveseven" }, SPAWN_PISTOLS, -1, { Dropped = 0 } )
-	SpawnGeneric( { "cw_g36c", "cw_ump45", "cw_mp5" }, SPAWN_SMGS, -1, { Dropped = 0 } )
-	SpawnGeneric( { "cw_ak74", "cw_ar15", "cw_m14", "cw_scarh" }, SPAWN_RIFLES, -1, { Dropped = 0 } )
-	SpawnGeneric( { "cw_shorty", "cw_m3super90" }, SPAWN_PUMP, -1, { Dropped = 0 } )
-	SpawnGeneric( "cw_l115", SPAWN_SNIPER, -1, { Dropped = 0 } )
-	SpawnGeneric( "cw_ammo_kit_regular", SPAWN_AMMO_CW, -1, { AmmoCapacity = 15 } )
-	SpawnGeneric( "weapon_crowbar", SPAWN_MELEE, 3, { Dropped = 0 } )
+	local post = { Dropped = 0 }
+	local post_dnc = { Dropped = 0, _dnc = true }
+	
+	SpawnGeneric( "weapon_slc_pc", SPAWN_PARTICLE_CANNON, -1, post )
+
+	SpawnGeneric( { "cw_deagle", "cw_makarov", "cw_mr96" }, SPAWN_PISTOLS, -1, post )
+	SpawnGeneric( { "cw_g36c", "cw_ump45", "cw_mp5" }, SPAWN_SMGS, -1, post )
+	SpawnGeneric( { "cw_ak74", "cw_ar15", "cw_m14", "cw_scarh", "cw_l85a2" }, SPAWN_RIFLES, -1, post )
+	SpawnGeneric( { "cw_shorty", "cw_m3super90" }, SPAWN_PUMP, -1, post )
+	SpawnGeneric( "cw_l115", SPAWN_SNIPER, -1, post )
+
+	SpawnGeneric( "weapon_crowbar", SPAWN_MELEE, 3, post )
+
+	SpawnGeneric( "cw_ammo_kit_regular", SPAWN_AMMO_CW, -1, { AmmoCapacity = 20 } )
 	
 	--[[-------------------------------------------------------------------------
 	Items
 	---------------------------------------------------------------------------]]
 	local spawn_items = table.Copy( SPAWN_ITEMS )
 
-	SpawnGeneric( "item_slc_radio", spawn_items, 2, { Dropped = 0, _dnc = true } )
-	SpawnGeneric( "item_slc_nvg", spawn_items, 2, { Dropped = 0, _dnc = true } )
-	SpawnGeneric( "item_slc_gasmask", spawn_items, 2, { Dropped = 0, _dnc = true } )
-	SpawnGeneric( "item_slc_battery", SPAWN_BATTERY, -1, { Dropped = 0 } )
-	SpawnGeneric( "item_slc_flashlight", SPAWN_FLASHLIGHT, 8, { Dropped = 0 } )
-	SpawnGeneric( "item_slc_medkit", SPAWN_MEDKITS, 4, { Dropped = 0 } )
+	SpawnGeneric( "item_slc_radio", spawn_items, 2, post_dnc )
+	SpawnGeneric( "item_slc_nvg", spawn_items, 3, post_dnc )
+	SpawnGeneric( "item_slc_gasmask", spawn_items, 3, post_dnc )
+	SpawnGeneric( "item_slc_battery", SPAWN_BATTERY, -1, post )
+	SpawnGeneric( "item_slc_flashlight", SPAWN_FLASHLIGHT, 8, post )
+	SpawnGeneric( "item_slc_medkit", SPAWN_MEDKITS, 4, post )
 	
+	--[[-------------------------------------------------------------------------
+	MedBay
+	---------------------------------------------------------------------------]]
+	local spawn_medbay = table.Copy( SPAWN_MEDBAY )
+
+	for i = 1, #spawn_medbay do
+		local rng = math.random( 1, 100 )
+		if rng <= 15 then
+			SpawnGeneric( "item_slc_medkitplus", spawn_medbay, 1, post_dnc )
+		else
+			SpawnGeneric( "item_slc_medkit", spawn_medbay, 1, post_dnc )
+		end
+	end
+
 	--[[-------------------------------------------------------------------------
 	Keycards
 	---------------------------------------------------------------------------]]
-	for k, v in pairs( KEYCARDS or {} ) do
+	/*for k, v in pairs( KEYCARDS or {} ) do
 		local spawns = table.Copy( v.spawns )
 		//local cards = table.Copy( v.ents )
 		local dices = {}
@@ -732,6 +1107,50 @@ function SpawnItems() --TODO
 					keycard:SetKeycardType( ent )
 					keycard.Dropped = 0
 				end
+			end
+		end
+	end*/
+
+	--[[-------------------------------------------------------------------------
+	Chips
+	---------------------------------------------------------------------------]]
+	for k, v in pairs( CHIPS ) do
+		local spawns = table.Copy( v.spawns )
+
+		for i = 1, v.amount do
+			local len = #spawns
+
+			if len == 0 then
+				break
+			end
+
+			local chip = CreateChip( SelectChip( v.level ) )
+			if IsValid( chip ) then
+				chip:SetPos( table.remove( spawns, math.random( len ) ) )
+				chip:Spawn()
+				chip.Dropped = 0
+			end
+		end
+	end
+
+	--[[-------------------------------------------------------------------------
+	Omnitool
+	---------------------------------------------------------------------------]]
+	for k, v in pairs( OMNITOOLS ) do
+		local spawns = table.Copy( v.spawns )
+
+		for i = 1, v.amount do
+			local len = #spawns
+
+			if len == 0 then
+				break
+			end
+
+			local omnitool = ents.Create( "item_slc_omnitool" )
+			if IsValid( omnitool ) then
+				omnitool:SetPos( table.remove( spawns, math.random( len ) ) )
+				omnitool:Spawn()
+				omnitool.Dropped = 0
 			end
 		end
 	end
@@ -794,4 +1213,6 @@ function SpawnItems() --TODO
 			WakeEntity( car )
 		end
 	end*/
+
+	hook.Run( "SLCSpawnItems" )
 end

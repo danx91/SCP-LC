@@ -18,7 +18,7 @@ SWEP.WorldModelAngleOffset 		= Angle( -20, 180, 190 )
 
 SWEP.DHUD = 0
 
-function SWEP:HandleUpgrade( mode, exit )
+function SWEP:HandleUpgrade( new_mode, mode, exit )
 	local t = self:GetNWString( "K_TYPE", nil )
 	if !t then
 		self:SetPos( exit )
@@ -180,6 +180,18 @@ function SWEP:Initialize()
 		self:SetKeycardType( "safe" )
 	end
 end
+
+/*ACCESS_SAFE = bit.lshift( 1, 0 )
+ACCESS_EUCLID = bit.lshift( 1, 1 )
+ACCESS_KETER = bit.lshift( 1, 2 )
+ACCESS_CHECKPOINT = bit.lshift( 1, 3 )
+ACCESS_OMEGA = bit.lshift( 1, 4 )
+ACCESS_GENERAL = bit.lshift( 1, 5 )
+ACCESS_GATEA = bit.lshift( 1, 6 )
+ACCESS_GATEB = bit.lshift( 1, 7 )
+ACCESS_ARMORY = bit.lshift( 1, 8 )
+ACCESS_FEMUR = bit.lshift( 1, 9 )
+ACCESS_EC = bit.lshift( 1, 10 )*/
 
 function SWEP:SetKeycardType( t )
 	//print( "setting type: "..t )
@@ -359,7 +371,7 @@ function SWEP:DrawWorldModel()
 		if !IsValid( self.WM ) then
 			print( "INVALID WORLD MODEL!" )
 			
-			self:Initialize()
+			self:Initialize()	
 			/*self.WM = ClientsideModel( self.WorldModel )
 			self.WM:SetParent( self )
 			self.WM:SetPos( self:GetPos() )

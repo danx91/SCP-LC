@@ -32,8 +32,8 @@ local function Button( x, y, w, h )
 end
 
 local MATS = {
-	arrow_up = GetMaterial( "slc_hud/arrow_up.png" ),
-	arrow_down = GetMaterial( "slc_hud/arrow_down.png" ),
+	arrow_up = GetMaterial( "slc/hud/arrow_up.png" ),
+	arrow_down = GetMaterial( "slc/hud/arrow_down.png" ),
 	muted = Material( "icon32/muted.png" ),
 	unmuted = Material( "icon32/unmuted.png" ),
 }
@@ -43,37 +43,44 @@ local MATS = {
 local SORT = {
 	inactive = 20,
 	unknown = 19,
-	other = 18,
-	[TEAM_SPEC] = 17,
-	[TEAM_CLASSD] = 16,
-	[TEAM_SCIENT] = 15,
-	[TEAM_MTF] = 14,
+	other = 16,
+	[TEAM_SPEC] = 15,
+	[TEAM_CLASSD] = 14,
+	[TEAM_SCI] = 13,
+	[TEAM_MTF] = 12,
 	teammates = 5,
 	localplayer = 0,
 }
 
 local customRanks = {
-	author = {
-		sorting = -20,
-		color = Color( 115, 25, 155, 100 ),
-		func = { "76561198110788144", "76561198108864618" } --Can be either SteamID64, table of SteamID64s or function with player as argument
-	},
-	tester = {
-		sorting = 19,
-		color = Color( 25, 165, 111 ),
-		func = { "76561198152379830", "76561198179611206" }
-	},
 	vip = {
-		sorting = 1,
+		sorting = 17,
 		color = Color( 220, 200, 35, 100 ),
 		func = function( ply )
 			return ply:IsPremium()
 		end,
 	},
-	countbob = {
+
+	--CREDITS - It grants NO benefits at all
+	author = {
+		sorting = -20,
+		color = Color( 115, 25, 155, 100 ),
+		func = { "76561198110788144" } --Can be either SteamID64, table of SteamID64s or function with player as argument
+	},
+	tester = {
 		sorting = 19,
-		color = Color( 0, 255, 0 ),
-		func = "76561198108864618"
+		color = Color( 10, 170, 115 ),
+		func = { "76561198152379830", "76561198246441626", "76561198210338085" }
+	},
+	contributor = {
+		sorting = 19,
+		color = Color( 20, 100, 20 ),
+		func = { "76561198179611206" }
+	},
+	translator = {
+		sorting = 19,
+		color = Color( 220, 110, 30 ),
+		func = {},
 	}
 }
 

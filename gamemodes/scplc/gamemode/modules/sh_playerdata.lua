@@ -15,8 +15,8 @@ end
 
 --set = function( ply, old, new ) return true to prevent
 --reset = function( ply, val ) return true to prevent
-function registerPlayerStatus( name, default, set, reset )
-	PlayerStatus[name] = { default, set, reset }
+function registerPlayerStatus( name, default, set, reset, transmit )
+	PlayerStatus[name] = { default, set, reset, transmit }
 end
 
 local function HasFlag( num, flag )
@@ -74,7 +74,7 @@ function PlayerData:AddStat( name, value, replace )
 
 		self.Stats[name] = globalstat
 		self.Round[name] = roundstat
-		self.Stats[name] = sessionstat
+		self.Session[name] = sessionstat
 
 		if HasFlag( stat, PlayerStats.STAT_ARCHIVE ) then
 			self.Player:SetSCPData( name, globalstat )
@@ -131,6 +131,8 @@ function PlayerData:GetSessionStat( name )
 end
 
 function PlayerData:Reset( roundend )
+	local names = ""
+
 	for k, v in pairs( PlayerStatus ) do
 		local reset = true
 
@@ -144,8 +146,16 @@ function PlayerData:Reset( roundend )
 
 		if reset then
 			self.Status[k] = v[1]
+
+			/*if v[4] == true then
+				names = names..k..";"
+			end*/
 		end
 	end
+
+	/*if names != "" then
+		net.Ping( "SLCPlayerData", "_reset:"..names, self.Player )
+	end*/
 end
 
 function PlayerData:RoundReset()
@@ -189,14 +199,66 @@ function PlayerData:SetStatus( name, value )
 	assert( value != nil, "Bad argument #2 to SetStatus, any value expected got nil" )
 	assert( self.Status[name] != nil, "Tried to set invalid player status: "..name )
 
+	local obj = PlayerStatus[name]
 	if self.Status[name] != value then
-		if !PlayerStatus[name][2] or PlayerStatus[name][2]( self.Player, self.Status[name], value ) != true then
+		if !obj[2] or obj[2]( self.Player, self.Status[name], value ) != true then
 			self.Status[name] = value
+
+			/*if obj[4] then
+				net.Ping( "SLCPlayerData", name..":"..tostring( value ), self.Player )
+			end*/
 		end
 	end
 end
 
 setmetatable( PlayerData, { __call = PlayerData.Create } )
+
+local ply = FindMetaTable( "Player" )
+--create direct bindings fo PlayerData table
+
+if CLIENT then
+	net.ReceivePing( "SLCPlayerData", function( data )
+		local name, value = string.match( data, "(.-):(.+)" )
+
+		if !name then
+			name = data
+
+			local obj = PlayerStatus[name]
+			if !obj then return end
+
+			value = obj[1]
+		end
+
+		if name == "_reset" then
+			for line in string.gmatch( value, "[^;]+" ) do
+				local obj = PlayerStatus[line]
+
+				if obj then
+					LocalPlayer().PlayerData.Status[line] = obj[1]
+					//print( "PD reset", line )
+				end
+			end
+		else
+			local obj = PlayerStatus[name]
+
+			if obj then
+				local t = type( obj[1] )
+
+				if t == "number" then
+					value = tonumber( value )
+				elseif t == "boolean" then
+					value = tobool( value )
+				end
+
+				//print( "casted", value, type( value ) )
+				if value != nil then
+					LocalPlayer().PlayerData.Status[name] = value
+					//print( "PD set", name, value )
+				end
+			end
+		end
+	end )
+end
 
 ---------------------------- BASE STATS ----------------------------
 
@@ -207,6 +269,7 @@ setmetatable( PlayerData, { __call = PlayerData.Create } )
 ---------------------------- BASE STATUS ----------------------------
 //registerPlayerStatus( "name", <initial value>, func/false[nil], nil/func/ture/false* )
 //* - true: only on roundend, false: never, nil: always, func: return true to suppress
+//name cannot contain ':'
 
 registerPlayerStatus( "Premium", false, function( ply, old, new ) ply:Set_SCPPremium( new ) end, false )
 registerPlayerStatus( "Active", false, function( ply, old, new ) ply:Set_SCPActive( new ) end, false )
@@ -216,12 +279,14 @@ registerPlayerStatus( "InitialTeam", 0, false, true )
 registerPlayerStatus( "Blink", false )
 registerPlayerStatus( "SightLimit", -1 )
 
-registerPlayerStatus( "SCPHuman", false )
+registerPlayerStatus( "SCPHuman", false ) --TODO make it transmited
+registerPlayerStatus( "SCPCanInteract", false )
 registerPlayerStatus( "SCPChat", false )
 registerPlayerStatus( "SCPNoRagdoll", false )
-registerPlayerStatus( "SCPTerror", true )
+//registerPlayerStatus( "SCPTerror", true )
 
 registerPlayerStatus( "SCP714", false )
+registerPlayerStatus( "SCP096Chase", false )
 --------------------------------------------------------------------
 -- for k, v in pairs( player.GetAll() ) do
 -- 	PlayerData( v )

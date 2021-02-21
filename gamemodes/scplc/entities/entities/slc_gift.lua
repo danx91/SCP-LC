@@ -40,7 +40,7 @@ function ENT:Initialize()
 					fx:SetOrigin( self:GetPos() )
 					util.Effect( "br_heal", fx )
 
-		        	local fent = ents.FindInSphere( self:GetPos(), 100 )		
+		        	local fent = ents.FindInSphere( self:GetPos(), 100 )
 		        	for k, v in pairs( fent ) do
 		        		if IsValid( v ) and v:IsPlayer() then
 		        			if v:GTeam() != TEAM_SPEC then

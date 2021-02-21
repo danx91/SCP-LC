@@ -45,7 +45,7 @@ function SWEP:PrimaryAttack()
 			AddRoundStat( "066" )
 
 			Timer( "SCP066_"..self.Owner:SteamID64(), 1, self.MusicLength, function( t, n )
-				if !IsValid( self ) or !IsValid( self.Owner ) then
+				if !IsValid( self ) or !self:CheckOwner() then
 					t:Destroy()
 					return
 				end
@@ -99,7 +99,7 @@ function SWEP:Reload()
 
 				if IsValid( ent ) and ent:IsPlayer() then
 					timer.Simple( 0.5, function()
-						if IsValid( self ) and IsValid( self.Owner ) and IsValid( ent ) then
+						if IsValid( self ) and self:CheckOwner() and IsValid( ent ) then
 							if ent:SCPTeam() != TEAM_SPEC and ( ent:SCPTeam() != TEAM_SCP or ent:GetSCPHuman() ) then
 								self.Owner:SetPos( ent:GetPos() + ang:Forward() * 15 + Vector( 0, 0, 15 ) )
 								self.Attached = ent
@@ -152,7 +152,7 @@ hook.Add( "DoPlayerDeath", "SCP066PlayerDeath", function( ply, attacker, dmginfo
 				local scp = ply.SCP066Attached
 				local wep = scp:GetActiveWeapon()
 
-				if wep.Attached then
+				if IsValid( wep ) and wep.Attached then
 					scp:SetParent( nil )
 					scp:SetMoveType( MOVETYPE_WALK )
 
@@ -186,8 +186,8 @@ hook.Add( "Move", "SCP066Move", function( ply, mv )
 	end
 end )
 
-function SWEP:DrawHUD()
-	if hud_disabled or HUDDrawInfo or ROUND.preparing then return end
+function SWEP:DrawSCPHUD()
+	//if hud_disabled or HUDDrawInfo or ROUND.preparing then return end
 	
 	local txt, color
 	if self.NextAttack > CurTime() then
@@ -257,16 +257,18 @@ DefineUpgradeSystem( "scp066", {
 
 		{ name = "nvmod", cost = 1, req = {}, reqany = false,  pos = { 4, 3 }, mod = {}, active = false },
 	},
-	rewards = {
-		{ 100, 2 },
-		{ 200, 1 },
-		{ 300, 1 },
-		{ 500, 2 },
-		{ 600, 2 },
-		{ 700, 2 },
-		{ 800, 2 },
-		{ 900, 2 },
-		{ 1000, 2 }
+	rewards = { --16
+		{ 100, 1 },
+		{ 175, 1 },
+		{ 250, 1 },
+		{ 375, 2 },
+		{ 450, 1 },
+		{ 525, 2 },
+		{ 625, 1 },
+		{ 750, 2 },
+		{ 850, 1 },
+		{ 925, 2 },
+		{ 1050, 2 },
 	}
 } )
 

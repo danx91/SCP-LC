@@ -6,7 +6,7 @@ function GM:PlayerNoClip( ply, on )
 end
 
 function GM:PlayerButtonDown( ply, button )
-	if SERVER and !ply:IsBot() then
+	/*if SERVER and !ply:IsBot() then
 		if ply:SCPTeam() == TEAM_SPEC then
 			if button == MOUSE_LEFT then
 				ply:SpectatePlayerNext()
@@ -16,7 +16,7 @@ function GM:PlayerButtonDown( ply, button )
 				ply:ChangeSpectateMode()
 			end
 		end
-	end
+	end*/
 
 	if SERVER then numpad.Activate( ply, button ) end
 
@@ -38,7 +38,7 @@ function GM:PlayerButtonDown( ply, button )
 		end
 
 		if button == KEY_F1 then
-			OpenClassViever()
+			OpenClassViewer()
 		end
 	end
 end
@@ -64,17 +64,50 @@ function GM:PlayerButtonUp( ply, button )
 end
 
 function GM:KeyPress( ply, key )
-
+	if SERVER and !ply:IsBot() then
+		if ply:SCPTeam() == TEAM_SPEC then
+			if key == IN_ATTACK then
+				ply:SpectatePlayerNext()
+			elseif key == IN_ATTACK2 then
+				ply:SpectatePlayerPrev()
+			elseif key == IN_JUMP or key == IN_RELOAD then
+				ply:ChangeSpectateMode()
+			end
+		end
+	end
 end
 
 function GM:KeyRelease( ply, key )
 
 end
 
+if CLIENT then
+	hook.Add( "Tick", "SLCClientSideUse", function()
+		local ply = LocalPlayer()
+		if IsValid( ply ) and ply:KeyDown( IN_USE ) then
+			if ply:SCPTeam() != TEAM_SPEC then
+				local sp = ply:GetShootPos()
+				local tr = util.TraceLine{
+					start = sp,
+					endpos = sp + ply:GetAimVector() * 75,
+					filter = ply,
+					//mask = 
+				}
+
+				if tr.Hit and IsValid( tr.Entity ) then
+					if tr.Entity.CSUse then
+						tr.Entity:CSUse( ply )
+					end
+				end
+			end
+		end
+	end )
+end
+
 function GM:StartCommand( ply, cmd )
-	if ply:HasEffect( "amnc227" ) then
-		cmd:RemoveKey( IN_ATTACK )
-		cmd:RemoveKey( IN_ATTACK2 )
+	if ply.GetDisableControls and ply:GetDisableControls() then
+		cmd:ClearMovement()
+		cmd:ClearButtons()
 	end
 end
 
@@ -94,7 +127,7 @@ function GM:PlayerCanPickupWeapon( ply, wep )
 	local t = ply:SCPTeam()
 	
 	if t == TEAM_SPEC then return false end
-	if #ply:GetWeapons() >= 8 then
+	if #ply:GetWeapons() >= ply:GetInventorySize() then
 		if wep.Stacks and wep.Stacks <= 1 then return false end
 
 		local pwep = ply:GetWeapon( wep:GetClass() )
@@ -117,7 +150,6 @@ function GM:PlayerCanPickupWeapon( ply, wep )
 	local class = wep:GetClass()
 
 	local has = false
-
 	for k, v in pairs( ply:GetWeapons() ) do
 		if v:GetClass() == class then
 			has = true
@@ -136,13 +168,17 @@ function GM:PlayerCanPickupWeapon( ply, wep )
 		end
 	end
 	if !wep.Dropped then
-		return true
+		return CLIENT or !wep.PickupPriority or !wep.PriorityTime or wep.PickupPriority == ply or wep.PriorityTime < CurTime()
 	elseif wep.Dropped > CurTime() - 1 then
 		return false
 	end
 
 	if ply:KeyDown( IN_USE ) then
 		if wep == ply:GetEyeTrace().Entity then
+			if wep.CanPickup and wep:CanPickup( ply ) == false then
+				return false
+			end
+			
 			return true
 		end
 	end
@@ -242,4 +278,12 @@ end
 
 function ply:IsSpectator()
 	return !self:Alive() and self:SCPTeam() == TEAM_SPEC
+end
+
+function ply:GetInventorySize()
+	return 8
+end
+
+function ply:IsHuman()
+	return SCPTeams.hasInfo(self:SCPTeam(), SCPTeams.INFO_HUMAN) //or self:GetSCPHuman()
 end

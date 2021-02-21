@@ -21,8 +21,8 @@ SWEP.Primary.Sound = "csgo/taser/taser_shoot.wav"
 SWEP.Primary.HitSound = "csgo/taser/taser_hit.wav"
 
 if CLIENT then
-	SWEP.WepSelectIcon = Material( "slc/taser.png" )
-	SWEP.SelectColor = Color( 255, 210, 0, 200 )
+	SWEP.WepSelectIcon = Material( "slc/items/taser.png" )
+	SWEP.SelectColor = Color( 255, 210, 0, 255 )
 end
 
 //SWEP.FallbackMat = "models/weapons/csgo/taser"
@@ -117,52 +117,42 @@ function SWEP:MakeImpactEffect( fxdata )
 	end
 end
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /*---------------
-WORLDMODEL-FIXING UTILITY CODE
+PIECE OF GARBAGE
 ORIGINALLY BY ROBOTBOY
+
+FIXED BY danx91
+EDIT: NO, THIS IS NOT FIXED, IT STILL WORKS LIKE SHIT
 ----------------*/
-    //SWEP.FixWorldModel = false
-	SWEP.FixWorldModel = true
-     
-    SWEP.FixWorldModelPos = Vector( -3, 0, 0 )
-     
-    SWEP.FixWorldModelAng = Angle( 0, 0, 0 )
-     
-    SWEP.FixWorldModelScale = 1
-     
-function SWEP:DoFixWorldModel()
-            if ( IsValid( self.Owner ) ) then
-                    local att = self.Owner:GetAttachment( self.Owner:LookupAttachment( "anim_attachment_RH" ) )
-                    if ( !att ) then return end
-                    local pos, ang = att.Pos, att.Ang
-                    ang:RotateAroundAxis( ang:Forward(), self.FixWorldModelAng.p )
-                    ang:RotateAroundAxis( ang:Right(), self.FixWorldModelAng.y )
-                    ang:RotateAroundAxis( ang:Up(), self.FixWorldModelAng.r )
-                    pos = pos + ang:Forward() * self.FixWorldModelPos.x + ang:Right() * self.FixWorldModelPos.y + ang:Up() * self.FixWorldModelPos.z
-                    self:SetModelScale( self.FixWorldModelScale, 0 )
-                    self:SetRenderOrigin( pos )
-                    self:SetRenderAngles( ang )
-            else
-                    self:SetRenderOrigin( self:GetNetworkOrigin() )
-                    self:SetRenderAngles( self:GetNetworkAngles() )
-            end 
-end 
+SWEP.FixWorldModelPos = Vector( -3, 0, 0 )
+SWEP.FixWorldModelAng = Angle( 0, 0, 0 )
 
 function SWEP:DrawWorldModel()
-            if ( self.FixWorldModel ) then self:DoFixWorldModel() end
-            self:DrawModel()
+     if IsValid( self.Owner ) then
+        local att = self.Owner:GetAttachment( self.Owner:LookupAttachment( "anim_attachment_RH" ) )
+        if att then
+	        local ang = att.Ang
+	        ang:RotateAroundAxis( ang:Forward(), self.FixWorldModelAng.p )
+	        ang:RotateAroundAxis( ang:Right(), self.FixWorldModelAng.y )
+	        ang:RotateAroundAxis( ang:Up(), self.FixWorldModelAng.r )
+
+	        local pos = att.Pos
+	        pos = pos + ang:Forward() * self.FixWorldModelPos.x + ang:Right() * self.FixWorldModelPos.y + ang:Up() * self.FixWorldModelPos.z
+
+	        self:SetRenderOrigin( pos )
+	        self:SetRenderAngles( ang )
+
+	        self:DrawModel()
+	        return
+	    end
+	end
+
+	self:SetRenderOrigin( self:GetNetworkOrigin() )
+   	self:SetRenderAngles( self:GetNetworkAngles() )
+    //self:SetRenderOrigin( self:GetPos() )
+    //self:SetRenderAngles( self:GetAngles() )
+
+    
+
+    self:DrawModel()
 end

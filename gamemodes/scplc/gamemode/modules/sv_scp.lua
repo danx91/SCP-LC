@@ -20,10 +20,12 @@ SCP_VALID_ENTRIES = {
 	no_select = true,
 	no_draw = true,
 	allow_chat = true,
-	is_human = true,
+	scp_human = true,
 	no_damage_forces = true,
 	dynamic_spawn = true,
 	no_terror = true,
+	can_interact = true,
+	reward_override = true,
 	//disable_crosshair = true,
 }
 
@@ -78,7 +80,12 @@ function SendSCPList( ply )
 	net.Start( "SCPList" )
 		net.WriteTable( data )
 		net.WriteTable( TransmitSCPS )
-	net.Send( ply )
+
+	if ply then
+		net.Send( ply )
+	else
+		net.Broadcast()
+	end
 end
 
 function GetSCP( name )
@@ -95,7 +102,7 @@ function RegisterSCP( name, model, weapon, static_stats, dynamic_stats, custom_c
 		error( "SCP " .. name .. "is already registered!" )
 	end
 
-	if !_LANG["english"]["CLASSES"][name] or !_LANG["english"]["CLASS_INFO"][name] then
+	if !_LANG["english"]["CLASSES"][name] or !_LANG["english"]["CLASS_OBJECTIVES"][name] then
 		MsgC( Color( 255, 50, 50 ), "No language entry for: "..name, "\n" )
 	end
 
@@ -212,7 +219,7 @@ function ObjectSCP:SetCallback( cb, post )
 	end
 end
 
-function ObjectSCP:SetupPlayer( ply, ... )
+local function setup_scp_internal( self, ply, ... )
 	local args = {...}
 	local basestats = table.Copy( self.basestats )
 
@@ -222,10 +229,9 @@ function ObjectSCP:SetupPlayer( ply, ... )
 		end
 	end
 
-	ply:Cleanup( basestats.no_strip == true )
-
 	ply:UnSpectate()
-	ply:GodDisable()
+	ply:Cleanup( basestats.no_strip == true )
+	//ply:GodDisable()
 
 	/*if !self.basestats.no_strip then
 		ply:SetVest( 0 )
@@ -253,9 +259,10 @@ function ObjectSCP:SetupPlayer( ply, ... )
 	//ply.SCPHuman = basestats.is_human == true
 	//ply.SCPChat = basestats.allow_chat == true
 
-	ply:SetSCPHuman( basestats.is_human == true )
+	ply:SetSCPHuman( basestats.scp_human == true )
 	ply:SetSCPChat( basestats.allow_chat == true )
-	ply:SetSCPTerror( basestats.no_terror != true )
+	//ply:SetSCPTerror( basestats.no_terror != true )
+	ply:SetSCPCanInteract( basestats.can_interact == true )
 
 	if !basestats.no_model then
 		ply:SetModel( self.model )
@@ -298,18 +305,49 @@ function ObjectSCP:SetupPlayer( ply, ... )
 	//ply.noragdoll = basestats.no_ragdoll == true
 	ply:SetSCPNoRagdoll( basestats.no_ragdoll == true )
 
+	if isnumber( basestats.reward_override ) then
+		ply:SetProperty( "reward_override", basestats.reward_override )
+	end
+
 	//ply.handsmodel = basestats.hands_model
 	ply:SetupHands()
 
 	hook.Run( "SLCSCPSetup", ply, self.name )
 
-	net.Start( "PlayerSetup" )
-	net.Send( ply )
+	//net.Start( "PlayerSetup" )
+	//net.Send( ply )
 
 	if self.post then
 		self.post( ply, ... )
 	end
 end
+
+function ObjectSCP:SetupPlayer( ply, instant, ... )
+	ply:KillSilent()
+	ply:SetPos( ZERO_POS )
+
+	ply:SetSCPTeam( TEAM_SCP )
+	ply:SetSCPClass( CLASSES[self.name] )
+
+	if instant then
+		setup_scp_internal( self, ply, ... )
+	else
+		ply:SetProperty( "spawning_scp", { time = CurTime() + INFO_SCREEN_DURATION, obj = self, args = {...} } )
+		InfoScreen( ply, "spawn", INFO_SCREEN_DURATION )
+	end
+end
+
+hook.Add( "Tick", "SLCSpawnSCPTick", function()
+	local ct = CurTime()
+
+	for k, v in pairs( player.GetAll() ) do
+		local data = v:GetProperty( "spawning_scp" )
+		if data and data.time < ct then
+			v:SetProperty( "spawning_scp", nil )
+			setup_scp_internal( data.obj, v, unpack( data.args ) )
+		end
+	end
+end )
 
 setmetatable( ObjectSCP, { __call = ObjectSCP.Create } )
 --------------------------------------------------------------------------------
@@ -322,7 +360,7 @@ timer.Simple( 0, function()
 
 	SetupForceSCP()
 
-	for k, v in pairs( player.GetAll() ) do
-		SendSCPList( v )
-	end
+	//for k, v in pairs( player.GetAll() ) do
+		SendSCPList()
+	//end
 end )

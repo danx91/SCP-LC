@@ -1,11 +1,11 @@
---[[-------------------------------------------------------------------------
-This part of code was requested by "HUD is too big!11!!!1!"" users
----------------------------------------------------------------------------]]
 local hudscales = {
+	vbig = 1.1,
+	big = 1.05,
 	normal = 1,
+	default = 1,
 	small = 0.9,
-	vsmall = 0.75,
-	imretard = 0.5,
+	vsmall = 0.8,
+	imretard = 0.6,
 }
 
 local hudscalecvar = CreateClientConVar( "cvar_slc_hud_scale", 1, true )
@@ -14,15 +14,25 @@ concommand.Add( "slc_hud_scale", function( ply, cmd, args )
 	local size = args[1]
 
 	if !size or size == "" or !hudscales[size] then
-		print( "Unknown HUD size! Available sizes: normal, small, vsmall, imretard" )
+		print( "Unknown HUD size! Available sizes: vbig, big, normal, small, vsmall, imretard" )
 		return
 	end
 
 	RunConsoleCommand( "cvar_slc_hud_scale", hudscales[size] )
+end, function( cmd, args )
+	args = string.Trim( args )
+	args = string.lower( args )
+
+	local tbl = {}
+
+	for k, v in pairs( hudscales ) do
+		if string.find( k, args ) then
+			table.insert( tbl, cmd.." "..k )
+		end
+	end
+
+	return tbl
 end )
---[[-------------------------------------------------------------------------
-End of useless code
----------------------------------------------------------------------------]]
 
 local hide = {
 	CHudHealth = true,
@@ -42,14 +52,15 @@ end
 
 local MATS = {
 	blur = Material( "pp/blurscreen" ),
-	mag = Material( "slc_hud/magicon.png" ),
-	ammo = Material( "slc_hud/ammoicon.png" ),
-	battery = Material( "slc_hud/battery.png" ),
-	blink = Material( "slc_hud/blink" ),
-	sprint = Material( "slc_hud/sprint" ),
-	hp = Material( "slc_hud/hp" ),
-	sanity = Material( "slc_hud/sanityicon.png" ),
-	xp = Material( "slc_hud/xpicon.png" ),
+	mag = Material( "slc/hud/magicon.png" ),
+	ammo = Material( "slc/hud/ammoicon.png" ),
+	battery = Material( "slc/hud/battery.png" ),
+	blink = Material( "slc/hud/blink" ),
+	sprint = Material( "slc/hud/sprint" ),
+	hp = Material( "slc/hud/hp" ),
+	sanity = Material( "slc/hud/sanityicon.png" ),
+	xp = Material( "slc/hud/xpicon.png" ),
+	escape_blocked = Material( "slc/hud/escape_blocked.png" )
 }
 
 local button_next = false
@@ -91,6 +102,8 @@ end
 
 SCPMarkers = {}
 HUDDrawSpawnInfo = 0
+EscapeStatus = 0
+EscapeTimer = 0
 hud_disabled = false
 HUDDrawInfo = false
 HUDBlink = 1
@@ -110,6 +123,9 @@ function GM:HUDPaint()
 		RebuildFonts()
 	end
 
+	--[[-------------------------------------------------------------------------
+	Markers
+	---------------------------------------------------------------------------]]
 	for i, v in rpairs( SCPMarkers ) do
 		local scr = v.data.pos:ToScreen()
 
@@ -147,26 +163,105 @@ function GM:HUDPaint()
 		end
 	end
 
-	if HUDDrawSpawnInfo > CurTime() and !ROUND.post then
-		local ply = LocalPlayer()
+	if !ROUND.post then
+		--[[-------------------------------------------------------------------------
+		Spawn info - deprecated
+		---------------------------------------------------------------------------]]
+		/*if HUDDrawSpawnInfo > CurTime() then
+			local ply = LocalPlayer()
 
-		local team = ply:SCPTeam()
-		local class = ply:SCPClass()
-		local color = SCPTeams.getColor( team )
+			local team = ply:SCPTeam()
+			local class = ply:SCPClass()
+			local color = SCPTeams.getColor( team )
 
-		local tw, th = draw.Text{
-			text = LANG.CLASSES[class] or class,
-			pos = { w * 0.5, h * 0.07 },
-			color = color,
-			font = "SCPHUDVBig",
-			xalign = TEXT_ALIGN_CENTER,
-			yalign = TEXT_ALIGN_TOP,
-		}
+			local tw, th = draw.Text{
+				text = LANG.CLASSES[class] or class,
+				pos = { w * 0.5, h * 0.07 },
+				color = color,
+				font = "SCPHUDVBig",
+				xalign = TEXT_ALIGN_CENTER,
+				yalign = TEXT_ALIGN_TOP,
+			}
 
-		local startinfo = LANG.CLASS_INFO[class]
+			local startinfo = LANG.CLASS_INFO[class]
 
-		if startinfo then
-			draw.MultilineText( w * 0.5, h * 0.075 + th, startinfo, "SCPHUDBig", Color( 255, 255, 255 ), w * 0.5, 0, 0, TEXT_ALIGN_CENTER )
+			if startinfo then
+				draw.MultilineText( w * 0.5, h * 0.075 + th, startinfo, "SCPHUDBig", Color( 255, 255, 255 ), w * 0.5, 0, 0, TEXT_ALIGN_CENTER )
+			end
+		--end*/
+
+		--[[-------------------------------------------------------------------------
+		EscapeTimer
+		---------------------------------------------------------------------------]]
+		/*else*/if EscapeStatus != 0 then
+			local x = w * 0.4625
+			local y = h * 0.15
+			local s = w * 0.075
+
+			if EscapeStatus == 1 then
+				draw.Text{
+					text = "Escaping...",
+					pos = { w * 0.5, y - h * 0.025 },
+					color = Color( 255, 255, 255 ),
+					font = "SCPHUDVBig",
+					xalign = TEXT_ALIGN_CENTER,
+					yalign = TEXT_ALIGN_BOTTOM,
+				}
+
+				local a = s * math.sqrt( 2 ) / 2
+				local diff = (s - a) / 2
+				local s2 = s / 2
+
+				local cx = x + s2
+				local cy = y + s2
+
+				local mx = Matrix()
+
+				mx:Translate( Vector( cx, cy ) )
+				mx:Rotate( Angle( 0, 45, 0 ) )
+				mx:Translate( Vector( -cx, -cy ) )
+
+				cam.PushModelMatrix( mx )
+					local f = (EscapeTimer - CurTime()) / 20
+
+					surface.SetDrawColor( Color( 255, 255, 255, 255 ) )
+					draw.NoTexture()
+					surface.DrawCooldownHollowRectCW( x + diff, y + diff, a, a, 10, f, HRCSTYLE_RECT_SOLID )
+				cam.PopModelMatrix()
+
+				draw.Text{
+					text = math.Round(EscapeTimer - CurTime()),
+					pos = { cx, cy },
+					color = Color( 255, 255, 255 ),
+					font = "SCPHUDVBig",
+					xalign = TEXT_ALIGN_CENTER,
+					yalign = TEXT_ALIGN_CENTER,
+				}
+			elseif EscapeStatus == 2 then
+				draw.Text{
+					text = "Escape Blocked!",
+					pos = { w * 0.5, y - h * 0.025 },
+					color = Color( 255, 0, 0 ),
+					font = "SCPHUDVBig",
+					xalign = TEXT_ALIGN_CENTER,
+					yalign = TEXT_ALIGN_BOTTOM,
+				}
+
+				PushFilters( TEXFILTER.LINEAR )
+					surface.SetDrawColor( Color( 255, 255, 255, 255 ) )
+					surface.SetMaterial( MATS.escape_blocked )
+					surface.DrawTexturedRect( x, y, s, s )
+				PopFilters()
+
+				/*draw.Text{
+					text = "Someone is blocking escape for your team!",
+					pos = { w * 0.5, y + s },
+					color = Color( 255, 0, 0 ),
+					font = "SCPHUDBig",
+					xalign = TEXT_ALIGN_CENTER,
+					yalign = TEXT_ALIGN_TOP,
+				}*/
+			end
 		end
 	end
 
@@ -177,18 +272,7 @@ function GM:HUDPaint()
 	local isspec = ply:SCPTeam() == TEAM_SPEC
 	local spectarget = ply:GetObserverTarget()
 	local drawtarget = IsValid( spectarget ) and ROUND.active
-	local pnum = player.GetCount()
-	local showtime = pnum > 1 and ROUND.active
-
-	local scale = hudscalecvar:GetFloat()
-	if !isspec and scale < 1 then
-		local mx = Matrix()
-
-		mx:Translate( Vector( 0, h * ( 1 - scale ), 0 ) )
-		mx:Scale( Vector( scale, scale, 1 ) )
-
-		cam.PushModelMatrix( mx )
-	end
+	local showtime = ROUND.active
 
 	surface.SetMaterial( MATS.blur )
 
@@ -205,13 +289,35 @@ function GM:HUDPaint()
 
 	local start = h * 0.01
 
+	local sh = h
+	local sw = w
+	local addy = 0
+
+	local bigFontOverride, mediumFontOverride, smallFontOverride, numbersFontOverride
+
+	if !isspec then
+		local scale = hudscalecvar:GetFloat()
+
+		if scale <= 0.9 then
+			bigFontOverride = "SCPHUDMedium"
+			mediumFontOverride = "SCPHUDVSmall"
+			smallFontOverride = "SCPHUDVSmall"
+			numbersFontOverride = "SCPNumbersSmall"
+		end
+
+		w = w * 0.95 * scale
+		h = h * 0.95 * scale
+
+		addy = sh - h
+	end
+
 	if !isspec then
 		--surface.DrawRect( start - 2, h * 0.765 - 2, w * 0.3 + 4, h * 0.225 + 4 )
 		surface.DrawPoly{
-			{ x = start - 2, y = h * 0.75 - 2 },
-			{ x = start + w * 0.275 + 2, y = h * 0.75 - 2 },
-			{ x = start + w * 0.35 + 3, y = h * 0.99 + 2 },
-			{ x = start - 2, y = h * 0.99 + 2 }
+			{ x = start - 2, y = h * 0.75 - 2 + addy },
+			{ x = start + w * 0.275 + 2, y = h * 0.75 - 2 + addy },
+			{ x = start + w * 0.35 + 3, y = h * 0.99 + 2 + addy },
+			{ x = start - 2, y = h * 0.99 + 2 + addy }
 		}
 	else
 		if drawtarget then
@@ -223,57 +329,25 @@ function GM:HUDPaint()
 		end
 	end
 
-	if scale == 1 then
-		render.SetStencilTestMask( 0xFF )
-		render.SetStencilWriteMask( 0xFF )
-		render.SetStencilPassOperation( STENCIL_KEEP )
-		render.SetStencilFailOperation( STENCIL_REPLACE )
-		render.SetStencilZFailOperation( STENCIL_KEEP )
+	render.SetStencilTestMask( 0xFF )
+	render.SetStencilWriteMask( 0xFF )
+	render.SetStencilPassOperation( STENCIL_KEEP )
+	render.SetStencilFailOperation( STENCIL_REPLACE )
+	render.SetStencilZFailOperation( STENCIL_KEEP )
 
-		render.SetStencilCompareFunction( STENCIL_NEVER )
-		render.SetStencilReferenceValue( 1 )
+	render.SetStencilCompareFunction( STENCIL_NEVER )
+	render.SetStencilReferenceValue( 1 )
 
-		render.ClearStencil()
-		render.SetStencilEnable( true )
-
-		if !isspec then
-			//surface.DrawRect( start, h * 0.765, w * 0.3, h * 0.225 )
-			surface.DrawPoly{
-				{ x = start, y = h * 0.75 },
-				{ x = start + w * 0.275, y = h * 0.75 },
-				{ x = start + w * 0.35, y = h * 0.99 },
-				{ x = start, y = h * 0.99 }
-			}
-		else
-			if drawtarget then
-				surface.DrawRect( w * 0.4, h * 0.06 + 10, w * 0.2, h * 0.05 )
-			end
-
-			if showtime then
-				surface.DrawRect( w * 0.45, 10, w * 0.1, h * 0.05 )
-			end
-		end
-
-		render.SetStencilCompareFunction( STENCIL_EQUAL )
-		render.SetStencilFailOperation( STENCIL_KEEP )
-
-		surface.SetMaterial( MATS.blur )
-		surface.SetDrawColor( Color( 255, 255, 255, 255 ) )
-		surface.DrawTexturedRect( 0, 0, w, h )
-
-		render.SetStencilEnable( false )
-		surface.SetDrawColor( Color( 0, 0, 0, 150 ) )
-	else
-		surface.SetDrawColor( Color( 0, 0, 0, 235 ) )
-	end
+	render.ClearStencil()
+	render.SetStencilEnable( true )
 
 	if !isspec then
-		draw.NoTexture()
+		//surface.DrawRect( start, h * 0.765, w * 0.3, h * 0.225 )
 		surface.DrawPoly{
-			{ x = start, y = h * 0.75 },
-			{ x = start + w * 0.275, y = h * 0.75 },
-			{ x = start + w * 0.35, y = h * 0.99 },
-			{ x = start, y = h * 0.99 }
+			{ x = start, y = h * 0.75 + addy },
+			{ x = start + w * 0.275, y = h * 0.75 + addy },
+			{ x = start + w * 0.35, y = h * 0.99 + addy },
+			{ x = start, y = h * 0.99 + addy }
 		}
 	else
 		if drawtarget then
@@ -285,7 +359,36 @@ function GM:HUDPaint()
 		end
 	end
 
-	local time = ROUND.time > 0 and string.ToMinutesSeconds( ROUND.time - CurTime() ) or "00:00"
+	render.SetStencilCompareFunction( STENCIL_EQUAL )
+	render.SetStencilFailOperation( STENCIL_KEEP )
+
+	surface.SetMaterial( MATS.blur )
+	surface.SetDrawColor( Color( 255, 255, 255, 255 ) )
+	surface.DrawTexturedRect( 0, 0, sw, sh )
+
+	render.SetStencilEnable( false )
+	surface.SetDrawColor( Color( 0, 0, 0, 150 ) )
+
+	if !isspec then
+		draw.NoTexture()
+		surface.DrawPoly{
+			{ x = start, y = h * 0.75 + addy },
+			{ x = start + w * 0.275, y = h * 0.75 + addy },
+			{ x = start + w * 0.35, y = h * 0.99 + addy },
+			{ x = start, y = h * 0.99 + addy }
+		}
+	else
+		if drawtarget then
+			surface.DrawRect( w * 0.4, h * 0.06 + 10, w * 0.2, h * 0.05 )
+		end
+
+		if showtime then
+			surface.DrawRect( w * 0.45, 10, w * 0.1, h * 0.05 )
+		end
+	end
+
+	local td = ROUND.time - CurTime()
+	local time = td > 0 and string.ToMinutesSeconds( td ) or "00:00"
 
 	if isspec then
 		if drawtarget then
@@ -315,26 +418,26 @@ function GM:HUDPaint()
 	end
 
 	surface.SetDrawColor( Color( 150, 150, 150, 100 ) )
-	surface.DrawRect( start + w * 0.025, h * 0.795, w * 0.235, 2 )
+	surface.DrawRect( start + w * 0.025, h * 0.795 + addy, w * 0.235, 2 )
 
 	draw.LimitedText{
 		text = string.sub( ply:Nick(), 1, 24 ),
-		pos = { start + w * 0.0875, h * 0.773 },
+		pos = { start + w * 0.0875, h * 0.773 + addy },
 		color = Color( 255, 255, 255, 100 ),
-		font = "SCPHUDBig",
+		font = bigFontOverride or "SCPHUDBig",
 		xalign = TEXT_ALIGN_CENTER,
 		yalign = TEXT_ALIGN_CENTER,
 		max_width = w * 0.175 - start
 	}
 
 	surface.SetDrawColor( Color( 150, 150, 150, 100 ) )
-	surface.DrawRect( start + w * 0.175, h * 0.76, 2, h * 0.025 )
+	surface.DrawRect( start + w * 0.175, h * 0.76 + addy, 2, h * 0.025 )
 
 	draw.Text{
-		text = string.sub( time, 1, 23 ),
-		pos = { start + w * 0.225, h * 0.773 },
+		text = time,
+		pos = { start + w * 0.225, h * 0.773 + addy },
 		color = Color( 255, 255, 255, 100 ),
-		font = "SCPNumbersBig",
+		font =  numbersFontOverride or "SCPNumbersBig",
 		xalign = TEXT_ALIGN_CENTER,
 		yalign = TEXT_ALIGN_CENTER,
 	}
@@ -352,17 +455,17 @@ function GM:HUDPaint()
 	local ixo = ratio * h * 0.005
 
 	local bar = SimpleMatrix( 2, 4, {
-		{ start + w * 0.01, h * 0.81 },
-		{ start + w * 0.275, h * 0.81 },
-		{ start + w * 0.275 + xoffset, h * 0.845 },
-		{ start + w * 0.01 + xoffset, h * 0.845 },
+		{ start + w * 0.01, h * 0.81 + addy },
+		{ start + w * 0.275, h * 0.81 + addy },
+		{ start + w * 0.275 + xoffset, h * 0.845 + addy },
+		{ start + w * 0.01 + xoffset, h * 0.845 + addy },
 	} )
 
 	local bar_out = SimpleMatrix( 2, 4, {
-		{ start + w * 0.01 - 4, h * 0.81 - 2 },
-		{ start + w * 0.275 + 2, h * 0.81 - 2 },
-		{ start + w * 0.275 + xoffset + 4, h * 0.845 + 2 },
-		{ start + w * 0.01 + xoffset - 2, h * 0.845 + 2 },
+		{ start + w * 0.01 - 4, h * 0.81 - 2 + addy },
+		{ start + w * 0.275 + 2, h * 0.81 - 2 + addy },
+		{ start + w * 0.275 + xoffset + 4, h * 0.845 + 2 + addy },
+		{ start + w * 0.01 + xoffset - 2, h * 0.845 + 2 + addy },
 	} )
 
 	local bar_offset = SimpleMatrix( 2, 4, {
@@ -375,10 +478,10 @@ function GM:HUDPaint()
 	local xico = ratio * ( h * 0.025 )
 
 	local ico = SimpleMatrix( 2, 4, {
-		{ start + w * 0.015, h * 0.815 },
-		{ start + w * 0.025, h * 0.815 },
-		{ start + w * 0.025 + xico, h * 0.84 },
-		{ start + w * 0.015 + xico, h * 0.84 },
+		{ start + w * 0.015, h * 0.815 + addy },
+		{ start + w * 0.025, h * 0.815 + addy },
+		{ start + w * 0.025 + xico, h * 0.84 + addy },
+		{ start + w * 0.015 + xico, h * 0.84 + addy },
 	} )
 
 	local ico_offset = SimpleMatrix( 2, 4, {
@@ -400,16 +503,16 @@ function GM:HUDPaint()
 
 		draw.NoTexture()	
 		surface.DrawPoly{
-			{ x = start + w * 0.015, y = h * 0.815 },
-			{ x = start + w * 0.015 + width, y = h * 0.815 },
-			{ x = start + w * 0.015 + width + xico, y = h * 0.84 },
-			{ x = start + w * 0.015 + xico, y = h * 0.84 },
+			{ x = start + w * 0.015, y = h * 0.815 + addy },
+			{ x = start + w * 0.015 + width, y = h * 0.815 + addy },
+			{ x = start + w * 0.015 + width + xico, y = h * 0.84 + addy },
+			{ x = start + w * 0.015 + xico, y = h * 0.84 + addy },
 		}
 	end
 
 	surface.SetDrawColor( Color( 255, 255, 255, 255 ) )
 	surface.SetMaterial( MATS.blink )
-	surface.DrawTexturedRect( h * -0.01 + w * 0.1475, h * 0.8075, h * 0.04, h * 0.04 )
+	surface.DrawTexturedRect( h * -0.01 + w * 0.1475, h * 0.8075 + addy, h * 0.04, h * 0.04 )
 
 	--HP
 	bar = bar + bar_offset
@@ -446,7 +549,7 @@ function GM:HUDPaint()
 
 	surface.SetDrawColor( Color( 255, 255, 255, 100 ) )
 	surface.SetMaterial( MATS.hp )
-	surface.DrawTexturedRect( h * -0.005 + w * 0.1475 + xoffset + cxo, h * 0.8625, h * 0.03, h * 0.03 )
+	surface.DrawTexturedRect( h * -0.005 + w * 0.1475 + xoffset + cxo, h * 0.8625 + addy, h * 0.03, h * 0.03 )
 
 	if mxButton( bar, bw, bh ) > 0 then
 		shownum = hp
@@ -492,7 +595,7 @@ function GM:HUDPaint()
 
 	surface.SetDrawColor( Color( 255, 255, 255, 255 ) )
 	surface.SetMaterial( MATS.sprint )
-	surface.DrawTexturedRect( h * -0.005 + w * 0.1475 + 2 * (xoffset + cxo), h * 0.9125, h * 0.03, h * 0.03 )
+	surface.DrawTexturedRect( h * -0.005 + w * 0.1475 + 2 * (xoffset + cxo), h * 0.9125 + addy, h * 0.03, h * 0.03 )
 
 	local wep = ply:GetActiveWeapon()
 
@@ -511,16 +614,16 @@ function GM:HUDPaint()
 
 		local xo = ratio * ( h * 0.12 )
 		local bat = {
-			{ x = start + w * 0.01 - 4, y = h * 0.86 - 2 },
-			{ x = start + w * 0.01 - 4 + xoffset, y = h * 0.86 - 2 },
-			{ x = start + w * 0.01 - 4 + xo, y = h * 0.945 + 2 },
-			{ x = start + w * 0.01 - 4, y = h * 0.945 + 2 },
+			{ x = start + w * 0.01 - 4, y = h * 0.86 - 2 + addy },
+			{ x = start + w * 0.01 - 4 + xoffset, y = h * 0.86 - 2 + addy },
+			{ x = start + w * 0.01 - 4 + xo, y = h * 0.945 + 2 + addy },
+			{ x = start + w * 0.01 - 4, y = h * 0.945 + 2 + addy },
 		}
 		surface.DrawPoly( bat )
 
 		draw.Text{
 			text = battery.."%",
-			pos = { start + w * 0.01, h * 0.945 },
+			pos = { start + w * 0.01, h * 0.945 + addy },
 			color = Color( 255, 255, 255, 100 ),
 			font = "SCPNumbersSmall",
 			xalign = TEXT_ALIGN_LEFT,
@@ -530,33 +633,35 @@ function GM:HUDPaint()
 		PushFilters( TEXFILTER.LINEAR )
 			surface.SetDrawColor( Color( 255, 255, 255, 100 ) )
 			surface.SetMaterial( MATS.battery )
-			surface.DrawTexturedRect( h * -0.02 + w * 0.01 + xo * 0.5 - 4, h * 0.94, h * 0.06, h * 0.06 )
+			surface.DrawTexturedRect( h * -0.02 + w * 0.01 + xo * 0.5 - 4, h * 0.94 + addy, h * 0.06, h * 0.06 )
 		PopFilters()
 	end
 
 	--AMMO
-	if IsValid( wep ) and wep:GetMaxClip1() > 0 then
+	if IsValid( wep ) and ( wep:GetMaxClip1() > 0 or wep.GetCustomClip ) then
 		PushFilters( TEXFILTER.LINEAR )
-			surface.SetDrawColor( Color( 255, 255, 255, 255 ) )
-			surface.SetMaterial( MATS.ammo )
-			surface.DrawTexturedRect( start + w * 0.075, h * 0.9575, h * 0.025, h * 0.025 )
+			if !wep.GetCustomClip then
+				surface.SetDrawColor( Color( 255, 255, 255, 255 ) )
+				surface.SetMaterial( MATS.ammo )
+				surface.DrawTexturedRect( start + w * 0.075, h * 0.9575 + addy, h * 0.025, h * 0.025 )
 
-			draw.Text{
-				text = string.sub( ply:GetAmmoCount( wep:GetPrimaryAmmoType() ), 1, 23 ),
-				pos = { start + w * 0.1, h * 0.97 },
-				color = Color( 255, 255, 255, 100 ),
-				font = "SCPNumbersBig",
-				xalign = TEXT_ALIGN_LEFT,
-				yalign = TEXT_ALIGN_CENTER,
-			}
+				draw.Text{
+					text = string.sub( ply:GetAmmoCount( wep:GetPrimaryAmmoType() ), 1, 23 ),
+					pos = { start + w * 0.1, h * 0.97 + addy },
+					color = Color( 255, 255, 255, 100 ),
+					font = "SCPNumbersBig",
+					xalign = TEXT_ALIGN_LEFT,
+					yalign = TEXT_ALIGN_CENTER,
+				}
+			end
 
 			surface.SetDrawColor( Color( 255, 255, 255, 255 ) )
 			surface.SetMaterial( MATS.mag )
-			surface.DrawTexturedRect( start + w * 0.21, h * 0.9575, h * 0.025, h * 0.025 )
+			surface.DrawTexturedRect( start + w * 0.21, h * 0.9575 + addy, h * 0.025, h * 0.025 )
 
 			draw.Text{
-				text = string.sub( wep:Clip1(), 1, 23 ),
-				pos = { start + w * 0.235, h * 0.97 },
+				text = string.sub( wep.GetCustomClip and wep:GetCustomClip() or wep:Clip1(), 1, 23 ),
+				pos = { start + w * 0.235, h * 0.97 + addy },
 				color = Color( 255, 255, 255, 100 ),
 				font = "SCPNumbersBig",
 				xalign = TEXT_ALIGN_LEFT,
@@ -567,65 +672,61 @@ function GM:HUDPaint()
 	end
 
 	--More info
-	if HUDDrawInfo or HUDDrawSpawnInfo > CurTime() or ROUND.post then
+	if HUDDrawInfo /*or HUDDrawSpawnInfo > CurTime()*/ or ROUND.post then
 		surface.SetDrawColor( Color( 150, 150, 150, 100 ) )
 		draw.NoTexture()
 
 		surface.DrawPoly{
-			{ x = start + w * 0.285 - 3, y = h * 0.75 - 2 },
-			{ x = start + w * 0.55 + 2 + h * 0.03, y = h * 0.75 - 2 },
-			{ x = start + w * 0.625 + 3 + h * 0.03, y = h * 0.99 + 2 },
-			{ x = start + w * 0.36 - 2, y = h * 0.99 + 2 }
+			{ x = start + w * 0.285 - 3, y = h * 0.75 - 2 + addy },
+			{ x = start + w * 0.55 + 2 + h * 0.03, y = h * 0.75 - 2 + addy },
+			{ x = start + w * 0.625 + 3 + h * 0.03, y = h * 0.99 + 2 + addy },
+			{ x = start + w * 0.36 - 2, y = h * 0.99 + 2 + addy }
 		}
 
-		if scale == 1 then
-			render.SetStencilTestMask( 0xFF )
-			render.SetStencilWriteMask( 0xFF )
-			render.SetStencilPassOperation( STENCIL_KEEP )
-			render.SetStencilFailOperation( STENCIL_REPLACE )
-			render.SetStencilZFailOperation( STENCIL_KEEP )
+		render.SetStencilTestMask( 0xFF )
+		render.SetStencilWriteMask( 0xFF )
+		render.SetStencilPassOperation( STENCIL_KEEP )
+		render.SetStencilFailOperation( STENCIL_REPLACE )
+		render.SetStencilZFailOperation( STENCIL_KEEP )
 
-			render.SetStencilCompareFunction( STENCIL_NEVER )
-			render.SetStencilReferenceValue( 1 )
+		render.SetStencilCompareFunction( STENCIL_NEVER )
+		render.SetStencilReferenceValue( 1 )
 
-			render.ClearStencil()
-			render.SetStencilEnable( true )
+		render.ClearStencil()
+		render.SetStencilEnable( true )
 
-			surface.SetMaterial( MATS.blur )
+		surface.SetMaterial( MATS.blur )
 
-			surface.DrawPoly{
-				{ x = start + w * 0.285, y = h * 0.75 },
-				{ x = start + w * 0.55 + h * 0.03, y = h * 0.75 },
-				{ x = start + w * 0.625 + h * 0.03, y = h * 0.99 },
-				{ x = start + w * 0.36, y = h * 0.99 }
-			}
+		surface.DrawPoly{
+			{ x = start + w * 0.285, y = h * 0.75 + addy },
+			{ x = start + w * 0.55 + h * 0.03, y = h * 0.75 + addy },
+			{ x = start + w * 0.625 + h * 0.03, y = h * 0.99 + addy },
+			{ x = start + w * 0.36, y = h * 0.99 + addy }
+		}
 
-			render.SetStencilCompareFunction( STENCIL_EQUAL )
-			render.SetStencilFailOperation( STENCIL_KEEP )
-			render.SetStencilPassOperation( STENCIL_REPLACE )
+		render.SetStencilCompareFunction( STENCIL_EQUAL )
+		render.SetStencilFailOperation( STENCIL_KEEP )
+		render.SetStencilPassOperation( STENCIL_REPLACE )
 
-			surface.SetDrawColor( Color( 255, 255, 255, 255 ) )
-			surface.DrawTexturedRect( 0, 0, w, h )
+		surface.SetDrawColor( Color( 255, 255, 255, 255 ) )
+		surface.DrawTexturedRect( 0, 0, sw, sh )
 
-			render.SetStencilEnable( false )
-			surface.SetDrawColor( Color( 0, 0, 0, 150 ) )
-		else
-			surface.SetDrawColor( Color( 0, 0, 0, 235 ) )
-		end
+		render.SetStencilEnable( false )
+		surface.SetDrawColor( Color( 0, 0, 0, 150 ) )
 
 		draw.NoTexture()
 		surface.DrawPoly{
-			{ x = start + w * 0.285, y = h * 0.75 },
-			{ x = start + w * 0.55 + h * 0.03, y = h * 0.75 },
-			{ x = start + w * 0.625 + h * 0.03, y = h * 0.99 },
-			{ x = start + w * 0.36, y = h * 0.99 }
+			{ x = start + w * 0.285, y = h * 0.75 + addy },
+			{ x = start + w * 0.55 + h * 0.03, y = h * 0.75 + addy },
+			{ x = start + w * 0.625 + h * 0.03, y = h * 0.99 + addy },
+			{ x = start + w * 0.36, y = h * 0.99 + addy }
 		}
 
 		local start = h * 0.01 + w * 0.285
 
 		local _, th = draw.Text{
 			text = LANG.HUD.class..":",
-			pos = { start + w * 0.02, h * 0.75 },
+			pos = { start + w * 0.02, h * 0.75 + addy },
 			color = Color( 255, 255, 255, 100 ),
 			font = "SCPHUDVSmall",
 			xalign = TEXT_ALIGN_LEFT,
@@ -635,9 +736,9 @@ function GM:HUDPaint()
 		local class = ply:SCPClass()
 		draw.LimitedText{
 			text = LANG.CLASSES[class] or class,
-			pos = { start + w * 0.04, h * 0.75 + th * 0.75 },
+			pos = { start + w * 0.04, h * 0.75 + th * 0.75 + addy },
 			color = Color( 255, 255, 255, 100 ),
-			font = "SCPHUDMedium",
+			font = mediumFontOverride or "SCPHUDMedium",
 			xalign = TEXT_ALIGN_LEFT,
 			yalign = TEXT_ALIGN_TOP,
 			max_width = w * 0.1125
@@ -645,7 +746,7 @@ function GM:HUDPaint()
 		
 		local _, th = draw.Text{
 			text = LANG.HUD.team..":",
-			pos = { start + w * 0.1525, h * 0.75 },
+			pos = { start + w * 0.1525, h * 0.75 + addy },
 			color = Color( 255, 255, 255, 100 ),
 			font = "SCPHUDVSmall",
 			xalign = TEXT_ALIGN_LEFT,
@@ -655,9 +756,9 @@ function GM:HUDPaint()
 		local tname = SCPTeams.getName( ply:SCPTeam() )
 		draw.LimitedText{
 			text = LANG.TEAMS[tname] or tname,
-			pos = { start + w * 0.1725, h * 0.75 + th * 0.75 },
+			pos = { start + w * 0.1725, h * 0.75 + th * 0.75 + addy },
 			color = Color( 255, 255, 255, 100 ),
-			font = "SCPHUDMedium",
+			font = mediumFontOverride or "SCPHUDMedium",
 			xalign = TEXT_ALIGN_LEFT,
 			yalign = TEXT_ALIGN_TOP,
 			max_width = w * 0.1025
@@ -675,24 +776,24 @@ function GM:HUDPaint()
 		surface.DrawLine( xx, 0, xx, h )*/
 
 		local bar = SimpleMatrix( 2, 4, {
-			{ start, h * 0.81 },
-			{ start + w * 0.265, h * 0.81 },
-			{ start + w * 0.265 + xoffset, h * 0.845 },
-			{ start + xoffset, h * 0.845 },
+			{ start, h * 0.81 + addy },
+			{ start + w * 0.265, h * 0.81 + addy },
+			{ start + w * 0.265 + xoffset, h * 0.845 + addy },
+			{ start + xoffset, h * 0.845 + addy },
 		} )
 
 		local bar_out = SimpleMatrix( 2, 4, {
-			{ start - 4, h * 0.81 - 2 },
-			{ start + w * 0.265 + 2, h * 0.81 - 2 },
-			{ start + w * 0.265 + xoffset + 4, h * 0.845 + 2 },
-			{ start + xoffset - 2, h * 0.845 + 2 },
+			{ start - 4, h * 0.81 - 2 + addy },
+			{ start + w * 0.265 + 2, h * 0.81 - 2 + addy },
+			{ start + w * 0.265 + xoffset + 4, h * 0.845 + 2 + addy },
+			{ start + xoffset - 2, h * 0.845 + 2 + addy },
 		} )
 
 		local ico = SimpleMatrix( 2, 4, {
-			{ start + ixo + w * 0.004, h * 0.815 },
-			{ start + ixo + w * 0.014, h * 0.815 },
-			{ start + ixo + w * 0.014 + xico, h * 0.84 },
-			{ start + ixo + w * 0.004 + xico, h * 0.84 },
+			{ start + ixo + w * 0.004, h * 0.815 + addy },
+			{ start + ixo + w * 0.014, h * 0.815 + addy },
+			{ start + ixo + w * 0.014 + xico, h * 0.84 + addy },
+			{ start + ixo + w * 0.004 + xico, h * 0.84 + addy },
 		} )
 
 		--SANITY
@@ -715,7 +816,7 @@ function GM:HUDPaint()
 
 		surface.SetDrawColor( Color( 255, 255, 255, 100 ) )
 		surface.SetMaterial( MATS.sanity )
-		surface.DrawTexturedRect( start + w * 0.1325 - h * 0.015, h * 0.8125, h * 0.03, h * 0.03 )
+		surface.DrawTexturedRect( start + w * 0.1325 - h * 0.015, h * 0.8125 + addy, h * 0.03, h * 0.03 )
 
 		if mxButton( bar, bw, bh ) > 0 then
 			shownum = san
@@ -733,18 +834,25 @@ function GM:HUDPaint()
 		surface.DrawDifference( bar:ToPoly(), bar_out:ToPoly() )
 
 		local xp = ply:SCPExp()
-		local maxxp = CVAR.levelxp:GetInt()
+		local maxxp = CVAR.levelxp:GetInt() + CVAR.levelinc:GetInt() * ply:SCPPrestige()
 		if xp > 0 then
 			local s = start + xoffset + cxo + ixo + w * 0.004
-			local width = w * 0.257 * ( xp / maxxp )
+
+			local pct = ( xp / maxxp )
+
+			if pct > 1 then
+				pct = 1
+			end
+
+			local width = w * 0.257 * pct
 
 			draw.NoTexture()
 			surface.SetDrawColor( Color( 175, 152, 0, 175 ) )
 			surface.DrawPoly{
-				{ x = s, y = h * 0.865 },
-				{ x = s + width, y = h * 0.865 },
-				{ x = s + width + xico, y = h * 0.89 },
-				{ x = s + xico, y = h * 0.89 },
+				{ x = s, y = h * 0.865 + addy },
+				{ x = s + width, y = h * 0.865 + addy },
+				{ x = s + width + xico, y = h * 0.89 + addy },
+				{ x = s + xico, y = h * 0.89 + addy },
 			}
 		end
 
@@ -757,14 +865,14 @@ function GM:HUDPaint()
 		PushFilters( TEXFILTER.LINEAR )
 			surface.SetDrawColor( Color( 255, 255, 255, 100 ) )
 			surface.SetMaterial( MATS.xp )
-			surface.DrawTexturedRect( start + xoffset + cxo + w * 0.1325 - h * 0.02, h * 0.8575, h * 0.04, h * 0.04 )
+			surface.DrawTexturedRect( start + xoffset + cxo + w * 0.1325 - h * 0.02, h * 0.8575 + addy, h * 0.04, h * 0.04 )
 		PopFilters()
 
 		draw.Text{
 			text = LANG.HUD.prestige_points..":\t"..ply:SCPPrestigePoints(),
-			pos = { start + (cxo + xoffset) * 2 + w * 0.01, h * 0.91 },
+			pos = { start + (cxo + xoffset) * 2 + w * 0.01, h * 0.91 + addy },
 			color = Color( 255, 255, 255, 100 ),
-			font = "SCPHUDSmall",
+			font = smallFontOverride or "SCPHUDSmall",
 			xalign = TEXT_ALIGN_LEFT,
 			yalign = TEXT_ALIGN_TOP,
 		}
@@ -772,7 +880,7 @@ function GM:HUDPaint()
 
 	if maxshow > 0 then
 		local text = string.format( "%i / %i  %s", shownum, maxshow, showtext or "" )
-		local tw, th = draw.TextSize( text, "SCPHUDSmall" )
+		local tw, th = draw.TextSize( text, smallFontOverride or "SCPHUDSmall" )
 
 		local x, y = input.GetCursorPos()
 
@@ -789,15 +897,14 @@ function GM:HUDPaint()
 			text = text,
 			pos = { x + 4, y + 4 },
 			color = Color( 200, 200, 200, 255 ),
-			font = "SCPHUDSmall",
+			font = smallFontOverride or "SCPHUDSmall",
 			xalign = TEXT_ALIGN_LEFT,
 			yalign = TEXT_ALIGN_TOP,
 		}
 	end
 
-	if !isspec and scale < 1 then
-		cam.PopModelMatrix()
-	end
+	w = sw
+	h = sh
 
 	--Hint
 	if HUDPickupHint then
@@ -840,7 +947,9 @@ function GM:HUDPaint()
 
 		local t = type( HUDPickupHint )
 		if t == "table" or  t == "Weapon" then
-			if HUDPickupHint.PrintName then
+			if HUDPickupHint.PickupName then
+				text = HUDPickupHint.PickupName
+			elseif HUDPickupHint.PrintName then
 				text = HUDPickupHint.PrintName
 			elseif HUDPickupHint.GetPrintName then
 				text = HUDPickupHint:GetPrintName()
@@ -871,6 +980,10 @@ end
 local dishudnf = false
 local wasdisabled = false
 
+function GM:SLCShouldDrawSCPHUD()
+	return !hud_disabled and !HUDDrawInfo /*and HUDDrawSpawnInfo < CurTime()*/ and !ROUND.preparing
+end
+
 function DisableHUDNextFrame()
 	dishudnf = true
 end
@@ -886,4 +999,25 @@ hook.Add( "Think", "SCPHUDThink", function()
 	elseif hud_disabled and wasdisabled == false then
 		hud_disabled = false
 	end
+end )
+
+local eyep, posp
+hook.Add( "PostDrawOpaqueRenderables", "cursortest", function()
+	/*if vgui.CursorVisible() then
+		if input.IsMouseDown( MOUSE_LEFT ) then
+			local x, y = input.GetCursorPos()
+			local vec = gui.ScreenToVector( x, y )
+			//local vec = util.AimVector( LocalPlayer():EyeAngles(), LocalPlayer():GetFOV(), x, y, ScrW(), ScrH() )
+			print( vec:Angle() )
+			local eye = LocalPlayer():EyePos()
+			local pos = eye + vec * 400
+
+			eyep = eye
+			posp = pos
+		end
+	end
+
+	if eyep then
+		render.DrawLine( eyep, posp )
+	end*/
 end )

@@ -2,7 +2,7 @@
 
 local MATS = {
 	blur = Material( "pp/blurscreen" ),
-	exit = Material( "slc_hud/exit.png" )
+	exit = Material( "slc/hud/exit.png" )
 }
 
 local cache = {}
@@ -35,6 +35,11 @@ local headers = {
 }
 
 ShowSCPs = {}
+CLASS_VIEWER_OVERRIDE = {}
+
+function ClassViewerOverride( model, data )
+	CLASS_VIEWER_OVERRIDE[model] = data
+end
 
 local recomputed = false
 local rebuildView, addHeader, addCategory
@@ -178,13 +183,60 @@ local function addClass( tab, p, h )
 		showinfo.details = tab
 
 		local model = cache[_name]
-
 		if !model then
-			model = istable( tab.model ) and table.Random( tab.model ) or tab.model
+			if tab.vest then
+				local vest = VEST.getID( tab.vest )
+				if vest then
+					local data = VEST.getData( vest )
+					model = { istable( data.model ) and table.Random( data.model ) or data.model, data.skin, data.bodygroups }
+				end
+			else
+				model = { istable( tab.model ) and table.Random( tab.model ) or tab.model, tab.skin, tab.bodygroups }
+			end
+
 			cache[_name] = model
 		end
 
-		showinfo.mvp:SetModel( model )
+		local override = CLASS_VIEWER_OVERRIDE[_name]
+		if override then
+			if override.model then
+				model[1] = override.model
+			end
+
+			if override.skin then
+				model[2] = override.skin
+			end
+
+			if override.bodygroups then
+				model[3] = override.bodygroups
+			end
+		end
+
+		showinfo.mvp:SetModel( model[1] )
+
+		local ent = showinfo.mvp:GetEntity()
+
+		if model[2] then
+			ent:SetSkin( model[2] )
+		end
+
+		if model[3] then
+			for k, v in pairs( model[3] ) do
+				if isstring( k ) then
+					k = ent:FindBodygroupByName( k )
+				end
+
+				if k > -1 then
+					ent:SetBodygroup( k, v )
+				end
+			end
+		end
+
+		local seq = ent:SelectWeightedSequence( ACT_HL2MP_IDLE )
+		if seq > -1 then
+			ent:SetSequence( seq )
+		end
+
 		showinfo.mvp:Update( tab.name )
 	end
 end
@@ -234,6 +286,13 @@ local function addSCP( tab, p, h )
 		end
 
 		showinfo.mvp:SetModel( model )
+
+		local ent = showinfo.mvp:GetEntity()
+		local seq = ent:SelectWeightedSequence( ACT_HL2MP_IDLE )
+		if seq > -1 then
+			ent:SetSequence( seq )
+		end
+
 		showinfo.mvp:Update( tab.name )
 	end
 end
@@ -356,6 +415,32 @@ local function openViewer()
 		}
 	end
 
+	local refound_b = vgui.Create( "DButton", window )
+	refound_b:SetSize( w * 0.1, h * 0.03 )
+	refound_b:AlignRight( w * 0.15 - 14 )
+	refound_b:AlignTop( h * 0.0025 )
+	refound_b:SetText( "" )
+	refound_b.Paint = function( self, pw, ph )
+		surface.SetDrawColor( Color( 150, 150, 150, 100 ) )
+		surface.DrawOutlinedRect( 0, 0, pw, ph )
+
+		draw.Text{
+			text = LANG.refound,
+			pos = { pw * 0.5, ph * 0.5 },
+			font = "SCPHUDSmall",
+			color = Color( 255, 255, 255, 255 ),
+			xalign = TEXT_ALIGN_CENTER,
+			yalign = TEXT_ALIGN_CENTER,
+		}
+	end
+
+	refound_b.DoClick = function( self )
+		self:SetVisible( false )
+		net.Ping( "SLCRefoundClasses" )
+		LocalPlayer().playermeta.refound = false
+	end
+	refound_b:SetVisible( LocalPlayer().playermeta.refound or false )
+
 	local exit_b = vgui.Create( "DButton", window )
 	exit_b:SetSize( w * 0.02, h * 0.02 )
 	exit_b:AlignRight( w * 0.01 )
@@ -375,7 +460,7 @@ local function openViewer()
 
 	local classselect = vgui.Create( "DScrollPanel", window )
 	classselect:Dock( LEFT )
-	classselect:DockMargin( 2, 7, 2, 2 )
+	classselect:DockMargin( 2, 14, 2, 2 )
 	classselect:SetWide( w * 0.35 )
 	classselect.Paint = function( self, pw, ph )
 		surface.SetDrawColor( Color( 150, 150, 150, 100 ) )
@@ -388,13 +473,17 @@ local function openViewer()
 
 	local c = vgui.Create( "DPanel", window )
 	c:Dock( TOP )
-	c:DockMargin( 2, 7, 2, 2 )
+	c:DockMargin( 2, 14, 2, 2 )
 	c:SetTall( h * 0.4 )
 	c.Paint = function() end
 
 	local mv = vgui.Create( "DModelPanel", c )
 	mv:Dock( LEFT )
 	mv:SetWide( w * 0.2 )
+
+	/*mv.LayoutEntity = function( self, ent )
+
+	end*/
 
 	local paint = mv.Paint
 	mv.Paint = function( self, pw, ph )
@@ -414,11 +503,6 @@ local function openViewer()
 	end
 
 	mv.Update = function( self, name )
-		-- if name == "SCP106" then
-		-- 	self.buy:SetVisible( false )
-		-- else
-		-- 	self.buy:SetVisible( true )
-		-- end
 		self.buy.cur = name
 		self.buy:SetVisible( !ply:IsClassUnlocked( name ) )
 	end
@@ -474,7 +558,11 @@ local function openViewer()
 						local t = SCPTeams.getName( val )
 						val = LANG.TEAMS[t] or val
 					elseif v == "chip" then
-						--TODO
+						if !val or val == "" then
+							val = LANG.none
+						else
+							val = LANG.WEAPONS.ACCESS_CHIP.NAMES[val] or val
+						end
 					end
 
 					totalh = totalh + basicText( "\t"..(LANG.details[v] or v)..":   "..val, 5, totalh ) + 5
@@ -546,6 +634,10 @@ local function openViewer()
 
 		totalh = totalh + self.scroll
 		self.maxScroll = math.max( totalh - ph, 0 )
+
+		if self.scroll > self.maxScroll then
+			self.scroll = self.maxScroll
+		end
 	end
 	details.OnMouseWheeled = function( self, delta )
 		self.scroll = math.Clamp( self.scroll - delta * 8, 0, self.maxScroll )
@@ -560,7 +652,7 @@ local function openViewer()
 		surface.SetDrawColor( Color( 150, 150, 150, 100 ) )
 		surface.DrawOutlinedRect( 0, 0, pw, ph )
 
-		draw.Text{
+		local tw, th = draw.Text{
 			text = LANG.info..":",
 			pos = { 5, 0 },
 			font = "SCPHUDSmall",
@@ -570,10 +662,29 @@ local function openViewer()
 		}
 
 		--TODO
+		if showinfo.details then
+			local desc = LANG.CLASS_DESCRIPTION[showinfo.details.name]
+			if desc then
+				local px, py = self:LocalToScreen()
+				local sx, sy = 10, th + 5
+
+				render.SetScissorRect( px, py + sy + 10, px + pw, py + ph - 20, true )
+
+				local height = draw.MultilineText( sx, sy - self.scroll, desc, "SCPHUDSmall", Color( 255, 255, 255, 255 ), pw - 20, 10 )
+				self.maxScroll = math.max( height - ph + sy + 10, 0 )
+
+				render.SetScissorRect( 0, 0, 0, 0, false )
+			end
+		end
 	end
+	info.OnMouseWheeled = function( self, delta )
+		self.scroll = math.Clamp( self.scroll - delta * 8, 0, self.maxScroll )
+	end
+	info.scroll = 0
+	info.maxScroll = 0
 end
 
-function OpenClassViever()
+function OpenClassViewer()
 	if IsValid( CLASS_VIEWER ) then CLASS_VIEWER:Close() end
 
 	showinfo.major = 0
@@ -584,6 +695,13 @@ function OpenClassViever()
 	openViewer()
 end
 
+net.ReceivePing( "SLCRefoundClasses", function( data )
+	data = tonumber( data )
+	if data and data > 0 then
+		SLCPopup( LANG.classviewer, string.format( LANG.refounded, data ) )
+	end
+end )
+
 /*timer.Simple( 0, function()
-	OpenClassViever()
+	OpenClassViewer()
 end )*/

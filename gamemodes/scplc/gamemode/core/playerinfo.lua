@@ -31,14 +31,42 @@ function PlayerInfo:New( arg )
 		file.Write( tab.File, "{}" )
 		tab.Data = {}
 	else
-		tab.Data = util.JSONToTable( file.Read( tab.File, "DATA" ) )
+		local data = util.JSONToTable( file.Read( tab.File, "DATA" ) )
+
+		if data.compressed then
+			data = util.JSONToTable( util.Decompress( data.data ) )
+		end
+
+		if !data then
+			print( "Failed to load Playerdata for player: "..tostring( tab.Player ).." - "..tab.ID )
+
+			if t == "Player" then
+				tab.Player.PlayerInfo = nil
+			end
+
+			return
+		end
+
+		tab.Data = data
+
+		tab:Update()
 	end
 
 	return tab
 end
 
 function PlayerInfo:Update()
-	file.Write( self.File, util.TableToJSON( self.Data ) )
+	local data = util.TableToJSON( self.Data )
+
+	if gamerule.Get( "compressPlayerdata" ) == true then
+		local c = util.Compress( data )
+
+		if c then
+			data = util.TableToJSON( { compressed = true, data = c } )
+		end
+	end
+
+	file.Write( self.File, data )
 end
 
 function PlayerInfo:Get( key )
@@ -51,3 +79,7 @@ function PlayerInfo:Set( key, value )
 end
 
 setmetatable( PlayerInfo, { __call = PlayerInfo.New } )
+
+hook.Add( "SLCRegisterGamerules", "SLCPlayerInfoRule", function()
+	gamerule.Register( "compressPlayerdata", { value = false } )
+end )

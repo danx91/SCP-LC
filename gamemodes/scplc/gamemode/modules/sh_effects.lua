@@ -61,7 +61,10 @@ hook.Add( "PlayerPostThink", "SLCEffectsThink", function( ply )
 				v.nextthink = CurTime() + eff.wait
 			end
 
-			eff.think( v, ply, v.tier, v.args )
+			local override = eff.think( v, ply, v.tier, v.args )
+			if isnumber( override ) then
+				v.nextthink = CurTime() + override
+			end
 		end
 	end
 end )
@@ -171,6 +174,7 @@ end
 --if all == true -> if effect.stacks == 1: remove all effects with this name instead of oldest one; if effect.stacks == 2: remove effect insetad of decreasing tier
 function PLAYER:RemoveEffect( name, all )
 	if CLIENT and self != LocalPlayer() then return end
+	if !self.EFFECTS then self.EFFECTS = {} end
 
 	if !name or name == "" then
 		for k, v in pairs( self.EFFECTS ) do
@@ -257,13 +261,18 @@ EFFECTS.registerEffect( "bleeding", {
 	duration = 15,
 	stacks = 2,
 	tiers = {
-		{ icon = Material( "slc_hud/effects/bleeding1.png" ) },
-		{ icon = Material( "slc_hud/effects/bleeding2.png" ) },
-		{ icon = Material( "slc_hud/effects/bleeding3.png" ) },
+		{ icon = Material( "slc/hud/effects/bleeding1.png" ) },
+		{ icon = Material( "slc/hud/effects/bleeding2.png" ) },
+		{ icon = Material( "slc/hud/effects/bleeding3.png" ) },
 	},
 	cantarget = function( ply )
 		local team = ply:SCPTeam()
 		return team != TEAM_SPEC and team != TEAM_SCP
+	end,
+	begin = function( self, ply, tier, args, refresh )
+		if refresh and IsValid( args[1] ) then
+			self.args[1] = args[1]
+		end
 	end,
 	think = function( self, ply, tier, args )
 		if SERVER then
@@ -280,6 +289,7 @@ EFFECTS.registerEffect( "bleeding", {
 			end
 
 			ply:TakeDamageInfo( dmg )
+			AddRoundStat( "bleed", tier )
 		else
 			if self.nsound and self.nsound > CurTime() then return end
 			self.nsound = CurTime() + 2.5
@@ -294,7 +304,7 @@ sound.Add( {
 	name = "SLCEffects.Bleeding",
 	volume = 0.1,
 	level = 50,
-	pitch = 50,
+	pitch = {50, 100},
 	sound = "physics/flesh/flesh_squishy_impact_hard1.wav",
 	channel = CHAN_STATIC,
 } )
@@ -306,8 +316,15 @@ EFFECTS.registerEffect( "doorlock", {
 	duration = 10,
 	stacks = 0,
 	tiers = {
-		{ icon = Material( "slc_hud/effects/doorlock.png" ) }
+		{ icon = Material( "slc/hud/effects/doorlock.png" ) }
 	},
+	cantarget = function( ply )
+		if CLIENT then
+			return true
+		end
+
+		return !ply:GetSCP096Chase()
+	end,
 	begin = function( self, ply, tier, args, refresh )
 		if CLIENT then
 			ply:EmitSound( "SLCEffects.DoorLockBeep" )
@@ -328,10 +345,10 @@ sound.Add( {
 AMN-C227
 ---------------------------------------------------------------------------]]
 EFFECTS.registerEffect( "amnc227", {
-	duration = 10,
+	duration = 2.5,
 	stacks = 0,
 	tiers = {
-		{ icon = Material( "slc_hud/effects/amn-c227.png" ) }
+		{ icon = Material( "slc/hud/effects/amn-c227.png" ) }
 	},
 	cantarget = function( ply )
 		local team = ply:SCPTeam()
@@ -371,6 +388,13 @@ EFFECTS.registerEffect( "amnc227", {
 	wait = 2,
 } )
 
+hook.Add( "StartCommand", "SLCAMNCEffect", function( ply, cmd )
+	if ply:HasEffect( "amnc227" ) then
+		cmd:RemoveKey( IN_ATTACK )
+		cmd:RemoveKey( IN_ATTACK2 )
+	end
+end )
+
 --[[-------------------------------------------------------------------------
 Insane
 ---------------------------------------------------------------------------]]
@@ -378,7 +402,7 @@ EFFECTS.registerEffect( "insane", {
 	duration = -1,
 	stacks = 0,
 	tiers = {
-		{ icon = Material( "slc_hud/effects/insane.png" ) }
+		{ icon = Material( "slc/hud/effects/insane.png" ) }
 	},
 	cantarget = function( ply )
 		local team = ply:SCPTeam()
@@ -395,6 +419,11 @@ EFFECTS.registerEffect( "insane", {
 			InsaneTick( ply )
 		end
 	end,
+	finish = function( self, ply, tier, args, interrupt )
+		if CLIENT then
+			InterruptInsane( ply )
+		end
+	end,
 	wait = 3,
 } )
 
@@ -405,7 +434,7 @@ EFFECTS.registerEffect( "gas_choke", {
 	duration = 10,
 	stacks = 0,
 	tiers = {
-		{ icon = Material( "slc_hud/effects/amn-c227.png" ) }
+		{ icon = Material( "slc/hud/effects/amn-c227.png" ) }
 	},
 	cantarget = function( ply )
 		local team = ply:SCPTeam()
@@ -449,7 +478,7 @@ EFFECTS.registerEffect( "gas_choke", {
 } )
 
 if CLIENT then
-	local choke_mat = GetMaterial( "slc/exhaust.png" )
+	local choke_mat = GetMaterial( "slc/misc/exhaust.png" )
 	hook.Add( "SLCScreenMod", "ChokeEffect", function( clr )
 		if LocalPlayer().choke then
 			clr.colour = 0
@@ -464,3 +493,86 @@ if CLIENT then
 
 	addSounds( "SLCEffects.Choke", "effects/choke/cough%i.ogg", 0, 1, { 90, 110 }, CHAN_STATIC, 1, 3 )
 end
+
+--[[-------------------------------------------------------------------------
+Radiation
+---------------------------------------------------------------------------]]
+EFFECTS.registerEffect( "radiation", {
+	duration = 300,
+	stacks = 0,
+	tiers = {
+		{ icon = Material( "slc/hud/effects/radiation.png" ) }
+	},
+	cantarget = function( ply )
+		local team = ply:SCPTeam()
+
+		if team == TEAM_SPEC or team == TEAM_SCP then
+			return false
+		end
+
+		local mask = ply:GetWeapon( "item_slc_gasmask" )
+
+		if IsValid( mask ) and mask:GetEnabled() or SERVER and ply:GetSCP714() then
+			return false
+		end
+
+		return true
+	end,
+	begin = function( self, ply, tier, args, refresh )
+		
+	end,
+	finish = function( self, ply, tier, args, interrupt )
+		
+	end,
+	think = function( self, ply, tier, args )
+		if CLIENT then
+			ply:EmitSound( "SLCEffects.Radiation" )
+		end
+
+		return math.random() * 0.15 + 0.05
+	end,
+	wait = 1,
+} )
+
+if CLIENT then
+	sound.Add( {
+		name = "SLCEffects.Radiation",
+		volume = 0.1,
+		level = 0,
+		pitch = { 95, 110 },
+		sound = "player/geiger1.wav",
+		channel = CHAN_STATIC,
+	} )
+end
+
+--[[-------------------------------------------------------------------------
+Deep Wounds
+---------------------------------------------------------------------------]]
+EFFECTS.registerEffect( "deep_wounds", {
+	duration = 120,
+	stacks = 0,
+	tiers = {
+		{ icon = Material( "slc/hud/effects/deep_wounds.png" ) },
+	},
+	cantarget = function( ply )
+		local team = ply:SCPTeam()
+		return team != TEAM_SPEC and team != TEAM_SCP
+	end,
+	begin = function( self, ply, tier, args, refresh )
+		if SERVER then
+			ply:ApplyEffect( "bleeding", args[1] )
+			ply:PushSpeed( 0.9, 0.9, -1, "SLC_DeepWounds", 1 )
+		end
+	end,
+	finish = function( self, ply, tier, args, interrupt )
+		if SERVER then
+			ply:PopSpeed( "SLC_DeepWounds" )
+		end
+	end,
+} )
+
+hook.Add( "SLCScaleHealing", "SLCDeepWounds", function( ply, source, heal )
+	if ply:HasEffect( "deep_wounds" ) then
+		return heal * 0.6
+	end
+end )

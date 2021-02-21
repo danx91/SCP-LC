@@ -39,23 +39,25 @@ function SWEP:ViewModelDrawn()
 		if !bone then return end
 
 		local m = vm:GetBoneMatrix( bone )
-		local pos, ang = m:GetTranslation(), m:GetAngles()
+		if m then
+			local pos, ang = m:GetTranslation(), m:GetAngles()
 
-		ang:RotateAroundAxis( ang:Forward(), 0 )
-		ang:RotateAroundAxis( ang:Right(), -130 )
-		ang:RotateAroundAxis( ang:Up(), 93 )
+			ang:RotateAroundAxis( ang:Forward(), 0 )
+			ang:RotateAroundAxis( ang:Right(), -130 )
+			ang:RotateAroundAxis( ang:Up(), 93 )
 
-		cam.Start3D2D( pos + ang:Right() * 3 + ang:Forward() * -1.80 + ang:Up() * 1.0, ang, 0.02 )
-	        draw.SimpleText( self.Lang.pname, "PassHud2", 40, -50, Color( 0, 0, 0, 255 ) )
-			draw.SimpleText( self.Owner:Name() or "Unknown", "PassHud", 40, -40, Color( 0, 0, 0, 255 ) )
-			draw.SimpleText( self.Lang.server, "PassHud2", 40, 15, Color( 0, 0, 0, 255 ) )
-			draw.SimpleText( string.sub( GetHostName(), 1, 20 ), "PassHud3", 40, 30, Color( 0, 0, 0, 255 ) )
-			draw.SimpleText( "<G<<<<<<<<<<<"..self.Owner:SteamID().."<<<<", "PassHud2", -60, 60, Color( 0, 0, 0, 200 ) )
-			draw.SimpleText( "<G<<<2281337<<<<777<<<<06<<<<<<<<<<", "PassHud2", -60, 75, Color( 0, 0, 0, 200 ) )
-			//surface.SetDrawColor(255,255,255,250)
-			//surface.SetMaterial(self.mat_ply)
-			//surface.DrawRect( -40, -42, 80, 80 )
-		cam.End3D2D()
+			cam.Start3D2D( pos + ang:Right() * 3 + ang:Forward() * -1.80 + ang:Up() * 1.0, ang, 0.02 )
+		        draw.SimpleText( self.Lang.pname, "PassHud2", 40, -50, Color( 0, 0, 0, 255 ) )
+				draw.SimpleText( self.Owner:Name() or "Unknown", "PassHud", 40, -40, Color( 0, 0, 0, 255 ) )
+				draw.SimpleText( self.Lang.server, "PassHud2", 40, 15, Color( 0, 0, 0, 255 ) )
+				draw.SimpleText( string.sub( GetHostName(), 1, 20 ), "PassHud3", 40, 30, Color( 0, 0, 0, 255 ) )
+				draw.SimpleText( "<G<<<<<<<<<<<"..self.Owner:SteamID().."<<<<", "PassHud2", -60, 60, Color( 0, 0, 0, 200 ) )
+				draw.SimpleText( "<G<<<2281337<<<<777<<<<06<<<<<<<<<<", "PassHud2", -60, 75, Color( 0, 0, 0, 200 ) )
+				//surface.SetDrawColor(255,255,255,250)
+				//surface.SetMaterial(self.mat_ply)
+				//surface.DrawRect( -40, -42, 80, 80 )
+			cam.End3D2D()
+		end
 end
 
 SWEP.ModScale = Vector( 0.699, 0.699, 0.699 )

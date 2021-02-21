@@ -6,7 +6,7 @@ SWEP.HoldType		= "normal"
 SWEP.NextPrimary 	= 0
 SWEP.NextSpecial 	= 0
 
-SWEP.AttackDelay 	= 1
+SWEP.AttackDelay 	= 2.5
 SWEP.SpecialDelay 	= 60
 SWEP.SpecialTime 	= 10
 
@@ -41,7 +41,7 @@ function SWEP:PrimaryAttack()
 			if ent:IsPlayer() then
 				if ent:SCPTeam() == TEAM_SCP or ent:SCPTeam() == TEAM_SPEC then return end
 
-				ent:TakeDamage( 250, self.Owner, self.Owner )
+				ent:TakeDamage( 75, self.Owner, self.Owner )
 
 				if ent:Health() <= 0 then
 					self:AddScore( 1 )
@@ -77,8 +77,8 @@ function SWEP:SecondaryAttack()
 	end )
 end
 
-function SWEP:DrawHUD()
-	if hud_disabled or HUDDrawInfo or ROUND.preparing then return end
+function SWEP:DrawSCPHUD()
+	//if hud_disabled or HUDDrawInfo or ROUND.preparing then return end
 	
 	local txt, color
 	if self.Immortal then
@@ -105,44 +105,46 @@ end
 hook.Add( "EntityTakeDamage", "SCP682Damage", function( ply, dmg )
 	if !ply:IsPlayer() or !ply:Alive() then return end
 
-	local wep = ply:GetActiveWeapon()
-	if IsValid( wep ) and wep:GetClass() == "weapon_scp_682" then
-		if wep.Immortal then return true end
+	if ply:SCPClass() == CLASSES.SCP682 then
+		local wep = ply:GetActiveWeapon()
+		if IsValid( wep ) then
+			if wep.Immortal then return true end
 
-		if dmg:IsDamageType( DMG_ACID ) then
-			if ROUND.preparing then return true end
+			if dmg:IsDamageType( DMG_ACID ) then
+				if ROUND.preparing then return true end
 
-			dmg:ScaleDamage( 5 )
-		elseif dmg:IsDamageType( DMG_BULLET ) then
-			local scale = wep:GetUpgradeMod( "prot" )
+				dmg:ScaleDamage( 5 )
+			elseif dmg:IsDamageType( DMG_BULLET ) then
+				local scale = wep:GetUpgradeMod( "prot" )
 
-			if scale then
-				dmg:ScaleDamage( scale )
-			end
+				if scale then
+					dmg:ScaleDamage( scale )
+				end
 
-			if wep:HasUpgrade( "ult" ) then
-				local t = GetTimer( "SCP682Ult"..ply:SteamID64() )
+				if wep:HasUpgrade( "ult" ) then
+					local t = GetTimer( "SCP682Ult"..ply:SteamID64() )
 
-				if IsValid( t ) then
-					t:Start() --reset timer time
-				else
-					Timer( "SCP682Ult"..ply:SteamID64(), 3, 1, function()
-						if IsValid( ply ) and IsValid( wep ) then
-							local hp = ply:Health()
-							local dif = ply:GetMaxHealth() - hp
+					if IsValid( t ) then
+						t:Start() --reset timer time
+					else
+						Timer( "SCP682Ult"..ply:SteamID64(), 3, 1, function()
+							if IsValid( ply ) and IsValid( wep ) then
+								local hp = ply:Health()
+								local dif = ply:GetMaxHealth() - hp
 
-							if dif > 0 then
-								ply:SetHealth( hp + math.ceil( dif * 0.05 ) )
+								if dif > 0 then
+									ply:SetHealth( hp + math.ceil( dif * 0.05 ) )
+								end
 							end
-						end
-					end )
+						end )
+					end
 				end
 			end
-		end
 
-		if wep.SpeedActive then
-			ply:PopSpeed( wep.SpeedActive )
-			wep.SpeedActive = false
+			if wep.SpeedActive then
+				ply:PopSpeed( wep.SpeedActive )
+				wep.SpeedActive = false
+			end
 		end
 	end
 end )

@@ -4,6 +4,10 @@ function vector:Copy()
 	return Vector( self.x, self.y, self.z )
 end
 
+function vector:Approach( target, delta )
+	local diff = target - self
+end
+
 function vector:IsInTolerance( dpos, tolerance )
 	if self == dpos then return true end
 
@@ -22,6 +26,33 @@ function vector:IsInTolerance( dpos, tolerance )
 	return true
 end
 
+function vector:DropToFloor( maxdist )
+	local result = util.TraceLine{
+		start = self,
+		endpos = self - Vector( 0, 0, maxdist or 100 ),
+		mask = MASK_SOLID_BRUSHONLY,
+	}
+
+	if !result.Hit then
+		return self * 1
+	else
+		return result.HitPos
+	end
+end
+
+/*function vector:RotateAroundPoint( point, angle )
+	local dir = self - point
+
+	print( self, point )
+	print( "dir", dir )
+
+	dir:Rotate( angle )
+
+	self.x = self.x + dir.x
+	self.y = self.y + dir.y
+	self.z = self.z + dir.z
+end*/
+
 local angle = FindMetaTable( "Angle" )
 
 function angle:Copy()
@@ -39,6 +70,31 @@ function angle:To360()
 	return math.AngleTo360( self )
 end
 
+function angle:Clamp( pmin, pmax, ymin, ymax, rmin, rmax )
+	if pmin and self.p < pmin then
+		self.p = pmin
+	end
+
+	if pmax and self.p > pmax then
+		self.p = pmax
+	end
+
+	if ymin and self.p < ymin then
+		self.y = ymin
+	end
+
+	if ymax and self.y > ymax then
+		self.y = ymax
+	end
+
+	if rmin and self.r < rmin then
+		self.r = rmin
+	end
+
+	if rmax and self.r > rmax then
+		self.r = rmax
+	end
+end
 
 function math.AngleTo360( ang )
 	ang:Normalize()

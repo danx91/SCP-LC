@@ -3,9 +3,6 @@ AddCSLuaFile()
 ENT.Base = "base_entity"
 ENT.Type = "anim"
 
-ENT.PrintName = "CCTV Camera"
-ENT.Author = "danx91"
-
 function ENT:Initialize()
 	self:SetModel( "models/slc/cctvcamera.mdl" )
 

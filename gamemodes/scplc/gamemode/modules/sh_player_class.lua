@@ -24,6 +24,8 @@ function PLAYER:SetupDataTables()
 	ply:AddSCPVar( "Vest", 2, "INT" )
 	ply:AddSCPVar( "StaminaLimit", 3, "INT" )
 
+	ply:AddSCPVar( "DisableControls", 0, "BOOL" )
+
 	if SERVER then
 		ply:Set_SCPActive( false )
 		ply:Set_SCPPremium( false )
@@ -44,6 +46,8 @@ function PLAYER:SetupDataTables()
 		ply:SetMaxSanity( 100 )
 		ply:SetVest( 0 )
 		ply:SetStaminaLimit( 100 )
+
+		ply:SetDisableControls( false )
 	end
 
 	if CLIENT then

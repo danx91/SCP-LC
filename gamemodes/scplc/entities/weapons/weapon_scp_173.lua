@@ -21,9 +21,10 @@ end
 function SWEP:Think()
 	if CLIENT or ROUND.post or self.StopThink then return end
 
+	local owner = self:GetOwner()
 	local freeze = false
 
-	local ply = self.Owner
+	/*local ply = self.Owner
 	local obb_bot, obb_top = ply:GetModelBounds()
 	local obb_mid = ( obb_bot + obb_top ) * 0.5
 
@@ -36,12 +37,12 @@ function SWEP:Think()
 	obb_top.z = obb_top.z - 10
 
 	local top, mid, bot = ply:LocalToWorld( obb_top ), ply:LocalToWorld( obb_mid ), ply:LocalToWorld( obb_bot )
-	local mask = MASK_BLOCKLOS_AND_NPCS
+	local mask = MASK_BLOCKLOS_AND_NPCS*/
 
 	for k, v in pairs( player.GetAll() ) do
 		//print( ply:GetBlink() )
 		if IsValid( v ) and v:Alive() and v:SCPTeam() != TEAM_SPEC and v:SCPTeam() != TEAM_SCP and !v:GetBlink() then
-			--print( v )
+			/*print( v )
 			local dist = ply:GetPos():DistToSqr( v:GetPos() )
 			local sight = v:GetSightLimit()
 
@@ -83,32 +84,33 @@ function SWEP:Think()
 				} )
 
 				//print( trace_top.Hit, trace_mid.Hit, trace_bot.Hit )
-				if !trace_top.Hit or !trace_mid.Hit or !trace_bot.Hit then
+				if !trace_top.Hit or !trace_mid.Hit or !trace_bot.Hit then*/
+				if owner:TestVisibility( v ) then
 					freeze = true
 
-					if ( !v.SCP173Horror or v.SCP173Horror < CurTime() ) and dist < 90000 then
+					if ( !v.SCP173Horror or v.SCP173Horror < CurTime() ) and owner:GetPos():DistToSqr( v:GetPos() ) < 90000 then
 						v.SCP173Horror = CurTime() + 15
 						v:TakeSanity( 15, SANITY_TYPE.ANOMALY )
 						v:SendLua( "LocalPlayer():EmitSound( 'SCP173.Horror' )" )
 					end
 				end
-			end
+			//end
 		end
 	end
 
 	if freeze then
-		ply:Freeze( true )
+		owner:Freeze( true )
 	else
-		ply:Freeze( false )
+		owner:Freeze( false )
 
 		for k, v in pairs( player.GetAll() ) do
 			if IsValid( v ) and v:Alive() and v:SCPTeam() != TEAM_SPEC and v:SCPTeam() != TEAM_SCP then
-				local dist = ply:GetPos():DistToSqr( v:GetPos() )
+				local dist = owner:GetPos():DistToSqr( v:GetPos() )
 				if dist <= 1600 then
 					local trace = util.TraceLine( {
-						start = ply:GetShootPos(),
+						start = owner:GetShootPos(),
 						endpos = v:EyePos(),
-						filter = { ply, v },
+						filter = { owner, v },
 						mask = MASK_SHOT
 					} )
 
@@ -306,8 +308,8 @@ function SWEP:Teleport()
 	self:SetNSpecial( self.NextSpecial )
 end
 
-function SWEP:DrawHUD()
-	if hud_disabled or HUDDrawInfo or ROUND.preparing then return end
+function SWEP:DrawSCPHUD()
+	//if hud_disabled or HUDDrawInfo or ROUND.preparing then return end
 
 	local NextSpecial = self:GetNSpecial()
 
@@ -349,10 +351,11 @@ end )
 
 hook.Add( "SLCBlink", "SCP173TP", function( time )
 	for k, v in pairs( SCPTeams.getPlayersByTeam( TEAM_SCP ) ) do
-		local wep = v:GetActiveWeapon()
-
-		if IsValid( wep ) and wep:GetClass() == "weapon_scp_173" then
-			wep.GBlink = CurTime() + time
+		if v:SCPClass() == CLASSES.SCP173 then
+			local wep = v:GetActiveWeapon()
+			if IsValid( wep ) then
+				wep.GBlink = CurTime() + time
+			end
 		end
 	end
 end )
@@ -401,7 +404,7 @@ DefineUpgradeSystem( "scp173", {
 } )
 
 function SWEP:OnUpgradeBought( name, info, group )
-	if group == "prot" and IsValid( self.Owner ) then
+	if group == "prot" and self:CheckOwner() then
 		local hp = self.Owner:Health() + 1000
 		local max = self.Owner:GetMaxHealth()
 

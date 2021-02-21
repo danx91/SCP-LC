@@ -98,8 +98,8 @@ function SWEP:PrimaryAttack()
 	end
 end
 
-function SWEP:DrawHUD()
-	if hud_disabled or HUDDrawInfo or ROUND.preparing then return end
+function SWEP:DrawSCPHUD()
+	//if hud_disabled or HUDDrawInfo or ROUND.preparing then return end
 
 	local target = self:GetTarget()
 	if IsValid( target ) then
@@ -135,7 +135,7 @@ hook.Add( "CanPlayerSeePlayer", "SCP966Visibility", function( ply, target )
 			return
 		end
 
-		local nvgp = ply:GetWeapon( "item_slc_nvg_plus" )
+		local nvgp = ply:GetWeapon( "item_slc_nvgplus" )
 		if IsValid( nvgp ) and nvgp:GetEnabled() then
 			return
 		end
@@ -144,13 +144,25 @@ hook.Add( "CanPlayerSeePlayer", "SCP966Visibility", function( ply, target )
 	end
 end )
 
-hook.Add( "DoPlayerDeath", "SCP966Damage", function( ply, attacker, info )
-	if attacker:IsPlayer() and attacker:SCPClass() == CLASSES.SCP966 then
-	 	AddRoundStat( "966" )
-	 	local wep = attacker:GetWeapon( "weapon_scp_966" )
-	 	if IsValid( wep ) then
-	 		wep:AddScore( 1 )
-	 	end
+-- hook.Add( "DoPlayerDeath", "SCP966Damage", function( ply, attacker, info )
+-- 	if attacker:IsPlayer() and attacker:SCPClass() == CLASSES.SCP966 then
+-- 	 	AddRoundStat( "966" )
+-- 	 	local wep = attacker:GetWeapon( "weapon_scp_966" )
+-- 	 	if IsValid( wep ) then
+-- 	 		wep:AddScore( 1 )
+-- 	 	end
+-- 	end
+-- end )
+
+hook.Add( "EntityTakeDamage", "SCP966DMG", function( ent, dmg )
+	if IsValid( ent ) and ent:IsPlayer() then
+		local ply = dmg:GetAttacker()
+		if IsValid( ply ) and ply:IsPlayer() and ply:SCPClass() == CLASSES.SCP966 then
+			local wep = ply:GetActiveWeapon()
+			if IsValid( wep ) and wep.UpgradeSystemMounted then
+				wep:AddScore( dmg:GetDamage() )
+			end
+		end
 	end
 end )
 
@@ -174,14 +186,14 @@ DefineUpgradeSystem( "scp966", {
 		{ name = "nvmod", cost = 1, req = {}, reqany = false,  pos = { 4, 1 }, mod = {}, active = false },
 	},
 	rewards = { --16+1
-		{ 1, 1 },
-		{ 2, 1 },
-		{ 3, 1 },
-		{ 5, 2 },
-		{ 7, 2 },
-		{ 9, 3 },
-		{ 10, 3 },
-		{ 12, 3 }
+		{ 100, 1 },
+		{ 200, 1 },
+		{ 300, 1 },
+		{ 500, 2 },
+		{ 700, 2 },
+		{ 900, 3 },
+		{ 1000, 3 },
+		{ 1200, 3 }
 	}
 } )
 

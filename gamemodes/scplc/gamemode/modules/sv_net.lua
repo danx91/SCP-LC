@@ -9,7 +9,7 @@ util.AddNetworkString( "RoundInfo" )
 util.AddNetworkString( "PlaySound" )
 util.AddNetworkString( "PlayerMessage" )
 util.AddNetworkString( "PlayerSetup" )
-util.AddNetworkString( "PlayerDespawn" )
+util.AddNetworkString( "PlayerCleanup" )
 util.AddNetworkString( "DropVest" )
 util.AddNetworkString( "CameraDetect" )
 util.AddNetworkString( "CenterMessage" )
@@ -18,17 +18,17 @@ util.AddNetworkString( "PlayerEffect" )
 util.AddNetworkString( "SCPUpgrade" )
 util.AddNetworkString( "DeathInfo" )
 util.AddNetworkString( "ClassUnlock" )
+util.AddNetworkString( "SLCAmbient" )
+util.AddNetworkString( "SLCEscape" )
 
 net.AddTableChannel( "SLCPlayerMeta" )
-
+net.AddTableChannel( "SLCGameruleData" )
+net.AddTableChannel( "SLCInfoScreen" )
 --[[-------------------------------------------------------------------------
 Receivers
 ---------------------------------------------------------------------------]]
 net.Receive( "PlayerReady", function( len, ply )
-	ply:SetActive( true )
 	SendSCPList( ply )
-
-	CheckRoundStart()
 
 	if ROUND.active then
 		if ROUND.post then
@@ -40,35 +40,45 @@ net.Receive( "PlayerReady", function( len, ply )
 				}
 			net.Send( ply )
 		elseif ROUND.preparing then
+			local t = GetTimer( "SLCPreround" )
+
+			local time
+			if t then
+				time = t:GetRemainingTime()
+			else
+				time = GetTimer( "SLCSetup" ):GetRemainingTime() + CVAR.pretime:GetInt()
+			end
+
 			net.Start( "RoundInfo" )
 				net.WriteTable{
 					status = "pre",
-					time = CurTime() + GetTimer( "SLCPreround" ):GetRemainingTime(),
+					time = CurTime() + time,
 					name = ROUND.roundtype.name,
 				}
 			net.Send( ply )
 		else
+			local t = GetTimer( "SLCRound" )
+
 			net.Start( "RoundInfo" )
 				net.WriteTable{
 					status = "live",
-					time = CurTime() + GetTimer( "SLCRound" ):GetRemainingTime(),
+					time = CurTime() + ( t and t:GetRemainingTime() or 0 ),
 					name = ROUND.roundtype.name,
 				}
 			net.Send( ply )
 		end
 	end
 
-	//ply.playermeta = ply.playermeta or {}
-	//hook.Run( "SLCPlayerMeta", ply, ply.playermeta )
 	if !ply.playermeta then
 		ErrorNoHalt( "Error! Player.playermeta is nil!\n", ply )
 	end
 
-	/*net.Start( "PlayerReady" )
-		net.WriteTable( ply.playermeta or {} )
-	net.Send( ply )*/
-
 	net.SendTable( "SLCPlayerMeta", ply.playermeta or {}, ply )
+
+	if !ply.FullyLoaded then
+		ply.FullyLoaded = true
+		hook.Run( "PlayerReady", ply )
+	end
 end )
 
 net.Receive( "SCPForceExhaust", function( len, ply )
@@ -79,19 +89,21 @@ net.Receive( "SCPForceExhaust", function( len, ply )
 end )
 
 net.Receive( "DropWeapon", function( len, ply )
-	local class = net.ReadString()
+	local ctrl = ply:GetProperty( "mind_control" )
+	if ctrl and ctrl[1] < CurTime() then
+		return
+	end
 
-	//local wep = ply:GetWeapon( class )
-	//if IsValid( wep ) then
-		//if wep.Droppable != false then
-			ply:PlayerDropWeapon( class )
-			//ply:DropWeapon( wep )
-			//wep.Dropped = CurTime()
-		//end
-	//end
+	local class = net.ReadString()
+	ply:PlayerDropWeapon( class )
 end )
 
 net.Receive( "WeaponDnD", function( len, ply )
+	local ctrl = ply:GetProperty( "mind_control" )
+	if ctrl and ctrl[1] < CurTime() then
+		return
+	end
+	
 	local wep1 = net.ReadEntity()
 	local wep2 = net.ReadEntity()
 

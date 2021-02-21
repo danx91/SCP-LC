@@ -86,7 +86,7 @@ function ENT:TriggerIgnite()
 	self:Remove()
 end
 
-local mat = Material( "slc/457trap" )
+local mat = Material( "slc/scp/457trap" )
 function ENT:Draw()
 	--self:DrawModel()
 

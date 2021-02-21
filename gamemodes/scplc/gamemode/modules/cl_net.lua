@@ -1,10 +1,12 @@
-net.AddTableChannel( "SLCPlayerMeta" )
-
 --[[-------------------------------------------------------------------------
 Receivers
 ---------------------------------------------------------------------------]]
 net.ReceiveTable( "SLCPlayerMeta", function( data )
 	LocalPlayer().playermeta = data
+end )
+
+net.ReceiveTable( "SLCInfoScreen", function( data )
+	InfoScreen( { team = data.team, class = data.class }, data.type, data.time, data.data )
 end )
 
 net.Receive( "PlayerReady", function( len )
@@ -35,6 +37,11 @@ net.Receive( "SCPList", function( len )
 	SetupForceSCP()
 end )
 
+net.Receive( "SLCEscape", function( len )
+	EscapeStatus = net.ReadUInt( 2 )
+	EscapeTimer = net.ReadFloat()
+end )
+
 net.Receive( "SCPForceExhaust", function( len )
 	local ply = LocalPlayer()
 
@@ -63,12 +70,20 @@ net.Receive( "CameraDetect", function( len )
 	end
 end )
 
-net.Receive( "PlayerSetup", function( len )
+/*net.Receive( "PlayerSetup", function( len )
 	HUDDrawSpawnInfo = CurTime() + 20
-end )
+end )*/
 
-net.Receive( "PlayerDespawn", function( len )
-	clearPlayerIDs()
+net.Receive( "PlayerCleanup", function( len )
+	local ply = net.ReadEntity()
+
+	if IsValid( ply ) then
+		hook.Run( "SLCPlayerCleanup", ply )
+
+		if ply == LocalPlayer() then
+			clearPlayerIDs()
+		end
+	end
 end )
 
 net.Receive( "RoundInfo", function( len )
@@ -92,6 +107,8 @@ net.Receive( "RoundInfo", function( len )
 		ROUND.preparing = false
 		ROUND.post = false
 	elseif status == "pre" then
+		CENTERMESSAGES = {}
+
 		ROUND.active = true
 		ROUND.time = data.time
 		ROUND.preparing = true

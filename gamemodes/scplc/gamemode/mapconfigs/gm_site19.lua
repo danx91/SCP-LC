@@ -18,6 +18,8 @@ SPAWN_SCP1471 = Vector( 2174.361328, 1557.007446, 50.836136 )
 SPAWN_SCP1048A = Vector( 1732.884521, 3500.440674, 50.865131 )
 SPAWN_SCP1048B = Vector( 5531.479492, -113.018181, 64.043182 )
 SPAWN_SCP8602 = Vector( 7284.303711, 5608.904785, -1041.298706 )
+SPAWN_SCP3199 = Vector( 2498.00, 1534.00, 1.00 )
+SPAWN_SCP24273 = Vector( 4016.164551, 3882.115967, 1.00 )
 
 SPAWN_SCP076 = { 
 	Vector( 5440, 1121, -447 ),
@@ -73,6 +75,50 @@ SPAWN_420 = {
 }
 
 OUTSIDE_966 = Vector(4165.00, 2375.00, 50.00)
+
+EGGS_3199 = {
+	--lcz
+	Vector( 605.00, 1889.00, 129.00 ),
+	Vector( -569.00, 1970.00, 1.00 ),
+	Vector( -91.00, -941.00, -127.00 ),
+	Vector( 1509.00, -2393.00, 2.00 ),
+	Vector( 2464.00, -1753.00, 1.00 ),
+	Vector( 1689.00, 638.00, 1.00 ),
+	Vector( 3051.00, 501.00, 1.00 ),
+	Vector( 2573.00, 1316.00, 1.00 ),
+	Vector( 479.00, -66.00, 1.00 ),
+	Vector( 937.00, -1035.00, -767.00 ),
+	Vector( 1974.00, -478.00, -767.00 ),
+	Vector( 1566.00, 991.00, 1.00 ),
+
+	--hcz
+	Vector( 4092.00, -2544.00, 17.00 ),
+	Vector( 5355.00, 301.00, 2.00 ),
+	Vector( 5328.00, 2403.00, 1.00 ),
+	Vector( 4514.00, 2990.00, -127.00 ),
+	Vector( 4194.00, 3913.00, 1.00 ),
+	Vector( 3099.00, 3302.00, -159.00 ),
+	Vector( 3236.00, 1039.00, 1.00 ),
+	Vector( 3373.00, 2206.00, 1.00 ),
+	Vector( 2807.00, 1798.00, 1.00 ),
+	Vector( 2442.00, 2587.00, 1.00 ),
+	Vector( 2351.00, 5025.00, -255.00 ),
+	Vector( 2972.00, 3659.00, 1.00 ),
+
+	--ez
+	Vector( 1684.00, 4150.00, 1.00 ),
+	Vector( 1051.00, 3047.00, 1.00 ),
+	Vector( 1181.00, 1952.00, 1.00 ),
+	Vector( 191.00, 2646.00, 1.00 ),
+	Vector( -656.00, 2864.00, 1.00 ),
+	Vector( -1609.00, 2471.00, -127.00 ),
+	Vector( -3612.00, 3115.00, 1.00 ),
+	Vector( -892.00, 3729.00, -63.00 ),
+	Vector( -548.00, 4643.00, 1.00 ),
+	Vector( 353.00, 3548.00, -127.00 ),
+	Vector( -531.00, 4100.00, -63.00 ),
+	Vector( 1825.00, 2311.00, 1.00 ),
+}
 
 --[[-------------------------------------------------------------------------
 Player spawns
@@ -138,7 +184,7 @@ SPAWN_SCIENT = {
 }
 
 SPAWN_MTF = {
-	Vector( -1440.00, 3490.00, 11.00 ),
+	/*Vector( -1440.00, 3490.00, 11.00 ),
 	Vector( -1500.00, 3490.00, 11.00 ),
 	Vector( -1560.00, 3490.00, 11.00 ),
 	Vector( -1620.00, 3490.00, 11.00 ),
@@ -159,7 +205,27 @@ SPAWN_MTF = {
 	Vector( -1940.00, 3315.00, 11.00 ),
 	Vector( -2000.00, 3315.00, 11.00 ),
 	Vector( -2000.00, 3375.00, 11.00 ),
-	Vector( -1940.00, 3375.00, 11.00 ),
+	Vector( -1940.00, 3375.00, 11.00 ),*/
+	Vector( -2910.00, 3792.00, 257.00 ),
+	Vector( -2910.00, 3851.00, 257.00 ),
+	Vector( -2910.00, 3978.00, 257.00 ),
+	Vector( -2910.00, 4225.00, 257.00 ),
+	Vector( -2800.00, 4225.00, 257.00 ),
+	Vector( -2800.00, 4179.00, 257.00 ),
+	Vector( -2800.00, 4096.00, 257.00 ),
+	Vector( -2713.00, 4096.00, 257.00 ),
+	Vector( -2650.00, 4086.00, 257.00 ),
+	Vector( -2650.00, 4026.00, 257.00 ),
+	Vector( -2643.00, 3947.00, 257.00 ),
+	Vector( -2730.00, 3930.00, 257.00 ),
+	Vector( -2827.00, 3930.00, 257.00 ),
+	Vector( -2808.00, 3770.00, 257.00 ),
+	Vector( -2747.00, 3770.00, 257.00 ),
+	Vector( -2635.00, 3770.00, 257.00 ),
+	Vector( -2625.00, 3860.00, 257.00 ),
+	Vector( -2530.00, 3820.00, 257.00 ),
+	Vector( -2530.00, 3906.00, 257.00 ),
+	Vector( -2530.00, 4104.00, 257.00 ),
 }
 
 SPAWN_SUPPORT_MTF = {
@@ -182,7 +248,7 @@ SPAWN_SUPPORT_CI = SPAWN_SUPPORT_MTF
 --[[-------------------------------------------------------------------------
 Keycards
 ---------------------------------------------------------------------------]]
-KEYCARDS = {
+/*KEYCARDS = {
 	lcz = { 
 		amount = 4, --amount of cards to spawn
 		ents = { -- { "card type", chance }
@@ -244,6 +310,126 @@ KEYCARDS = {
 			Vector( -3267.4348144531, 2961.9831542969, 0.03125 ),
 		} 
 	},
+}*/
+CHIPS = {
+	/*group = {
+		amount = <number>,
+		level = <number>/<table of numbers>,
+		spawns = {
+			<Vector>,
+			...
+		}
+	}*/
+	/*lcz_d = {
+		amount = 1,
+		level = 1,
+		spawns = {
+			Vector( -2115.00, 1089.00, 130.00 ),
+		}
+	},*/
+	lcz_0 = { --lcz pre gas open areas
+		amount = 2,
+		level = 1,
+		spawns = {
+			Vector( 1311.00, 1824.00, 129.00 ),
+			Vector( -331.00, 808.00, 37.00 ),
+			Vector( -330.00, 1267.00, 37.00 ),
+			Vector( 173.00, -627.00, 65.00 ),
+			Vector( 883.00, -2396.00, 1.00 ),
+			Vector( 2162.00, -2155.00, 2.00 ),
+			Vector( 11.00, -620.00, 22.00 ),
+		},
+	},
+	lcz_1 = { --lcz post gas open areas and underground
+		amount = 3,
+		level = 1,
+		spawns = {
+			Vector( 3172.00, -1761.00, 1.00 ),
+			Vector( 1886.00, 570.00, 1.00 ),
+			Vector( 2797.00, 1321.00, 33.00 ),
+			Vector( 409.00, -49.00, 1.00 ),
+			Vector( 2396.00, -243.00, 1.00 ),
+			Vector( 942.00, -389.00, -767.00 ),
+			Vector( 2209.00, -1700.00, -767.00 ),
+			Vector( 1613.00, 65.00, -767.00 ),
+		},
+	},
+	lcz_2 = { --lcz closed areas
+		amount = 3,
+		level = 2,
+		spawns = {
+			Vector( -1647.00, -575.00, 26.00 ),
+			Vector( 548.00, -1181.00, 37.00 ),
+			Vector( 549.00, 1370.00, 257.00 ),
+			Vector( 1360.00, 532.00, 65.00 ),
+			Vector( 1759.00, 801.00, 37.00 ),
+			Vector( 2255.00, 1360.00, 1.00 ),
+			Vector( 3017.00, 113.00, 37.00 ),
+		},
+	},
+	hcz_2 = {
+		amount = 3,
+		level = 2,
+		spawns = {
+			Vector( 5995.00, -392.00, 1.00 ),
+			Vector( 5331.00, 2137.00, 29.00 ),
+			Vector( 5224.00, 3794.00, 65.00 ),
+			Vector( 4288.00, 3040.00, 1.00 ),
+			Vector( 3000.00, 2758.00, -382.00 ),
+			Vector( 2950.00, 1797.00, 1.00 ),
+			Vector( 1901.00, 5234.00, -213.00 ),
+		},
+	},
+	hcz_3 = {
+		amount = 2,
+		level = 3,
+		spawns = {
+			Vector( 5135.00, -1023.00, 62.00 ),
+			Vector( 5160.00, 543.00, 1.00 ),
+			Vector( 4857.00, -2620.00, 42.00 ),
+			Vector( 2151.00, 1600.00, 37.00 ),
+		},
+	},
+	ez_3 = {
+		amount = 3,
+		level = 3,
+		spawns = {
+			Vector( -76.00, 3402.00, -87.00 ),
+			Vector( 223.00, 3760.00, -103.00 ),
+			Vector( -571.00, 2723.00, 1.00 ),
+			Vector( 57.00, 2271.00, 37.00 ),
+			Vector( -1941.00, 2518.00, -127.00 ),
+			Vector( -1111.00, 3901.00, -27.00 ),
+		},
+	},
+}
+
+OMNITOOLS = {
+	lcz = {
+		amount = 8,
+		spawns = {
+			Vector( -378.00, 866.00, 37.00 ),
+			Vector( -780.00, 344.00, -127.00 ),
+			Vector( 326.00, -946.00, -127.00 ),
+			Vector( 305.34, -618.72, 42.16 ),
+			Vector( 399.75, -612.28, 22.09 ),
+			Vector( 1145.00, -372.00, -767.00 ),
+			Vector( -174.00, 1344.00, 37.00 ),
+			Vector( 2501.00, -1949.00, -767.00 ),
+			Vector( 1254.00, -739.00, 1.00 ),
+			Vector( 2193.00, -283.00, 1.00 ),
+		}
+	},
+	hcz = {
+		amount = 3,
+		spawns = {
+			Vector( 3654.00, -1373.00, -127.00 ),
+			Vector( 5359.00, 180.00, 2.00 ),
+			Vector( 4380.00, 517.00, 17.00 ),
+			Vector( 4786.00, 2307.00, 1.00 ),
+			Vector( 4105.00, 2466.00, 1.00 ),
+		}
+	}
 }
 
 --[[-------------------------------------------------------------------------
@@ -256,7 +442,7 @@ SPAWN_MEDKITS = {
 
 	--hcz
 	Vector( 4917.00, 2755.00, 11.00 ),
-	Vector( 3990.00, 182.00, -337.00 ),
+	Vector( 3990.00, 200.00, -337.00 ),
 	Vector( 3381.00, 2235.00, 11.00 ),
 
 	--lcz
@@ -265,6 +451,12 @@ SPAWN_MEDKITS = {
 	Vector( 552.00, -1406.00, 11.00 ),
 	Vector( 1844.00, 1355.00, 11.00 ),
 	Vector( 195.00, -1210.00, -117.00 ),
+}
+
+SPAWN_MEDBAY = {
+	Vector( -1444.00, 3519.00, 1.00 ),
+	Vector( -1848.00, 3312.00, 1.00 ),
+	Vector( -1444.00, 3428.00, 37.00 ),
 }
 
 SPAWN_ITEMS = {
@@ -407,16 +599,22 @@ SPAWN_AMMO_CW = {
 	Vector( -7350.00, 3250.00, 2571.00 ),
 	Vector( -7350.00, 3150.00, 2571.00 ),
 	Vector( -7350.00, 3050.00, 2571.00 ),
+	Vector( -7350.00, 2950.00, 2571.00 ),
 
 	--tower
 	Vector( 50.00, 6431.00, 3115.00 ),
 
 	--MTF
-	Vector( -1550.00, 3300.00, 11.00 ),
-	Vector( -1625.00, 3300.00, 11.00 ),
-	Vector( -1700.00, 3300.00, 11.00 ),
-	Vector( -1775.00, 3300.00, 11.00 ),
-	Vector( -1850.00, 3300.00, 11.00 ),
+	-- Vector( -1550.00, 3300.00, 11.00 ),
+	-- Vector( -1625.00, 3300.00, 11.00 ),
+	-- Vector( -1700.00, 3300.00, 11.00 ),
+	-- Vector( -1775.00, 3300.00, 11.00 ),
+	-- Vector( -1850.00, 3300.00, 11.00 ),
+	Vector( -3020.00, 3775.00, 257.00 ),
+	Vector( -3020.00, 3865.00, 257.00 ),
+	Vector( -3020.00, 3955.00, 257.00 ),
+	Vector( -3020.00, 4045.00, 257.00 ),
+	Vector( -3020.00, 4135.00, 257.00 ),
 
 	--armory
 	Vector( 1550.00, -1630.00, 11.00 ),
@@ -430,7 +628,7 @@ SPAWN_AMMO_CW = {
 	Vector( 1450.00, -1550.00, 11.00 ),
 
 	--random
-	Vector( 1364.00, -2113.00, -757.00 ),
+	//Vector( 1364.00, -2113.00, -757.00 ),
 	Vector( 4956.00, 2366.00, 11.00 ),
 	Vector( 5034.00, -2263.00, 63.00 ),
 }
@@ -438,6 +636,8 @@ SPAWN_AMMO_CW = {
 --[[-------------------------------------------------------------------------
 Spawn weapons
 ---------------------------------------------------------------------------]]
+SPAWN_PARTICLE_CANNON = Vector( 3577.00, 1715.00, 60.00 )
+
 SPAWN_PISTOLS = {
 	--armory
 	Vector( 1347.34, -1698.53, 51.88 ),
@@ -533,6 +733,8 @@ SPAWN_VEST = {
 --[[-------------------------------------------------------------------------
 Misc Locations
 ---------------------------------------------------------------------------]]
+ZERO_POS = Vector( -1100, 500, 0 )
+
 GAS_POS = {
 	Vector( 2268.5, -2267.5, 2 ),
 	Vector( 4800, 3042.5, 1 ),
@@ -554,6 +756,10 @@ SCP_914_INTAKE_MINS = Vector( 1677.00, -549.00, 0.00 )
 SCP_914_INTAKE_MAXS = Vector( 1600.00, -683.00, 128.00 )
 OrderVectors( SCP_914_INTAKE_MINS, SCP_914_INTAKE_MAXS )
 
+SCP_914_OUTPUT_MINS = Vector( 1675.00, -995.00, 128.00 )
+SCP_914_OUTPUT_MAXS = Vector( 1618.00, -1116.00, 0.00 )
+OrderVectors( SCP_914_OUTPUT_MINS, SCP_914_OUTPUT_MAXS )
+
 SCP_914_OUTPUT = Vector(1651.584229, -1052.149902, 7.470211)
 SCP_914_DOORS = {
 	Vector( 1604.50, -571.00, 55.50 ),
@@ -562,20 +768,70 @@ SCP_914_DOORS = {
 SCP_914_BUTTON = Vector( 1567.000000, -832.000000, 46.000000 )
 
 --[[-------------------------------------------------------------------------
-Omega warhead
+Warhead misc
 ---------------------------------------------------------------------------]]
-OMEGA_GATE_A_DOORS = {
-	Vector( -484.00, 4836.00, 50.25 ),
-	Vector( -412.00, 4836.00, 50.25 ),
+WARHEAD_IS_ON_SURFACE = function( ply )
+	return ply:GetPos().z > 1675
+end
+
+--[[-------------------------------------------------------------------------
+Alpha Warhead
+---------------------------------------------------------------------------]]
+ALPHA_CARD_SPAWN = {
+	{
+		Vector( -2478.00, 1559.00, 165.00 ),
+		Vector( -1144.00, -531.00, 65.00 ),
+		Vector( 1888.00, 490.00, 18.00 ),
+		Vector( 959.00, -1033.00, -767.00 ),
+		Vector( 3171.00, -1190.00, -31.00 ),
+	},
+	{
+		Vector( 5347.00, 1245.00, -511.00 ),
+		Vector( 1979.00, 1687.00, 1.00 ),
+		Vector( 1827.00, 3297.00, -382.00 ),
+		Vector( 2019.00, 3995.00, -447.00 ),
+		Vector( 4873.00, 2782.00, -127.00 ),
+	},
+	{
+		Vector( -534.00, 4655.00, 1.00 ),
+		Vector( -800.00, 2644.00, 37.00 ),
+		Vector( -3048.00, 2953.00, 1.00 ),
+		Vector( 1391.00, 3945.00, 37.00 ),
+		Vector( 5245.00, 4601.00, -1147.00 ),
+	},
 }
 
-OMEGA_REMOTE_NAME = "omega_lever_room2nuke"
+ALPHA_ACTIVATION = { Vector( -1275.00, 2678.00, 51.00 ), Angle( 0, -90, 0 ) }
+
+ALPHA_REMOTE_CHECK = function()
+	local remote = ents.FindByName( "warhead_lever_alpha" )[1]
+
+	return IsValid( remote ) and remote:GetState()
+end
+--[[-------------------------------------------------------------------------
+Omega warhead
+---------------------------------------------------------------------------]]
+OMEGA_ACTIVATION_1 = { Vector( -133.00, 6433.00, 3155.00 ), Angle( 0, 0, 0 ) }
+OMEGA_ACTIVATION_2 = { Vector( -2298.00, 6405.00, 3155.00 ), Angle( 0, 180, 0 ) }
+
+OMEGA_GATE_A_DOOR_L = "gate_containment_door_l"
+OMEGA_GATE_A_DOOR_R = "gate_containment_door_r"
+
+OMEGA_SHELTER_DOOR_L = "shelter_door_l"
+OMEGA_SHELTER_DOOR_R = "shelter_door_r"
+
+OMEGA_SHELTER = { Vector( -110, -1918, -128 ), Vector( 495, -1408, 30 ) }
+
+OMEGA_REMOTE_CHECK = function()
+	local remote = ents.FindByName( "warhead_lever_omega" )[1]
+
+	return IsValid( remote ) and remote:GetState()
+end
 
 --[[-------------------------------------------------------------------------
 Escape/Escort
 ---------------------------------------------------------------------------]]
-
-POS_ESCAPE = Vector( -6563.0942382813, -704.70709228516, 2263.7766113281 )
+POS_ESCAPE = { Vector( -6986.00, -896.00, 2230.00 ), Vector( -6450.00, -500.00, 2395.00 ) }
 
 POS_ESCORT = Vector( -2878.6206054688, 1741.7536621094, 2300.03125 ) --Generic escort pos, used if game will fail to find escort pos for specified team
 POS_ESCORT_MTF = POS_ESCORT
@@ -603,6 +859,7 @@ POS_BUTTON = {
 	Vector(362.000000, 1592.000000, 294.000000), --173
 	Vector(4993.000000, 3592.000000, 53.000000), --096
 	Vector(4216.00, 2256.00, 38.00), --966
+	Vector( 1264.00, -958.50, 53.00 ), --914
 }
 
 POS_ROT_BUTTON = {
@@ -623,8 +880,8 @@ SOUND_TRANSMISSION_NAME = "sound_lever_106"
 CAGE_INSIDE = Vector( 2498.16, 4482.72, -402.50 )
 CAGE_DOWN_POS = Vector( 2488.00, 4488.00, -307.00 )
 CAGE_BOUNDS = {
-	MINS = Vector( 2325.47, 4651.63, -194.53 ),
-	MAXS = Vector( 2611.38, 4363.59, -402.59 )
+	MINS = Vector( 2325.47, 4651.63, -200.00 ),
+	MAXS = Vector( 2611.38, 4363.59, -403.00 )
 }
 OrderVectors( CAGE_BOUNDS.MINS, CAGE_BOUNDS.MAXS )
 
@@ -682,254 +939,574 @@ OrderVectors( POCKETD_MINS, POCKETD_MAXS )
 --[[-------------------------------------------------------------------------
 Map buttons config
 ---------------------------------------------------------------------------]]
+local function preparing_override( ply, ent, data )
+	return !ROUND.preparing
+end
+
 BUTTONS = {
+	/*
 	{
-		name = "Security Room Door",
-		pos = Vector(-1928.00, 3551.00, 53.00),
-		override = function( ply, ent ) return !ROUND.preparing end,
+		name = "",
+		pos = Vector(  ),
+		access = ACCESS_,
+	},
+	*/
+
+	--misc--
+	{
+		name = "D Cells Control",
+		pos = Vector( -2239.00, 1832.00, 181.00 ),
+		access = ACCESS_OFFICE,
 	},
 	{
-		name = "173 Control Room Door",
-		pos = Vector(193.000000, 1768.000000, 309.000000),
-		access = bit.lshift( 1, 1 ),
-		override = function( ply, ent )
+		name = "Armory",
+		pos = Vector( 1801.00, -1432.00, 53.00 ),
+		access = ACCESS_ARMORY,
+	},
+	{
+		name = "Glass Room",
+		pos = Vector( 1393.00, 728.00, 53.00 ),
+		access = ACCESS_GENERAL,
+	},
+	{
+		name = "Checkpoint room LCZ_1",
+		pos = Vector( 2968.00, 273.00, 53.00 ),
+		access = ACCESS_CHECKPOINT_LCZ,
+	},
+	{
+		name = "Checkpoint room LCZ_2",
+		pos = Vector( 2616.00, 641.00, 53.00 ),
+		access = ACCESS_CHECKPOINT_LCZ,
+	},
+	{
+		name = "Checkpoint room EZ",
+		pos = Vector( 1688.00, 4113.00, 53.00 ),
+		access = ACCESS_CHECKPOINT_EZ,
+	},
+	{
+		name = "Portla Observation #1",
+		pos = Vector( 1673.00, 2055.989990, 53.00 ),
+		access = ACCESS_GENERAL,
+	},
+	{
+		name = "Portla Observation #2",
+		pos = Vector( 1289.00, 2055.989990, 53.00 ),
+		access = ACCESS_GENERAL,
+	},
+	{
+		name = "Office 1",
+		pos = Vector( 1297.00, 3047.989990, 117.00 ),
+		access = ACCESS_OFFICE,
+	},
+	{
+		name = "Office 2",
+		pos = Vector( -936.00, 2465.00, 53.00 ),
+		access = ACCESS_OFFICE,
+	},
+	{
+		name = "Office 3",
+		pos = Vector( -1288.00, 2465.00, 53.00 ),
+		access = ACCESS_OFFICE,
+	},
+	{
+		name = "MedBay",
+		pos = Vector( -1928.00, 3551.00, 53.00 ),
+		access = ACCESS_MEDBAY,
+	},
+	{
+		name = "Electrical Center",
+		pos = Vector( -2328.00, 3775.00, 53.00 ),
+		access = ACCESS_EC,
+		override = function( ply, ent, data )
 			if ROUND.preparing then
 				return false
 			end
 		end,
 	},
 	{
-		name = "173 Door",
-		pos = Vector( 393, 1288, 181 ),
-		override = function( ply, ent ) return !ROUND.preparing end,
-	},
-	{
-		name = "106 Door",
-		pos = Vector( 2280, 3959, 53 ),
-		override = function( ply, ent ) return !ROUND.preparing end,
-		nosound = true,
-	},
-	{
-		name = "008 Door",
-		pos = Vector( 2441, 1896, 53 ),
-		override = function( ply, ent ) return !ROUND.preparing end,
-	},
-	{
-		name = "457 Door",
-		pos = Vector( 6208.00, -144.00, 53.00 ),
-		override = function( ply, ent ) return !ROUND.preparing end,
-	},
-	{
-		name = "HCZ-LCZ CHECKPOINT 1",
-		pos = Vector(2816.00, -192.00, 53.00),
-		access = bit.lshift( 1, 3 ),
-	},
-	{
-		name = "HCZ-LCZ CHECKPOINT 2",
-		pos = Vector(2816.00, 1088.00, 53.00),
-		access = bit.lshift( 1, 3 ),
-	},
-	{
-		name = "HCZ-EZ CHECKPOINT 1",
-		pos = Vector(2176.00, 2368.00, 53.00),
-		access = bit.lshift( 1, 3 ),
-	},
-	{
-		name = "HCZ-EZ CHECKPOINT 2",
-		pos = Vector(1536.00, 3648.00, 53.00),
-		access = bit.lshift( 1, 3 ),
-	},
-	{
-		name = "Control room",
-		pos = Vector(-2328.000000, 3775.000000, 53.000000),
-		access = bit.lshift( 1, 10 ),
+		name = "Particle Cannon",
+		pos = Vector( 3676.00, 2156.00, 59.00 ),
+		access = ACCESS_PARTICLE,
 	},
 	{
 		name = "Gate A",
-		pos = Vector(-321.000000, 4784.000000, 53.000000),
-		access = bit.lshift( 1, 6 ),
+		pos = Vector( -321.00, 4784.00, 53.00 ),
+		access = ACCESS_GATE_A,
+		omega_disable = true,
+		//alpha_disable = true,
 	},
 	{
 		name = "Gate B",
-		pos = Vector(-3790.500000, 2472.500000, 53.000000),
-		access = bit.lshift( 1, 7 ),
+		pos = Vector( -3790.50, 2472.50, 53.00 ),
+		access = ACCESS_GATE_B,
 	},
 	{
-		name = "Armory",
-		pos = Vector(1801.000000, -1432.000000, 53.000000),
-		access = bit.lshift( 1, 8 ),
+		name = "SCP-008 Observation",
+		pos = Vector( 2441.00, 1576.00, 53.00 ),
+		access = ACCESS_GENERAL,
 	},
 	{
-		name = "Cells Control Room",
-		pos = Vector(-2239.000000, 1832.000000, 181.000000),
-		access = bit.lshift( 1, 3 ),
+		name = "Facility Exit",
+		pos = Vector( -6655.00, -664.00, 2293.00 ),
+		access = ACCESS_GENERAL,
 	},
+
+	--Warhed Elevator--
+	/*{
+		name = "Warhead Elevator UP_OUT",
+		pos = Vector( 4535.00, 408.00, 53.00 ),
+		access = ACCESS_WARHEAD_ELEVATOR,
+		msg_omnitool = "elevator_noomni",
+	},
+	{
+		name = "Warhead Elevator UP_IN",
+		pos = Vector( 4553.00, 492.00, 53.00 ),
+		access = ACCESS_WARHEAD_ELEVATOR,
+		msg_omnitool = "elevator_noomni",
+	},
+	{
+		name = "Warhead Elevator DOWN_OUT",
+		pos = Vector( 4535.00, 408.00, -331.00 ),
+		access = ACCESS_WARHEAD_ELEVATOR,
+		msg_omnitool = "elevator_noomni",
+	},
+	{
+		name = "Warhead Elevator DOWN_IN",
+		pos = Vector( 4553.00, 492.00, -331.00 ),
+		access = ACCESS_WARHEAD_ELEVATOR,
+		msg_omnitool = "elevator_noomni",
+	},*/
+
+	--Checkpoints--
+	{
+		name = "Checkpoint LCZ1",
+		pos = Vector( 2816.00, -192.00, 53.00 ),
+		access = ACCESS_CHECKPOINT_LCZ,
+		omega_override = true
+	},
+	{
+		name = "Checkpoint LCZ2",
+		pos = Vector( 2816.00, 1088.00, 53.00 ),
+		access = ACCESS_CHECKPOINT_LCZ,
+		omega_override = true
+	},
+	{
+		name = "Checkpoint EZ1",
+		pos = Vector( 1536.00, 3648.00, 53.00 ),
+		access = ACCESS_CHECKPOINT_EZ,
+		omega_override = true
+	},
+	{
+		name = "Checkpoint EZ2",
+		pos = Vector( 2176.00, 2368.00, 53.00 ),
+		access = ACCESS_CHECKPOINT_EZ,
+		omega_override = true
+	},
+
+	--SCPs--
+	--safe
+	{
+		name = "SCP-914",
+		pos = Vector( 1264.00, -958.50, 53.00 ),
+		access = ACCESS_SAFE,
+	},
+	{
+		name = "SCP-1123",
+		pos = Vector( 737.00, -1240.00, 53.00 ),
+		access = ACCESS_SAFE,
+	},
+	{
+		name = "SCP-714",
+		pos = Vector( 2225.00, 920.00, 53.00 ),
+		access = ACCESS_SAFE,
+	},
+	{
+		name = "SCP-860-1025",
+		pos = Vector( 2072.00, 1185.00, 53.00 ),
+		access = ACCESS_SAFE,
+	},
+	{
+		name = "SCP-860",
+		pos = Vector( 2017.00, 1336.00, 53.00 ),
+		access = ACCESS_SAFE,
+	},
+	{
+		name = "SCP-1025",
+		pos = Vector( 2225.00, 1336.00, 53.00 ),
+		access = ACCESS_SAFE,
+	},
+	{
+		name = "Forest #1",
+		pos = Vector( 1673.00, 2216.00, 53.00 ),
+		access = ACCESS_SAFE,
+		override = function( ply, ent, data )
+			if ply:SCPClass() == CLASSES.SCP8602 then
+				return true
+			end
+		end
+	},
+	{
+		name = "Forset #2",
+		pos = Vector( 1289.00, 2216.00, 53.00 ),
+		access = ACCESS_SAFE,
+		override = function( ply, ent, data )
+			if ply:SCPClass() == CLASSES.SCP8602 then
+				return true
+			end
+		end
+	},
+
+	--euclid
+	{
+		name = "SCP-173",
+		pos = Vector( 193.00, 1768.00, 309.00 ),
+		access = ACCESS_EUCLID,
+		override = function( ply, ent, data )
+			if ROUND.preparing then
+				return false
+			end
+		end
+	},
+	{
+		name = "SCP-012",
+		pos = Vector( -527.00, -344.00, 53.00 ),
+		access = ACCESS_EUCLID,
+	},
+	{
+		name = "SCP-372",
+		pos = Vector( -944.00, -705.50, 53.00 ),
+		access = ACCESS_EUCLID,
+	},
+	{
+		name = "SCP-205",
+		pos = Vector( 3096.00, -1519.00, 53.00 ),
+		access = ACCESS_EUCLID,
+	},
+	{
+		name = "SCP-178",
+		pos = Vector( 393.00, -152.00, 53.00 ),
+		access = ACCESS_EUCLID,
+	},
+	{
+		name = "SCP-1162",
+		pos = Vector( 1569.00, 892.00, 53.00 ),
+		access = ACCESS_EUCLID,
+	},
+	{
+		name = "SCP-895",
+		pos = Vector( 5440.50, 360.00, 53.00 ),
+		access = ACCESS_EUCLID,
+	},
+	{
+		name = "SCP-079",
+		pos = Vector( 3723.50, -1162.00, -75.00 ),
+		access = ACCESS_EUCLID,
+	},
+	{
+		name = "SCP-513",
+		pos = Vector( 3896.00, 3745.00, 53.00 ),
+		access = ACCESS_EUCLID,
+	},
+	{
+		name = "SCP-008",
+		pos = Vector( 2441.00, 1896.00, 53.00 ),
+		access = ACCESS_EUCLID,
+	},
+
+	--keter
+	{
+		name = "SCP-035",
+		pos = Vector( 5336.00, -639.00, 53.00 ),
+		access = ACCESS_KETER,
+	},
+
+	--special--
+	--scps
+	{
+		name = "SCP-106",
+		pos = Vector( 2280.00, 3959.00, 53.00 ),
+		override = preparing_override,
+		msg_access = "",
+	},
+	{
+		name = "SCP-457",
+		pos = Vector( 6208.00, -144.00, 53.00 ),
+		override = preparing_override,
+		msg_access = "",
+	},
+
+	--scp 914
+	{
+		name = "SCP-914 Upgrade",
+		pos = Vector( 1567.00, -832.00, 46.00 ),
+		tolerance = { x = 5 },
+		override = function( ply, ent, data )
+			return Use914( ent, ply )
+		end,
+		//msg_access = "",
+		//msg_deny = "",
+		suppress_texts = true,
+		scp_disallow = true,
+	},
+	{
+		name = "SCP-914 Mode",
+		pos = Vector( 1563.00, -832.00, 62.00 ),
+		//msg_access = "",
+		//msg_deny = "",
+		override = function( ply, ent, data )
+			return !GetRoundStat( "914use" )
+		end,
+		suppress_texts = true,
+		scp_disallow = true,
+	},
+
+	--scp 106 recontamination
 	{
 		name = "Femur Breaker",
 		pos = Vector( 2176.00, 5244.50, -201.00 ),
-		access = bit.lshift( 1, 9 ),
-		access_msg = "femur_act",
-		deny_msg = "",
-		nocard_msg = "device_nocard",
-		access_granted = function( ply )
-			return Recontain106( ply )
-		end
+		access = ACCESS_FEMUR,
+		access_granted = function( ply, ent, data )
+			return !Recontain106( ply ) --TODO invert in function not here?
+		end,
+		msg_access = "femur_act",
+		msg_deny = "",
+		msg_omnitool = "device_noomni",
 	},
 	{
 		name = "ELO-IID",
 		pos = Vector( 2048.000000, 5244.009766, -202.139999 ),
-		deny_msg = "",
-		access_msg = "",
-		override = function( pl, ent )
+		override = function( pl, ent, data )
 			return !GetRoundStat( "106recontain" )
 		end,
+		//msg_access = "",
+		//msg_deny = "",
+		suppress_texts = true,
+		scp_disallow = true,
 	},
 	{
 		name = "Sound Transmission",
 		pos = Vector( 2088.000000, 5243.990234, -201.860001 ),
-		deny_msg = "",
-		access_msg = "",
-		override = function( pl, ent )
+		override = function( pl, ent, data )
 			return !GetRoundStat( "106recontain" )
 		end,
+		//msg_access = "",
+		//msg_deny = "",
+		suppress_texts = true,
+		scp_disallow = true,
 	},
+
+	--warheads
 	{
-		name = "SCP 372",
-		pos = Vector(-944.000000, -705.500000, 53.000000),
-		access = bit.lshift( 1, 1 ),
-	},
-	{
-		name = "Room 13",
-		pos = Vector(1393.000000, 728.000000, 53.000000),
-		access = bit.lshift( 1, 0 ),
-	},
-	{
-		name = "SCP 860, 1025",
-		pos = Vector(2072.000000, 1185.000000, 53.000000),
-		access = bit.lshift( 1, 0 ),
-	},
-	{
-		name = "SCP 178",
-		pos = Vector(393.000000, -152.000000, 53.000000),
-		access = bit.lshift( 1, 1 ),
-	},
-	{
-		name = "SCP 1123",
-		pos = Vector(737.000000, -1240.000000, 53.000000),
-		access = bit.lshift( 1, 0 ),
-	},
-	{
-		name = "SCP 714",
-		pos = Vector(2225.00, 920.00, 53.00),
-		access = bit.lshift( 1, 0 ),
-	},
-	{
-		name = "SCP 914",
-		pos = Vector(1264.000000, -958.500000, 53.000000),
-		access = bit.lshift( 1, 0 ),
-	},
-	{
-		name = "SCP 079",
-		pos = Vector(3723.50, -1162.00, -75.00),
-		access = bit.lshift( 1, 1 ),
-	},
-	{
-		name = "914 Upgrade Button",
-		pos = Vector( 1567.000000, -832.000000, 46.000000 ),
-		tolerance = { x = 5 },
-		deny_msg = "",
-		access_msg = "",
-		override = function( ply, ent )
-			return Use914( ent )
-		end
-	},
-	{
-		name = "914 Mode Button",
-		pos = Vector( 1563.000000, -832.000000, 62.000000 ),
-		deny_msg = "",
-		access_msg = "",
-		override = function( ply, ent )
-			return !GetRoundStat( "914use" )
-		end
-	},
-	{
-		name = "SCP 1162",
-		pos = Vector(1569.000000, 892.000000, 53.000000),
-		access = bit.lshift( 1, 1 ),
-	},
-	{
-		name = "Checkpoint 1",
-		pos = Vector(2968.000000, 273.000000, 53.000000),
-		access = bit.lshift( 1, 3 ),
-	},
-	{
-		name = "Checkpoint 2",
-		pos = Vector(2616.000000, 641.000000, 53.000000),
-		access = bit.lshift( 1, 3 ),
-	},
-	{
-		name = "Checkpoint 3",
-		pos = Vector(792.000000, 3977.000000, 53.000000),
-		access = bit.lshift( 1, 3 ),
-	},
-	{
-		name = "Portal observation room",
-		pos = Vector(1289.000000, 2055.989990, 53.000000),
-		access = bit.lshift( 1, 5 ),
-	},
-	{
-		name = "Portal observation room",
-		pos = Vector(1673.000000, 2055.989990, 53.000000),
-		access = bit.lshift( 1, 5 ),
-	},
-	{
-		name = "Portal",
-		pos = Vector(1289.000000, 2216.000000, 53.000000),
-		access = bit.lshift( 1, 0 ),
-		override = function( ply, ent )
-			if ply:SCPClass() == CLASSES.SCP8602 then
-				return true
-			end
-		end
-	},
-	{
-		name = "Portal",
-		pos = Vector(1673.000000, 2216.000000, 53.000000),
-		access = bit.lshift( 1, 0 ),
-		override = function( ply, ent )
-			if ply:SCPClass() == CLASSES.SCP8602 then
-				return true
-			end
-		end
-	},
-	{
-		name = "Melon room",
-		pos = Vector( 3676.000000, 2156.000000, 59.000000 ),
-		access = bit.lshift( 1, 7 ),
---		override = function(pl, ent)
---			return false
---		end
-	},
-	{
-		name = "OMEGA Warhead Remote Detonation",
+		name = "OMEGA Warhead Detonation",
 		pos = Vector( -2317.50, 6476.50, 3137.00 ),
-		access = bit.lshift( 1, 4 ),
-		access_msg = "",
-		deny_msg = "",
-		nocard_msg = "device_nocard",
-		access_granted = function( ply )
-			--OMEGAWarhead( ply )
-			return false
-		end,
+		disabled = true,
+	},
+	{
+		name = "Evacuation Shelter",
+		pos = Vector( 195.679993, -1387.290039, -75.00 ),
+		disabled = true,
+	},
+
+	--SCP use disallow
+	{
+		name = "173",
+		pos = Vector( 362.00, 1592.00, 294.00 ),
+		scp_disallow = true,
+		suppress_check = true,
+	},
+	{
+		name = "012",
+		pos = Vector( -560.00, -52.00, -192.00 ),
+		scp_disallow = true,
+		suppress_check = true,
+	},
+	{
+		name = "372",
+		pos = Vector( -1056.00, -530.00, 38.00 ),
+		scp_disallow = true,
+		suppress_check = true,
+	},
+	{
+		name = "035 door",
+		pos = Vector( 5468.00, -784.00, 53.860001 ),
+		scp_disallow = true,
+		suppress_check = true,
+	},
+	{
+		name = "035 gas",
+		pos = Vector( 5468.00, -808.00, 54.00 ),
+		scp_disallow = true,
+		suppress_check = true,
+	},
+	{
+		name = "966 door",
+		pos = Vector( 4216.00, 2256.00, 38.00 ),
+		scp_disallow = true,
+		suppress_check = true,
+	},
+	{
+		name = "049 door",
+		pos = Vector( 5040.00, -2376.00, 54.00 ),
+		scp_disallow = true,
+		suppress_check = true,
+	},
+	{
+		name = "Alpha Lever",
+		pos = Vector( 3972.00, 264.00, -330.00 ),
+		scp_disallow = true,
+		suppress_check = true,
+	},
+	{
+		name = "Omega Lever",
+		pos = Vector( 3972.00, 306.00, -330.00 ),
+		scp_disallow = true,
+		suppress_check = true,
+	},
+	{
+		name = "682 door",
+		pos = Vector( 2288.00, 3396.010010, -201.139999 ),
+		scp_disallow = true,
+		suppress_check = true,
+	},
+	{
+		name = "682 acid",
+		pos = Vector( 2264.00, 3396.00, -201.00 ),
+		scp_disallow = true,
+		suppress_check = true,
+	},
+	{
+		name = "lockdown",
+		pos = Vector( -2451.989990, 4120.00, 310.25 ),
+		scp_disallow = true,
+		suppress_check = true,
+	},
+	{
+		name = "tesla",
+		pos = Vector( -2451.989990, 4078.00, 310.25 ),
+		scp_disallow = true,
+		suppress_check = true,
+	},
+	{
+		name = "remote",
+		pos = Vector( -2452.00, 3876.00, 309.859985 ),
+		scp_disallow = true,
+		suppress_check = true,
+	},
+	{
+		name = "cannon",
+		pos = Vector( -29.00, 6648.00, 3138.00 ),
+		scp_disallow = true,
+		suppress_check = true,
 	},
 }
+
+ButtonController( "Warhead Elevator", {
+	access = ACCESS_WARHEAD_ELEVATOR,
+	msg_omnitool = "elevator_noomni",
+	buttons_set = {
+		{ Vector( 4535.00, 408.00, 53.00 ), Vector( 4553.00, 492.00, -331.00 ) },
+		{ Vector( 4553.00, 492.00, 53.00 ), Vector( 4535.00, 408.00, -331.00 ) },
+	},
+	/*on_use = function( ply, ent, data, setid )
+		print( "Warhead Elevator used!", ply, ent, data, setid )
+	end,*/
+	cooldown = 15,
+	initial_state = 1,
+	debug_use = 1,
+} )
+
+ButtonController( "LCZ Elevator 1", {
+	buttons_set = {
+		{ Vector( 792.00, -2239.00, 53.00 ), Vector( 620.00, -465.00, -715.00 ) },
+		{ Vector( 876.00, -2257.00, 53.00 ), Vector( 533.00, -447.00, -715.00 ) },
+	},
+	/*on_use = function( ply, ent, data, setid )
+		print( "LCZ 1 Elevator used!", ply, ent, data, setid )
+	end,*/
+	suppress_texts = true,
+	cooldown = 15,
+	initial_state = 1,
+	debug_use = 1,
+} )
+
+ButtonController( "LCZ Elevator 2", {
+	buttons_set = {
+		{ Vector( 872.00, 415.00, 53.00 ), Vector( 2452.00, 145.00, -715.00 ) },
+		{ Vector( 788.00, 433.00, 53.00 ), Vector( 2537.00, 127.00, -715.00 ) },
+	},
+	/*on_use = function( ply, ent, data, setid )
+		print( "LCZ 2 Elevator used!", ply, ent, data, setid )
+	end,*/
+	suppress_texts = true,
+	cooldown = 15,
+	initial_state = 1,
+	debug_use = 1,
+} )
+
+ButtonController( "HCZ Elevator 1", {
+	buttons_set = {
+		{ Vector( 4648.00, -97.00, 53.00 ), Vector( 4564.00, -1503.00, 69.00 ) },
+		{ Vector( 4564.00, -79.00, 53.00 ), Vector( 4664.00, -1533.00, 69.00 ) },
+	},
+	/*on_use = function( ply, ent, data, setid )
+		print( "HCZ 1 Elevator used!", ply, ent, data, setid )
+	end,*/
+	suppress_texts = true,
+	cooldown = 15,
+	initial_state = 1,
+	debug_use = 1,
+} )
+
+ButtonController( "HCZ Elevator 2", {
+	buttons_set = {
+		{ Vector( 4952.00, -287.00, 53.00 ), Vector( 5036.00, -1729.00, 69.00 ) },
+		{ Vector( 5036.00, -305.00, 53.00 ), Vector( 4936.00, -1699.00, 69.00 ) },
+	},
+	/*on_use = function( ply, ent, data, setid )
+		print( "HCZ 2 Elevator used!", ply, ent, data, setid )
+	end,*/
+	suppress_texts = true,
+	cooldown = 15,
+	initial_state = 1,
+	debug_use = 1,
+} )
+
+ButtonController( "Gate A Elevator", {
+	buttons_set = {
+		{ Vector( -193.00, 5144.00, 53.00 ), Vector( -175.00, 5228.00, 2613.00 ) },
+		{ Vector( -175.00, 5228.00, 53.00 ), Vector( -193.00, 5144.00, 2613.00 ) },
+	},
+	/*on_use = function( ply, ent, data, setid )
+		print( "Gate A Elevator used!", ply, ent, data, setid )
+	end,*/
+	suppress_texts = true,
+	cooldown = 15,
+	initial_state = 1,
+	debug_use = 1,
+	warhead_lockdown = true,
+} )
+
+ButtonController( "Gate B Elevator", {
+	buttons_set = {
+		{ Vector( -3944.00, 1921.00, 53.00 ), Vector( -3860.00, 1903.00, 2613.00 ) },
+		{ Vector( -3860.00, 1903.00, 53.00 ), Vector( -3944.00, 1921.00, 2613.00 ) },
+	},
+	/*on_use = function( ply, ent, data, setid )
+		print( "Gate B Elevator used!", ply, ent, data, setid )
+	end,*/
+	suppress_texts = true,
+	cooldown = 15,
+	initial_state = 1,
+	debug_use = 1,
+	warhead_lockdown = true,
+} )
 
 --[[-------------------------------------------------------------------------
 Cameras
 ---------------------------------------------------------------------------]]
 CCTV = {
 	{
-		name = "Class D cells",
+		name = "Class D Cells",
 		pos = Vector( -300.880524, -936.250854, 255.968750 ),
 		ang = Angle( 32.125, 137.296, 0.000 )
 	},
@@ -1020,13 +1597,83 @@ CCTV = {
 	}
 }
 
-STORED_DOORS = STORED_DOORS or {}
-hook.Add( "EntityKeyValue", "Site19EntityKeyValue", function( ent, key, value )
-	if CLIENT then return end
+hook.Add( "SLCPreround", "Site19Preround", function()
+	for k, v in pairs( ents.GetAll() ) do
+		local name = v:GetName()
+		//local class = v:GetClass()
 
-	if ent:GetClass() == "func_door" and key == "targetname" then
-		if string.match( value, "lcz_door_" ) or string.match( value, "hcz_door_" ) or string.match( value, "ez_door_" ) then
-			STORED_DOORS[ent] = true
+		if name == "049_hall_button" then
+			v:Fire( "Unlock" )
+		elseif name == "966_door" then
+			v:SetKeyValue( "forceclosed", "1" )
+		elseif name == "049_door" then
+			v:SetKeyValue( "forceclosed", "1" )
+		elseif name == "4016" then
+			v:Remove()
+		end
+		/*local class = v:GetClass()
+		if class == "func_door" then
+			print( "set for", v, name )
+			v:SetCollisionGroup( COLLISION_GROUP_PLAYER )
+			v:SetKeyValue( "dmg", 0 )
+		end*/
+
+		local pos = v:GetPos()
+		if pos == Vector( 3972.00, 264.00, -330.00 ) then
+			local btn = ents.Create( "slc_button" )
+			if IsValid( btn ) then
+				btn:SetName( "warhead_lever_alpha" )
+				btn:Tie( v, 1, 1, Angle( 0, 0, 0 ), Angle( -180, 0, 0 ), true )
+				btn:SetSound( "Buttons.snd21" )
+				btn:Spawn()
+			end
+		elseif pos == Vector( 3972.00, 306.00, -330.00 ) then
+			local btn = ents.Create( "slc_button" )
+			if IsValid( btn ) then
+				btn:SetName( "warhead_lever_omega" )
+				btn:Tie( v, 1, 1, Angle( 0, 0, 0 ), Angle( -180, 0, 0 ), true )
+				btn:SetSound( "Buttons.snd21" )
+				btn:Spawn()
+			end
+		elseif pos == Vector( 228.00, -1388.00, -78.00 ) then
+			v:SetName( "shelter_door_l" )
+		elseif pos == Vector( 156.00, -1388.00, -78.00 ) then
+			v:SetName( "shelter_door_r" )
 		end
 	end
 end )
+
+//STORED_DOORS = STORED_DOORS or {}
+hook.Add( "EntityKeyValue", "Site19EntityKeyValue", function( ent, key, value )
+	if CLIENT then return end
+
+	local unblocker = CVAR.doorunblocker:GetBool()
+	if !IsValid( LUA_ENT ) and unblocker then
+		LUA_ENT = ents.Create( "lua_run" )
+		LUA_ENT:SetName( "door_unblocker" )
+		LUA_ENT:Spawn()
+	end
+
+	local class = ent:GetClass()
+	if class == "func_door" and key == "targetname" then
+		if string.match( value, "^lcz_door_" ) or string.match( value, "^hcz_door_" ) or string.match( value, "^ez_door_" ) then
+			//STORED_DOORS[ent] = true
+
+			if unblocker then
+				ent:Fire( "AddOutput", "OnClose door_unblocker:RunPassedCode:hook.Run( 'SLCOnDoorClosed' ):0:-1" )
+			end
+		end
+	/*elseif class == "func_button" then
+		if string.sub( key, 1, 2 ) == "On" then
+			print( ent, key, value, ent:GetName() )
+		end*/
+	end
+
+end )
+
+//hook.Add( "AcceptInput", "Site19ChangeDoors", function( ent, input, activator, caller, value )
+	//if ent:GetClass() == "func_button" then
+		//print( ent, input, activator, caller, value, ent:GetName() )
+		//PrintTable( ent:GetKeyValues() )
+	//end
+//end )

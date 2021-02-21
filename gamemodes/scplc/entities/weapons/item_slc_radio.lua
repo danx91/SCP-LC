@@ -3,8 +3,6 @@ SWEP.Language 		= "RADIO"
 
 SWEP.WorldModel		= "models/mishka/models/radio.mdl"
 
-SWEP.NextUse 		= 0
-
 SWEP.ShouldDrawViewModel 	= false
 SWEP.ShouldDrawWorldModel 	= false
 
@@ -12,9 +10,11 @@ SWEP.Toggleable 	= true
 SWEP.EnableHolsterThink	= true
 SWEP.HasBattery 	= true
 SWEP.HolsterBatteryUsage = true
-SWEP.BatteryUsage 	= 1.8
+SWEP.BatteryUsage 	= 3.6
 
 SWEP.SelectFont = "SCPHUDMedium"
+
+SWEP.NextUse 		= 0
 
 function SWEP:SetupDataTables()
 	self:CallBaseClass( "SetupDataTables" )
@@ -67,7 +67,7 @@ function SWEP:DrawWorldModel()
 	end
 end
 
-local radio = Material( "slc/radioHUD.png" )
+local radio = Material( "slc/misc/radioHUD.png" )
 function SWEP:DrawHUD()
 	if hud_disabled then return end
 

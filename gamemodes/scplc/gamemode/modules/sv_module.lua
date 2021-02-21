@@ -32,7 +32,7 @@ function GM:OnEntityCreated( ent )
 end
 
 function GM:GetFallDamage( ply, speed )
-	print( speed )
+	//print( speed )
 
 	return 1
 end
@@ -50,6 +50,65 @@ end
 		ply:PrintMessage(HUD_PRINTTALK, "You will be blinking now")
 	end)
 end*/
+
+local doorBlockers = {}
+function AddDoorBlocker( class )
+	table.insert( doorBlockers, class )
+end
+
+function GM:SLCOnDoorClosed()
+	local activator, caller = ACTIVATOR, CALLER
+
+	if CVAR.doorunblocker:GetBool() then
+		local name = activator:GetName()
+		if name and string.match( name, "_door_1_" ) then
+			local dpos = activator:GetPos() - Vector( 0, 0, 55.5 )
+			local forward = activator:GetKeyValues().movedir
+
+			dpos = dpos + forward * -32
+			local radius = forward * -55
+
+			local mins = dpos * 1
+			local maxs = mins + radius
+			OrderVectors( mins, maxs )
+
+			mins = mins - Vector( 0, 0, 0 ) 
+			maxs = maxs + Vector( 0, 0, 32 )
+
+			local found = ents.FindInBox( mins, maxs )
+			if #found > 0 then
+				local rdot = radius:Dot( radius )
+				local up = Vector( 0, 0, 16 )
+
+				for k, v in pairs( found ) do
+					local pos = v:GetPos()
+					pos.z = dpos.z --hack?
+
+					for k, bl in pairs( doorBlockers ) do
+						if string.find( v:GetClass(), bl ) then
+
+							local frac = 0
+							if rdot != 0 then
+								frac = (pos - dpos):Dot( radius ) / rdot --fraction
+							end
+							local pline = (dpos + radius * frac) --point on line
+							local vec = pos - pline --vector pointing from pline to item
+							vec:Normalize() --normalize it so we can multiply it
+
+							v:SetPos( pline + vec * 64 + up ) --set object pos 64 units away from door, perpendicularly to door
+							v:PhysWake()
+							//print( frac, vec, dpos + radius * frac, pos + norm * 32 )
+						end
+					end
+				end
+			end
+		end
+	end
+end
+
+AddDoorBlocker( "^item_slc_" )
+AddDoorBlocker( "^weapon_" )
+AddDoorBlocker( "^cw_" )
 
 hook.Add( "PlayerPostThink", "WeaponHolsterThink", function( ply )
 	local active = ply:GetActiveWeapon()
@@ -107,6 +166,18 @@ function CenterMessage( msg, ply )
 		net.Send( ply )
 	else
 		net.Broadcast()
+	end
+end
+
+function InfoScreen( ply, t, duration, data, ovteam, ovclass )
+	if type( ply ) == "Player" then
+		net.SendTable( "SLCInfoScreen", {
+			type = t,
+			time = duration,
+			data = data,
+			team = ovteam or ply:SCPTeam(),
+			class = ovclass or ply:SCPClass(),
+		}, ply )
 	end
 end
 
@@ -183,18 +254,18 @@ function TransmitSound( snd, status, arg1, arg2 )
 	if isvector( arg1 ) then
 		for k, v in pairs( player.GetAll() ) do
 			if IsValid( v ) then
-				local dist = v:GetPos():DistToSqr( arg1 )
+				local dist = v:GetPos():Distance( arg1 )
 
-				if dist <= arg2 * arg2 then
+				if dist <= arg2 then
 					net.Start( "PlaySound" )
 						net.WriteBool( status )
-						net.WriteFloat( 1 - math.sqrt( dist ) / arg2 )
+						net.WriteFloat( 1 - dist / arg2 )
 						net.WriteString( snd )
 					net.Send( v )
 				end
 			end
 		end
-	elseif IsValid( arg1 ) and arg1:IsPlayer() then
+	elseif isentity( arg1 ) and IsValid( arg1 ) and arg1:IsPlayer() or istable( arg1 ) then
 		net.Start( "PlaySound" )
 			net.WriteBool( status )
 			net.WriteFloat( arg2 or 1 )
@@ -206,14 +277,6 @@ function TransmitSound( snd, status, arg1, arg2 )
 			net.WriteFloat( arg1 or 1 )
 			net.WriteString( snd )
 		net.Broadcast()
-	end
-end
-
-function GetPocketPos()
-	if istable( POS_POCKETD ) then
-		return table.Random( POS_POCKETD )
-	else
-		return POS_POCKETD
 	end
 end
 
@@ -260,369 +323,42 @@ function ServerSound( file, ent, filter )
 	return sound
 end
 
---[[-------------------------------------------------------------------------
-Map interaction
----------------------------------------------------------------------------]]
-function Use914( ent )
-	if GetRoundStat( "914use" ) then return false end
-	SetRoundStat( "914use", true )
-
-	if SCP_914_BUTTON and ent:GetPos() != SCP_914_BUTTON then
-		for k, v in pairs( ents.FindByClass( "func_door" ) ) do
-			if v:GetPos() == SCP_914_DOORS[1] or v:GetPos() == SCP_914_DOORS[2] then
-				v:Fire( "Close" )
-				AddTimer( "914DoorOpen"..v:EntIndex(), 15, 1, function()
-					v:Fire( "Open" )
-				end )
-			end
-		end
-	end
-
-	local button = ents.FindByName( SCP_914_STATUS )[1]
-	local angle = button:GetAngles().roll
-	local mode = 0
-
-	if angle == 45 then
-		mode = 1
-	elseif	angle == 90 then
-		mode = 2
-	elseif	angle == 135 then
-		mode = 3
-	elseif	angle == 180 then
-		mode = 4
-	end
-
-	AddTimer( "SCP914UpgradeEnd", 16, 1, function()
-		SetRoundStat( "914use", false )
+hook.Add( "PostGamemodeLoaded", "SCPLCLightStyle", function()
+	timer.Simple( 0, function()
+		engine.LightStyle( 0, "g" )
 	end )
+end )
 
-	AddTimer( "SCP914Upgrade", 10, 1, function() 
-		local items = ents.FindInBox( SCP_914_INTAKE_MINS, SCP_914_INTAKE_MAXS )
-		for k, v in pairs( items ) do
-			if IsValid( v ) then
-				if v.HandleUpgrade then
-					v:HandleUpgrade( mode, SCP_914_OUTPUT )
-				elseif v.scp914upgrade then
-					local item_class
-
-					if isstring( v.scp914upgrade ) and mode > 2 then item_class = v.scp914upgrade end
-					if isfunction( v.scp914upgrade ) then item_class = v:scp914upgrade( mode ) end
-
-					if item_class then
-						local item = ents.Create( item_class )
-						if IsValid( item ) then
-							v:Remove()
-							item:SetPos( SCP_914_OUTPUT )
-							item:Spawn()
-						end
-					end
-				end
-			end
+concommand.Add( "slc_debuginfo", function( ply, cmd, args )
+	if !IsValid( ply ) or ply:IsListenServerHost() then
+		print( "=== DEBUG INFO ===" )
+		print( "Round:" )
+		PrintTable( ROUND, 1 )
+		print( "\nPlayers" )
+		for k, v in pairs( player.GetAll() ) do
+			print( "->", v, v:Nick(), v:SteamID() )
+			print( "\tGeneral info -> ", v:SCPTeam(), v:SCPClass(), v:Alive(), v:GetModel(), v:GetObserverMode(), v:GetObserverTarget() )
+			print( "\tSpeed -> ", v:GetWalkSpeed(), v:GetRunSpeed(), v:GetCrouchedWalkSpeed() )
+			if v.SpeedStack then PrintTable( v.SpeedStack, 2 ) end
+			print( "\tInventory ->" )
+			PrintTable( v:GetWeapons(), 2 )
+			print( "\tPData ->" )
+			PrintTable( v.PlayerData.Status, 2 )
+			print( "\tSCPVars ->" )
+			PrintTable( v.scp_var_table, 2 )
+			print( "\tMisc -> ", v:IsBurning(), v:GetVest() )
+			print( "--------------------" )
 		end
-	end )
-
-	return true
-end
-
---[[-------------------------------------------------------------------------
-Gate A Explosion
----------------------------------------------------------------------------]]
-local function isGateAOpen()
-	local doors = ents.FindInSphere( POS_MIDDLE_GATE_A, 125 )
-
-	for k, v in pairs( doors ) do
-		if v:GetClass() == "prop_dynamic" then 
-			if table.HasValue( POS_GATE_A_DOORS, v:GetPos() ) then
-				return false
-			end
-		end
+		print( "==================" )
 	end
+end )
 
-	return true
-end
+concommand.Add( "slc_lightstyle", function( ply, cmd, args )
+	if !IsValid( ply ) or ply:IsListenServerHost() then
+		--for i = 0, 31 do
+			engine.LightStyle( 0, args[1] )
+		--end
 
-local function destroyGate()
-	local ent = ents.FindInSphere( POS_MIDDLE_GATE_A, 125 )
-	for k, v in pairs( ent ) do
-		local class = v:GetClass()
-		if class == "prop_dynamic" or class == "func_door" then
-			v:Remove()
-		end
+		BroadcastLua( "render.RedownloadAllLightmaps( true )" )
 	end
-end
-
-local function takeDamage( ent, ply )
-	for k, v in pairs( ents.FindInSphere( POS_MIDDLE_GATE_A, 1000 ) ) do
-		if v:IsPlayer() and v:Alive() then
-			if v:SCPTeam() != TEAM_SPEC then
-				local dmg = ( 1001 - v:GetPos():Distance( POS_MIDDLE_GATE_A ) ) * 10
-				if dmg > 0 then 
-					v:TakeDamage( dmg, ply or v, ent )
-				end
-			end
-		end
-	end
-end
-
-function ExplodeGateA( ply )
-	if GetRoundStat( "gatea" ) then return end
-	if isGateAOpen() then return end
-
-	SetRoundStat( "gatea", true )
-	
-	local snd = ServerSound( "ambient/alarms/alarm_citizen_loop1.wav" )
-	snd:SetSoundLevel( 0 )
-	snd:Play()
-	snd:ChangeVolume( 0.25 )
-
-	BroadcastLua( 'surface.PlaySound("radio/franklin1.ogg")' )
-
-	local time = CVAR.explodetime:GetInt()
-	PlayerMessage( "gateexplode$"..time )
-
-	AddTimer( "GateExplode", 1, time, function( self, n )
-		if isGateAOpen() then 
-			self:Destroy()
-			snd:Stop()
-
-			PlayerMessage( "explodeterminated" )
-			SetRoundStat( "gatea", false )
-
-			return
-		end
-		
-		if n % 10 == 0 then PlayerMessage( "gateexplode$"..( time - n ) ) end
-		if n + 1 == time then snd:Stop() end
-
-		if n == time then
-			BroadcastLua( 'surface.PlaySound("ambient/explosions/exp2.wav")' )
-
-			local explosion = ents.Create( "env_explosion" )
-			explosion:SetKeyValue( "spawnflags", 210 )
-			explosion:SetPos( POS_MIDDLE_GATE_A )
-			explosion:Spawn()
-			explosion:Fire( "explode", "", 0 )
-
-			destroyGate()
-
-			if IsValid( ply ) then
-				takeDamage( explosion, ply )
-				ply:AddFrags( 7 )
-			else
-				takeDamage( explosion )
-			end
-		end
-	end )
-end
-
---[[-------------------------------------------------------------------------
-SCP106 Recontain
----------------------------------------------------------------------------]]
-function Recontain106( ply )
-	if GetRoundStat( "106recontain" ) then
-		PlayerMessage( "r106used", ply, true )
-		//ply:PrintMessage( HUD_PRINTCENTER, "SCP 106 recontain procedure can be triggered only once per round" )
-		return false
-	end
-
-	local cage
-	for k, v in pairs( ents.GetAll() ) do
-		if v:GetPos() == CAGE_DOWN_POS then
-			cage = v
-			break
-		end
-	end
-	if !cage then
-		PlayerMessage( "r106eloiid", ply, true )
-		//ply:PrintMessage( HUD_PRINTCENTER, "Power down ELO-IID electromagnet in order to start SCP 106 recontain procedure" )
-		return false
-	end
-
-	local e = ents.FindByName( SOUND_TRANSMISSION_NAME )[1]
-	if e:GetAngles().roll == 0 then
-		PlayerMessage( "r106sound", ply, true )
-		//ply:PrintMessage( HUD_PRINTCENTER, "Enable sound transmission in order to start SCP 106 recontain procedure" )
-		return false
-	end
-
-	local fplys = ents.FindInBox( CAGE_BOUNDS.MINS, CAGE_BOUNDS.MAXS )
-	local plys = {}
-	for k, v in pairs( fplys ) do
-		if IsValid( v ) and v:IsPlayer() and v:SCPTeam() != TEAM_SPEC and v:SCPTeam() != TEAM_SCP then
-			table.insert( plys, v )
-		end
-	end
-
-	if #plys < 1 then
-		PlayerMessage( "r106human", ply, true )
-		//ply:PrintMessage( HUD_PRINTCENTER, "Living human in cage is required in order to start SCP 106 recontain procedure" )
-		return false
-	end
-
-	local scps = {}
-	for k, v in pairs( player.GetAll() ) do
-		if v:SCPClass() == CLASSES.SCP106 then
-			table.insert( scps, v )
-		end
-	end
-
-	local scpnum = #scps
-	if scpnum < 1 then
-		PlayerMessage( "r106already", ply, true )
-		//ply:PrintMessage( HUD_PRINTCENTER, "SCP 106 is already recontained" )
-		return false
-	end
-
-	SetRoundStat( "106recontain", true )
-
-	AddTimer( "106Recontain", 6, 1, function( self, n )
-		if ROUND.post or !GetRoundStat( "106recontain" ) then return end
-		for k, v in pairs( plys ) do
-			if IsValid( v ) then
-				v:Kill()
-			end
-		end
-
-		for k, v in pairs( scps ) do
-			if IsValid( v ) then
-				local swep = v:GetActiveWeapon()
-				if IsValid( swep ) and swep:GetClass() == "weapon_scp_106" then
-					swep:TeleportSequence( CAGE_INSIDE )
-				end
-			end
-		end
-
-		AddTimer( "106Recontain", 11, 1, function( self, n )
-			if ROUND.post or !GetRoundStat( "106recontain" ) then return end
-			for k, v in pairs( scps ) do
-				if IsValid( v ) then
-					v:Kill()
-				end
-			end
-
-			local eloiid = ents.FindByName( ELO_IID_NAME )[1]
-			eloiid:Use( game.GetWorld(), game.GetWorld(), USE_TOGGLE, 1 )
-
-			if IsValid( ply ) then
-				local points = math.ceil( SCPTeams.getReward( TEAM_SCP ) * 1.5 * scpnum )
-				PlayerMessage( "r106success$"..points, ply, true )
-				//ply:PrintMessage(HUD_PRINTTALK, "You've been awarded with 10 points for recontaining SCP 106!")
-				ply:AddFrags( points )
-			end
-		end )
-
-
-	end )
-
-	return true
-end
-
---[[-------------------------------------------------------------------------
-Omega Warhead
----------------------------------------------------------------------------]]
-function OMEGAWarhead( ply )
-	if OMEGAEnabled then return end
-
-	local remote = ents.FindByName( OMEGA_REMOTE_NAME )[1]
-	if GetConVar( "br_enable_warhead" ):GetInt() != 1 or remote:GetAngles().pitch == 180 then
-		ply:PrintMessage( HUD_PRINTCENTER, "You inserted keycard but nothing happened" )
-		return
-	end
-
-	OMEGAEnabled = true
-
-	--local alarm = ServerSound( "warhead/alarm.ogg" )
-	--alarm:SetSoundLevel( 0 )
-	--alarm:Play()
-	net.Start( "SendSound" )
-		net.WriteInt( 1, 2 )
-		net.WriteString( "warhead/alarm.ogg" )
-	net.Broadcast()
-
-	timer.Create( "omega_announcement", 3, 1, function()
-		--local announcement = ServerSound( "warhead/announcement.ogg" )
-		--announcement:SetSoundLevel( 0 )
-		--announcement:Play()
-		net.Start( "SendSound" )
-			net.WriteInt( 1, 2 )
-			net.WriteString( "warhead/announcement.ogg" )
-		net.Broadcast()
-
-		timer.Create( "omega_delay", 11, 1, function()
-			for k, v in pairs( ents.FindByClass( "func_door" ) ) do
-				if IsInTolerance( OMEGA_GATE_A_DOORS[1], v:GetPos(), 100 ) or IsInTolerance( OMEGA_GATE_A_DOORS[2], v:GetPos(), 100 ) then
-					v:Fire( "Unlock" )
-					v:Fire( "Open" )
-					v:Fire( "Lock" )
-				end
-			end
-
-			OMEGADoors = true
-
-			--local siren = ServerSound( "warhead/siren.ogg" )
-			--siren:SetSoundLevel( 0 )
-			--siren:Play()
-			net.Start( "SendSound" )
-				net.WriteInt( 1, 2 )
-				net.WriteString( "warhead/siren.ogg" )
-			net.Broadcast()
-			timer.Create( "omega_alarm", 12, 5, function()
-				--siren = ServerSound( "warhead/siren.ogg" )
-				--siren:SetSoundLevel( 0 )
-				--siren:Play()
-				net.Start( "SendSound" )
-					net.WriteInt( 1, 2 )
-					net.WriteString( "warhead/siren.ogg" )
-				net.Broadcast()
-			end )
-
-			timer.Create( "omega_check", 1, 89, function()
-				if !IsValid( remote ) or remote:GetAngles().pitch == 180 or !OMEGAEnabled then
-					WarheadDisabled( siren )
-				end
-			end )
-		end )
-
-		timer.Create( "omega_detonation", 90, 1, function()
-			--local boom = ServerSound( "warhead/explosion.ogg" )
-			--boom:SetSoundLevel( 0 )
-			--boom:Play()
-			net.Start( "SendSound" )
-				net.WriteInt( 1, 2 )
-				net.WriteString( "warhead/explosion.ogg" )
-			net.Broadcast()
-			for k, v in pairs( player.GetAll() ) do
-				v:Kill()
-			end
-		end )
-	end )
-end
-
-function WarheadDisabled( siren )
-	OMEGAEnabled = false
-	OMEGADoors = false
-
-	--if siren then
-		--siren:Stop()
-	--end
-	net.Start( "SendSound" )
-		net.WriteInt( 0, 2 )
-		net.WriteString( "warhead/siren.ogg" )
-	net.Broadcast()
-
-	if timer.Exists( "omega_check" ) then timer.Remove( "omega_check" ) end
-	if timer.Exists( "omega_alarm" ) then timer.Remove( "omega_alarm" ) end
-	if timer.Exists( "omega_detonation" ) then timer.Remove( "omega_detonation" ) end
-	
-	for k, v in pairs( ents.FindByClass( "func_door" ) ) do
-		if IsInTolerance( OMEGA_GATE_A_DOORS[1], v:GetPos(), 100 ) or IsInTolerance( OMEGA_GATE_A_DOORS[2], v:GetPos(), 100 ) then
-			v:Fire( "Unlock" )
-			v:Fire( "Close" )
-		end
-	end
-end
-
--- engine.LightStyle( 0, "m" )
--- timer.Simple( 0, function()
--- 	BroadcastLua( "render.RedownloadAllLightmaps( true )" )
--- end )
+end )

@@ -1,4 +1,14 @@
-local ULX_CAT = "Admin SCP"
+local ULX_CAT = " SCP: Lost Control"
+
+if SERVER and ULib then
+	ULib.ucl.registerAccess( "slc spectatescp", ULib.ACCESS_OPERATOR, "Allows player to bypass anti-ghosting system and let them spectate SCPs", ULX_CAT )
+
+	hook.Add( "SLCCanSpectateSCP", "SLCBaseULX", function( ply )
+		if ULib.ucl.query( ply, "slc spectatescp" ) then
+			return true
+		end
+	end )
+end
 
 function InitializeSCPULX()
 	if !ulx or !ULib then 
@@ -62,8 +72,8 @@ function InitializeSCPULX()
 
 		if !class or !spawn then return end
 
-		plyt:SetupPlayer( class )
-		plyt:SetPos( table.Random( spawn ) )
+		local pos = table.Random( spawn )
+		plyt:SetupPlayer( class, pos, true )
 
 		if silent then
 			ulx.fancyLogAdmin( ply, true, "#A force spawned #T as "..class.name, plyt )
@@ -103,7 +113,9 @@ function InitializeSCPULX()
 	function ulx.level( ply, plyt, lvl, silent )
 		if !isnumber( lvl ) then return end
 
-		plyt:AddLevel( lvl )
+		for k, v in pairs( plyt ) do
+			v:AddLevel( lvl )
+		end
 
 		if silent then
 			ulx.fancyLogAdmin( ply, true, "#A gave #T "..lvl.." level(s)", plyt )
@@ -113,7 +125,7 @@ function InitializeSCPULX()
 	end
 
 	local level = ulx.command( ULX_CAT, "ulx level", ulx.level, "!level" )
-	level:addParam{ type = ULib.cmds.PlayerArg }
+	level:addParam{ type = ULib.cmds.PlayersArg }
 	level:addParam{ type = ULib.cmds.NumArg, hint = "Level" }
 	level:addParam{ type = ULib.cmds.BoolArg, invisible = true }
 	level:setOpposite( "ulx silent level", { nil, nil, nil, true }, "!slevel" )
@@ -214,7 +226,7 @@ function SetupForceSCP()
 
 		local scp_obj = GetSCP( scp )
 		if scp_obj then
-			scp_obj:SetupPlayer( plyt )
+			scp_obj:SetupPlayer( plyt, true )
 
 			if silent then
 				ulx.fancyLogAdmin( plyc, true, "#A force spawned #T as "..scp, plyt )

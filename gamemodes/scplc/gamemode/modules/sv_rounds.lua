@@ -43,38 +43,23 @@ addRoundType( "normal", {
 		OpenSCPs()
 	end,
 	postround = function( self, winner )
-		/*for k, v in pairs( GetActivePlayers() ) do --TODO
-			local r = tonumber( v:GetPData( "scp_penalty", 0 ) ) - 1
-			r = math.max( r, 0 )
-
-			if r == 0 then
-				v:PlayerMessage( "scpready#50,200,50" )
-				//print( v, "can be scp" )
-			else
-				v:PlayerMessage( "scpwait".."$"..r.."#200,50,50" )
-				//print( v, "must wait", r )
-			end
-		end*/
+		PrintSCPNotice()
 	end,
 	endcheck = function( self )
 		local plys = GetAlivePlayers()
 		local teams = {}
-		local lt  = nil
 		local num = 0
 
 		for k, v in pairs( plys ) do
 			local t = v:SCPTeam()
 			if !teams[t] then
 				teams[t] = true
-				lt = t
 				num = num + 1
 			end
 		end
 
 		if num == 0 then
 			return true
-		elseif num == 1 then
-			return lt
 		else
 			for t1, v in pairs( teams ) do
 				for t2, v in pairs( teams ) do
@@ -84,12 +69,55 @@ addRoundType( "normal", {
 				end
 			end
 
-			return SCPTeams.highestScore()
+			return true
+		end
+	end,
+	getwinner = function( self )
+		if #player.GetAll() < CVAR.minplayers:GetInt() then return true end --TODO check
+
+		local plys = GetAlivePlayers()
+		local teams = {}
+		local num = 0
+
+		for k, v in pairs( plys ) do
+			local t = v:SCPTeam()
+			if !teams[t] then
+				teams[t] = true
+				num = num + 1
+			end
 		end
 
-		return false
-	end,
+		//if num == 0 then
+			//return false
+		//else
+			local hs = SCPTeams.highestScore()
 
+			if hs then
+				if istable( hs ) then
+					local allies = SCPTeams.getAllies( hs[1], true )
+					local lookup = CreateLookupTable( allies )
+
+					for k, v in pairs( hs ) do
+						if !lookup[v] then
+							return false
+						end
+					end
+
+					return allies
+				else
+					local winner = SCPTeams.getAllies( hs, true )
+
+					if #winner == 1 then
+						winner = winner[1]
+					end
+
+					return winner
+				end
+			else
+				return false
+			end
+		//end
+	end
 }, "dull" )
 
 addRoundType( "multi", {

@@ -5,6 +5,11 @@ MAP_CONFIG_PATH = GM.FolderName .. "/gamemode/mapconfigs"
 
 _LANG = {}
 _LANG_ALIASES = {}
+_LANG_FLAGS = {}
+
+LANGUAGE = {
+	EQ_LONG_TEXT = bit.lshift( 1, 0 ),
+}
 
 function registerLanguage( tab, name, ... )
 	if !tab or !name then return end
@@ -14,6 +19,7 @@ function registerLanguage( tab, name, ... )
 	end
 
 	_LANG[name] = tab
+	_LANG_FLAGS[name] = 0
 
 	for k, v in pairs( { ... } ) do
 		_LANG_ALIASES[v] = name
@@ -22,6 +28,20 @@ function registerLanguage( tab, name, ... )
 	print( "# Language loaded: "..name )
 end
 
+function setLanguageFlag( name, flag )
+	if _LANG_FLAGS[name] and flag then
+		_LANG_FLAGS[name] = bit.bor( _LANG_FLAGS[name], flag )
+	end
+end
+
+--[[-------------------------------------------------------------------------
+Load mods - TODO
+---------------------------------------------------------------------------]]
+
+
+--[[-------------------------------------------------------------------------
+Load core modules
+---------------------------------------------------------------------------]]
 print( "--------------Loading Core Modules---------------" )
 local files = file.Find( CORE_PATH.."/*.lua", "LUA" )
 for k, f in pairs( files ) do
@@ -54,6 +74,9 @@ for k, f in pairs( files ) do
 	end
 end
 
+--[[-------------------------------------------------------------------------
+Load language
+---------------------------------------------------------------------------]]
 print( "----------------Loading Languages----------------" )
 local files = file.Find( LANGUAGES_PATH.."/*.lua", "LUA" )
 for k, f in pairs( files ) do
@@ -64,6 +87,11 @@ for k, f in pairs( files ) do
 	include( LANGUAGES_PATH.."/"..f )
 end
 
+hook.Run( "SLCLanguageLoaded" ) --language has beed loaded, pre-modules
+
+--[[-------------------------------------------------------------------------
+Load modules
+---------------------------------------------------------------------------]]
 if SERVER then
 	AddCSLuaFile( "modules/sh_module.lua" )
 	AddCSLuaFile( "modules/cl_module.lua" )
@@ -116,6 +144,11 @@ end
 print( "#" )
 print( "# Skipped files: " .. skipped )
 
+hook.Run( "SLCModulesLoaded" ) --essential gamemode files have been loaded, pre-mapconfig
+
+--[[-------------------------------------------------------------------------
+Load map config
+---------------------------------------------------------------------------]]
 print( "---------------Loading Map Config----------------" )
 if file.Exists( MAP_CONFIG_PATH .. "/" .. game.GetMap() .. ".lua", "LUA" ) then
 	local map = "mapconfigs/" .. game.GetMap() .. ".lua"
@@ -131,5 +164,7 @@ else
 	print( "----------------Loading Complete-----------------" )
 	error( "Unsupported map " .. game.GetMap() .. "!" )
 end
+
+hook.Run( "SLCMapConfigLoaded" )
 
 print( "----------------Loading Complete-----------------" )

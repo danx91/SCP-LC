@@ -4,51 +4,52 @@ GM.Author 	= "danx91"
 GM.Email 	= ""
 GM.Website 	= ""
 
-SIGNATURE = "a7"
-VERSION = "ALPHA 0.7"
-DATE = "16/11/2019"
+--[[-------------------------------------------------------------------------
+Static values
+---------------------------------------------------------------------------]]
+SIGNATURE = "b06"
+VERSION = "BETA 0.7"
+DATE = "21/02/2020"
 
 SCPS = {}
 CLASSES = {}
 MAP = {}
 
---Keycard access help
-ACCESS_SAFE = bit.lshift( 1, 0 )
-ACCESS_EUCLID = bit.lshift( 1, 1 )
-ACCESS_KETER = bit.lshift( 1, 2 )
-ACCESS_CHECKPOINT = bit.lshift( 1, 3 )
-ACCESS_OMEGA = bit.lshift( 1, 4 )
-ACCESS_GENERAL = bit.lshift( 1, 5 )
-ACCESS_GATEA = bit.lshift( 1, 6 )
-ACCESS_GATEB = bit.lshift( 1, 7 )
-ACCESS_ARMORY = bit.lshift( 1, 8 )
-ACCESS_FEMUR = bit.lshift( 1, 9 )
-ACCESS_EC = bit.lshift( 1, 10 )
+INFO_SCREEN_DURATION = 12
 
 --[[-------------------------------------------------------------------------
 Convars
 ---------------------------------------------------------------------------]]
 CVAR = {
-	minplayers = CreateConVar( "slc_min_players", 2, { FCVAR_SERVER_CAN_EXECUTE, FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
-	pretime = CreateConVar( "slc_time_preparing", 60, { FCVAR_SERVER_CAN_EXECUTE, FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
-	roundtime = CreateConVar( "slc_time_round", 1500, { FCVAR_SERVER_CAN_EXECUTE, FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
-	posttime = CreateConVar( "slc_time_postround", 30, { FCVAR_SERVER_CAN_EXECUTE, FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
-	blink = CreateConVar( "slc_blink_delay", 5, { FCVAR_SERVER_CAN_EXECUTE, FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
-	groups = CreateConVar( "slc_premium_groups", "", { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE } ),
-	premiumxp = CreateConVar( "slc_premium_xp", 2, { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE } ),
-	spawnrate = CreateConVar( "slc_support_spawnrate", "360,540", { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE } ),
-	penalty = CreateConVar( "slc_scp_penalty", 3, { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE } ),
-	p_penalty = CreateConVar( "slc_scp_premium_penalty", 1, { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE } ),
-	maxsupport = CreateConVar( "slc_support_amount", 5, { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE } ),
-	humanscale = CreateConVar( "slc_scaledamage_human", 1, { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE } ),
-	scpscale = CreateConVar( "slc_scaledamage_scp", 1, { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE } ),
-	explodetime = CreateConVar( "slc_time_explode", 30, { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE } ),
-	levelxp = CreateConVar( "slc_xp_level", 10000, { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE } ),
-	escapexp = CreateConVar( "slc_xp_escape", "250,2000", { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE } ),
-	escortpoints = CreateConVar( "slc_points_escort", 6, { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE } ),
-	pointsxp = CreateConVar( "slc_points_xp", 50, { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE } ),
-	roundxp = CreateConVar( "slc_xp_round", "100,200,300", { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE } ),
-	winxp = CreateConVar( "slc_xp_win", "1500,1000", { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE } ),
+	minplayers = CreateConVar( "slc_min_players", 2, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
+	pretime = CreateConVar( "slc_time_preparing", 60, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
+	roundtime = CreateConVar( "slc_time_round", 1500, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
+	posttime = CreateConVar( "slc_time_postround", 30, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
+	waittime = CreateConVar( "slc_time_wait", 15, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
+	blink = CreateConVar( "slc_blink_delay", 5, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
+	groups = CreateConVar( "slc_premium_groups", "", { FCVAR_ARCHIVE } ),
+	premiumxp = CreateConVar( "slc_premium_xp", 2, { FCVAR_ARCHIVE } ),
+	spawnrate = CreateConVar( "slc_support_spawnrate", "360,540", { FCVAR_ARCHIVE } ),
+	penalty = CreateConVar( "slc_scp_penalty", 4, { FCVAR_ARCHIVE } ),
+	p_penalty = CreateConVar( "slc_scp_premium_penalty", 2, { FCVAR_ARCHIVE } ),
+	maxsupport = CreateConVar( "slc_support_amount", 5, { FCVAR_ARCHIVE } ),
+	humanscale = CreateConVar( "slc_scaledamage_human", 1, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
+	scpscale = CreateConVar( "slc_scaledamage_scp", 1, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
+	explodetime = CreateConVar( "slc_time_explode", 30, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
+	levelxp = CreateConVar( "slc_xp_level", 10000, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
+	levelinc = CreateConVar( "slc_xp_increase", 1000, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
+	escapexp = CreateConVar( "slc_xp_escape", "250,2000", { FCVAR_ARCHIVE } ),
+	escortpoints = CreateConVar( "slc_points_escort", 4, { FCVAR_ARCHIVE } ),
+	pointsxp = CreateConVar( "slc_points_xp", 50, { FCVAR_ARCHIVE } ),
+	roundxp = CreateConVar( "slc_xp_round", "100,200,300", { FCVAR_ARCHIVE } ),
+	winxp = CreateConVar( "slc_xp_win", "1500,1000", { FCVAR_ARCHIVE } ),
+	scp914kill = CreateConVar( "slc_scp914_kill", 0, { FCVAR_ARCHIVE } ),
+	doorunblocker = CreateConVar( "slc_enable_door_unblocker", 1, { FCVAR_ARCHIVE } ),
+	spectatescp = CreateConVar( "slc_allow_scp_spectate", 0, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
+	omega_time = CreateConVar( "slc_time_omega", 180, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
+	omega_shelter_xp = CreateConVar( "slc_xp_omega_shelter", 500, { FCVAR_ARCHIVE } ),
+	alpha_time = CreateConVar( "slc_time_alpha", 180, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
+	alpha_escape_xp = CreateConVar( "slc_xp_alpha_escape", 500, { FCVAR_ARCHIVE } ),
 }
 
 --TODO
@@ -128,6 +129,12 @@ Shared GM hooks
 function GM:Initialize()
 	self.BaseClass.Initialize( self )
 end
+
+function GM:PreGamemodeLoaded()
+	hook.Remove( "PostDrawEffects", "RenderWidgets" )
+    hook.Remove( "PlayerTick", "TickWidgets" )
+   // hook.Remove( "RenderScene", "RenderStereoscopy" )
+end
 /*function GM:EntityTakeDamage( target, dmginfo ) --TODO
 	if target:IsPlayer() and target:HasWeapon( "item_scp_500" ) then
 		if target:Health() <= dmginfo:GetDamage() then
@@ -161,7 +168,7 @@ end*/
 end*/
 
 function GM:ScalePlayerDamage( ply, hitgroup, info )
-	if !info:IsDamageType( DMG_DIRECT ) then
+	/*if !info:IsDamageType( DMG_DIRECT ) then --TODO disabled till all models have hitgroups
 		if hitgroup == HITGROUP_HEAD then
 			info:ScaleDamage( 2 )
 		elseif hitgroup == HITGROUP_CHEST then
@@ -173,7 +180,7 @@ function GM:ScalePlayerDamage( ply, hitgroup, info )
 		elseif hitgroup == HITGROUP_LEFTLEG or hitgroup == HITGROUP_RIGHTLEG then
 			info:ScaleDamage( 0.75 )
 		end
-	end
+	end*/
 end
 
 local function getSCPBuff()
@@ -232,11 +239,11 @@ function GM:EntityTakeDamage( target, info )
 					if IsValid( wep ) then
 						local class = wep:GetClass()
 
-						if class == "weapon_crowbar" then
+						/*if class == "weapon_crowbar" then
 							info:ScaleDamage( 0.3 )
 						elseif class == "weapon_stunstick" then
 							info:ScaleDamage( 0.5 )
-						end
+						end*/
 					end
 
 					if target != attacker then
@@ -257,6 +264,10 @@ function GM:EntityTakeDamage( target, info )
 						end
 					end
 				end
+			end
+
+			if info:IsDamageType( DMG_RADIATION ) and target:HasEffect( "radiation" ) then
+				info:ScaleDamage( 1.2 )
 			end
 
 			if info:IsDamageType( DMG_BULLET ) or info:IsDamageType( DMG_SLASH ) then
@@ -284,9 +295,11 @@ end
 function GM:PlayerFootstep( ply, pos, foot, sound, vol, filter )
 	//print( ply, pos, foot, sound, vol, filter )
 	if SERVER then
-		//PrintTable( filter:GetPlayers() )
-		local crouch = ply:Crouching()
-		ply:EmitSound( sound, crouch and 60 or 80, 100, crouch and 0.5 or 1, CHAN_BODY )
+		if ply:Alive() then
+			//PrintTable( filter:GetPlayers() )
+			local crouch = ply:Crouching()
+			ply:EmitSound( sound, crouch and 60 or 80, 100, crouch and 0.5 or 1, CHAN_BODY )
+		end
 	end
 
 	return true
@@ -397,61 +410,9 @@ function GM:EntityEmitSound( data )
 	--print( data.SoundName, data.Entity )
 end
 
---[[-------------------------------------------------------------------------
-106 Collision
----------------------------------------------------------------------------]]
 function GM:ShouldCollide( ent1, ent2 )
-	if ent1:IsPlayer() and ent1:SCPClass() == CLASSES.SCP106 or ent2:IsPlayer() and ent2:SCPClass() == CLASSES.SCP106 then
-		if ent1.ignorecollide106 or ent2.ignorecollide106 then
-			return false
-		end
-	end
-
 	return true
 end
-
-local function SetupCollide()
-	local fent = ents.GetAll()
-	for k, v in pairs( fent ) do
-		if v and v:GetClass() == "func_door" or v:GetClass() == "prop_dynamic" then
-			if v:GetClass() == "prop_dynamic" then
-				local ennt = ents.FindInSphere( v:GetPos(), 5 )
-				local neardors = false
-				for k, v in pairs( ennt ) do
-					if v:GetClass() == "func_door" then
-						neardors = true
-						break
-					end
-				end
-				if !neardors then 
-					v.ignorecollide106 = false
-					continue
-				end
-			end
-
-			local changed
-			for _, pos in pairs( DOOR_RESTRICT106 ) do
-				if v:GetPos():Distance( pos ) < 100 then
-					v.ignorecollide106 = false
-					changed = true
-					break
-				end
-			end
-			
-			if !changed then
-				v.ignorecollide106 = true
-			end
-		end
-	end
-end
-
-function GM:PostCleanupMap()
-	SetupCollide()
-end
-
-timer.Simple( 0, function()
-	SetupCollide()
-end )
 
 --[[-------------------------------------------------------------------------
 Shared functions

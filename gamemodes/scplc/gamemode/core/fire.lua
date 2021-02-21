@@ -6,10 +6,14 @@ game.AddParticles( "particles/slc_fire.pcf" )
 PrecacheParticleSystem( "scp_457_fire" )
 
 if SERVER then
-	function ENTITY:Burn( time, radius, attacker, dmg )
+	function ENTITY:Burn( time, radius, attacker, dmg, sc, dontoverride, fulloverride )
 		local fire = FIRE_REGISTRY[self]
 
-		if !IsValid( fire ) then
+		if fulloverride and IsValid( fire ) then
+			fire:Remove()
+		end
+
+		if fulloverride or !IsValid( fire ) then
 			fire = ents.Create( "slc_entity_fire" )
 			fire:SetPos( self:GetPos() )
 			fire:SetParent( self )
@@ -18,11 +22,16 @@ if SERVER then
 			fire:SetBurnTime( time )
 			fire:SetFireDamage( dmg )
 			fire:SetFireRadius( radius )
+			fire:SetDontOverride( dontoverride )
+
+			if sc and attacker:IsPlayer() then
+				fire:SetSignatureCheck( attacker:TimeSignature() )
+			end
 
 			fire:Spawn()
 
 			FIRE_REGISTRY[self] = fire
-		else
+		elseif !fire.DontOverride then
 			local changed = false
 
 			if fire:Get_DieTime() - CurTime() < time then
@@ -62,5 +71,9 @@ if SERVER then
 		if IsValid( fire ) then
 			fire:Remove()
 		end
+	end
+
+	function ENTITY:GetFireEntity()
+		return FIRE_REGISTRY[self]
 	end
 end

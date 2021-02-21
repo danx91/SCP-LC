@@ -1,7 +1,8 @@
 VEST = {
 	vests = {},
 	vid = {},
-	rand = {}
+	rand = {},
+	callbacks = {},
 }
 
 local TRANSLATE_DMG = {
@@ -50,7 +51,7 @@ data = {
 }
 */
 
-function VEST.register( name, data, randomvest )
+function VEST.register( name, data, randomvest, callback )
 	assert( !VEST.vests[name], "Vest '"..name.."' is already registered!" )
 	assert( data.damage and data.model, "Invalid data for vest '"..name.."'!" )
 
@@ -65,6 +66,10 @@ function VEST.register( name, data, randomvest )
 
 	if randomvest then
 		table.insert( VEST.rand, id )
+	end
+
+	if callback then
+		VEST.callbacks[id] = callback
 	end
 
 	data.name = name
@@ -113,6 +118,10 @@ function VEST.getID( name )
 	return 0
 end
 
+function VEST.getCallback( id )
+	return VEST.callbacks[id]
+end
+
 function VEST.translateDamage( dmg )
 	return TRANSLATE_DMG[dmg]
 end
@@ -136,22 +145,40 @@ end
 	print( ply:GetWalkSpeed(), ply:GetRunSpeed() )
 end )*/
 
--- timer.Simple( 0, function()
--- 	hook.Run( "SLCRegisterVests" )
--- end )
+local GUARD_MODELS_LOOKUP
 
-VEST.register( "guard", { model = "models/scp/guard_sci.mdl", damage = { [DMG_BULLET] = 0.7, [DMG_FALL] = 1.3 }, mobility = 0.95, weight = 1 }, true )
-VEST.register( "chief", { model = "models/scp/soldier_1.mdl", damage = { [DMG_BULLET] = 0.6, [DMG_FALL] = 1.4 }, mobility = 0.93, weight = 2 } )
-VEST.register( "private", { model = "models/scp/guard_noob.mdl", damage = { [DMG_BULLET] = 0.65, [DMG_FALL] = 1.35 }, mobility = 0.94, weight = 1.5 } )
-VEST.register( "sergeant", { model = "models/scp/captain.mdl", damage = { [DMG_BULLET] = 0.55, [DMG_FALL] = 1.45 }, mobility = 0.9, weight = 2.5 } )
-VEST.register( "lieutenant", { model = "models/scp/guard_left.mdl", damage = { [DMG_BULLET] = 0.5, [DMG_FALL] = 1.5 }, mobility = 0.87, weight = 3 } )
-VEST.register( "alpha1", { model = "models/scp/soldier_3.mdl", damage = { [DMG_BULLET] = 0.4, [DMG_FALL] = 1.6 }, mobility = 0.85, weight = 4 } )
-VEST.register( "medic", { model = "models/scp/guard_med.mdl", damage = { [DMG_BULLET] = 0.55, [DMG_FALL] = 1.4 }, mobility = 0.9, weight = 2 } )
+timer.Simple( 0, function()
+	GUARD_MODELS_LOOKUP = CreateLookupTable( GUARD_MODELS )
+end )
 
-VEST.register( "ntf", { model = "models/player/pmc_4/pmc__07.mdl", damage = { [DMG_BULLET] = 0.5, [DMG_FALL] = 1.5 }, mobility = 0.88, weight = 3 } )
+local function guard_callback( ply, vest, data )
+	local mdl = ply:GetModel()
+	if GUARD_MODELS_LOOKUP and GUARD_MODELS_LOOKUP[mdl] then
+		return mdl
+	end
+end
+
+/*VEST.register( "guard", { model = "models/scp/guard_sci.mdl", damage = { [DMG_BULLET] = 0.7, [DMG_FALL] = 1.3 }, mobility = 0.95, weight = 1 }, true )
+VEST.register( "specguard", { model = "models/scp/soldier_1.mdl", damage = { [DMG_BULLET] = 0.6, [DMG_FALL] = 1.4 }, mobility = 0.93, weight = 2 } )
+VEST.register( "heavyguard", { model = "models/scp/guard_noob.mdl", damage = { [DMG_BULLET] = 0.65, [DMG_FALL] = 1.35 }, mobility = 0.94, weight = 1.5 } )
+VEST.register( "guard_medic", { model = "models/scp/guard_med.mdl", damage = { [DMG_BULLET] = 0.55, [DMG_FALL] = 1.4 }, mobility = 0.9, weight = 2 } )*/
+
+//VEST.register( "temp1", { model = "models/scp/guard_left.mdl", damage = { [DMG_BULLET] = 0.5, [DMG_FALL] = 1.5 }, mobility = 0.87, weight = 3 } ) --niebieski ntf czapeczka, kamizelka, pakunki
+
+VEST.register( "guard", { model = GUARD_MODELS, damage = { [DMG_BULLET] = 0.7, [DMG_FALL] = 1.3 }, mobility = 0.95, weight = 1, bodygroups = { vest = 1 } }, true, guard_callback )
+VEST.register( "specguard", { model = GUARD_MODELS, damage = { [DMG_BULLET] = 0.63, [DMG_FALL] = 1.4 }, mobility = 0.93, weight = 2, bodygroups = { vest = 1 } }, true, guard_callback )
+VEST.register( "heavyguard", { model = GUARD_MODELS, damage = { [DMG_BULLET] = 0.6, [DMG_FALL] = 1.45 }, mobility = 0.92, weight = 2.5, bodygroups = { vest = 1, helmet = 1, armour = 1, nvg = 0 } }, true, guard_callback )
+VEST.register( "guard_medic", { model = "models/scp/guard_med.mdl", damage = { [DMG_BULLET] = 0.6, [DMG_FALL] = 1.4 }, mobility = 0.93, weight = 2 } )
+
+VEST.register( "ntf", { model = "models/alski/mtfsupport/mtf1.mdl", damage = { [DMG_BULLET] = 0.5, [DMG_FALL] = 1.5 }, mobility = 0.88, weight = 3 } )
+VEST.register( "mtf_medic", { model = "models/alski/mtfsupport/mtf_medyk.mdl", damage = { [DMG_BULLET] = 0.55, [DMG_FALL] = 1.4 }, mobility = 0.9, weight = 2 } )
+VEST.register( "ntfcom", { model = "models/scp/captain.mdl", damage = { [DMG_BULLET] = 0.55, [DMG_FALL] = 1.45 }, mobility = 0.9, weight = 2.5 } )
+
+VEST.register( "alpha1", { model = "models/alski/mtfsupport/saper_mtf.mdl", damage = { [DMG_BULLET] = 0.4, [DMG_FALL] = 1.6 }, mobility = 0.84, weight = 4 } )
+
 VEST.register( "ci", { model = "models/friskiukas/bf4/us_01.mdl", damage = { [DMG_BULLET] = 0.45, [DMG_FALL] = 1.6 }, mobility = 0.83, weight = 4 } )
 
-VEST.register( "fire", { model = "models/player/kerry/class_securety.mdl", damage = { [DMG_BURN] = 0.2, [DMG_FALL] = 1.75 }, mobility = 0.8, weight = 5 }, true )
-VEST.register( "electro", { model = "models/player/kerry/class_securety.mdl", damage = { [DMG_SHOCK] = 0.05, [DMG_ENERGYBEAM] = 0.05, [DMG_FALL] = 2 }, mobility = 0.7, weight = 6, HIDE = { [DMG_ENERGYBEAM] = true } }, true )
+VEST.register( "fire", { model = "models/player/kerry/class_securety.mdl", damage = { [DMG_BURN] = 0.2, [DMG_FALL] = 1.7 }, mobility = 0.81, weight = 5 }, true )
+VEST.register( "electro", { model = "models/player/kerry/class_securety.mdl", damage = { [DMG_SHOCK] = 0.02, [DMG_ENERGYBEAM] = 0.02, [DMG_FALL] = 1.9 }, mobility = 0.88, weight = 4, HIDE = { [DMG_ENERGYBEAM] = true } }, true )
 
-//player.GetAll()[1]:SetModel( "models/scp/soldier_3.mdl" )
+//Entity(1):SetModel( "models/scp/guard_med.mdl" )

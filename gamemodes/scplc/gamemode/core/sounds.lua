@@ -1,5 +1,5 @@
 sound.Add{
-	name = "Player.Breathing",
+	name = "SLCPlayer.Breathing",
 	sound = "breathing.wav",
 	volume = 0.75,
 	level = 70,
@@ -17,11 +17,20 @@ local vest = {
 }
 
 sound.Add{
-	name = "Player.Vest",
+	name = "SLCPlayer.Vest",
 	sound = vest,
 	volume = 1,
 	level = 75,
 	pitch = { 90, 110 },
+	channel = CHAN_STATIC,
+}
+
+sound.Add{
+	name = "SLCPlayer.Heartbeat",
+	sound = "heartbeat.ogg",
+	volume = 1,
+	level = 0,
+	pitch = 100,
 	channel = CHAN_STATIC,
 }
 
@@ -42,4 +51,4 @@ function addSounds( name, sounds, level, volume, pitch, channel, numstart, numen
 	}
 end
 
-//addSounds( "Player.Vest", "npc/combine_soldier/gear%i.wav", 70, 1, { 90, 110 }, CHAN_STATIC, 6 )
+//addSounds( "SLCPlayer.Vest", "npc/combine_soldier/gear%i.wav", 70, 1, { 90, 110 }, CHAN_STATIC, 6 )

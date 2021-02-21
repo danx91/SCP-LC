@@ -59,7 +59,7 @@ function surface.DrawRing( x, y, radius, thick, angle, segments, fill, rotation 
 	local segang = angle / segments
 	local bigradius = radius + thick
 
-	local lastsin = 0
+	local lastsin = 0 --TODO optimize
 	local lastcos = 0
 
 	for i = 1, math.Round( segments * fill ) do
@@ -132,7 +132,6 @@ function surface.DrawRingDC( x, y, radius, thick, angle, segments, fill, rotatio
 			{ x = x + sin2 * bigradius, y = y + cos2 * bigradius },
 			{ x = x + sin2 * radius, y = y + cos2 * radius }
 		} )
-
 	end
 end
 
@@ -457,6 +456,214 @@ function surface.DrawCooldownRectCCW( x, y, width, height, pct )
 	surface.DrawPoly( verts )
 end
 
+--[[-------------------------------------------------------------------------
+surface.DrawCooldownHollowRectCW( x, y, width, height, pct )
+---------------------------------------------------------------------------]]
+local DIRECTION_UP, DIRECTION_DOWN, DIRECTION_LEFT, DIRECTION_RIGHT = 1, 2, 3, 4
+
+HRCSTYLE_RECT_SOLID = 1
+HRCSTYLE_TRIANGLE_STATIC = 2
+HRCSTYLE_TRIANGLE_DYNAMIC = 3
+
+local function HRCSegment( x, y, direction, short, long, pct, mode )
+	local f = short / long
+	local x_dir, y_dir
+
+	if direction == DIRECTION_UP then
+		x_dir = 1
+		y_dir = 1
+		//x = x + short
+	elseif direction == DIRECTION_RIGHT then
+		x_dir = -1
+		y_dir = 1
+		//y = y + short
+	elseif direction == DIRECTION_DOWN then
+		x_dir = -1
+		y_dir = -1
+		//x = x - short
+	elseif direction == DIRECTION_LEFT then
+		x_dir = 1
+		y_dir = -1
+		//y = y - short
+	else
+		return
+	end
+
+	local alt = x_dir * y_dir == -1
+
+	if mode == 1 then
+		if alt then
+			surface.DrawPoly( {
+				{ x = x, y = y },
+				{ x = x, y = y + long * pct * y_dir },
+				{ x = x + short * x_dir, y = y + long * pct * y_dir },
+				{ x = x + short * x_dir, y = y }
+			} )
+		else
+			surface.DrawPoly( {
+				{ x = x, y = y },
+				{ x = x + long * pct * x_dir, y = y },
+				{ x = x + long * pct * x_dir, y = y + short * y_dir },
+				{ x = x, y = y + short * y_dir }
+			} )
+		end
+	else
+		local t1f = pct < f and pct / f or 1
+		local t1s = short * t1f
+
+		local t1sx = t1s * x_dir
+		local t1sy = t1s * y_dir
+
+		if alt then
+			if mode == 2 then
+				surface.DrawPoly( {
+					{ x = x, y = y },
+					{ x = x, y = y + t1sy },
+					{ x = x + t1sx, y = y + t1sy }
+				} )
+			else
+				surface.DrawPoly( {
+					{ x = x, y = y },
+					{ x = x, y = y + t1sy },
+					{ x = x + short * x_dir, y = y + short * y_dir }
+				} )
+			end
+		else
+			if mode == 2 then
+				surface.DrawPoly( {
+					{ x = x, y = y },
+					{ x = x + t1sx, y = y },
+					{ x = x + t1sx, y = y + t1sy }
+				} )
+			else
+				surface.DrawPoly( {
+					{ x = x, y = y },
+					{ x = x + t1sx, y = y },
+					{ x = x + short * x_dir, y = y + short * y_dir }
+				} )
+			end
+		end
+
+		if pct > f then
+			if alt then
+				y = y + short * y_dir
+			else
+				x = x + short * y_dir
+			end
+
+			local t2f = pct < 1 - f and (pct - f) / (1 - 2 * f) or 1
+			local t2s = ( long - 2 * short ) * t2f
+
+			local t2sy = t2s * y_dir
+
+			if alt then
+				surface.DrawPoly( {
+					{ x = x, y = y },
+					{ x = x, y = y + t2sy },
+					{ x = x + short * x_dir, y = y + t2sy },
+					{ x = x + short * x_dir, y = y }
+				} )
+			else
+				surface.DrawPoly( {
+					{ x = x, y = y },
+					{ x = x + t2s * x_dir, y = y },
+					{ x = x + t2s * x_dir, y = y + short * y_dir },
+					{ x = x, y = y + short * y_dir }
+				} )
+			end
+
+			if pct > 1 - f then
+				if alt then
+					y = y + (long - 2 * short) * y_dir
+				else
+					x = x + (long - 2 * short) * y_dir
+				end
+
+				local t3f = pct < 1 and (pct - 1 + f) / f or 1
+				local t3s = short * t3f
+
+				local t3sx = t3s * x_dir
+				local t3sy = t3s * y_dir
+
+				if alt then
+					if mode == 2 then
+						surface.DrawPoly( {
+							{ x = x, y = y },
+							{ x = x, y = y + t3sy },
+							{ x = x + short * (1 - t3f) * x_dir, y = y + t3sy },
+							{ x = x + short * x_dir, y = y }
+						} )
+					else
+						surface.DrawPoly( {
+							{ x = x, y = y },
+							{ x = x, y = y + t3sy },
+							{ x = x + short * x_dir, y = y },
+						} )
+					end
+				else
+					if mode == 2 then
+						surface.DrawPoly( {
+							{ x = x, y = y },
+							{ x = x + t3sx, y = y },
+							{ x = x + t3sx, y = y + short * (1 - t3f) * y_dir },
+							{ x = x, y = y + short * y_dir }
+						} )
+					else
+						surface.DrawPoly( {
+							{ x = x, y = y },
+							{ x = x + t3sx, y = y },
+							{ x = x, y = y + short * y_dir },
+						} )
+					end
+				end
+			end
+		end
+	end
+end
+
+function surface.DrawCooldownHollowRectCW( x, y, width, height, thick, pct, style )
+	pct = math.Clamp( pct, 0, 1 )
+	style = style or 1
+
+	x = x - thick
+	y = y - thick
+
+	local tw = width + thick * 2
+	local th = height + thick * 2
+
+	if pct > 0 then
+		if style == 1 then
+			HRCSegment( x + thick, y, DIRECTION_UP, thick, width + thick, pct < 0.25 and pct / 0.25 or 1, style )
+		else
+			HRCSegment( x, y, DIRECTION_UP, thick, tw, pct < 0.25 and pct / 0.25 or 1, style )
+		end
+
+		if pct > 0.25 then
+			if style == 1 then
+				HRCSegment( x + tw, y + thick, DIRECTION_RIGHT, thick, height + thick, pct < 0.5 and ( pct - 0.25 ) / 0.25 or 1, style )
+			else
+				HRCSegment( x + tw, y, DIRECTION_RIGHT, thick, th, pct < 0.5 and ( pct - 0.25 ) / 0.25 or 1, style )
+			end
+
+			if pct > 0.5 then
+				if style == 1 then
+					HRCSegment( x + tw - thick, y + th, DIRECTION_DOWN, thick, width + thick, pct < 0.75 and ( pct - 0.5 ) / 0.25 or 1, style )
+				else
+					HRCSegment( x + tw, y + th, DIRECTION_DOWN, thick, tw, pct < 0.75 and ( pct - 0.5 ) / 0.25 or 1, style )
+				end
+
+				if pct > 0.75 then
+					if style == 1 then
+						HRCSegment( x, y + th - thick, DIRECTION_LEFT, thick, height + thick, pct < 1 and ( pct - 0.75 ) / 0.25 or 1, style )
+					else
+						HRCSegment( x, y + th, DIRECTION_LEFT, thick, th, pct < 1 and ( pct - 0.75 ) / 0.25 or 1, style )
+					end
+				end
+			end
+		end
+	end
+end
+
 /*-------------------------------------------------------------------------
 draw.MultilineText( x, y, text, font, color, maxWidth, margin, dist, align, maxRows, simulate, calcW )
 
@@ -544,16 +751,28 @@ function draw.MultilineText( x, y, text, font, color, maxWidth, margin, dist, al
 		end
 	end
 
-	local n = maxRows or #final
+	local n = #final
+	if maxRows and maxRows < n then
+		n = maxRows
+	end
+
 	local maxw = 0
 
 	for i = 1, n do
 		local tw = 0
 
 		if !simulate then
+			local xoffset = 0
+
+			if align == TEXT_ALIGN_LEFT then
+				xoffset = margin
+			elseif align == TEXT_ALIGN_RIGHT then
+				xoffset = -margin
+			end
+
 			tw = draw.Text{
 				text = final[i],
-				pos = { x + margin, y + margin + height * ( i - 1 ) },
+				pos = { x + xoffset, y + margin + height * ( i - 1 ) },
 				color = color,
 				font = font,
 				xalign = align,
@@ -568,7 +787,41 @@ function draw.MultilineText( x, y, text, font, color, maxWidth, margin, dist, al
 		end
 	end
 
-	return margin + height * n, maxw --TODO margin * 2?
+	return margin * 2 + height * n, maxw --TODO margin * 2?
+end
+
+/*-------------------------------------------------------------------------
+draw.SimulateMultilineText( text, font, maxWidth, margin, dist, maxRows, calcW )
+
+Helper function, simplified form of draw.MultilineText for simulation purposes
+
+@param  	[string] 		text 		Text to draw
+@param 		[string] 		font 		Font to use
+@param  	[number] 		maxWidth 	Maximum width of text
+@param 		[number] 		margin 		Margin of text
+@param 		[number] 		dist 		Distance between text rows
+@param 		[number] 		maxRows 	Maximum amount of rows
+@param 		[boolean] 		calcW 		If true, width of text will be also calculated instead of returning maxWidth
+
+@return 	[number] 		height 		Final height of text including margin and distance
+			[number]		width 		Width of the widest line. If simulate == true and calcW == false, maxWidth will be returned instead
+---------------------------------------------------------------------------*/
+function draw.SimulateMultilineText( text, font, maxWidth, margin, dist, maxRows, calcW )
+	return draw.MultilineText( 0, 0, text, font, nil, maxWidth, margin, dist, nil, maxRows, true, calcW )
+end
+
+/*-------------------------------------------------------------------------
+draw.BlurOutlinedText( table )
+
+
+
+@param  	[table] 		data 		Text data to draw
+
+@return 	[number] 		width 		
+			[number]		height 		
+---------------------------------------------------------------------------*/
+function draw.BlurOutlinedText( table )
+	
 end
 
 /*-------------------------------------------------------------------------
@@ -632,6 +885,30 @@ function PopFilters()
 	render.PopFilterMin()
 	render.PopFilterMag()
 end
+
+/*SURFACE_SCALE_X = 1
+SURFACE_SCALE_Y = 1
+function surface.SetScaling( x, y )
+	SURFACE_SCALE_X = x or 1
+	SURFACE_SCALE_Y = y or 1
+end
+
+SURFACE_TRANSLATE_X = 0
+SURFACE_TRANSLATE_Y = 0
+function surface.SetTranslation( x, y )
+	SURFACE_TRANSLATE_X = x or 0
+	SURFACE_TRANSLATE_Y = y or 0
+end
+
+_surfaceDrawRect = _surfaceDrawRect or surface.DrawRect
+function surface.DrawRect( x, y, w, h )
+	_surfaceDrawRect( x * SURFACE_SCALE_X + SURFACE_TRANSLATE_X, y * SURFACE_SCALE_Y + SURFACE_TRANSLATE_Y, w * SURFACE_SCALE_X, h * SURFACE_SCALE_Y )
+end
+
+_surfaceDrawTexturedRect = _surfaceDrawTexturedRect or surface.DrawTexturedRect
+function surface.DrawTexturedRect( x, y, w, h )
+	_surfaceDrawTexturedRect( x * SURFACE_SCALE_X + SURFACE_TRANSLATE_X, y * SURFACE_SCALE_Y + SURFACE_TRANSLATE_Y, w * SURFACE_SCALE_X, h * SURFACE_SCALE_Y )
+end*/
 
 /*_VGUIC = _VGUIC or vgui.Create
 VGUIREG = VGUIREG or {}

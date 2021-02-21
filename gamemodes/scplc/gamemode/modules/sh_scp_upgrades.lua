@@ -5,7 +5,7 @@ data = {
 	grid_x = 3,
 	grid_y = 4,
 	upgrades = {
-		{ name = "", icon = <material>, cost = 1, req = {}, reqany = false,  pos = { <xpos>, <ypos> }, mod = {}, active = false, group = nil },
+		{ name = "", icon = <material>, cost = 1, req = {}, block = {}, reqany = false,  pos = { <xpos>, <ypos> }, mod = {}, active = false, group = nil, rowr = false }, --rowr: repeat on weapon restore
 		//name MUST be unique; reqany = false - All required upgrades are required to unlock; reqany = true - Any required upgrade is required to unlock
 		//mod = { key = <value> } - can be obtained by swep:GetUpgradeMod( key ); active = <any* but false/nil> - will call OnUpgradeBought( <upgrade name>, <any*>, <group> )
 		...
@@ -88,14 +88,29 @@ function InstallUpgradeSystem( name, swep )
 		end
 	end
 
-	swep.UpgradeUnlocked = function( self, name )
+	swep.UpgradeBlocked = function( self, name )
 		local id = upg.upgradeid[name]
+		if id then
+			local block = upg.upgrades[id].block
+			if block and #block > 0 then
+				for k, v in pairs( block ) do
+					if self.UpgradeSystemRegistry.upgrades[v] then
+						return true
+					end
+				end
+			end
+		end
+	end
 
+	swep.UpgradeUnlocked = function( self, name )
+		if self:UpgradeBlocked( name ) then return false end
+
+		local id = upg.upgradeid[name]
 		if id then
 			local req = upg.upgrades[id].req
 			local reqany = upg.upgrades[id].reqany
 
-			if #req == 0 then
+			if !req or #req == 0 then
 				return true
 			end
 
@@ -116,8 +131,9 @@ function InstallUpgradeSystem( name, swep )
 	end
 
 	swep.CanBuyUpgrade = function( self, name )
-		if self:HasUpgrade( name ) then return end
-		if !self:UpgradeUnlocked( name ) then return end
+		if self:HasUpgrade( name ) then return false end
+		if !self:UpgradeUnlocked( name ) then return false end
+		//if self:UpgradeBlocked( name ) then return false end
 
 		local id = upg.upgradeid[name]
 		if id then
@@ -130,7 +146,7 @@ function InstallUpgradeSystem( name, swep )
 
 		if upgrade then
 			if self:CanBuyUpgrade( upgrade.name ) then
-				self.UpgradeSystemRegistry.points = self.UpgradeSystemRegistry.points - upg.upgrades[id].cost
+				self.UpgradeSystemRegistry.points = self.UpgradeSystemRegistry.points - upgrade.cost
 				self.UpgradeSystemRegistry.upgrades[upgrade.name] = true
 
 				if SERVER then
@@ -150,17 +166,55 @@ function InstallUpgradeSystem( name, swep )
 		end
 	end
 
-	swep.GetUpgradeMod = function( self, name )
-		return self.UpgradeSystemRegistry.mod[name]
+	swep.GetUpgradeMod = function( self, name, def )
+		return self.UpgradeSystemRegistry.mod[name] or def
 	end
 
+	/*swep.StoreUpgradeSystem = function( self, data )
+		StoreUpgradeSystem( self, data )
+	end*/
+
 	swep.UpgradeSystemMounted = true
+end
+
+function StoreUpgradeSystem( swep, data )
+	if swep.UpgradeSystemMounted then
+		data.UpgradeSystemMounted = true
+		data.UpgradeSystemRegistry = swep.UpgradeSystemRegistry
+	end
+end
+
+function RestoreUpgradeSystem( swep, data )
+	if data.UpgradeSystemMounted then
+		swep.UpgradeSystemRegistry = data.UpgradeSystemRegistry
+
+		local owner = swep:GetOwner()
+
+		if IsValid( owner ) then
+			net.SendTable( "SCPUpgradeSync", { swep:GetClass(), swep.UpgradeSystemRegistry }, owner )
+		end
+
+		if swep.UpgradeSystemRestored then
+			swep:UpgradeSystemRestored( swep.UpgradeSystemRegistry.upgrades )
+		end
+
+		local upg = upgrades[swep.UpgradeSystemName]
+		if upg then
+			for k, v in pairs( upg.upgrades ) do
+				if v.active and v.rowr and swep.OnUpgradeBought and swep.UpgradeSystemRegistry.upgrades[v.name] then
+					swep:OnUpgradeBought( v.name, v.active, v.group )
+				end
+			end
+		end
+	end
 end
 
 --[[-------------------------------------------------------------------------
 Server utils
 ---------------------------------------------------------------------------]]
 if SERVER then
+	net.AddTableChannel( "SCPUpgradeSync" )
+
 	net.Receive( "SCPUpgrade", function( len, ply )
 		local id = net.ReadUInt( 8 )
 
@@ -175,6 +229,28 @@ end
 GUI
 ---------------------------------------------------------------------------]]
 if CLIENT then
+	net.ReceiveTable( "SCPUpgradeSync", function( data )
+
+		WaitForSync( function()
+			local wep = LocalPlayer():GetWeapon( data[1] )
+
+			if IsValid( wep ) then
+				if wep.UpgradeSystemMounted then
+					wep.UpgradeSystemRegistry = data[2]
+
+					local upg = upgrades[wep.UpgradeSystemName]
+					if upg then
+						for k, v in pairs( upg.upgrades ) do
+							if v.active and v.rowr and wep.OnUpgradeBought and wep.UpgradeSystemRegistry.upgrades[v.name] then
+								wep:OnUpgradeBought( v.name, v.active, v.group )
+							end
+						end
+					end
+				end
+			end
+		end )
+	end )
+
 	net.Receive( "SCPUpgrade", function( len )
 		local num = net.ReadUInt( 8 )
 
@@ -184,7 +260,7 @@ if CLIENT then
 		local cur = wep:GetUpgradePoints()
 
 		if num > cur then
-			local bind = input.LookupBinding( "+zoom" )
+			local bind = input.LookupBinding( "+zoom" ) --TEST: message not sent if invalid character
 
 			if bind then
 				bind = string.upper( bind )
@@ -192,7 +268,7 @@ if CLIENT then
 				bind = "+zoom"
 			end
 
-			PlayerMessage( "upgradepoints$"..bind )
+			PlayerMessage( "upgradepoints$"..EscapeMessage( bind ) )
 		end
 
 		wep:SetUpgradePoints( num )
@@ -234,10 +310,12 @@ if CLIENT then
 	HUDSCPUpgradesOpen = false
 	local MATS = {
 		blur = Material( "pp/blurscreen" ),
-		nown = Material( "slc_hud/upgrades/notowned.png" ),
-		locked = Material( "slc_hud/upgrades/locked.png" )
+		nown = Material( "slc/hud/upgrades/notowned.png" ),
+		locked = Material( "slc/hud/upgrades/locked.png" )
 	}
 	local recomputed = false
+
+	local color_white = Color( 255, 255, 255, 255 )
 
 	local function drawUpgrades()
 		if !HUDSCPUpgradesOpen then return end
@@ -282,7 +360,7 @@ if CLIENT then
 		render.SetStencilFailOperation( STENCIL_KEEP )
 
 		surface.SetMaterial( MATS.blur )
-		surface.SetDrawColor( Color( 255, 255, 255, 255 ) )
+		surface.SetDrawColor( color_white )
 		surface.DrawTexturedRect( 0, 0, w, h )
 
 		render.SetStencilEnable( false )
@@ -349,7 +427,7 @@ if CLIENT then
 			render.PushFilterMag( TEXFILTER.LINEAR )
 			
 			if v.icon then
-				surface.SetDrawColor( Color( 255, 255, 255, 255 ) )
+				surface.SetDrawColor( color_white )
 				surface.SetMaterial( v.icon )
 				surface.DrawTexturedRect( sx, sy, icosize, icosize )
 			end
@@ -453,7 +531,7 @@ if CLIENT then
 				text = clang.name or info.name,
 				pos = { cx + w * 0.01, cy + h * 0.02 },
 				font = "SCPHUDMedium",
-				color = Color( 255, 255, 255, 255 ),
+				color = color_white,
 				xalign = TEXT_ALIGN_LEFT,
 				yalign = TEXT_ALIGN_CENTER,
 				max_width = w * 0.28
@@ -467,7 +545,7 @@ if CLIENT then
 				text = owned and ( LANG.upgrades.owned.." ✓" ) or ( LANG.upgrades.cost..": "..info.cost ),
 				pos = { cx + w * 0.01, cur_y - h * 0.025 },
 				font = "SCPHUDSmall",
-				color = Color( 255, 255, 255, 255 ),
+				color = color_white,
 				xalign = TEXT_ALIGN_LEFT,
 				yalign = TEXT_ALIGN_CENTER,
 			}
@@ -477,12 +555,12 @@ if CLIENT then
 
 				surface.DrawRect( cx, cur_y, width, math.ceil( height + h * 0.015 ) )
 
-				draw.MultilineText( cx + w * 0.01, cur_y + h * 0.01, clang.info, "SCPHUDSmall", Color( 255, 255, 255, 255 ), w * 0.28, 0, 0, TEXT_ALIGN_LEFT )
+				draw.MultilineText( cx + w * 0.01, cur_y + h * 0.01, clang.info, "SCPHUDSmall", color_white, w * 0.28, 0, 0, TEXT_ALIGN_LEFT )
 
 				cur_y = cur_y + math.ceil( height + h * 0.015 )
 			end
 
-			if #info.req > 0 and !wep:UpgradeUnlocked( info.name ) then
+			if info.req and #info.req > 0 and !wep:UpgradeUnlocked( info.name ) then
 				surface.DrawRect( cx, cur_y, width, math.ceil( h * 0.05 ) )
 				cur_y = cur_y + math.ceil( h * 0.05 )
 
@@ -490,7 +568,7 @@ if CLIENT then
 					text = ( info.reqany and LANG.upgrades.requiresany or LANG.upgrades.requiresall )..":",
 					pos = { cx + w * 0.01, cur_y - h * 0.02 },
 					font = "SCPHUDMedium",
-					color = Color( 255, 255, 255, 255 ),
+					color = color_white,
 					xalign = TEXT_ALIGN_LEFT,
 					yalign = TEXT_ALIGN_CENTER,
 				}
@@ -505,7 +583,38 @@ if CLIENT then
 						text = "\t"..( lang[v] and lang[v].name or v )..( owned and " ✓" or " ✗" ),
 						pos = { cx + w * 0.01, cur_y - h * 0.02 },
 						font = "SCPHUDSmall",
-						color = owned and Color( 255, 255, 255, 255 ) or Color( 225, 55, 55, 255 ),
+						color = owned and color_white or Color( 225, 55, 55, 255 ),
+						xalign = TEXT_ALIGN_LEFT,
+						yalign = TEXT_ALIGN_CENTER,
+						max_width = w * 0.28
+					}
+				end
+			end
+
+			if info.block and #info.block > 0 and !wep:HasUpgrade( info.name ) then
+				local blocked = wep:UpgradeBlocked( info.name )
+
+				surface.DrawRect( cx, cur_y, width, math.ceil( h * 0.05 ) )
+				cur_y = cur_y + math.ceil( h * 0.05 )
+
+				draw.Text{
+					text = LANG.upgrades.blocked..":",
+					pos = { cx + w * 0.01, cur_y - h * 0.02 },
+					font = "SCPHUDMedium",
+					color = color_white,
+					xalign = TEXT_ALIGN_LEFT,
+					yalign = TEXT_ALIGN_CENTER,
+				}
+
+				for i, v in ipairs( info.block ) do
+					surface.DrawRect( cx, cur_y, width, math.ceil( h * 0.03 ) )
+					cur_y = cur_y + math.ceil( h * 0.03 )
+
+					draw.LimitedText{
+						text = "\t"..( lang[v] and lang[v].name or v ),
+						pos = { cx + w * 0.01, cur_y - h * 0.02 },
+						font = "SCPHUDSmall",
+						color = blocked and Color( 255, 55, 55, 255 ) or color_white,
 						xalign = TEXT_ALIGN_LEFT,
 						yalign = TEXT_ALIGN_CENTER,
 						max_width = w * 0.28

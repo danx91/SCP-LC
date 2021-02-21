@@ -21,11 +21,11 @@ function SWEP:Think()
 	local pos = self.Owner:GetPos()
 
 	local len = #self.PosLog
-	if len == 0 or pos:DistToSqr( self.PosLog[len] ) > 5625 then
+	if len == 0 or pos:DistToSqr( self.PosLog[len] ) > 10000 then
 		table.insert( self.PosLog, pos )
 		len = len + 1
 
-		if len > 6 then
+		if len > 5 then
 			table.remove( self.PosLog, 1 )
 			len = len - 1
 		end
@@ -76,7 +76,7 @@ function SWEP:PrimaryAttack()
 			if ent:IsPlayer() then
 				if ent:SCPTeam() == TEAM_SCP or ent:SCPTeam() == TEAM_SPEC then return end
 
-				local dmg = math.random( 30, 40 )
+				local dmg = math.random( 20, 30 )
 
 				self.Owner:EmitSound( "SCP939.Attack" )
 				ent:TakeDamage( dmg, self.Owner, self.Owner )
@@ -144,7 +144,7 @@ InstallUpgradeSystem( "scp939", SWEP )
 sound.Add( {
 	name = "SCP939.Attack",
 	volume = 1,
-	level = 80,
+	level = 75,
 	pitch = 100,
 	sound = "scp/939/attack.ogg",
 	channel = CHAN_STATIC,

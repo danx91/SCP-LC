@@ -38,13 +38,29 @@ function SWEP:InitializeLanguage( name )
 	end
 end
 
+function SWEP:StoreWeapon( data )
+	/*if self.UpgradeSystemMounted then
+		self:StoreUpgradeSystem( data )
+	end*/
+
+	StoreUpgradeSystem( self, data )
+end
+
+function SWEP:RestoreWeapon( data )
+	RestoreUpgradeSystem( self, data )
+end
+
 function SWEP:Deploy()
-	if IsValid( self.Owner ) then
-		self.Owner:DrawViewModel( self.ShouldDrawViewModel )
+	local owner = self:GetOwner()
+	if IsValid( owner ) then
+		self.OwnerSignature = owner:TimeSignature()
+		owner:DrawViewModel( self.ShouldDrawViewModel )
 
 		if SERVER then
-			self.Owner:DrawWorldModel( self.ShouldDrawWorldModel )
+			owner:DrawWorldModel( self.ShouldDrawWorldModel )
 		end
+
+		self:ResetViewModelBones()
 	end
 end
 
@@ -69,7 +85,7 @@ function SWEP:PlayerFreeze()
 		//self.Owner:SetRunSpeed( 0 )
 		self.OldJumpPower = self.Owner:GetJumpPower()
 		self.Owner:SetJumpPower( 0 )
-		self.Owner:PushSpeed( 2, 2, -1, "SLC_SCPFreeze" )
+		self.Owner:PushSpeed( 3, 3, -1, "SLC_SCPFreeze" )
 	end
 
 	if ROUND.preparing or ROUND.post then return end
@@ -96,8 +112,22 @@ function SWEP:SCPDamageEvent( ent, dmg )
 	end
 end
 
+function SWEP:CheckOwner()
+	local owner = self:GetOwner()
+	
+	if !IsValid( owner ) then return false end
+
+	if !self.OwnerSignature then
+		self.OwnerSignature = owner:TimeSignature()
+	end
+
+	return owner:CheckSignature( self.OwnerSignature )
+end
+
 SWEP.PrimaryCD = 0
 function SWEP:PrimaryAttack()
+	if ROUND.preparing then return end
+	
 	if self.PrimaryCD > CurTime() then return end
 	self.PrimaryCD = CurTime() + 0.5
 
@@ -124,6 +154,12 @@ function SWEP:SecondaryAttack()
 end
 
 function SWEP:Reload()
+end
+
+function SWEP:DrawHUD()
+	if self.DrawSCPHUD and hook.Run( "SLCShouldDrawSCPHUD" ) then
+		self:DrawSCPHUD()
+	end
 end
 
 hook.Add( "SLCScreenMod", "SCPVisionMod", function( clr )

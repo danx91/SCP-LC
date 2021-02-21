@@ -29,23 +29,43 @@ SWEP.Droppable				= true
 SWEP.ShouldDrawViewModel 	= true
 SWEP.ShouldDrawWorldModel 	= true
 
-SWEP.Lang 					= {}
+//SWEP.Lang 					= {}
 
 SWEP.Stacks 				= 0
 
 SWEP.Toggleable 			= false
 SWEP.Selectable 			= true
+SWEP.PreventDropping 		= false
 SWEP.EnableHolsterThink 	= false
 SWEP.HasBattery 			= false
 SWEP.HolsterBatteryUsage 	= false
 SWEP.BatteryUsage 			= 2.5
 SWEP.NBatteryTake 			= 0
 
+SWEP.OwnerChangedTime 		= 0
+
 function SWEP:SetupDataTables()
 	if self.Toggleable then self:AddNetworkVar( "Enabled", "Bool" ) end
 	if self.HasBattery then self:AddNetworkVar( "Battery", "Int" ) self:SetBattery( 100 ) end
 	if self.Stacks > 1 then self:AddNetworkVar( "Count", "Int" ) self:SetCount( 1 ) end
+
+	/*self:AddNetworkVar( "DebugOwner", "Entity" )
+	if CLIENT then
+		self:NetworkVarNotify( "DebugOwner", self.DebugOwnerChanged )
+	end*/
 end
+
+/*function SWEP:DebugOwnerChanged( name, old, new )
+	if CLIENT then
+		if new != old then
+			if IsValid( new ) and new:EntIndex() != 0 then
+				self:Equip()
+			else
+				self:OnDrop()
+			end
+		end
+	end
+end*/
 
 function SWEP:InitializeLanguage()
 	if CLIENT and self.Language then
@@ -53,6 +73,7 @@ function SWEP:InitializeLanguage()
 
 		if self.Lang then
 			self.PrintName = self.Lang.name or self.PrintName
+			self.PickupName = self.Lang.pickupname
 			self.ShowName = self.Lang.showname
 			self.Author	= self.Lang.author
 			self.Info = self.Lang.info
@@ -70,17 +91,42 @@ function SWEP:OnSelect()
 end
 
 function SWEP:Deploy()
-	if IsValid( self.Owner ) then
-		self.Owner:DrawViewModel( self.ShouldDrawViewModel )
+	local owner = self:GetOwner()
+	if IsValid( owner ) then
+		owner:DrawViewModel( self.ShouldDrawViewModel )
 
 		if SERVER then
-			self.Owner:DrawWorldModel( self.ShouldDrawWorldModel )
+			owner:DrawWorldModel( self.ShouldDrawWorldModel )
 		end
+
+		self:ResetViewModelBones()
 	end
 end
 
 function SWEP:Holster( wep )
 	return true
+end
+
+function SWEP:OwnerChanged() --TODO: TEST
+	if CLIENT then
+		if IsValid( self:GetOwner() ) then
+			self:Equip()
+		else
+			self:OnDrop()
+		end
+	end
+end
+
+function SWEP:Equip()
+	/*if SERVER then
+		self:SetDebugOwner( self:GetOwner() )
+	end*/
+end
+
+function SWEP:OnDrop()
+	/*if SERVER then
+		self:SetDebugOwner( Entity( 0 ) )
+	end*/
 end
 
 function SWEP:HolsterThink()
@@ -170,4 +216,8 @@ function SWEP:DragAndDrop( wep )
 	end
 
 	return false
+end
+
+function SWEP:PreDrawViewModel( vm )
+	//print( vm, vm:HasBoneManipulations() )
 end

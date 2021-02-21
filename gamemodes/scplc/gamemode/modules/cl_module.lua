@@ -1,4 +1,7 @@
 LANG = {}
+LANG_FLAGS = 0
+LANG_NAME = "undefined"
+
 ROUND = {
 	name = "",
 	time = 0,
@@ -48,7 +51,7 @@ local function CheckTable( tab, ref )
 	for k, v in pairs( ref ) do
 		if istable( v ) then
 			if !istable( tab[k] ) then
-				tab[k] = table.Copy( v )
+				tab[k] = table.Copy( v ) --TODO test
 			else
 				CheckTable( tab[k], v )
 			end
@@ -93,6 +96,8 @@ function ChangeLang( lang, force )
 	if !force and cur_lang == ltu then return end
 
 	cur_lang = ltu
+	LANG_NAME = ltu
+	LANG_FLAGS = _LANG_FLAGS[ltu]
 
 	print( "Setting language to: "..ltu )
 
@@ -125,10 +130,10 @@ timer.Create( "Credits", 300, 0, function()
 end )
 
 timer.Create( "SLCHeartbeat", 2, 0, function()
-	if !LocalPlayer().Alive then return end
+	if !FULLY_LOADED or !LocalPlayer():Alive() then return end
 	if LocalPlayer():SCPTeam() != TEAM_SPEC and LocalPlayer():SCPTeam() != TEAM_SCP then
 		if LocalPlayer():Health() < 25 then
-			LocalPlayer():EmitSound( "heartbeat.ogg" )
+			LocalPlayer():EmitSound( "SLCPlayer.Heartbeat" )
 		end
 	end
 end)
@@ -136,13 +141,13 @@ end)
 --[[-------------------------------------------------------------------------
 Screen effects
 ---------------------------------------------------------------------------]]
-Material( "slc/blind.png" )
+Material( "slc/misc/blind.png" )
 local blind_mat = CreateMaterial( "mat_SCP_blind", "UnlitGeneric", {
-	["$basetexture"] = "slc/blind.png",
+	["$basetexture"] = "slc/misc/blind.png",
 	["$additive"] = "1",
 } )
 
-local exhaust_mat = GetMaterial( "slc/exhaust.png" )
+local exhaust_mat = GetMaterial( "slc/misc/exhaust.png" )
 
 local stamina_effects = 100
 local color_mat = Material( "pp/colour" )
@@ -169,17 +174,20 @@ hook.Add( "RenderScreenspaceEffects", "SCPEffects", function()
 	clr.contrast = 1
 	clr.colour = 1
 
-	local hp = ply:Health()
-	local t = ply:SCPTeam()
-	if ply:Alive() and t != TEAM_SPEC and t != TEAM_SCP and hp < 25 then
-		local scale = math.max( hp / 25, 0.2 )
-		clr.colour = clr.colour * scale
-		clr.add_r = clr.add_r + ( 1 - scale ) * 0.1
-		clr.mul_r = clr.mul_r + ( 1 - scale ) * 0.7
-		clr.brightness = clr.brightness - ( 1 - scale ) * 0.075
+	if ply:Alive() then
+		local hp = ply:Health()
+		local t = ply:SCPTeam()
+		
+		if ply:Alive() and t != TEAM_SPEC and t != TEAM_SCP and hp < 25 then
+			local scale = math.max( hp / 25, 0.2 )
+			clr.colour = clr.colour * scale
+			clr.add_r = clr.add_r + ( 1 - scale ) * 0.1
+			clr.mul_r = clr.mul_r + ( 1 - scale ) * 0.7
+			clr.brightness = clr.brightness - ( 1 - scale ) * 0.075
 
-		DrawMotionBlur( 0.5, 0.6, 0.01 )
-		DrawSharpen( 0.8, 2.25 )
+			DrawMotionBlur( 0.5, 0.6, 0.01 )
+			DrawSharpen( 0.8, 2.25 )
+		end
 	end
 
 	if ply.Stamina then
@@ -226,14 +234,13 @@ local nextblink = 0
 
 net.Receive( "PlayerBlink", function( len )
 	local duration = net.ReadFloat()
+	local delay = net.ReadUInt( 6 )
 
 	if duration > 0 then
 		blink = true
 	end
 
 	endblink = CurTime() + duration
-
-	local delay = net.ReadUInt( 6 )
 	nextblink = CurTime() + delay
 
 	HUDNextBlink = nextblink 
@@ -263,14 +270,6 @@ end )
 
 
 --[[-------------------------------------------------------------------------
--
----------------------------------------------------------------------------]]
-hook.Add( "HUDWeaponPickedUp", "DonNotShowCards", function( weapon )
-	//EQHUD.weps = LocalPlayer():GetWeapons()
-	//if weapon:GetClass() == "br_keycard" then return false end
-end )
-
---[[-------------------------------------------------------------------------
 Commands
 ---------------------------------------------------------------------------]]
 --
@@ -287,6 +286,31 @@ function GM:player_spawn( data )
 		removePlayerID( ply )
 	end
 end
+
+local SyncFunctions = {}
+function WaitForSync( func )
+	table.insert( SyncFunctions, func )
+end
+
+local WaitingSync = false
+hook.Add( "Tick", "SyncTick", function()
+	if WaitingSync then
+		if WaitingSync == LocalPlayer():TimeSignature() then
+			WaitingSync = false
+
+			local tmp = SyncFunctions --move table to tmp to avoid infinity calling on error
+			SyncFunctions = {}
+
+			for k, v in pairs( tmp ) do
+				v()
+			end
+		end
+	end
+end )
+
+net.ReceivePing( "SLCPlayerSync", function( data )
+	WaitingSync = tonumber( data )
+end )
 
 /*gameevent.Listen( "entity_killed" )
 function GM:entity_killed( data )
@@ -322,27 +346,38 @@ function GM:OnPlayerChat( ply, text, team, dead )
 	return true
 end
 
-function GM:CalcView( ply, origin, angles, fov )
-	local data = {}
-	data.origin = origin
-	data.angles = angles
-	data.fov = fov
-	data.drawviewer = false
+--[[-------------------------------------------------------------------------
+Copied from Base Gamemode and edited
+---------------------------------------------------------------------------]]
+function GM:CalcView( ply, origin, angles, fov, znear, zfar )
+	local view = {}
+	view.origin		= origin
+	view.angles		= angles
+	view.fov		= fov
+	view.znear		= znear
+	view.zfar		= zfar
+	view.drawviewer	= false
 
-	local item = ply:GetActiveWeapon()
-	if IsValid( item ) then
-		if item.CalcView then
-			local vec, ang, nfov, dw = item:CalcView( ply, origin, angles, fov )
-			if vec then data.origin = vec end
-			if ang then data.angles = ang end
-			if nfov then data.fov = nfov end
-			if dw == true then data.drawviewer = dw end
+	local vehicle	= ply:GetVehicle()
+	if IsValid( vehicle ) then return hook.Run( "CalcVehicleView", vehicle, ply, view ) end
+
+	if drive.CalcView( ply, view ) then return view end
+
+	player_manager.RunClass( ply, "CalcView", view )
+
+	local weapon = ply:GetActiveWeapon()
+	if IsValid( weapon )then
+		if weapon.CalcView then
+			local draw_viewer 
+			view.origin, view.angles, view.fov, draw_viewer = weapon:CalcView( ply, origin * 1, angles * 1, fov )
+
+			if draw_viewer then
+				view.drawviewer = true
+			end
 		end
 	end
 
-	//data = HeadBob( ply, data )
-
-	return data
+	return view
 end
 
 function  GM:SetupWorldFog()
@@ -408,20 +443,34 @@ function GM:PreRender()
 	local lp = LocalPlayer()
 
 	for k, v in pairs( player.GetAll() ) do
-		if hook.Run( "CanPlayerSeePlayer", lp, v ) == false then
-			v:SetNoDraw( true )
-		else
-			v:SetNoDraw( false )
+		if v != lp then
+			if hook.Run( "CanPlayerSeePlayer", lp, v ) == false then
+				v:SetNoDraw( true )
+			else
+				v:SetNoDraw( false )
+			end
 		end
 	end
 end
 
+/*function GM:PrePlayerDraw( ply )
+	local lp = LocalPlayer()
+
+	//for k, v in pairs( player.GetAll() ) do
+		if v != lp then
+			if hook.Run( "CanPlayerSeePlayer", lp, ply ) == false then
+				return true
+			end
+		end
+	//end
+end*/
+
 hook.Add( "PreDrawHalos", "PickupWeapon", function()
-	local ply = LocalPlayer()
+	/*debugoverlay.Axis(trace.HitPos, trace.HitNormal:Angle(), 5, 0.1 )
+	debugoverlay.Text(trace.HitPos + Vector( 0, 0, -5 ), tostring(trace.Entity), 0.1 )*/
 
 	local t = ply:SCPTeam()
 	if t == TEAM_SPEC or t == TEAM_SCP then return end
-
 	local wep = ply:GetEyeTrace().Entity
 	if IsValid( wep ) and wep:IsWeapon() then
 		/*if ply:HasWeapon( wep:GetClass() ) and ( !wep.Stacks or wep.Stacks <= 1 ) then return end
@@ -432,7 +481,7 @@ hook.Add( "PreDrawHalos", "PickupWeapon", function()
 			--return
 		end*/
 
-		if ( ply:GetPos():DistToSqr( wep:GetPos() ) < 4500 or ply:EyePos():DistToSqr( wep:GetPos() ) < 3700 ) then
+		if ply:GetPos():DistToSqr( wep:GetPos() ) < 4500 or ply:EyePos():DistToSqr( wep:GetPos() ) < 3700 then
 			if !hook.Run( "WeaponPickupHover", wep ) and hook.Run( "PlayerCanPickupWeapon", ply, wep ) != false then
 				halo.Add( { wep }, Color( 125, 100, 200 ), 2, 2, 1, true, true )
 				HUDPickupHint = wep
@@ -442,9 +491,69 @@ hook.Add( "PreDrawHalos", "PickupWeapon", function()
 end )
 
 timer.Simple( 0, function()
-	ChangeLang( cur_lang, true )
-	DamageLogger( LocalPlayer() )
+	local ply = LocalPlayer()
 
+	ChangeLang( cur_lang, true )
+	DamageLogger( ply )
+	//PlayerData( ply )
+
+	--if FULLY_LOADED then
+		--MakePlayerReady()
+	--else
+		--CheckContent()
+	--end
+
+	print( "Almost ready! Waiting for additional info..." )
+
+	local timeout
+	hook.Add( "Tick", "SLCPlayerReady", function()
+		if !timeout then
+			timeout = RealTime() + 10
+		end
+
+		if timeout <= RealTime() then
+			hook.Remove( "Tick", "SLCPlayerReady" )
+
+			ErrorNoHalt( "ReadyCheck timed out!\n" )
+			MakePlayerReady()
+		end
+
+		if NetTablesReceived then
+			hook.Remove( "Tick", "SLCPlayerReady" )
+			
+			print( "Everything is set up! Updating our status on server...", RealTime() - timeout + 10 )
+			MakePlayerReady()
+		end
+	end )
+	--MakePlayerReady()
+end )
+
+function MakePlayerReady()
 	net.Start( "PlayerReady" )
 	net.SendToServer()
+
+	FULLY_LOADED = true
+	hook.Run( "PlayerReady", ply )
+end
+
+--[[-------------------------------------------------------------------------
+DebugInfo
+---------------------------------------------------------------------------]]
+concommand.Add( "slc_debuginfo_cl", function( ply, cmd, args )
+	print( "=== DEBUG INFO ===" )
+	print( "Round:" )
+	PrintTable( ROUND, 1 )
+	print( "Info:" )
+	local v = LocalPlayer()
+	print( v, v:Nick(), v:SteamID() )
+	print( "General info -> ", v:SCPTeam(), v:SCPClass(), v:Alive(), v:GetModel(), v:GetObserverMode(), v:GetObserverTarget() )
+	print( "Speed -> ", v:GetWalkSpeed(), v:GetRunSpeed(), v:GetCrouchedWalkSpeed() )
+	print( "Inventory ->" )
+	PrintTable( v:GetWeapons(), 1 )
+	print( "Local Inventory ->" )
+	PrintTable( GetLocalWeapons(), 1 )
+	print( "SCPVars ->" )
+	PrintTable( v.scp_var_table, 1 )
+	print( "Misc ->" )
+	print( "==================" )
 end )

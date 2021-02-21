@@ -24,12 +24,13 @@ local holdid = nil
 local function Button( x, y, w, h, id )
 	local mx, my = input.GetCursorPos()
 	if mx >= x and mx <= x + w and my >= y and my <= y + h then
+		local rt = RealTime()
 		if input.IsMouseDown( MOUSE_LEFT ) then
 			if button_hold == 0 then
-				button_hold = CurTime() + 0.2
+				button_hold = rt + 0.2
 				holdid = id
 				return 1 --HOVER
-			elseif button_hold <= CurTime() then
+			elseif button_hold <= rt then
 				if holdid and holdid != id then
 					return 1 --HOVER
 				end
@@ -44,7 +45,7 @@ local function Button( x, y, w, h, id )
 				return 1 --HOVER
 			end
 		else
-			if button_hold != 0 and button_hold > CurTime() then
+			if button_hold != 0 and button_hold > rt then
 				if button_next then
 					button_next = false
 					button_hold = 0
@@ -67,8 +68,8 @@ local function Button( x, y, w, h, id )
 end
 
 local MATS = {
-	vest = Material( "slc_hud/vest.png" ),
-	gear = Material( "slc_hud/gear.png" ),
+	vest = Material( "slc/items/vest.png" ),
+	gear = Material( "slc/hud/gear.png" ),
 }
 
 local TEXTURES = {
@@ -88,6 +89,21 @@ local EQ = {
 	rows = 2,
 	size = 0.085,
 	offset = 0.0075
+}
+
+local nav_font_override
+
+local show = function()
+	local t = LocalPlayer():SCPTeam()
+	return t == TEAM_MTF or t == TEAM_CI
+end
+local cmd = function( cmd )
+	LocalPlayer():ConCommand( cmd )
+end
+
+local ACTIONS = {
+	{ "escort", GetMaterial( "null" ), show, cmd, "slc_escort" },
+	{ "gatea", GetMaterial( "null" ), show, cmd, "slc_destroy_gatea" },
 }
 
 EQ.slots = EQ.cols * EQ.rows
@@ -181,10 +197,13 @@ local function drawWepSelectIcon( ico, cx, cy, size, color )
 		surface.SetMaterial( ico )
 	end
 
-	if ico_w > ico_h then
+	if ico_w == ico_h then
+		ico_w = size
+		ico_h = size
+	elseif ico_w > ico_h then
 		ico_h = size * ico_h / ico_w
 		ico_w = size
-	elseif ico_h > ico_w then
+	else//elseif ico_h > ico_w then
 		ico_w = size * ico_w / ico_h
 		ico_h = size
 	end
@@ -240,7 +259,13 @@ local function drawItem( i, wx, wy, size, offset )
 	surface.DrawRect( cx, cy, size, size )
 
 	local wep = WEAPONS[i]
-	if !IsValid( wep ) then return end
+	if !IsValid( wep ) then
+		if drag == i then
+			drag = 0
+		end
+
+		return
+	end
 
 	if drag == i then
 		cx = mx - size * 0.5
@@ -295,7 +320,7 @@ local function drawItem( i, wx, wy, size, offset )
 	elseif btn == 2 then
 		input.SelectWeapon( wep )
 	elseif btn == 3 then
-		if wep.Droppable != false then
+		if wep.Droppable != false and wep.PreventDropping != true then
 			net.Start( "DropWeapon" )
 				net.WriteString( wep:GetClass() )
 			net.SendToServer()
@@ -315,8 +340,9 @@ local function drawItem( i, wx, wy, size, offset )
 
 	local c_wep = TEXTURES[wep:GetClass()] or wep
 
-	if c_wep.WepSelectIcon and c_wep.WepSelectIcon != def_wep then
-		drawWepSelectIcon( c_wep.WepSelectIcon, cx, cy, size, c_wep.SelectColor )
+	local s = c_wep.SelectIcon or c_wep.WepSelectIcon
+	if s and s != def_wep then
+		drawWepSelectIcon( s, cx, cy, size, c_wep.SelectColor )
 	elseif c_wep.SelectFont then
 		local font = OVERRIDE_FONTS[c_wep.SelectFont] or c_wep.SelectFont
 		local fy = cy + size * 0.5
@@ -329,7 +355,7 @@ local function drawItem( i, wx, wy, size, offset )
 			text = c_wep.IconLetter or c_wep.ShowName or c_wep.PrintName,
 			pos = { cx + size * 0.5, fy },
 			font = font,
-			color = c_wep.SelectColor or Color( 255, 210, 0, 200 ),
+			color = c_wep.SelectColor or Color( 255, 210, 0, 255 ),
 			xalign = TEXT_ALIGN_CENTER,
 			yalign = TEXT_ALIGN_CENTER,
 		}
@@ -373,6 +399,40 @@ local function drawItem( i, wx, wy, size, offset )
 	end
 end
 
+local function drawSideButton( x, y, w, h, offset, tab )
+	local btn = Button( x, y, w, h )
+
+	if btn == 1 then
+		surface.SetDrawColor( Color( 50, 50, 50, 75 ) )
+		surface.DrawRect( x, y, w, h )
+	elseif btn == 2 or btn == 3 then
+		local cb = tab[4]
+		if isfunction( cb ) then
+			cb( unpack( tab, 5 ) )
+		end
+	end
+
+	if tab[2] then
+		surface.SetMaterial( tab[2] )
+		surface.SetDrawColor( Color( 255, 255, 255, 255 ) )
+		surface.DrawOutlinedRect( x + 2, y + 2, h - 4, h - 4 )
+		surface.DrawTexturedRect( x + 2, y + 2, h - 4, h - 4 )
+
+		x = x + h
+		w = w - h
+	end
+
+	draw.LimitedText{
+		text = LANG.eq_buttons[tab[1]] or tab[1],
+		pos = { x + w * 0.5, y + h * 0.5 },
+		font = "SCPHUDMedium",
+		color = Color( 255, 255, 255, 255 ),
+		xalign = TEXT_ALIGN_CENTER,
+		yalign = TEXT_ALIGN_CENTER,
+		max_width = w,
+	}
+end
+
 local blur = Material( "pp/blurscreen" )
 local recomputed = false
 
@@ -399,6 +459,8 @@ local function DrawEQ()
 		end
 	end
 
+	//if !IsValid(  )
+
 	surface.SetAlphaMultiplier( alpha )
 
 	local w, h = ScrW(), ScrH()
@@ -421,12 +483,28 @@ local function DrawEQ()
 	local wx, wy = w * 0.5 - width * 0.5, h * 0.5 - height * 0.5
 
 	local vest_width = size + 2 * offset
-	local vest_height = vest_width + h * 0.04 - offset
+	local vest_height = size + offset + h * 0.04 --vest_width + h * 0.04 - offset
 	local vest_x = wx - vest_width - w * 0.01
+
+	local b_x = wx + width + w * 0.01
+	local b_y = wy
+	local b_w = w * 0.2
+	local b_h = h * 0.075
 
 	surface.SetDrawColor( Color( 150 * alpha, 150 * alpha, 150 * alpha, 100 ) )
 	surface.DrawRect( vest_x - 2, wy - 2, vest_width + 4, vest_height + 4 )
 	surface.DrawRect( wx - 2, wy - 2, width + 4, height + 4 )
+
+	local cache = {}
+	for i, v in ipairs( ACTIONS ) do
+		local r = v[3] == true or isfunction( v[3] ) and v[3]()
+		cache[i] = r
+
+		if r then
+			surface.DrawRect( b_x - 2, b_y - 2, b_w + 4, b_h + 4 )
+			b_y = b_y + b_h + offset
+		end
+	end
 
 	render.SetStencilTestMask( 0xFF )
 	render.SetStencilWriteMask( 0xFF )
@@ -443,6 +521,14 @@ local function DrawEQ()
 	surface.DrawRect( vest_x, wy, vest_width, vest_height )
 	surface.DrawRect( wx, wy, width, height )
 
+	b_y = wy
+	for i, v in ipairs( ACTIONS ) do
+		if cache[i] then
+			surface.DrawRect( b_x, b_y, b_w, b_h )
+			b_y = b_y + b_h + offset
+		end
+	end
+
 	render.SetStencilCompareFunction( STENCIL_EQUAL )
 	render.SetStencilFailOperation( STENCIL_KEEP )
 	render.SetStencilPassOperation( STENCIL_REPLACE )
@@ -457,42 +543,13 @@ local function DrawEQ()
 	surface.DrawRect( vest_x, wy, vest_width, vest_height )
 	surface.DrawRect( wx, wy, width, height )
 
-	for i = 1, EQ.slots do
-		if i != drag then
-			drawItem( i, wx, wy, size, offset )
+	b_y = wy
+	for i, v in ipairs( ACTIONS ) do
+		if cache[i] then
+			surface.DrawRect( b_x, b_y, b_w, b_h )
+			b_y = b_y + b_h + offset
 		end
 	end
-
-	if drag > 0 then
-		drawItem( drag, wx, wy, size, offset )
-	end
-
-	draw.Text{
-		text = LANG.eq_lmb,
-		pos = { wx + w * 0.01, wy + height - 0.02 * h },
-		font = "SCPHUDMedium",
-		color = Color( 255, 255, 255, 255 ),
-		xalign = TEXT_ALIGN_LEFT,
-		yalign = TEXT_ALIGN_CENTER,
-	}
-
-	draw.Text{
-		text = LANG.eq_hold,
-		pos = { w * 0.5, wy + height - 0.02 * h },
-		font = "SCPHUDMedium",
-		color = Color( 255, 255, 255, 255 ),
-		xalign = TEXT_ALIGN_CENTER,
-		yalign = TEXT_ALIGN_CENTER,
-	}
-
-	draw.Text{
-		text = LANG.eq_rmb,
-		pos = { wx + width - w * 0.01, wy + height - 0.02 * h },
-		font = "SCPHUDMedium",
-		color = Color( 255, 255, 255, 255 ),
-		xalign = TEXT_ALIGN_RIGHT,
-		yalign = TEXT_ALIGN_CENTER,
-	}
 
 	drawVest( vest_x + offset, wy + offset, size )
 
@@ -505,7 +562,54 @@ local function DrawEQ()
 		yalign = TEXT_ALIGN_CENTER,
 	}
 
-	if SHOW_WEP_INFO then
+	b_y = wy
+	for i, v in ipairs( ACTIONS ) do
+		if cache[i] then
+			drawSideButton( b_x, b_y, b_w, b_h, offset, v )
+			b_y = b_y + b_h + offset
+		end
+	end
+
+	local keyfont = 
+
+	draw.Text{
+		text = LANG.eq_lmb,
+		pos = { wx + w * 0.01, wy + height - 0.02 * h },
+		font = nav_font_override or "SCPHUDMedium",
+		color = Color( 255, 255, 255, 255 ),
+		xalign = TEXT_ALIGN_LEFT,
+		yalign = TEXT_ALIGN_CENTER,
+	}
+
+	draw.Text{
+		text = LANG.eq_hold,
+		pos = { w * 0.5, wy + height - 0.02 * h },
+		font = nav_font_override or "SCPHUDMedium",
+		color = Color( 255, 255, 255, 255 ),
+		xalign = TEXT_ALIGN_CENTER,
+		yalign = TEXT_ALIGN_CENTER,
+	}
+
+	draw.Text{
+		text = LANG.eq_rmb,
+		pos = { wx + width - w * 0.01, wy + height - 0.02 * h },
+		font = nav_font_override or "SCPHUDMedium",
+		color = Color( 255, 255, 255, 255 ),
+		xalign = TEXT_ALIGN_RIGHT,
+		yalign = TEXT_ALIGN_CENTER,
+	}
+
+	for i = 1, EQ.slots do
+		if i != drag then
+			drawItem( i, wx, wy, size, offset )
+		end
+	end
+
+	if drag > 0 then
+		drawItem( drag, wx, wy, size, offset )
+	end
+
+	if SHOW_WEP_INFO and !close_eq then
 		local mx, my = input.GetCursorPos()
 
 		local color = Color( 0, 0, 0, 240 )
@@ -590,8 +694,8 @@ local function DrawEQ()
 
 		if info and info != "" then
 			surface.SetDrawColor( color )
-			surface.DrawRect( mx, cur_y, width, h * 0.04 )
-			cur_y = cur_y + h * 0.04
+			surface.DrawRect( mx, cur_y, width, h * 0.05 )
+			cur_y = cur_y + h * 0.05
 
 			draw.Text{
 				text = LANG.info..":",
@@ -602,12 +706,12 @@ local function DrawEQ()
 				yalign = TEXT_ALIGN_CENTER,
 			}
 
-			local height = draw.MultilineText( mx + w * 0.01, cur_y, info, "SCPHUDMedium", nil, w * 0.38, 0, 0, TEXT_ALIGN_LEFT, nil, true )
+			local height = draw.MultilineText( mx + w * 0.015, cur_y, info, "SCPHUDMedium", nil, w * 0.375, 0, 0, TEXT_ALIGN_LEFT, nil, true )
 
 			surface.SetDrawColor( color )
 			surface.DrawRect( mx, cur_y, width, height )
 
-			draw.MultilineText( mx + w * 0.01, cur_y, info, "SCPHUDMedium", Color( 255, 255, 255, 255 ), w * 0.38, 0, 0, TEXT_ALIGN_LEFT )
+			draw.MultilineText( mx + w * 0.015, cur_y, info, "SCPHUDMedium", Color( 255, 255, 255, 255 ), w * 0.375, 0, 0, TEXT_ALIGN_LEFT )
 
 			cur_y = cur_y + height
 		end
@@ -672,7 +776,7 @@ local lcx = 0
 local lcy = 0
 function ShowEQ()
 	HUDDrawInfo = true
-
+	
 	UpdatePlayerEQ()
 	close_eq = false
 	draw_eq = true
@@ -682,12 +786,19 @@ function ShowEQ()
 	end
 
 	gui.EnableScreenClicker( true )
+
+	if bit.band( LANG_FLAGS, LANGUAGE.EQ_LONG_TEXT ) == LANGUAGE.EQ_LONG_TEXT then
+		nav_font_override = "SCPHUDVSmall"
+	else
+		nav_font_override = nil
+	end
 end
 
 function HideEQ()
 	HUDDrawInfo = false
 
 	if draw_eq then
+		drag = 0
 		close_eq = true
 		lcx, lcy = input.GetCursorPos()
 	end
@@ -704,4 +815,8 @@ end
 
 function IsEQVisible()
 	return draw_eq
+end
+
+function GetLocalWeapons()
+	return WEAPONS
 end

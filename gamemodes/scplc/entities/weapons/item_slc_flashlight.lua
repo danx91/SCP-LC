@@ -100,9 +100,9 @@ function SWEP:OnDrop()
 	self:SetEnabled( false )
 end
 
-function SWEP:OwnerChanged()
+/*function SWEP:OwnerChanged()
 	self:SetEnabled( false )
-end
+end*/
 
 function SWEP:Think()
 	self:CallBaseClass( "Think" )
@@ -211,8 +211,6 @@ local beamrenderer = {}
 
 SWEP.NWorldLight = 0
 function SWEP:DrawWorldModel()
-	local newpos, newang
-
 	if IsValid( self.Owner ) then
 		if !IsValid( self.WModel ) then return end
 
@@ -226,17 +224,81 @@ function SWEP:DrawWorldModel()
 			return
 		end
 
-		newpos, newang = LocalToWorld( self.WorldModelPositionOffset, self.WorldModelAngleOffset, matrix:GetTranslation(), matrix:GetAngles() )
+		local newpos, newang = LocalToWorld( self.WorldModelPositionOffset, self.WorldModelAngleOffset, matrix:GetTranslation(), matrix:GetAngles() )
 
 		self.WModel:SetPos( newpos )
 		self.WModel:SetAngles( newang )
 		self.WModel:SetupBones()
 		self.WModel:DrawModel()
+
+		--TODO test
+		if !self:GetEnabled() then
+			if self.DLight then
+				self.DLight.dietime = CurTime()
+			end
+
+			return
+		end
+
+		local forward = ( newang or self:GetAngles() ):Forward()
+		local pos = ( newpos or self:GetPos() ) + forward * 6
+		local endpos = pos + forward * self.LightDistance
+
+		local tr = util.TraceLine( {
+			start = pos - forward * 15,
+			endpos = endpos,
+			filter = { self, self.Owner },
+			mask = MASK_BLOCKLOS_AND_NPCS
+		} )
+
+		if tr.StartSolid or tr.HitPos:DistToSqr( pos ) < 100 then return end
+
+		if self.NWorldLight < CurTime() then
+			self.NWorldLight = CurTime() + 5
+
+			local light = DynamicLight( self:EntIndex() )
+			if light then
+				light.r = 200
+				light.g = 200
+				light.b = 200
+				light.size = 196
+				light.brightness = 0.5
+				light.decay = 0
+				light.dietime = CurTime() + 6
+				light.pos = tr.HitPos
+				light.dir = newang:Forward()
+
+				self.DLight = light
+			end
+		end
+
+		if self.DLight then
+			self.DLight.pos = tr.HitPos - forward * 10 + tr.HitNormal * 15
+		end
+		
+		local dot = ( LocalPlayer():EyePos() - pos ):GetNormalized():Dot( forward )
+
+		local beamalpha = math.Clamp( 0.95 - dot, 0, 1 )
+		if beamalpha > 0 then
+			table.insert( beamrenderer, { pos, tr.HitPos, beamalpha } )
+		end
+
+		if dot < 0 then return end
+
+		local vis = util.PixelVisible( pos, 3, self.PixelVis )
+
+		local alpha = 255 * vis * ( dot - 0.22 )
+		local size = 64 * vis * ( dot + 0.1 )
+
+		alpha = math.Clamp( alpha, 0, 255 )
+		size = math.Clamp( size, 16, 48 )
+
+		//render.SetMaterial( light_sprite )
+		//render.DrawSprite( pos, size, size, Color( 255, 255, 255, alpha ) )
+		table.insert( spriterenderer, { pos, size, alpha } )
 	else
 		self:DrawModel()
-	end
 
-	if !self:GetEnabled() then
 		if self.DLight then
 			self.DLight.dietime = CurTime()
 		end
@@ -244,62 +306,70 @@ function SWEP:DrawWorldModel()
 		return
 	end
 
-	local forward = ( newang or self:GetAngles() ):Forward()
-	local pos = ( newpos or self:GetPos() ) + forward * 6
-	local endpos = pos + forward * self.LightDistance
+	-- if !self:GetEnabled() then
+	-- 	if self.DLight then
+	-- 		self.DLight.dietime = CurTime()
+	-- 	end
 
-	local tr = util.TraceLine( {
-		start = pos - forward * 15,
-		endpos = endpos,
-		filter = { self, self.Owner },
-		mask = MASK_BLOCKLOS_AND_NPCS
-	} )
+	-- 	return
+	-- end
 
-	if tr.StartSolid or tr.HitPos:DistToSqr( pos ) < 100 then return end
+	-- local forward = ( newang or self:GetAngles() ):Forward()
+	-- local pos = ( newpos or self:GetPos() ) + forward * 6
+	-- local endpos = pos + forward * self.LightDistance
 
-	if self.NWorldLight < CurTime() then
-		self.NWorldLight = CurTime() + 5
+	-- local tr = util.TraceLine( {
+	-- 	start = pos - forward * 15,
+	-- 	endpos = endpos,
+	-- 	filter = { self, self.Owner },
+	-- 	mask = MASK_BLOCKLOS_AND_NPCS
+	-- } )
 
-		local light = DynamicLight( self:EntIndex() )
-		if light then
-			light.r = 200
-			light.g = 200
-			light.b = 200
-			light.size = 196
-			light.brightness = 0.5
-			light.decay = 0
-			light.dietime = CurTime() + 6
-			light.pos = tr.HitPos
-			light.dir = newang:Forward()
+	-- if tr.StartSolid or tr.HitPos:DistToSqr( pos ) < 100 then return end
 
-			self.DLight = light
-		end
-	end
+	-- if self.NWorldLight < CurTime() then
+	-- 	self.NWorldLight = CurTime() + 5
 
-	if self.DLight then
-		self.DLight.pos = tr.HitPos - forward * 10 + tr.HitNormal * 15
-	end
+	-- 	local light = DynamicLight( self:EntIndex() )
+	-- 	if light then
+	-- 		light.r = 200
+	-- 		light.g = 200
+	-- 		light.b = 200
+	-- 		light.size = 196
+	-- 		light.brightness = 0.5
+	-- 		light.decay = 0
+	-- 		light.dietime = CurTime() + 6
+	-- 		light.pos = tr.HitPos
+	-- 		light.dir = newang:Forward()
+
+	-- 		self.DLight = light
+	-- 	end
+	-- end
+
+	-- if self.DLight then
+	-- 	self.DLight.pos = tr.HitPos - forward * 10 + tr.HitNormal * 15
+	-- end
 	
-	local dot = ( LocalPlayer():EyePos() - pos ):GetNormalized():Dot( forward )
+	-- local dot = ( LocalPlayer():EyePos() - pos ):GetNormalized():Dot( forward )
 
-	local beamalpha = math.Clamp( 0.95 - dot, 0, 1 )
-	if beamalpha > 0 then
-		table.insert( beamrenderer, { pos, tr.HitPos, beamalpha } )
-	end
+	-- local beamalpha = math.Clamp( 0.95 - dot, 0, 1 )
+	-- if beamalpha > 0 then
+	-- 	table.insert( beamrenderer, { pos, tr.HitPos, beamalpha } )
+	-- end
 
-	if dot < 0 then return end
+	-- if dot < 0 then return end
 
-	local vis = util.PixelVisible( pos, 3, self.PixelVis )
+	-- local vis = util.PixelVisible( pos, 3, self.PixelVis )
 
-	local alpha = 255 * vis * ( dot - 0.22 )
-	local size = 64 * vis * ( dot + 0.1 )
+	-- local alpha = 255 * vis * ( dot - 0.22 )
+	-- local size = 64 * vis * ( dot + 0.1 )
 
-	alpha = math.Clamp( alpha, 0, 255 )
-	size = math.Clamp( size, 16, 48 )
+	-- alpha = math.Clamp( alpha, 0, 255 )
+	-- size = math.Clamp( size, 16, 48 )
 
-	//render.SetMaterial( light_sprite )
-	//render.DrawSprite( pos, size, size, Color( 255, 255, 255, alpha ) )
-	table.insert( spriterenderer, { pos, size, alpha } )
+	-- //render.SetMaterial( light_sprite )
+	-- //render.DrawSprite( pos, size, size, Color( 255, 255, 255, alpha ) )
+	-- table.insert( spriterenderer, { pos, size, alpha } )
 end
 
 hook.Add( "PostDrawOpaqueRenderables", "FlashLightSprite", function()

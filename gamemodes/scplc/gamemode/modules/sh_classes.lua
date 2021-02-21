@@ -4,18 +4,18 @@
 		weapons = {},
 		ammo = {},
 		chip = "", --GetChip?
+		omnitool = true/false,
 		health = 100,
 		walk_speed = 100,
 		run_speed = 225,
 		sanity = 100,
 		max_sanity = 100 --can be nil
 		vest = nil,
-		level = 0, --deprecated
 		price = 1,
 		max = 0,
 		persona = { class = <fake_class>, team = <fake_team> },
-		override = function( ply ) end, --return false to disallow, nil to do nothing (check level), true to allow
-		--spawn = ? --Vector or table if them. Use only to override group spawn --Not working!
+		override = function( ply ) end, --return false to disallow, nil to do standard check, true to allow
+		--spawn = ? --Vector or table of them. Use only to override group spawn
 	}
 ]]
 
@@ -36,7 +36,7 @@ local AllClasses = {}
 local SpawnInfo = {}
 SpawnInfo.SUPPORT = {}
 
-local SupportCallbacks = {}
+local SupportData = {}
 
 local function assert_warn( b, s )
 	if !b then
@@ -60,7 +60,7 @@ function addClassGroup( name, weight, spawn )
 	table.insert( SelectInfo, { name, weight } )
 end
 
-function addSupportGroup( name, weight, spawn, data )
+function addSupportGroup( name, weight, spawn, max, callback, spawnrule )
 	if !name or !weight then return end
 
 	assert_warn( !gwarn, "Using 'addSupportGroup' function outside 'RegisterClassGroups' hook can cause errors!" )
@@ -77,7 +77,7 @@ function addSupportGroup( name, weight, spawn, data )
 
 	SelectClasses.SUPPORT[name] = {}
 	SpawnInfo.SUPPORT[name] = spawn
-	SupportCallbacks[name] = data
+	SupportData[name] = { max = max or 0, callback = callback, spawnrule = spawnrule }
 
 	table.insert( SuppWeightList, { name, cvar } )
 end
@@ -99,8 +99,8 @@ function getGroups()
 	return SelectClasses
 end
 
-function getSupportCallback( name )
-	return SupportCallbacks[name]
+function getSupportData( name )
+	return SupportData[name]
 end
 
 function registerClass( name, group, model, data, support )
@@ -114,8 +114,18 @@ function registerClass( name, group, model, data, support )
 	assert( !string.match( name, "%s" ), "Class name can not contain any whitespace characters!" )
 	assert( usetab[group] != nil, "Invalid group: "..group )
 	--assert( usetab[group][name] == nil, "Class '"..name.."' is already registered!" )
+
+	if AllClasses[name] and !usetab[group][name] then
+		local tab = table.Copy( AllClasses[name] )
+
+		tab.support = support
+
+		usetab[group][name] = tab
+		print( "Class '"..name.."' is already registered in another group! Duplicating old data to new group, provided new data is discarded!" )
+	end
+
 	assert( AllClasses[name] == nil, "Class '"..name.."' is already registered!" )
-	assert_warn( _LANG["english"]["CLASSES"][name] != nil and _LANG["english"]["CLASS_INFO"][name] != nil, "No language entry for: "..name )
+	assert_warn( _LANG["english"]["CLASSES"][name] != nil and _LANG["english"]["CLASS_OBJECTIVES"][name] != nil, "No language entry for: "..name )
 
 	CLASSES[string.upper( name )] = name
 
@@ -164,20 +174,29 @@ end
 function selectSupportGroup()
 	if CLIENT then return end
 
-	local total = 0
+	local newlist = {}
 
-	for i, v in ipairs( SuppWeightList ) do
+	for i, v in pairs( SuppWeightList ) do
+		local data = SupportData[v[1]]
+
+		if !data.spawnrule or data.spawnrule() then
+			table.insert( newlist, v )
+		end
+	end
+
+	local total = 0
+	for i, v in ipairs( newlist ) do
 		total = total + v[2]:GetInt()
 	end
 
 	local dice = math.random( total )
 	total = 0
 
-	for i, v in ipairs( SuppWeightList ) do
+	for i, v in ipairs( newlist ) do
 		total = total + v[2]:GetInt()
 
 		if total >= dice then
-			return v[1], SupportCallbacks[v[1]]
+			return v[1], SupportData[v[1]]
 		end
 	end
 end
@@ -230,8 +249,10 @@ end
 function ply:UnlockClass( name )
 	if self:CanUnlockClass( name ) then
 		if SERVER then
-			self:AddPrestigePoints( -AllClasses[name].price )
-			self.PlayerInfo:Get( "unlocked_classes" )[name] = true
+			local price = AllClasses[name].price
+
+			self:AddPrestigePoints( -price )
+			self.PlayerInfo:Get( "unlocked_classes" )[name] = price
 			self.PlayerInfo:Update()
 		end
 
@@ -248,12 +269,80 @@ function ply:UnlockClass( name )
 	return false
 end
 
-hook.Add( "SLCPlayerMeta", "SLCClassInfo", function( ply, playermeta )
-	local classinfo = ply.PlayerInfo:Get( "unlocked_classes" )
-	if !classinfo then
-		classinfo = {}
-		ply.PlayerInfo:Set( "unlocked_classes", classinfo )
-	end
+if SERVER then
+	hook.Add( "SLCPlayerMeta", "SLCClassInfo", function( ply, playermeta )
+		local classinfo = ply.PlayerInfo:Get( "unlocked_classes" )
 
-	playermeta.classes = classinfo
-end )
+		if !classinfo then
+			classinfo = {}
+			ply.PlayerInfo:Set( "unlocked_classes", classinfo )
+		end
+
+		local classmeta = {}
+		local refound = false
+		for k, v in pairs( classinfo ) do
+			if v then
+				local class = AllClasses[k]
+
+				if class then
+					if !isnumber( v ) then
+						//ply.PlayerInfo:Get( "unlocked_classes" )[k] = class.price
+						classinfo[k] = class.price
+					elseif v > class.price then
+						refound = true
+					end
+
+					classmeta[k] = true
+				else
+					if isnumber( v ) then
+						refound = true
+					else
+						//ply.PlayerInfo:Get( "unlocked_classes" )[k] = nil
+						classinfo[k] = nil
+					end
+				end
+			else
+				//ply.PlayerInfo:Get( "unlocked_classes" )[k] = nil
+				classinfo[k] = nil
+			end
+		end
+
+		ply.PlayerInfo:Update()
+
+		playermeta.refound = refound
+		playermeta.classes = classmeta
+	end )
+
+	net.ReceivePing( "SLCRefoundClasses", function( data, ply )
+		local points = 0
+
+		local classinfo = ply.PlayerInfo:Get( "unlocked_classes" )
+		if classinfo then
+			for k, v in pairs( classinfo ) do
+				if v then
+					local class = AllClasses[k]
+
+					if class then
+						if isnumber( v ) and v > class.price then
+							classinfo[k] = class.price
+							points = points + (v - class.price)
+						end
+					else
+						if isnumber( v ) then
+							classinfo[k] = nil
+							points = points + v
+						end
+					end
+				end
+			end
+
+			ply.PlayerInfo:Update()
+		end
+
+		if points > 0 then
+			net.Ping( "SLCRefoundClasses", points, ply )
+			//print( "Refounded", points, ply )
+			ply:AddPrestigePoints( points )
+		end
+	end )
+end

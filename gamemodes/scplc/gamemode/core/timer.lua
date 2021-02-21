@@ -141,7 +141,11 @@ function Timer:Tick()
 		self:Destroy()
 
 		if self.endcallback then
-			self.endcallback()
+			local suc, err = pcall( self.endcallback )
+			if !suc then
+				print( "Error in timer "..self.name.."!" )
+				print( err )
+			end
 		end
 	end
 end
@@ -166,6 +170,7 @@ function TickTimer( num, func )
 	table.insert( _TickTimersCache, { num, func } )
 end
 
+--BUG: if error occurs in timer function, remaining timers will be called in the next tick
 hook.Add( "Tick", "TimersTick", function()
 	for k, v in pairs( _TimersCache ) do
 		if v.alive and v.ncall <= CurTime() then
@@ -186,6 +191,7 @@ end )
 function ZeroTimer( func )
 	TickTimer( 0, func )
 end
+
 --[[-------------------------------------------------------------------------
 Player Timers
 ---------------------------------------------------------------------------]]

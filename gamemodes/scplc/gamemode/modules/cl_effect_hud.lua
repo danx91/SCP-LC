@@ -33,6 +33,11 @@ local function button( x, y, w, h )
 	return 0
 end
 
+local color_white = Color( 255, 255, 255, 255 )
+local color_25 = Color( 25, 25, 25, 255 )
+local color_black235 = Color( 0, 0, 0, 235 )
+local color_white175 = Color( 255, 255, 255, 175 )
+
 local function DrawEffectsHUD()
 	next_frame = true
 	local w, h = ScrW(), ScrH()
@@ -51,7 +56,7 @@ local function DrawEffectsHUD()
 		local reg = EFFECTS.registry[effect.name.."_"..effect.tier]
 		local eff = EFFECTS.effects[effect.name]
 
-		surface.SetDrawColor( Color( 255, 255, 255, 175 ) )
+		surface.SetDrawColor( color_white175 )
 		surface.DrawOutlinedRect( w * 0.97 - 1, h * 0.55 + w * 0.035 * ( i - 1 ) - 1, w * 0.025 + 2, w * 0.025 + 2 )
 
 		if hide and i == 5 then
@@ -59,7 +64,7 @@ local function DrawEffectsHUD()
 				text = (ec - 4).."+",
 				pos = { w * 0.9824, h * 0.55 + w * 0.035 * ( i - 1 ) + w * 0.0125 },
 				font = "SCPHUDMedium",
-				color = Color( 255, 255, 255, 255 ),
+				color = color_white,
 				xalign = TEXT_ALIGN_CENTER,
 				yalign = TEXT_ALIGN_CENTER,
 			}
@@ -80,13 +85,13 @@ local function DrawEffectsHUD()
 		else
 			local ico = reg.icon
 			if ico then
-				surface.SetDrawColor( Color( 25, 25, 25, 255 ) )
+				surface.SetDrawColor( color_25 )
 				surface.DrawRect( w * 0.97, h * 0.55 + w * 0.035 * ( i - 1 ), w * 0.025, w * 0.025 )
 
 				render.PushFilterMin( TEXFILTER.LINEAR )
 				render.PushFilterMag( TEXFILTER.LINEAR )
 
-				surface.SetDrawColor( Color( 255, 255, 255, 255 ) )
+				surface.SetDrawColor( reg.color or color_white )
 				surface.SetMaterial( ico )
 				surface.DrawTexturedRect( w * 0.97 + 2, h * 0.55 + w * 0.035 * ( i - 1 ) + 2, w * 0.025 - 4, w * 0.025 - 4 )
 
@@ -97,7 +102,7 @@ local function DrawEffectsHUD()
 			if effect.endtime != -1 then
 				local timepct = ( effect.endtime - CurTime() ) / eff.duration
 
-				surface.SetDrawColor( Color( 0, 0, 0, 235 ) )
+				surface.SetDrawColor( color_black235 )
 				draw.NoTexture()
 				surface.DrawCooldownRectCCW( w * 0.97, h * 0.55 + w * 0.035 * ( i - 1 ), w * 0.025, w * 0.025, 1 - timepct, 0.05 )
 			end
@@ -135,10 +140,10 @@ local function DrawEffectsHUD()
 			end
 		end
 
-		surface.SetDrawColor( Color( 255, 255, 255, 255 ) )
+		surface.SetDrawColor( color_white )
 		surface.DrawRect( mx - maxw - 17, my - 1, maxw + 18, fh + 10 )
 
-		surface.SetDrawColor( Color( 25, 25, 25, 255 ) )
+		surface.SetDrawColor( color_25 )
 		surface.DrawRect( mx - maxw - 16, my, maxw + 16, fh + 8 )
 
 		local cury = my + 4
@@ -147,7 +152,7 @@ local function DrawEffectsHUD()
 				text = showtext[i],
 				pos = { mx - 8, cury },
 				font = "SCPHUDMedium",
-				color = Color( 255, 255, 255, 255 ),
+				color = color_white,
 				xalign = TEXT_ALIGN_RIGHT,
 				yalign = TEXT_ALIGN_TOP,
 			}

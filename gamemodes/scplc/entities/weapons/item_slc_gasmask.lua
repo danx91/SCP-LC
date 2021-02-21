@@ -18,9 +18,11 @@ function SWEP:SetupDataTables()
 	self:AddNetworkVar( "Upgraded", "Bool" )
 end
 
-function SWEP:scp914upgrade( mode )
-	if mode == 4 then
-		if math.random( 100 ) <= 25 then
+function SWEP:HandleUpgrade( mode, num_mode, pos )
+	self:SetPos( pos )
+	
+	if mode == UPGRADE_MODE.VERY_FINE then
+		if math.random( 100 ) <= 33 then
 			self:SetUpgraded( true )
 		end
 	end
@@ -41,16 +43,16 @@ function SWEP:OnDrop()
 	self:SetEnabled( false )
 end
 
-function SWEP:OwnerChanged()
+/*function SWEP:OwnerChanged()
 	self:SetEnabled( false )
-end
+end*/
 
 function SWEP:OnSelect()
 	self:SetEnabled( !self:GetEnabled() )
 end
 
 if CLIENT then
-	local overlay = GetMaterial( "slc/gasmask.png" )
+	local overlay = GetMaterial( "slc/misc/gasmask.png" )
 	hook.Add( "SLCScreenMod", "GasMask", function( clr )
 		local ply = LocalPlayer()
 		local wep = ply:GetWeapon( "item_slc_gasmask" )

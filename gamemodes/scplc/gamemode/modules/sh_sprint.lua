@@ -13,7 +13,7 @@ hook.Add( "StartCommand", "SCPSprint", function( ply, cmd )
 				ply.Jumping = true
 				ply.StaminaRegen = CurTime() + 1.5
 
-				local mask = ply:GetWeapon( "item_slc_gasmas" )
+				local mask = ply:GetWeapon( "item_slc_gasmask" )
 
 				if !IsValid( mask ) or !mask:GetEnabled() or !mask:GetUpgraded() or ply.Stamina - 10 > 30 then
 					ply.Stamina = math.max( ply.Stamina - 10, 0 )
@@ -123,10 +123,10 @@ local function CalcStamina( ply )
 	if SERVER then
 		if ply.Stamina < 50 and !ply.Breathing then
 			ply.Breathing = true
-			ply:EmitSound( "Player.Breathing" )
+			ply:EmitSound( "SLCPlayer.Breathing" )
 		elseif ply.Stamina > 50 and ply.Breathing then
 			ply.Breathing = false
-			ply:StopSound( "Player.Breathing" )
+			ply:StopSound( "SLCPlayer.Breathing" )
 		end
 	end
 end
