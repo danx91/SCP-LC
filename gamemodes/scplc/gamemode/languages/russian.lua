@@ -38,63 +38,63 @@ lang.NRegistry = {
 	vestdrop = "Вы сняли бронежилет",
 	hasvest = "У вас уже есть бронежилет! Выбросите его через инвентарь",
 	escortpoints = "Вы получили %i очков за спасение",
-	femur_act = "Femur Breaker activated...",
-	levelup = "You leveled up! Your current level: %i",
-	healplayer = "You received %i points for healing other player",
-	detectscp = "You received %i points for detecting SCPs",
-	winxp = "You received %i experience because your initial team won the game",
-	winalivexp = "You received %i experience because your team won the game",
-	upgradepoints = "You received new upgrade point(s)! Press '%s' to open SCP upgrade menu",
-	prestigeup = "Player %s earned higher prestige! Their current prestige level: %i",
-	omega_detonation = "OMEGA Warhead detonation in %i seconds. Get on the surface or proceed to the blast shelter immediately!",
-	alpha_detonation = "ALPHA Warhead detonation in %i seconds. Get in the facility or proceed to the evacuation immediately!",
-	alpha_card = "You've inserted ALPHA Warhead nuclear card",
-	destory_scp = "You received %i points for destroying SCP object!",
+	femur_act = "Устройство для перелома бедренной кости активировано...",
+	levelup = "Новый уровень! Ваш текущий уровень: %i",
+	healplayer = "Вы получили %i очков за лечение других игроков",
+	detectscp = "Вы получили %i очков за обнаружение SCP",
+	winxp = "Вы получили %i ОО, так как Ваша изначальная команда победила",
+	winalivexp = "Вы получили %i ОО, так как Ваша команда победила",
+	upgradepoints = "Вы получили очки улучшения! Нажмите '%s', чтобы открыть меню навыков SCP",
+	prestigeup = "Игрок %s повысил престиж! Их текущий престиж: %i",
+	omega_detonation = "Детонация боеголовки ОМЕГА через %i сек. Выбирайтесь на поверхность или пройдите в убежище немедленно!",
+	alpha_detonation = "Детонации боеголовки АЛЬФА через %i сек. Вернитесь в комплекс или проследуйте к зоне эвакуации немедленно!",
+	alpha_card = "Вы вставили ключ-карту АЛЬФА боеголовки",
+	destory_scp = "Вы получили %i очков за уничтожение объекта SCP!",
 }
 
-lang.NFailed = "Failed to access NRegistry with key: %s"
+lang.NFailed = "Невозможно загрузить NRegistry с ключом: %s"
 
 --[[-------------------------------------------------------------------------
 NCRegistry
 ---------------------------------------------------------------------------]]
 lang.NCRegistry = {
-	escaped = "You escaped!",
-	escapeinfo = "Good job! You escaped in %s",
-	escapexp = "You received %i experience",
-	escort = "You have been escorted!",
-	roundend = "Round ended!",
-	nowinner = "No winner in this round!",
-	roundnep = "Not enough players!",
-	roundwin = "Round winner: %s",
-	roundwinmulti = "Round winners: [RAW]",
-	shelter_escape = "You survived explosion in blast shelter",
-	alpha_escape = "You escaped before warhead exploded",
+	escaped = "Вы сбежали!",
+	escapeinfo = "Хорошая работа! Вы сбежали за %s",
+	escapexp = "Вы получили %i ОО",
+	escort = "Вы были спасены!",
+	roundend = "Раунд закончен!",
+	nowinner = "Ничья!",
+	roundnep = "Недостаточно игроков!",
+	roundwin = "Победитель: %s",
+	roundwinmulti = "Победители: [RAW]",
+	shelter_escape = "Вы выжили в убежище",
+	alpha_escape = "Вы сбежали до того, как боеголовка сдетонировала",
 
-	mvp = "MVP: %s with score: %i",
-	stat_kill = "Players killed: %i",
-	stat_rdm = "RDM kills: %i",
-	stat_rdmdmg = "RDM damage: %i",
-	stat_dmg = "Damage dealt: %i",
-	stat_bleed = "Bleeding damage: %i",
-	stat_106recontain = "SCP 106 has been recontained",
-	stat_escapes = "Escaped players: %i",
-	stat_escorts = "Players escroted: %i",
-	stat_023 = "Sudden deaths caused by SCP 023: %i",
-	stat_049 = "Cured people: %i",
-	stat_066 = "Played masterpieces: %i",
-	stat_096 = "Players killed by shy guy: %i",
-	stat_106 = "Players teleported to Pocket Dimension: %i",
-	stat_173 = "Snapped necks: %i",
-	stat_457 = "Incinerated players: %i",
-	stat_682 = "Players killed by overgrown reptile: %i",
-	stat_8602 = "Players nailed to wall: %i",
-	stat_939 = "SCP 939 preys: %i",
-	stat_966 = "Insidious cuts: %i",
-	stat_3199 = "Assassinations by SCP 3199: %i",
-	stat_24273 = "People judged by SCP 2427-3: %i",
+	mvp = "Самый ценный игрок: %s со счетом: %i",
+	stat_kill = "Игроков убито: %i",
+	stat_rdm = "РДМ убийства: %i",
+	stat_rdmdmg = "РДМ урон: %i",
+	stat_dmg = "Нанесенный урон: %i",
+	stat_bleed = "Урон кровотечением: %i",
+	stat_106recontain = "SCP 106 был захватчен",
+	stat_escapes = "Игроков сбежало: %i",
+	stat_escorts = "Игроков спасено: %i",
+	stat_023 = "Внезапных смертей от SCP 023: %i",
+	stat_049 = "Получили исцеление: %i",
+	stat_066 = "Сыграно шедевров: %i",
+	stat_096 = "Игроки убитые скромником: %i",
+	stat_106 = "Игроки попавшие в карманное измерение: %i",
+	stat_173 = "Сломано шей: %i",
+	stat_457 = "Сожжено игроков: %i",
+	stat_682 = "Игроков убито ящерицей-переростком: %i",
+	stat_8602 = "Игроков прижато к стене: %i",
+	stat_939 = "Жертв SCP 939: %i",
+	stat_966 = "Коварных порезов: %i",
+	stat_3199 = "Жертв SCP 3199: %i",
+	stat_24273 = "Игроков убитых SCP 2427-3: %i",
 }
 
-lang.NCFailed = "Failed to access NCRegistry with key: %s"
+lang.NCFailed = "Невозможно получить NCRegistry с ключом: %s"
 
 --[[-------------------------------------------------------------------------
 HUD
@@ -102,34 +102,34 @@ HUD
 local hud = {}
 lang.HUD = hud
 
-hud.pickup = "Pick up"
-hud.class = "Class"
-hud.team = "Team"
-hud.prestige_points = "Prestige Points"
+hud.pickup = "Поднять"
+hud.class = "Класс"
+hud.team = "Команда"
+hud.prestige_points = "Очки престижа"
 hud.hp = "HP"
-hud.stamina = "STAMINA"
-hud.sanity = "SANITY"
-hud.xp = "XP"
+hud.stamina = "ВЫНОСЛИВОСТЬ"
+hud.sanity = "ЗДРАВОМЫСЛИЕ"
+hud.xp = "ОО"
 
 --[[-------------------------------------------------------------------------
 EQ
 ---------------------------------------------------------------------------]]
-lang.eq_lmb = "LMB - Select"
-lang.eq_rmb = "RMB - Drop"
-lang.eq_hold = "Hold LMB - Move item"
-lang.eq_vest = "Vest"
-lang.eq_key = "Press '%s' to open EQ"
+lang.eq_lmb = "ЛКМ - Выбрать"
+lang.eq_rmb = "ПКМ - Выкинуть"
+lang.eq_hold = "ЛКМ (зажато) - Передвигать предмет"
+lang.eq_vest = "Бронежилет"
+lang.eq_key = "Нажмите '%s', чтобы открыть инвентарь"
 
-lang.info = "Informations"
-lang.author = "Author"
-lang.mobility = "Mobility"
-lang.weight = "Weight"
-lang.protection = "Protection"
+lang.info = "Инфомарция"
+lang.author = "Автор"
+lang.mobility = "Мобильность"
+lang.weight = "Вес"
+lang.protection = "Защита"
 
-lang.weight_unit = "kg"
+lang.weight_unit = "кг"
 lang.eq_buttons = {
-	escort = "Escort",
-	gatea = "Destroy Gate A"
+	escort = "Спасти",
+	gatea = "Взорвать Выход A"
 }
 
 --[[-------------------------------------------------------------------------
@@ -138,129 +138,129 @@ Effects
 local effects = {}
 lang.EFFECTS = effects
 
-effects.permanent = "perm"
-effects.bleeding = "Bleeding"
+effects.permanent = "навсегда"
+effects.bleeding = "Кровотечение"
 effects.doorlock = "Door Lock"
 effects.amnc227 = "AMN-C227"
-effects.insane = "Insane"
-effects.gas_choke = "Choking"
-effects.radiation = "Radiation"
-effects.deep_wounds = "Deep Wounds"
+effects.insane = "Безумность"
+effects.gas_choke = "Удушение"
+effects.radiation = "Радиация"
+effects.deep_wounds = "Глубокие раны"
 
 --[[-------------------------------------------------------------------------
 Class viewer
 ---------------------------------------------------------------------------]]
-lang.classviewer = "Class Viewer"
-lang.preview = "Preview"
-lang.random = "Random"
-lang.price = "Price"
-lang.buy = "Buy"
-lang.refound = "Refund"
-lang.none = "None"
-lang.refounded = "All removed classes has been refunded. You've recived %d prestige points."
+lang.classviewer = "Просмотр классов"
+lang.preview = "Предпросмотр"
+lang.random = "Случайно"
+lang.price = "Цена"
+lang.buy = "Купить"
+lang.refound = "Вернуть"
+lang.none = "Отсутствует"
+lang.refounded = "Цена за возвращенные классы добавлена. Вы получили %d очков престижа.."
 
 lang.details = {
-	details = "Details",
-	name = "Name",
-	team = "Team",
-	price = "Prestige Points price",
-	walk_speed = "Walk Speed",
-	run_speed = "Run Speed",
-	chip = "Access Chip",
-	persona = "Fake ID",
-	weapons = "Weapons",
-	class = "Class",
-	hp = "Health",
-	speed = "Speed",
-	health = "Health",
-	sanity = "Sanity"
+	details = "Подробности",
+	name = "Имя",
+	team = "Команда",
+	price = "Цена за очки престижа",
+	walk_speed = "Скорость ходьбы",
+	run_speed = "Скорость бега",
+	chip = "Чип доступа",
+	persona = "Поддельные документы",
+	weapons = "Оружие",
+	class = "Класс",
+	hp = "Здоровье",
+	speed = "Скорость",
+	health = "Здоровье",
+	sanity = "Здравомыслие"
 }
 
 lang.headers = {
-	support = "SUPPORT",
-	classes = "CLASSES",
-	scp = "SCPs"
+	support = "ПОДДЕРЖКА",
+	classes = "КЛАССЫ",
+	scp = "SCP"
 }
 
 lang.view_cat = {
-	classd = "Class D",
-	sci = "Scientists",
-	mtf = "Security",
-	mtf_ntf = "MTF Epsilon-11",
-	mtf_alpha = "MTF Alpha-1",
-	ci = "Chaos Insurgency",
+	classd = "Класс D",
+	sci = "Ученые",
+	mtf = "Охрана",
+	mtf_ntf = "МОГ Эпсилон-11",
+	mtf_alpha = "МОГ Альфа-1",
+	ci = "Повстанцы Хаоса",
 }
 
 --[[-------------------------------------------------------------------------
 Scoreboard
 ---------------------------------------------------------------------------]]
-lang.unconnected = "Unconnected"
+lang.unconnected = "Отключен"
 
 lang.scoreboard = {
-	name = "Scoreboard",
-	playername = "Name",
-	ping = "Ping",
-	prestige = "Prestige",
-	level = "Level",
-	score = "Score",
-	ranks = "Ranks",
+	name = "Счет",
+	playername = "Имя",
+	ping = "Пинг",
+	prestige = "Престиж",
+	level = "Уровень",
+	score = "Очки",
+	ranks = "Ранги",
 }
 
 lang.ranks = {
-	author = "Author",
+	author = "Автор",
 	vip = "VIP",
-	tester = "Tester",
-	contributor = "Contributor",
-	translator = "Translator",
+	tester = "Тестер",
+	contributor = "Помощник",
+	translator = "Переводчик",
 }
 
 --[[-------------------------------------------------------------------------
 Upgrades
 ---------------------------------------------------------------------------]]
 lang.upgrades = {
-	tree = "%s UPGRADE TREE",
-	points = "Points",
-	cost = "Cost",
-	owned = "Owned",
-	requiresall = "Requires",
-	requiresany = "Requires any",
-	blocked = "Blocked by"
+	tree = "%s ДЕРЕВО УЛУЧШЕНИЙ",
+	points = "Очки",
+	cost = "Цена",
+	owned = "Получено",
+	requiresall = "Требует",
+	requiresany = "Требует одну из",
+	blocked = "Блокируется"
 }
 
 --[[-------------------------------------------------------------------------
 Info screen
 ---------------------------------------------------------------------------]]
 lang.info_screen = {
-	subject = "Subject",
-	class = "Class",
-	team = "Team",
-	status = "Status",
-	objectives = "Objectives",
-	details = "Details",
-	registry_failed = "info_screen_registry failed"
+	subject = "Субъект",
+	class = "Класс",
+	team = "Команда",
+	status = "Состояние",
+	objectives = "Цели",
+	details = "Подробности",
+	registry_failed = "fatal_ошибка_экран_не_загружен"
 }
 
 lang.info_screen_registry = {
-	escape_time = "You escaped in %s minutes",
-	escape_xp = "You received %s experience",
-	escape1 = "You escaped from facility",
-	escape2 = "You escaped during warhead countdown",
-	escape3 = "You survived in blast shelter",
-	escorted = "You have been escorted",
-	killed_by = "You have been killed by: %s",
-	suicide = "You've commited suicide",
-	unknown = "Cause of your death is unknown",
-	hazard = "You have been killed by hazard",
-	alpha_mia = "Last known location: Surface",
-	omega_mia = "Last known location: Facility",
+	escape_time = "Вы сбежали за %s мин.",
+	escape_xp = "Вы получили %s ОО",
+	escape1 = "Вы сбежали из комплекса",
+	escape2 = "Вы сбежали во время процесса детонации",
+	escape3 = "Вы выжили в убежище",
+	escorted = "Вы были спасены",
+	killed_by = "Вы были убиты: %s",
+	suicide = "Вы совершили суицид",
+	unknown = "[ДАННЫЕ УДАЛЕНЫ]",
+	hazard = "Вы были убиты окружением",
+	alpha_mia = "Последнее месторасположение: Поверхность",
+	omega_mia = "Последнее месторасположение: Комплекс",
 }
 
 lang.info_screen_type = {
-	alive = "Alive",
-	escaped = "Escaped",
-	dead = "Deceased",
-	mia = "Missed in action",
-	unknown = "Unknown",
+	alive = "Жив",
+	escaped = "Сбежал",
+	dead = "Мертв",
+	mia = "Пропал",
+	unknown = "Неизвестно",
 }
 
 lang.info_screen_macro = {
@@ -273,8 +273,8 @@ lang.info_screen_macro = {
 --[[-------------------------------------------------------------------------
 Generic
 ---------------------------------------------------------------------------]]
-lang.nothing = "Nothing"
-lang.exit = "Exit"
+lang.nothing = "Ничего"
+lang.exit = "Выход"
 
 --[[-------------------------------------------------------------------------
 Misc
@@ -283,31 +283,31 @@ local misc = {}
 lang.MISC = misc
 
 misc.content_checker = {
-	title = "Gamemode Content",
-	msg = [[It looks like you don't have some addons. It may cause errors like missing content (textures/models/sounds) and may break your gameplay experience.
-You don't have %i addons out of %i. Would you like to download it now? (you can either download it through game or do it manually on workshop page)]],
-	no = "No",
-	download = "Download now",
-	workshop = "Show workshop page",
-	downloading = "Downloading",
-	mounting = "Mounting",
-	processing = "Processing addon: %s\nStatus: %s",
-	cancel = "Cancel"
+	title = "Контент режима",
+	msg = [[Похоже у вас нет некоторых аддонов. Могут отсутствовать некоторые вещи (звуки/текстуры/модели) и они могут испортить ощущения от игры.
+У вас нет %i аддонов из %i. Хотите скачать их сейчас? (Вы можете скачать их сейчас или вручную через мастерскую)]],
+	no = "Нет",
+	download = "Скачать сейчас",
+	workshop = "Показать страницу в мастерской",
+	downloading = "Скачеваем",
+	mounting = "Устанавливаем",
+	processing = "Прогрузка: %s\nСостояние: %s",
+	cancel = "Отмена"
 }
 
 misc.omega_warhead = {
-	idle = "OMEGA Warhead is idle\n\nWaiting for input...",
-	waiting = "OMEGA Warhead is idle\n\nInput accepted!\nWaiting for second input...",
-	failed = "OMEGA Warhead is locked\n\nNo second input detected!\nWait %is",
-	no_remote = "OMEGA Warhead failed\n\nFailed to establish connection to warhead!\t",
-	active = "OMEGA Warhead is engaged\n\nProceed to evacuation immediately!\nDetonation in %.2fs",
+	idle = "Боеголовка ОМЕГА заряжена\n\nОжидание запуска...",
+	waiting = "Боеголовка ОМЕГА заряжена\n\nКлюч принят!\nОжидаем второго ключа...",
+	failed = "Боеголовка ОМЕГА заблокирована\n\nНе обнаружено втрого ключа!\nОжидайте %is",
+	no_remote = "Запуск боеголовки ОМЕГА невозможен\n\nСоединение не установлено!\t",
+	active = "Боеголовка ОМЕГА запущена\n\nЭвакуируйтесь!\nДетонация через %.2fs",
 }
 
 misc.alpha_warhead = {
-	idle = "ALPHA Warhead is idle\n\nWaiting for nuclear codes...",
-	ready = "ALPHA Warhead is idle\n\nCodes accepted!\nWaiting for activation...",
-	no_remote = "ALPHA Warhead failed\n\nFailed to establish connection to warhead!\t",
-	active = "ALPHA Warhead is engaged\n\nProceed to evacuation immediately!\nDetonation in %.2fs",
+	idle = "Боеголовка АЛЬФА заряжена\n\nОжидание кодов запусков...",
+	ready = "Боеголовка АЛЬФА заряжена\n\nКоды приняты!\nОжидание активации...",
+	no_remote = "Запуск боеголовки АЛЬФА невозможен\n\nСоединение не установлено!\t",
+	active = "Боеголовка АЛЬФА запущена\n\nЭвакуируйтесь!\nДетонация через %.2fs",
 }
 
 --[[-------------------------------------------------------------------------
@@ -316,25 +316,25 @@ Vests
 local vest = {}
 lang.VEST = vest
 
-vest.guard = "Security Guard Vest"
-vest.heavyguard = "Heavy Guard Vest"
-vest.specguard = "Specialist Guard Vest"
-vest.guard_medic = "Medic Guard Vest"
-vest.ntf = "MTF NTF Vest"
-vest.mtf_medic = "MTF NTF Medic Vest"
-vest.ntf_com = "MTF NTF Commander Vest"
-vest.alpha1 = "MTF Alpha-1 Vest"
-vest.ci = "Chaos Insurgency Vest"
-vest.fire = "Fireproof Vest"
-vest.electro = "Electroproof Vest"
+vest.guard = "Бронежилет охраны"
+vest.heavyguard = "Тяжелый бронежилет охраны"
+vest.specguard = "Бронежилет охранника-специалиста"
+vest.guard_medic = "Бронежилет медика"
+vest.ntf = "Бронежилет МОГ NTF"
+vest.mtf_medic = "Бронежилет медика МОГ NTF"
+vest.ntf_com = "Бронежилет командира МОГ NTF"
+vest.alpha1 = "Бронежилет МОГ Альфа-1"
+vest.ci = "Бронежилет Повстанца Хаоса"
+vest.fire = "Противпожарный бронежилет"
+vest.electro = "Электро непроницаемый бронежилет"
 
 local dmg = {}
 lang.DMG = dmg
 
-dmg.BURN = "Fire Damage"
-dmg.SHOCK = "Electrical Damage"
-dmg.BULLET = "Bullet Damage"
-dmg.FALL = "Fall Damage"
+dmg.BURN = "Урон огнём"
+dmg.SHOCK = "Урон электричеством"
+dmg.BULLET = "Огнестрельный урон"
+dmg.FALL = "Урон от падения"
 
 --[[-------------------------------------------------------------------------
 Teams
@@ -342,11 +342,11 @@ Teams
 local teams = {}
 lang.TEAMS = teams
 
-teams.SPEC = "Spectators"
-teams.CLASSD = "Class D"
-teams.SCI = "Scientists"
-teams.MTF = "MTF"
-teams.CI = "CI"
+teams.SPEC = "Наблюдатели"
+teams.CLASSD = "Класс D"
+teams.SCI = "Ученые"
+teams.MTF = "МОГ"
+teams.CI = "Повстанцы"
 teams.SCP = "SCP"
 
 --[[-------------------------------------------------------------------------
@@ -355,7 +355,7 @@ Classes
 local classes = {}
 lang.CLASSES = classes
 
-classes.unknown = "Unknown"
+classes.unknown = "Неизвестно"
 
 classes.SCP023 = "SCP 023"
 classes.SCP049 = "SCP 049"
@@ -372,64 +372,64 @@ classes.SCP966 = "SCP 966"
 classes.SCP3199 = "SCP 3199"
 classes.SCP24273 = "SCP 2427-3"
 
-classes.classd = "Class D"
-classes.veterand = "Class D Veteran"
-classes.kleptod = "Class D Kleptomaniac"
-classes.ciagent = "CI Agent"
+classes.classd = "Класс D"
+classes.veterand = "Ветеран класса D"
+classes.kleptod = "Клептоман класс D"
+classes.ciagent = "Агент Повстанцев"
 
-classes.sciassistant = "Scientist Assistant"
-classes.sci = "Scientist"
-classes.seniorsci = "Senior Scientist"
-classes.headsci = "Head Scientist"
+classes.sciassistant = "Ученый ассистент"
+classes.sci = "Ученый"
+classes.seniorsci = "Старший ученый"
+classes.headsci = "Главный ученый"
 
-classes.guard = "Security Guard"
-classes.chief = "Security Chief"
-classes.lightguard = "Light Security Guard"
-classes.heavyguard = "Heavy Security Guard"
-classes.specguard = "Security Guard Specialist"
-classes.guardmedic = "Security Guard Medic"
-classes.tech = "Security Guard Technician"
-classes.cispy = "CI Spy"
+classes.guard = "Охранник"
+classes.chief = "Глава охраны"
+classes.lightguard = "Легкий охранник"
+classes.heavyguard = "Тяжелый охранник"
+classes.specguard = "Охранник-специалист"
+classes.guardmedic = "Охранник-медик"
+classes.tech = "Охранник-техник"
+classes.cispy = "Шпион Повстанцев"
 
-classes.ntf_1 = "MTF NTF - SMG"
-classes.ntf_2 = "MTF NTF - Shotgun"
-classes.ntf_3 = "MTF NTF - Rifle"
-classes.ntfcom = "MTF NTF Commander"
-classes.ntfsniper = "MTF NTF Sniper"
-classes.ntfmedic = "MTF NTF Medic"
-classes.alpha1 = "MTF Alpha-1"
-classes.alpha1sniper = "MTF Alpha-1 Marksman"
-classes.ci = "Chaos Insurgency"
-classes.cicom = "Chaos Insurgency Commander"
+classes.ntf_1 = "МОГ NTF - SMG"
+classes.ntf_2 = "МОГ NTF - Дробовик"
+classes.ntf_3 = "МОГ NTF - Винтовка"
+classes.ntfcom = "Командир МОГ NTF"
+classes.ntfsniper = "Снайпер МОГ NTF"
+classes.ntfmedic = "Медик МОГ NTF"
+classes.alpha1 = "МОГ Альфа-1"
+classes.alpha1sniper = "Стрелок МОГ Альфа-1"
+classes.ci = "Повстанец Хаоса"
+classes.cicom = "Командир Повстанцев Хаоса"
 
 --[[-------------------------------------------------------------------------
 Class Info - NOTE: Each line is limited to 48 characters!
 Screen is designed to hold max of 5 lines of text and THERE IS NO internal protection!
 Note that last (5th) line should be shorter to prevent text overlaping (about 38 characters)
 ---------------------------------------------------------------------------]]
-local generic_classd = [[- Escape from the facility
-- Avoid staff and SCP objects
-- Cooperate with others]]
+local generic_classd = [[- Сбежать из комплекса
+- Избегать сотрудников и SCP
+- Кооперироваться с другими]]
 
-local generic_sci = [[- Escape from the facility
-- Avoid Class D and SCP objects
-- Cooperate with guards and MTFs]]
+local generic_sci = [[- Сбежать из комплекса
+- Избегать сотрудников и SCP
+- Кооперироваться с охраной и МОГ]]
 
-local generic_guard = [[- Rescue scientists
-- Terminate all Class D and SCPs
-- Listen to your supervisor]]
+local generic_guard = [[- Спасти ученых
+- Устранить класс D и SCP
+- Слушать приказы]]
 
-local generic_ntf = [[- Get to the facility
-- Help the remaining staff inside
-- Don't let Class D and SCPs escape]]
+local generic_ntf = [[- Добраться до комплекса
+- Помочь сотрудникам сбежать
+- Устранить класс D и SCP]]
 
-local generic_scp = [[- Escape from the facility
-- Kill everyone you meet
-- Cooperate with other SCPs]]
+local generic_scp = [[- Сбежать из комплекса
+- Убить всех
+- Кооперироваться с другими SCP]]
 
-local generic_scp_friendly = [[- Escape from the facility
-- You may cooperate with humans
-- Cooperate with other SCPs]]
+local generic_scp_friendly = [[- Сбежать из комплекса
+- Вы можете кооперироваться с людьми
+- Кооперироваться с другими SCP]]
 
 lang.CLASS_OBJECTIVES = {
 	classd = generic_classd,
@@ -438,9 +438,9 @@ lang.CLASS_OBJECTIVES = {
 
 	kleptod = generic_classd,
 
-	ciagent = [[- Escort Class D memebers
-- Avoid staff and SCP objects
-- Cooperate with others]],
+	ciagent = [[- Спасти класс D
+- Избегать сотрудников и SCP
+- Кооперироваться с другими]],
 
 	sciassistant = generic_sci,
 
@@ -458,21 +458,21 @@ lang.CLASS_OBJECTIVES = {
 
 	specguard = generic_guard,
 
-	chief = [[- Rescue scientists
-- Terminate all Class D and SCPs
-- Give orders to other guards]],
+	chief = [[- Спасти ученых
+- Устранить класс D и SCP
+- Отдавать приказы охране]],
 
-	guardmedic = [[- Rescue scientists
-- Terminate all Class D and SCPs
-- Support other guards with your medkit]],
+	guardmedic = [[- Спасти ученых
+- Устранить класс D и SCP
+- Помогать охране аптечками]],
 
-	tech = [[- Rescue scientists
-- Terminate all Class D and SCPs
-- Support other guards with your turret]],
+	tech = [[- Спасти ученых
+- Устранить класс D и SCP
+- Помогать охране турелью]],
 
-	cispy = [[- Pretend to be a guard
-- Help remaining Class D Personnel
-- Sabotage security actions]],
+	cispy = [[- Претвориться охранником
+- Спасти оставшийся класс D
+- Саботировать работу охраны]],
 
 	ntf_1 = generic_ntf,
 
@@ -480,39 +480,39 @@ lang.CLASS_OBJECTIVES = {
 
 	ntf_3 = generic_ntf,
 
-	ntfmedic = [[- Help the remaining staff inside
-- Support other NTFs with your medkit
-- Don't let Class D and SCPs escape]],
+	ntfmedic = [[- Помочь оставшимся сотрудникам
+- Помочь оперативникам МОГ своей аптечкой
+- Не позволить класс D и SCP сбежать]],
 
-	ntfcom = [[- Help the remaining staff inside
-- Don't let Class D and SCPs escape
-- Give orders to other NTFs]],
+	ntfcom = [[- Помочь оставшимся сотрудникам
+- Не позволить класс D и SCP сбежать
+- Отдавать приказы оперативникам]],
 
-	ntfsniper = [[- Help the remaining staff inside
-- Don't let Class D and SCPs escape
-- Protect your team from behind]],
+	ntfsniper = [[- Помочь оставшимся сотрудникам
+- Не позволить класс D и SCP сбежать
+- Помогать команде со спины]],
 
-	alpha1 = [[- Protect foundation at all cost
-- Stop SCPs and Class D
-- You are authorized to ]].."[REDACTED]",
+	alpha1 = [[- Защитить комплекс любой ценой
+- Остановить SCP и класс D
+- Вам дан доступ к ]].."[ДАННЫЕ УДАЛЕНЫ]",
 
-	alpha1sniper = [[- Protect foundation at all cost
-- Stop SCPs and Class D
-- You are authorized to ]].."[REDACTED]",
+	alpha1sniper = [[- Защитить комплекс любой ценой
+- Остановить SCP и класс D
+- Вам дан доступ к ]].."[ДАННЫЕ УДАЛЕНЫ]",
 
-	ci = [[- Help Class D Personnel
-- Eliminate all facility staff
-- Listen to your supervisor]],
+	ci = [[- Помочь классу D
+- Уничтожить всех сотрудников
+- Слушать приказы]],
 
-	cicom = [[- Help Class D Personnel
-- Eliminate all facility staff
-- Give orders to other CIs]],
+	cicom = [[- Помочь классу D
+- Уничтожить всех сотрудников
+- Отдавать приказы Повстанцам]],
 
 	SCP023 = generic_scp,
 
-	SCP049 = [[- Escape from the facility
-- Cooperate with other SCPs
-- Cure people]],
+	SCP049 = [[- Сбежать из комплекса
+- Кооперироваться с другими SCP
+- Исцелить людей]],
 
 	SCP0492 = [[]],
 
@@ -731,435 +731,435 @@ END OF UNUSED PART
 ---------------------------------------------------------------------------]]
 
 lang.CLASS_DESCRIPTION = {
-	classd = [[Difficulty: Easy
-Toughness: Normal
-Agility: Normal
-Combat potential: Low
-Can escape: Yes
-Can escort: None
-Escorted by: CI
+	classd = [[Сложность: Легкая
+Стойкость: Нормальная
+Выносливость: Нормальная
+Боевой потенциал: Низкий
+Может сбежать: Да
+Может спасти: Нет
+Может быть спасен: Повстанцами Хаоса 
 
-Overview:
-Basic class. Cooperate with others to face SCPs and facility staff. You can be escorted by CI memebers.
+Описание:
+Базовый класс. Кооперируйтесь с другими, чтобы противостоять SCP и сотрудникам. Вас могут спасти Повстанцы Хаоса.
 ]],
 
-	veterand = [[Difficulty: Easy
-Toughness: High
-Agility: High
-Combat potential: Normal
-Can escape: Yes
-Can escort: None
-Escorted by: CI
+	veterand = [[Сложность: Легкая
+Стойкость: Высокая
+Выносливость: Высокая
+Боевой потенциал: Нормальный
+Может сбежать: Да
+Может спасти: Нет
+Может быть спасен: Повстанцами Хаоса
 
-Overview:
-More advanced class. You have basic access in facility. Cooperate with others to face SCPs and facility staff. You can be escorted by CI memebers.
+Описание:
+Более продвинутый класс. Кооперируйтесь с другими, чтобы противостоять SCP и сотрудникам. Вас могут спасти Повстанцы Хаоса.
 ]],
 
-	kleptod = [[Difficulty: Hard
-Toughness: Low
-Agility: Very High
-Combat potential: Low
-Can escape: Yes
-Can escort: None
-Escorted by: CI
+	kleptod = [[Сложность: Тяжелая
+Стойкость: Низкая
+Выносливость: Очень высокая
+Боевой потенциал: Низкий
+Может сбежать: Да
+Может спасти: Нет
+Может быть спасен: Повстанцами Хаоса
 
-Overview:
-High utility class. Starts with one random item. Cooperate with others to face SCPs and facility staff. You can be escorted by CI memebers.
+Описание:
+Быстрый базовый класс. Начинает со случайным предметом. Кооперируйтесь с другими, чтобы противостоять SCP и сотрудникам. Вас могут спасти Повстанцы Хаоса.
 ]],
 
-	ciagent = [[Difficulty: Medium
-Toughness: Very High
-Agility: High
-Combat potential: Normal
-Can escape: No
-Can escort: Class D
-Escorted by: None
+	ciagent = [[Сложность: Средняя
+Стойкость: Очень высокая
+Выносливость: Высокая
+Боевой потенциал: Нормальный
+Может сбежать: Нет
+Может спасти: Класс D
+Может быть спасен: Нет 
 
-Overview:
-Armed with taser CI unit. Provide help to Class D and cooperate with them. You can escort Class D memebers.
+Описание:
+Вооружен тазером. Помогите сбежать классу D и кооперируйтесь с ними. Вы можете спасти класс D. 
 ]],
 
-	sciassistant = [[Difficulty: Medium
-Toughness: Normal
-Agility: Normal
-Combat potential: Low
-Can escape: Yes
-Can escort: None
-Escorted by: Security, MTF
+	sciassistant = [[Сложность: Средняя
+Стойкость: Нормальная
+Выносливость: Нормальная
+Боевой потенциал: Низкий
+Может сбежать: Да
+Может спасти: Нет
+Может быть спасен: Охранной, МОГ 
 
-Overview:
-Basic class. Cooperate with facility staff and stay away from SCPs. You can be escorted by MTFs memebers.
+Описание:
+Базовый класс. Кооперируйтесь с сотрудниками и держитесь подальше от SCP. Вы можете быть спасены оперативниками МОГ.
 ]],
 
-	sci = [[Difficulty: Medium
-Toughness: Normal
-Agility: Normal
-Combat potential: Low
-Can escape: Yes
-Can escort: None
-Escorted by: Security, MTF
+	sci = [[Сложность: Средняя
+Стойкость: Нормальная
+Выносливость: Нормальная
+Боевой потенциал: Низкий
+Может сбежать: Да
+Может спасти: Нет
+Может быть спасен: Охранной, МОГ
 
-Overview:
-One of the scientists. Cooperate with facility staff and stay away from SCPs. You can be escorted by MTFs memebers.
+Описание:
+Ученый. Кооперируйтесь с сотрудниками и держитесь подальше от SCP. Вы можете быть спасены оперативниками МОГ.
 ]],
 
-	seniorsci = [[Difficulty: Easy
-Toughness: High
-Agility: High
-Combat potential: Normal
-Can escape: Yes
-Can escort: None
-Escorted by: Security, MTF
+	seniorsci = [[Сложность: Легкая
+Стойкость: Высокая
+Выносливость: Высокая
+Боевой потенциал: Нормальный
+Может сбежать: Да
+Может спасти: Нет
+Может быть спасен: Охранной, МОГ 
 
-Overview:
-One of the scientists. You have higher access level. Cooperate with facility staff and stay away from SCPs. You can be escorted by MTFs memebers.
+Описание:
+Ученый. У вас более высокий уровень доступа. Кооперируйтесь с сотрудниками и держитесь подальше от SCP. Вы можете быть спасены оперативниками МОГ.
 ]],
 
-	headsci = [[Difficulty: Easy
-Toughness: High
-Agility: High
-Combat potential: Normal
-Can escape: Yes
-Can escort: None
-Escorted by: Security, MTF
+	headsci = [[Сложность: Легкая
+Стойкость: Высокая
+Выносливость: Высокая
+Боевой потенциал: Нормальный
+Может сбежать: Да
+Может спасти: Нет
+Может быть спасен: Охранной, МОГ
 
-Overview:
-Best of the scientists. You have higher utility and HP. Cooperate with facility staff and stay away from SCPs. You can be escorted by MTFs memebers.
+Описание:
+Лучший из ученых. У вас больше здоровья и возможностей. Кооперируйтесь с сотрудниками и держитесь подальше от SCP. Вы можете быть спасены оперативниками МОГ.
 ]],
 
-	guard = [[Difficulty: Easy
-Toughness: Normal
-Agility: Normal
-Combat potential: Normal
-Can escape: No
-Can escort: Scientists
-Escorted by: None
+	guard = [[Сложность: Легкая
+Стойкость: Нормальная
+Выносливость: Нормальная
+Боевой потенциал: Нормальный
+Может сбежать: Нет
+Может спасти: Ученых
+Может быть спасен: Нет
 
-Overview:
-Basic security guard. Utilize your weapon and tools to help other staff members and to kill SCPs and Class D. You can escort Scientists.
+Описание:
+Базовый охранник. Используйте свое оружие, чтобы помочь сотрудникам и убить SCP с классом D. Вы можете спасти ученых.
 ]],
 
-	lightguard = [[Difficulty: Hard
-Toughness: Low
-Agility: Very High
-Combat potential: Low
-Can escape: No
-Can escort: Scientists
-Escorted by: None
+	lightguard = [[Сложность: Тяжелая
+Стойкость: Низкая
+Выносливость: Очень высокая
+Боевой потенциал: Низкий
+Может сбежать: Нет
+Может спасти: Ученых 
+Может быть спасен: Нет
 
-Overview:
-One of the guards. High utility, no armor and lower health. Utilize your weapon and tools to help other staff members and to kill SCPs and Class D. You can escort Scientists.
+Описание:
+Охранник. Больше скорости, но нет бронежилета и меньше здоровья Используйте свое оружие, чтобы помочь сотрудникам и убить SCP с классом D. Вы можете спасти ученых.
 ]],
 
-	heavyguard = [[Difficulty: Medium
-Toughness: High
-Agility: Low
-Combat potential: High
-Can escape: No
-Can escort: Scientists
-Escorted by: None
+	heavyguard = [[Сложность: Средняя
+Стойкость: Высокая
+Выносливость: Низкая
+Боевой потенциал: Высокий
+Может сбежать: Нет
+Может спасти: Ученых
+Может быть спасен: Нет
 
-Overview:
-One of the guards. Lower utility, better armor and higher health. Utilize your weapon and tools to help other staff members and to kill SCPs and Class D. You can escort Scientists.
+Описание:
+Охранник. Меньше скорости, но лучше бронежилет и больше здоровья. Используйте свое оружие, чтобы помочь сотрудникам и убить SCP с классом D. Вы можете спасти ученых.
 ]],
 
-	specguard = [[Difficulty: Hard
-Toughness: High
-Agility: Low
-Combat potential: Very High
-Can escape: No
-Can escort: Scientists
-Escorted by: None
+	specguard = [[Сложность: Тяжелая
+Стойкость: Высокая
+Выносливость: Низкая
+Боевой потенциал: Очень высокий
+Может сбежать: Нет
+Может спасти: Ученых
+Может быть спасен: Нет
 
-Overview:
-One of the guards. Not so high utility, higher health and strong combat potential. Utilize your weapon and tools to help other staff members and to kill SCPs and Class D. You can escort Scientists.
+Описание:
+Охранник. Меньше по мобильности, выше по здоровью и боевому потенциалу. Используйте свое оружие, чтобы помочь сотрудникам и убить SCP с классом D. Вы можете спасти ученых.
 ]],
 
-	chief = [[Difficulty: Easy
-Toughness: Normal
-Agility: Normal
-Combat potential: Normal
-Can escape: No
-Can escort: Scientists
-Escorted by: None
+	chief = [[Сложность: Легкая
+Стойкость: Нормальная
+Выносливость: Нормальная
+Боевой потенциал: Нормальный
+Может сбежать: Нет
+Может спасти: Ученых
+Может быть спасен: Нет
 
-Overview:
-One of the guards. Slightly better combat potential, has taser. Utilize your weapon and tools to help other staff members and to kill SCPs and Class D. You can escort Scientists.
+Описание:
+Охранник. Лучше в боевом потенциале, носит тазер. Используйте свое оружие, чтобы помочь сотрудникам и убить SCP с классом D. Вы можете спасти ученых.
 ]],
 
-	guardmedic = [[Difficulty: Hard
-Toughness: High
-Agility: High
-Combat potential: Low
-Can escape: No
-Can escort: Scientists
-Escorted by: None
+	guardmedic = [[Сложность: Тяжелая
+Стойкость: Высокая
+Выносливость: Высокая
+Боевой потенциал: Низкий
+Может сбежать: Нет
+Может спасти: Ученых
+Может быть спасен: Нет
 
-Overview:
-One of the guards. You have medkit and taser. Utilize your weapon and tools to help other staff members and to kill SCPs and Class D. You can escort Scientists.
+Описание:
+Охранник. У вас есть аптечка и тазер. Используйте свое оружие, чтобы помочь сотрудникам и убить SCP с классом D. Вы можете спасти ученых.
 ]],
 
-	tech = [[Difficulty: Hard
-Toughness: Normal
-Agility: Normal
-Combat potential: High
-Can escape: No
-Can escort: Scientists
-Escorted by: None
+	tech = [[Сложность: Тяжелая
+Стойкость: Нормальная
+Выносливость: Нормальная
+Боевой потенциал: Высокий
+Может сбежать: Нет
+Может спасти: Ученых
+Может быть спасен: Нет
 
-Overview:
-One of the guards. Has placeable turret, with 3 fire modes (Hold E on turret to see its menu). Utilize your weapon and tools to help other staff members and to kill SCPs and Class D. You can escort Scientists.
+Описание:
+Охранник. Владеет турелью с тремя режимами стрельбы (Зажмите E на турели, чтобы открыть меню). Используйте свое оружие, чтобы помочь сотрудникам и убить SCP с классом D. Вы можете спасти ученых.
 ]],
 
 	cispy = [[Difficulty: Very Hard
-Toughness: Normal
-Agility: High
-Combat potential: Normal
-Can escape: No
-Can escort: Class D
-Escorted by: None
+Стойкость: Нормальная
+Выносливость: Высокая
+Боевой потенциал: Нормальный
+Может сбежать: Нет
+Может спасти: Класс D 
+Может быть спасен: Нет
 
-Overview:
-CI spy. High utility. Try to blend in Security Guards and help Class D.
+Описание:
+Шпион Повстанцев. Много оборудования. Влейтесь в охрану и помогите спасти класс D.
 ]],
 
-	ntf_1 = [[Difficulty: Medium
-Toughness: Normal
-Agility: High
-Combat potential: Normal
-Can escape: No
-Can escort: Scientists
-Escorted by: None
+	ntf_1 = [[Сложность: Средняя
+Стойкость: Нормальная
+Выносливость: Высокая
+Боевой потенциал: Нормальный
+Может сбежать: Нет
+Может спасти: Ученых
+Может быть спасен: Нет
 
-Overview:
-MTF NTF Unit. Armed with SMG. Get into facility and secure it. Help staff inside and kill SCPs and Class D.
+Описание:
+Оперативник МОГ Эпсилон-11. Вооружен SMG. Попадите в комплекс и захватите его. Помогите сотрудникам и устраните класс D с SCP.
 ]],
 
-	ntf_2 = [[Difficulty: Medium
-Toughness: Normal
-Agility: High
-Combat potential: Normal
-Can escape: No
-Can escort: Scientists
-Escorted by: None
+	ntf_2 = [[Сложность: Средняя
+Стойкость: Нормальная
+Выносливость: Высокая
+Боевой потенциал: Нормальный
+Может сбежать: Нет
+Может спасти: Ученых
+Может быть спасен: Нет
 
-Overview:
-MTF NTF Unit. Armed with shotgun. Get into facility and secure it. Help staff inside and kill SCPs and Class D.
+Описание:
+Оперативник МОГ Эпсилон-11. Вооружен дробовиком. Попадите в комплекс и захватите его. Помогите сотрудникам и устраните класс D с SCP.
 ]],
 
-	ntf_3 = [[Difficulty: Medium
-Toughness: Normal
-Agility: High
-Combat potential: Normal
-Can escape: No
-Can escort: Scientists
-Escorted by: None
+	ntf_3 = [[Сложность: Средняя
+Стойкость: Нормальная
+Выносливость: Высокая
+Боевой потенциал: Нормальный
+Может сбежать: Нет
+Может спасти: Ученых
+Может быть спасен: Нет
 
-Overview:
-MTF NTF Unit. Armed with rifle. Get into facility and secure it. Help staff inside and kill SCPs and Class D.
+Описание:
+Оперативник МОГ Эпсилон-11. Вооружен винтовкой. Попадите в комплекс и захватите его. Помогите сотрудникам и устраните класс D с SCP.
 ]],
 
-	ntfmedic = [[Difficulty: Hard
-Toughness: High
-Agility: High
-Combat potential: Low
-Can escape: No
-Can escort: Scientists
-Escorted by: None
+	ntfmedic = [[Сложность: Тяжелая
+Стойкость: Высокая
+Выносливость: Высокая
+Боевой потенциал: Низкий
+Может сбежать: Нет
+Может спасти: Ученых
+Может быть спасен: Нет
 
-Overview:
-MTF NTF Unit. Armed with pistol, has medkit. Get into facility and secure it. Help staff inside and kill SCPs and Class D.
+Описание:
+Оперативник МОГ Эпсилон-11. Вооружен пистолетом, есть аптечка. Попадите в комплекс и захватите его. Помогите сотрудникам и устраните класс D с SCP.
 ]],
 
-	ntfcom = [[Difficulty: Hard
-Toughness: High
-Agility: Very High
-Combat potential: High
-Can escape: No
-Can escort: Scientists
-Escorted by: None
+	ntfcom = [[Сложность: Тяжелая
+Стойкость: Высокая
+Выносливость: Очень высокая
+Боевой потенциал: Высокий
+Может сбежать: Нет
+Может спасти: Ученых
+Может быть спасен: Нет
 
-Overview:
-MTF NTF Unit. Armed with marksman rifle. Get into facility and secure it. Help staff inside and kill SCPs and Class D.
+Описание:
+Оперативник МОГ Эпсилон-11. Вооружен штурмовой винтовкой. Попадите в комплекс и захватите его. Помогите сотрудникам и устраните класс D с SCP.
 ]],
 
-	ntfsniper = [[Difficulty: Hard
-Toughness: Normal
-Agility: Normal
-Combat potential: High
-Can escape: No
-Can escort: Scientists
-Escorted by: None
+	ntfsniper = [[Сложность: Тяжелая
+Стойкость: Нормальная
+Выносливость: Нормальная
+Боевой потенциал: Высокий
+Может сбежать: Нет
+Может спасти: Ученых
+Может быть спасен: Нет
 
-Overview:
-MTF NTF Unit. Armed with sniper rifle. Get into facility and secure it. Help staff inside and kill SCPs and Class D.
+Описание:
+Оперативник МОГ Эпсилон-11. Вооружен снайперской винтовкой. Попадите в комплекс и захватите его. Помогите сотрудникам и устраните класс D с SCP.
 ]],
 
-	alpha1 = [[Difficulty: Medium
+	alpha1 = [[Сложность: Средняя
 Toughness: Extreme
-Agility: Very High
-Combat potential: High
-Can escape: No
-Can escort: Scientists
-Escorted by: None
+Выносливость: Очень высокая
+Боевой потенциал: Высокий
+Может сбежать: Нет
+Может спасти: Ученых
+Может быть спасен: Нет
 
-Overview:
-MTF Alpha-1 Unit. Heavly armored, high utility unit, armed with rifle. Get into facility and secure it. Help staff inside and kill SCPs and Class D.
+Описание:
+Оперативник МОГ Альфа-1. Тяжело вооружен и защищен, вооружен винтовкой. Попадите в комплекс и захватите его. Помогите сотрудникам и устраните класс D с SCP.
 ]],
 
-	alpha1sniper = [[Difficulty: Hard
-Toughness: Very High
-Agility: Very High
-Combat potential: Very High
-Can escape: No
-Can escort: Scientists
-Escorted by: None
+	alpha1sniper = [[Сложность: Тяжелая
+Стойкость: Очень высокая
+Выносливость: Очень высокая
+Боевой потенциал: Очень высокий
+Может сбежать: Нет
+Может спасти: Ученых
+Может быть спасен: Нет
 
-Overview:
-MTF Alpha-1 Unit. Heavly armored, high utility unit, armed with marksman rifle. Get into facility and secure it. Help staff inside and kill SCPs and Class D.
+Описание:
+Оперативник МОГ Альфа-1. Тяжело вооружен и защищен, вооружен стрелковой винтовкой. Попадите в комплекс и захватите его. Помогите сотрудникам и устраните класс D с SCP.
 ]],
 
-	ci = [[Difficulty: Medium
-Toughness: High
-Agility: High
-Combat potential: Normal
-Can escape: No
-Can escort: Class D
-Escorted by: None
+	ci = [[Сложность: Средняя
+Стойкость: Высокая
+Выносливость: Высокая
+Боевой потенциал: Нормальный
+Может сбежать: Нет
+Может спасти: Класс D
+Может быть спасен: Нет
 
-Overview:
-Chaos Insurgency unit. Get into facility and help Class D and kill facility staff.
+Описание:
+Агент Повстанцев Хаоса. Проникните в комплекс, спасите класс D убейте сотрудников.
 ]],
 
-	cicom = [[Difficulty: Medium
-Toughness: Very High
-Agility: High
-Combat potential: High
-Can escape: No
-Can escort: Class D
-Escorted by: None
+	cicom = [[Сложность: Средняя
+Стойкость: Очень высокая
+Выносливость: Высокая
+Боевой потенциал: Высокий
+Может сбежать: Нет
+Может спасти: Класс D
+Может быть спасен: Нет
 
-Overview:
-Chaos Insurgency unit. Higher combat potential. Get into facility, help Class D and kill facility staff.
+Описание:
+Агент Повстанцев Хаоса. Больший боевой потенциал. Проникните в комплекс, спасите класс D убейте сотрудников.
 ]],
 	
-	SCP023 = [[Difficulty: Hard
-Toughness: Low
-Agility: High
-Damage: Instant Death
+	SCP023 = [[Сложность: Тяжелая
+Стойкость: Низкая
+Выносливость: Высокая
+Урон: Моментальная смерть
 
-Overview:
-You can walk through walls. If someone sees you, they will be put on your list. Once in a while you teleport to one player on list and burn them to death. You can place your clone.
+Описание:
+Вы ходите через стены. Если кто-то вас увидит, то они попадут в ваш список. Из раза в раз вы телепортируетесь по людям в списке и сжигаете их дотла. Вы можете создавать клона.
 ]],
 
-	SCP049 = [[Difficulty: Hard
-Toughness: Low
-Agility: High
-Damage: Instant Death after 3 attacks
+	SCP049 = [[Сложность: Тяжелая
+Стойкость: Низкая
+Выносливость: Высокая
+Урон: Смерть после трех атак
 
-Overview:
-Attack player 3 times to kill them. You can create zombies out of bodies (reload key).
+Описание:
+Атакуйте игрока 3 раза, чтобы убить их. Вы можете создавать зомби (кнопка для перезарядки оружия).
 ]],
 
 	SCP0492 = [[]],
 
-	SCP066 = [[Difficulty: Medium
-Toughness: High
-Agility: Normal
-Damage: Low / AoE
+	SCP066 = [[Сложность: Средняя
+Стойкость: Высокая
+Выносливость: Нормальная
+Урон: Низкий, на растоянии
 
-Overview:
-You play very loud music damaging all players near you.
+Описание:
+Вы проигрываете громкую музыку и наносите урон игрокам в округе.
 ]],
 
-	SCP096 = [[Difficulty: Hard
-Toughness: High
-Agility: Very Low / Extreme when enraged
-Damage: Instant Death
+	SCP096 = [[Сложность: Тяжелая
+Стойкость: Высокая
+Выносливость: Очень низкая / Экстремально высокая, когда в ярости
+Урон: Моментальная смерть
 
-Overview:
-If someone sees you, you will become enraged. While in rage, you run extremely fast and you can kill your targets.
+Описание:
+Если кто-то посмотрит на вас, то вы перейдете в ярости. Находясь в ярости, вы быстро передвигаетесь и убиваете своих врагов.
 ]],
 
-	SCP106 = [[Difficulty: Medium
-Toughness: Normal
-Agility: Low
-Damage: Medium / Instant death in Pocket Dimension
+	SCP106 = [[Сложность: Средняя
+Стойкость: Нормальная
+Выносливость: Низкая
+Урон: Средний / Смерть в карманном измерении
 
-Overview:
-You can walk through walls. Attack somebody to teleport them to pocket dimension. While in pocket dimension you instantly kill your targets.
+Описание:
+Вы проходите через двери. Атакуйте кого-нибудь, чтобы отправить его в карманное измерение. Находясь в карманном измерении у жертвы есть шанс сбежать, также там наносится урон.
 ]],
 
-	SCP173 = [[Difficulty: Easy
-Toughness: Extreme
-Agility: Super Extreme
-Damage: Instant Death
+	SCP173 = [[Сложность: Легкая
+Стойкость: Экстремальная
+Выносливость: Максимальная
+Урон: Моментальная смерть
 
-Overview:
-You are extremely fast, but you can't move if someone sees you. You automatically kill nearby players. You can use special attack to teleport to one player in range.
+Описание:
+Вы очень быстры, но не можете двигаться, когда на вас смотрят. Вы автоматически убиваете игроков в округе. Вы можете использовать спец. атаку, чтобы переместиться к игроку.
 ]],
 
-	SCP457 = [[Difficulty: Easy
-Toughness: Normal
-Agility: Normal
-Damage: Medium / Fire can spread
+	SCP457 = [[Сложность: Легкая
+Стойкость: Нормальная
+Выносливость: Нормальная
+Урон: Средний / Огонь может распростроняться
 
-Overview:
-You are burning and you can burn nearby players. You can also place traps that activate when someone steps on them.
+Описание:
+Вы горите и зажигаете игроков рядом. Вы можете ставить ловушки, которые активируются, если на них наступят.
 ]],
 
-	SCP682 = [[Difficulty: Hard
-Toughness: Super Extreme
-Agility: Normal
-Damage: High
+	SCP682 = [[Сложность: Тяжелая
+Стойкость: Максимальная
+Выносливость: Нормальная
+Урон: Высокий
 
-Overview:
-Extremely tough and deadly. Use special ability to gain damage immunity for short period of time.
+Описание:
+Сверх стойкий с большим уроном. Используйте спец. атаку, чтобы получить бесмертие на несколько секунд.
 ]],
 
-	SCP8602 = [[Difficulty: Medium
-Toughness: High
-Agility: High
-Damage: Low / High (strong attack)
+	SCP8602 = [[Сложность: Средняя
+Стойкость: Высокая
+Выносливость: Высокая
+Урон: Низкий / Высокий (сильная атака)
 
-Overview:
-If someone is near a wall, you can pin them against this wall, dealing massive damage to them. You will also lose some health.
+Описание:
+Если кто-то находится рядом со стеной, вы можете прижать его к стене, нанося большой урон им. Вы также теряете немного здоровья.
 ]],
 
-	SCP939 = [[Difficulty: Medium
-Toughness: Normal
-Agility: High
-Damage: Medium
-
-Overview:
-You leave trail of invisible, toxic cloud. Intoxicated players can't use LMB and RMB.
+	SCP939 = [[Сложность: Средняя
+Стойкость: Нормальная
+Выносливость: Высокая
+Урон: Средний
+	
+Описание:
+Вы оставляете невидимое облако токсичного дыма. Пораженные игроки не могут использовать ЛКМ и ПКМ.
 ]],
 
-	SCP966 = [[Difficulty: Medium
-Toughness: Low
-Agility: High
-Damage: Low / Bleeding
+	SCP966 = [[Сложность: Средняя
+Стойкость: Низкая
+Выносливость: Высокая
+Урон: Низкий / Кровотечение
 
-Overview:
-You are invisible. Your attacks always inflict bleeding.
+Описание:
+Вы невидимы. Ваши атаки наносят урон с кровотечением.
 ]],
 
-	SCP24273 = [[Difficulty: Hard
-Toughness: Normal
-Agility: Normal
-Damage: High / Instant death during Mind Control
+	SCP24273 = [[Сложность: Тяжелая
+Стойкость: Нормальная
+Выносливость: Нормальная
+Урон: Высокий / Моментальная смерть во время контроля разумом
 
-Overview:
-You can dash forward to deal damage to first hit player. Special ability allows you to control other player for a short time. Bringing controlled player to you, will allow you to kill him instantly. Commiting suicide while controlling player will cause health loss.
+Описание:
+Вы можете прыгнуть вперед, нанося урон первому попавшемуся игроку. Специальная атака позволяет управлять разумом игроков на короткое время. Приведя игрока к себе он моментально умрет. Совершая суицид игроком нанесет вам некоторый урон.
 ]],
 
-	SCP3199 = [[Difficulty: Very Hard
-Toughness: Low
-Agility: Very High
-Damage: Low / Medium
+	SCP3199 = [[Сложность: Очень тяжелая
+Стойкость: Низкая
+Выносливость: Очень высокая
+Урон: Низкий / Средний
 
-Overview:
-Attacking the player grants you frenzy and inflicts deep wounds. While in frenzy, you move slightly faster and you can see location of nearby players. Missing an attack or attacking a player who already has deep wounds, stops frenzy and applies penalty. Having at least 5 frenzy tokens allows you to use special attack. Special attack kills player after short preparation.
+Описание:
+Атакуя игрока вы входите в безумие и наносите глубокие раны. Находясь в безумии, вы двигаетесь быстрее и видите игроков рядом. Промахнувшись или нанеся урон человеку с глубокими ранами, останавливает безумие и дает штраф. 5 очков безумия дает спец. атаку. Спец. атака убивает игрока через пару секунд активации.
 ]],
 }
 
@@ -1168,8 +1168,8 @@ Weapons
 ---------------------------------------------------------------------------]]
 lang.GenericUpgrades = {
 	nvmod = {
-		name = "Extra Vision",
-		info = "Brightness of your vision is increased\nDark areas will no longer stop you"
+		name = "Хорошое зрение",
+		info = "Яркость повышается\nТемные места больше вас не остановят"
 	}
 }
 
@@ -1177,371 +1177,371 @@ local wep = {}
 lang.WEAPONS = wep
 
 wep.SCP023 = {
-	editMode1 = "Press LMB to place spectre",
-	editMode2 = "RMB - cancel, R - Rotate",
-	preys = "Available preys: %i",
-	attack = "Next attack: %s",
-	trapActive = "Trap is active!",
-	trapInactive = "Press RMB to place trap",
+	editMode1 = "ЛКМ, чтобы поставить клона",
+	editMode2 = "ПКМ - отмена, R - вращение",
+	preys = "Доступные жертвы: %i",
+	attack = "Следующая атак: %s",
+	trapActive = "Ловушка активирована!",
+	trapInactive = "Нажмите ПКМ, чтобы поставить ловушку",
 	upgrades = {
 		attack1 = {
-			name = "Lust I",
-			info = "Your attack cooldown is reduced by 20 seconds",
+			name = "Страсть I",
+			info = "Перезарядка атаки уменьшена на 10 секунд",
 		},
 		attack2 = {
-			name = "Lust II",
-			info = "Your attack cooldown is reduced by 20 seconds\n\t• Total cooldown: 40s",
+			name = "Страсть II",
+			info = "Перезарядка атаки уменьшена на 20 секунд\n\t• Перезарядка: 40 сек.",
 		},
 		attack3 = {
-			name = "Lust III",
-			info = "Your attack cooldown is reduced by 20 seconds\n\t• Total cooldown: 60s",
+			name = "Страсть III",
+			info = "Перезарядка атаки уменьшена на 20 Секунд\n\t• Перезарядка: 60 сек.",
 		},
 		trap1 = {
-			name = "Bad Omen I",
-			info = "Your trap cooldown is reduced to 40 seconds",
+			name = "Плохой знак I",
+			info = "Перезарядка ловушки уменьшена до 40 секунд",
 		},
 		trap2 = {
-			name = "Bad Omen II",
-			info = "Your trap cooldown is reduced to 20 seconds\nSpectre travel distance is increased by 25 units",
+			name = "Плохой знак II",
+			info = "Перезарядка ловушки уменьшена до 20 секунд\nДальность работы клона увеличена до 20 единиц",
 		},
 		trap3 = {
-			name = "Bad Omen III",
-			info = "Spectre travel distance is increased by 25 units\n\t• Total increase: 50 units",
+			name = "Плохой знак III",
+			info = "Дальность работы клона увеличина на 25 единиц\n\t• Общая прибавка: 50 единиц",
 		},
 		hp = {
-			name = "Alpha male I",
-			info = "You gain 1000 HP (also maximum HP) and 10% bullet protection, but trap cooldown is increased by 30 seconds",
+			name = "Альфа самец I",
+			info = "Вы получаете 1000 здоровья и 10% пуленепробиваемости, но перезарядка ловушки увеличена на 30 секунд",
 		},
 		speed = {
-			name = "Alpha male II",
-			info = "You gain 10% movement speed and additional 15% bullet protection, but trap cooldown is increased by 30 seconds\n\t• Total protection: 25%, total cooldown increase: 60s",
+			name = "Альфа самец II",
+			info = "Вы получаете +10% к скорости и +15% пуленепробиваемости, но перезарядка ловушки увеличена на 30 секунд\n\t• Общая защита: 25%, общая прибавка к перезарядке: 60s",
 		},
 		alt = {
-			name = "Alpha male III",
-			info = "Your attack cooldown is reduced by 30 seconds and you gain 15% bullet protection, but you can no longer use your trap\n\t• Total protection: 40%",
+			name = "Альфа самец III",
+			info = "Перезарядка атаки уменьшена на 30 секунд и вы получаете +15% пуленепробиваемости, но больше не можете использовать свою ловушку\n\t• Общая защита: 40%",
 		},
 	}
 }
 
 wep.SCP049 = {
-	surgery = "Performing surgery",
-	surgery_failed = "Surgery failed!",
+	surgery = "Проведение операции",
+	surgery_failed = "Операция провалена!",
 	zombies = {
-		normal = "Standard Zombie",
-		light = "Light Zombie",
-		heavy = "Heavy Zombie"
+		normal = "Стандартный зомби",
+		light = "Легкий зомби",
+		heavy = "Тяжелый зомби"
 	},
 	upgrades = {
 		cure1 = {
-			name = "I am the Cure I",
-			info = "Get 40% bullet protection",
+			name = "Я есть исцеление I",
+			info = "+40% защита от пуль",
 		},
 		cure2 = {
-			name = "I am the Cure II",
-			info = "Recover 300HP every 180 seconds",
+			name = "Я есть исцеление II",
+			info = "Восстанавливайте 300 ОЗ каждые 180 секунд",
 		},
 		merci = {
-			name = "Act of Mercy",
-			info = "Primary attack cooldown is reduced by 2.5 seconds\nYou no longer apply the 'Door Lock' effect to nearby humans",
+			name = "Пощада",
+			info = "Перезарядка основной атаки уменьшена на 2.5 секунд\nЭффект 'Door Lock' больше не применяется",
 		},
 		symbiosis1 = {
-			name = "Symbiosis I",
-			info = "After performing surgery, you are healed by 10% of your maximum health",
+			name = "Симбиоз I",
+			info = "После проведение операции, вы вылечиваетесь на 10% от максимального здоровья",
 		},
 		symbiosis2 = {
-			name = "Symbiosis II",
-			info = "After performing surgery, you are healed by 15% of your maximum health\nNearby SCP 049-2 instances are healed by 10% of their maximum health",
+			name = "Симбиозs II",
+			info = "После проведение операции, вы вылечиваетесь на 15% от максимального здоровья\nSCP 049-2 рядом лечаться на 10% от их макс. здоровья",
 		},
 		symbiosis3 = {
-			name = "Symbiosis III",
-			info = "After performing surgery, you are healed by 20% of your maximum health\nNearby SCP 049-2 instances are healed by 20% of their maximum health",
+			name = "Симбиоз III",
+			info = "После проведение операции, вы вылечиваетесь на 20% от максимального здоровья\nSCP 049-2 рядом лечаться на 20% от их макс. здоровья",
 		},
 		hidden = {
-			name = "Hidden Potential",
-			info = "You gain 1 token for every successful surgery\nEach token increases HP of zombies by 5%\n\t• This ability only affects newly created zombies",
+			name = "Скрытый потенциал",
+			info = "Вы получаете 1 токен за каждую операцию\nКаждый токен повышает ОЗ зомби на 5%\n\t• Способность применяется только на ново созданных зомби",
 		},
 		trans = {
-			name = "Transfusion",
-			info = "Your zombies have their HP increased by 15%\nYour zombies gain 20% of life steal\n\t• This ability only affects newly created zombies",
+			name = "Переливание крови",
+			info = "ОЗ зомби повышено на 15%\nЗомби забирают 20% от урона людям в качестве здоровья\n\t• Способность применяется только на ново созданных зомби",
 		},
 		rm = {
-			name = "Radical Therapy",
-			info = "Whenever it's possible, you create 2 zombies from 1 body\n\t• If only 1 spectator is available, you create only 1 zombie\n\t• Both zombies are of the same type\n\t• Second zombie has HP reduced by 50%\n\t• Second zombie has damage reduced by 25%",
+			name = "Радикальная операция",
+			info = "Когда возможно вы создаете 2 зомби из одного тела\n\t• Если есть только один наблюдатель, вы создаете одного зомби\n\t• Оба зомби одного типа\n\t• ОЗ второго зомби понижено на 50%\n\t• Урон второго зомби уменьшен на 25%",
 		},
 		doc1 = {
-			name = "Surgical Precision I",
-			info = "Surgery time is reduced by 5s",
+			name = "Хирургическая точность I",
+			info = "Время проведения операции понижено на 5 сек.",
 		},
 		doc2 = {
-			name = "Surgical Precision II",
-			info = "Surgery time is reduced by 5s\n\t• Total surgery time reduction: 10s",
+			name = "Хирургическая точность II",
+			info = "Время проведения операции понижено на 5 сек.\n\t• Общее понижение: 10 сек.",
 		},
 	}
 }
 
 wep.SCP0492 = {
-	too_far = "You are becoming weaker!"
+	too_far = "Вы становитесь слабее!"
 }
 
 wep.SCP066 = {
-	wait = "Next attack: %is",
-	ready = "Attack is ready!",
-	chargecd = "Dash cooldown: %is",
+	wait = "Следующая атака: %is",
+	ready = "Атака готова!",
+	chargecd = "Перезарядка рывка: %is",
 	upgrades = {
 		range1 = {
-			name = "Resonance I",
-			info = "Damage radius is increased by 75",
+			name = "Резонанс I",
+			info = "Радиус урона увеличен на 75",
 		},
 		range2 = {
-			name = "Resonance II",
-			info = "Damage radius is increased by 75\n\t• Total increase: 150",
+			name = "Резонанс II",
+			info = "Радиус урона увеличен на 75\n\t• Общее увеличение: 150",
 		},
 		range3 = {
-			name = "Resonance III",
-			info = "Damage radius is increased by 75\n\t• Total increase: 225",
+			name = "Резонанс III",
+			info = "Радиус урона увеличен на 75\n\t• Общее увеличение: 225",
 		},
 		damage1 = {
-			name = "Bass I",
-			info = "Damage is increased to 112.5%, but radius is reduced to 90%",
+			name = "Басы I",
+			info = "Урон увеличен на 112.5%, но радиус понижен на 90%",
 		},
 		damage2 = {
-			name = "Bass II",
-			info = "Damage is increased to 135%, but radius is reduced to 75%",
+			name = "Басы II",
+			info = "Урон увеличен на 135%, но радиус понижен на 75%",
 		},
 		damage3 = {
-			name = "Bass III",
-			info = "Damage is increased to 200%, but radius is reduced to 50%",
+			name = "Басы III",
+			info = "Урон увеличен на 200%, но радиус понижен на 50%",
 		},
 		def1 = {
-			name = "Negation Wave I",
-			info = "While playing music, you negate 10% of incoming damage",
+			name = "Отрицательные волны I",
+			info = "Проигрывая музыку, вы уменьшаете 10% от получаемого урона",
 		},
 		def2 = {
-			name = "Negation Wave II",
-			info = "While playing music, you negate 25% of incoming damage",
+			name = "Отрицательные волны II",
+			info = "Проигрывая музыку, вы уменьшаете 25% от получаемого урона",
 		},
 		charge = {
-			name = "Dash",
-			info = "Unlocks ability to dash forward by pressing reload key\n\t• Ability cooldown: 20s",
+			name = "Рывок",
+			info = "Разблокирует способность рывка вперед нажатием на кнопку перезарядки\n\t• Перезарядка способности: 20s",
 		},
 		sticky = {
-			name = "Sticky",
-			info = "After dashing into human, you stick to him for the next 10s",
+			name = "Липкий",
+			info = "После рывка, вы приплипаете к человеку на 10 сек.",
 		}
 	}
 }
 
 wep.SCP096 = {
-	charges = "Regeneration charges: %i",
-	regen = "Regenerating HP - charges: %i",
+	charges = "Восстанавливающие рывки: %i",
+	regen = "Восстановление ОЗ - рывков: %i",
 	upgrades = {
 		sregen1 = {
-			name = "Calm Spirit I",
-			info = "You gain one regenration charge each 4 seconds instead of 5 seconds"
+			name = "Спокойствие I",
+			info = "Вы получаете один рывок, каждые 4 секунд, вместо 5 секунд"
 		},
 		sregen2 = {
-			name = "Calm Spirit II",
-			info = "Your regeneration charges heal you for 6 HP instead of 5 HP"
+			name = "Спокойствие II",
+			info = "Ваши рывки лечат вас на 6 ОЗ, вместо 5"
 		},
 		sregen3 = {
-			name = "Calm Spirit III",
-			info = "Your regeneration rate is 66% faster"
+			name = "Спокойствие III",
+			info = "Скорость восстановления увеличена на 66%"
 		},
 		kregen1 = {
-			name = "Hannibal I",
-			info = "You regenerate additional 90 HP for successful kill"
+			name = "Ганнибал I",
+			info = "Вы получаете 90 ОЗ за убийство"
 		},
 		kregen2 = {
-			name = "Hannibal II",
-			info = "You regenerate additional 90 HP for successful kill\n\t• Total heal increase: 180HP"
+			name = "Ганнибал II",
+			info = "Вы получаете 90 ОЗ за убийство\n\t• Общее увеличение за убийство: 180 ОЗ"
 		},
 		hunt1 = {
-			name = "Shy I",
-			info = "Hunting area is increased to 4250 units"
+			name = "Стеснительный I",
+			info = "Теперь игроки активируют вашу ярость за 4250 единицы дальше"
 		},
 		hunt2 = {
-			name = "Shy II",
-			info = "Hunting area is increased to 5500 units"
+			name = "Стеснительный II",
+			info = "Теперь игроки активируют вашу ярость за 4250 единицы дальше"
 		},
 		hp = {
-			name = "Goliath",
-			info = "Your maximum health is increased to 4000 HP\n\t• Your current health is not increased"
+			name = "Голиаф",
+			info = "Макс. здоровье увеличено до 4000 ОЗ\n\t• Текущее здоровье не увеличивается"
 		},
 		def = {
-			name = "Persistent",
-			info = "You gain 30% bullet protection"
+			name = "Настойчивый",
+			info = "+30% к защите от пуль"
 		}
 	}
 }
 
 wep.SCP106 = {
-	swait = "Special ability cooldown: %is",
-	sready = "Special ability is ready!",
+	swait = "Перезарядка способности: %is",
+	sready = "Способность готова!",
 	upgrades = {
 		cd1 = {
-			name = "Void Walk I",
-			info = "Special ability cooldown is reduced by 15s"
+			name = "Прогулка по пустоте I",
+			info = "Перезарядка способность уменьшена на 15 сек."
 		},
 		cd2 = {
-			name = "Void Walk II",
-			info = "Special ability cooldown is reduced by 15s\n\t• Total cooldown: 30s"
+			name = "Прогулка по пустоте II",
+			info = "Перезарядка способность уменьшена на 15 сек.\n\t• Общее уменьшение: 30 сек."
 		},
 		cd3 = {
-			name = "Void Walk III",
-			info = "Special ability cooldown is reduced by 15s\n\t• Total cooldown: 45s"
+			name = "Прогулка по пустоте III",
+			info = "Перезарядка способность уменьшена на 15 сек.\n\t• Общее уменьшение: 45 сек."
 		},
 		tpdmg1 = {
-			name = "Decaying Touch I",
-			info = "After teleport gain 15 additional damage for 10s"
+			name = "Разъедающее прикосновение I",
+			info = "После телепортации вы получаете +15 к урону на 10 сек."
 		},
 		tpdmg2 = {
-			name = "Decaying Touch II",
-			info = "After teleport gain 20 additional damage for 20s"
+			name = "Разъедающее прикосновение II",
+			info = "После телепортации вы получаете +20 к урону на 20 сек."
 		},
 		tpdmg3 = {
-			name = "Decaying Touch III",
-			info = "After teleport gain 25 additional damage for 30s"
+			name = "Разъедающее прикосновение III",
+			info = "После телепортации вы получаете +25 к урону на 30 сек."
 		},
 		tank1 = {
-			name = "Pocket Shield I",
-			info = "Get 20% bullet damage protection, but you will be 10% slower"
+			name = "Карманный щит I",
+			info = "+20% к защите от пуль, но вы медленее на 10%"
 		},
 		tank2 = {
-			name = "Pocket Shield II",
-			info = "Get 20% bullet damage protection, but you will be 10% slower\n\t• Total protection: 40%\n\t• Total slow: 20%"
+			name = "Карманный щит II",
+			info = "+20% к защите от пуль, но вы медленее на 10%\n\t• Общая защита: 40%\n\t• Общее замедление: 20%"
 		},
 	}
 }
 
 wep.SCP173 = {
-	swait = "Special ability cooldown: %is",
-	sready = "Special ability is ready!",
+	swait = "Перезарядка способности: %is",
+	sready = "Способность готова!",
 	upgrades = {
 		specdist1 = {
-			name = "Wraith I",
-			info = "Your special ability distance is increased by 500"
+			name = "Призрак I",
+			info = "Дистанции способности увеличена на 500"
 		},
 		specdist2 = {
-			name = "Wraith II",
-			info = "Your special ability distance is increased by 700\n\t• Total increase: 1200"
+			name = "Призрак II",
+			info = "Дистанции способности увеличена на 700\n\t• Общая прибавка: 1200"
 		},
 		specdist3 = {
-			name = "Wraith III",
-			info = "Your special ability distance is increased by 800\n\t• Total increase: 2000"
+			name = "Призрак III",
+			info = "Дистанции способности увеличена на 800\n\t• Общая прибавка: 2000"
 		},
 		boost1 = {
-			name = "Bloodthirster I",
-			info = "Each time you kill human you will gain 150 HP and your special ability cooldown will be decreased by 10%"
+			name = "Кровопийца I",
+			info = "Каждый раз убивая человека вы получаете 150 ОЗ, перезарядка вашей способности уменьшена на 10%"
 		},
 		boost2 = {
-			name = "Bloodthirster II",
-			info = "Each time you kill human you will gain 300 HP and your special ability cooldown will be decreased by 25%"
+			name = "Кровопийца II",
+			info = "Каждый раз убивая человека вы получаете 300 ОЗ, перезарядка вашей способности уменьшена на 25%"
 		},
 		boost3 = {
-			name = "Bloodthirster III",
-			info = "Each time you kill human you will gain 500 HP and your special ability cooldown will be decreased by 50%"
+			name = "Кровопийца III",
+			info = "Каждый раз убивая человека вы получаете 500 ОЗ, перезарядка вашей способности уменьшена на 50%"
 		},
 		prot1 = {
-			name = "Concrete Skin I",
-			info = "Instantly heal 1000 HP and get 10% protection against bullet wounds"
+			name = "Цементная кожа I",
+			info = "Моментально вылечите 1000 ОЗ и получите 10% защиты от пуль"
 		},
 		prot2 = {
-			name = "Concrete Skin II",
-			info = "Instantly heal 1000 HP and get 10% protection against bullet wounds\n\t• Total protection: 20%"
+			name = "Цементная кожа II",
+			info = "Моментально вылечите 1000 ОЗ и получите 10% защиты от пуль\n\t• Общая защита: 20%"
 		},
 		prot3 = {
-			name = "Concrete Skin III",
-			info = "Instantly heal 1000 HP and get 20% protection against bullet wounds\n\t• Total protection: 40%"
+			name = "Цементная кожа III",
+			info = "Моментально вылечите 1000 ОЗ и получите 20% защиты от пуль\n\t• Общая защита: 40%"
 		},
 	},
-	back = "You can hold R to back to previous position",
+	back = "Удерживая R, вы вернетесь к прошлому месту",
 }
 
 wep.SCP457 = {
-	swait = "Special ability cooldown: %is",
-	sready = "Special ability is ready!",
-	placed = "Active traps: %i/%i",
-	nohp = "Not enough HP!",
+	swait = "Перезарядка способности: %is",
+	sready = "Способность готова!",
+	placed = "Ловушки: %i/%i",
+	nohp = "Не достаточно ОЗ!",
 	upgrades = {
 		fire1 = {
-			name = "Live Torch I",
-			info = "Your burn radius is increased by 25"
+			name = "Живой факел I",
+			info = "Радиус урона увеличен на 25"
 		},
 		fire2 = {
-			name = "Live Torch II",
-			info = "Your burn damage is increased by 0.5"
+			name = "Живой факел II",
+			info = "Радиус урона увеличен на 0.5"
 		},
 		fire3 = {
-			name = "Live Torch III",
-			info = "Your burn radius is increased by 50 and your burn damage is increased by 0.5\n\t• Total radius increase: 75\n\t• Total damage increase: 1"
+			name = "Живой факел III",
+			info = "Радиус урона увеличен на 50 и урон увеличен на 0.5\n\t• Общая прибавка у радиусу: 75\n\t• Общее повышение урона: 1"
 		},
 		trap1 = {
-			name = "Little Surprise I",
-			info = "Trap lifetime is increased to 4 minutes and will burn 1s longer"
+			name = "Маленький сюрприз I",
+			info = "Продолжительность существования ловушки увеличено до 4 минут, а огонь наносит урон на 1 сек. дольше"
 		},
 		trap2 = {
-			name = "Little Surprise II",
-			info = "Trap lifetime is increased to 5 minutes and will burn 1s longer and its damage is increased by 0.5\n\t• Total burn time increase: 2s"
+			name = "Маленький сюрприз II",
+			info = "Продолжительность существования ловушки увеличено до 5 минут, а огонь наносит урон на 1 сек. дольше, урон увеличен на 0.5\n\t• Общая прибавка к длительности горения: 2 сек."
 		},
 		trap3 = {
-			name = "Little Surprise III",
-			info = "Trap will burn 1s longer and its damage is increased by 0.5\n\t• Total burn time increase: 3s\n\t• Total damage increase: 1"
+			name = "Маленький сюрприз III",
+			info = "Горение от ловушки увеличено на 1 сек. и урон повышен на 0.5\n\t• Общая прибавка к длительности горения: 3s\n\t• Общая прибавка к урону: 1"
 		},
 		heal1 = {
-			name = "Sizzling Snack I",
-			info = "Burning people will heal you for additional 1 health"
+			name = "Горячие закуски I",
+			info = "Горящие люди дают вам 1 доп. ОЗ"
 		},
 		heal2 = {
-			name = "Sizzling Snack II",
-			info = "Burning people will heal you for additional 1 health\n\t• Total heal increase: 2"
+			name = "Горячие закуски II",
+			info = "Горящие люди дают вам 1 доп. ОЗ\n\t• Общее увеличение: 2"
 		},
 		speed = {
-			name = "Fast Fire",
-			info = "Your speed is increased by 10%"
+			name = "Быстрый огонь",
+			info = "Скорость увеличена на 10%"
 		}
 	}
 }
 
 wep.SCP682 = {
-	swait = "Special ability cooldown: %is",
-	sready = "Special ability is ready!",
-	s_on = "You are immune to any damage! %is",
+	swait = "Перезарядка способности: %is",
+	sready = "Способность готова!",
+	s_on = "Вы бессмертны! %is",
 	upgrades = {
 		time1 = {
-			name = "Unbroken I",
-			info = "Your special ability duration is increased by 2.5s\n\t• Total duration: 12.5s"
+			name = "Нерушимый I",
+			info = "Длительность способности увеличена на 2.5 сек.\n\t• Общая длительность: 12.5 сек."
 		},
 		time2 = {
-			name = "Unbroken II",
-			info = "Your special ability duration is increased by 2.5s\n\t• Total duration: 15s"
+			name = "Нерушимый II",
+			info = "Длительность способности увеличена на 2.5 сек.\n\t• Общая длительность: 15 сек."
 		},
 		time3 = {
-			name = "Unbroken III",
-			info = "Your special ability duration is increased by 2.5s\n\t• Total duration: 17.5s"
+			name = "Нерушимый III",
+			info = "Длительность способности увеличена на 2.5 сек.\n\t• Общая длительность: 17.5 сек."
 		},
 		prot1 = {
-			name = "Adaptation I",
-			info = "You take 10% less bullet damage"
+			name = "Адаптация I",
+			info = "Вы получаете на 10% меньше урона от пуль"
 		},
 		prot2 = {
-			name = "Adaptation II",
-			info = "You take 15% less bullet damage\n\t• Total damage reduction: 25%"
+			name = "Адаптация II",
+			info = "Вы получаете на 15% меньше урона от пуль\n\t• Общее уменьшение: 25%"
 		},
 		prot3 = {
-			name = "Adaptation III",
-			info = "You take 15% less bullet damage\n\t• Total damage reduction: 40%"
+			name = "Адаптация III",
+			info = "Вы получаете на 15% меньше урона от пуль\n\t• Общее уменьшение: 40%"
 		},
 		speed1 = {
-			name = "Furious Rush I",
-			info = "After using special ability, gain 10% movement speed until receiving damage"
+			name = "Яростный рывок I",
+			info = "После использования способности, вы получите +10% к скорости после получения урона"
 		},
 		speed2 = {
-			name = "Furious Rush II",
-			info = "After using special ability, gain 20% movement speed until receiving damage"
+			name = "Яростный рывок II",
+			info = "После использования способности, вы получите +20% к скорости после получения урона"
 		},
 		ult = {
-			name = "Regeneration",
-			info = "5 seconds after receiving damage, regenerate 5% of missing health"
+			name = "Регенерация",
+			info = "5 секунд после получения урона, вы регенируется 5% от потраченного ОЗ"
 		},
 	}
 }
@@ -1549,28 +1549,28 @@ wep.SCP682 = {
 wep.SCP8602 = {
 	upgrades = {
 		charge11 = {
-			name = "Brutality I",
-			info = "Damage of strong attack is increased by 5"
+			name = "Зверство I",
+			info = "Урон сильной атаки увеличен на 5"
 		},
 		charge12 = {
-			name = "Brutality II",
-			info = "Damage of strong attack is increased by 10\n\t• Total damage increase: 15"
+			name = "Зверство II",
+			info = "Урон сильной атаки увеличен на 10\n\t• Общее увеличение урона: 15"
 		},
 		charge13 = {
-			name = "Brutality III",
-			info = "Damage of strong attack is increased by 10\n\t• Total damage increase: 25"
+			name = "Зверство III",
+			info = "Урон сильной атаки увеличен на 10\n\t• Общее увеличение урона: 25"
 		},
 		charge21 = {
-			name = "Charge I",
-			info = "Range of strong attack is increased by 15"
+			name = "Прыжок I",
+			info = "Дистанция прыжка увеличена на 15"
 		},
 		charge22 = {
-			name = "Charge II",
-			info = "Range of strong attack is increased by 15\n\t• Total range increase: 30"
+			name = "Прыжок II",
+			info = "Дистанция прыжка увеличена на 15\n\t• Общая дистанция: 30"
 		},
 		charge31 = {
-			name = "Shared Pain",
-			info = "When you perform strong attack, everyone nearby impact point will receive 20% of the original damage"
+			name = "Боль на всех",
+			info = "Используя сильную атаку, все рядом с точкой ударой получат 20% от урона"
 		},
 	}
 }
@@ -1578,28 +1578,28 @@ wep.SCP8602 = {
 wep.SCP939 = {
 	upgrades = {
 		heal1 = {
-			name = "Bloodlust I",
-			info = "Your attacks heal you for at least 22.5 HP (up to 30)"
+			name = "Кровожадность I",
+			info = "Ваши атаки лечат вас от 22.5 до 30 ОЗ"
 		},
 		heal2 = {
-			name = "Bloodlust II",
-			info = "Your attacks heal you for at least 37.5 HP (up to 50)"
+			name = "Кровожадность II",
+			info = "Ваши атаки лечат вас от 37.5 до 50 ОЗ"
 		},
 		heal3 = {
-			name = "Bloodlust III",
-			info = "Your attacks heal you for at least 52.5 HP (up to 70)"
+			name = "Кровожадность III",
+			info = "Ваши атаки лечат вас от 52.5 до 70 ОЗ"
 		},
 		amn1 = {
-			name = "Lethal Breath I",
-			info = "Your poison radius is increased to 100"
+			name = "Фатальное дыхание I",
+			info = "Радиус яда повышен на 100"
 		},
 		amn2 = {
-			name = "Lethal Breath II",
-			info = "Your poison now deals damage: 1.5 dmg/s"
+			name = "Фатальное дыхание II",
+			info = "Ваш яд наносит больший урон: 1.5 урон/сек"
 		},
 		amn3 = {
-			name = "Lethal Breath III",
-			info = "Your poison radius is increased to 125 and your poison damage is increased to 3 dmg/s"
+			name = "Фатальное дыхание III",
+			info = "Радиус яда повышен на 125 и урон повышен до 3 урон/сек"
 		},
 	}
 }
@@ -1607,127 +1607,127 @@ wep.SCP939 = {
 wep.SCP966 = {
 	upgrades = {
 		lockon1 = {
-			name = "Frenzy I",
-			info = "Time required to attack is reduced to 2.5s"
+			name = "Безумие I",
+			info = "Перезарядка атаки уменьшена до 2.5 сек."
 		},
 		lockon2 = {
-			name = "Frenzy II",
-			info = "Time required to attack is reduced to 2s"
+			name = "Безумие II",
+			info = "Перезарядка атаки уменьшена до 2 сек."
 		},
 		dist1 = {
-			name = "Call of the Hunter I",
-			info = "Attack range is increased by 15"
+			name = "Зов охотника I",
+			info = "Дальность атаки повышена на 15"
 		},
 		dist2 = {
-			name = "Call of the Hunter II",
-			info = "Attack range is increased by 15\n\t• Total range increase: 30"
+			name = "Зов охотника II",
+			info = "Дальность атаки повышена на 15\n\t• Общее увеличение: 30"
 		},
 		dist3 = {
-			name = "Call of the Hunter III",
-			info = "Attack range is increased by 15\n\t• Total range increase: 45"
+			name = "Зов охотника III",
+			info = "Дальность атаки повышена на 15\n\t• Общее увеличение: 45"
 		},
 		dmg1 = {
-			name = "Sharp Claws I",
-			info = "Attack damage is increased by 5"
+			name = "Острые когти I",
+			info = "Урон увеличен на 5"
 		},
 		dmg2 = {
-			name = "Sharp Claws II",
-			info = "Attack damage is increased by 5\n\t• Total damage increase: 10"
+			name = "Острые когти II",
+			info = "Урон увеличен на 5\n\t• Общее увеличение: 10"
 		},
 		bleed1 = {
-			name = "Deep Wounds I",
-			info = "Your attacks have 25% chance of inflicting higher tier bleeding"
+			name = "Глубокие раны I",
+			info = "Ваши атаки имеют шанс 25% нанесение сильного кровотечения"
 		},
 		bleed2 = {
-			name = "Deep Wounds II",
-			info = "Your attacks have 50% chance of inflicting higher tier bleeding"
+			name = "Глубокие раны II",
+			info = "Ваши атаки имеют шанс 50% нанесение сильного кровотечения"
 		},
 	}
 }
 
 wep.SCP24273 = {
-	mind_control = "Mind Control is ready! Press RMB",
-	mind_control_cd = "Mind Control is on cooldown! Wait: %is",
-	dash = "Attack is ready!",
-	dash_cd = "Attack is on cooldown! Wait: %is",
+	mind_control = "Управление разумом готово! Нажмите ПКМ",
+	mind_control_cd = "Управление разумом перезаряжается! Ждите: %is",
+	dash = "Атака готова!",
+	dash_cd = "Атака на перезарядке! Ждите: %is",
 	upgrades = {
 		dash1 = {
-			name = "Ruthless Charge I",
-			info = "Your attack cooldown is reduced by 1 second and its power is increased by 15%"
+			name = "Безжалостный рывок I",
+			info = "Перезарядка атаки уменьшена на 1 секунд, а её сила увеличена на 15%"
 		},
 		dash2 = {
-			name = "Ruthless Charge II",
-			info = "Penalty time after attack is reduced by 1 second and speed penalty is reduced from 40% to 25%"
+			name = "Безжалостный рывок II",
+			info = "Штрафное время после атаки уменьшено на 1 секунду, а штраф на скорость уменьшен с 40% на 25%"
 		},
 		dash3 = {
-			name = "Ruthless Charge III",
-			info = "Your attack damage is increased by 50"
+			name = "Безжалостный рывок III",
+			info = "Ваш урон увеличен на 50"
 		},
 		mc11 = {
-			name = "Persistent Hunter I",
-			info = "Your Mind Control duration is increased by 10s, but cooldown is increased by 20s"
+			name = "Упрямый охотник I",
+			info = "Время управления разумом увеличено на 10 сек., но перезарядка увеличена на 20 сек."
 		},
 		mc12 = {
-			name = "Persistent Hunter II",
-			info = "Your Mind Control duration is increased by 10s, but cooldown is increased by 25s\n\t• Total duration increase: 20s\n\t• Total cooldown increase: 45s"
+			name = "Упрямый охотник II",
+			info = "Время управления разумом увеличено на 10 сек., но перезарядка увеличена на 25 сек.\n\t• Общее увеличение: 20 сек.\n\t• Общее увеличение перезарядки: 45 сек."
 		},
 		mc21 = {
-			name = "Impatient Hunter I",
-			info = "Your Mind Control duration is reduced by 5s and cooldown is reduced by 10s"
+			name = "Нетерпеливый охотник I",
+			info = "Время управлением разумом уменьшено на 5 сек., но перезарядка уменьшается на 10 сек."
 		},
 		mc22 = {
-			name = "Impatient Hunter II",
-			info = "Your Mind Control duration is reduced by 10s and cooldown is reduced by 15s"
+			name = "Нетерпеливый охотник II",
+			info = "Время управлением разумом уменьшено на 10 сек., но перезарядка уменьшается на 15 сек."
 		},
 		mc3 = {
-			name = "Unbroken Hunter",
-			info = "During Mind Control gain 50% reduction for all types of damage"
+			name = "Неразрушимый охотник",
+			info = "Во время управления разумом, вы получаете +50% сопротивления ко всему урону"
 		},
 		mc13 = {
-			name = "Strict Judge",
-			info = "Killing your prey during Mind Control, reduces its cooldown by 40%. Mind Control range is increased by 1000 units"
+			name = "Строгий судья",
+			info = "Убивая жертву во время управления разумом, длительность пепрезарядки уменьшается на 40%. Дальность управления разумом повышается на 1000 единиц"
 		},
 		mc23 = {
-			name = "Crimson Judge",
-			info = "Killing your prey during Mind Control, heals you by 400 HP. Mind Control range is increased by 500 units"
+			name = "Кровавый судья",
+			info = "Убивая жертву во время управления разумом, вы получаете 400 ОЗ. Дальность управления разумом повышается на 500 единиц"
 		},
 	}
 }
 
 wep.SCP3199 = {
-	special = "Special attack is ready! Press RMB",
+	special = "Спец. атака готова! Нажмите ПКМ",
 	upgrades = {
 		regen1 = {
-			name = "Taste of Blood I",
-			info = "Regenerate 2 HP per second while in Frenzy"
+			name = "Вкус крови I",
+			info = "Восстановите 2 ОЗ в секунду находясь в бешенстве"
 		},
 		regen2 = {
-			name = "Taste of Blood II",
-			info = "Health regeneration ratio is increased by 10% for each Frenzy token"
+			name = "Вкус крови II",
+			info = "Восстановление здоровья увеличено на 10% за каждый токен бешенства"
 		},
 		frenzy1 = {
-			name = "Hunter's Game I",
-			info = "Your maximum Frenzy tokens are increased by 1\nYour Frenzy duration is increased by 20%"
+			name = "Голодные игры I",
+			info = "Максимум токенов бешенства увеличено на 1\nДлительность бешенства увеличена на 20%"
 		},
 		frenzy2 = {
-			name = "Hunter's Game II",
-			info = "Your maximum Frenzy tokens are increased by 1\nYour Frenzy duration is increased by 30%\nYour special attack is disabled\n\t• Total Frenzy tokens increase: 2\n\t• Total duration increase: 50%"
+			name = "Голодные игры II",
+			info = "Максимум токенов бешенства увеличено на 1\nДлительность бешенства увеличена на 30%\nСпец. атака отключена\n\t• Общая прибавка токенов: 2\n\t• Общая прибавка длительности: 50%"
 		},
 		ch = {
-			name = "Blind Fury",
-			info = "Your speed is increased by 25%\nYou can no longer detect heartbeat of nearby humans"
+			name = "Слепая ярость",
+			info = "+25% к скорости\nВы больше не чувствуется сердцебиения людей в округе"
 		},
 		egg1 = {
-			name = "Another One",
-			info = "You create 1 new inactive egg upon buying this upgrade\n\t• Egg will not be created if there is no empty spot for egg in map"
+			name = "Последующий",
+			info = "Вы создаете 1 новое неактивное яйцо покупая это улучшение\n\t• Яйцо не появится, если нет свободного места"
 		},
 		egg2 = {
-			name = "Legacy",
-			info = "One of inactive eggs will be activated once this upgrade is bought\n\t• This won't have effect is there is no inactive egg on map"
+			name = "Потомство",
+			info = "Одно неактивное яйцо будет активировано\n\t• Не сработает, если нет неактивных яиц на карте"
 		},
 		egg3 = {
-			name = "Easter Egg",
-			info = "Your respawn time is decreased to 20 seconds"
+			name = "Пасхальное яйцо",
+			info = "Время появления уменьшено до 20 секунд"
 		},
 	}
 }
@@ -1737,185 +1737,185 @@ wep.SCP714 = {
 }
 
 wep.HOLSTER = {
-	name = "Holster",
+	name = "Руки",
 }
 
 wep.ID = {
-	name = "ID",
-	pname = "Name:",
-	server = "Server:",
+	name = "Пасспорт",
+	pname = "Имя:",
+	server = "Сервер:",
 }
 
 wep.CAMERA = {
-	name = "Surveillance System",
-	showname = "Cameras",
-	info = "Cameras allow you to see what is happening in the facility.\nThey also provide you an ability to scan SCPs and transmit this information to your current radio channel",
+	name = "Видеонаблюдение",
+	showname = "Камеры",
+	info = "Камеры помогают увидеть что происходит в комплексе.\nОни также дают возможность обнаружить SCP и передать эту информацию по радиоканалу",
 }
 
 wep.RADIO = {
-	name = "Radio",
+	name = "Радио",
 }
 
 wep.NVG = {
-	name = "NVG",
-	info = "Night Vision Goggles - Device that makes dark areas brighter and makes bright areas even more brighter.\nSometimes you can see anomalous things through them."
+	name = "ПНВ",
+	info = "Прибор ночного видения - устройство освещающее окружение, но только для вас.\nПомогают увидеть аномалии."
 }
 
 wep.NVGPLUS = {
-	name = "Enhanced NVG",
-	showname = "NVG+",
-	info = "Enhanced version of NVG, allows you to use it while holding other items in hands.\nUnfortunately battery lasts only for 10 seconds"
+	name = "Улучшенные ПНВ",
+	showname = "ПНВ+",
+	info = "Улучшенная версия ПНВ, дает возможность использовать с другими предметами в руках.\nК сожалению, батарея держиться только 10 сек."
 }
 
 wep.ACCESS_CHIP = {
-	name = "Access Chip",
-	cname = "Access Chip - %s",
-	showname = "CHIP",
-	pickupname = "CHIP",
-	clearance = "Clearance level: %i",
-	hasaccess = "Grants access to:",
+	name = "Чип доступа",
+	cname = "Чип доступа - %s",
+	showname = "ЧИП",
+	pickupname = "ЧИП",
+	clearance = "Уровень допуска: %i",
+	hasaccess = "Дает доступ:",
 	NAMES = {
-		general = "General",
-		jan1 = "Janitor",
-		jan = "Janitor",
-		jan2 = "Senior Janitor",
-		acc = "Accountant",
-		log = "Logistician",
-		sci1 = "Researcher level 1",
-		sci2 = "Researcher level 2",
-		sci3 = "Researcher level 3",
-		spec = "Containment Specialist",
-		guard = "Security",
-		chief = "Security Chief",
-		mtf = "MTF",
-		com = "MTF Commander",
-		hacked3 = "Hacked 3",
-		hacked4 = "Hacked 4",
-		hacked5 = "Hacked 5",
-		director = "Site Director",
+		general = "Базовый",
+		jan1 = "Уборщик",
+		jan = "Уборщик",
+		jan2 = "Старший уборщик",
+		acc = "Бухгалтер",
+		log = "Логист",
+		sci1 = "Исследователь 1 разряда",
+		sci2 = "Исследователь 2 разряда",
+		sci3 = "Исследователь 3 разряда,
+		spec = "Специалист содержания",
+		guard = "Охранник",
+		chief = "Глава охранны",
+		mtf = "МОГ",
+		com = "Командир МОГ,
+		hacked3 = "ВЗЛОМАНО 3",
+		hacked4 = "ВЗЛОМАНО 4",
+		hacked5 = "ВЗЛОМАНО 5",
+		director = "Директор комплекса",
 		o5 = "O5"
 	},
 	ACCESS = {
-		GENERAL = "General",
-		SAFE = "Safe",
-		EUCLID = "Euclid",
-		KETER = "Keter",
-		OFFICE = "Office",
-		MEDBAY = "MedBay",
-		GENERAL = "General",
-		CHECKPOINT_LCZ = "Checkpoint LCZ-HCZ",
-		CHECKPOINT_EZ = "Checkpoint EZ-HCZ",
-		WARHEAD_ELEVATOR = "Warhead Elevator",
-		EC = "Electrical Center",
-		ARMORY = "Armory",
-		GATE_A = "Gate A",
-		GATE_B = "Gate B",
-		FEMUR = "Femur Breaker",
-		ALPHA = "Alpha Warhead",
-		OMEGA = "Omega Warhead",
-		PARTICLE = "Particle Cannon",
+		GENERAL = "Базовое",
+		SAFE = "Безопастные",
+		EUCLID = "Евклиды",
+		KETER = "Кетеры",
+		OFFICE = "Офисы",
+		MEDBAY = "Медкрыло",
+		GENERAL = "Базовое",
+		CHECKPOINT_LCZ = "Чекпоинт LCZ-HCZ",
+		CHECKPOINT_EZ = "Чекпоинт EZ-HCZ",
+		WARHEAD_ELEVATOR = "Лифт к боеголовке",
+		EC = "Пункт управления",
+		ARMORY = "Оружейная",
+		GATE_A = "Выход A",
+		GATE_B = "Выход B",
+		FEMUR = "Устройство перелома бедра",
+		ALPHA = "Боеголовка АЛЬФА",
+		OMEGA = "Боеголовка ОМЕГА",
+		PARTICLE = "Молекулярная пушка",
 	},
 }
 
 wep.OMNITOOL = {
-	name = "Omnitool",
-	cname = "Omnitool - %s",
-	showname = "OMNITOOL",
-	pickupname = "OMNITOOL",
-	none = "NONE",
-	chip = "Installed Chip: %s",
-	clearance = "Clearance level: %i",
+	name = "Омнитул",
+	cname = "Омнитул - %s",
+	showname = "ОМНИТУЛ",
+	pickupname = "ОМНИТУЛ",
+	none = "ОТСУТСВУЕТ",
+	chip = "Установленный чип: %s",
+	clearance = "Уровень доступ: %i",
 	SCREEN = {
-		loading = "Loading",
-		name = "Omnitool v4.78",
-		installing = "Installing new chip...",
-		ejecting = "Ejecting access chip...",
-		ejectwarn = "Are you sure to eject chip?",
-		ejectconfirm = "Press again to confirm...",
-		chip = "Installed Chip:",
+		loading = "Загрузка",
+		name = "Омнитул v4.78",
+		installing = "Установка нового чипа...",
+		ejecting = "Выброс чипа...",
+		ejectwarn = "Вы уверены?",
+		ejectconfirm = "Нажмите еще раз, чтобы подтвердить...",
+		chip = "Установленный чип:",
 	},
 }
 
 wep.KEYCARD = {
 	author = "danx91",
-	instructions = "Access:",
+	instructions = "Доступ:",
 	ACC = {
-		"SAFE",
-		"EUCLID",
-		"KETER",
-		"Checkpoints",
-		"OMEGA Warhead",
-		"General Access",
-		"Gate A",
-		"Gate B",
-		"Armory",
-		"Femur Breaker",
-		"EC",
+		"БЕЗОПАСТНО",
+		"ЕВКЛИД",
+		"КЕТЕР",
+		"КПП",
+		"БОЕГОЛОВКА ОМЕГА,
+		"Общий доступ",
+		"Выход A",
+		"Выход B",
+		"Оружейная",
+		"Устр. перелома бедра",
+		"КУ",
 	},
 	STATUS = {
-		"ACCESS",
-		"NO ACCESS",
+		"ДОСТУП",
+		"НЕТ ДОСТУПА",
 	},
 	NAMES = {
-		"Keycard Level 1",
-		"Keycard Level 2",
-		"Keycard Level 3",
-		"Researcher Keycard",
-		"MTF Guard Keycard",
-		"MTF Commander Keycard",
-		"Keycard Level OMNI",
-		"Checkpoint Security Keycard",
-		"Hacked CI Keycard",
+		"Ключ-карта уровня 1",
+		"Ключ-карта уровня 2",
+		"Ключ-карта уровня 3",
+		"Ключ-карта исследователя",
+		"Ключ-карта МОГ",
+		"Ключ-карта командира МОГ",
+		"Ключ-карта уровня OMNI",
+		"Ключ-карта с пропуском КПП",
+		"Взломанная ключ-карта повстанцев",
 	},
 }
 
 wep.MEDKIT = {
-	name = "Medkit (Charges Left: %d)",
-	showname = "Medkit",
-	pickupname = "Medkit",
+	name = "Аптечка (Осталось медикаментов: %d)",
+	showname = "Аптечка",
+	pickupname = "Аптечка",
 }
 
 wep.MEDKITPLUS = {
-	name = "Big Medkit (Charges Left: %d)",
-	showname = "Medkit+",
-	pickupname = "Medkit+",
+	name = "Большая аптечка (Осталось медикаментов: %d)",
+	showname = "Аптечка+",
+	pickupname = "Аптечка+",
 }
 
 wep.TASER = {
-	name = "Taser"
+	name = "Тазер"
 }
 
 wep.FLASHLIGHT = {
-	name = "Flashlight"
+	name = "Фонарик"
 }
 
 wep.BATTERY = {
-	name = "Battery"
+	name = "Батарейка"
 }
 
 wep.GASMASK = {
-	name = "Gas Mask"
+	name = "Противогаз"
 }
 
 wep.TURRET = {
-	name = "Turret",
-	pickup = "Pick up",
+	name = "Турель",
+	pickup = "Поднять",
 	MODES = {
-		off = "Disable",
-		filter = "Filter staff",
-		all = "Target everything",
-		supp = "Suppressing fire"
+		off = "Отключить",
+		filter = "Без огня по сотрудникам",
+		all = "Огонь по всем",
+		supp = "Подавляющий огонь"
 	}
 }
 
 wep.ALPHA_CARD1 = {
-	name = "ALPHA Warhead Codes #1"
+	name = "Коды запуска боеголовки АЛЬФА #1"
 }
 
 wep.ALPHA_CARD2 = {
-	name = "ALPHA Warhead Codes #2"
+	name = "Коды запуска боеголовки АЛЬФА #2"
 }
 
-wep.weapon_stunstick = "Stunstick"
+wep.weapon_stunstick = "Парализатор"
 
-registerLanguage( lang, "english", "en", "default" )
+registerLanguage( lang, "russian", "ru" )
