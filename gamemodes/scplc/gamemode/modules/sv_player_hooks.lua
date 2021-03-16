@@ -537,6 +537,8 @@ function GM:PlayerCanSeePlayersChat( text, team, listener, speaker )
 end
 
 function GM:PlayerCanHearPlayersVoice( listener, talker )
+	if ROUND.infoscreen then return false end
+
 	local t_lis = listener:SCPTeam()
 	local t_tal = talker:SCPTeam()
 

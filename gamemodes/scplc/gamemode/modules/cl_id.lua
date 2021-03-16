@@ -61,6 +61,7 @@ function GM:HUDDrawTargetID()
 	if !IsValid( ply ) then return end
 	if !ply.IsPlayer or !ply:IsPlayer() then return end
 	if !ply:Alive() then return end
+	if ROUND.infoscreen then return end
 	if ply:GetPos():DistToSqr( lp:GetPos() ) > 90000 then return end
 	if ply:SCPTeam() == TEAM_SPEC then return end
 	if hook.Run( "CanPlayerSeePlayer", lp, ply ) == false then return end
@@ -92,7 +93,7 @@ function GM:HUDDrawTargetID()
 
 	if class then
 		draw.Text{
-			text = LANG.CLASSES[class] or class,
+			text = LANG.CLASSES_ID[class] or LANG.CLASSES[class] or class,
 			pos = { w * 0.5, h * 0.575 },
 			color = color,
 			font = "SCPHUDSmall",

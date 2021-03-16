@@ -531,16 +531,15 @@ function ALPHAWarhead( ply )
 		PlayerMessage( "alpha_detonation$"..time )
 		TransmitSound( "warhead/siren.wav", true, 1 )
 
+		local support_timer = GetTimer( "SupportTimer" )
+		if IsValid( support_timer ) then
+			support_timer:Destroy()
+			//print( "SUPPORT TIMER DESTROYED" )
+		end
+
 		AddTimer( "AlphaCountdown", time - 10, 1, function( self, n )
 			//print( "Lockdown" )
-
 			SetRoundStat( "warhead_lockdown", true )
-
-			local support_timer = GetTimer( "SupportTimer" )
-			if IsValid( support_timer ) then
-				support_timer:Destroy()
-				//print( "SUPPORT TIMER DESTROYED" )
-			end
 
 			local escape_timer = GetTimer( "EscapeTimer" )
 			if IsValid( escape_timer ) then

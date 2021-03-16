@@ -98,6 +98,7 @@ net.Receive( "RoundInfo", function( len )
 	if status == "off" then
 		ROUND.active = false
 		ROUND.preparing = false
+		ROUND.infoscreen = false
 		ROUND.post = false
 		ROUND.name = ""
 		ROUND.time = 0
@@ -105,18 +106,27 @@ net.Receive( "RoundInfo", function( len )
 		ROUND.active = true
 		ROUND.time = data.time
 		ROUND.preparing = false
+		ROUND.infoscreen = false
 		ROUND.post = false
-	elseif status == "pre" then
+	elseif status == "inf" then
 		CENTERMESSAGES = {}
-
 		ROUND.active = true
 		ROUND.time = data.time
 		ROUND.preparing = true
+		ROUND.infoscreen = true
+		ROUND.post = false
+	elseif status == "pre" then
+		//CENTERMESSAGES = {}
+		ROUND.active = true
+		ROUND.time = data.time
+		ROUND.preparing = true
+		ROUND.infoscreen = false
 		ROUND.post = false
 	elseif status == "post" then
 		ROUND.active = true
 		ROUND.time = data.time
 		ROUND.preparing = false
+		ROUND.infoscreen = false
 		ROUND.post = true
 	end
 end )

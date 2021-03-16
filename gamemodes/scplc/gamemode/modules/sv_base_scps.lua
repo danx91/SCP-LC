@@ -202,6 +202,7 @@ hook.Add( "RegisterSCP", "RegisterBaseSCPs", function()
 
 	RegisterSCP( "SCP457", "models/player/corpse1.mdl", "weapon_scp_457", {
 		jump_power = 200,
+		no_ragdoll = true,
 		//no_draw = true,
 	}, {
 		base_health = 2300,
@@ -257,10 +258,10 @@ hook.Add( "RegisterSCP", "RegisterBaseSCPs", function()
 		prep_freeze = true,
 		no_ragdoll = true,
 	}, {
-		base_health = 3200,
-		max_health = 3200,
-		base_speed = 165,
-		run_speed = 165,
+		base_health = 3100,
+		max_health = 3100,
+		base_speed = 160,
+		run_speed = 160,
 	} )
 
 	RegisterSCP( "SCP3199", "models/player/alski/scp3199/scp3199.mdl", "weapon_scp_3199", {

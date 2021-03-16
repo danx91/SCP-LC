@@ -27,7 +27,7 @@ lang.NRegistry = {
 	acc_wrong = "Do wykonania tej czynności wymagany jest wyższy poziom dostępu",
 	rxpspec = "Otrzymujesz %i doświadczenia za grę na tym serwerze!",
 	rxpplay = "Otrzymujesz %i doświadczenia za pozostanie przy życiu w rundzie!",
-	rxpplus = "Otrzymujesz %i doświadczenia za przeżycie ponad powoły rundy!",
+	rxpplus = "Otrzymujesz %i doświadczenia za przeżycie ponad połowy rundy!",
 	roundxp = "Otrzymujesz %i doświadczenia za zdobyte punkty",
 	gateexplode = "Czas do wybuchu Gate A: %i",
 	explodeterminated = "Wybuch Gate A zakończony",
@@ -94,7 +94,7 @@ lang.NCRegistry = {
 	stat_939 = "Dusze SCP 939: %i",
 	stat_966 = "Gracze przecięci przez SCP 966: %i",
 	stat_3199 = "Zabójstwa dokonane przez SCP 3199: %i",
-	stat_24273 = "Osoby ocenione przez SCP 2427-3: %i",
+	stat_24273 = "Osoby osądzone przez SCP 2427-3: %i",
 }
 
 lang.NCFailed = "Nie udało się uzyskać dostępu do NCRegistry z kluczem: %s"
@@ -213,7 +213,8 @@ lang.ranks = {
 	author = "Autor",
 	vip = "VIP",
 	tester = "Tester",
-	contributor = "Contributor"
+	contributor = "Contributor",
+	translator = "Tłumacz",
 }
 
 --[[-------------------------------------------------------------------------
@@ -1595,7 +1596,7 @@ wep.ACCESS_CHIP = {
 		sci2 = "Naukowiec poziomu 2",
 		sci3 = "Naukowiec poziomu 3",
 		spec = "Specjalista zabezpieczeń",
-		guard = "ochroniarz",
+		guard = "Ochroniarz",
 		chief = "Szef ochrony",
 		mtf = "MTF",
 		com = "Dowódca MTF",
@@ -1680,7 +1681,7 @@ wep.TURRET = {
 	pickup = "Podnieś",
 	MODES = {
 		off = "Wyłącz",
-		filter = "Nie atakuj personelu",
+		filter = "Filtruj personel",
 		all = "Celuj we wszystko",
 		supp = "Ogień zaporowy"
 	}

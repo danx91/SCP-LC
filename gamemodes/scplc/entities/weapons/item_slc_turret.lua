@@ -48,13 +48,13 @@ function SWEP:Think()
 
 				//self.LastAng = ang
 
-				local ct, rt = CurTime(), RealTime()
+				local ct = CurTime()
 
 				local place = self:GetPlace()
 				if place == 0 then
 					local result, valid = self:TraceIndicator( pos, ep, ang )
 
-					if valid and self.LPrimary + 0.15 >= rt then
+					if valid and self.LPrimary + 0.15 >= ct then
 						self.LastResult = result
 						self.LastAngle = ang
 						//self.LastEA = ea
@@ -79,7 +79,8 @@ function SWEP:Think()
 							turret:Spawn()
 							turret:SetPos( self.LastResult )
 							turret:SetAngles( self.LastAngle )
-							turret.LastUser = owner
+							turret:SetTurretOwner( owner )
+							turret:SetOwnerSignature( owner:TimeSignature() )
 						end
 
 						local holster = owner:GetWeapon( "item_slc_holster" )
@@ -91,7 +92,7 @@ function SWEP:Think()
 					end
 				else
 					local result, valid = self:TraceIndicator( pos, ep, ang )
-					if self.LPrimary + 0.15 < rt or !valid then
+					if self.LPrimary + 0.15 < ct or !valid then
 						self:SetPlace( 0 )
 					end
 				end
@@ -135,7 +136,7 @@ function SWEP:OnRemove()
 end
 
 function SWEP:PrimaryAttack()
-	self.LPrimary = RealTime()
+	self.LPrimary = CurTime()
 end
 
 function SWEP:SecondaryAttack()
@@ -159,7 +160,7 @@ function SWEP:Reload()
 	end
 end
 
-local trace_mask = MASK_SOLID_BRUSHONLY
+local trace_mask = MASK_SHOT//MASK_SOLID_BRUSHONLY
 function SWEP:TraceIndicator( pos, ep, ang )
 	/*local att = self.Indicator:GetAttachment( 2 )
 	if att then
@@ -167,10 +168,13 @@ function SWEP:TraceIndicator( pos, ep, ang )
 		debugoverlay.Line( att.Pos, att.Pos + att.Ang:Forward() * 50, 0, Color( 255, 255, 255 ), false )
 	end*/
 
+	local owner = self:GetOwner()
+
 	local trace1 = util.TraceLine{
 		start = pos,
 		endpos = ep,
 		mask = trace_mask,
+		filter = owner,
 	}
 
 	local result
@@ -184,6 +188,7 @@ function SWEP:TraceIndicator( pos, ep, ang )
 			start = trace1.HitPos,
 			endpos = trace1.HitPos - Vector( 0, 0, 100 ),
 			mask = trace_mask,
+			filter = owner,
 		}
 
 		if trace2.Hit then

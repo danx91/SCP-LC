@@ -39,23 +39,36 @@ net.Receive( "PlayerReady", function( len, ply )
 					name = ROUND.roundtype.name,
 				}
 			net.Send( ply )
+		elseif ROUND.infoscreen then
+			local t = GetTimer( "SLCSetup" )
+			if t then
+				net.Start( "RoundInfo" )
+					net.WriteTable{
+						status = "inf",
+						time = CurTime() + t:GetRemainingTime(),
+						name = ROUND.roundtype.name,
+					}
+				net.Send( ply )
+			end
 		elseif ROUND.preparing then
 			local t = GetTimer( "SLCPreround" )
 
-			local time
+			/*local time
 			if t then
 				time = t:GetRemainingTime()
 			else
 				time = GetTimer( "SLCSetup" ):GetRemainingTime() + CVAR.pretime:GetInt()
-			end
+			end*/
 
-			net.Start( "RoundInfo" )
-				net.WriteTable{
-					status = "pre",
-					time = CurTime() + time,
-					name = ROUND.roundtype.name,
-				}
-			net.Send( ply )
+			if t then
+				net.Start( "RoundInfo" )
+					net.WriteTable{
+						status = "pre",
+						time = CurTime() + t:GetRemainingTime(),
+						name = ROUND.roundtype.name,
+					}
+				net.Send( ply )
+			end
 		else
 			local t = GetTimer( "SLCRound" )
 

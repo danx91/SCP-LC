@@ -24,6 +24,8 @@ SWEP.EnableDash = false
 SWEP.NTargetTrace = 0
 SWEP.NDistCheck = 0
 function SWEP:Think()
+	self:PlayerFreeze()
+	
 	local ct = CurTime()
 	local owner = self:GetOwner()
 
@@ -50,7 +52,7 @@ function SWEP:Think()
 				self:SetMindControlTarget( ply )
 
 				self:SetNextPrimaryFire( ct + self:GetMindControlDuration() + 5 )
-				self:SetNextSecondaryFire( ct + self:GetMindControlDuration() + 45 + self:GetUpgradeMod( "mc_cd", 0 ) )
+				self:SetNextSecondaryFire( ct + self:GetMindControlDuration() + 60 + self:GetUpgradeMod( "mc_cd", 0 ) )
 
 				local oa = owner:EyeAngles()
 				self.RestoreEyeAngles = oa
@@ -163,10 +165,10 @@ function SWEP:Think()
 		self.DashDirection = ang:Forward()
 		self.DashTime = ct + 0.15
 
-		self.PopSpeed = ct + 2.5 + self:GetUpgradeMod( "dash_ptime", 0 )
+		self.PopSpeed = ct + 3 - self:GetUpgradeMod( "dash_ptime", 0 )
 
 		if SERVER then
-			local spd = 0.6 + self:GetUpgradeMod( "dash_pspeed", 0 )
+			local spd = 0.5 + self:GetUpgradeMod( "dash_pspeed", 0 )
 			owner:PushSpeed( spd, spd, 1, "slc_2427_speed", 1 )
 		end
 	end
@@ -313,7 +315,7 @@ function SWEP:OnRemove()
 end
 
 function SWEP:GetMindControlDuration()
-	return 25 + self:GetUpgradeMod( "mc_dur", 0 )
+	return 20 + self:GetUpgradeMod( "mc_dur", 0 )
 end
 
 //SWEP.MCPenalty = 0
@@ -455,8 +457,14 @@ hook.Add( "StartCommand", "SLCSCP2427Control", function( ply, cmd )
 			cmd:SetViewAngles( wep.LockAngles )
 		end
 
-		if wep.PopSpeed and wep.PopSpeed > ct and cmd:KeyDown( IN_JUMP ) then
-			cmd:RemoveKey( IN_JUMP )
+		if wep.PopSpeed and wep.PopSpeed > ct then
+			if cmd:KeyDown( IN_JUMP ) then
+				cmd:RemoveKey( IN_JUMP )
+			end
+			
+			if cmd:KeyDown( IN_DUCK ) then
+				cmd:RemoveKey( IN_DUCK )
+			end
 		end
 	end
 

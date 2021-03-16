@@ -6,7 +6,7 @@ CONTROLLERS_CACHE = CONTROLLERS_CACHE or {}
 CONTROLLERS_USE_TIME = CONTROLLERS_USE_TIME or {}
 CONTROLLERS_LAST_SETID = CONTROLLERS_LAST_SETID or {}
 
-local function handle_button_use( ply, ent, data )
+local function internal_use( ply, ent, data )
 	local cached = CONTROLLERS_CACHE[ent]
 	if cached then
 		if CONTROLLERS_LAST_SETID[data.name] == cached[2] then
@@ -32,12 +32,22 @@ local function handle_button_use( ply, ent, data )
 			end
 		end
 
-		if data.debug_use then
+		if data.debug_use and !data.access then
 			ent:Fire( "Use" )
 		end
 
 		CONTROLLERS_LAST_SETID[data.name] = cached[2]
 	end
+end
+
+local function handle_button_use( ply, ent, data )
+	if !data.access then
+		return internal_use( ply, ent, data )
+	end
+end
+
+local function handle_input( ply, ent, data )
+	return internal_use( ply, ent, data )
 end
 
 /*
@@ -58,6 +68,7 @@ end
 function ButtonController( name, data )
 	data.name = name
 	data.access_granted = handle_button_use
+	data.input_override = handle_input
 
 	BUTTON_CONTROLLERS[name] = data
 end

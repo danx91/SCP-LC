@@ -324,6 +324,7 @@ end
 
 function ObjectSCP:SetupPlayer( ply, instant, ... )
 	ply:KillSilent()
+	ply:UnSpectate()
 	ply:SetPos( ZERO_POS )
 
 	ply:SetSCPTeam( TEAM_SCP )

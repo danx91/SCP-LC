@@ -738,14 +738,26 @@ ZERO_POS = Vector( -1100, 500, 0 )
 GAS_POS = {
 	Vector( 2268.5, -2267.5, 2 ),
 	Vector( 4800, 3042.5, 1 ),
-	Vector( 640, -37.5, -757 )
+	Vector( 640, -37.5, -757 ),
+	Vector( 675, -160, -700 ),
 }
 
 GAS_DIM = {
 	{ mins = Vector( -137, -137, 0 ), maxs = Vector( 137, 137, 64 ), bounds = 1 },
-	{ mins = Vector( -45, -117.5, 0 ), maxs = Vector( 45, 117.5, 64 ), bounds = 1 },
-	{ mins = Vector( -100, -47.5, 0 ), maxs = Vector( 100, 47.5, 64 ), bounds = 1 }
+	{ mins = Vector( -80, -117.5, 0 ), maxs = Vector( 75, 117.5, 96 ), bounds = 1 },
+	{ mins = Vector( -100, -47.5, 0 ), maxs = Vector( 100, 47.5, 64 ), bounds = 1 },
+	{ mins = Vector( -20, -50, 0 ), maxs = Vector( 20, 40, 48 ), bounds = 1 }
 }
+
+/*if CLIENT then
+	local showid = 4
+
+	hook.Add( "Think", "gastest", function()
+		//debugoverlay.Axis( GAS_POS[showid] + GAS_DIM[showid].mins, Angle( 0 ), 5, 0.1, true )
+		debugoverlay.Axis( GAS_POS[showid], Angle( 0 ), 5, 0.1, true )
+		debugoverlay.BoxAngles(GAS_POS[showid], GAS_DIM[showid].mins, GAS_DIM[showid].maxs, Angle( 0 ), 0.1, Color( 255, 255, 255, 0 ), true )
+	end )
+end*/
 
 --[[-------------------------------------------------------------------------
 SCP 914
@@ -1508,92 +1520,110 @@ CCTV = {
 	{
 		name = "Class D Cells",
 		pos = Vector( -300.880524, -936.250854, 255.968750 ),
-		ang = Angle( 32.125, 137.296, 0.000 )
+		ang = Angle( 32.125, 137.296, 0.000 ),
+		destroy_omega = true,
 	},
 	{
 		name = "LCZ Lock",
 		pos = Vector( 2415.669189, -2415.156250, 127.968750 ),
-		ang = Angle( 21.345, 135.096, 0.000 )
+		ang = Angle( 21.345, 135.096, 0.000 ),
+		destroy_omega = true,
 	},
 	{
 		name = "Armory",
 		pos = Vector( 1244.758545, -1546.920898, 127.968750 ),
-		ang = Angle( 13.100, -0.504, 0.000 )
+		ang = Angle( 13.100, -0.504, 0.000 ),
+		destroy_omega = true,
 	},
 	{
 		name = "LCZ Main Hall",
 		pos = Vector( 2407.205078, -124.942398, 255.968750 ),
-		ang = Angle( 39.720, -147.464, 0.000 )
+		ang = Angle( 39.720, -147.464, 0.000 ),
+		destroy_omega = true,
 	},
 	{
 		name = "SCP 079",
 		pos = Vector( 3794.826416, -1125.444580, -0.031250 ),
-		ang = Angle( 23.880, 110.235, 0.000 )
+		ang = Angle( 23.880, 110.235, 0.000 ),
+		destroy_omega = true,
 	},
 	{
 		name = "Omega Warhead",
 		pos = Vector( 4069.712402, 169.602386, -256.031250 ),
-		ang = Angle( 39.720, 127.464, 0.000 )
+		ang = Angle( 39.720, 127.464, 0.000 ),
+		destroy_omega = true,
 	},
 	{
 		name = "HCZ Tesla Gate",
 		pos = Vector( 4155.907715, 1428.488037, 255.968750 ),
-		ang = Angle( 31.360, 91.075, 0.000 )
+		ang = Angle( 31.360, 91.075, 0.000 ),
+		destroy_omega = true,
 	},
 	{
 		name = "SCP 106",
 		pos = Vector( 2302.043213, 5010.212891, -128.031250 ),
-		ang = Angle( 20.780, 136.395, 0.000 )
+		ang = Angle( 20.780, 136.395, 0.000 ),
+		destroy_omega = true,
 	},
 	{
 		name = "EZ Checkpoint Exit 1",
 		pos = Vector( 1135.397461, 3720.185059, 127.968750 ),
-		ang = Angle( 14.400, -149.886, 0.000 )
+		ang = Angle( 14.400, -149.886, 0.000 ),
+		destroy_omega = true,
 	},
 	{
 		name = "EZ Checkpoint Exit 2",
 		pos = Vector( 709.690918, 2182.443359, 127.968750 ),
-		ang = Angle( 16.820, 53.175, 0.000 )
+		ang = Angle( 16.820, 53.175, 0.000 ),
+		destroy_omega = true,
 	},
 	{
 		name = "Electrical Center",
 		pos = Vector( -2457.775635, 3769.280029, 127.968750 ),
-		ang = Angle( 15.060, -35.784, 0.000 )
+		ang = Angle( 15.060, -35.784, 0.000 ),
+		destroy_omega = true,
 	},
 	{
 		name = "Gate A",
 		pos = Vector( -698.344604, 5353.954590, 260.359039 ),
-		ang = Angle( 27.820, -43.104, 0.000 )
+		ang = Angle( 27.820, -43.104, 0.000 ),
+		destroy_omega = true,
 	},
 	{
 		name = "Gate B",
 		pos = Vector( -3959.009521, 2423.581055, 255.968750 ),
-		ang = Angle( 27.160, -43.485, 0.000 )
+		ang = Angle( 27.160, -43.485, 0.000 ),
+		destroy_omega = true,
 	},
 	{
 		name = "Gate A - Surface",
 		pos = Vector( -1081.659912, 5891.317383, 2815.968750 ),
-		ang = Angle( 23.640, -35.406, 0.000 )
+		ang = Angle( 23.640, -35.406, 0.000 ),
+		destroy_alpha = true,
 	},
 	{
 		name = "Surface",
 		pos = Vector( -800.234619, 6919.050781, 2535.238770 ),
-		ang = Angle( 14.840, 178.874, 0.000 )
+		ang = Angle( 14.840, 178.874, 0.000 ),
+		destroy_alpha = true,
 	},
 	{
 		name = "Tunnel",
 		pos = Vector( -2666.820068, 1632.292480, 2769.426270 ),
-		ang = Angle( 16.380, 120.354, 0.000 )
+		ang = Angle( 16.380, 120.354, 0.000 ),
+		destroy_alpha = true,
 	},
 	{
 		name = "Gate B - Surface",
 		pos = Vector( -3725.372803, 2067.642578, 2703.968750 ),
-		ang = Angle( 13.980, 168.314, 0.000 )
+		ang = Angle( 13.980, 168.314, 0.000 ),
+		destroy_alpha = true,
 	},
 	{
 		name = "Facility Exit",
 		pos = Vector( -7131.351563, 1044.328735, 2687.968750 ),
-		ang = Angle( 9.800, 71.294, 0.000 )
+		ang = Angle( 9.800, 71.294, 0.000 ),
+		destroy_alpha = true,
 	}
 }
 

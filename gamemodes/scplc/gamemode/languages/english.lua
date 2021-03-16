@@ -37,7 +37,7 @@ lang.NRegistry = {
 	vestpickup = "You picked up vest",
 	vestdrop = "You dropped your vest",
 	hasvest = "You already has vest! Use your EQ to drop it",
-	escortpoints = "You received %i points for escroting your allies",
+	escortpoints = "You received %i points for escorting your allies",
 	femur_act = "Femur Breaker activated...",
 	levelup = "You leveled up! Your current level: %i",
 	healplayer = "You received %i points for healing other player",
@@ -78,7 +78,7 @@ lang.NCRegistry = {
 	stat_bleed = "Bleeding damage: %i",
 	stat_106recontain = "SCP 106 has been recontained",
 	stat_escapes = "Escaped players: %i",
-	stat_escorts = "Players escroted: %i",
+	stat_escorts = "Players escorted: %i",
 	stat_023 = "Sudden deaths caused by SCP 023: %i",
 	stat_049 = "Cured people: %i",
 	stat_066 = "Played masterpieces: %i",
@@ -92,6 +92,8 @@ lang.NCRegistry = {
 	stat_966 = "Insidious cuts: %i",
 	stat_3199 = "Assassinations by SCP 3199: %i",
 	stat_24273 = "People judged by SCP 2427-3: %i",
+	stat_omega_warhead = "Omega warhead has been detonated",
+	stat_alpha_warhead = "Alpha warhead has been detonated",
 }
 
 lang.NCFailed = "Failed to access NCRegistry with key: %s"
@@ -210,7 +212,8 @@ lang.ranks = {
 	author = "Author",
 	vip = "VIP",
 	tester = "Tester",
-	contributor = "Contributor"
+	contributor = "Contributor",
+	translator = "Translator",
 }
 
 --[[-------------------------------------------------------------------------
@@ -400,6 +403,13 @@ classes.alpha1 = "MTF Alpha-1"
 classes.alpha1sniper = "MTF Alpha-1 Marksman"
 classes.ci = "Chaos Insurgency"
 classes.cicom = "Chaos Insurgency Commander"
+
+local classes_id = {}
+lang.CLASSES_ID = classes_id
+
+classes_id.ntf_1 = "MTF NTF"
+classes_id.ntf_2 = "MTF NTF"
+classes_id.ntf_3 = "MTF NTF"
 
 --[[-------------------------------------------------------------------------
 Class Info - NOTE: Each line is limited to 48 characters!
@@ -763,7 +773,7 @@ Can escort: None
 Escorted by: CI
 
 Overview:
-Hight utility class. Starts with one random item. Cooperate with others to face SCPs and facility staff. You can be escorted by CI memebers.
+High utility class. Starts with one random item. Cooperate with others to face SCPs and facility staff. You can be escorted by CI memebers.
 ]],
 
 	ciagent = [[Difficulty: Medium
@@ -1656,7 +1666,7 @@ wep.SCP24273 = {
 		},
 		dash2 = {
 			name = "Ruthless Charge II",
-			info = "Penalty time after attack is reduced by 1 second and speed penalty is reduced from 40% to 25%"
+			info = "Penalty time after attack is reduced by 0.5 second and speed penalty is reduced from 50% to 35%"
 		},
 		dash3 = {
 			name = "Ruthless Charge III",

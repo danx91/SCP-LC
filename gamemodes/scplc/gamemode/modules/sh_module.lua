@@ -7,9 +7,9 @@ GM.Website 	= ""
 --[[-------------------------------------------------------------------------
 Static values
 ---------------------------------------------------------------------------]]
-SIGNATURE = "b06"
-VERSION = "BETA 0.7"
-DATE = "21/02/2020"
+SIGNATURE = "b000701"
+VERSION = "BETA 0.7.1"
+DATE = "16/03/2020"
 
 SCPS = {}
 CLASSES = {}
@@ -46,9 +46,9 @@ CVAR = {
 	scp914kill = CreateConVar( "slc_scp914_kill", 0, { FCVAR_ARCHIVE } ),
 	doorunblocker = CreateConVar( "slc_enable_door_unblocker", 1, { FCVAR_ARCHIVE } ),
 	spectatescp = CreateConVar( "slc_allow_scp_spectate", 0, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
-	omega_time = CreateConVar( "slc_time_omega", 180, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
+	omega_time = CreateConVar( "slc_time_omega", 150, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
 	omega_shelter_xp = CreateConVar( "slc_xp_omega_shelter", 500, { FCVAR_ARCHIVE } ),
-	alpha_time = CreateConVar( "slc_time_alpha", 180, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
+	alpha_time = CreateConVar( "slc_time_alpha", 150, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
 	alpha_escape_xp = CreateConVar( "slc_xp_alpha_escape", 500, { FCVAR_ARCHIVE } ),
 }
 

@@ -3,6 +3,7 @@ ROUND = ROUND or {
 	post = false,
 	active = false,
 	aftermatch = false,
+	infoscreen = false,
 	timers = setmetatable( {}, { __mode = "v" } ),
 	stats = {},
 	queue = {},
@@ -14,8 +15,6 @@ ROUND = ROUND or {
 Global functions
 ---------------------------------------------------------------------------]]
 function SetupSupportTimer()
-	local values = {}
-
 	local time, max = string.match( string.gsub( CVAR.spawnrate:GetString(), "%s", "" ), "(%d+),*(%d*)" )
 
 	time = tonumber( time )
@@ -81,6 +80,7 @@ local function ResetEvents()
 	ROUND.post = false
 	ROUND.preparing = false
 	ROUND.aftermatch = false
+	ROUND.infoscreen = false
 	ROUND.freeze = false
 	ROUND.roundtype = ROUNDS.dull
 
@@ -177,19 +177,29 @@ function RestartRound()
 	ROUND.roundtype:init()
 
 	ROUND.preparing = true
+	ROUND.infoscreen = true
 
 	local prep = CVAR.pretime:GetInt()
 
 	net.Start( "RoundInfo" )
 		net.WriteTable{
-			status = "pre",
-			time = CurTime() + prep + INFO_SCREEN_DURATION,
+			status = "inf",
+			time = CurTime() + INFO_SCREEN_DURATION,
 			name = ROUND.roundtype.name,
 		}
 	net.Broadcast()
 
 	AddTimer( "SLCSetup", INFO_SCREEN_DURATION, 1, function( self, n )
+		ROUND.infoscreen = false
 		hook.Run( "SLCPreround" )
+
+		net.Start( "RoundInfo" )
+			net.WriteTable{
+				status = "pre",
+				time = CurTime() + prep,
+				name = ROUND.roundtype.name,
+			}
+		net.Broadcast()
 
 		AddTimer( "SLCPreround", prep, 1, function( self, n )
 			print( "Preparing end, starting round..." )

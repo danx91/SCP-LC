@@ -355,7 +355,7 @@ function SpawnSupport()
 			end
 		until #plys == 0*/
 
-		if IsValid( ply ) and ply:SCPTeam() == TEAMS_SPEC and !ply:GetProperty( "spawning" ) and !ply:GetProperty( "spawning_scp" ) then
+		if IsValid( ply ) and ply:SCPTeam() == TEAM_SPEC and !ply:GetProperty( "spawning" ) and !ply:GetProperty( "spawning_scp" ) then
 			local plytab = {}
 
 			for k, v in pairs( classes ) do
@@ -392,8 +392,7 @@ function SpawnSupport()
 				local class = table.Random( plytab )
 
 				print( "Assigning '"..ply:Nick().."' to support class '"..class.name.."' ["..group.."]" )
-				ply:SetupPlayer( class )
-				ply:SetPos( table.remove( spawns, math.random( #spawns ) ) )
+				ply:SetupPlayer( class, table.remove( spawns, math.random( #spawns ) ) )
 
 				inuse[class.name] = inuse[class.name] + 1
 				num = num + 1
@@ -650,15 +649,22 @@ hook.Add( "Tick", "SLCEscapeCheck", function() --TODO remove timer on escape / e
 				min = tonumber( min )
 				max = tonumber( max )
 
-				local rtime = t:GetRemainingTime()
-				local ttime = t:GetTime()
-
-				local diff = math.floor( ttime - rtime )
 				local xp = 0
+				local msg
 
 				if ROUND.aftermatch then
 					xp = min
+
+					msg = {
+						"escape1",
+						{ "escape_xp", "text;"..xp }
+					}
 				else
+					local rtime = t:GetRemainingTime()
+					local ttime = t:GetTime()
+
+					local diff = math.floor( ttime - rtime )
+
 					local time = rtime / ttime
 					if time < 0.2 then
 						xp = min
@@ -669,13 +675,13 @@ hook.Add( "Tick", "SLCEscapeCheck", function() --TODO remove timer on escape / e
 					end
 
 					xp = math.floor( xp )
-				end
 
-				local msg = {
-					"escape1",
-					{ "escape_time", "time;"..diff },
-					{ "escape_xp", "text;"..xp }
-				}
+					msg = {
+						"escape1",
+						{ "escape_time", "time;"..diff },
+						{ "escape_xp", "text;"..xp }
+					}
+				end
 
 				for k, v in pairs( tab ) do
 					hook.Run( "SLCPlayerEscaped", v, diff, rtime )
@@ -717,6 +723,12 @@ function StartAftermatch( endcheck )
 
 	print( "Starting aftermatch" )
 	//PlayerMessage( "aftermatch", LAST_ESCAPE )
+
+	local support_timer = GetTimer( "SupportTimer" )
+	if IsValid( support_timer ) then
+		support_timer:Destroy()
+		//print( "SUPPORT TIMER DESTROYED" )
+	end
 
 	ecc = endcheck
 	ROUND.aftermatch = true
@@ -1166,6 +1178,10 @@ function SpawnItems() --TODO
 			cctv:SetPos( v.pos )
 
 			cctv:SetCam( i )
+
+			if v.destroy_alpha or v.destroy_omega then
+				DestroyOnWarhead( cctv, v.destroy_alpha, v.destroy_omega )
+			end
 
 			v.ent = cctv
 		end

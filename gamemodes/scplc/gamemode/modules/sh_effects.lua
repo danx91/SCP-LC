@@ -573,6 +573,6 @@ EFFECTS.registerEffect( "deep_wounds", {
 
 hook.Add( "SLCScaleHealing", "SLCDeepWounds", function( ply, source, heal )
 	if ply:HasEffect( "deep_wounds" ) then
-		return heal * 0.6
+		return heal * 0.25
 	end
 end )

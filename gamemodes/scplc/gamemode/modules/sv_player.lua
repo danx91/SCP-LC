@@ -70,6 +70,12 @@ function ply:Despawn()
 	self:InvalidatePlayerForSpectate()
 end
 
+/*function ply:PrepareForSpawn()
+	self:UnSpectate()
+	//self:InvalidatePlayerForSpectate()
+
+end*/
+
 function ply:DropEQ()
 	self:DropVest( true )
 
@@ -191,6 +197,7 @@ function ply:SetupPlayer( class, spawn, instant )
 		setup_player_internal( self, class, spawn )
 	else
 		self:KillSilent()
+		self:UnSpectate()
 		self:SetPos( ZERO_POS )
 
 		self:SetSCPClass( class.name )

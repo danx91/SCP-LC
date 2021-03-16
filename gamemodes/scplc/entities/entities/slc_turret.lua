@@ -40,6 +40,9 @@ function ENT:SetupDataTables()
 	self:AddNetworkVar( "DesiredAngleP", "Float" )
 	self:AddNetworkVar( "AnimSpeed", "Float" )
 
+	self:AddNetworkVar( "TurretOwner", "Entity" )
+	self:AddNetworkVar( "OwnerSignature", "Int" )
+
 	self:SetMode( 1 )
 end
 
@@ -166,7 +169,7 @@ function ENT:Think()
 
 				if self.NFireBullets <= ct then
 					if 2 * math.pi * line:Length2D() * math.abs( ang.y - self.PredictedAngle.y ) / 360 < 5 then
-						local attacker = self.LastUser
+						local attacker = self:GetTurretOwner() //self.LastUser
 						if !IsValid( attacker ) or attacker:SCPClass() != "tech" then
 							attacker = self
 						end
@@ -301,7 +304,8 @@ end
 ENT.LCSUse =  0
 function ENT:CSUse( ply )
 	if CLIENT then
-		if ply:IsHuman() then
+		--if ply:IsHuman() then
+		if ply == self:GetTurretOwner() and ply:CheckSignature( self:GetOwnerSignature() ) then
 			local ct = CurTime()
 
 			if self:GetStatus() == STATUS_IDLE then
@@ -345,13 +349,13 @@ function ENT:OnTakeDamage( dmginfo )
 		explosion:Spawn()
 		explosion:Fire( "explode", "", 0 )
 
-		for k, v in pairs( ents.FindInSphere( pos, 150) ) do
+		for k, v in pairs( ents.FindInSphere( pos, 200) ) do
 			if v:IsPlayer() and v:SCPTeam() != TEAM_SPEC then
 				local dist = v:GetPos():Distance( pos )
 
 				local dmginfo2 = DamageInfo()
 
-				dmginfo2:SetDamage( math.ceil( (151 - dist) / 2 ) )
+				dmginfo2:SetDamage( math.ceil( (201 - dist) / 2 ) )
 				dmginfo2:SetAttacker( dmginfo:GetAttacker() )
 
 				v:TakeDamageInfo( dmginfo2 )
@@ -363,7 +367,8 @@ function ENT:OnTakeDamage( dmginfo )
 end
 
 function ENT:RequestMode( ply, mode )
-	if ply:IsHuman() then
+	--if ply:IsHuman() then
+	if ply == self:GetTurretOwner() and ply:CheckSignature( self:GetOwnerSignature() ) then
 		local status = self:GetStatus()
 		if status == STATUS_IDLE then
 			self:SetDesiredAngleY( 0 )
@@ -382,7 +387,7 @@ function ENT:RequestMode( ply, mode )
 				self:SetStatusTime( ct + 3 )
 				self:SetMode( mode )
 
-				self.LastUser = ply
+				//self.LastUser = ply
 			end
 		end
 	end
@@ -448,6 +453,7 @@ if SERVER then
 
 	AddTurretFilterModels( SCI_MODELS )
 	AddTurretFilterModels( MTF_MODELS )
+	AddTurretFilterModels( GUARD_MODELS )
 	AddTurretFilterModels( { "models/scp/guard_sci.mdl", "models/scp/soldier_1.mdl", "models/scp/guard_noob.mdl", "models/scp/guard_left.mdl", "models/scp/guard_med.mdl",
 		"models/player/pmc_4/pmc__07.mdl", "models/scp/soldier_3.mdl", "models/scp/captain.mdl", "models/player/kerry/class_securety.mdl" } )
 

@@ -152,9 +152,15 @@ function SWEP:PrimaryAttack()
 							owner:EmitSound( "Bounce.Flesh" )
 
 							local dmg = math.random( 30, 40 )
+
+							local has_deep_wounds = ent:HasEffect( "deep_wounds" )
+							if has_deep_wounds then
+								dmg = math.floor( dmg - 20 )
+							end
+
 							ent:TakeDamage( dmg, owner, owner )
 
-							if self.Frenzy != 0 and ent:HasEffect( "deep_wounds" ) then
+							if self.Frenzy != 0 and has_deep_wounds then
 								self:StopFrenzy()
 							else
 								ent:ApplyEffect( "deep_wounds", owner )

@@ -154,7 +154,16 @@ function ply:GetValidSpectateTargets()
 		info = SCPTeams.INFO_ALIVE
 	end
 
-	return SCPTeams.getPlayersByInfo( info )
+	local plys = {}
+	local tab = SCPTeams.getPlayersByInfo( info )
+
+	for k, v in pairs( tab ) do
+		if !v:GetProperty( "spawning" ) and !v:GetProperty( "spawning_scp" ) then
+			table.insert( plys, v )
+		end
+	end
+
+	return plys
 end
 
 function ply:InvalidatePlayerForSpectate()

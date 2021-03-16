@@ -261,8 +261,11 @@ function SWEP:UseOmnitool( ent, data, status, msg, shared )
 					self:PrintMessage( msg or data.msg_access or "acc_granted" )
 
 					if SERVER then
-						//ent:Use( owner, owner, USE_TOGGLE )
-						ent:Input( "use", owner, owner )
+						if !isfunction( data.input_override ) or data.input_override( owner ) != true then
+							//ent:Use( owner, owner, USE_TOGGLE )
+							ent:Input( "use", owner, owner )
+						end
+
 						//print( "granted!" )
 						owner:EmitSound( "Omnitool.granted" )
 					end

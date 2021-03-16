@@ -22,6 +22,7 @@ SWEP.Skin = 0
 
 function SWEP:SetupDataTables()
 	self:AddNetworkVar( "Charges", "Int" )
+	self:AddNetworkVar( "HealEnd", "Float" )
 
 	self:SetCharges( self.Charges )
 end
@@ -41,36 +42,29 @@ function SWEP:Equip()
 	if CLIENT then
 		self.PrintName = string.format( self.Lang.name, self:GetCharges() )
 
-		if !IsValid( self.Owner ) then
-			self.NextHeal = CurTime() + 3
-
-			self.Healing = nil
-			self.NextCheck = nil
-			self.HealEnd = nil
-		end
+		self:ResetData()
 	end
 end
 
 function SWEP:OnDrop()
-	self:PopSpeed()
-	self.NextHeal = CurTime() + 3
-
-	self.Healing = nil
-	self.NextCheck = nil
-	self.HealEnd = nil
+	self:ResetData()
 end
 
 function SWEP:Think()
 	if self.NextCheck then
 		if self.NextCheck < CurTime() then
-			self:PopSpeed()
-			self.NextHeal = CurTime() + 3
-
-			self.Healing = nil
-			self.NextCheck = nil
-			self.HealEnd = nil
+			self:ResetData()
 		end
 	end
+end
+
+function SWEP:ResetData( time )
+	self:PopSpeed()
+	self.NextHeal = CurTime() + ( time or 3 )
+
+	self.Healing = nil
+	self.NextCheck = nil
+	self:SetHealEnd( 0 )
 end
 
 function SWEP:PrimaryAttack()
@@ -87,11 +81,13 @@ function SWEP:SecondaryAttack()
 	if ROUND.post or self.NextHeal > CurTime() then return end
 	self.NextHeal = CurTime() + 0.2
 
-	local start = self.Owner:GetShootPos()
+	local owner = self:GetOwner()
+
+	local start = owner:GetShootPos()
 	local trace = util.TraceHull{
 		start = start,
-		endpos = start + self.Owner:GetAimVector() * 50,
-		filter = self.Owner,
+		endpos = start + owner:GetAimVector() * 50,
+		filter = owner,
 		mins = Vector( -8, -8, -8 ),
 		maxs = Vector( 8, 8, 8 )
 	}
@@ -111,8 +107,9 @@ function SWEP:PopSpeed()
 			self.Healing:PopSpeed( "SLC_Medkit" )
 		end
 
-		if IsValid( self.Owner ) then
-			self.Owner:PopSpeed( "SLC_Medkit" )
+		local owner = self:GetOwner()
+		if IsValid( owner ) then
+			owner:PopSpeed( "SLC_Medkit" )
 		elseif IsValid( self.HLOwner ) then
 			self.HLOwner:PopSpeed( "SLC_Medkit" )
 		end
@@ -122,15 +119,18 @@ end
 function SWEP:Heal( ply, sh )
 	if !ply:Alive() or ply:SCPTeam() == TEAM_SPEC or ply:SCPTeam() == TEAM_SCP then return end
 
+	local owner = self:GetOwner()
+	local ct = CurTime()
+
 	if IsValid( self.Healing ) then
 		if self.Healing == ply then
-			self.NextCheck = CurTime() + 0.3
+			self.NextCheck = ct + 0.3
 
-			if self.HealEnd <= CurTime() then
+			if self:GetHealEnd() <= ct then
 				local rnd = math.random() * 2 - 1
 				local heal = self.HealDmg + math.ceil( self.HealRand * rnd )
 
-				local override = hook.Run( "SLCScaleHealing", self.Healing, self.Owner, heal )
+				local override = hook.Run( "SLCScaleHealing", self.Healing, owner, heal )
 
 				if override == true then
 					heal = 0
@@ -141,19 +141,20 @@ function SWEP:Heal( ply, sh )
 				local hp = math.min( self.Healing:Health() + heal, self.Healing:GetMaxHealth() )
 				self.Healing:SetHealth( hp )
 				self.Healing:RemoveEffect( "bleeding", true )
+				self.Healing:RemoveEffect( "deep_wounds", true )
 				--print( self.Healing, self.Healing:Health(), self.HealDmg + math.ceil( self.HealRand * rnd ) )
 				self:PopSpeed()
 
-				if SERVER and self.Healing != self.Owner then
-					self.Owner:AddFrags( 1 )
-					PlayerMessage( "healplayer$1", self.Owner )
+				if SERVER and self.Healing != owner then
+					owner:AddFrags( 1 )
+					PlayerMessage( "healplayer$1", owner )
 				end
 
 				self.Healing = nil
 				self.NextCheck = nil
-				self.HealEnd = nil
+				self:SetHealEnd( 0 )
 
-				self.NextHeal = CurTime() + 3
+				self.NextHeal = ct + 3
 				self.Charges = self:GetCharges() - 1
 
 				if CLIENT then
@@ -171,27 +172,27 @@ function SWEP:Heal( ply, sh )
 		else
 			self:PopSpeed()
 			self.Healing = nil
-			self.NextHeal = CurTime() + 3
+			self.NextHeal = ct + 3
 		end
 	elseif ply:Health() < ply:GetMaxHealth() * 0.9 then
 		self.Healing = ply
 
 		if SERVER then
-			self.HLOwner = self.Owner
-			self.Owner:PushSpeed( 0.2, 0.2, -1, "SLC_Medkit" )
+			self.HLOwner = owner
+			owner:PushSpeed( 0.2, 0.2, -1, "SLC_Medkit" )
 
 			if !sh then
 				ply:PushSpeed( 0.2, 0.2, -1, "SLC_Medkit" )
 			end
 		end
 		
-		self.NextCheck = CurTime() + 0.3
-		self.HealEnd = CurTime() + self.HealTime
+		self.NextCheck = ct + 0.3
+		self:SetHealEnd( ct + self.HealTime )
 	end
 end
 
 function SWEP:DrawWorldModel()
-	if !IsValid( self.Owner ) then
+	if !IsValid( self:GetOwner() ) then
 		self:DrawModel()
 	end
 end
@@ -199,9 +200,11 @@ end
 function SWEP:DrawHUD()
 	if hud_disabled then return end
 
-	if self.HealEnd then
+	local heal_end = self:GetHealEnd()
+	local ct = CurTime()
+	if heal_end > ct then
 		draw.NoTexture()
 		surface.SetDrawColor( Color( 255, 255, 255 ) )
-		surface.DrawRing( ScrW() * 0.5, ScrH() * 0.5, 30, 6, 360, 40, 1 - ( self.HealEnd - CurTime() ) / self.HealTime )
+		surface.DrawRing( ScrW() * 0.5, ScrH() * 0.5, 30, 6, 360, 40, 1 - ( heal_end - ct ) / self.HealTime )
 	end
 end

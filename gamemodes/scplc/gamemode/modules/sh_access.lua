@@ -305,6 +305,7 @@ if SERVER then
 		override = <function(ply, ent, name), return <boolean>, <string>>, --optional, return true to allow, false to disallow and nil to do access check;
 			optional string return to override message; higher priority than ENTITY:AccessOverride
 		access_granted = <function(ply, name) return <boolean>>, --optional, called when access is granted, return true to suppress use
+		input_override = <function( ply ) return <boolean>>
 		no_sound = <boolean>, --optional, if true, don't play sounds
 		msg_target = <number>, --optional, 0 - auto (default); 1 - always disaply message in omnitool; 2 - always display on screen //doesn't work as expected
 		msg_access = <string>, --optional, custom message when access is granted

@@ -228,6 +228,7 @@ fully_registered = CurTime() + 1
 local ply = FindMetaTable( "Player" )
 function ply:IsClassUnlocked( name )
 	if self:IsBot() then return true end
+	if gamerule.Get( "lan" ) then return true end
 
 	local class = AllClasses[name]
 	if class then
@@ -344,5 +345,9 @@ if SERVER then
 			//print( "Refounded", points, ply )
 			ply:AddPrestigePoints( points )
 		end
+	end )
+
+	hook.Add( "SLCRegisterGamerules", "SLCPlayerInfoRule", function()
+		gamerule.Register( "lan", { value = false } )
 	end )
 end

@@ -17,7 +17,13 @@ local function prepare_text( text_data )
 	//local tab_size = #text_data
 	for i, v in ipairs( text_data ) do
 		for line in string.gmatch( v.text, "[^\n]+" ) do
-			local len = utf8.len( line )
+			local len, pos = utf8.len( line )
+			
+			if !len then
+				line = "Invalid UTF8 string!"
+				len = string.len( line )
+			end
+
 			local max = v.max or 43
 
 			if len > max then
