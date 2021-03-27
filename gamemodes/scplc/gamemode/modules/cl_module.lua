@@ -468,7 +468,7 @@ end*/
 hook.Add( "PreDrawHalos", "PickupWeapon", function()
 	/*debugoverlay.Axis(trace.HitPos, trace.HitNormal:Angle(), 5, 0.1 )
 	debugoverlay.Text(trace.HitPos + Vector( 0, 0, -5 ), tostring(trace.Entity), 0.1 )*/
-
+	local ply = LocalPlayer()
 	local t = ply:SCPTeam()
 	if t == TEAM_SPEC or t == TEAM_SCP then return end
 	local wep = ply:GetEyeTrace().Entity
