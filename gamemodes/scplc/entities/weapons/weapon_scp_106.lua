@@ -137,7 +137,7 @@ SWEP.NextPlace = 0
 SWEP.TPPoint = nil
 function SWEP:SecondaryAttack()
 	if SERVER then
-		if self.NextPlace > CurTime() then return end
+		if self.NextPlace > CurTime() or self:GetOwner():GetVelocity().z != 0 then return end
 		self.NextPlace = CurTime() + 10
 
 		self.Owner:EmitSound( "SCP106.Place" )
