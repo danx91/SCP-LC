@@ -168,7 +168,7 @@ function SWEP:Holster()
 	return true
 end
 
-function SWEP:PreDrop()
+function SWEP:SLCPreDrop()
 	if SERVER then
 		self:PopSpeed()
 	end

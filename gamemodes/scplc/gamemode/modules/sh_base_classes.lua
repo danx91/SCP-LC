@@ -17,6 +17,15 @@ VETERAND_MODELS = {
 	"models/player/kerry/class_jan_7.mdl",
 }
 
+VETERAND_MODELS_V2 = {
+	"models/veteran/1000shells/class_veteran2.mdl",
+	"models/veteran/1000shells/class_veteran3.mdl",
+	"models/veteran/1000shells/class_veteran4.mdl",
+	"models/veteran/1000shells/class_veteran5.mdl",
+	"models/veteran/1000shells/class_veteran6.mdl",
+	"models/veteran/1000shells/class_veteran7.mdl",
+}
+
 SCI_MODELS = {
 	"models/bmscientistcits/p_female_01.mdl",
 	"models/bmscientistcits/p_female_02.mdl",
@@ -41,6 +50,18 @@ SCI_MODELS = {
 	"models/scp/apsci_male_07.mdl",
 	"models/scp/apsci_male_08.mdl",
 	"models/scp/apsci_male_09.mdl",
+}
+
+HEAD_SCI_MODELS = {
+	"models/armacham/scientists/scientists_1.mdl",
+	"models/armacham/scientists/scientists_2.mdl",
+	"models/armacham/scientists/scientists_3.mdl",
+	"models/armacham/scientists/scientists_4.mdl",
+	"models/armacham/scientists/scientists_5.mdl",
+	"models/armacham/scientists/scientists_6.mdl",
+	"models/armacham/scientists/scientists_7.mdl",
+	"models/armacham/scientists/scientists_8.mdl",
+	"models/armacham/scientists/scientists_9.mdl",
 }
 
 GUARD_MODELS = {
@@ -82,7 +103,9 @@ hook.Add( "SLCRegisterClassGroups", "BaseGroups", function()
 	addClassGroup( "sci", 21, SPAWN_SCIENT )
 	addClassGroup( "mtf", 30, SPAWN_MTF )
 
-	addSupportGroup( "mtf_ntf", 70, SPAWN_SUPPORT_MTF )
+	addSupportGroup( "mtf_ntf", 70, SPAWN_SUPPORT_MTF, -1, function()
+		TransmitSound( string.format( "scp_lc/announcements/ntf_entered%i.ogg", math.random( 3 ) ), true, 1 )
+	end )
 	//addSupportGroup( "mtf_fire", 25, SPAWN_SUPPORT_MTF )
 	addSupportGroup( "mtf_alpha", 10, SPAWN_SUPPORT_MTF, 3, function()
 		SetRoundStat( "mtfalphaspawned", true )
@@ -131,7 +154,7 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		max = 0,
 	} )*/
 
-	registerClass( "veterand", "classd", VETERAND_MODELS, {
+	registerClass( "veterand", "classd", VETERAND_MODELS_V2, {
 		team = TEAM_CLASSD,
 		weapons = {},
 		ammo = {},
@@ -210,7 +233,7 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		max = 0,
 	} )
 
-	registerClass( "seniorsci", "sci", SCI_MODELS, {
+	registerClass( "seniorsci", "sci", "models/player/scientist.mdl", {
 		team = TEAM_SCI,
 		weapons = {},
 		ammo = {},
@@ -225,7 +248,7 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		max = 1,
 	} )
 
-	registerClass( "headsci", "sci", SCI_MODELS, {
+	registerClass( "headsci", "sci", HEAD_SCI_MODELS, {
 		team = TEAM_SCI,
 		weapons = {},
 		ammo = {},

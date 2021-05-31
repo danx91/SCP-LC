@@ -1,6 +1,6 @@
 sound.Add{
 	name = "SLCPlayer.Breathing",
-	sound = "breathing.wav",
+	sound = "scp_lc/misc/breathing.wav",
 	volume = 0.75,
 	level = 70,
 	pitch = { 90, 110 },
@@ -27,7 +27,7 @@ sound.Add{
 
 sound.Add{
 	name = "SLCPlayer.Heartbeat",
-	sound = "heartbeat.ogg",
+	sound = "scp_lc/misc/heartbeat.ogg",
 	volume = 1,
 	level = 0,
 	pitch = 100,

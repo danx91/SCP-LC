@@ -100,7 +100,7 @@ end )
 
 sound.Add{
 	name = "Radio.Beep",
-	sound = "radio_beep.ogg",
+	sound = "scp_lc/radio_beep.ogg",
 	volume = 1,
 	level = 60,
 	pitch = 100,

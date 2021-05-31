@@ -541,19 +541,15 @@ end )
 --[[-------------------------------------------------------------------------
 ProgressBar
 ---------------------------------------------------------------------------]]
-PROGRESS_STYLE_BAR = 0
-PROGRESS_STYLE_RING = 1
-PROGRESS_STYLE_HRC = 2
-
 local PROGRESS_ENABLED = false
 local PROGRESS_VALUE = 0
 local PROGRESS_MAX_VALUE = 0
 
-function SetProgressBarEnabled( enable, type, maxvalue )
+function SetProgressBarEnabled( enable, maxvalue )
 
 end
 
-function SetProgressBarvalue( value )
+function SetProgressBarValue( value )
 
 end
 

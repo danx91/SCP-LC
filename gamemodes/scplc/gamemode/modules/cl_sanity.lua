@@ -32,7 +32,7 @@ end
 --[[-------------------------------------------------------------------------
 Whispers
 ---------------------------------------------------------------------------]]
-addSounds( "SLCEffects.Whispers", "effects/insane/whispers%i.ogg", 0, { 0.75, 1 }, { 90, 110 }, CHAN_STATIC, 1, 3 )
+addSounds( "SLCEffects.Whispers", "scp_lc/effects/insane/whispers%i.ogg", 0, { 0.75, 1 }, { 90, 110 }, CHAN_STATIC, 1, 3 )
 
 AddInsaneEffect( 12, function( ply )
 	ply:EmitSound( "SLCEffects.Whispers" )
@@ -86,7 +86,7 @@ Blink Effect
 ---------------------------------------------------------------------------]]
 sound.Add{
 	name = "SLCEffects.Horror",
-	sound = "scp/173/Horror/Horror2.ogg",
+	sound = "scp_lc/scp/173/Horror/Horror2.ogg",
 	volume = 1,
 	level = 0,
 	pitch = 100,

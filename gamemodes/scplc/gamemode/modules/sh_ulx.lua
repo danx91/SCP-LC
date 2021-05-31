@@ -2,6 +2,9 @@ local ULX_CAT = " SCP: Lost Control"
 
 if SERVER and ULib then
 	ULib.ucl.registerAccess( "slc spectatescp", ULib.ACCESS_OPERATOR, "Allows player to bypass anti-ghosting system and let them spectate SCPs", ULX_CAT )
+	ULib.ucl.registerAccess( "slc spectateinfo", ULib.ACCESS_OPERATOR, "Allows player to details about player they are currently spectating", ULX_CAT )
+	ULib.ucl.registerAccess( "slc skipintro", ULib.ACCESS_OPERATOR, "Allows player to skip info screen at the start of the round", ULX_CAT )
+	ULib.ucl.registerAccess( "slc afkdontkick", ULib.ACCESS_ADMIN, "Don't kick players with this access if they are AFK", ULX_CAT )
 
 	hook.Add( "SLCCanSpectateSCP", "SLCBaseULX", function( ply )
 		if ULib.ucl.query( ply, "slc spectatescp" ) then
@@ -35,7 +38,7 @@ function InitializeSCPULX()
 		if !class_n then return end
 		
 		if !plyt:GetActive() then
-			ULib.tsayError( plyc, "Player "..plyt:Nick().." is inactive! Force spawn failed", true )
+			ULib.tsayError( ply, "Player "..plyt:Nick().." is inactive! Force spawn failed", true )
 			return
 		end
 
@@ -208,6 +211,89 @@ function InitializeSCPULX()
 	restartround:setOpposite( "ulx silent restart_round", { nil, true }, "!srestart" )
 	restartround:defaultAccess( ULib.ACCESS_SUPERADMIN )
 	restartround:help( "Restarts round" )
+
+	function ulx.spawnchip( ply, chip, silent )
+		chip = tostring( chip )
+
+		local ent = CreateChip( chip )
+		if IsValid( ent ) then
+			ent:SetPos( ply:GetEyeTrace().HitPos )
+			ent:Spawn()
+
+			if silent then
+				ulx.fancyLogAdmin( ply, true, "#A spawned '"..chip.."' chip" )
+			else
+				ulx.fancyLogAdmin( ply, "#A spawned '"..chip.."' chip" )
+			end
+		else
+			ULib.tsayError( plyc, "Unknown chip name '"..chip.."'!", true )
+		end
+	end
+
+	local spawnchip = ulx.command( ULX_CAT, "ulx spawn_chip", ulx.spawnchip, "!chip" )
+	spawnchip:addParam{ type = ULib.cmds.StringArg, hint = "Chip name", completes = ACC_REGISTRY.CHIPS_ID }
+	spawnchip:addParam{ type = ULib.cmds.BoolArg, invisible = true }
+	spawnchip:setOpposite( "ulx silent spawn_chip", { nil, true } )
+	spawnchip:defaultAccess( ULib.ACCESS_SUPERADMIN )
+	spawnchip:help( "Spawns chip" )
+
+	local function rem_info( ply, target, type, silent )
+		if silent then
+			ulx.fancyLogAdmin( ply, true, "#A removed #T data: "..type, target )
+		else
+			ulx.fancyLogAdmin( ply, "#A removed #T data: "..type, target )
+		end
+	end
+
+	function ulx.removedata( ply, target, atype, silent )
+		if atype == "level" then
+			target:Set_SCPLevel( 0 )
+			target:SetSCPData( "level", 0 )
+
+			rem_info( ply, target, atype, silent )
+		elseif atype == "xp" then
+			target:Set_SCPExp( 0 )
+			target:SetSCPData( "xp", 0 )
+
+			rem_info( ply, target, atype, silent )
+		elseif atype == "prestige" then
+			target:Set_SCPPrestige( 0 )
+			target:SetSCPData( "prestige", 0 )
+
+			rem_info( ply, target, atype, silent )
+		elseif atype == "prestige_points" then
+			target:Set_SCPPrestigePoints( 0 )
+			target:SetSCPData( "prestige_points", 0 )
+
+			rem_info( ply, target, atype, silent )
+		elseif atype == "owned_classes" then
+			target.PlayerInfo:Set( "unlocked_classes", {} )
+
+			rem_info( ply, target, atype, silent )
+		elseif atype == "all" then
+			target:Set_SCPLevel( 0 )
+			target:SetSCPData( "level", 0 )
+			target:Set_SCPExp( 0 )
+			target:SetSCPData( "xp", 0 )
+			target:Set_SCPPrestige( 0 )
+			target:SetSCPData( "prestige", 0 )
+			target:Set_SCPPrestigePoints( 0 )
+			target:SetSCPData( "prestige_points", 0 )
+			target.PlayerInfo:Set( "unlocked_classes", {} )
+
+			rem_info( ply, target, atype, silent )
+		else
+			ULib.tsayError( plyc, "Unknown type '"..atype.."'!", true )
+		end
+	end
+
+	local removedata = ulx.command( ULX_CAT, "ulx remove_data", ulx.removedata )
+	removedata:addParam{ type = ULib.cmds.PlayerArg, hint = "Target" }
+	removedata:addParam{ type = ULib.cmds.StringArg, hint = "Type", completes = { "level", "xp", "prestige", "prestige_points", "owned_classes", "all" } }
+	removedata:addParam{ type = ULib.cmds.BoolArg, invisible = true }
+	removedata:setOpposite( "ulx silent remove_data", { nil, nil, true } )
+	removedata:defaultAccess( ULib.ACCESS_SUPERADMIN )
+	removedata:help( "Removes player data" )
 end
 
 function SetupForceSCP()

@@ -233,6 +233,12 @@ hook.Add( "DrawOverlay", "SLCInfoScreen", function()
 		INFO_SCREEN.done = true
 	end
 
+	if ULib then
+		if !INFO_SCREEN.done and input.IsMouseDown( MOUSE_LEFT ) and ULib.ucl.query( LocalPlayer(), "slc skipintro" ) then
+			INFO_SCREEN.done = true
+		end
+	end
+
 	if !INFO_SCREEN.done then
 		if INFO_SCREEN.blackout < 1 then
 			if INFO_SCREEN.time == 0 then
@@ -319,7 +325,7 @@ hook.Add( "DrawOverlay", "SLCInfoScreen", function()
 					if chars > INFO_SCREEN.last_char then
 						INFO_SCREEN.last_char = chars + 2
 						//sound.Play( "common/talk.wav", Vector( 0, 0, 0 ), 0, math.random( 100, 120 ), 1 )
-						sound.Play( "misc/text_sound.wav", Vector( 0, 0, 0 ), 0, math.random( 100, 120 ), 1 )
+						sound.Play( "scp_lc/misc/text_sound.wav", Vector( 0, 0, 0 ), 0, math.random( 100, 120 ), 1 )
 					end
 				end
 

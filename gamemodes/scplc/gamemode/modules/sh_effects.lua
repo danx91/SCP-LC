@@ -491,7 +491,7 @@ if CLIENT then
 		end
 	end )
 
-	addSounds( "SLCEffects.Choke", "effects/choke/cough%i.ogg", 0, 1, { 90, 110 }, CHAN_STATIC, 1, 3 )
+	addSounds( "SLCEffects.Choke", "scp_lc/effects/choke/cough%i.ogg", 0, 1, { 90, 110 }, CHAN_STATIC, 1, 3 )
 end
 
 --[[-------------------------------------------------------------------------

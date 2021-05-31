@@ -349,10 +349,10 @@ function SWEP:DrawSCPHUD()
 	end
 end
 
-addSounds( "SCP049.Attack", "scp/049/attack%i.ogg", 100, 1, 100, CHAN_STATIC, 0, 7 )
+addSounds( "SCP049.Attack", "scp_lc/scp/049/attack%i.ogg", 100, 1, 100, CHAN_STATIC, 0, 7 )
 sound.Add{
 	name = "SCP049.Remove714",
-	sound = "scp/049/remove714_1.ogg",
+	sound = "scp_lc/scp/049/remove714_1.ogg",
 	volume = 1,
 	level = 100,
 	pitch = 100,

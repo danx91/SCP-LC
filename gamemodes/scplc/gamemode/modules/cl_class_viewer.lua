@@ -188,13 +188,17 @@ local function addClass( tab, p, h )
 				local vest = VEST.getID( tab.vest )
 				if vest then
 					local data = VEST.getData( vest )
-					model = { istable( data.model ) and table.Random( data.model ) or data.model, data.skin, data.bodygroups }
+					if data then
+						model = { istable( data.model ) and table.Random( data.model ) or data.model, data.skin, data.bodygroups }
+						cache[_name] = model
+					end
 				end
-			else
-				model = { istable( tab.model ) and table.Random( tab.model ) or tab.model, tab.skin, tab.bodygroups }
 			end
 
-			cache[_name] = model
+			if !model then
+				model = { istable( tab.model ) and table.Random( tab.model ) or tab.model, tab.skin, tab.bodygroups }
+				cache[_name] = model
+			end
 		end
 
 		local override = CLASS_VIEWER_OVERRIDE[_name]

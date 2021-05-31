@@ -355,49 +355,51 @@ function SpawnSupport()
 			end
 		until #plys == 0*/
 
-		if IsValid( ply ) and ply:SCPTeam() == TEAM_SPEC and !ply:GetProperty( "spawning" ) and !ply:GetProperty( "spawning_scp" ) then
-			local plytab = {}
+		if IsValid( ply ) and ply:IsActive() and !ply:IsAFK() and ply:SCPTeam() == TEAM_SPEC then
+			if !ply:GetProperty( "spawning" ) and !ply:GetProperty( "spawning_scp" ) then
+				local plytab = {}
 
-			for k, v in pairs( classes ) do
-				if !inuse[k] then inuse[k] = 0 end
-				if v.max == 0 or inuse[k] < v.max then
-					local owned
+				for k, v in pairs( classes ) do
+					if !inuse[k] then inuse[k] = 0 end
+					if v.max == 0 or inuse[k] < v.max then
+						local owned
 
-					if v.override then
-						local result = v.override( ply )
+						if v.override then
+							local result = v.override( ply )
 
-						if result then
-							owned = true
-						elseif result == false then
-							owned = false
+							if result then
+								owned = true
+							elseif result == false then
+								owned = false
+							end
+						end
+
+						if owned == nil then
+							//owned = ply:SCPLevel() >= v.level
+							owned = ply:IsClassUnlocked( v.name )
+						end
+
+						if owned then
+							table.insert( plytab, v )
 						end
 					end
-
-					if owned == nil then
-						//owned = ply:SCPLevel() >= v.level
-						owned = ply:IsClassUnlocked( v.name )
-					end
-
-					if owned then
-						table.insert( plytab, v )
-					end
-				end
-			end
-
-			if #plytab > 0 then
-				if #spawns == 0 then
-					spawns = table.Copy( spawninfo )
 				end
 
-				local class = table.Random( plytab )
+				if #plytab > 0 then
+					if #spawns == 0 then
+						spawns = table.Copy( spawninfo )
+					end
 
-				print( "Assigning '"..ply:Nick().."' to support class '"..class.name.."' ["..group.."]" )
-				ply:SetupPlayer( class, table.remove( spawns, math.random( #spawns ) ) )
+					local class = table.Random( plytab )
 
-				inuse[class.name] = inuse[class.name] + 1
-				num = num + 1
-			else
-				table.insert( unused, ply )
+					print( "Assigning '"..ply:Nick().."' to support class '"..class.name.."' ["..group.."]" )
+					ply:SetupPlayer( class, table.remove( spawns, math.random( #spawns ) ) )
+
+					inuse[class.name] = inuse[class.name] + 1
+					num = num + 1
+				else
+					table.insert( unused, ply )
+				end
 			end
 		end
 	until num >= max

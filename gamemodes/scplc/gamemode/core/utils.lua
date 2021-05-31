@@ -74,6 +74,7 @@ local rep = {
 	["%:"] = "?n",
 	["%,"] = "?m",
 }
+
 function EscapeMessage( msg )
 	msg = string.gsub( msg, "?", "?q" )
 

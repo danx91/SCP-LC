@@ -50,6 +50,8 @@ lang.NRegistry = {
 	alpha_detonation = "ALPHA Warhead detonation in %i seconds. Get in the facility or proceed to the evacuation immediately!",
 	alpha_card = "You've inserted ALPHA Warhead nuclear card",
 	destory_scp = "You received %i points for destroying SCP object!",
+	afk = "You are AFK. You will not spawn and receive XP over time!",
+	afk_end = "You are no longer AFK",
 }
 
 lang.NFailed = "Failed to access NRegistry with key: %s"

@@ -35,8 +35,8 @@ function SetupSupportTimer()
 	end )
 end
 
-function AddTimer( name, time, rep, func )
-	local t = Timer( name, time, rep, func )
+function AddTimer( ... )
+	local t = Timer( ... )
 	table.insert( ROUND.timers, t )
 
 	return t
@@ -296,7 +296,7 @@ end, "CheckRoundStart" )
 GM hooks
 ---------------------------------------------------------------------------]]
 function GM:SLCPreround()
-	TransmitSound( "Alarm2.ogg", true )
+	TransmitSound( "scp_lc/round_start.ogg", true )
 	/*net.Start( "PlaySound" )
 		net.WriteUInt( 1, 1 )
 		net.WriteString( "Alarm2.ogg" )
@@ -304,7 +304,7 @@ function GM:SLCPreround()
 end
 
 function GM:SLCRound()
-	TransmitSound( "Bell2.ogg", true )
+	TransmitSound( "scp_lc/bell2.ogg", true )
 	/*net.Start( "PlaySound" )
 		net.WriteUInt( 1, 1 )
 		net.WriteString( "Bell2.ogg" )
@@ -314,7 +314,7 @@ end
 --winner can be: team id, table of team ids, false (time's up) or true (not enough players)
 function GM:SLCPostround( winner )
 	//BroadcastLua( "surface.PlaySound('Bell1.ogg')" )
-	TransmitSound( "Bell1.ogg", true )
+	TransmitSound( "scp_lc/bell1.ogg", true )
 	/*net.Start( "PlaySound" )
 		net.WriteUInt( 1, 1 )
 		net.WriteString( "Bell1.ogg" )

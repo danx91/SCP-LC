@@ -3,10 +3,10 @@ SWEP.PrintName		= "SCP-106"
 
 SWEP.HoldType		= "normal"
 
-SWEP.Chase 			= "scp/106/chase.ogg"
-SWEP.Place 			= "scp/106/place.ogg"
-SWEP.Teleport 		= "scp/106/tp.ogg"
-SWEP.Disappear 		= "scp/106/disappear.ogg"
+SWEP.Chase 			= "scp_lc/scp/106/chase.ogg"
+SWEP.Place 			= "scp_lc/scp/106/place.ogg"
+SWEP.Teleport 		= "scp_lc/scp/106/tp.ogg"
+SWEP.Disappear 		= "scp_lc/scp/106/disappear.ogg"
 
 SWEP.NextPrimaryAttack	= 0
 SWEP.AttackDelay		= 1
@@ -63,6 +63,14 @@ function SWEP:Think()
 			end
 		end
 	end
+end
+
+function SWEP:OnRemove()
+	for ply, time in pairs( self.SoundPlayers ) do
+		if IsValid( ply ) then
+			TransmitSound( self.Chase, false, ply )
+		end
+	end	
 end
 
 function SWEP:PrimaryAttack()
@@ -160,6 +168,18 @@ SWEP.NextTP = 0
 function SWEP:Reload()
 	if self.NextTP > CurTime() then return end
 
+	local owner = self:GetOwner()
+	if !owner:IsOnGround() then return end
+
+	local pos = owner:GetPos() - Vector( 0, 0, 50 )
+	local tr = util.TraceLine{
+		start = pos,
+		endpos = pos,
+		mask = MASK_SOLID,
+	}
+
+	if !tr.AllSolid then return end
+
 	local cd = 90 - ( self:GetUpgradeMod( "cd" ) or 0 )
 	self.NextTP = CurTime() + cd
 
@@ -192,7 +212,7 @@ function SWEP:TeleportSequence( point )
 	DestroyTimer( "106TP_2"..self.Owner:SteamID64() )
 
 	local ppos = self.Owner:GetPos()
-	Timer( "106TP_1"..self.Owner:SteamID64(), 0.1, 40, function( this, n )
+	AddTimer( "106TP_1"..self.Owner:SteamID64(), 0.1, 40, function( this, n )
 		if IsValid( self ) and self:CheckOwner() then
 			if n < 40 and n % 20 == 1 then
 				--self:EmitSound( "SCP106.Disappear" )
@@ -205,7 +225,7 @@ function SWEP:TeleportSequence( point )
 		if IsValid( self ) and self:CheckOwner() then
 			self.Owner:SetPos( point - Vector( 0, 0, 80 ) )
 
-			Timer( "106TP_2"..self.Owner:SteamID64(), 0.1, 41, function( this, n )
+			AddTimer( "106TP_2"..self.Owner:SteamID64(), 0.1, 41, function( this, n )
 				if IsValid( self ) and self:CheckOwner() then
 					if n == 1 or n == 30 then
 						//self:EmitSound( "SCP106.Teleport" )

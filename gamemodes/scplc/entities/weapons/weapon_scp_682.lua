@@ -127,7 +127,7 @@ hook.Add( "EntityTakeDamage", "SCP682Damage", function( ply, dmg )
 					if IsValid( t ) then
 						t:Start() --reset timer time
 					else
-						Timer( "SCP682Ult"..ply:SteamID64(), 3, 1, function()
+						AddTimer( "SCP682Ult"..ply:SteamID64(), 3, 1, function()
 							if IsValid( ply ) and IsValid( wep ) then
 								local hp = ply:Health()
 								local dif = ply:GetMaxHealth() - hp
@@ -188,6 +188,6 @@ sound.Add( {
 	volume = 1,
 	level = 100,
 	pitch = { 90, 110 },
-	sound = "scp/682/roar.ogg",
+	sound = "scp_lc/scp/682/roar.ogg",
 	channel = CHAN_STATIC,
 } )

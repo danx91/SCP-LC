@@ -44,7 +44,7 @@ function SWEP:PrimaryAttack()
 			self.Owner:EmitSound( "SCP066.Music" )
 			AddRoundStat( "066" )
 
-			Timer( "SCP066_"..self.Owner:SteamID64(), 1, self.MusicLength, function( t, n )
+			AddTimer( "SCP066_"..self.Owner:SteamID64(), 1, self.MusicLength, function( t, n )
 				if !IsValid( self ) or !self:CheckOwner() then
 					t:Destroy()
 					return
@@ -225,7 +225,7 @@ sound.Add( {
 	volume = 1.0,
 	level = 90,
 	pitch = 100,
-	sound = "scp/066/eric.ogg"
+	sound = "scp_lc/scp/066/eric.ogg"
 } )
 
 sound.Add( {
@@ -234,7 +234,7 @@ sound.Add( {
 	volume = 1.0,
 	level = 511,
 	pitch = 100,
-	sound = "scp/066/beethoven.ogg"
+	sound = "scp_lc/scp/066/beethoven.ogg"
 } )
 
 DefineUpgradeSystem( "scp066", {

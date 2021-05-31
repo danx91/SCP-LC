@@ -38,8 +38,8 @@ SWEP.NewAct = {
 	//[ACT_MP_SWIM] = ACT_,
 }
 
-SWEP.ChaseSound = "scp/096/chase.ogg"
-SWEP.TriggeredSound = "scp/096/triggered.ogg"
+SWEP.ChaseSound = "scp_lc/scp/096/chase.ogg"
+SWEP.TriggeredSound = "scp_lc/scp/096/triggered.ogg"
 
 SWEP.Regen = false
 SWEP.RegenPrep = 0
@@ -332,7 +332,7 @@ function SWEP:Think()
 
 							local regenmod = self:GetUpgradeMod( "regenmod" ) or 0
 							owner:AddHealth( 150 + regenmod )
-							Timer( "SCP096_Regen_"..owner:SteamID64(), 2, 2, function( this, n )
+							AddTimer( "SCP096_Regen_"..owner:SteamID64(), 2, 2, function( this, n )
 								if IsValid( self ) and self:CheckOwner() then
 									owner:AddHealth( 75 + regenmod )
 								end
@@ -460,16 +460,17 @@ end
 SWEP.AttackPitch = 0
 function SWEP:CalcView( ply, pos, ang, fov )
 	local ct = CurTime()
+
 	if self.Regen then
 		local f = 3 - math.Clamp( self.RegenPrep - ct, 2, 3 )
 
 		ang.p = Lerp( f, ang.p, 45 )
-		return pos - Vector( 0, 0, f * 24 )
-	elseif wep.RegenPost > ct then
+		return pos - Vector( 0, 0, f * 24 ), ang
+	elseif self.RegenPost > ct then
 		local f = math.Clamp( self.RegenPost - ct, 0, 1 )
 
 		ang.p = Lerp( f, ang.p, 45 )
-		return pos - Vector( 0, 0, f * 24 )
+		return pos - Vector( 0, 0, f * 24 ), ang
 	end
 
 	local af = self:GetAttackFinish()
@@ -489,7 +490,7 @@ function SWEP:CalcView( ply, pos, ang, fov )
 
 	if self.AttackPitch > 0 then
 		ang.p = Lerp( self.AttackPitch, ang.p, 75 )
-		return pos - Vector( 0, 0, self.AttackPitch * 28 )
+		return pos - Vector( 0, 0, self.AttackPitch * 28 ), ang
 	end
 end
 
@@ -685,7 +686,7 @@ sound.Add{
 	volume = 1,
 	level = 80,
 	pitch = 100,
-	sound = "scp/096/attack1.ogg",
+	sound = "scp_lc/scp/096/attack1.ogg",
 	channel = CHAN_STATIC,
 }
 
@@ -694,7 +695,7 @@ sound.Add{
 	volume = 1,
 	level = 80,
 	pitch = 100,
-	sound = "scp/096/attack2.ogg",
+	sound = "scp_lc/scp/096/attack2.ogg",
 	channel = CHAN_STATIC,
 }
 
@@ -703,7 +704,7 @@ sound.Add{
 	volume = 1,
 	level = 100,
 	pitch = 100,
-	sound = "scp/096/scream.ogg",
+	sound = "scp_lc/scp/096/scream.ogg",
 	channel = CHAN_STATIC,
 }
 

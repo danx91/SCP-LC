@@ -5,4 +5,5 @@
 	"maps"		"gm_site19"
 	"menusystem"	"1"
 	"workshopid"	"2402059605"
+	"category"		"pvp"
 }

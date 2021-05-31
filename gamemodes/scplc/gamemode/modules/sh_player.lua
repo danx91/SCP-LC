@@ -18,7 +18,24 @@ function GM:PlayerButtonDown( ply, button )
 		end
 	end*/
 
-	if SERVER then numpad.Activate( ply, button ) end
+	if SERVER then 
+		numpad.Activate( ply, button )
+
+		local rt = RealTime()
+
+		if !ply.SLCAFKTimer then
+			ply.SLCAFKTimer = 0
+		end
+
+		if ply.SLCAFKTimer <= rt then
+			if ply:IsAFK() then
+				ply:Set_SCPAFK( false )
+				PlayerMessage( "afk_end", ply )
+			else
+				ply.SLCAFKTimer = rt
+			end
+		end
+	end
 
 	if CLIENT and IsFirstTimePredicted() then
 		local menu_key = input.LookupBinding( "+menu" )
@@ -26,6 +43,11 @@ function GM:PlayerButtonDown( ply, button )
 			if input.GetKeyCode( menu_key ) == button then
 				if CanShowEQ() then
 					ShowEQ()
+				end
+
+				local t = ply:SCPTeam()
+				if t == TEAM_SPEC then
+					HUDSpectatorInfo = true
 				end
 			end
 		end
@@ -51,6 +73,11 @@ function GM:PlayerButtonUp( ply, button )
 		if menu_key then
 			if input.GetKeyCode( menu_key ) == button then
 				HideEQ()
+
+				local t = ply:SCPTeam()
+				if t == TEAM_SPEC then
+					HUDSpectatorInfo = false
+				end
 			end
 		end
 
@@ -210,6 +237,14 @@ function ply:IsPremium()
 	end
 
 	return self:Get_SCPPremium()
+end
+
+function ply:IsAFK()
+	if !self.Get_SCPAFK then
+		self:DataTables()
+	end
+
+	return self:Get_SCPAFK()
 end
 
 function ply:SCPLevel()

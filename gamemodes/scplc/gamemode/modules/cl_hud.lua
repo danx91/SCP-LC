@@ -63,6 +63,25 @@ local MATS = {
 	escape_blocked = Material( "slc/hud/escape_blocked.png" )
 }
 
+local COLOR = {
+	white = Color( 255, 255, 255, 255 ),
+	text_white = Color( 255, 255, 255, 100 ),
+	text_red = Color( 255, 100, 100, 200 ),
+	escape_blocked = Color( 255, 0, 0, 255 ),
+	gray_bg = Color( 150, 150, 150, 100 ),
+	black_bg = Color( 0, 0, 0, 150 ),
+	hp_bar = Color( 175, 0, 25, 175 ),
+	stamina = Color( 150, 175, 0, 175 ),
+	stamina_alt = Color( 75, 125, 25, 75 ),
+	sanity = Color( 100, 100, 150, 175 ),
+	xp = Color( 175, 152, 0, 175 ),
+	hover_bg = Color( 180, 180, 180, 255 ),
+	hover_fg = Color( 20, 20, 20, 255 ),
+	hover_text = Color( 200, 200, 200, 255 ),
+	hint1 = Color( 115, 115, 115, 215 ),
+	hint2 = Color( 150, 150, 150, 255 ),
+}
+
 local button_next = false
 local next_frame = false
 local function button( x, y, w, h )
@@ -100,6 +119,18 @@ local function mxButton( mx, w, h )
 	return button( mx:Get( 1, 1 ), mx:Get( 2, 1 ), w, h )
 end
 
+local function SpecInfoText( x, y, text, w )
+	draw.LimitedText{
+		text = text,
+		pos = {  x, y },
+		color = COLOR.text_white,
+		font = "SCPHUDMedium",
+		xalign = TEXT_ALIGN_LEFT,
+		yalign = TEXT_ALIGN_CENTER,
+		max_width = w,
+	}
+end
+
 SCPMarkers = {}
 HUDDrawSpawnInfo = 0
 EscapeStatus = 0
@@ -109,6 +140,7 @@ HUDDrawInfo = false
 HUDBlink = 1
 HUDNextBlink = 0
 HUDPickupHint = false
+HUDSpectatorInfo = false
 
 local recomputed = false
 local last_width = ScrW()
@@ -130,7 +162,7 @@ function GM:HUDPaint()
 		local scr = v.data.pos:ToScreen()
 
 		if scr.visible then
-			surface.SetDrawColor( Color( 255, 100, 100, 200 ) )
+			surface.SetDrawColor( COLOR.text_red )
 			//surface.DrawRect( scr.x - 5, scr.y - 5, 10, 10 )
 			surface.DrawPoly( {
 				{ x = scr.x, y = scr.y - 10 },
@@ -142,7 +174,7 @@ function GM:HUDPaint()
 			local tw, th = draw.Text( {
 				text = v.data.name,
 				font = "SCPHUDSmall",
-				color = Color( 255, 100, 100, 200 ),
+				color = COLOR.text_red,
 				pos = { scr.x, scr.y + 10 },
 				xalign = TEXT_ALIGN_CENTER,
 				yalign = TEXT_ALIGN_TOP,
@@ -151,7 +183,7 @@ function GM:HUDPaint()
 			draw.Text( {
 				text = math.Round( v.data.pos:Distance( LocalPlayer():GetPos() ) * 0.019 ) .. "m",
 				font = "SCPHUDSmall",
-				color = Color( 255, 100, 100, 200 ),
+				color = COLOR.text_red,
 				pos = { scr.x, scr.y + 10 + th },
 				xalign = TEXT_ALIGN_CENTER,
 				yalign = TEXT_ALIGN_TOP,
@@ -202,7 +234,7 @@ function GM:HUDPaint()
 				draw.Text{
 					text = "Escaping...",
 					pos = { w * 0.5, y - h * 0.025 },
-					color = Color( 255, 255, 255 ),
+					color = COLOR.white,
 					font = "SCPHUDVBig",
 					xalign = TEXT_ALIGN_CENTER,
 					yalign = TEXT_ALIGN_BOTTOM,
@@ -224,7 +256,7 @@ function GM:HUDPaint()
 				cam.PushModelMatrix( mx )
 					local f = (EscapeTimer - CurTime()) / 20
 
-					surface.SetDrawColor( Color( 255, 255, 255, 255 ) )
+					surface.SetDrawColor( COLOR.white )
 					draw.NoTexture()
 					surface.DrawCooldownHollowRectCW( x + diff, y + diff, a, a, 10, f, HRCSTYLE_RECT_SOLID )
 				cam.PopModelMatrix()
@@ -232,7 +264,7 @@ function GM:HUDPaint()
 				draw.Text{
 					text = math.Round(EscapeTimer - CurTime()),
 					pos = { cx, cy },
-					color = Color( 255, 255, 255 ),
+					color = COLOR.white,
 					font = "SCPHUDVBig",
 					xalign = TEXT_ALIGN_CENTER,
 					yalign = TEXT_ALIGN_CENTER,
@@ -241,14 +273,14 @@ function GM:HUDPaint()
 				draw.Text{
 					text = "Escape Blocked!",
 					pos = { w * 0.5, y - h * 0.025 },
-					color = Color( 255, 0, 0 ),
+					color = COLOR.escape_blocked,
 					font = "SCPHUDVBig",
 					xalign = TEXT_ALIGN_CENTER,
 					yalign = TEXT_ALIGN_BOTTOM,
 				}
 
 				PushFilters( TEXFILTER.LINEAR )
-					surface.SetDrawColor( Color( 255, 255, 255, 255 ) )
+					surface.SetDrawColor( COLOR.white )
 					surface.SetMaterial( MATS.escape_blocked )
 					surface.DrawTexturedRect( x, y, s, s )
 				PopFilters()
@@ -284,7 +316,7 @@ function GM:HUDPaint()
 		MATS.blur:Recompute()
 	end
 
-	surface.SetDrawColor( Color( 150, 150, 150, 100 ) )
+	surface.SetDrawColor( COLOR.gray_bg )
 	draw.NoTexture()
 
 	local start = h * 0.01
@@ -363,11 +395,11 @@ function GM:HUDPaint()
 	render.SetStencilFailOperation( STENCIL_KEEP )
 
 	surface.SetMaterial( MATS.blur )
-	surface.SetDrawColor( Color( 255, 255, 255, 255 ) )
+	surface.SetDrawColor( COLOR.white )
 	surface.DrawTexturedRect( 0, 0, sw, sh )
 
 	render.SetStencilEnable( false )
-	surface.SetDrawColor( Color( 0, 0, 0, 150 ) )
+	surface.SetDrawColor( COLOR.black_bg )
 
 	if !isspec then
 		draw.NoTexture()
@@ -395,19 +427,48 @@ function GM:HUDPaint()
 			draw.LimitedText{
 				text = string.sub( spectarget:Nick(), 1, 36 ),
 				pos = {  w * 0.5, 10 + h * 0.085 },
-				color = Color( 255, 255, 255, 100 ),
+				color = COLOR.text_white,
 				font = "SCPHUDBig",
 				xalign = TEXT_ALIGN_CENTER,
 				yalign = TEXT_ALIGN_CENTER,
 				max_width = w * 0.2 - start,
 			}
+
+			if HUDSpectatorInfo then
+				if ULib and ULib.ucl.query( ply, "slc spectateinfo" ) then
+					surface.SetDrawColor( Color( 150, 150, 150, 255 ) )
+					surface.DrawRect( w * 0.35 - 1, h * 0.25 - 1, w * 0.3 + 2, h * 0.5 + 2 )
+
+					surface.SetDrawColor( Color( 40, 40, 40, 255 ) )
+					surface.DrawRect( w * 0.35, h * 0.25, w * 0.3, h * 0.5 )
+
+					local dx, max_w = w * 0.35 + 8, w * 0.3 - 16
+					SpecInfoText( dx, h * 0.27, "Nick: "..spectarget:Nick(), max_w )
+					SpecInfoText( dx, h * 0.3, "Player ID: "..spectarget:UserID() )
+					SpecInfoText( dx, h * 0.33, "SteamID: "..spectarget:SteamID() )
+					SpecInfoText( dx, h * 0.36, "SteamID64: "..( spectarget:SteamID64() or "-" ) )
+					SpecInfoText( dx, h * 0.39, "Level: "..spectarget:SCPLevel().."   |   XP: "..spectarget:SCPExp() )
+					SpecInfoText( dx, h * 0.42, "Active: "..tostring( spectarget:IsActive() ).."   |   AFK: "..tostring( spectarget:IsAFK() ) )
+					SpecInfoText( dx, h * 0.45, "Premium: "..tostring( spectarget:IsPremium() ) )
+					SpecInfoText( dx, h * 0.48, "Team: "..SCPTeams.getName( spectarget:SCPTeam() ) )
+					SpecInfoText( dx, h * 0.51, "Class: "..spectarget:SCPClass(), max_w )
+
+					local pc, pt = spectarget:SCPPersona()
+					SpecInfoText( dx, h * 0.54, "Fake ID: "..SCPTeams.getName( pt )..", "..pc, max_w )
+					SpecInfoText( dx, h * 0.57, "HP: "..spectarget:Health().." / "..spectarget:GetMaxHealth() )
+
+
+					--SpecInfoText( dx, h * 0.7, "To get additional info, type in console:" )
+					--SpecInfoText( w * 0.4, h * 0.73, "'slc_playerinfo 5'" )
+				end
+			end
 		end
 
 		if showtime then
 			draw.Text{
 				text = time,
 				pos = {  w * 0.5, 10 + h * 0.025 },
-				color = Color( 255, 255, 255, 100 ),
+				color = COLOR.text_white,
 				font = "SCPHUDBig",
 				xalign = TEXT_ALIGN_CENTER,
 				yalign = TEXT_ALIGN_CENTER,
@@ -417,26 +478,26 @@ function GM:HUDPaint()
 		return
 	end
 
-	surface.SetDrawColor( Color( 150, 150, 150, 100 ) )
+	surface.SetDrawColor( COLOR.gray_bg )
 	surface.DrawRect( start + w * 0.025, h * 0.795 + addy, w * 0.235, 2 )
 
 	draw.LimitedText{
 		text = string.sub( ply:Nick(), 1, 24 ),
 		pos = { start + w * 0.0875, h * 0.773 + addy },
-		color = Color( 255, 255, 255, 100 ),
+		color = COLOR.text_white,
 		font = bigFontOverride or "SCPHUDBig",
 		xalign = TEXT_ALIGN_CENTER,
 		yalign = TEXT_ALIGN_CENTER,
 		max_width = w * 0.175 - start
 	}
 
-	surface.SetDrawColor( Color( 150, 150, 150, 100 ) )
+	surface.SetDrawColor( COLOR.gray_bg )
 	surface.DrawRect( start + w * 0.175, h * 0.76 + addy, 2, h * 0.025 )
 
 	draw.Text{
 		text = time,
 		pos = { start + w * 0.225, h * 0.773 + addy },
-		color = Color( 255, 255, 255, 100 ),
+		color = COLOR.text_white,
 		font =  numbersFontOverride or "SCPNumbersBig",
 		xalign = TEXT_ALIGN_CENTER,
 		yalign = TEXT_ALIGN_CENTER,
@@ -494,7 +555,7 @@ function GM:HUDPaint()
 	draw.NoTexture()
 
 	--BLINK
-	surface.SetDrawColor( Color( 150, 150, 150, 100 ) )
+	surface.SetDrawColor( COLOR.gray_bg )
 	surface.DrawDifference( bar:ToPoly(), bar_out:ToPoly() )
 
 	local cur = HUDNextBlink - CurTime()
@@ -510,7 +571,7 @@ function GM:HUDPaint()
 		}
 	end
 
-	surface.SetDrawColor( Color( 255, 255, 255, 255 ) )
+	surface.SetDrawColor( COLOR.white )
 	surface.SetMaterial( MATS.blink )
 	surface.DrawTexturedRect( h * -0.01 + w * 0.1475, h * 0.8075 + addy, h * 0.04, h * 0.04 )
 
@@ -520,7 +581,7 @@ function GM:HUDPaint()
 	ico = ico + bar_offset
 
 	draw.NoTexture()
-	surface.SetDrawColor( Color( 150, 150, 150, 100 ) )
+	surface.SetDrawColor( COLOR.gray_bg )
 	surface.DrawDifference( bar:ToPoly(), bar_out:ToPoly() )
 
 	local hp = ply:Health()
@@ -540,14 +601,14 @@ function GM:HUDPaint()
 		if i == segments then
 			surface.SetDrawColor( Color( 175, 0, 25, 175 * intense ) )
 		else
-			surface.SetDrawColor( Color( 175, 0, 25, 175 ) )
+			surface.SetDrawColor( COLOR.hp_bar )
 		end
 
 		surface.DrawPoly( nico:ToPoly() )
 		nico = nico + ico_offset
 	end
 
-	surface.SetDrawColor( Color( 255, 255, 255, 100 ) )
+	surface.SetDrawColor( COLOR.text_white )
 	surface.SetMaterial( MATS.hp )
 	surface.DrawTexturedRect( h * -0.005 + w * 0.1475 + xoffset + cxo, h * 0.8625 + addy, h * 0.03, h * 0.03 )
 
@@ -565,7 +626,7 @@ function GM:HUDPaint()
 	ico = ico + bar_offset
 
 	draw.NoTexture()
-	surface.SetDrawColor( Color( 150, 150, 150, 100 ) )
+	surface.SetDrawColor( COLOR.gray_bg )
 	surface.DrawDifference( bar:ToPoly(), bar_out:ToPoly() )
 
 	if ply.Stamina then
@@ -577,9 +638,9 @@ function GM:HUDPaint()
 
 		for i = 1, segments do
 			if ply.Exhausted then
-				surface.SetDrawColor( Color( 75, 125, 25, 75 ) )
+				surface.SetDrawColor( COLOR.stamina_alt )
 			else
-				surface.SetDrawColor( Color( 150, 175, 0, 175 ) )
+				surface.SetDrawColor( COLOR.stamina )
 			end
 
 			surface.DrawPoly( nico:ToPoly() )
@@ -593,7 +654,7 @@ function GM:HUDPaint()
 		end
 	end
 
-	surface.SetDrawColor( Color( 255, 255, 255, 255 ) )
+	surface.SetDrawColor( COLOR.white )
 	surface.SetMaterial( MATS.sprint )
 	surface.DrawTexturedRect( h * -0.005 + w * 0.1475 + 2 * (xoffset + cxo), h * 0.9125 + addy, h * 0.03, h * 0.03 )
 
@@ -624,14 +685,14 @@ function GM:HUDPaint()
 		draw.Text{
 			text = battery.."%",
 			pos = { start + w * 0.01, h * 0.945 + addy },
-			color = Color( 255, 255, 255, 100 ),
+			color = COLOR.text_white,
 			font = "SCPNumbersSmall",
 			xalign = TEXT_ALIGN_LEFT,
 			yalign = TEXT_ALIGN_BOTTOM,
 		}
 
 		PushFilters( TEXFILTER.LINEAR )
-			surface.SetDrawColor( Color( 255, 255, 255, 100 ) )
+			surface.SetDrawColor( COLOR.text_white )
 			surface.SetMaterial( MATS.battery )
 			surface.DrawTexturedRect( h * -0.02 + w * 0.01 + xo * 0.5 - 4, h * 0.94 + addy, h * 0.06, h * 0.06 )
 		PopFilters()
@@ -641,28 +702,28 @@ function GM:HUDPaint()
 	if IsValid( wep ) and ( wep:GetMaxClip1() > 0 or wep.GetCustomClip ) then
 		PushFilters( TEXFILTER.LINEAR )
 			if !wep.GetCustomClip then
-				surface.SetDrawColor( Color( 255, 255, 255, 255 ) )
+				surface.SetDrawColor( COLOR.white )
 				surface.SetMaterial( MATS.ammo )
 				surface.DrawTexturedRect( start + w * 0.075, h * 0.9575 + addy, h * 0.025, h * 0.025 )
 
 				draw.Text{
 					text = string.sub( ply:GetAmmoCount( wep:GetPrimaryAmmoType() ), 1, 23 ),
 					pos = { start + w * 0.1, h * 0.97 + addy },
-					color = Color( 255, 255, 255, 100 ),
+					color = COLOR.text_white,
 					font = "SCPNumbersBig",
 					xalign = TEXT_ALIGN_LEFT,
 					yalign = TEXT_ALIGN_CENTER,
 				}
 			end
 
-			surface.SetDrawColor( Color( 255, 255, 255, 255 ) )
+			surface.SetDrawColor( COLOR.white )
 			surface.SetMaterial( MATS.mag )
 			surface.DrawTexturedRect( start + w * 0.21, h * 0.9575 + addy, h * 0.025, h * 0.025 )
 
 			draw.Text{
 				text = string.sub( wep.GetCustomClip and wep:GetCustomClip() or wep:Clip1(), 1, 23 ),
 				pos = { start + w * 0.235, h * 0.97 + addy },
-				color = Color( 255, 255, 255, 100 ),
+				color = COLOR.text_white,
 				font = "SCPNumbersBig",
 				xalign = TEXT_ALIGN_LEFT,
 				yalign = TEXT_ALIGN_CENTER,
@@ -673,7 +734,7 @@ function GM:HUDPaint()
 
 	--More info
 	if HUDDrawInfo /*or HUDDrawSpawnInfo > CurTime()*/ or ROUND.post then
-		surface.SetDrawColor( Color( 150, 150, 150, 100 ) )
+		surface.SetDrawColor( COLOR.gray_bg )
 		draw.NoTexture()
 
 		surface.DrawPoly{
@@ -708,11 +769,11 @@ function GM:HUDPaint()
 		render.SetStencilFailOperation( STENCIL_KEEP )
 		render.SetStencilPassOperation( STENCIL_REPLACE )
 
-		surface.SetDrawColor( Color( 255, 255, 255, 255 ) )
+		surface.SetDrawColor( COLOR.white )
 		surface.DrawTexturedRect( 0, 0, sw, sh )
 
 		render.SetStencilEnable( false )
-		surface.SetDrawColor( Color( 0, 0, 0, 150 ) )
+		surface.SetDrawColor( COLOR.black_bg )
 
 		draw.NoTexture()
 		surface.DrawPoly{
@@ -727,7 +788,7 @@ function GM:HUDPaint()
 		local _, th = draw.Text{
 			text = LANG.HUD.class..":",
 			pos = { start + w * 0.02, h * 0.75 + addy },
-			color = Color( 255, 255, 255, 100 ),
+			color = COLOR.text_white,
 			font = "SCPHUDVSmall",
 			xalign = TEXT_ALIGN_LEFT,
 			yalign = TEXT_ALIGN_TOP,
@@ -737,7 +798,7 @@ function GM:HUDPaint()
 		draw.LimitedText{
 			text = LANG.CLASSES[class] or class,
 			pos = { start + w * 0.04, h * 0.75 + th * 0.75 + addy },
-			color = Color( 255, 255, 255, 100 ),
+			color = COLOR.text_white,
 			font = mediumFontOverride or "SCPHUDMedium",
 			xalign = TEXT_ALIGN_LEFT,
 			yalign = TEXT_ALIGN_TOP,
@@ -747,7 +808,7 @@ function GM:HUDPaint()
 		local _, th = draw.Text{
 			text = LANG.HUD.team..":",
 			pos = { start + w * 0.1525, h * 0.75 + addy },
-			color = Color( 255, 255, 255, 100 ),
+			color = COLOR.text_white,
 			font = "SCPHUDVSmall",
 			xalign = TEXT_ALIGN_LEFT,
 			yalign = TEXT_ALIGN_TOP,
@@ -757,7 +818,7 @@ function GM:HUDPaint()
 		draw.LimitedText{
 			text = LANG.TEAMS[tname] or tname,
 			pos = { start + w * 0.1725, h * 0.75 + th * 0.75 + addy },
-			color = Color( 255, 255, 255, 100 ),
+			color = COLOR.text_white,
 			font = mediumFontOverride or "SCPHUDMedium",
 			xalign = TEXT_ALIGN_LEFT,
 			yalign = TEXT_ALIGN_TOP,
@@ -798,7 +859,7 @@ function GM:HUDPaint()
 
 		--SANITY
 		draw.NoTexture()
-		surface.SetDrawColor( Color( 150, 150, 150, 100 ) )
+		surface.SetDrawColor( COLOR.gray_bg )
 		surface.DrawDifference( bar:ToPoly(), bar_out:ToPoly() )
 
 		local san = ply:GetSanity()
@@ -808,13 +869,13 @@ function GM:HUDPaint()
 		local nico = SimpleMatrix( 2, 4, ico )
 
 		for i = 1, segments do
-			surface.SetDrawColor( Color( 100, 100, 150, 175 ) )
+			surface.SetDrawColor( COLOR.sanity )
 
 			surface.DrawPoly( nico:ToPoly() )
 			nico = nico + ico_offset
 		end
 
-		surface.SetDrawColor( Color( 255, 255, 255, 100 ) )
+		surface.SetDrawColor( COLOR.text_white )
 		surface.SetMaterial( MATS.sanity )
 		surface.DrawTexturedRect( start + w * 0.1325 - h * 0.015, h * 0.8125 + addy, h * 0.03, h * 0.03 )
 
@@ -830,7 +891,7 @@ function GM:HUDPaint()
 
 		--XP
 		draw.NoTexture()
-		surface.SetDrawColor( Color( 150, 150, 150, 100 ) )
+		surface.SetDrawColor( COLOR.gray_bg )
 		surface.DrawDifference( bar:ToPoly(), bar_out:ToPoly() )
 
 		local xp = ply:SCPExp()
@@ -847,7 +908,7 @@ function GM:HUDPaint()
 			local width = w * 0.257 * pct
 
 			draw.NoTexture()
-			surface.SetDrawColor( Color( 175, 152, 0, 175 ) )
+			surface.SetDrawColor( COLOR.xp )
 			surface.DrawPoly{
 				{ x = s, y = h * 0.865 + addy },
 				{ x = s + width, y = h * 0.865 + addy },
@@ -863,7 +924,7 @@ function GM:HUDPaint()
 		end
 
 		PushFilters( TEXFILTER.LINEAR )
-			surface.SetDrawColor( Color( 255, 255, 255, 100 ) )
+			surface.SetDrawColor( COLOR.text_white )
 			surface.SetMaterial( MATS.xp )
 			surface.DrawTexturedRect( start + xoffset + cxo + w * 0.1325 - h * 0.02, h * 0.8575 + addy, h * 0.04, h * 0.04 )
 		PopFilters()
@@ -871,7 +932,7 @@ function GM:HUDPaint()
 		draw.Text{
 			text = LANG.HUD.prestige_points..":\t"..ply:SCPPrestigePoints(),
 			pos = { start + (cxo + xoffset) * 2 + w * 0.01, h * 0.91 + addy },
-			color = Color( 255, 255, 255, 100 ),
+			color = COLOR.text_white,
 			font = smallFontOverride or "SCPHUDSmall",
 			xalign = TEXT_ALIGN_LEFT,
 			yalign = TEXT_ALIGN_TOP,
@@ -887,16 +948,16 @@ function GM:HUDPaint()
 		x = x + 5
 		y = y + 5
 
-		surface.SetDrawColor( Color( 180, 180, 180, 255 ) )
+		surface.SetDrawColor( COLOR.hover_bg )
 		surface.DrawRect( x - 2, y - 2, tw + 12, th + 12 )
 
-		surface.SetDrawColor( Color( 20, 20, 20, 255 ) )
+		surface.SetDrawColor( COLOR.hover_fg )
 		surface.DrawRect( x, y, tw + 8, th + 8 )
 
 		draw.Text{
 			text = text,
 			pos = { x + 4, y + 4 },
-			color = Color( 200, 200, 200, 255 ),
+			color = COLOR.hover_text,
 			font = smallFontOverride or "SCPHUDSmall",
 			xalign = TEXT_ALIGN_LEFT,
 			yalign = TEXT_ALIGN_TOP,
@@ -926,18 +987,18 @@ function GM:HUDPaint()
 			tw = th
 		end
 
-		surface.SetDrawColor( Color( 115, 115, 115, 215 ) )
+		surface.SetDrawColor( COLOR.hint1 )
 		--surface.SetDrawColor( Color( 175, 175, 175, 255 ) )
 		surface.DrawRect( w * 0.485 - tw * 0.5, h * 0.75 - th * 0.5 - w * 0.015, w * 0.03 + tw, w * 0.03 + th )
 
-		surface.SetDrawColor( Color( 150, 150, 150, 255 ) )
+		surface.SetDrawColor( COLOR.hint2 )
 		--surface.SetDrawColor( Color( 125, 125, 125, 255 ) )
 		surface.DrawRect( w * 0.49 - tw * 0.5, h * 0.75 - th * 0.5 - w * 0.01, w * 0.02 + tw, w * 0.02 + th )
 
 		draw.Text{
 			text = key,
 			pos = { w * 0.5, h * 0.75 },
-			color = Color( 255, 255, 255, 255 ),
+			color = COLOR.white,
 			font = "SCPHUDBig",
 			xalign = TEXT_ALIGN_CENTER,
 			yalign = TEXT_ALIGN_CENTER,
@@ -959,7 +1020,7 @@ function GM:HUDPaint()
 		draw.Text{
 			text = text,
 			pos = { w * 0.5, h * 0.75 - th - w * 0.02 },
-			color = Color( 255, 255, 255, 255 ),
+			color = COLOR.white,
 			font = "SCPHUDBig",
 			xalign = TEXT_ALIGN_CENTER,
 			yalign = TEXT_ALIGN_CENTER,
@@ -1001,8 +1062,8 @@ hook.Add( "Think", "SCPHUDThink", function()
 	end
 end )
 
-local eyep, posp
-hook.Add( "PostDrawOpaqueRenderables", "cursortest", function()
+--local eyep, posp
+--hook.Add( "PostDrawOpaqueRenderables", "cursortest", function()
 	/*if vgui.CursorVisible() then
 		if input.IsMouseDown( MOUSE_LEFT ) then
 			local x, y = input.GetCursorPos()
@@ -1020,4 +1081,4 @@ hook.Add( "PostDrawOpaqueRenderables", "cursortest", function()
 	if eyep then
 		render.DrawLine( eyep, posp )
 	end*/
-end )
+--end )

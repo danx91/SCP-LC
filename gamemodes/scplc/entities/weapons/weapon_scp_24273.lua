@@ -709,6 +709,7 @@ if CLIENT then
 	end )
 
 	hook.Add( "PreDrawHalos", "SLCSCP2427Halo", function()
+		local ply = LocalPlayer()
 		if ply:SCPClass() == CLASSES.SCP24273 then
 			local wep = ply:GetActiveWeapon()
 			if IsValid( wep ) then

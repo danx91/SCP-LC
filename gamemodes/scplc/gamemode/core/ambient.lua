@@ -261,4 +261,4 @@ end
 	end
 end )
 
-AddAmbient( "023", "sound/scp/023/ambient.ogg", nil, nil, 0.2 )*/
+AddAmbient( "023", "sound/scp_lc/scp/023/ambient.ogg", nil, nil, 0.2 )*/

@@ -128,7 +128,7 @@ function GetActivePlayers()
 	local tab = {}
 
 	for i, v in ipairs( player.GetAll() ) do
-		if v:IsActive() then
+		if v:IsActive() and !v:IsAFK() then
 			table.insert( tab, v )
 		end
 	end
@@ -226,23 +226,27 @@ Timer( "PlayXP", 300, 0, function()
 		local plus = rt:GetRemainingTime() <= rt:GetTime() * 0.5
 
 		for k, v in pairs( player.GetAll() ) do
-			if SCPTeams.hasInfo( v:SCPTeam(), SCPTeams.INFO_ALIVE ) then
-				if plus then
-					v:AddXP( pplus )
-					PlayerMessage( "rxpplus$"..pplus, v )
+			if !v:IsAFK() then
+				if SCPTeams.hasInfo( v:SCPTeam(), SCPTeams.INFO_ALIVE ) then
+					if plus then
+						v:AddXP( pplus )
+						PlayerMessage( "rxpplus$"..pplus, v )
+					else
+						v:AddXP( pplay )
+						PlayerMessage( "rxpplay$"..pplay, v )
+					end
 				else
-					v:AddXP( pplay )
-					PlayerMessage( "rxpplay$"..pplay, v )
+					v:AddXP( pspec )
+					PlayerMessage( "rxpspec$"..pspec, v )
 				end
-			else
-				v:AddXP( pspec )
-				PlayerMessage( "rxpspec$"..pspec, v )
 			end
 		end
 	else
 		for k, v in pairs( player.GetAll() ) do
-			v:AddXP( pspec )
-			PlayerMessage( "rxpspec$"..pspec, v )
+			if !v:IsAFK() then
+				v:AddXP( pspec )
+				PlayerMessage( "rxpspec$"..pspec, v )
+			end
 		end
 	end
 end )

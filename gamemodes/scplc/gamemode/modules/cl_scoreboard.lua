@@ -65,7 +65,7 @@ local customRanks = {
 	author = {
 		sorting = -20,
 		color = Color( 115, 25, 155, 100 ),
-		func = { "76561198110788144" } --Can be either SteamID64, table of SteamID64s or function with player as argument
+		func = "76561198110788144"--Can be either SteamID64, table of SteamID64s or function with player as argument
 	},
 	tester = {
 		sorting = 19,

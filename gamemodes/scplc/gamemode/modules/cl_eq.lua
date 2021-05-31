@@ -451,11 +451,11 @@ local function DrawEQ()
 			close_eq = false
 			return
 		else
-			alpha = math.max( alpha - 2 * RealFrameTime(), 0 )
+			alpha = math.max( alpha - 4 * RealFrameTime(), 0 )
 		end
 	else
 		if alpha < 1 then
-			alpha = math.min( alpha + 3 * RealFrameTime(), 1 )
+			alpha = math.min( alpha + 4 * RealFrameTime(), 1 )
 		end
 	end
 
@@ -570,7 +570,7 @@ local function DrawEQ()
 		end
 	end
 
-	local keyfont = 
+	//local keyfont = 
 
 	draw.Text{
 		text = LANG.eq_lmb,

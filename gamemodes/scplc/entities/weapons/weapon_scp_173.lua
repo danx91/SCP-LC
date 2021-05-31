@@ -332,9 +332,9 @@ function SWEP:DrawSCPHUD()
 	}
 end
 
-addSounds( "SCP173.Horror", "scp/173/Horror/Horror%i.ogg", 0, 1, 100, CHAN_STATIC, 0, 9 )
-addSounds( "SCP173.Rattle", "scp/173/Rattle%i.ogg", 100, 1, 100, CHAN_STATIC, 1, 3 )
-addSounds( "SCP173.Snap", "scp/173/NeckSnap%i.ogg", 511, 1, 100, CHAN_STATIC, 1, 3 )
+addSounds( "SCP173.Horror", "scp_lc/scp/173/horror/horror%i.ogg", 0, 1, 100, CHAN_STATIC, 0, 9 )
+addSounds( "SCP173.Rattle", "scp_lc/scp/173/rattle%i.ogg", 100, 1, 100, CHAN_STATIC, 1, 3 )
+addSounds( "SCP173.Snap", "scp_lc/scp/173/neck_snap%i.ogg", 511, 1, 100, CHAN_STATIC, 1, 3 )
 
 hook.Add( "PlayerFootstep", "173Rattle", function( ply, pos, foot, sound, vol, filter )
 	if ply:SCPClass() == CLASSES.SCP173 then

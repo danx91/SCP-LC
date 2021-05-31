@@ -524,7 +524,7 @@ hook.Add( "EntityTakeDamage", "SCP106DMGMod", function( ent, dmg )
 	end
 end )
 
-AddAmbient( "023", "sound/scp/023/ambient.ogg", nil, nil, 0.2 )
+AddAmbient( "023", "sound/scp_lc/scp/023/ambient.ogg", nil, nil, 0.2 )
 
 DefineUpgradeSystem( "scp023", {
 	grid_x = 4,

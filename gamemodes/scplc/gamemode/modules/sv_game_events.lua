@@ -133,7 +133,7 @@ function ExplodeGateA( ply )
 	snd:Play()
 	snd:ChangeVolume( 0.25 )
 
-	BroadcastLua( 'surface.PlaySound("franklin1.ogg")' )
+	//BroadcastLua( 'surface.PlaySound("scp_lc/franklin1.ogg")' )
 
 	local time = CVAR.explodetime:GetInt()
 	PlayerMessage( "gateexplode$"..time )
@@ -272,7 +272,11 @@ function Recontain106( ply )
 			end
 
 			local eloiid = ents.FindByName( ELO_IID_NAME )[1]
-			eloiid:Use( game.GetWorld(), game.GetWorld(), USE_TOGGLE, 1 )
+			if eloiid then
+				eloiid:Use( game.GetWorld(), game.GetWorld(), USE_TOGGLE, 1 )
+			end
+
+			TransmitSound( "scp_lc/announcements/recontained106.ogg", true, 1 )
 		end )
 
 
@@ -346,7 +350,7 @@ function OMEGAWarhead( ply1, ply2 )
 		ALPHA_WARHED_SCREEN:SetUsable( false )
 	end
 
-	TransmitSound( "warhead/alarm.ogg", true, 1 )
+	TransmitSound( "scp_lc/warhead/alarm.ogg", true, 1 )
 	AddTimer( "OmegaSiren", 3, 1, function( self, n )
 
 		//print( "Opening doors..." )
@@ -442,8 +446,8 @@ function OMEGAWarhead( ply1, ply2 )
 					end
 				end
 
-				TransmitSound( "warhead/explosion.ogg", true, facility, 1 )
-				TransmitSound( "warhead/explosion_far.ogg", true, surface, 1 )
+				TransmitSound( "scp_lc/warhead/explosion.ogg", true, facility, 1 )
+				TransmitSound( "scp_lc/warhead/explosion_far.ogg", true, surface, 1 )
 
 				for k, v in pairs( OMEGA_DESTROY ) do
 					if IsValid( k ) then
@@ -525,7 +529,7 @@ function ALPHAWarhead( ply )
 		sel_omega:Broadcast( NULL, false, 2 )
 	end
 
-	TransmitSound( "warhead/alarm.ogg", true, 1 )
+	TransmitSound( "scp_lc/warhead/alarm.ogg", true, 1 )
 	AddTimer( "AlphaSiren", 3, 1, function( self, n )
 		local time = CVAR.alpha_time:GetInt()
 		PlayerMessage( "alpha_detonation$"..time )
@@ -583,8 +587,8 @@ function ALPHAWarhead( ply )
 					end
 				end
 
-				TransmitSound( "warhead/explosion.ogg", true, surface, 1 )
-				TransmitSound( "warhead/explosion_far.ogg", true, facility, 1 )
+				TransmitSound( "scp_lc/warhead/explosion.ogg", true, surface, 1 )
+				TransmitSound( "scp_lc/warhead/explosion_far.ogg", true, facility, 1 )
 
 				for k, v in pairs( ALPHA_DESTROY ) do
 					if IsValid( k ) then

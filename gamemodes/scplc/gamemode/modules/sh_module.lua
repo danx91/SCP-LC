@@ -7,9 +7,9 @@ GM.Website 	= ""
 --[[-------------------------------------------------------------------------
 Static values
 ---------------------------------------------------------------------------]]
-SIGNATURE = "b000701"
-VERSION = "BETA 0.7.1"
-DATE = "16/03/2020"
+SIGNATURE = "b000702"
+VERSION = "BETA 0.7.2"
+DATE = "31/05/2021"
 
 SCPS = {}
 CLASSES = {}
@@ -50,6 +50,8 @@ CVAR = {
 	omega_shelter_xp = CreateConVar( "slc_xp_omega_shelter", 500, { FCVAR_ARCHIVE } ),
 	alpha_time = CreateConVar( "slc_time_alpha", 150, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
 	alpha_escape_xp = CreateConVar( "slc_xp_alpha_escape", 500, { FCVAR_ARCHIVE } ),
+	afk_mode = CreateConVar( "slc_afk_mode", 1, { FCVAR_NOTIFY, FCVAR_ARCHIVE }, "0 - don't do anything, 1 - kick if server is full, >= 2 - kick after x seconds" ),
+	afk_time = CreateConVar( "slc_afk_time", 120, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
 }
 
 --TODO

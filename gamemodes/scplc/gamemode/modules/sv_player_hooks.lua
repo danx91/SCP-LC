@@ -585,18 +585,6 @@ end
 	
 end*/
 
-hook.Add( "PlayerSay", "SCPPenaltyShow", function( ply, msg, teamonly )
-	if string.lower( msg ) == "!scp" then
-		if !ply.nscpcmdcheck or ply.nscpcmdcheck < CurTime() then
-			ply.nscpcmdcheck = CurTime() + 10
-
-			PrintSCPNotice( ply )
-		end
-
-		return ""
-	end
-end )
-
 hook.Add( "SetupPlayerVisibility", "CCTVPVS", function( ply, viewentity )
 	local wep = ply:GetActiveWeapon()
 	if IsValid( wep ) and wep:GetClass() == "item_slc_camera" then

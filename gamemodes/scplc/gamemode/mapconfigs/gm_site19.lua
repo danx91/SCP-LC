@@ -1677,28 +1677,24 @@ end )
 hook.Add( "EntityKeyValue", "Site19EntityKeyValue", function( ent, key, value )
 	if CLIENT then return end
 
-	local unblocker = CVAR.doorunblocker:GetBool()
-	if !IsValid( LUA_ENT ) and unblocker then
-		LUA_ENT = ents.Create( "lua_run" )
-		LUA_ENT:SetName( "door_unblocker" )
-		LUA_ENT:Spawn()
-	end
+	if CVAR.doorunblocker:GetBool() then
+		if !IsValid( LUA_ENT ) then
+			LUA_ENT = ents.Create( "lua_run" )
+			LUA_ENT:SetName( "door_unblocker" )
+			LUA_ENT:Spawn()
+		end
 
-	local class = ent:GetClass()
-	if class == "func_door" and key == "targetname" then
-		if string.match( value, "^lcz_door_" ) or string.match( value, "^hcz_door_" ) or string.match( value, "^ez_door_" ) then
-			//STORED_DOORS[ent] = true
+		local class = ent:GetClass()
+		if class == "func_door" and key == "targetname" then
+			if string.match( value, "^lcz_door_" ) or string.match( value, "^hcz_door_" ) or string.match( value, "^ez_door_" ) then
+				//STORED_DOORS[ent] = true
 
-			if unblocker then
-				ent:Fire( "AddOutput", "OnClose door_unblocker:RunPassedCode:hook.Run( 'SLCOnDoorClosed' ):0:-1" )
+				--if unblocker then
+					ent:Fire( "AddOutput", "OnClose door_unblocker:RunPassedCode:hook.Run( 'SLCOnDoorClosed' ):0:-1" )
+				--end
 			end
 		end
-	/*elseif class == "func_button" then
-		if string.sub( key, 1, 2 ) == "On" then
-			print( ent, key, value, ent:GetName() )
-		end*/
 	end
-
 end )
 
 //hook.Add( "AcceptInput", "Site19ChangeDoors", function( ent, input, activator, caller, value )

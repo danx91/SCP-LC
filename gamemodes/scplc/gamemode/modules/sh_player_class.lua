@@ -6,6 +6,7 @@ function PLAYER:SetupDataTables()
 	print("Setting up datatables for " .. ply:Nick() )
 	ply:NetworkVar( "Bool", 0, "_SCPActive" )
 	ply:NetworkVar( "Bool", 1, "_SCPPremium" )
+	ply:NetworkVar( "Bool", 2, "_SCPAFK" )
 
 	ply:NetworkVar( "Int", 0, "_SCPTeam" )
 	ply:NetworkVar( "Int", 1, "_SCPPersonaT" )
@@ -29,6 +30,7 @@ function PLAYER:SetupDataTables()
 	if SERVER then
 		ply:Set_SCPActive( false )
 		ply:Set_SCPPremium( false )
+		ply:Set_SCPAFK( false )
 
 		ply:Set_SCPTeam( TEAM_SPEC )
 		ply:Set_SCPPersonaT( TEAM_SPEC )

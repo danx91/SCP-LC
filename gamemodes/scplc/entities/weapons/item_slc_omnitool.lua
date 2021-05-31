@@ -726,7 +726,7 @@ InstallTable( "ActionQueue", SWEP )
 
 sound.Add{
 	name = "Omnitool.granted",
-	sound = "misc/omnitool_granted.ogg",
+	sound = "scp_lc/misc/omnitool_granted.ogg",
 	volume = 0.2,
 	level = 60,
 	pitch = 100,

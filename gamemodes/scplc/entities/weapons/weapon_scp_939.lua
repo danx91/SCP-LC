@@ -146,6 +146,6 @@ sound.Add( {
 	volume = 1,
 	level = 75,
 	pitch = 100,
-	sound = "scp/939/attack.ogg",
+	sound = "scp_lc/scp/939/attack.ogg",
 	channel = CHAN_STATIC,
 } )

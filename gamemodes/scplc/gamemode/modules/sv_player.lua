@@ -702,8 +702,8 @@ function ply:PlayerDropWeapon( class, all, force )
 		end
 
 		//print( wep:Clip1(), self:GetAmmoCount( wep:GetPrimaryAmmoType() ) )
-		if wep.PreDrop then
-			wep:PreDrop()	
+		if wep.SLCPreDrop then
+			wep:SLCPreDrop()	
 		end
 
 		self:DropWeapon( wep )
@@ -832,6 +832,51 @@ function ply:DisableStasis()
 		hook.Run( "SLCPlayerStasisEnd", self, data )
 	end
 end
+
+--[[-------------------------------------------------------------------------
+AFK
+---------------------------------------------------------------------------]]
+function ply:MakeAFK()
+	if !self:IsAFK() then
+		self.SLCAFKTimer = RealTime() + 1
+		self:Set_SCPAFK( true )
+		PlayerMessage( "afk", self )
+	end
+end
+
+local nafk = 0
+Timer( "SLCAFKCheck", 10, 0, function( self, n )
+	local rt = RealTime()
+	local afk_time = CVAR.afk_time:GetInt() or 60
+	local afk_mode = CVAR.afk_mode:GetInt() or 1
+
+	local players = player.GetAll()
+	local server_full = #players == game.MaxPlayers()
+
+
+	for k, v in pairs( players ) do
+		if !v:IsBot() then
+			if !v:IsAFK() then
+				--print( "check", v, v.SLCAFKTimer, rt )
+				if v.SLCAFKTimer and v.SLCAFKTimer + afk_time < rt then
+					v:MakeAFK()
+				end
+			elseif !ULib or !ULib.ucl.query( v, "slc afkdontkick" ) then
+				--print( "Player afk", v, math.floor( rt - v.SLCAFKTimer ) )
+
+				if afk_mode == 1 and server_full then
+					print( "AFK player kicked - Server is full" )
+					v:Kick( "AFK" )
+				elseif afk_mode >= 2 then
+					if math.floor( rt - v.SLCAFKTimer ) >= afk_mode then
+						print( "AFK player kicked - Maximum AFK time exceded" )
+						v:Kick( "AFK" )
+					end
+				end
+			end
+		end
+	end
+end )
 
 --[[-------------------------------------------------------------------------
 Properties

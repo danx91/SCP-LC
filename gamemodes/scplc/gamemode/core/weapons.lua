@@ -49,7 +49,9 @@ local CW_WEP_DMG = {
 timer.Simple( 0, function()
 	for k, v in pairs( CW_WEP_DMG ) do
 		local wep_tab = weapons.GetStored( k )
-		wep_tab.Damage = v
+		if wep_tab then
+			wep_tab.Damage = v
+		end
 	end
 end )
 
