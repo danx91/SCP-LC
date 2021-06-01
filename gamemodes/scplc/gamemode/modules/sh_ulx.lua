@@ -233,7 +233,7 @@ function InitializeSCPULX()
 	local spawnchip = ulx.command( ULX_CAT, "ulx spawn_chip", ulx.spawnchip, "!chip" )
 	spawnchip:addParam{ type = ULib.cmds.StringArg, hint = "Chip name", completes = ACC_REGISTRY.CHIPS_ID }
 	spawnchip:addParam{ type = ULib.cmds.BoolArg, invisible = true }
-	spawnchip:setOpposite( "ulx silent spawn_chip", { nil, true } )
+	spawnchip:setOpposite( "ulx silent spawn_chip", { nil, nil, true } )
 	spawnchip:defaultAccess( ULib.ACCESS_SUPERADMIN )
 	spawnchip:help( "Spawns chip" )
 
