@@ -357,7 +357,7 @@ function OMEGAWarhead( ply1, ply2 )
 
 		local time = CVAR.omega_time:GetInt()
 		PlayerMessage( "omega_detonation$"..time )
-		TransmitSound( "warhead/siren.wav", true, 1 )
+		TransmitSound( "scp_lc/warhead/siren.wav", true, 1 )
 
 		local a_doors = { [OMEGA_GATE_A_DOOR_L] = true, [OMEGA_GATE_A_DOOR_R] = true }
 		local s_doors = { [OMEGA_SHELTER_DOOR_L] = true, [OMEGA_SHELTER_DOOR_R] = true }
@@ -381,7 +381,7 @@ function OMEGAWarhead( ply1, ply2 )
 			end
 
 			AddTimer( "OmegaShelter", 5, 1, function( self, n )
-				TransmitSound( "warhead/siren.wav", false, 1 )
+				TransmitSound( "scp_lc/warhead/siren.wav", false, 1 )
 
 				//print( "HOLDING ROUND!" )
 				HoldRound()
@@ -533,7 +533,7 @@ function ALPHAWarhead( ply )
 	AddTimer( "AlphaSiren", 3, 1, function( self, n )
 		local time = CVAR.alpha_time:GetInt()
 		PlayerMessage( "alpha_detonation$"..time )
-		TransmitSound( "warhead/siren.wav", true, 1 )
+		TransmitSound( "scp_lc/warhead/siren.wav", true, 1 )
 
 		local support_timer = GetTimer( "SupportTimer" )
 		if IsValid( support_timer ) then
@@ -552,7 +552,7 @@ function ALPHAWarhead( ply )
 			end
 
 			AddTimer( "AlphaSiren", 5, 1, function( self, n )
-				TransmitSound( "warhead/siren.wav", false, 1 )
+				TransmitSound( "scp_lc/warhead/siren.wav", false, 1 )
 			end )
 
 			AddTimer( "AlphaExplosion", 10, 1, function( self, n )
