@@ -30,10 +30,12 @@ function GM:PlayerButtonDown( ply, button )
 		if ply.SLCAFKTimer <= rt then
 			if ply:IsAFK() then
 				ply:Set_SCPAFK( false )
+				QueueInsert( ply ) --insert player back to spawn queue
+
 				PlayerMessage( "afk_end", ply )
-			else
-				ply.SLCAFKTimer = rt
 			end
+
+			ply.SLCAFKTimer = rt
 		end
 	end
 

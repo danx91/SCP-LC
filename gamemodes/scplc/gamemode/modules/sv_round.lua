@@ -72,6 +72,12 @@ local function CleanupPlayers()
 		v.PlayerData:RoundReset()
 		v.Logger:Reset( true )
 		v:Cleanup()
+
+		if v:IsAFK() then
+			v:InvalidatePlayerForSpectate()
+			v:KillSilent()
+			v:SetupSpectator()
+		end
 	end
 end
 

@@ -44,14 +44,14 @@ function CheckQueue()
 	local queue = {}
 	
 	for i, v in ipairs( ROUND.queue ) do
-		if IsValid( v ) and !v:Alive() and v:SCPTeam() == TEAM_SPEC and !queueReg[v] then
+		if IsValid( v ) and !v:Alive() and !v:IsAFK() and v:SCPTeam() == TEAM_SPEC and !queueReg[v] then
 			table.insert( queue, v )
 			queueReg[v] = true
 		end
 	end
 
 	for i, v in ipairs( SCPTeams.getPlayersByTeam( TEAM_SPEC ) ) do
-		if !queueReg[v] and !v:Alive() then
+		if !queueReg[v] and !v:Alive() and !v:IsAFK() then
 			table.insert( queue, v )
 			queueReg[v] = true
 		end
