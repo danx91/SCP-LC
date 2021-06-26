@@ -42,7 +42,7 @@ Queue
 function CheckQueue()
 	queueReg = {}
 	local queue = {}
-	
+
 	for i, v in ipairs( ROUND.queue ) do
 		if IsValid( v ) and !v:Alive() and !v:IsAFK() and v:SCPTeam() == TEAM_SPEC and !queueReg[v] then
 			table.insert( queue, v )
@@ -50,7 +50,7 @@ function CheckQueue()
 		end
 	end
 
-	for i, v in ipairs( SCPTeams.getPlayersByTeam( TEAM_SPEC ) ) do
+	for i, v in ipairs( SCPTeams.GetPlayersByTeam( TEAM_SPEC ) ) do
 		if !queueReg[v] and !v:Alive() and !v:IsAFK() then
 			table.insert( queue, v )
 			queueReg[v] = true
@@ -181,8 +181,8 @@ function SetupPlayers( multi )
 		all = all - 1
 	end
 
-	local tab = getPlayerTable( all )
-	local groups = getGroups()
+	local tab = GetPlayerTable( all )
+	local groups = GetGroups()
 	local playertab = {}
 
 	for k, ply in pairs( plys ) do
@@ -258,7 +258,7 @@ function SetupPlayers( multi )
 
 		table.sort( classplayers, levelsort )
 
-		local classes, spawninfo = getClassGroup( g_name )
+		local classes, spawninfo = GetClassGroup( g_name )
 		local spawns = table.Copy( spawninfo )
 
 		local classspawns = {}
@@ -330,8 +330,8 @@ function SpawnSupport()
 		return
 	end
 
-	local group, data = selectSupportGroup()
-	local classes, spawninfo = getSupportGroup( group )
+	local group, data = SelectSupportGroup()
+	local classes, spawninfo = GetSupportGroup( group )
 	local spawns = table.Copy( spawninfo )
 
 	local num = 0
@@ -356,7 +356,7 @@ function SpawnSupport()
 		until #plys == 0*/
 
 		if IsValid( ply ) and ply:IsActive() and !ply:IsAFK() and ply:SCPTeam() == TEAM_SPEC then
-			if !ply:GetProperty( "spawning" ) and !ply:GetProperty( "spawning_scp" ) then
+			if !ply:IsAboutToSpawn() then
 				local plytab = {}
 
 				for k, v in pairs( classes ) do
@@ -448,7 +448,7 @@ local function GetEscapeData()
 
 		if team != TEAM_SPEC then
 			if ist and v:GetPos():WithinAABox( POS_ESCAPE[1], POS_ESCAPE[2] ) or !ist and v:GetPos():DistToSqr( POS_ESCAPE ) <= 22500 then
-				if SCPTeams.canEscape( team ) or GetRoundStat( "alpha_warhead" ) then
+				if SCPTeams.CanEscape( team ) or GetRoundStat( "alpha_warhead" ) then
 					table.insert( players, v )
 				end
 
@@ -457,11 +457,11 @@ local function GetEscapeData()
 				teams[team] = true
 			end
 		end
-	end	
+	end
 
 	for t1, v1 in pairs( teams ) do
 		for t2, v2 in pairs( teams ) do
-			if !SCPTeams.isAlly( t1, t2 ) then
+			if !SCPTeams.IsAlly( t1, t2 ) then
 				return players, true, all
 			end
 		end
@@ -492,7 +492,7 @@ function CheckEscape()
 
 		for k, v in pairs( player.GetAll() ) do
 			local team = v:SCPTeam()
-			if SCPTeams.canEscape( team ) then
+			if SCPTeams.CanEscape( team ) then
 				local ist = istable( POS_ESCAPE )
 				if ist and v:GetPos():WithinAABox( POS_ESCAPE[1], POS_ESCAPE[2] ) or !ist and v:GetPos():DistToSqr( POS_ESCAPE ) <= 22500 then
 					table.insert( players, v )
@@ -526,7 +526,7 @@ function CheckEscape()
 					CenterMessage( string.format( "offset:75;escaped#255,0,0,SCPHUDVBig;escapeinfo$%s;escapexp$%d", string.ToMinutesSeconds( diff ), xp ), v )
 
 					v:AddXP( xp )
-					SCPTeams.addScore( team, SCPTeams.getReward( team ) * 3 )
+					SCPTeams.AddScore( team, SCPTeams.GetReward( team ) * 3 )
 
 					v:Despawn()
 
@@ -630,7 +630,7 @@ hook.Add( "Tick", "SLCEscapeCheck", function() --TODO remove timer on escape / e
 				v:AddXP( xp )
 
 				local team = v:SCPTeam()
-				SCPTeams.addScore( team, SCPTeams.getReward( team ) * 2 )
+				SCPTeams.AddScore( team, SCPTeams.GetReward( team ) * 2 )
 
 				v:Despawn()
 
@@ -647,6 +647,11 @@ hook.Add( "Tick", "SLCEscapeCheck", function() --TODO remove timer on escape / e
 		else
 			local t = GetTimer( "SLCRound" )
 			if IsValid( t ) or ROUND.aftermatch then
+				local rtime = t:GetRemainingTime()
+				local ttime = t:GetTime()
+
+				local diff = math.floor( ttime - rtime )
+
 				local min, max = string.match( CVAR.escapexp:GetString(), "^(%d+),(%d+)$" )
 				min = tonumber( min )
 				max = tonumber( max )
@@ -662,11 +667,6 @@ hook.Add( "Tick", "SLCEscapeCheck", function() --TODO remove timer on escape / e
 						{ "escape_xp", "text;"..xp }
 					}
 				else
-					local rtime = t:GetRemainingTime()
-					local ttime = t:GetTime()
-
-					local diff = math.floor( ttime - rtime )
-
 					local time = rtime / ttime
 					if time < 0.2 then
 						xp = min
@@ -694,7 +694,7 @@ hook.Add( "Tick", "SLCEscapeCheck", function() --TODO remove timer on escape / e
 					v:AddXP( xp )
 
 					local team = v:SCPTeam()
-					SCPTeams.addScore( team, SCPTeams.getReward( team ) * 3 )
+					SCPTeams.AddScore( team, SCPTeams.GetReward( team ) * 3 )
 
 					v:Despawn()
 
@@ -762,7 +762,7 @@ function PlayerEscort( ply )
 	if ROUND.post then return end
 
 	local team = ply:SCPTeam()
-	local pos = _G["POS_ESCORT_"..SCPTeams.getName( team )] or POS_ESCORT
+	local pos = _G["POS_ESCORT_"..SCPTeams.GetName( team )] or POS_ESCORT
 	if ply:GetPos():DistToSqr( pos ) > 62500 then return end
 
 	local t = GetTimer( "SLCRound" )
@@ -791,7 +791,7 @@ function PlayerEscort( ply )
 		local plys = {}
 
 		for k, v in pairs( player.GetAll() ) do
-			if v:GetPos():DistToSqr( pos ) <= 62500 and SCPTeams.canEscort( team, v:SCPTeam() ) then
+			if v:GetPos():DistToSqr( pos ) <= 62500 and SCPTeams.CanEscort( team, v:SCPTeam() ) then
 				table.insert( plys, v )
 			end
 		end
@@ -812,7 +812,7 @@ function PlayerEscort( ply )
 
 			v:AddXP( xp )
 			local vteam = v:SCPTeam()
-			SCPTeams.addScore( vteam, SCPTeams.getReward( vteam ) * 3 )
+			SCPTeams.AddScore( vteam, SCPTeams.GetReward( vteam ) * 3 )
 
 			v:Despawn()
 
@@ -828,7 +828,7 @@ function PlayerEscort( ply )
 		AddRoundStat( "escorts", num )
 
 		local points = num * CVAR.escortpoints:GetInt()
-		
+
 		PlayerMessage( "escortpoints$"..points, ply )
 		ply:AddFrags( points )
 
@@ -1003,7 +1003,7 @@ function SpawnItems() --TODO
 		item:Spawn()
 		item.Dropped = CurTime()
 	end
-	
+
 	/*local pos500 = table.Copy( SPAWN_500 )
 	
 	for i = 1, 2 do
@@ -1033,16 +1033,16 @@ function SpawnItems() --TODO
 		if IsValid( vest ) then
 			vest:Spawn()
 			vest:SetPos( v - Vector( 0, 0, 10 ) )
-			vest:SetVest( VEST.getRandomVest() )
+			vest:SetVest( VEST.GetRandomVest() )
 		end
 	end
-	
+
 	--[[-------------------------------------------------------------------------
 	Weapons
 	---------------------------------------------------------------------------]]
 	local post = { Dropped = 0 }
 	local post_dnc = { Dropped = 0, _dnc = true }
-	
+
 	SpawnGeneric( "weapon_slc_pc", SPAWN_PARTICLE_CANNON, -1, post )
 
 	SpawnGeneric( { "cw_deagle", "cw_makarov", "cw_mr96" }, SPAWN_PISTOLS, -1, post )
@@ -1054,7 +1054,7 @@ function SpawnItems() --TODO
 	SpawnGeneric( "weapon_crowbar", SPAWN_MELEE, 3, post )
 
 	SpawnGeneric( "cw_ammo_kit_regular", SPAWN_AMMO_CW, -1, { AmmoCapacity = 20 } )
-	
+
 	--[[-------------------------------------------------------------------------
 	Items
 	---------------------------------------------------------------------------]]
@@ -1066,7 +1066,7 @@ function SpawnItems() --TODO
 	SpawnGeneric( "item_slc_battery", SPAWN_BATTERY, -1, post )
 	SpawnGeneric( "item_slc_flashlight", SPAWN_FLASHLIGHT, 8, post )
 	SpawnGeneric( "item_slc_medkit", SPAWN_MEDKITS, 4, post )
-	
+
 	--[[-------------------------------------------------------------------------
 	MedBay
 	---------------------------------------------------------------------------]]

@@ -32,7 +32,7 @@ end
 --[[-------------------------------------------------------------------------
 Whispers
 ---------------------------------------------------------------------------]]
-addSounds( "SLCEffects.Whispers", "scp_lc/effects/insane/whispers%i.ogg", 0, { 0.75, 1 }, { 90, 110 }, CHAN_STATIC, 1, 3 )
+AddSounds( "SLCEffects.Whispers", "scp_lc/effects/insane/whispers%i.ogg", 0, { 0.75, 1 }, { 90, 110 }, CHAN_STATIC, 1, 3 )
 
 AddInsaneEffect( 12, function( ply )
 	ply:EmitSound( "SLCEffects.Whispers" )

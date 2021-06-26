@@ -88,7 +88,7 @@ local function button( x, y, w, h )
 	local mx, my = input.GetCursorPos()
 	if mx >= x and mx <= x + w and my >= y and my <= y + h then
 		if input.IsMouseDown( MOUSE_LEFT )then
-			
+
 			if button_next then
 				button_next = false
 				return 2 --LMB
@@ -204,7 +204,7 @@ function GM:HUDPaint()
 
 			local team = ply:SCPTeam()
 			local class = ply:SCPClass()
-			local color = SCPTeams.getColor( team )
+			local color = SCPTeams.GetColor( team )
 
 			local tw, th = draw.Text{
 				text = LANG.CLASSES[class] or class,
@@ -450,11 +450,11 @@ function GM:HUDPaint()
 					SpecInfoText( dx, h * 0.39, "Level: "..spectarget:SCPLevel().."   |   XP: "..spectarget:SCPExp() )
 					SpecInfoText( dx, h * 0.42, "Active: "..tostring( spectarget:IsActive() ).."   |   AFK: "..tostring( spectarget:IsAFK() ) )
 					SpecInfoText( dx, h * 0.45, "Premium: "..tostring( spectarget:IsPremium() ) )
-					SpecInfoText( dx, h * 0.48, "Team: "..SCPTeams.getName( spectarget:SCPTeam() ) )
+					SpecInfoText( dx, h * 0.48, "Team: "..SCPTeams.GetName( spectarget:SCPTeam() ) )
 					SpecInfoText( dx, h * 0.51, "Class: "..spectarget:SCPClass(), max_w )
 
 					local pc, pt = spectarget:SCPPersona()
-					SpecInfoText( dx, h * 0.54, "Fake ID: "..SCPTeams.getName( pt )..", "..pc, max_w )
+					SpecInfoText( dx, h * 0.54, "Fake ID: "..SCPTeams.GetName( pt )..", "..pc, max_w )
 					SpecInfoText( dx, h * 0.57, "HP: "..spectarget:Health().." / "..spectarget:GetMaxHealth() )
 
 
@@ -562,7 +562,7 @@ function GM:HUDPaint()
 	if HUDBlink > 0 and cur > 0 then
 		local width = cur / HUDBlink * w * 0.255
 
-		draw.NoTexture()	
+		draw.NoTexture()
 		surface.DrawPoly{
 			{ x = start + w * 0.015, y = h * 0.815 + addy },
 			{ x = start + w * 0.015 + width, y = h * 0.815 + addy },
@@ -588,17 +588,17 @@ function GM:HUDPaint()
 	local maxhp = ply:GetMaxHealth()
 
 	local hpperseg = maxhp / 20
-	local segments = math.min( math.ceil( hp / maxhp * 20 ), 20 )
+	local hp_segments = math.min( math.ceil( hp / maxhp * 20 ), 20 )
 
-	local intense = 1 - segments + hp / hpperseg
+	local intense = 1 - hp_segments + hp / hpperseg
 	local nico = SimpleMatrix( 2, 4, ico )
 
 	if intense > 1 then
 		intense = 1
 	end
 
-	for i = 1, segments do
-		if i == segments then
+	for i = 1, hp_segments do
+		if i == hp_segments then
 			surface.SetDrawColor( Color( 175, 0, 25, 175 * intense ) )
 		else
 			surface.SetDrawColor( COLOR.hp_bar )
@@ -617,7 +617,7 @@ function GM:HUDPaint()
 		maxshow = maxhp
 		showtext = LANG.HUD.hp
 	end
-	
+
 	//surface.SetDrawColor( Color( 150, 150, 150, 100 ) )
 
 	--STAMINA
@@ -629,9 +629,11 @@ function GM:HUDPaint()
 	surface.SetDrawColor( COLOR.gray_bg )
 	surface.DrawDifference( bar:ToPoly(), bar_out:ToPoly() )
 
-	if ply.Stamina then
-		local stamina = ply.Stamina
-		local segments = math.min( math.ceil( stamina * 0.2 ), 20 )
+	if ply.GetStamina then
+		local stamina = ply:GetStamina()
+		local max_stamina = ply:GetMaxStamina()
+
+		local segments = math.Clamp( math.ceil( stamina / max_stamina * 20 ), 0, 20 )
 
 		//local intense = 1 //- segments + stamina / 5
 		local nico = SimpleMatrix( 2, 4, ico )
@@ -649,7 +651,7 @@ function GM:HUDPaint()
 
 		if mxButton( bar, bw, bh ) > 0 then
 			shownum = stamina
-			maxshow = 100
+			maxshow = max_stamina
 			showtext = LANG.HUD.stamina
 		end
 	end
@@ -663,7 +665,7 @@ function GM:HUDPaint()
 	--BATTERY
 	if IsValid( wep ) and wep.HasBattery then
 		local battery = wep:GetBattery()
-		
+
 		if battery < 0 then
 			battery = 0
 		end
@@ -804,7 +806,7 @@ function GM:HUDPaint()
 			yalign = TEXT_ALIGN_TOP,
 			max_width = w * 0.1125
 		}
-		
+
 		local _, th = draw.Text{
 			text = LANG.HUD.team..":",
 			pos = { start + w * 0.1525, h * 0.75 + addy },
@@ -814,7 +816,7 @@ function GM:HUDPaint()
 			yalign = TEXT_ALIGN_TOP,
 		}
 
-		local tname = SCPTeams.getName( ply:SCPTeam() )
+		local tname = SCPTeams.GetName( ply:SCPTeam() )
 		draw.LimitedText{
 			text = LANG.TEAMS[tname] or tname,
 			pos = { start + w * 0.1725, h * 0.75 + th * 0.75 + addy },

@@ -15,8 +15,13 @@ end
 
 --set = function( ply, old, new ) return true to prevent
 --reset = function( ply, val ) return true to prevent
-function registerPlayerStatus( name, default, set, reset, transmit )
-	PlayerStatus[name] = { default, set, reset, transmit }
+function RegisterPlayerStatus( name, default, set, reset, transmit )
+	assert( name != "_reset", "PlayerStatus name '_reset' is forbidden!" )
+
+	local t = type( default )
+	assert( !transmit or t == "number" or t == "boolean", "Failed to register PlayerStatus! Transmited PlayerStatus only supports numbers and booleans!" )
+
+	PlayerStatus[name] = { def = default, set = set, reset = reset, transmit = transmit and t }
 end
 
 local function HasFlag( num, flag )
@@ -39,7 +44,7 @@ function PlayerData:Create( ply )
 	data.Status = {}
 
 	for k, v in pairs( PlayerStatus ) do
-		data.Status[k] = v[1]
+		data.Status[k] = v.def
 
 		ply["Set"..k] = function( ply, value )
 			data:SetStatus( k, value )
@@ -48,6 +53,42 @@ function PlayerData:Create( ply )
 		ply["Get"..k] = function( ply )
 			return data:GetStatus( k )
 		end
+
+		/*if v.transmit then
+			local use = nil
+
+			if v.transmit == "BOOL" or v.transmit == "INT" or v.transmit == "FLOAT" or v.transmit == "STRING" then
+				use = v[4]
+			else
+				local t = type( v.def )
+				if t == "number" then
+					use = "FLOAT"
+				elseif t == "string" then
+					use = "STRING"
+				elseif t == "boolean" then
+					use = "BOOL"
+				end
+			end
+
+			if use then
+				local id = ply:AddSCPVar( "PD_"..k, use )
+
+				if id then
+					v.transmit_ok = true
+				end
+
+				if CLIENT then
+					ply:SetSCPVarCallback( id, use, function( p, val )
+						/*if v[2] then
+							v[2]( p, k, val )
+						end*/
+
+						/*print( "callback", p, k, val )
+						data.Status[k] = val
+					end )
+				end
+			end
+		end*/
 	end
 
 	data:SetupData()
@@ -131,31 +172,51 @@ function PlayerData:GetSessionStat( name )
 end
 
 function PlayerData:Reset( roundend )
-	local names = ""
+	//local names = ""
+	local to_transmit = {}
 
 	for k, v in pairs( PlayerStatus ) do
 		local reset = true
 
-		if v[3] == false then
+		if v.reset == false then
 			reset = false
-		elseif v[3] == true and !roundend then
+		elseif v.reset == true and !roundend then
 			reset = false
-		elseif isfunction( v[3] ) then
-			reset = !v[3]( self.Player, self.Status[k], v[1] )
+		elseif isfunction( v.reset ) then
+			reset = !v.reset( self.Player, self.Status[k], v.def )
 		end
 
 		if reset then
-			self.Status[k] = v[1]
+			//if v[2] then v[2]( self.Player, self.Status[k], v.def ) end
+			self.Status[k] = v.def
+
+			/*if v.transmit_ok then
+				local func = self.Player["SetPD"..k]
+				if func then
+					func( v.def )
+				end
+			end*/
 
 			/*if v[4] == true then
 				names = names..k..";"
 			end*/
+
+			if v.transmit then
+				table.insert( to_transmit, name )
+			end
 		end
 	end
 
 	/*if names != "" then
 		net.Ping( "SLCPlayerData", "_reset:"..names, self.Player )
 	end*/
+
+	if SERVER and #to_transmit > 0 then
+		net.Start( "SLCPlayerDataUpdate" )
+			net.WriteString( "_reset" )
+			net.WriteTable( to_transmit ) -- shouldn't exceed limit
+		net.Send( self.Player )
+	end
 end
 
 function PlayerData:RoundReset()
@@ -201,12 +262,32 @@ function PlayerData:SetStatus( name, value )
 
 	local obj = PlayerStatus[name]
 	if self.Status[name] != value then
-		if !obj[2] or obj[2]( self.Player, self.Status[name], value ) != true then
+		if !obj.set or obj.set( self.Player, self.Status[name], value ) != true then
 			self.Status[name] = value
+
+			/*if obj.transmit_ok then
+				local func = self.Player["SetPD"..name]
+				if func then
+					func( v.def )
+				end
+			end*/
 
 			/*if obj[4] then
 				net.Ping( "SLCPlayerData", name..":"..tostring( value ), self.Player )
 			end*/
+
+			if SERVER and obj.transmit then
+				net.Start( "SLCPlayerDataUpdate" )
+					net.WriteString( name )
+
+					if obj.transmit == "boolean" then
+						net.WriteBool( value )
+					else
+						net.WriteFloat( value )
+					end
+
+				net.Send( self.Player )
+			end
 		end
 	end
 end
@@ -214,9 +295,9 @@ end
 setmetatable( PlayerData, { __call = PlayerData.Create } )
 
 local ply = FindMetaTable( "Player" )
---create direct bindings fo PlayerData table
+--create direct bindings to PlayerData table
 
-if CLIENT then
+/*if CLIENT then
 	net.ReceivePing( "SLCPlayerData", function( data )
 		local name, value = string.match( data, "(.-):(.+)" )
 
@@ -258,6 +339,33 @@ if CLIENT then
 			end
 		end
 	end )
+end*/
+
+if CLIENT then
+	net.Receive( "SLCPlayerDataUpdate", function( len )
+		local ply = LocalPlayer()
+		local name = net.ReadString()
+
+		if name == "_reset" then
+			local to_reset = net.ReadTable()
+
+			for k, v in pairs( to_reset ) do
+				local obj = PlayerStatus[v]
+				if obj then
+					ply.PlayerData.Status[v] = obj.def
+				end
+			end
+		else
+			local obj = PlayerStatus[name]
+			if obj then
+				if obj.transmit == "boolean" then
+					ply.PlayerData.Status[name] = net.ReadBool()
+				else
+					ply.PlayerData.Status[name] = net.ReadFloat()
+				end
+			end
+		end
+	end )
 end
 
 ---------------------------- BASE STATS ----------------------------
@@ -267,27 +375,28 @@ end
 --------------------------------------------------------------------
 
 ---------------------------- BASE STATUS ----------------------------
-//registerPlayerStatus( "name", <initial value>, func/false[nil], nil/func/ture/false* )
+//RegisterPlayerStatus( "name", <initial value>, func/false[nil], nil/func/ture/false* )
 //* - true: only on roundend, false: never, nil: always, func: return true to suppress
 //name cannot contain ':'
 
-registerPlayerStatus( "Premium", false, function( ply, old, new ) ply:Set_SCPPremium( new ) end, false )
-registerPlayerStatus( "Active", false, function( ply, old, new ) ply:Set_SCPActive( new ) end, false )
+RegisterPlayerStatus( "Premium", false, function( ply, old, new ) ply:Set_SCPPremium( new ) end, false )
+RegisterPlayerStatus( "Active", false, function( ply, old, new ) ply:Set_SCPActive( new ) end, false )
 
-registerPlayerStatus( "InitialTeam", 0, false, true )
+RegisterPlayerStatus( "InitialTeam", 0, false, true )
 
-registerPlayerStatus( "Blink", false )
-registerPlayerStatus( "SightLimit", -1 )
+RegisterPlayerStatus( "Blink", false )
+RegisterPlayerStatus( "SightLimit", -1 )
 
-registerPlayerStatus( "SCPHuman", false ) --TODO make it transmited
-registerPlayerStatus( "SCPCanInteract", false )
-registerPlayerStatus( "SCPChat", false )
-registerPlayerStatus( "SCPNoRagdoll", false )
-//registerPlayerStatus( "SCPTerror", true )
+RegisterPlayerStatus( "SCPHuman", false, nil, nil, true ) --TODO test
+RegisterPlayerStatus( "SCPCanInteract", false )
+RegisterPlayerStatus( "SCPChat", false )
+RegisterPlayerStatus( "SCPNoRagdoll", false )
+//RegisterPlayerStatus( "SCPTerror", true )
 
-registerPlayerStatus( "SCP714", false )
-registerPlayerStatus( "SCP096Chase", false )
+RegisterPlayerStatus( "SCP714", false )
+RegisterPlayerStatus( "SCP096Chase", false )
 --------------------------------------------------------------------
--- for k, v in pairs( player.GetAll() ) do
--- 	PlayerData( v )
--- end
+ /*for k, v in pairs( player.GetAll() ) do
+ 	PlayerData( v )
+ 	v:SetActive( true )
+ end*/

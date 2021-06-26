@@ -18,7 +18,7 @@ function GM:PlayerButtonDown( ply, button )
 		end
 	end*/
 
-	if SERVER then 
+	if SERVER then
 		numpad.Activate( ply, button )
 
 		local rt = RealTime()
@@ -31,6 +31,7 @@ function GM:PlayerButtonDown( ply, button )
 			if ply:IsAFK() then
 				ply:Set_SCPAFK( false )
 				QueueInsert( ply ) --insert player back to spawn queue
+				CheckRoundStart()
 
 				PlayerMessage( "afk_end", ply )
 			end
@@ -138,6 +139,11 @@ function GM:StartCommand( ply, cmd )
 		cmd:ClearMovement()
 		cmd:ClearButtons()
 	end
+
+	if SERVER and ply:IsAboutToSpawn() then
+		cmd:ClearMovement()
+		cmd:ClearButtons()
+	end
 end
 
 function GM:PlayerSwitchWeapon( ply, old, new )
@@ -154,7 +160,7 @@ end
 
 function GM:PlayerCanPickupWeapon( ply, wep )
 	local t = ply:SCPTeam()
-	
+
 	if t == TEAM_SPEC then return false end
 	if #ply:GetWeapons() >= ply:GetInventorySize() then
 		if wep.Stacks and wep.Stacks <= 1 then return false end
@@ -164,12 +170,14 @@ function GM:PlayerCanPickupWeapon( ply, wep )
 		if pwep.CanStack and !pwep:CanStack() then return false end
 	end
 
-	if t == TEAM_SCP and !ply:GetSCPHuman() then
+	if t == TEAM_SCP then
 		if wep.SCP then
 			return true
 		end
 
-		return false
+		if !ply:GetSCPHuman() then
+			return false
+		end
 	end
 
 	if wep.SCP then
@@ -196,6 +204,7 @@ function GM:PlayerCanPickupWeapon( ply, wep )
 			if pwep.CanStack and !pwep:CanStack() then return false end
 		end
 	end
+
 	if !wep.Dropped then
 		return CLIENT or !wep.PickupPriority or !wep.PriorityTime or wep.PickupPriority == ply or wep.PriorityTime < CurTime()
 	elseif wep.Dropped > CurTime() - 1 then
@@ -207,7 +216,7 @@ function GM:PlayerCanPickupWeapon( ply, wep )
 			if wep.CanPickup and wep:CanPickup( ply ) == false then
 				return false
 			end
-			
+
 			return true
 		end
 	end
@@ -322,5 +331,5 @@ function ply:GetInventorySize()
 end
 
 function ply:IsHuman()
-	return SCPTeams.hasInfo(self:SCPTeam(), SCPTeams.INFO_HUMAN) //or self:GetSCPHuman()
+	return SCPTeams.HasInfo(self:SCPTeam(), SCPTeams.INFO_HUMAN) or self:GetSCPHuman()
 end

@@ -16,7 +16,7 @@ data = {
 }
 */
 
-function EFFECTS.registerEffect( name, data )
+function EFFECTS.RegisterEffect( name, data )
 	local tiers = #data.tiers
 
 	for i = 1, tiers do
@@ -257,7 +257,7 @@ end
 --[[-------------------------------------------------------------------------
 Bleeding
 ---------------------------------------------------------------------------]]
-EFFECTS.registerEffect( "bleeding", {
+EFFECTS.RegisterEffect( "bleeding", {
 	duration = 15,
 	stacks = 2,
 	tiers = {
@@ -312,7 +312,7 @@ sound.Add( {
 --[[-------------------------------------------------------------------------
 Door lock
 ---------------------------------------------------------------------------]]
-EFFECTS.registerEffect( "doorlock", {
+EFFECTS.RegisterEffect( "doorlock", {
 	duration = 10,
 	stacks = 0,
 	tiers = {
@@ -344,7 +344,7 @@ sound.Add( {
 --[[-------------------------------------------------------------------------
 AMN-C227
 ---------------------------------------------------------------------------]]
-EFFECTS.registerEffect( "amnc227", {
+EFFECTS.RegisterEffect( "amnc227", {
 	duration = 2.5,
 	stacks = 0,
 	tiers = {
@@ -398,7 +398,7 @@ end )
 --[[-------------------------------------------------------------------------
 Insane
 ---------------------------------------------------------------------------]]
-EFFECTS.registerEffect( "insane", {
+EFFECTS.RegisterEffect( "insane", {
 	duration = -1,
 	stacks = 0,
 	tiers = {
@@ -430,7 +430,7 @@ EFFECTS.registerEffect( "insane", {
 --[[-------------------------------------------------------------------------
 Gas Choke
 ---------------------------------------------------------------------------]]
-EFFECTS.registerEffect( "gas_choke", {
+EFFECTS.RegisterEffect( "gas_choke", {
 	duration = 10,
 	stacks = 0,
 	tiers = {
@@ -491,13 +491,13 @@ if CLIENT then
 		end
 	end )
 
-	addSounds( "SLCEffects.Choke", "scp_lc/effects/choke/cough%i.ogg", 0, 1, { 90, 110 }, CHAN_STATIC, 1, 3 )
+	AddSounds( "SLCEffects.Choke", "scp_lc/effects/choke/cough%i.ogg", 0, 1, { 90, 110 }, CHAN_STATIC, 1, 3 )
 end
 
 --[[-------------------------------------------------------------------------
 Radiation
 ---------------------------------------------------------------------------]]
-EFFECTS.registerEffect( "radiation", {
+EFFECTS.RegisterEffect( "radiation", {
 	duration = 300,
 	stacks = 0,
 	tiers = {
@@ -548,7 +548,7 @@ end
 --[[-------------------------------------------------------------------------
 Deep Wounds
 ---------------------------------------------------------------------------]]
-EFFECTS.registerEffect( "deep_wounds", {
+EFFECTS.RegisterEffect( "deep_wounds", {
 	duration = 120,
 	stacks = 0,
 	tiers = {

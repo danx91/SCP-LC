@@ -64,7 +64,7 @@ function SWEP:Think()
 					local max_dist = radius * radius
 					for k, v in pairs( player.GetAll() ) do
 						if IsValid( v ) then
-							if SCPTeams.hasInfo( v:SCPTeam(), SCPTeams.INFO_HUMAN ) then
+							if SCPTeams.HasInfo( v:SCPTeam(), SCPTeams.INFO_HUMAN ) then
 								if !v:HasEffect( "deep_wounds" ) then
 									if pos:DistToSqr( v:GetPos() ) <= max_dist then
 										local pos = v:GetPos() + v:OBBCenter()

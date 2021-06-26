@@ -76,7 +76,7 @@ local function CleanupPlayers()
 		if v:IsAFK() then
 			v:InvalidatePlayerForSpectate()
 			v:KillSilent()
-			v:SetupSpectator()
+			v:SetupSpectator( true )
 		end
 	end
 end
@@ -119,7 +119,7 @@ function FinishRoundInternal( winner, endcheck )
 	if IsValid( endckeck ) then
 		endcheck:Destroy()
 	end
-	
+
 	hook.Run( "SLCPostround", winner )
 
 	local post = CVAR.posttime:GetInt()
@@ -141,22 +141,28 @@ function RestartRound()
 	assert( MAP_LOADED, "Map config is not loaded and game will not start! Change map to supported one in order to play this gamemode!" )
 
 	print( "(Re)starting round..." )
+	//util.TimerCycle()
 
 	DestroyTimers()
 	print( "Timers destroyed!" )
+	//print( string.format( "Took %i ms!", util.TimerCycle() ) )
 
 	CleanupPlayers()
 	print( "Players cleaned!" )
+	//print( string.format( "Took %i ms!", util.TimerCycle() ) )
 
 	ResetEvents()
 	ResetRoundStats()
 	print( "Round data reset!" )
+	//print( string.format( "Took %i ms!", util.TimerCycle() ) )
 
 	game.CleanUpMap()
 	print( "Map cleaned!" )
+	//print( string.format( "Took %i ms!", util.TimerCycle() ) )
 
 	hook.Run( "SLCRoundCleanup" )
 	print( "Everything is ready!" )
+	//print( string.format( "Took %i ms!", util.TimerCycle() ) )
 
 	if #GetActivePlayers() < CVAR.minplayers:GetInt() then
 		MsgC( Color( 255, 50, 50 ), "Not enough players to start round! Round restart canceled!\n" )
@@ -194,8 +200,11 @@ function RestartRound()
 			name = ROUND.roundtype.name,
 		}
 	net.Broadcast()
+	//print( string.format( "Took %i ms!", util.TimerCycle() ) )
 
 	AddTimer( "SLCSetup", INFO_SCREEN_DURATION, 1, function( self, n )
+		CheckSpectatorMode( true )
+
 		ROUND.infoscreen = false
 		hook.Run( "SLCPreround" )
 
@@ -361,7 +370,7 @@ function GM:SLCPostround( winner )
 		local show = ""
 
 		for k, v in pairs( winner ) do
-			local name = SCPTeams.getName( v )
+			local name = SCPTeams.GetName( v )
 
 			txt = txt.."@TEAMS."..name..","
 			raw = raw.."%%s. "
@@ -382,7 +391,7 @@ function GM:SLCPostround( winner )
 
 		CenterMessage( msg )
 	else
-		local name = SCPTeams.getName( winner )
+		local name = SCPTeams.GetName( winner )
 
 		print( "Round has ended! Winner: "..name )
 

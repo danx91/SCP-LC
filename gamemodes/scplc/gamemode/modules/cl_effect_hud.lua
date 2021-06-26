@@ -88,15 +88,17 @@ local function DrawEffectsHUD()
 				surface.SetDrawColor( color_25 )
 				surface.DrawRect( w * 0.97, h * 0.55 + w * 0.035 * ( i - 1 ), w * 0.025, w * 0.025 )
 
-				render.PushFilterMin( TEXFILTER.LINEAR )
-				render.PushFilterMag( TEXFILTER.LINEAR )
+				//render.PushFilterMin( TEXFILTER.LINEAR )
+				//render.PushFilterMag( TEXFILTER.LINEAR )
+				PushFilters( TEXFILTER.LINEAR )
 
 				surface.SetDrawColor( reg.color or color_white )
 				surface.SetMaterial( ico )
 				surface.DrawTexturedRect( w * 0.97 + 2, h * 0.55 + w * 0.035 * ( i - 1 ) + 2, w * 0.025 - 4, w * 0.025 - 4 )
 
-				render.PopFilterMin()
-				render.PopFilterMag()
+				//render.PopFilterMin()
+				//render.PopFilterMag()
+				PopFilters()
 			end
 
 			if effect.endtime != -1 then

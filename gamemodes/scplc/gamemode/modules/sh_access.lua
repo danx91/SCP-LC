@@ -20,7 +20,7 @@ function RegisterAccess( name )
 	assert( isstring( name ), "bad argument #1 to 'RegisterAccess' (string expected, got "..type( name )..")" )
 
 	if ACC_REGISTRY.DATA[name] then
-		print( "Access '"..name.."' is already registered!" )		
+		print( "Access '"..name.."' is already registered!" )
 		return false
 	end
 
@@ -315,10 +315,10 @@ if SERVER then
 		suppress_check = <boolean>, --optional, skipps access check
 		disable = <boolean>, --optional, blocks usage of button
 		suppress_texts = <boolean>, --optional, suppress all texts
-		omega_disable = <boolean>, --oprional, can't be used when omega is active
-		alpha_disable = <boolean>, --oprional, can't be used when alpha is active
-		omega_override = <boolean>, --oprional, overrides access when omega is active
-		alpha_override = <boolean>, --oprional, overrides access when alpha is active
+		omega_disable = <boolean>, --optional, can't be used when omega is active
+		alpha_disable = <boolean>, --optional, can't be used when alpha is active
+		omega_override = <boolean>, --optional, overrides access when omega is active
+		alpha_override = <boolean>, --optional, overrides access when alpha is active
 	}
 	*/
 	BUTTONS_CACHE = BUTTONS_CACHE or {}

@@ -122,7 +122,7 @@ hook.Add( "RegisterSCP", "RegisterBaseSCPs", function()
 		no_select = true,
 		//no_model = true,
 		no_terror = true,
-		reward_override = 4,
+		reward_override = 3,
 	}, {
 		base_health = 800,
 		max_health = 800,

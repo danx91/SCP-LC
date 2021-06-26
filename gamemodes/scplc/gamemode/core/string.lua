@@ -7,7 +7,7 @@ function string.ExactLength( str, len, alignRight )
 		return string.sub( str, 1, len )
 	else
 		local s = string.rep( " ", len - sl )
-		
+
 		if alignRight then
 			return s..str
 		else

@@ -87,7 +87,7 @@ for k, f in pairs( files ) do
 	include( LANGUAGES_PATH.."/"..f )
 end
 
-hook.Run( "SLCLanguageLoaded" ) --language has beed loaded, pre-modules
+hook.Run( "SLCLanguagesLoaded" ) --language has beed loaded, pre-modules
 
 --[[-------------------------------------------------------------------------
 Load modules

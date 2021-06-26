@@ -1,6 +1,6 @@
 IDs = IDs or {}
 
-function updatePlayerID( ply )
+function UpdatePlayerID( ply )
 	local lp = LocalPlayer()
 
 	local lpt = lp:SCPTeam()
@@ -11,7 +11,7 @@ function updatePlayerID( ply )
 	local tc, tt
 
 	if IsValid( wep ) and wep:GetClass() == "item_slc_id" then
-		if SCPTeams.isAlly( lpt, team ) then
+		if SCPTeams.IsAlly( lpt, team ) then
 			tc = class
 			tt = team
 		else
@@ -32,7 +32,7 @@ function updatePlayerID( ply )
 	end
 end
 
-function getPlayerID( ply )
+function GetPlayerID( ply )
 	if ply == LocalPlayer() then
 		return { class = ply:SCPClass(), team = ply:SCPTeam() }
 	end
@@ -40,12 +40,12 @@ function getPlayerID( ply )
 	return IDs[ply]
 end
 
-function removePlayerID( ply )
+function RemovePlayerID( ply )
 	IDs[ply] = nil
 end
 
 
-function clearPlayerIDs()
+function ClearPlayerIDs()
 	IDs = {}
 end
 
@@ -68,15 +68,15 @@ function GM:HUDDrawTargetID()
 
 	if nupd < CurTime() then
 		nupd = CurTime() + 0.5
-		updatePlayerID( ply )
+		UpdatePlayerID( ply )
 	end
 
 	local color = Color( 200, 200, 200, 255 )
 	local class = nil
 
-	local id = getPlayerID( ply )
+	local id = GetPlayerID( ply )
 	if id then
-		color = SCPTeams.getColor( id.team ) or color
+		color = SCPTeams.GetColor( id.team ) or color
 		class = id.class or "unknown"
 	end
 

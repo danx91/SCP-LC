@@ -13,7 +13,7 @@ function net.Ping( name, data, ply )
 	net.Start( "SLCPing" )
 		net.WriteString( tostring( name ) )
 		net.WriteString( tostring( data ) )
-		
+
 	if CLIENT then
 		net.SendToServer()
 	end
@@ -153,7 +153,7 @@ net.Receive( "SLCSendTable", function( len, ply )
 	if header != "0310" then //0x30333130
 		local crc = util.CRC( chunk )
 		local checksum = tostring( math.Bin2Dec( header, true ) )
-		
+
 		if crc != checksum then
 			ErrorNoHalt( "SLCSendTable message checksum is wrong! Expected: "..checksum..", got: "..crc..". Message canceled\n" )
 			net_cache[message_id] = nil

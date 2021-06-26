@@ -441,7 +441,7 @@ if SERVER then
 				end
 			end
 
-			for k, v in pairs( SCPTeams.getPlayersByInfo( SCPTeams.INFO_ALIVE, true ) ) do
+			for k, v in pairs( SCPTeams.GetPlayersByInfo( SCPTeams.INFO_ALIVE, true ) ) do
 				if mode != 2 or !SLC_TURRET_FILTER_MODELS[v:GetModel()] then
 					if turret_test_range_vis( self, v, shoot_pos, shoot_ang, self.VerticalRange, self.HorizontalRange ) then
 						return v

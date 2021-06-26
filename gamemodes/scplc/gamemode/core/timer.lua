@@ -117,7 +117,7 @@ end
 
 function Timer:Call( ... )
 	if self.destroyed then return end
-	
+
 	local suc, err = pcall( self.callback, self, self.current, ... )
 	if !suc then
 		print( "Error in timer "..self.name.."!" )

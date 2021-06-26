@@ -64,7 +64,7 @@ function GetRoundStat( name )
 end
 
 function ResetRoundStats()
-	SCPTeams.resetScore()
+	SCPTeams.ResetScore()
 	
 	for k, v in pairs( ROUND.stats ) do
 		v.value = v.init

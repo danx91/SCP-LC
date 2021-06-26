@@ -117,7 +117,7 @@ function SWEP:PopSpeed()
 end
 
 function SWEP:Heal( ply, sh )
-	if !ply:Alive() or ply:SCPTeam() == TEAM_SPEC or ply:SCPTeam() == TEAM_SCP then return end
+	if !ply:Alive() or ply:SCPTeam() == TEAM_SPEC or ( !sh and ply:SCPTeam() == TEAM_SCP ) then return end
 
 	local owner = self:GetOwner()
 	local ct = CurTime()

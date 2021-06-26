@@ -42,15 +42,6 @@ net.Receive( "SLCEscape", function( len )
 	EscapeTimer = net.ReadFloat()
 end )
 
-net.Receive( "SCPForceExhaust", function( len )
-	local ply = LocalPlayer()
-
-	if !ply.Exhausted then
-		ply.Stamina = 0
-		ply.StaminaRegen = CurTime() + 0.5
-	end
-end )
-
 net.Receive( "PlayerMessage", function( len )
 	local msg = net.ReadString()
 	local center = net.ReadBool()
@@ -81,7 +72,7 @@ net.Receive( "PlayerCleanup", function( len )
 		hook.Run( "SLCPlayerCleanup", ply )
 
 		if ply == LocalPlayer() then
-			clearPlayerIDs()
+			ClearPlayerIDs()
 		end
 	end
 end )
@@ -144,17 +135,58 @@ function ply:SetupSCPVarTable()
 		FLOAT = {},
 		STRING = {},
 	}
+
+	self.scp_var_callbacks = {
+		BOOL = {},
+		INT = {},
+		FLOAT = {},
+		STRING = {},
+	}
+end
+
+function ply:SCPVarUpdated( id, type, newVal )
+	if newVal != nil then
+		local cb = self.scp_var_callbacks[type][id]
+		if cb then
+			cb( self, newVal )
+		end
+	end
+end
+
+function ply:SetSCPVarCallback( id, type, cb )
+	assert( _type( cb ) == "function", "Bad argument #1 to function SetSCPVarCallback. Function expected got ".._type( cb ) )
+
+	self.scp_var_callbacks[type][id] = cb
 end
 
 function ply:AddSCPVar( name, id, type )
 	if !name or !id or !type then return end
 
-	assert( id < 16, "Too big ID in AddSCPVar function. IDs cannot be greater than 15!" )
-	assert( id >= 0, "ID in AddSCPVar cannot be negative!" )
-
 	if !self.scp_var_table then
 		self:SetupSCPVarTable()
 	end
+
+	/*assert( self.scp_var_table[type], "Invalid type '"..type.."'!" )
+
+	if !id then
+		id = self.scp_var_lookup[type][name]
+		print( "ID after lookup", type, name, id )
+
+		if !id then
+			for i = 0, 15 do
+				if self.scp_var_table[type][i] == nil then
+					id = i
+					print( "Assigning id", type, name, id )
+					break
+				end
+			end
+		end
+	end
+
+	assert( id, "Failed to assign ID for SCPVar '"..name.."'! " )
+	assert( id < 16, "You can only create maximum of 16 SCPVars of each type!" )*/
+	assert( id < 16, "Too big ID in AddSCPVar function. IDs cannot be greater than 15!" )
+	assert( id >= 0, "ID in AddSCPVar cannot be negative!" )
 
 	if type == "BOOL" then
 		self.scp_var_table.BOOL[id] = self.scp_var_table.BOOL[id] or false
@@ -218,13 +250,21 @@ net.Receive( "UpdateSCPVars", function()
 		local id = bit.band( sig, 15 ) --xxxxxx & 001111
 
 		if t == 0 then --BOOL
-			ply.scp_var_table.BOOL[id] = net.ReadBool()
+			local val = net.ReadBool()
+			ply.scp_var_table.BOOL[id] = val
+			ply:SCPVarUpdated( id, "BOOL", val )
 		elseif t == 16 then --INT
-			ply.scp_var_table.INT[id] = net.ReadInt( 32 )
+			local val = net.ReadInt( 32 )
+			ply.scp_var_table.INT[id] = val
+			ply:SCPVarUpdated( id, "INT", val )
 		elseif t == -32 then --FLOAT
-			ply.scp_var_table.FLOAT[id] = net.ReadFloat()
+			local val = net.ReadFloat()
+			ply.scp_var_table.FLOAT[id] = val
+			ply:SCPVarUpdated( id, "FLOAT", val )
 		elseif t == -16 then --STRING
-			ply.scp_var_table.STRING[id] = net.ReadString()
+			local val = net.ReadString()
+			ply.scp_var_table.STRING[id] = val
+			ply:SCPVarUpdated( id, "STRING", val )
 		end
 	end
 end )

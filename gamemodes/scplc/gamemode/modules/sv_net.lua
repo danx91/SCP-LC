@@ -1,4 +1,3 @@
-util.AddNetworkString( "SCPForceExhaust" )
 util.AddNetworkString( "PlayerBlink" )
 util.AddNetworkString( "DropWeapon" )
 util.AddNetworkString( "UpdateSCPVars" )
@@ -20,6 +19,7 @@ util.AddNetworkString( "DeathInfo" )
 util.AddNetworkString( "ClassUnlock" )
 util.AddNetworkString( "SLCAmbient" )
 util.AddNetworkString( "SLCEscape" )
+util.AddNetworkString( "SLCPlayerDataUpdate" )
 
 net.AddTableChannel( "SLCPlayerMeta" )
 net.AddTableChannel( "SLCGameruleData" )
@@ -91,13 +91,6 @@ net.Receive( "PlayerReady", function( len, ply )
 	if !ply.FullyLoaded then
 		ply.FullyLoaded = true
 		hook.Run( "PlayerReady", ply )
-	end
-end )
-
-net.Receive( "SCPForceExhaust", function( len, ply )
-	if !ply.Exhausted then
-		ply.Stamina = 0
-		ply.StaminaRegen = CurTime() + 0.5
 	end
 end )
 
@@ -200,13 +193,30 @@ end
 
 function ply:AddSCPVar( name, id, type )
 	if !name or !id or !type then return end
-	
-	assert( id < 16, "Too big ID in AddSCPVar function. IDs cannot be greater than 15!" )
-	assert( id >= 0, "ID in AddSCPVar cannot be negative!" )
 
 	if !self.scp_var_table then
 		self:SetupSCPVarTable()
 	end
+
+	/*assert( self.scp_var_table[type], "Invalid type '"..type.."'!" )
+
+	if !id then
+		id = self.scp_var_lookup[type][name]
+
+		if !id then
+			for i = 0, 15 do
+				if self.scp_var_table[type][i] == nil then
+					id = i
+					break
+				end
+			end
+		end
+	end
+	
+	assert( id, "Failed to assign ID for SCPVar '"..name.."'! " )
+	assert( id < 16, "You can only create maximum of 16 SCPVars of each type!" )*/
+	assert( id < 16, "Too big ID in AddSCPVar function. IDs cannot be greater than 15!" )
+	assert( id >= 0, "ID in AddSCPVar cannot be negative!" )
 
 	if type == "BOOL" then
 		self.scp_var_table.BOOL[id] = false
@@ -317,7 +327,9 @@ net.Receive( "UpdateSCPVars", function( len, ply )
 
 	for k, v in pairs( ply.scp_var_table ) do
 		for id, val in pairs( v ) do
-			ply:SCPVarUpdated( id, k )
+			//if isnumber( id ) then
+				ply:SCPVarUpdated( id, k )
+			//end
 		end
 	end
 

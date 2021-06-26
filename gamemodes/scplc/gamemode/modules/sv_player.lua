@@ -7,7 +7,7 @@ function ply:SetSCPClass( class )
 	if !self.Set_SCPClass then
 		self:DataTables()
 	end
-	
+
 	self:Set_SCPClass( class )
 	self:Set_SCPPersonaC( class )
 end
@@ -22,11 +22,13 @@ function ply:Cleanup( norem )
 	self.ClassData = nil
 
 	self:ResetProperties()
+	self.SLCProperties = {}
 	self:ClearSpeedStack()
 	self.PlayerData:Reset()
 	self.Logger:Reset()
 
-	//self:SetStamina( 100 )
+	self:SetStamina( 100 )
+	self:SetMaxStamina( 100 )
 	self:SetStaminaLimit( 100 )
 	self:SetDisableControls( false )
 
@@ -160,6 +162,11 @@ local function setup_player_internal( self, class, spawn )
 	self:SetBaseSpeed( class.walk_speed, class.run_speed, 0.5 )
 	self:SetJumpPower( 175 )
 
+	local max_stamina = class.stamina or 100
+	self:SetStamina( max_stamina )
+	self:SetMaxStamina( max_stamina )
+	self:SetStaminaLimit( max_stamina )
+
 	self:SetModel( istable( class.model ) and table.Random( class.model ) or class.model )
 
 	if class.skin then
@@ -230,60 +237,60 @@ function ply:EquipVest( vest, silent )
 	if t == TEAM_SCP and !self:GetSCPHuman() then return end
 
 	if isstring( vest ) then
-		vest = VEST.getID( vest )
+		vest = VEST.GetID( vest )
 	end
 
-	local data = VEST.getData( vest )
+	local data = VEST.GetData( vest )
 	if data then
-		hook.Run( "SLCArmorPickedUp", self )
-		
-		self:SetVest( vest )
-		//self.OldModel = self:GetModel()
+		if !hook.Run( "SLCArmorPickedUp", self ) then
+			self:SetVest( vest )
+			//self.OldModel = self:GetModel()
 
-		//local custom = {}
-		local use_model
-		local callback = VEST.getCallback( vest )
-		if callback then
-			use_model = callback( self, vest, data )
-		end
+			//local custom = {}
+			local use_model
+			local callback = VEST.GetCallback( vest )
+			if callback then
+				use_model = callback( self, vest, data )
+			end
 
-		local bodygroups = {}
-		for i = 0, self:GetNumBodyGroups() - 1 do
-			bodygroups[i] = self:GetBodygroup( i )
-		end
+			local bodygroups = {}
+			for i = 0, self:GetNumBodyGroups() - 1 do
+				bodygroups[i] = self:GetBodygroup( i )
+			end
 
-		self:SetProperty( "old_model", { self:GetModel(), self:GetSkin(), bodygroups } )
-		self:SetModel( use_model or istable( data.model ) and table.Random( data.model ) or data.model )
+			self:SetProperty( "old_model", { self:GetModel(), self:GetSkin(), bodygroups } )
+			self:SetModel( use_model or istable( data.model ) and table.Random( data.model ) or data.model )
 
-		if data.skin then
-			self:SetSkin( data.skin )
-		end
+			if data.skin then
+				self:SetSkin( data.skin )
+			end
 
-		if data.bodygroups then
-			for k, v in pairs( data.bodygroups ) do
-				if isstring( k ) then
-					k = self:FindBodygroupByName( k )
-				end
+			if data.bodygroups then
+				for k, v in pairs( data.bodygroups ) do
+					if isstring( k ) then
+						k = self:FindBodygroupByName( k )
+					end
 
-				if k > -1 then
-					self:SetBodygroup( k, v )
+					if k > -1 then
+						self:SetBodygroup( k, v )
+					end
 				end
 			end
+
+			/*local callback = VEST.GetCallback( vest )
+			if callback then
+				callback( self, vest, data, true, custom )
+			end*/
+
+			self:PushSpeed( data.mobility, data.mobility, -1, "SLC_Vest" )
+
+			if !silent then
+				PlayerMessage( "vestpickup", self )
+				self:EmitSound( "SLCPlayer.Vest" )
+			end
+
+			return true
 		end
-
-		/*local callback = VEST.getCallback( vest )
-		if callback then
-			callback( self, vest, data, true, custom )
-		end*/
-
-		self:PushSpeed( data.mobility, data.mobility, -1, "SLC_Vest" )
-
-		if !silent then
-			PlayerMessage( "vestpickup", self )
-			self:EmitSound( "SLCPlayer.Vest" )
-		end
-
-		return true
 	end
 end
 
@@ -303,10 +310,10 @@ function ply:DropVest( silent )
 	end
 
 	self:SetVest( 0 )
-	
+
 	local pos = self:GetPos():DropToFloor()
-	VEST.create( vest, pos )
-	
+	VEST.Create( vest, pos )
+
 	self:SetModel( info[1] )
 
 	if info[2] then
@@ -674,7 +681,7 @@ function ply:PlayerDropWeapon( class, all, force )
 
 		if wep.Stacks and wep.Stacks > 1 then
 			local count = wep:GetCount()
-			
+
 			if count > 1 then
 				local forward = self:EyeAngles():Forward()
 
@@ -703,7 +710,7 @@ function ply:PlayerDropWeapon( class, all, force )
 
 		//print( wep:Clip1(), self:GetAmmoCount( wep:GetPrimaryAmmoType() ) )
 		if wep.SLCPreDrop then
-			wep:SLCPreDrop()	
+			wep:SLCPreDrop()
 		end
 
 		self:DropWeapon( wep )
@@ -803,8 +810,8 @@ function ply:SetStasis( time )
 	if time and time > 0 then
 		AddTimer( "Stasis_"..self:SteamID64(), time, 1, function( this, n )
 			if IsValid( self ) then
-				local data = self:GetProperty( "stasis_data" )
-				if data and self:CheckSignature( data.signature ) then
+				local s_data = self:GetProperty( "stasis_data" )
+				if s_data and self:CheckSignature( s_data.signature ) then
 					self:DisableStasis()
 				end
 			end
@@ -844,7 +851,7 @@ function ply:MakeAFK()
 	end
 end
 
-local nafk = 0
+//local nafk = 0
 Timer( "SLCAFKCheck", 10, 0, function( self, n )
 	local rt = RealTime()
 	local afk_time = CVAR.afk_time:GetInt() or 60
@@ -879,22 +886,22 @@ Timer( "SLCAFKCheck", 10, 0, function( self, n )
 end )
 
 --[[-------------------------------------------------------------------------
-Properties
+SLCProperties
 ---------------------------------------------------------------------------]]
 function ply:ResetProperties()
-	self.Properties = {}
+	self.SLCProperties = {}
 end
 
 function ply:SetProperty( key, value )
-	if !self.Properties then self.Properties = {} end
+	if !self.SLCProperties then self.SLCProperties = {} end
 
-	self.Properties[key] = value
+	self.SLCProperties[key] = value
 end
 
 function ply:GetProperty( key )
-	if !self.Properties then self.Properties = {} end
-	
-	return self.Properties[key]
+	if !self.SLCProperties then self.SLCProperties = {} end
+
+	return self.SLCProperties[key]
 end
 
 --[[-------------------------------------------------------------------------
@@ -906,10 +913,10 @@ function ply:AddFrags( f )
 	if f > 0 then
 		local team = self:SCPTeam()
 		if team != TEAM_SPEC then
-			SCPTeams.addScore( team, f )
+			SCPTeams.AddScore( team, f )
 		end
 	end
-	
+
 	Player_AddFrags( self, f )
 end
 
@@ -1039,4 +1046,8 @@ end
 
 function ply:SkipNextKillRewards()
 	self._skipNextKillRewards = true
+end
+
+function ply:IsAboutToSpawn()
+	return !!self:GetProperty( "spawning" ) or !!self:GetProperty( "spawning_scp" )
 end

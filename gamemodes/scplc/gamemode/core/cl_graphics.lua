@@ -55,12 +55,12 @@ function surface.DrawRing( x, y, radius, thick, angle, segments, fill, rotation 
 	fill = math.Clamp( fill or 1, 0, 1 )
 	rotation = rotation or 0
 
-	local segmentstodraw = {}
+	//local segmentstodraw = {}
 	local segang = angle / segments
 	local bigradius = radius + thick
 
-	local lastsin = 0 --TODO optimize
-	local lastcos = 0
+	//local lastsin = 0 --TODO optimize
+	//local lastcos = 0
 
 	for i = 1, math.Round( segments * fill ) do
 		local ang1 = math.rad( rotation + ( i - 1 ) * segang )
@@ -108,7 +108,7 @@ function surface.DrawRingDC( x, y, radius, thick, angle, segments, fill, rotatio
 	rotation = rotation or 0
 	dist = dist or 0
 
-	local segmentstodraw = {}
+	//local segmentstodraw = {}
 	local segang = ( angle / segments )
 	local bigradius = radius + thick
 
@@ -183,7 +183,7 @@ function surface.DrawSubTexturedRect( x, y, w, h, subx, suby, subw, subh, txw, t
 			y = y + h,
 			u = ustart,
 			v = vstart + vwidth
-		},				
+		},
 	} )
 end
 
@@ -203,9 +203,16 @@ function surface.DrawFilledCircle( x, y, radius, seg )
 	seg = math.Round( seg )
 	local verts = {}
 
-	for i = 0, seg do
+	/*for i = 0, seg do
 		local a = math.rad( ( i / seg ) * -360 )
 		table.insert( verts, { x = x + math.sin( a ) * radius, y = y + math.cos( a ) * radius } )
+	end*/
+
+	table.insert( verts, { x = x, y = y, u = 0.5, v = 0.5 } )
+	for i = 0, seg do
+		local a = math.rad( ( i / seg ) * -360 )
+		local sin, cos = math.sin( a ), math.cos( a )
+		table.insert( verts, { x = x + sin * radius, y = y + cos * radius, u = sin / 2 + 0.5, v = cos / 2 + 0.5 } )
 	end
 
 	surface.DrawPoly( verts )
@@ -250,14 +257,14 @@ function surface.DrawDifference( v1, v2 )
 
 	render.SetStencilWriteMask( 0xFF )
 	render.SetStencilTestMask( 0xFF )
-	
+
 	render.SetStencilPassOperation( STENCIL_KEEP )
 	render.SetStencilZFailOperation( STENCIL_KEEP )
 	render.SetStencilFailOperation( STENCIL_INCR )
 
 	render.SetStencilCompareFunction( STENCIL_NEVER )
 	render.SetStencilReferenceValue( 1 )
-	
+
 	render.SetStencilEnable( true )
 
 		surface.DrawPoly( v1 )
@@ -692,7 +699,7 @@ function draw.MultilineText( x, y, text, font, color, maxWidth, margin, dist, al
 	local texts = string.Split( text , "\n" )
 
 	surface.SetFont( font )
-	
+
 	local fw, fh = surface.GetTextSize( "W" )
 	local height = fh + ( dist or 0 )
 
@@ -711,7 +718,7 @@ function draw.MultilineText( x, y, text, font, color, maxWidth, margin, dist, al
 			local stack = 0
 			repeat
 				stack = stack + 1
-				
+
 				local index = string.match( cur_txt, "() ", space )
 
 				if index == nil then
@@ -821,7 +828,7 @@ draw.BlurOutlinedText( table )
 			[number]		height 		
 ---------------------------------------------------------------------------*/
 function draw.BlurOutlinedText( table )
-	
+
 end
 
 /*-------------------------------------------------------------------------
@@ -847,7 +854,7 @@ Draws text, but obeys maximum width
 //function draw.LimitedText( x, y, text, font, color, max_width, xalign, yalign )
 function draw.LimitedText( tab )
 	tab.text = tostring( tab.text )
-	
+
 	if tab.max_width then
 		local cur_text = tab.text
 		local len = string.len( cur_text )
@@ -872,7 +879,7 @@ end
 
 function draw.TextSize( text, font )
 	surface.SetFont( font )
-	
+
 	return surface.GetTextSize( text )
 end
 

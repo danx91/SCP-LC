@@ -859,6 +859,37 @@ POS_GATE_A_DOORS = {
 	Vector(-412.00, 4836.00, 50.00),
 }
 
+GATE_A_EXPLOSION_RADIUS = 1000
+
+EXPLOSION_AREAS_A = {
+	{ Vector( -750, 4607, -10 ), Vector( 25, 5400, 314 ) },
+	{ Vector( -772, 3775, -80 ), Vector( -300, 4610, 130 ) },
+}
+
+/*hook.Add( "Think", "gastest", function()
+	local pos1 = Vector( 0, 0, 0 )
+	local pos2 = Vector( 0, 0, 0 )
+
+	debugoverlay.Axis( pos1, Angle( 0 ), 10, 0.1, true )
+	debugoverlay.Axis( pos2, Angle( 0 ), 20, 0.1, true )
+
+	local iz = false
+	debugoverlay.Line( Vector( pos1.x, pos1.y, pos1.z ), Vector( pos2.x, pos1.y, pos1.z ), 0.1, Color( 255, 255, 255 ), iz )
+	debugoverlay.Line( Vector( pos2.x, pos1.y, pos1.z ), Vector( pos2.x, pos2.y, pos1.z ), 0.1, Color( 255, 255, 255 ), iz )
+	debugoverlay.Line( Vector( pos2.x, pos2.y, pos1.z ), Vector( pos1.x, pos2.y, pos1.z ), 0.1, Color( 255, 255, 255 ), iz )
+	debugoverlay.Line( Vector( pos1.x, pos2.y, pos1.z ), Vector( pos1.x, pos1.y, pos1.z ), 0.1, Color( 255, 255, 255 ), iz )
+
+	debugoverlay.Line( Vector( pos1.x, pos1.y, pos2.z ), Vector( pos2.x, pos1.y, pos2.z ), 0.1, Color( 255, 255, 255 ), iz )
+	debugoverlay.Line( Vector( pos2.x, pos1.y, pos2.z ), Vector( pos2.x, pos2.y, pos2.z ), 0.1, Color( 255, 255, 255 ), iz )
+	debugoverlay.Line( Vector( pos2.x, pos2.y, pos2.z ), Vector( pos1.x, pos2.y, pos2.z ), 0.1, Color( 255, 255, 255 ), iz )
+	debugoverlay.Line( Vector( pos1.x, pos2.y, pos2.z ), Vector( pos1.x, pos1.y, pos2.z ), 0.1, Color( 255, 255, 255 ), iz )
+
+	debugoverlay.Line( Vector( pos1.x, pos1.y, pos1.z ), Vector( pos1.x, pos1.y, pos2.z ), 0.1, Color( 255, 255, 255 ), iz )
+	debugoverlay.Line( Vector( pos1.x, pos2.y, pos1.z ), Vector( pos1.x, pos2.y, pos2.z ), 0.1, Color( 255, 255, 255 ), iz )
+	debugoverlay.Line( Vector( pos2.x, pos1.y, pos1.z ), Vector( pos2.x, pos1.y, pos2.z ), 0.1, Color( 255, 255, 255 ), iz )
+	debugoverlay.Line( Vector( pos2.x, pos2.y, pos1.z ), Vector( pos2.x, pos2.y, pos2.z ), 0.1, Color( 255, 255, 255 ), iz )
+end )*/
+
 --[[-------------------------------------------------------------------------
 SCP doors
 ---------------------------------------------------------------------------]]

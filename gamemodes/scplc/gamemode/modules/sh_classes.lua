@@ -8,8 +8,9 @@
 		health = 100,
 		walk_speed = 100,
 		run_speed = 225,
+		stamina = 100, --can be nil
 		sanity = 100,
-		max_sanity = 100 --can be nil
+		max_sanity = 100, --can be nil
 		vest = nil,
 		price = 1,
 		max = 0,
@@ -44,12 +45,12 @@ local function assert_warn( b, s )
 	end
 end
 
-function addClassGroup( name, weight, spawn )
+function AddClassGroup( name, weight, spawn )
 	if !name or !weight then return end
 
-	assert_warn( !gwarn, "Using 'addClassGroup' function outside 'RegisterClassGroups' hook can cause errors!" )
+	assert_warn( !gwarn, "Using 'AddClassGroup' function outside 'RegisterClassGroups' hook can cause errors!" )
 
-	assert( name != "SUPPORT", "Forbidden group name: 'SUPPORT'! To add support group use 'addSupportGroup' function instead" )
+	assert( name != "SUPPORT", "Forbidden group name: 'SUPPORT'! To add support group use 'AddSupportGroup' function instead" )
 	assert( !string.match( name, "%s" ), "Group name can not contain any whitespace characters!" )
 	assert( SelectClasses[name] == nil, "Group '"..name.."' is already registered!" )
 	assert( istable( spawn ), "Spawn info is not valid!" )
@@ -60,10 +61,10 @@ function addClassGroup( name, weight, spawn )
 	table.insert( SelectInfo, { name, weight } )
 end
 
-function addSupportGroup( name, weight, spawn, max, callback, spawnrule )
+function AddSupportGroup( name, weight, spawn, max, callback, spawnrule )
 	if !name or !weight then return end
 
-	assert_warn( !gwarn, "Using 'addSupportGroup' function outside 'RegisterClassGroups' hook can cause errors!" )
+	assert_warn( !gwarn, "Using 'AddSupportGroup' function outside 'RegisterClassGroups' hook can cause errors!" )
 
 	assert( !string.match( name, "%s" ), "Group name can not contain any whitespace characters!" )
 	assert( SelectClasses.SUPPORT[name] == nil, "Group '"..name.."' is already registered!" )
@@ -82,35 +83,35 @@ function addSupportGroup( name, weight, spawn, max, callback, spawnrule )
 	table.insert( SuppWeightList, { name, cvar } )
 end
 
-function getClassGroup( name )
+function GetClassGroup( name )
 	assert( SelectClasses[name] != nil, "Invalid group: "..name )
-	assert( name != "SUPPORT", "Forbidden group name: 'SUPPORT'! To get support group use 'getSupportGroup' function instead" )
+	assert( name != "SUPPORT", "Forbidden group name: 'SUPPORT'! To get support group use 'GetSupportGroup' function instead" )
 
 	return SelectClasses[name], SpawnInfo[name]
 end
 
-function getSupportGroup( name )
+function GetSupportGroup( name )
 	assert( SelectClasses.SUPPORT[name] != nil, "Invalid group: "..name )
 
 	return SelectClasses.SUPPORT[name], SpawnInfo.SUPPORT[name]
 end
 
-function getGroups()
+function GetGroups()
 	return SelectClasses
 end
 
-function getSupportData( name )
+function GetSupportData( name )
 	return SupportData[name]
 end
 
-function registerClass( name, group, model, data, support )
+function RegisterClass( name, group, model, data, support )
 	//if !name or !group or !model or !data then return end
 
-	assert_warn( !cwarn, "Using 'registerClass' function outside 'RegisterPlayerClasses' hook can cause errors!" )
+	assert_warn( !cwarn, "Using 'RegisterClass' function outside 'RegisterPlayerClasses' hook can cause errors!" )
 
 	local usetab = support and SelectClasses.SUPPORT or SelectClasses
 
-	assert( group != "SUPPORT", "Forbidden group name: 'SUPPORT'! To register support class use 'registerSupportClass' function instead" )
+	assert( group != "SUPPORT", "Forbidden group name: 'SUPPORT'! To register support class use 'RegisterSupportClass' function instead" )
 	assert( !string.match( name, "%s" ), "Class name can not contain any whitespace characters!" )
 	assert( usetab[group] != nil, "Invalid group: "..group )
 	--assert( usetab[group][name] == nil, "Class '"..name.."' is already registered!" )
@@ -121,7 +122,7 @@ function registerClass( name, group, model, data, support )
 		tab.support = support
 
 		usetab[group][name] = tab
-		print( "Class '"..name.."' is already registered in another group! Duplicating old data to new group, provided new data is discarded!" )
+		print( "Class '"..name.."' is already registered in another group! Copying old data to new group, provided new data is discarded!" )
 	end
 
 	assert( AllClasses[name] == nil, "Class '"..name.."' is already registered!" )
@@ -138,11 +139,15 @@ function registerClass( name, group, model, data, support )
 	usetab[group][name] = data
 end
 
-function registerSupportClass( name, group, model, data )
-	registerClass( name, group, model, data, true )
+function RegisterSupportClass( name, group, model, data )
+	RegisterClass( name, group, model, data, true )
 end
 
-function getPlayerTable( ply )
+function GetClassData( name )
+	return AllClasses[name]
+end
+
+function GetPlayerTable( ply )
 	local tab = {}
 	local total = 0
 
@@ -171,7 +176,7 @@ function getPlayerTable( ply )
 	return final
 end
 
-function selectSupportGroup()
+function SelectSupportGroup()
 	if CLIENT then return end
 
 	local newlist = {}

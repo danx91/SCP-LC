@@ -110,7 +110,7 @@ function SWEP:Scan()
 
 	local detected = {}
 
-	local scps = SCPTeams.getPlayersByTeam( TEAM_SCP )
+	local scps = SCPTeams.GetPlayersByTeam( TEAM_SCP )
 	//print( #scps )
 	for k, v in pairs( scps ) do
 		local tr = util.TraceLine{

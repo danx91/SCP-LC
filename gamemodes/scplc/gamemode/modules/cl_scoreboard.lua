@@ -38,6 +38,10 @@ local MATS = {
 	unmuted = Material( "icon32/unmuted.png" ),
 }
 
+local COLOR = {
+	white = Color( 255, 255, 255, 255 ),
+}
+
 --Lower value is sorted higher
 --WARNING!! Don't use values higher than 20 and lower than -20!!
 local SORT = {
@@ -155,6 +159,8 @@ end
 
 local function createPlayerTab( ply, pnl )
 	local tab = vgui.Create( "DPanel", pnl )
+	tab.Player = ply
+
 	tab:Dock( TOP )
 	tab:DockMargin( 3, 5, 3, 5 )
 	tab:SetZPos( 9999 + ply:EntIndex() )
@@ -170,9 +176,9 @@ local function createPlayerTab( ply, pnl )
 		local color = !ply:IsActive() and Color( 100, 100, 100, 255 )
 		self.BackgroundAlpha = ply:IsActive() and 225 or 100
 
-		local id = getPlayerID( ply )
+		local id = GetPlayerID( ply )
 		if id and id.team then
-			color = SCPTeams.getColor( id.team )
+			color = SCPTeams.GetColor( id.team )
 
 			if id.team == lp:SCPTeam() then
 				sorting = SORT.teammates
@@ -210,7 +216,7 @@ local function createPlayerTab( ply, pnl )
 
 	tab.BackgroundAlpha = 0
 	tab._Color = Color( 200, 200, 200, 200 )
-	tab._TextColor = Color( 255, 255, 255, 255 )
+	tab._TextColor = COLOR.white
 
 	tab.Color = tab._Color
 	tab.TextColor = tab._TextColor
@@ -261,9 +267,9 @@ local function createPlayerTab( ply, pnl )
 	mute:DockMargin( 4, 4, 4, 4 )
 	mute:SetText( "" )
 	mute.Paint = function( self, pw, ph )
-		surface.SetDrawColor( Color( 255, 255, 255, 255 ) )
+		surface.SetDrawColor( COLOR.white )
 
-		if self.Muted then
+		if IsValid( ply ) and ply:IsMuted() then
 			surface.SetMaterial( MATS.muted )
 		else
 			surface.SetMaterial( MATS.unmuted )
@@ -275,15 +281,25 @@ local function createPlayerTab( ply, pnl )
 		surface.DrawOutlinedRect( 0, 0, pw, ph )
 	end
 	mute.DoClick = function( self )
-		local mute = !ply:IsMuted()
-		ply:SetMuted( mute )
-
-		self.Muted = mute
+		if input.IsKeyDown( KEY_LCONTROL ) then
+			ply:SetMuted( !ply:IsMuted() )
+			SCOREBOARD.VolumeSlider = nil
+		else
+			if SCOREBOARD.VolumeSlider == tab then
+				SCOREBOARD.VolumeSlider = nil
+			else
+				SCOREBOARD.VolumeSlider = tab
+			end
+		end
+	end
+	mute.DoRightClick = function( self )
+		ply:SetMuted( !ply:IsMuted() )
+		SCOREBOARD.VolumeSlider = nil
 	end
 	mute.PerformLayout = function( self, pw, ph )
 		self:SetWide( ph )
 	end
-	mute.Muted = false
+	tab.Mute = mute
 
 	local ping = vgui.Create( "DLabel", tab )
 	ping:Dock( RIGHT )
@@ -297,7 +313,7 @@ local function createPlayerTab( ply, pnl )
 		draw.Text{
 			text = text,
 			pos = { pw * 0.5, ph * 0.5 },
-			color = Color( 255, 255, 255, 255 ),//tab.TextColor,
+			color = COLOR.white,//tab.TextColor,
 			font = "SCPNumbersSmall",
 			xalign = TEXT_ALIGN_CENTER,
 			yalign = TEXT_ALIGN_CENTER,
@@ -319,7 +335,7 @@ local function createPlayerTab( ply, pnl )
 		draw.Text{
 			text = text,
 			pos = { pw * 0.5, ph * 0.5 },
-			color = Color( 255, 255, 255, 255 ),//tab.TextColor,
+			color = COLOR.white,//tab.TextColor,
 			font = "SCPNumbersSmall",
 			xalign = TEXT_ALIGN_CENTER,
 			yalign = TEXT_ALIGN_CENTER,
@@ -341,7 +357,7 @@ local function createPlayerTab( ply, pnl )
 		draw.Text{
 			text = text,
 			pos = { pw * 0.5, ph * 0.5 },
-			color = Color( 255, 255, 255, 255 ),//tab.TextColor,
+			color = COLOR.white,//tab.TextColor,
 			font = "SCPNumbersSmall",
 			xalign = TEXT_ALIGN_CENTER,
 			yalign = TEXT_ALIGN_CENTER,
@@ -363,7 +379,7 @@ local function createPlayerTab( ply, pnl )
 		draw.Text{
 			text = text,
 			pos = { pw * 0.5, ph * 0.5 },
-			color = Color( 255, 255, 255, 255 ),//tab.TextColor,
+			color = COLOR.white,//tab.TextColor,
 			font = "SCPNumbersSmall",
 			xalign = TEXT_ALIGN_CENTER,
 			yalign = TEXT_ALIGN_CENTER,
@@ -404,7 +420,7 @@ local function createPlayerTab( ply, pnl )
 				draw.Text{
 					text = texts[i],
 					pos = { totalw + ( widths[i] + 8 ) * 0.5, ph * 0.5 },
-					color = Color( 255, 255, 255, 255 ),
+					color = COLOR.white,
 					font = "SCPHUDVSmall",
 					xalign = TEXT_ALIGN_CENTER,
 					yalign = TEXT_ALIGN_CENTER,
@@ -416,7 +432,7 @@ local function createPlayerTab( ply, pnl )
 			local px, py = self:LocalToScreen( 0, 0 )
 			totalw = 4
 
-			surface.SetDrawColor( 255, 255, 255 )
+			surface.SetDrawColor( COLOR.white )
 			surface.DrawRect( px, py, 8, 8 )
 
 			for i, v in ipairs( tab.ranks ) do
@@ -450,7 +466,7 @@ local function createPlayerTab( ply, pnl )
 					draw.LimitedText{
 						text = texts[i],
 						pos = { totalw + ( cw + 8 ) * 0.5, ph * 0.5 },
-						color = Color( 255, 255, 255, 255 ),
+						color = COLOR.white,
 						font = "SCPHUDVSmall",
 						xalign = TEXT_ALIGN_CENTER,
 						yalign = TEXT_ALIGN_CENTER,
@@ -596,7 +612,7 @@ local function createScoreboard()
 		draw.LimitedText{
 			text = LANG.scoreboard.playername,
 			pos = { lx + lw * 0.5, ph * 0.03 },
-			color = Color( 255, 255, 255, 255 ),
+			color = COLOR.white,
 			font = "SCPHUDMedium",
 			xalign = TEXT_ALIGN_CENTER,
 			yalign = TEXT_ALIGN_CENTER,
@@ -611,7 +627,7 @@ local function createScoreboard()
 		draw.LimitedText{
 			text = LANG.scoreboard.ping,
 			pos = { rx - rw * 0.5, ph * 0.03 },
-			color = Color( 255, 255, 255, 255 ),
+			color = COLOR.white,
 			font = "SCPHUDMedium",
 			xalign = TEXT_ALIGN_CENTER,
 			yalign = TEXT_ALIGN_CENTER,
@@ -624,7 +640,7 @@ local function createScoreboard()
 		draw.LimitedText{
 			text = LANG.scoreboard.prestige,
 			pos = { rx - rw * 0.5, ph * 0.03 },
-			color = Color( 255, 255, 255, 255 ),
+			color = COLOR.white,
 			font = "SCPHUDMedium",
 			xalign = TEXT_ALIGN_CENTER,
 			yalign = TEXT_ALIGN_CENTER,
@@ -637,7 +653,7 @@ local function createScoreboard()
 		draw.LimitedText{
 			text = LANG.scoreboard.level,
 			pos = { rx - rw * 0.5, ph * 0.03 },
-			color = Color( 255, 255, 255, 255 ),
+			color = COLOR.white,
 			font = "SCPHUDMedium",
 			xalign = TEXT_ALIGN_CENTER,
 			yalign = TEXT_ALIGN_CENTER,
@@ -650,7 +666,7 @@ local function createScoreboard()
 		draw.LimitedText{
 			text = LANG.scoreboard.score,
 			pos = { rx - rw * 0.5, ph * 0.03 },
-			color = Color( 255, 255, 255, 255 ),
+			color = COLOR.white,
 			font = "SCPHUDMedium",
 			xalign = TEXT_ALIGN_CENTER,
 			yalign = TEXT_ALIGN_CENTER,
@@ -663,7 +679,7 @@ local function createScoreboard()
 		draw.LimitedText{
 			text = LANG.scoreboard.ranks,
 			pos = { lx + lw * 0.5, ph * 0.03 },
-			color = Color( 255, 255, 255, 255 ),
+			color = COLOR.white,
 			font = "SCPHUDMedium",
 			xalign = TEXT_ALIGN_CENTER,
 			yalign = TEXT_ALIGN_CENTER,
@@ -723,6 +739,15 @@ local function createScoreboard()
 	container.Players:GetVBar():SetWide( 0 )
 	container.Players:InvalidateParent( true )
 
+	local _OnMouseWheeled = container.Players.OnMouseWheeled
+	container.Players.OnMouseWheeled = function( self, delta )
+		if container.Players:GetVBar():IsVisible() then
+			SCOREBOARD.VolumeSlider = nil
+		end
+
+		_OnMouseWheeled( self, delta )
+	end
+
 	SCOREBOARD = container
 end
 
@@ -750,33 +775,112 @@ end
 function GM:ScoreboardHide()
 	ScoreboardVisible = false
 
+	SCOREBOARD.VolumeSlider = nil
 	SCOREBOARD:Hide()
 	//SCOREBOARD:Remove()
 end
 
+local holdingVC = false
 hook.Add( "DrawOverlay", "ScoreboardArrow", function()
-	if IsValid( SCOREBOARD ) and SCOREBOARD:IsVisible() then
-		local sh = ScrH()
-		local x, y = ScrW() * 0.15, sh * 0.11
-		local w, h = SCOREBOARD.Players:GetSize()
+	if holdingVC and !input.IsButtonDown( MOUSE_LEFT ) then
+		holdingVC = false
+	end
 
-		render.PushFilterMag( TEXFILTER.LINEAR )
-		render.PushFilterMin( TEXFILTER.LINEAR )
+	if IsValid( SCOREBOARD ) and SCOREBOARD:IsVisible() then
+		local w, h = ScrW(), ScrH()
+
+		local x, y = w * 0.15, h * 0.11
+		local pw, ph = SCOREBOARD.Players:GetSize()
+
+		PushFilters( TEXFILTER.LINEAR )
 
 		if SCOREBOARD.DrawArrowUp then
 			surface.SetMaterial( MATS.arrow_up )
 			surface.SetDrawColor( Color( 255, 255, 255, math.TimedSinWave( 0.75, 0, 255 ) ) )
-			surface.DrawTexturedRect( x + w, y, 32, 32 )
+			surface.DrawTexturedRect( x + pw, y, 32, 32 )
 		end
 
 		if SCOREBOARD.DrawArrowDown then
 			surface.SetDrawColor( Color( 255, 255, 255, math.TimedSinWave( 0.75, 0, 255 ) ) )
 			surface.SetMaterial( MATS.arrow_down )
-			surface.DrawTexturedRect( x + w, y + h - 32, 32, 32 )
+			surface.DrawTexturedRect( x + pw, y + ph - 32, 32, 32 )
 		end
 
-		render.PopFilterMag()
-		render.PopFilterMin()
+		PopFilters()
+
+		local tab = SCOREBOARD.VolumeSlider
+		if tab and IsValid( tab.Player ) then
+			local px, py = SCOREBOARD.Players:LocalToScreen( tab:GetPos() )
+			local pw, ph = tab:GetSize()
+
+			surface.SetDrawColor( Color( 0, 0, 0, tab.BackgroundAlpha ) )
+			surface.DrawRect( px + pw + w * 0.01, py, w * 0.11, ph )
+
+			surface.SetDrawColor( tab._Color )
+			surface.DrawOutlinedRect( px + pw + w * 0.01, py, w * 0.11, ph )
+
+			local nx, ny = px + pw + w * 0.02, py + ph * 0.5
+			local nw = w * 0.09
+			surface.SetDrawColor( Color( 75, 75, 75, 255 ) )
+			surface.DrawRect( nx, ny - 1, nw, 2 )
+
+			local muted = tab.Player:IsMuted()
+			local vol = tab.Player:GetVoiceVolumeScale()
+
+			if muted then
+				vol = 0
+			end
+
+			draw.NoTexture()
+			local cpx = nx + nw * vol
+			local mx, my = input.GetCursorPos()
+			local dx, dy = cpx - mx, ny - my
+
+			local hover = dx * dx + dy * dy <= 36
+			local lmb = input.IsButtonDown( MOUSE_LEFT )
+
+			if lmb then
+				if hover then
+					holdingVC = true
+				elseif math.abs( dy ) <= 6 and mx >= nx and mx <= nx + nw then
+					cpx = mx
+
+					vol = ( cpx - nx ) / nw
+					tab.Player:SetVoiceVolumeScale( vol )
+				end
+			end
+
+			if holdingVC then
+				cpx = mx
+
+				if cpx < nx then
+					cpx = nx
+				end
+
+				if cpx > nx + nw then
+					cpx = nx + nw
+				end
+
+				vol = ( cpx - nx ) / nw
+				tab.Player:SetVoiceVolumeScale( vol )
+			end
+
+			if !muted and vol == 0 then
+				tab.Player:SetMuted( true )
+			elseif muted and vol > 0 then
+				tab.Player:SetMuted( false )
+			end
+
+			surface.SetDrawColor( Color( 175, 175, 175, 255 ) )
+			surface.DrawRect( nx, ny - 1, nw * vol, 2 )
+
+			if holdingVC or hover then
+				surface.SetDrawColor( Color( 225, 225, 225, 255 ) )
+			end
+
+			surface.DrawFilledCircle( cpx, ny, 6, 12 )
+
+		end
 	end
 end )
 

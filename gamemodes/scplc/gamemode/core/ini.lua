@@ -5,7 +5,7 @@ INI_LOADER_VERSION = "v1.0"
 
 local function writeSections( f, tab, c )
 	local d = file.Open( f, "w", "DATA" )
-	if !d then 
+	if !d then
 		error( "Failed to open "..f )
 	end
 
@@ -16,7 +16,7 @@ local function writeSections( f, tab, c )
 		d:Write( "\n\n"..string.format( "[%s]", k ) )
 		for _k, _v in pairs( v ) do
 			if _v == "" then
-				_v = "''"	
+				_v = "''"
 			elseif tonumber( _v ) and type( _v ) == "string" then
 				_v = "'".._v.."'"
 			end
@@ -41,7 +41,7 @@ local function createSections( tab, name, prefix, sections, char )
 end
 
 local function parseFile( path )
-	f = file.Open( path, "r", "DATA" )
+	local f = file.Open( path, "r", "DATA" )
 	if !f then
 		error( "Failed to open "..path )
 	end

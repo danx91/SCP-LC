@@ -171,7 +171,7 @@ local function addClass( tab, p, h )
 		}
 
 		draw.NoTexture()
-		surface.SetDrawColor( SCPTeams.getColor( tab.team ) )
+		surface.SetDrawColor( SCPTeams.GetColor( tab.team ) )
 		surface.DrawPoly{
 			{ x = pw * 0.9 - ph * 0.5, y = ph * 0.1 },
 			{ x = pw * 0.9 - ph * 0.1, y = ph * 0.1 },
@@ -185,9 +185,9 @@ local function addClass( tab, p, h )
 		local model = cache[_name]
 		if !model then
 			if tab.vest then
-				local vest = VEST.getID( tab.vest )
+				local vest = VEST.GetID( tab.vest )
 				if vest then
-					local data = VEST.getData( vest )
+					local data = VEST.GetData( vest )
 					if data then
 						model = { istable( data.model ) and table.Random( data.model ) or data.model, data.skin, data.bodygroups }
 						cache[_name] = model
@@ -271,7 +271,7 @@ local function addSCP( tab, p, h )
 		}
 
 		draw.NoTexture()
-		surface.SetDrawColor( SCPTeams.getColor( TEAM_SCP ) )
+		surface.SetDrawColor( SCPTeams.GetColor( TEAM_SCP ) )
 		surface.DrawPoly{
 			{ x = pw * 0.9 - ph * 0.5, y = ph * 0.1 },
 			{ x = pw * 0.9 - ph * 0.1, y = ph * 0.1 },
@@ -306,7 +306,7 @@ function rebuildView()
 	if !LANG.headers then return end
 
 	local h = ScrH()
-	local groups = getGroups()
+	local groups = GetGroups()
 
 	local panel = showinfo.panel
 
@@ -441,9 +441,9 @@ local function openViewer()
 	refound_b.DoClick = function( self )
 		self:SetVisible( false )
 		net.Ping( "SLCRefoundClasses" )
-		LocalPlayer().playermeta.refound = false
+		ply.playermeta.refound = false
 	end
-	refound_b:SetVisible( LocalPlayer().playermeta.refound or false )
+	refound_b:SetVisible( ply.playermeta.refound or false )
 
 	local exit_b = vgui.Create( "DButton", window )
 	exit_b:SetSize( w * 0.02, h * 0.02 )
@@ -559,7 +559,7 @@ local function openViewer()
 					if v == "name" then
 						val = LANG.CLASSES[val] or val
 					elseif v == "team" then
-						local t = SCPTeams.getName( val )
+						local t = SCPTeams.GetName( val )
 						val = LANG.TEAMS[t] or val
 					elseif v == "chip" then
 						if !val or val == "" then
@@ -621,7 +621,7 @@ local function openViewer()
 							if key == "class" then
 								txt = txt..( LANG.CLASSES[data] or data )
 							elseif key == "team" then
-								local t = SCPTeams.getName( data )
+								local t = SCPTeams.GetName( data )
 								txt = txt..( LANG.TEAMS[t] or data )
 							elseif isstring( data ) or isnumber( data ) then
 								txt = txt..data

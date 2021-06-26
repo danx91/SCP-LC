@@ -295,6 +295,7 @@ You don't have %i addons out of %i. Would you like to download it now? (you can 
 	workshop = "Show workshop page",
 	downloading = "Downloading",
 	mounting = "Mounting",
+	idle = "Waiting for download...",
 	processing = "Processing addon: %s\nStatus: %s",
 	cancel = "Cancel"
 }
@@ -526,8 +527,6 @@ lang.CLASS_OBJECTIVES = {
 - Cure people]],
 
 	SCP0492 = [[]],
-
-	SCP023 = generic_scp,
 
 	SCP066 = generic_scp_friendly,
 
@@ -1053,7 +1052,7 @@ Escorted by: None
 Overview:
 Chaos Insurgency unit. Higher combat potential. Get into facility, help Class D and kill facility staff.
 ]],
-	
+
 	SCP023 = [[Difficulty: Hard
 Toughness: Low
 Agility: High
@@ -1813,7 +1812,6 @@ wep.ACCESS_CHIP = {
 		KETER = "Keter",
 		OFFICE = "Office",
 		MEDBAY = "MedBay",
-		GENERAL = "General",
 		CHECKPOINT_LCZ = "Checkpoint LCZ-HCZ",
 		CHECKPOINT_EZ = "Checkpoint EZ-HCZ",
 		WARHEAD_ELEVATOR = "Warhead Elevator",

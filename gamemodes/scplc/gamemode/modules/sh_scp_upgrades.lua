@@ -423,8 +423,9 @@ if CLIENT then
 			surface.SetDrawColor( Color( 0, 0, 0, 200 ) )
 			surface.DrawRect( sx, sy, icosize, icosize )
 
-			render.PushFilterMin( TEXFILTER.LINEAR )
-			render.PushFilterMag( TEXFILTER.LINEAR )
+			//render.PushFilterMin( TEXFILTER.LINEAR )
+			//render.PushFilterMag( TEXFILTER.LINEAR )
+			PushFilters( TEXFILTER.LINEAR )
 			
 			if v.icon then
 				surface.SetDrawColor( color_white )
@@ -456,8 +457,9 @@ if CLIENT then
 				surface.DrawTexturedRect( sx + halfico * 0.5, sy + halfico * 0.5, halfico, halfico )
 			end
 
-			render.PopFilterMin()
-			render.PopFilterMag()
+			//render.PopFilterMin()
+			//render.PopFilterMag()
+			PopFilters()
 
 			local rnum = #v.req
 			for j = 1, rnum do

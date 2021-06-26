@@ -85,7 +85,7 @@ end
 --[[-------------------------------------------------------------------------
 Gate A Explosion
 ---------------------------------------------------------------------------]]
-local function isGateAOpen()
+local function IsGateAOpen()
 	local doors = ents.FindInSphere( POS_MIDDLE_GATE_A, 125 )
 
 	for k, v in pairs( doors ) do
@@ -99,7 +99,7 @@ local function isGateAOpen()
 	return true
 end
 
-local function destroyGate()
+local function DestroyGateA()
 	local ent = ents.FindInSphere( POS_MIDDLE_GATE_A, 125 )
 	for k, v in pairs( ent ) do
 		local class = v:GetClass()
@@ -109,8 +109,8 @@ local function destroyGate()
 	end
 end
 
-local function takeDamage( ent, ply )
-	for k, v in pairs( ents.FindInSphere( POS_MIDDLE_GATE_A, 1000 ) ) do
+local function TakeDamageA( ent, ply )
+	/*for k, v in pairs( ents.FindInSphere( POS_MIDDLE_GATE_A, 1000 ) ) do
 		if v:IsPlayer() and v:Alive() then
 			if v:SCPTeam() != TEAM_SPEC then
 				local dmg = ( 1001 - v:GetPos():Distance( POS_MIDDLE_GATE_A ) ) * 10
@@ -119,12 +119,28 @@ local function takeDamage( ent, ply )
 				end
 			end
 		end
+	end*/
+
+	for k, v in pairs( player.GetAll() ) do
+		if v:Alive() and v:SCPTeam() != TEAM_SPEC then
+			local pos = v:GetPos()
+			for _, tab in pairs( EXPLOSION_AREAS_A ) do
+				if pos:WithinAABox( tab[1], tab[2] ) then
+					local dmg = math.Clamp( 1 - pos:Distance( POS_MIDDLE_GATE_A ) / GATE_A_EXPLOSION_RADIUS, 0, 1 ) * 10000
+					if dmg > 0 then
+						v:TakeDamage( dmg, ply or v, ent )
+					end
+
+					break
+				end
+			end
+		end
 	end
 end
 
 function ExplodeGateA( ply )
 	if GetRoundStat( "gatea" ) then return end
-	if isGateAOpen() then return end
+	if IsGateAOpen() then return end
 
 	SetRoundStat( "gatea", true )
 	
@@ -139,7 +155,7 @@ function ExplodeGateA( ply )
 	PlayerMessage( "gateexplode$"..time )
 
 	AddTimer( "GateExplode", 1, time, function( self, n )
-		if isGateAOpen() then 
+		if IsGateAOpen() then 
 			self:Destroy()
 			snd:Stop()
 
@@ -161,13 +177,13 @@ function ExplodeGateA( ply )
 			explosion:Spawn()
 			explosion:Fire( "explode", "", 0 )
 
-			destroyGate()
+			DestroyGateA()
 
 			if IsValid( ply ) then
 				ply:AddFrags( 5 )
-				takeDamage( explosion, ply )
+				TakeDamageA( explosion, ply )
 			else
-				takeDamage( explosion )
+				TakeDamageA( explosion )
 			end
 		end
 	end )
@@ -259,7 +275,7 @@ function Recontain106( ply )
 			hook.Run( "SLCSCP106Recontained", ply )
 
 			if IsValid( ply ) then
-				local points = math.ceil( SCPTeams.getReward( TEAM_SCP ) * 1.5 * scpnum )
+				local points = math.ceil( SCPTeams.GetReward( TEAM_SCP ) * 1.5 * scpnum )
 				PlayerMessage( "r106success$"..points, ply, true )
 				ply:AddFrags( points )
 			end
@@ -387,7 +403,7 @@ function OMEGAWarhead( ply1, ply2 )
 				HoldRound()
 
 				local xp = CVAR.omega_shelter_xp:GetInt()
-				for k, v in pairs( SCPTeams.getPlayersByInfo( SCPTeams.INFO_HUMAN ) ) do
+				for k, v in pairs( SCPTeams.GetPlayersByInfo( SCPTeams.INFO_HUMAN ) ) do
 					if v:GetPos():WithinAABox( OMEGA_SHELTER[1], OMEGA_SHELTER[2] ) then
 						//CenterMessage( string.format( "offset:75;escaped#255,0,0,SCPHUDVBig;shelter_escape;escapexp$%d", xp ), v )
 						InfoScreen( v, "escaped", INFO_SCREEN_DURATION, {
@@ -398,7 +414,7 @@ function OMEGAWarhead( ply1, ply2 )
 						v:AddXP( xp )
 
 						local team = v:SCPTeam()
-						SCPTeams.addScore( team, SCPTeams.getReward( team ) * 2 )
+						SCPTeams.AddScore( team, SCPTeams.GetReward( team ) * 2 )
 
 						v:Despawn()
 

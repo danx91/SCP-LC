@@ -98,7 +98,7 @@ function InfoScreen( ply, type, duration, data )
 	local status
 
 	local class = istab and ply.class or ply:SCPClass()
-	local team = SCPTeams.getName( istab and ply.team or ply:SCPTeam() )
+	local team = SCPTeams.GetName( istab and ply.team or ply:SCPTeam() )
 
 	if type == "spawn" then
 		status = LANG.info_screen_type.alive
@@ -394,7 +394,7 @@ hook.Add( "DrawOverlay", "SLCInfoScreen", function()
 	end
 end )
 
-concommand.Add( "tscr", function()
+/*concommand.Add( "tscr", function()
 	InfoScreen( nil, "escape", 12, {
 		{ "text;aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" },
 		{ "text;aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" },
@@ -403,4 +403,4 @@ concommand.Add( "tscr", function()
 		{ "text;aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" },
 		{ "text;aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" },
 	} )
-end )
+end )*/

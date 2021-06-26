@@ -90,19 +90,26 @@ function SWEP:Think()
 					PrintTable( self.Preys )
 					PrintTable( self.PreysLookup )*/
 					for i = 1, torem do
-						//local old = self.Preys[i][1]
-						//self.PreysLookup[old] = nil
-						self.PreysLookup[self.Preys[i][1]] = nil
+						local old = self.Preys[i][1] --player that is removed from list
+						local ply_obj = self.Preys[i + torem] --player that is placed in the place of old player
 
-						local ply = self.Preys[i + torem]
-						self.Preys[i] = ply
-						self.Preys[i + torem] = nil
+						self.PreysLookup[old] = nil --remove old player from lookup
 
-						//print( "SWAP", (i + torem).." -> "..i, ply and ply[1], old )
+						self.Preys[i + torem] = nil --ply_obj overrides old player (old player is ultimately removed from list)
+						self.Preys[i] = ply_obj
+						//print( "Removing", old )
+						//self.PreysLookup[self.Preys[i][1]] = nil
 
-						if ply and IsValid( ply[1] ) then
-							print( "Removing ambient for", ply[1] )
-							ply[1]:StopAmbient( "023" )
+
+						//print( "SWAP", (i + torem).." -> "..i, ply_obj and ply_obj[1], old )
+
+						/*if ply_obj and IsValid( ply_obj[1] ) then --?? local old?
+							//print( "Removing ambient for", ply_obj[1] )
+							ply_obj[1]:StopAmbient( "023" )
+						end*/
+						if IsValid( old ) then --stop ambient for removed player
+							old:StopAmbient( "023" )
+							//print( "stopping ambient for", old )
 						end
 					end
 					/*print("Post")

@@ -16,6 +16,7 @@ function PLAYER:SetupDataTables()
 	ply:NetworkVar( "Int", 4, "_SCPPrestige" )
 	ply:NetworkVar( "Int", 5, "_SCPPrestigePoints" )
 	ply:NetworkVar( "Int", 6, "TimeSignature" )
+	ply:NetworkVar( "Int", 7, "Stamina" ) --although this could be SCPVar, NetworkVar is more reliable and has prediction error correction
 
 	ply:NetworkVar( "String", 0, "_SCPClass" )
 	ply:NetworkVar( "String", 1, "_SCPPersonaC" )
@@ -23,8 +24,10 @@ function PLAYER:SetupDataTables()
 	ply:AddSCPVar( "Sanity", 0, "INT" )
 	ply:AddSCPVar( "MaxSanity", 1, "INT" )
 	ply:AddSCPVar( "Vest", 2, "INT" )
-	ply:AddSCPVar( "StaminaLimit", 3, "INT" )
+	ply:AddSCPVar( "MaxStamina", 3, "INT" )
+	ply:AddSCPVar( "StaminaLimit", 4, "INT" )
 
+	//ply:AddSCPVar( "Exhausted", 0, "BOOL" )
 	ply:AddSCPVar( "DisableControls", 0, "BOOL" )
 
 	if SERVER then
@@ -43,10 +46,12 @@ function PLAYER:SetupDataTables()
 		ply:Set_SCPPrestige( tonumber( ply:GetSCPData( "prestige", 0 ) ) or 0 )
 		ply:Set_SCPPrestigePoints( tonumber( ply:GetSCPData( "prestige_points", 0 ) ) or 0 )
 		ply:SetTimeSignature( math.floor( CurTime() ) )
+		ply:SetStamina( 100 )
 
 		ply:SetSanity( 100 )
 		ply:SetMaxSanity( 100 )
 		ply:SetVest( 0 )
+		ply:SetMaxStamina( 100 )
 		ply:SetStaminaLimit( 100 )
 
 		ply:SetDisableControls( false )

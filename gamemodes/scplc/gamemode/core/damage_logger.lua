@@ -41,7 +41,7 @@ end
 
 function DamageLogger:DamageTaken( dmg, attacker, data )
 	local ivp = IsValid( attacker ) and attacker:IsPlayer()
-	local rdm = ivp and SCPTeams.isAlly( self.Player:SCPTeam(), attacker:SCPTeam() )
+	local rdm = ivp and SCPTeams.IsAlly( self.Player:SCPTeam(), attacker:SCPTeam() )
 
 	table.insert( self.TakenLog, { attacker = attacker, attackername = ivp and attacker:GetName() or "NULL", attackerid = ivp and attacker:SteamID64() or "NULL", damage = dmg, data = data, rdm = rdm } )
 
@@ -66,7 +66,7 @@ end
 
 function DamageLogger:DamageDealt( dmg, target, data )
 	local ivp = IsValid( target ) and target:IsPlayer()
-	local rdm = ivp and SCPTeams.isAlly( self.Player:SCPTeam(), target:SCPTeam() )
+	local rdm = ivp and SCPTeams.IsAlly( self.Player:SCPTeam(), target:SCPTeam() )
 
 	table.insert( self.DealtLog, { target = target, targetname = ivp and target:GetName() or "NULL", targetid = ivp and target:SteamID64() or "NULL", damage = dmg, data = data, rdm = rdm } )
 

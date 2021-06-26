@@ -1,15 +1,15 @@
 local ply = FindMetaTable( "Player" )
 
-function ply:SetupSpectator()
+function ply:SetupSpectator( roam )
 	self:SetSCPTeam( TEAM_SPEC )
 	self:SetSCPClass( "spectator" )
 
 	self:CrosshairEnable()
 
-	//local plys = SCPTeams.getPlayersByInfo( SCPTeams.INFO_HUMAN )
+	//local plys = SCPTeams.GetPlayersByInfo( SCPTeams.INFO_HUMAN )
 	local plys = self:GetValidSpectateTargets()
 
-	if #plys < 1 then
+	if roam or #plys < 1 then
 		self:UnSpectate()
 		self:Spectate( OBS_MODE_ROAMING )
 	else
@@ -23,7 +23,7 @@ function ply:SpectatePlayerNext()
 	if self:SCPTeam() != TEAM_SPEC then return end
 	if self.DeathScreen or self.SetupAsSpectator then return end
 
-	//local plys = SCPTeams.getPlayersByInfo( SCPTeams.INFO_HUMAN )
+	//local plys = SCPTeams.GetPlayersByInfo( SCPTeams.INFO_HUMAN )
 	local plys = self:GetValidSpectateTargets()
 	if self:GetObserverMode() == OBS_MODE_ROAMING then
 		if #plys > 0 then
@@ -72,7 +72,7 @@ function ply:SpectatePlayerPrev()
 	if self:SCPTeam() != TEAM_SPEC then return end
 	if self.DeathScreen or self.SetupAsSpectator then return end
 
-	//local plys = SCPTeams.getPlayersByInfo( SCPTeams.INFO_HUMAN )
+	//local plys = SCPTeams.GetPlayersByInfo( SCPTeams.INFO_HUMAN )
 	local plys = self:GetValidSpectateTargets()
 
 	if self:GetObserverMode() == OBS_MODE_ROAMING then
@@ -121,10 +121,10 @@ end
 function ply:ChangeSpectateMode()
 	if self:SCPTeam() != TEAM_SPEC then return end
 	if self.DeathScreen or self.SetupAsSpectator then return end
-	
+
 	local cur_mode = self:GetObserverMode()
 
-	//if #SCPTeams.getPlayersByInfo( SCPTeams.INFO_HUMAN ) < 1 then
+	//if #SCPTeams.GetPlayersByInfo( SCPTeams.INFO_HUMAN ) < 1 then
 	if #self:GetValidSpectateTargets() < 1 then
 		if cur_mode != OBS_MODE_ROAMING then
 			--print( "SpecMode - foce roam", self )
@@ -147,7 +147,7 @@ function ply:ChangeSpectateMode()
 	--print( "change spec mode", self )
 end
 
-function ply:GetValidSpectateTargets()
+function ply:GetValidSpectateTargets( all )
 	local info = SCPTeams.INFO_HUMAN
 
 	if CVAR.spectatescp:GetBool() == true or hook.Run( "SLCCanSpectateSCP", self ) == true then
@@ -155,10 +155,10 @@ function ply:GetValidSpectateTargets()
 	end
 
 	local plys = {}
-	local tab = SCPTeams.getPlayersByInfo( info )
+	local tab = SCPTeams.GetPlayersByInfo( info )
 
 	for k, v in pairs( tab ) do
-		if !v:GetProperty( "spawning" ) and !v:GetProperty( "spawning_scp" ) then
+		if all or !v:IsAboutToSpawn() then
 			table.insert( plys, v )
 		end
 	end
@@ -167,11 +167,11 @@ function ply:GetValidSpectateTargets()
 end
 
 function ply:InvalidatePlayerForSpectate()
-	//local roam = #SCPTeams.getPlayersByInfo( SCPTeams.INFO_HUMAN ) < 1
+	//local roam = #SCPTeams.GetPlayersByInfo( SCPTeams.INFO_HUMAN ) < 1
 	local roam = #self:GetValidSpectateTargets() < 1
 	--print( "ivalidate", self, roam )
 
-	for k, v in pairs( SCPTeams.getPlayersByTeam( TEAM_SPEC ) ) do
+	for k, v in pairs( SCPTeams.GetPlayersByTeam( TEAM_SPEC ) ) do
 		if v != self then
 			if v:GetObserverTarget() == self then
 				if roam then
@@ -181,6 +181,28 @@ function ply:InvalidatePlayerForSpectate()
 					v:SpectatePlayerNext()
 				end
 			end
+		end
+	end
+end
+
+function ply:CheckSpectatorMode( all )
+	if self:GetObserverMode() == OBS_MODE_ROAMING then
+		local plys = self:GetValidSpectateTargets( all )
+		if #plys > 0 then
+			self:Spectate( OBS_MODE_CHASE )
+			self:SpectateEntity( plys[1] )
+		end
+	end
+end
+
+--[[-------------------------------------------------------------------------
+Globals
+---------------------------------------------------------------------------]]
+
+function CheckSpectatorMode( all )
+	for k, v in pairs( player.GetAll() ) do
+		if v:SCPTeam() == TEAM_SPEC then
+			v:CheckSpectatorMode( all )
 		end
 	end
 end

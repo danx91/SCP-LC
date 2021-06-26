@@ -25,7 +25,7 @@ SWEP.NTargetTrace = 0
 SWEP.NDistCheck = 0
 function SWEP:Think()
 	self:PlayerFreeze()
-	
+
 	local ct = CurTime()
 	local owner = self:GetOwner()
 
@@ -252,7 +252,7 @@ function SWEP:PrimaryAttack()
 	local owner = self:GetOwner()
 	if !owner:IsOnGround() then return end
 
-	local owner = self:GetOwner()
+	//local owner = self:GetOwner()
 	local seq = owner:LookupSequence( "stary_skacze" )
 	if seq > -1 then
 		owner:DoCustomAnimEvent( PLAYERANIMEVENT_CUSTOM, seq )
@@ -273,7 +273,7 @@ function SWEP:SecondaryAttack()
 	if owner:Health() == 1 then return end
 
 	local owner_pos = owner:GetPos()
-	local plys = FindInCylinder( owner_pos, 2000 + self:GetUpgradeMod( "mc_dist", 0 ), -400, 350, nil, nil, SCPTeams.getPlayersByInfo( SCPTeams.INFO_HUMAN, true ) )
+	local plys = FindInCylinder( owner_pos, 2000 + self:GetUpgradeMod( "mc_dist", 0 ), -400, 350, nil, nil, SCPTeams.GetPlayersByInfo( SCPTeams.INFO_HUMAN, true ) )
 
 	local len = #plys
 	if len > 0 then
@@ -297,7 +297,7 @@ function SWEP:SecondaryAttack()
 			self:SetNextPrimaryFire( self.PrepareMindControl + 5 )
 			self:SetNextSecondaryFire( self.PrepareMindControl + 5 )
 
-			local owner = self:GetOwner()
+			//local owner = self:GetOwner()
 			local seq, dur = owner:LookupSequence( "stary_spi" )
 			if seq > -1 then
 				self:SetNWFloat( "anim_time", ct + dur )
@@ -307,7 +307,7 @@ function SWEP:SecondaryAttack()
 end
 
 function SWEP:Reload()
-	
+
 end
 
 function SWEP:OnRemove()
@@ -325,7 +325,7 @@ function SWEP:StopMindControl( noanim1, noanim2 ) --STOP EKRAN EFEKTY DLA OFIARY
 		net.Start( "SLCMindControl" )
 			net.WriteBool( false )
 		net.Send( self.MCTarget[1] )
-		
+	
 		if self.MCTarget[1]:GetProperty( "mind_control" ) then
 			self.MCTarget[1]:SetProperty( "mind_control" )
 		end
@@ -344,7 +344,7 @@ function SWEP:StopMindControl( noanim1, noanim2 ) --STOP EKRAN EFEKTY DLA OFIARY
 	--end
 
 	self.LockAngles = self.RestoreEyeAngles//nil
-	
+
 	local penalty_time = 3
 	local owner = self:GetOwner()
 	if IsValid( owner ) then
@@ -396,7 +396,7 @@ hook.Add( "CalcMainActivity", "SLCSCP2427Activity", function( ply, vel )
 					return -1, seq
 				end
 			end
-		end	
+		end
 	end
 end )
 
@@ -461,7 +461,7 @@ hook.Add( "StartCommand", "SLCSCP2427Control", function( ply, cmd )
 			if cmd:KeyDown( IN_JUMP ) then
 				cmd:RemoveKey( IN_JUMP )
 			end
-			
+
 			if cmd:KeyDown( IN_DUCK ) then
 				cmd:RemoveKey( IN_DUCK )
 			end
@@ -474,13 +474,13 @@ hook.Add( "StartCommand", "SLCSCP2427Control", function( ply, cmd )
 			cmd:ClearMovement()
 
 			cmd:SetButtons( ply.MindControlObject:GetNWInt( "mc_buttons" ) )
-			
+
 			local desired = ply.MindControlObject:GetNWAngle( "mc_angles" )
 
 			if !ply.MindControlAngles then
 				ply.MindControlAngles = desired
 			end
-			
+
 			local ang = LerpAngle( FrameTime() * 2, ply.MindControlAngles, desired )
 			ang.roll = 0
 
@@ -665,11 +665,11 @@ if CLIENT then
 	net.Receive( "SLCMindControl", function( len )
 		local status = net.ReadBool()
 
+		local ply = LocalPlayer()
+
 		if status then
 			local ctrl = net.ReadEntity()
 			local time = net.ReadFloat()
-
-			local ply = LocalPlayer()
 
 			ply.MindControlTime = time
 			ply.MindControlObject = ctrl
@@ -743,7 +743,7 @@ end
 
 function SWEP:DrawSCPHUD()
 	//if hud_disabled or HUDDrawInfo or ROUND.preparing then return end
-	
+
 	local ct = CurTime()
 	local ctime = self:GetMindControl()
 	if ctime >= ct then
@@ -762,7 +762,7 @@ function SWEP:DrawSCPHUD()
 	end
 
 	local txt, color
-		
+
 	local npf = self:GetNextPrimaryFire()
 	local nsf = self:GetNextSecondaryFire()
 

@@ -199,5 +199,5 @@ DefineUpgradeSystem( "scp966", {
 
 InstallUpgradeSystem( "scp966", SWEP )
 
-addSounds( "SCP966.Random", "scp_lc/scp/966/random%i.ogg", 80, 1, 100, CHAN_STATIC, 0, 5 )
-addSounds( "SCP966.Attack", "scp_lc/scp/966/slash%i.ogg", 75, 0.75, 100, CHAN_STATIC, 0, 1 )
+AddSounds( "SCP966.Random", "scp_lc/scp/966/random%i.ogg", 80, 1, 100, CHAN_STATIC, 0, 5 )
+AddSounds( "SCP966.Attack", "scp_lc/scp/966/slash%i.ogg", 75, 0.75, 100, CHAN_STATIC, 0, 1 )

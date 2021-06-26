@@ -190,8 +190,8 @@ hook.Add( "RenderScreenspaceEffects", "SCPEffects", function()
 		end
 	end
 
-	if ply.Stamina then
-		stamina_effects = math.Approach( stamina_effects, ply.Stamina, RealFrameTime() * 20 )
+	if ply.GetStamina then
+		stamina_effects = math.Approach( stamina_effects, ply:GetStamina(), RealFrameTime() * 20 )
 
 		local staminamul = math.Map( math.min( stamina_effects, 30 ), 0, 30, 0.25, 0 )
 		clr.contrast = clr.contrast - staminamul
@@ -283,7 +283,7 @@ function GM:player_spawn( data )
 	if !IsValid( ply ) then return end
 
 	if ply != LocalPlayer() then
-		removePlayerID( ply )
+		RemovePlayerID( ply )
 	end
 end
 
@@ -319,21 +319,21 @@ function GM:entity_killed( data )
 	local victim = Entity( data.entindex_killed )
 
 	if victim == LocalPlayer() then
-		clearPlayerIDs()
+		ClearPlayerIDs()
 	end
 end*/
 
 function GM:OnPlayerChat( ply, text, team, dead )
 	if IsValid( ply ) then
-		local t = getPlayerID( ply )
+		local t = GetPlayerID( ply )
 		if ply:SCPTeam() == TEAM_SPEC then
 			t = { team = TEAM_SPEC }
 		end
 
 		if t and t.team then
-			local n = SCPTeams.getName( t.team )
+			local n = SCPTeams.GetName( t.team )
 			name = LANG.TEAMS[n] or n
-			clr = SCPTeams.getColor( t.team )
+			clr = SCPTeams.GetColor( t.team )
 
 			chat.AddText( clr, "["..name.."] ", Color( 100, 200, 100 ), ply:Nick(), Color( 255, 255, 255 ), ": ", text )
 		else
@@ -470,7 +470,7 @@ hook.Add( "PreDrawHalos", "PickupWeapon", function()
 	debugoverlay.Text(trace.HitPos + Vector( 0, 0, -5 ), tostring(trace.Entity), 0.1 )*/
 	local ply = LocalPlayer()
 	local t = ply:SCPTeam()
-	if t == TEAM_SPEC or t == TEAM_SCP then return end
+	if t == TEAM_SPEC or ( t == TEAM_SCP and !ply:GetSCPHuman() ) then return end
 	local wep = ply:GetEyeTrace().Entity
 	if IsValid( wep ) and wep:IsWeapon() then
 		/*if ply:HasWeapon( wep:GetClass() ) and ( !wep.Stacks or wep.Stacks <= 1 ) then return end
@@ -490,18 +490,21 @@ hook.Add( "PreDrawHalos", "PickupWeapon", function()
 	end
 end )
 
-timer.Simple( 0, function()
+hook.Add( "InitPostEntity", "SLCUpdateStatus", function()
 	local ply = LocalPlayer()
 
-	ChangeLang( cur_lang, true )
 	DamageLogger( ply )
-	//PlayerData( ply )
+	PlayerData( ply )
 
 	--if FULLY_LOADED then
 		--MakePlayerReady()
 	--else
 		--CheckContent()
 	--end
+end )
+
+timer.Simple( 0, function()
+	ChangeLang( cur_lang, true )
 
 	print( "Almost ready! Waiting for additional info..." )
 
@@ -533,7 +536,7 @@ function MakePlayerReady()
 	net.SendToServer()
 
 	FULLY_LOADED = true
-	hook.Run( "PlayerReady", ply )
+	hook.Run( "PlayerReady", LocalPlayer() )
 end
 
 --[[-------------------------------------------------------------------------
@@ -546,7 +549,7 @@ concommand.Add( "slc_debuginfo_cl", function( ply, cmd, args )
 	print( "Info:" )
 	local v = LocalPlayer()
 	print( v, v:Nick(), v:SteamID() )
-	print( "General info -> ", v:SCPTeam(), v:SCPClass(), v:Alive(), v:GetModel(), v:GetObserverMode(), v:GetObserverTarget() )
+	print( "General info -> ", v:SCPTeam(), v:SCPClass(), v:Alive(), v:IsAFK(), v:GetModel(), v:GetObserverMode(), v:GetObserverTarget() )
 	print( "Speed -> ", v:GetWalkSpeed(), v:GetRunSpeed(), v:GetCrouchedWalkSpeed() )
 	print( "Inventory ->" )
 	PrintTable( v:GetWeapons(), 1 )

@@ -1,9 +1,9 @@
 cmd = {}
 local commands = {}
 
-local function sendCMD( ply, cmd, args )
+local function sendCMD( ply, c, args )
 	net.Start( "PlayerCommand" )
-		net.WriteString( cmd )
+		net.WriteString( c )
 		net.WriteTable( args )
 	net.SendToServer()
 end

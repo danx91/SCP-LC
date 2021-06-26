@@ -2,7 +2,7 @@ hook.Add( "PlayerPostThink", "SLCSanity", function( ply )
 	if !ply.NSanity then ply.NSanity = 0 end
 	if !ply.NSanityRegen then ply.NSanityRegen = 0 end
 
-	if SCPTeams.hasInfo( ply:SCPTeam(), SCPTeams.INFO_HUMAN ) then
+	if SCPTeams.HasInfo( ply:SCPTeam(), SCPTeams.INFO_HUMAN ) then
 		if ply.NSanity < CurTime() then
 			ply.NSanity = CurTime() + 10
 
@@ -11,7 +11,7 @@ hook.Add( "PlayerPostThink", "SLCSanity", function( ply )
 				local num = 0
 
 				for k, v in pairs( FindInCylinder( ply:GetPos(), 500, 0, 128, nil, nil, player.GetAll() ) ) do
-					if v != ply and SCPTeams.hasInfo( v:SCPTeam(), SCPTeams.INFO_HUMAN ) then
+					if v != ply and SCPTeams.HasInfo( v:SCPTeam(), SCPTeams.INFO_HUMAN ) then
 						local f = v:GetSanity() / v:GetMaxSanity()
 
 						if f < 0.2 or f >= 0.9 then
@@ -51,7 +51,7 @@ end )
 SANITY_TYPE = {}
 local sanity_callback = {}
 function AddSanityType( name, func )
-	local id = SCPTeams.addTeamInfo( "SANITY_VULNERABLE_TO_"..name )
+	local id = SCPTeams.AddTeamInfo( "SANITY_VULNERABLE_TO_"..name )
 	SANITY_TYPE[name] = id
 	sanity_callback[id] = func
 end
@@ -59,7 +59,7 @@ end
 local ply = FindMetaTable( "Player" )
 
 function ply:TakeSanity( num, sanitytype, data )
-	if !SCPTeams.hasInfo( self:SCPTeam(), SCPTeams.INFO_HUMAN ) then return end
+	if !SCPTeams.HasInfo( self:SCPTeam(), SCPTeams.INFO_HUMAN ) then return end
 
 	local new = hook.Run( "SLCPlayerSanityChange", self, sanitytype, num, data )
 
@@ -71,7 +71,7 @@ function ply:TakeSanity( num, sanitytype, data )
 		num = new
 	end
 
-	if SCPTeams.hasInfo( self:SCPTeam(), sanitytype ) then
+	if SCPTeams.HasInfo( self:SCPTeam(), sanitytype ) then
 		num = num * 2
 	end
 
@@ -89,7 +89,7 @@ function SanityEvent( amount, sanitytype, origin, distance, inflictor, victim )
 
 	local tab = {}
 
-	for k, v in pairs( FindInCylinder( origin, distance, -1000, 1000, nil, MASK_SOLID_BRUSHONLY, SCPTeams.getPlayersByInfo( SCPTeams.INFO_HUMAN ) ) ) do
+	for k, v in pairs( FindInCylinder( origin, distance, -1000, 1000, nil, MASK_SOLID_BRUSHONLY, SCPTeams.GetPlayersByInfo( SCPTeams.INFO_HUMAN ) ) ) do
 		local pos = v:EyePos()
 		local eang = v:EyeAngles().yaw
 		local tang = (pos - origin):Angle().yaw
@@ -147,8 +147,8 @@ end )
 AddSanityType( "KILL" )
 AddSanityType( "ANOMALY" )
 
-SCPTeams.addInfo( TEAM_CLASSD, SCPTeams.INFO_SANITY_VULNERABLE_TO_ANOMALY )
-SCPTeams.addInfo( TEAM_SCI, SCPTeams.INFO_SANITY_VULNERABLE_TO_KILL )
+SCPTeams.AddInfo( TEAM_CLASSD, SCPTeams.INFO_SANITY_VULNERABLE_TO_ANOMALY )
+SCPTeams.AddInfo( TEAM_SCI, SCPTeams.INFO_SANITY_VULNERABLE_TO_KILL )
 
 //print( SANITY_TYPE.DEATH, SANITY_TYPE.KILL, SANITY_TYPE.ANOMALY )
 

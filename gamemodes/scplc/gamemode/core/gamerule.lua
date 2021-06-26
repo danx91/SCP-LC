@@ -112,12 +112,8 @@ function gamerule.Save()
 end
 
 if SERVER then
-	timer.Simple( 0, function()
+	hook.Add( "SLCGamemodeLoaded", "SLCGamerule", function()
 		hook.Run( "SLCRegisterGamerules" )
-
-		if !file.Exists( "slc", "DATA" ) then
-			file.CreateDir( "slc" )
-		end
 
 		if !file.Exists( "slc/gamerule.dat", "DATA" ) then
 			file.Write( "slc/gamerule.dat", util.TableToJSON( gamerule.data ) )
@@ -317,10 +313,10 @@ end, function( cmd, args )
 		local arg = string.sub( args, space + 1 )
 		local tab = {}
 
-		local cmd = "slc_gamerule "..pre.." "
+		local cmdstr = "slc_gamerule "..pre.." "
 		for k, v in pairs( gamerule.data ) do
 			if args == "" or string.find( string.lower( k ), arg, 1, true ) then
-				table.insert( tab, cmd..k )
+				table.insert( tab, cmdstr..k )
 			end
 		end
 

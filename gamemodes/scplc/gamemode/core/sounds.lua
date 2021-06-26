@@ -34,7 +34,7 @@ sound.Add{
 	channel = CHAN_STATIC,
 }
 
-function addSounds( name, sounds, level, volume, pitch, channel, numstart, numend )
+function AddSounds( name, sounds, level, volume, pitch, channel, numstart, numend )
 	local tab = {}
 
 	for i = numstart, numend do
@@ -51,4 +51,4 @@ function addSounds( name, sounds, level, volume, pitch, channel, numstart, numen
 	}
 end
 
-//addSounds( "SLCPlayer.Vest", "npc/combine_soldier/gear%i.wav", 70, 1, { 90, 110 }, CHAN_STATIC, 6 )
+//AddSounds( "SLCPlayer.Vest", "npc/combine_soldier/gear%i.wav", 70, 1, { 90, 110 }, CHAN_STATIC, 6 )

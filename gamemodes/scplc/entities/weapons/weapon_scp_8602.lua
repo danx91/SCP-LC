@@ -152,4 +152,4 @@ sound.Add( {
 -- 	sound = "npc/antlion/shell_impact4.wav",
 -- 	channel = CHAN_STATIC,
 -- } )
-addSounds( "SCP8602.ImpactHard", "scp_lc/scp/8602/attack%i.ogg", 75, 1, 100, CHAN_STATIC, 1, 3 )
+AddSounds( "SCP8602.ImpactHard", "scp_lc/scp/8602/attack%i.ogg", 75, 1, 100, CHAN_STATIC, 1, 3 )

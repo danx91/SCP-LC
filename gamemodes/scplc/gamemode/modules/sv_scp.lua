@@ -1,8 +1,8 @@
-SCPObjects = {}
-SCPNoSelectObjects = {}
-TransmitSCPS = {}
+local SCPObjects = {}
+local SCPNoSelectObjects = {}
+local TransmitSCPS = {}
 
-SCP_VALID_ENTRIES = {
+local SCP_VALID_ENTRIES = {
 	base_speed = true,
 	run_speed = true,
 	base_health = true,
@@ -29,17 +29,13 @@ SCP_VALID_ENTRIES = {
 	//disable_crosshair = true,
 }
 
-SCP_DYNAMIC_VARS = {}
-SCP_DYNAMIC_DEFAULT = {}
+local SCP_DYNAMIC_VARS = {}
+local SCP_DYNAMIC_DEFAULT = {}
 
 local lua_override = false
 
 function UpdateDynamicVars()
 	print( "Updating SCPs dynamic vars" )
-
-	if !file.Exists( "slc", "DATA" ) then
-		file.CreateDir( "slc" )
-	end
 
 	if !file.Exists( "slc/scp_override.txt", "DATA" ) then
 		WriteINI( "slc/scp_override.txt", {} )
@@ -245,7 +241,7 @@ local function setup_scp_internal( self, ply, ... )
 		if istable( pos ) then
 			pos = table.Random( pos )
 		end
-		
+
 		ply:Spawn()
 		ply:SetPos( pos )
 	elseif basestats.dynamic_spawn and isvector( args[1] ) then
@@ -272,7 +268,7 @@ local function setup_scp_internal( self, ply, ... )
 
 	ply:SetHealth( basestats.base_health or 1500 )
 	ply:SetMaxHealth( basestats.max_health or 1500 )
-	
+
 	ply:SetBaseSpeed( basestats.base_speed or 200, basestats.run_speed or basestats.base_speed or 200, 0.4 )
 	ply:SetJumpPower( basestats.jump_power or 200 )
 
@@ -323,16 +319,16 @@ local function setup_scp_internal( self, ply, ... )
 end
 
 function ObjectSCP:SetupPlayer( ply, instant, ... )
-	ply:KillSilent()
-	ply:UnSpectate()
-	ply:SetPos( ZERO_POS )
-
-	ply:SetSCPTeam( TEAM_SCP )
-	ply:SetSCPClass( CLASSES[self.name] )
-
 	if instant then
 		setup_scp_internal( self, ply, ... )
 	else
+		ply:KillSilent()
+		ply:UnSpectate()
+		ply:SetPos( ZERO_POS )
+
+		ply:SetSCPTeam( TEAM_SCP )
+		ply:SetSCPClass( CLASSES[self.name] )
+
 		ply:SetProperty( "spawning_scp", { time = CurTime() + INFO_SCREEN_DURATION, obj = self, args = {...} } )
 		InfoScreen( ply, "spawn", INFO_SCREEN_DURATION )
 	end
@@ -353,7 +349,7 @@ end )
 setmetatable( ObjectSCP, { __call = ObjectSCP.Create } )
 --------------------------------------------------------------------------------
 
-timer.Simple( 0, function()
+hook.Add( "SLCGamemodeLoaded", "SLCSCPModule", function()
 	UpdateDynamicVars()
 
 	hook.Run( "RegisterSCP" )

@@ -52,7 +52,7 @@ _EntityTakeDamageInfo = _EntityTakeDamageInfo or ent.TakeDamageInfo --TODO
 		local dmgtype = info:GetDamageType()
 		local prevent_forces = bit.band( dmgtype, DMG_PREVENT_PHYSICS_FORCE ) == DMG_PREVENT_PHYSICS_FORCE
 		local velocity
-		
+
 		if prevent_forces then
 			info:SetDamageType( bit.band( dmgtype, bit.bnot( DMG_PREVENT_PHYSICS_FORCE ) ) )
 			velocity = self:GetVelocity()

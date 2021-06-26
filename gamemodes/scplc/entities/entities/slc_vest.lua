@@ -48,7 +48,7 @@ function ENT:Draw()
 			local name = "Invalid!"
 
 			if id > 0 then
-				local tmp = VEST.getName( self:GetVest() )
+				local tmp = VEST.GetName( self:GetVest() )
 				if tmp then
 					name = LANG.VEST[tmp] or tmp
 				end

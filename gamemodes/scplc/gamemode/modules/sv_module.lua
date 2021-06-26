@@ -72,7 +72,7 @@ function GM:SLCOnDoorClosed()
 			local maxs = mins + radius
 			OrderVectors( mins, maxs )
 
-			mins = mins - Vector( 0, 0, 0 ) 
+			mins = mins - Vector( 0, 0, 0 )
 			maxs = maxs + Vector( 0, 0, 32 )
 
 			local found = ents.FindInBox( mins, maxs )
@@ -137,7 +137,7 @@ function GetActivePlayers()
 end
 
 function GetAlivePlayers()
-	return SCPTeams.getPlayersByInfo( SCPTeams.INFO_ALIVE )
+	return SCPTeams.GetPlayersByInfo( SCPTeams.INFO_ALIVE )
 end
 
 function PlayerMessage( msg, ply, center )
@@ -191,7 +191,7 @@ Timer( "PlayerBlink", blinkdelay, 0, function( self, n )
 
 	local plys = {}
 
-	for k, v in pairs( SCPTeams.getPlayersByInfo( SCPTeams.INFO_HUMAN ) ) do
+	for k, v in pairs( SCPTeams.GetPlayersByInfo( SCPTeams.INFO_HUMAN ) ) do
 		if !v:GetBlink() then
 			v:SetBlink( true )
 			table.insert( plys, v )
@@ -227,7 +227,7 @@ Timer( "PlayXP", 300, 0, function()
 
 		for k, v in pairs( player.GetAll() ) do
 			if !v:IsAFK() then
-				if SCPTeams.hasInfo( v:SCPTeam(), SCPTeams.INFO_ALIVE ) then
+				if SCPTeams.HasInfo( v:SCPTeam(), SCPTeams.INFO_ALIVE ) then
 					if plus then
 						v:AddXP( pplus )
 						PlayerMessage( "rxpplus$"..pplus, v )
@@ -341,7 +341,7 @@ concommand.Add( "slc_debuginfo", function( ply, cmd, args )
 		print( "\nPlayers" )
 		for k, v in pairs( player.GetAll() ) do
 			print( "->", v, v:Nick(), v:SteamID() )
-			print( "\tGeneral info -> ", v:SCPTeam(), v:SCPClass(), v:Alive(), v:GetModel(), v:GetObserverMode(), v:GetObserverTarget() )
+			print( "\tGeneral info -> ", v:SCPTeam(), v:SCPClass(), v:Alive(), v:IsAFK(), v:GetModel(), v:GetObserverMode(), v:GetObserverTarget() )
 			print( "\tSpeed -> ", v:GetWalkSpeed(), v:GetRunSpeed(), v:GetCrouchedWalkSpeed() )
 			if v.SpeedStack then PrintTable( v.SpeedStack, 2 ) end
 			print( "\tInventory ->" )
@@ -350,6 +350,8 @@ concommand.Add( "slc_debuginfo", function( ply, cmd, args )
 			PrintTable( v.PlayerData.Status, 2 )
 			print( "\tSCPVars ->" )
 			PrintTable( v.scp_var_table, 2 )
+			print( "\tProperties ->" )
+			PrintTable( v.SLCProperties, 2 )
 			print( "\tMisc -> ", v:IsBurning(), v:GetVest() )
 			print( "--------------------" )
 		end

@@ -55,7 +55,7 @@ function PlayerMessage( msg, ply, center )
 
 	local name, func = string.match( msg, "^(.-)$(.+)" )
 	local rawtext = ""
-	
+
 	if name then
 		local args = {}
 
@@ -168,7 +168,7 @@ function PlayerMessage( msg, ply, center )
 		if !text then
 			text = string.format( LANG.NFailed, tostring( msg ) )
 		end
-		
+
 		text = RestoreMessage( text )
 
 		add_text( text, color, center )
@@ -284,7 +284,7 @@ function CenterMessage( msg, ply )
 
 		local name, func = string.match( s, "^(.-)$(.+)" )
 		local rawtext = ""
-	
+
 		if name then
 			local args = {}
 

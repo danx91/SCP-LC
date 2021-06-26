@@ -47,12 +47,12 @@ end
 --[[-------------------------------------------------------------------------
 Player functions
 ---------------------------------------------------------------------------]]
-local ply = FindMetaTable( "Player" )
-function ply:PlayAmbient( name, loop, force, co )
+local PLAYER = FindMetaTable( "Player" )
+function PLAYER:PlayAmbient( name, loop, force, co )
 	PlayAmbient( name, loop, self, force, co )
 end
 
-function ply:StopAmbient( name, all )
+function PLAYER:StopAmbient( name, all )
 	StopAmbient( self, name, all )
 end
 
@@ -149,18 +149,18 @@ Clientside functions
 if CLIENT then
 	local current_ambient
 	function GetIGModAudio( name, nc, flags, cb )
-		local igac = SLC_AMBIENTS.CACHE[name]
+		local c_igac = SLC_AMBIENTS.CACHE[name]
 		local obj = SLC_AMBIENTS.Registry[name]
 
-		if IsValid( igac ) then
+		if IsValid( c_igac ) then
 			if cb then
-				cb( igac, obj, false )
+				cb( c_igac, obj, false )
 			end
 
-			return igac
+			return c_igac
 		end
 
-		if igac == true then
+		if c_igac == true then
 			return true
 		end
 

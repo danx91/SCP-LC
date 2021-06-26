@@ -20,7 +20,7 @@ function InitializeSCPULX()
 	end
 
 	local class_names = {}
-	for group_name, group in pairs( getGroups() ) do
+	for group_name, group in pairs( GetGroups() ) do
 		if group_name != "SUPPORT" then
 			for k, class in pairs( group ) do
 				table.insert( class_names, k )
@@ -45,9 +45,9 @@ function InitializeSCPULX()
 		local class
 		local spawn
 
-		for group_name, group in pairs( getGroups() ) do
+		for group_name, group in pairs( GetGroups() ) do
 			if group_name != "SUPPORT" then
-				local _, grspwn = getClassGroup( group_name )
+				local _, grspwn = GetClassGroup( group_name )
 				for k, c in pairs( group ) do
 					if k == class_n then
 						class = c
@@ -57,7 +57,7 @@ function InitializeSCPULX()
 				end
 			else
 				for group_name, group in pairs( group ) do
-					local _, grspwn = getSupportGroup( group_name )
+					local _, grspwn = GetSupportGroup( group_name )
 					for k, c in pairs( group ) do
 						if k == class_n then
 							class = c

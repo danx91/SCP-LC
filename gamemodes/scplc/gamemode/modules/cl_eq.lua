@@ -102,8 +102,13 @@ local cmd = function( cmd )
 end
 
 local ACTIONS = {
-	{ "escort", GetMaterial( "null" ), show, cmd, "slc_escort" },
-	{ "gatea", GetMaterial( "null" ), show, cmd, "slc_destroy_gatea" },
+	{ "escort", GetMaterial( "null" ), function()
+		return SCPTeams.CanEscort( LocalPlayer():SCPTeam(), true )
+	end, LocalPlayer().ConCommand, "slc_escort" },
+
+	{ "gatea", GetMaterial( "null" ), function()
+		return GetClassData( LocalPlayer():SCPClass() ).support
+	end, LocalPlayer().ConCommand, "slc_destroy_gatea" },
 }
 
 EQ.slots = EQ.cols * EQ.rows
@@ -139,15 +144,17 @@ local function drawVest( x, y, size )
 	local vest = LocalPlayer():GetVest()
 
 	if vest > 0 then
-		render.PushFilterMag( TEXFILTER.LINEAR )
-		render.PushFilterMin( TEXFILTER.LINEAR )
+		//render.PushFilterMag( TEXFILTER.LINEAR )
+		//render.PushFilterMin( TEXFILTER.LINEAR )
+		PushFilters( TEXFILTER.LINEAR )
 
 		surface.SetDrawColor( Color( 255, 255, 255, 255 ) )
 		surface.SetMaterial( MATS.vest )
 		surface.DrawTexturedRect( x + size * 0.1, y + size * 0.1, size * 0.8, size * 0.8 )
 
-		render.PopFilterMag()
-		render.PopFilterMin()
+		//render.PopFilterMag()
+		//render.PopFilterMin()
+		PopFilters()
 
 		local btn = Button( x, y, size, size )
 		if btn == 1 then
@@ -159,7 +166,7 @@ local function drawVest( x, y, size )
 		end
 
 		if btn > 0 then
-			local data = VEST.getData( vest )
+			local data = VEST.GetData( vest )
 			if data then
 				local info = StringBuilder()
 
@@ -169,7 +176,7 @@ local function drawVest( x, y, size )
 
 				for k, v in pairs( data.damage ) do
 					if !data.HIDE[k] then
-						local name = VEST.translateDamage( k )
+						local name = VEST.TranslateDamage( k )
 						info:print( "\t\t", LANG.DMG[name] or name, ":   ", 100 - math.ceil( v * 100 ), "%" )
 					end
 				end
@@ -208,14 +215,16 @@ local function drawWepSelectIcon( ico, cx, cy, size, color )
 		ico_h = size
 	end
 
-	render.PushFilterMag( TEXFILTER.LINEAR )
-	render.PushFilterMin( TEXFILTER.LINEAR )
+	//render.PushFilterMag( TEXFILTER.LINEAR )
+	//render.PushFilterMin( TEXFILTER.LINEAR )
+	PushFilters( TEXFILTER.LINEAR )
 
 	surface.SetDrawColor( color or Color( 255, 255, 255, 255 ) )
 	surface.DrawTexturedRect( cx + size * 0.5 - ico_w * 0.5, cy + size * 0.5 - ico_h * 0.5, ico_w, ico_h )
 
-	render.PopFilterMag()
-	render.PopFilterMin()
+	//render.PopFilterMag()
+	//render.PopFilterMin()
+	PopFilters()
 end
 
 local def_wep = surface.GetTextureID( "weapons/swep" )

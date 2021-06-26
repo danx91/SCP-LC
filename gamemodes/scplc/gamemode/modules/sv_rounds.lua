@@ -10,7 +10,7 @@ ROUNDS.dull = {
 	getwinner = function( self ) return false end,
 }
 
-function addRoundType( name, tab, base, chance )
+function AddRoundType( name, tab, base, chance )
 	if base then
 		local bc = ROUNDS[base]
 
@@ -27,11 +27,11 @@ function addRoundType( name, tab, base, chance )
 	ROUNDS[name] = tab
 end
 
-function selectRoundType() --TODO
+function SelectRoundType() --TODO
 
 end
 
-addRoundType( "normal", {
+AddRoundType( "normal", {
 	name = "normal",
 	init = function( self, multi )
 		SetupPlayers( multi )
@@ -63,7 +63,7 @@ addRoundType( "normal", {
 		else
 			for t1, v in pairs( teams ) do
 				for t2, v in pairs( teams ) do
-					if !SCPTeams.isAlly( t1, t2 ) then
+					if !SCPTeams.IsAlly( t1, t2 ) then
 						return false
 					end
 				end
@@ -90,11 +90,11 @@ addRoundType( "normal", {
 		//if num == 0 then
 			//return false
 		//else
-			local hs = SCPTeams.highestScore()
+			local hs = SCPTeams.HighestScore()
 
 			if hs then
 				if istable( hs ) then
-					local allies = SCPTeams.getAllies( hs[1], true )
+					local allies = SCPTeams.GetAllies( hs[1], true )
 					local lookup = CreateLookupTable( allies )
 
 					for k, v in pairs( hs ) do
@@ -105,7 +105,7 @@ addRoundType( "normal", {
 
 					return allies
 				else
-					local winner = SCPTeams.getAllies( hs, true )
+					local winner = SCPTeams.GetAllies( hs, true )
 
 					if #winner == 1 then
 						winner = winner[1]
@@ -120,7 +120,7 @@ addRoundType( "normal", {
 	end
 }, "dull" )
 
-addRoundType( "multi", {
+AddRoundType( "multi", {
 	name = "multi",
 	init = function( self )
 		self.BaseClass.init( self, true )

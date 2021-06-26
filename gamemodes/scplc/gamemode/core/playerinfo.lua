@@ -1,10 +1,8 @@
-if !file.Exists( "slc", "DATA" ) then
-	file.CreateDir( "slc" )
-end
-
-if !file.Exists( "slc/playerinfo", "DATA" ) then
-	file.CreateDir( "slc/playerinfo" )
-end
+hook.Add( "SLCGamemodeLoaded",  "SLCPlayerInfo", function()
+	if !file.Exists( "slc/playerinfo", "DATA" ) then
+		file.CreateDir( "slc/playerinfo" )
+	end
+end )
 
 PlayerInfo = {}
 function PlayerInfo:New( arg )
@@ -31,7 +29,25 @@ function PlayerInfo:New( arg )
 		file.Write( tab.File, "{}" )
 		tab.Data = {}
 	else
-		local data = util.JSONToTable( file.Read( tab.File, "DATA" ) )
+		local f = file.Read( tab.File, "DATA" )
+		local data = util.JSONToTable( f )
+
+		if !data then
+			print( "Player data of '"..tab.ID.."' is corrupted! Fixing..." )
+
+			if f then
+				if !file.Exists( "slc/playerinfo/corrupted", "DATA" ) then
+					file.CreateDir( "slc/playerinfo/corrupted" )
+				end
+
+				file.Write( "slc/playerinfo/corrupted/"..tab.ID.."_"..os.date( "%d%m%y" )..".dat", f )
+			end
+
+			file.Write( tab.File, "{}" )
+			tab.Data = {}
+
+			return tab
+		end
 
 		if data.compressed then
 			data = util.JSONToTable( util.Decompress( data.data ) )

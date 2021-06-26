@@ -47,7 +47,7 @@ end
 
 function GM:PlayerReady( ply )
 	gamerule.SendAll( ply )
-	
+
 	ply:SetActive( true )
 	QueueInsert( ply )
 
@@ -98,7 +98,7 @@ function GM:PlayerSetHandsModel( ply, ent )
 
 	local simplemodel = player_manager.TranslateToPlayerModelName( ply:GetModel() )
 	local info = player_manager.TranslatePlayerHands( simplemodel )
-	
+
 	if info then
 		ent:SetModel( info.model )
 		ent:SetSkin( info.skin )
@@ -135,23 +135,23 @@ function GM:DoPlayerDeath( ply, attacker, dmginfo )
 		attacker.Logger:AddKill( ply )
 	end
 
-	if SCPTeams.hasInfo( ply:SCPTeam(), SCPTeams.INFO_HUMAN ) then
+	if SCPTeams.HasInfo( ply:SCPTeam(), SCPTeams.INFO_HUMAN ) then
 		SanityEvent( 10, SANITY_TYPE.DEATH, ply:GetPos() + Vector( 0, 0, 20 ), 1000, attacker, ply )
 	end
 
-	ply.StoredProperties = ply.Properties
+	ply.StoredProperties = ply.SLCProperties
 
 	ply:DropEQ() //TODO TEST
 	ply:CreatePlayerRagdoll()
 	//ply:CreateRagdoll()
 	ply:Despawn()
-	
+
 	if attacker:IsPlayer() then
-		print( "[KILL] Player '"..ply:Nick().."' ["..SCPTeams.getName( ply:SCPTeam() ).."] has been killed by '"..attacker:Nick().."' ["..SCPTeams.getName( attacker:SCPTeam() ).."]" )
+		print( "[KILL] Player '"..ply:Nick().."' ["..SCPTeams.GetName( ply:SCPTeam() ).."] has been killed by '"..attacker:Nick().."' ["..SCPTeams.GetName( attacker:SCPTeam() ).."]" )
 	elseif IsValid( attacker ) then
-		print( "[KILL] Player '"..ply:Nick().."' ["..SCPTeams.getName( ply:SCPTeam() ).."] has been killed by '"..attacker:GetName().."' ["..attacker:GetClass().."]" )
+		print( "[KILL] Player '"..ply:Nick().."' ["..SCPTeams.GetName( ply:SCPTeam() ).."] has been killed by '"..attacker:GetName().."' ["..attacker:GetClass().."]" )
 	else
-		print( "[KILL] Player '"..ply:Nick().."' ["..SCPTeams.getName( ply:SCPTeam() ).."] has been killed by UNKNOWN" )
+		print( "[KILL] Player '"..ply:Nick().."' ["..SCPTeams.GetName( ply:SCPTeam() ).."] has been killed by UNKNOWN" )
 	end
 
 	ply:AddDeaths( 1 )
@@ -195,15 +195,15 @@ function GM:PlayerDeath( victim, inflictor, attacker )
 				local t_vic = victim:SCPTeam()
 				local t_att = attacker:SCPTeam()
 
-				local rdm = !preventrdm and SCPTeams.isAlly( t_vic, t_att )
-				local reward = isnumber( pprop.reward_override ) and pprop.reward_override or SCPTeams.getReward( t_vic )
-				local tname = SCPTeams.getName( t_vic )
+				local rdm = !preventrdm and SCPTeams.IsAlly( t_vic, t_att )
+				local reward = isnumber( pprop.reward_override ) and pprop.reward_override or SCPTeams.GetReward( t_vic )
+				local tname = SCPTeams.GetName( t_vic )
 
 				//if len > 0 and !rdm then
 					local pool = reward * 2
 					local init = pool
 					//print( "pool", victim, pool )
-					
+
 					if len == 0 then
 						reward = pool
 					else
@@ -361,7 +361,7 @@ function GM:PlayerDeathThink( ply ) --TODO
 	end
 end
 
-hook.Add( "StartCommand", "DeadFreeze", function( ply, cmd )
+hook.Add( "StartCommand", "SLCDeadFreeze", function( ply, cmd )
 	if ply:SCPTeam() == TEAM_SPEC and ( ply.SetupAsSpectator or ply.DeathScreen ) then
 		cmd:ClearMovement()
 	end
@@ -387,7 +387,7 @@ hook.Add( "Think", "ApplyTerror", function()
 			v.TerrorPower = 0
 		end
 
-		for k, v in pairs( SCPTeams.getPlayersByTeam( TEAM_SCP ) ) do
+		for k, v in pairs( SCPTeams.GetPlayersByTeam( TEAM_SCP ) ) do
 			if v:GetSCPTerror() then
 				for k, ply in pairs( FindInCylinder( v:GetPos(), 1500, -128, 128, nil, nil, player.GetAll() ) ) do
 					local t = ply:SCPTeam()
@@ -445,7 +445,7 @@ function GM:AcceptInput( ent, input, activator, caller, value )
 end*/
 
 function GM:PlayerUse( ply, ent )
-	if ply:SCPTeam() == TEAM_SPEC then return false end
+	if ply:SCPTeam() == TEAM_SPEC or ply:IsAboutToSpawn() then return false end
 
 	if !ply.NUse then ply.NUse = 0 end
 	if ply.NUse > CurTime() then return false end
@@ -486,8 +486,8 @@ function GM:PlayerUse( ply, ent )
 		if data.disabled then
 			return false
 		end
-		
-		if data.scp_disallow and ply:SCPTeam() == TEAM_SCP and !ply:GetSCPCanInteract() then
+
+		if data.scp_disallow and ply:SCPTeam() == TEAM_SCP and !ply:GetSCPCanInteract() and !ply:GetSCPHuman() then
 			return false
 		end
 

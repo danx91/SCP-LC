@@ -5,7 +5,7 @@ function vector:Copy()
 end
 
 function vector:Approach( target, delta )
-	local diff = target - self
+	//local diff = target - self
 end
 
 function vector:IsInTolerance( dpos, tolerance )
@@ -309,7 +309,7 @@ function SimpleMatrix:New( w, h, init )
 				return a:Mul( b )
 			elseif type( b ) == "table" and b.Mul then
 				return b:Mul( a )
-			end			
+			end
 		end
 	} )
 
@@ -372,7 +372,7 @@ end
 
 function SimpleMatrix:Mul( mx )
 	local result
-	local usematrix, usescalar = false, false
+	//local usematrix, usescalar = false, false
 
 	if type( mx ) == "table" then
 		if #self[1] != #mx then
@@ -393,7 +393,7 @@ function SimpleMatrix:Mul( mx )
 		return result
 	elseif type( mx ) == "number" then
 		result = SimpleMatrix( #self[1], #self, self )
-		
+
 		local width = #result[1]
 		for y = 1, #result do
 			for x = 1, width do

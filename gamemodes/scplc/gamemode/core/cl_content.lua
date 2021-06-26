@@ -129,6 +129,10 @@ end
 -- 				print( "Failed to mount addon!" )
 -- 			end
 
+-- 			if IsValid( SLC_POPUP ) then
+-- 				SLC_POPUP.text = string.format( lang.processing, id, lang.idle )
+-- 			end
+
 -- 			tab.idle = true
 -- 		end )
 -- 	else
@@ -145,7 +149,7 @@ end
 -- 			DownloadAddons()
 -- 		else
 -- 			tab.downloading = false
-			
+
 -- 			if IsValid( SLC_POPUP ) then
 -- 				SLC_POPUP:Close()
 -- 			end
