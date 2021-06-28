@@ -1920,3 +1920,4 @@ wep.ALPHA_CARD2 = {
 wep.weapon_stunstick = "Парализатор"
 
 registerLanguage( lang, "russian", "ru" )
+setLanguageFlag( "russian", LANGUAGE.EQ_LONG_TEXT )

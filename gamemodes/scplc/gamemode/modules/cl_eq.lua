@@ -93,22 +93,24 @@ local EQ = {
 
 local nav_font_override
 
-local show = function()
+/*local show = function()
 	local t = LocalPlayer():SCPTeam()
 	return t == TEAM_MTF or t == TEAM_CI
-end
-local cmd = function( cmd )
+end*/
+
+local cmd_func = function( cmd )
 	LocalPlayer():ConCommand( cmd )
 end
 
 local ACTIONS = {
 	{ "escort", GetMaterial( "null" ), function()
 		return SCPTeams.CanEscort( LocalPlayer():SCPTeam(), true )
-	end, LocalPlayer().ConCommand, "slc_escort" },
+	end, cmd_func, "slc_escort" },
 
 	{ "gatea", GetMaterial( "null" ), function()
-		return GetClassData( LocalPlayer():SCPClass() ).support
-	end, LocalPlayer().ConCommand, "slc_destroy_gatea" },
+		local class_data = GetClassData( LocalPlayer():SCPClass() )
+		return class_data and class_data.support
+	end, cmd_func, "slc_destroy_gatea" },
 }
 
 EQ.slots = EQ.cols * EQ.rows
@@ -739,7 +741,7 @@ end
 
 hook.Add( "DrawOverlay", "SCPEQ", DrawEQ )
 
-function UpdatePlayerEQ()
+/*function UpdatePlayerEQ()
 	local size = EQ.slots
 	local weps = LocalPlayer():GetWeapons()
 
@@ -777,6 +779,46 @@ function UpdatePlayerEQ()
 
 		if add and first_empty != 0 then
 			WEAPONS[first_empty] = weps[i]
+		end
+	end
+end*/
+
+function UpdatePlayerEQ() --TEST
+	local player_weapons = LocalPlayer():GetWeapons()
+
+	local pwep_lookup = CreateLookupTable( player_weapons )
+	local cwep_lookup = CreateLookupTable( WEAPONS )
+
+	--remove missing items
+	for k, v in pairs( WEAPONS ) do
+		if !IsValid( v ) or !pwep_lookup[v] then
+			print( "REMOVING ITEM", v, k ) --REMOVE
+			WEAPONS[k] = nil
+		end
+	end
+	
+	--add new items
+	for i = 1, #player_weapons do
+		local wep = player_weapons[i] --iterate over all items in inventory
+		print( "check", wep, i ) --REMOVE
+
+		if IsValid( wep ) and !cwep_lookup[wep] then --is weapon is valid and is not present in local inventory
+			local first_empty = 0
+
+			for j = 1, EQ.slots do
+				if !WEAPONS[j] then
+					first_empty = j --get first empty slot
+					break
+				end
+			end
+
+			if first_empty > 0 then
+				WEAPONS[first_empty] = wep --insert item
+				print( "ADDING ITEM", wep, first_empty ) --REMOVE
+			else
+				print( "Player has too much items!", #player_weapons.."/"..EQ.slots ) --this should never run
+				break
+			end
 		end
 	end
 end

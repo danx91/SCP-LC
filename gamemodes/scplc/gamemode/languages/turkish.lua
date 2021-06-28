@@ -1914,3 +1914,4 @@ wep.ALPHA_CARD2 = {
 wep.weapon_stunstick = "Şoksopası"
 
 registerLanguage( lang, "turkish", "tr", "turk", "turkce" )
+setLanguageFlag( "turkish", LANGUAGE.EQ_LONG_TEXT )
