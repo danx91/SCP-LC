@@ -435,7 +435,7 @@ function GM:HUDPaint()
 			}
 
 			if HUDSpectatorInfo then
-				if ULib and ULib.ucl.query( ply, "slc spectateinfo" ) then
+				if (ULib and ULib.ucl.query( ply, "slc spectateinfo" )) or (serverguard and serverguard.player:HasPermission(ply, "Check spectate info")) then
 					surface.SetDrawColor( Color( 150, 150, 150, 255 ) )
 					surface.DrawRect( w * 0.35 - 1, h * 0.25 - 1, w * 0.3 + 2, h * 0.5 + 2 )
 

@@ -1,7 +1,31 @@
 if not serverguard then print("Serverguard not found") return end
 
+if SERVER then
+	hook.Add( "SLCCanSpectateSCP", "slc.base.CanSpectate", function( ply )
+		if serverguard.player:HasPermission(ply, "Can observe SCP") then
+			return true
+		end
+	end )
+end
+
 -- Force spawn human
 
+--[[
+	How to add some perms
+
+	@input string (Name perm)
+	serverguard.permission:Add("example")
+
+	@input player, string (Name perm)
+	@return bool (has access or not)
+	serverguard.player:HasPermission(ply, "example")
+	
+]]
+
+serverguard.permission:Add("Can observe SCP")
+serverguard.permission:Add("Check spectate info")
+serverguard.permission:Add("Skip intro")
+serverguard.permission:Add("Bypass Anti-AFK")
 local command = {};
 
 command.help				= "Force spawn as Human";

@@ -234,7 +234,7 @@ hook.Add( "DrawOverlay", "SLCInfoScreen", function()
 	end
 
 	if ULib then
-		if !INFO_SCREEN.done and input.IsMouseDown( MOUSE_LEFT ) and ULib.ucl.query( LocalPlayer(), "slc skipintro" ) then
+		if !INFO_SCREEN.done and input.IsMouseDown( MOUSE_LEFT ) and ((ULib and ULib.ucl.query( LocalPlayer(), "slc skipintro" )) or (serverguard and serverguard.player:HasPermission(ply, "Skip intro"))) then
 			INFO_SCREEN.done = true
 		end
 	end
