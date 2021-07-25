@@ -150,7 +150,7 @@ hook.Run( "SLCModulesLoaded" ) --essential gamemode files have been loaded, pre-
 Load map config
 ---------------------------------------------------------------------------]]
 print( "---------------Loading Map Config----------------" )
-if file.Exists( MAP_CONFIG_PATH .. "/" .. game.GetMap() .. ".lua", "LUA" ) then
+if file.Exists( MAP_CONFIG_PATH .. "/" .. game.GetMap() .. ".lua", "LUA" ) or hook.Call("SCPLC_LOADCUSTOMDMAP",GAMEMODE,game.GetMap()) then
 	local map = "mapconfigs/" .. game.GetMap() .. ".lua"
 	if SERVER then
 		AddCSLuaFile( map )
