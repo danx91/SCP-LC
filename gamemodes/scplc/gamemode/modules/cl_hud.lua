@@ -146,6 +146,10 @@ local recomputed = false
 local last_width = ScrW()
 
 function GM:HUDPaint()
+
+	local shouldDraw = hook.Call("HUDShouldDraw", GAMEMODE, "scplc.hud")
+    if shouldDraw == false then return end
+
 	next_frame = true
 	local w, h = ScrW(), ScrH()
 
