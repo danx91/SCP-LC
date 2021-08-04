@@ -1,24 +1,33 @@
+if !ulx or !ULib then 
+	print( "# > ULX or ULib not found" )
+	return
+end
+
 local ULX_CAT = " SCP: Lost Control"
 
 if SERVER and ULib then
-	ULib.ucl.registerAccess( "slc spectatescp", ULib.ACCESS_OPERATOR, "Allows player to bypass anti-ghosting system and let them spectate SCPs", ULX_CAT )
+	/*ULib.ucl.registerAccess( "slc spectatescp", ULib.ACCESS_OPERATOR, "Allows player to bypass anti-ghosting system and let them spectate SCPs", ULX_CAT )
 	ULib.ucl.registerAccess( "slc spectateinfo", ULib.ACCESS_OPERATOR, "Allows player to details about player they are currently spectating", ULX_CAT )
 	ULib.ucl.registerAccess( "slc skipintro", ULib.ACCESS_OPERATOR, "Allows player to skip info screen at the start of the round", ULX_CAT )
-	ULib.ucl.registerAccess( "slc afkdontkick", ULib.ACCESS_ADMIN, "Don't kick players with this access if they are AFK", ULX_CAT )
+	ULib.ucl.registerAccess( "slc afkdontkick", ULib.ACCESS_ADMIN, "Don't kick players with this access if they are AFK", ULX_CAT )*/
 
-	hook.Add( "SLCCanSpectateSCP", "SLCBaseULX", function( ply )
+	/*hook.Add( "SLCCanSpectateSCP", "SLCBaseULX", function( ply )
 		if ULib.ucl.query( ply, "slc spectatescp" ) then
 			return true
 		end
-	end )
+	end )*/
+
+	SLCAuth.AddLibrary( "ulx", "ULX", {
+		CheckAccess = function( ply, access )
+			return ULib.ucl.query( ply, access )
+		end,
+		RegisterAccess = function( name, help )
+			ULib.ucl.registerAccess( name, ULib.ACCESS_ADMIN, help, ULX_CAT )
+		end,
+	} )
 end
 
 function InitializeSCPULX()
-	if !ulx or !ULib then 
-		print( "ULX or ULib not found" )
-		return
-	end
-
 	local class_names = {}
 	for group_name, group in pairs( GetGroups() ) do
 		if group_name != "SUPPORT" then
@@ -26,8 +35,8 @@ function InitializeSCPULX()
 				table.insert( class_names, k )
 			end
 		else
-			for _, group in pairs( group ) do
-				for k, class in pairs( group ) do
+			for _, sup_group in pairs( group ) do
+				for k, class in pairs( sup_group ) do
 					table.insert( class_names, k )
 				end
 			end
@@ -56,9 +65,9 @@ function InitializeSCPULX()
 					end
 				end
 			else
-				for group_name, group in pairs( group ) do
-					local _, grspwn = GetSupportGroup( group_name )
-					for k, c in pairs( group ) do
+				for sup_group_name, sup_group in pairs( group ) do
+					local _, grspwn = GetSupportGroup( sup_group_name )
+					for k, c in pairs( sup_group ) do
 						if k == class_n then
 							class = c
 							spawn = grspwn
@@ -226,7 +235,7 @@ function InitializeSCPULX()
 				ulx.fancyLogAdmin( ply, "#A spawned '"..chip.."' chip" )
 			end
 		else
-			ULib.tsayError( plyc, "Unknown chip name '"..chip.."'!", true )
+			ULib.tsayError( ply, "Unknown chip name '"..chip.."'!", true )
 		end
 	end
 
@@ -283,7 +292,7 @@ function InitializeSCPULX()
 
 			rem_info( ply, target, atype, silent )
 		else
-			ULib.tsayError( plyc, "Unknown type '"..atype.."'!", true )
+			ULib.tsayError( ply, "Unknown type '"..atype.."'!", true )
 		end
 	end
 
@@ -297,11 +306,6 @@ function InitializeSCPULX()
 end
 
 function SetupForceSCP()
-	if !ulx or !ULib then 
-		print( "ULX or ULib not found" )
-		return
-	end
-	
 	function ulx.forcescp( plyc, plyt, scp, silent )
 		if !scp then return end
 

@@ -14,7 +14,7 @@ end )
 
 DamageLogger = {}
 
-function DamageLogger:New( ply ) --TODO Test memory usage
+function DamageLogger:New( ply ) --TEST memory usage
 	local logger = setmetatable( {}, { __index = DamageLogger } )
 
 	logger.New = function() end
@@ -192,12 +192,12 @@ function DamageLogger:GetDeathDetails( deathid )
 			tab.killer = log.Killer
 			tab.weapon = log.Weapon
 
-			local ivp = IsValid( log.Killer ) and log.Killer:IsPlayer()
+			/*local ivp = IsValid( log.Killer ) and log.Killer:IsPlayer()
 			local t_att
 
 			if ivp then
 				t_att = log.Killer:SCPTeam()
-			end
+			end*/
 
 			local assists = {}
 

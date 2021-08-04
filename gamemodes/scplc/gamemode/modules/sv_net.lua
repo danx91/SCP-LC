@@ -20,6 +20,9 @@ util.AddNetworkString( "ClassUnlock" )
 util.AddNetworkString( "SLCAmbient" )
 util.AddNetworkString( "SLCEscape" )
 util.AddNetworkString( "SLCPlayerDataUpdate" )
+util.AddNetworkString( "SLCGamemodeConfig" )
+util.AddNetworkString( "SLCProgressBar" )
+//util.AddNetworkString( "SLCAuthLibrary" )
 
 net.AddTableChannel( "SLCPlayerMeta" )
 net.AddTableChannel( "SLCGameruleData" )
@@ -57,7 +60,7 @@ net.Receive( "PlayerReady", function( len, ply )
 			if t then
 				time = t:GetRemainingTime()
 			else
-				time = GetTimer( "SLCSetup" ):GetRemainingTime() + CVAR.pretime:GetInt()
+				time = GetTimer( "SLCSetup" ):GetRemainingTime() + CVAR.slc_time_preparing:GetInt()
 			end*/
 
 			if t then

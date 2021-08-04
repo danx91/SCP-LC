@@ -6,18 +6,6 @@ function GM:PlayerNoClip( ply, on )
 end
 
 function GM:PlayerButtonDown( ply, button )
-	/*if SERVER and !ply:IsBot() then
-		if ply:SCPTeam() == TEAM_SPEC then
-			if button == MOUSE_LEFT then
-				ply:SpectatePlayerNext()
-			elseif button == MOUSE_RIGHT then
-				ply:SpectatePlayerPrev()
-			elseif button == KEY_SPACE or button == KEY_R then
-				ply:ChangeSpectateMode()
-			end
-		end
-	end*/
-
 	if SERVER then
 		numpad.Activate( ply, button )
 
@@ -41,29 +29,21 @@ function GM:PlayerButtonDown( ply, button )
 	end
 
 	if CLIENT and IsFirstTimePredicted() then
-		local menu_key = input.LookupBinding( "+menu" )
-		if menu_key then
-			if input.GetKeyCode( menu_key ) == button then
-				if CanShowEQ() then
-					ShowEQ()
-				end
-
-				local t = ply:SCPTeam()
-				if t == TEAM_SPEC then
-					HUDSpectatorInfo = true
-				end
+		if button == GetBindButton( "eq_button" ) then
+			if CanShowEQ() then
+				ShowEQ()
 			end
-		end
 
-		local zoom_key = input.LookupBinding( "+zoom" )
-		if zoom_key then
-			if input.GetKeyCode( zoom_key ) == button then
-				ShowSCPUpgrades()
+			local t = ply:SCPTeam()
+			if t == TEAM_SPEC then
+				HUDSpectatorInfo = true
 			end
-		end
-
-		if button == KEY_F1 then
+		elseif button == GetBindButton( "upgrade_tree_button" ) then
+			ShowSCPUpgrades()
+		elseif button == GetBindButton( "ppshop_button" ) then
 			OpenClassViewer()
+		elseif button == GetBindButton( "settings_button" ) then
+			OpenSettingsWindow()
 		end
 	end
 end
@@ -121,7 +101,6 @@ if CLIENT then
 					start = sp,
 					endpos = sp + ply:GetAimVector() * 75,
 					filter = ply,
-					//mask = 
 				}
 
 				if tr.Hit and IsValid( tr.Entity ) then
@@ -137,7 +116,23 @@ end
 function GM:StartCommand( ply, cmd )
 	if ply.GetDisableControls and ply:GetDisableControls() then
 		cmd:ClearMovement()
-		cmd:ClearButtons()
+
+		local mask = ply:GetDisableControlsFlag()
+		if mask == 0 then
+			cmd:ClearButtons()
+		else
+			cmd:SetButtons( bit.band( cmd:GetButtons(), mask ) )
+		end
+
+		if bit.band( mask, -2147483648 ) == 0 then --TEST camera movement mask
+			if !ply.DisableControlsAngle then
+				ply.DisableControlsAngle = cmd:GetViewAngles()
+			end
+
+			cmd:SetViewAngles( ply.DisableControlsAngle )
+		end
+	elseif ply.DisableControlsAngle then
+		ply.DisableControlsAngle = nil
 	end
 
 	if SERVER and ply:IsAboutToSpawn() then
@@ -224,6 +219,63 @@ function GM:PlayerCanPickupWeapon( ply, wep )
 	return false
 end
 
+--From base gamemode
+function GM:UpdateAnimation( ply, velocity, maxseqgroundspeed )
+
+	local len = velocity:Length()
+	local movement = 1.0
+
+	if ( len > 0.2 ) then
+		movement = ( len / maxseqgroundspeed )
+	end
+
+	local n_movement, noclamp = hook.Run( "SLCMovementAnimSpeed", ply, velocity, maxseqgroundspeed, len, movement )
+	if isnumber( n_movement ) then
+		movement = n_movement
+	end
+
+	local rate = movement
+
+	if !noclamp then
+		if rate > 2 then
+			rate = 2
+		end
+	end
+
+	-- if we're under water we want to constantly be swimming..
+	if ( ply:WaterLevel() >= 2 ) then
+		rate = math.max( rate, 0.5 )
+	elseif ( !ply:IsOnGround() && len >= 1000 ) then
+		rate = 0.1
+	end
+
+	ply:SetPlaybackRate( rate )
+
+	-- We only need to do this clientside..
+	if ( CLIENT ) then
+		if ( ply:InVehicle() ) then
+			--
+			-- This is used for the 'rollercoaster' arms
+			--
+			local Vehicle = ply:GetVehicle()
+			local Velocity = Vehicle:GetVelocity()
+			local fwd = Vehicle:GetUp()
+			local dp = fwd:Dot( Vector( 0, 0, 1 ) )
+
+			ply:SetPoseParameter( "vertical_velocity", ( dp < 0 && dp || 0 ) + fwd:Dot( Velocity ) * 0.005 )
+
+			-- Pass the vehicles steer param down to the player
+			local steer = Vehicle:GetPoseParameter( "vehicle_steer" )
+			steer = steer * 2 - 1 -- convert from 0..1 to -1..1
+			if ( Vehicle:GetClass() == "prop_vehicle_prisoner_pod" ) then steer = 0 ply:SetPoseParameter( "aim_yaw", math.NormalizeAngle( ply:GetAimVector():Angle().y - Vehicle:GetAngles().y - 90 ) ) end
+			ply:SetPoseParameter( "vehicle_steer", steer )
+
+		end
+		GAMEMODE:GrabEarAnimation( ply )
+		GAMEMODE:MouthMoveAnimation( ply )
+	end
+
+end
 --[[-------------------------------------------------------------------------
 Player functions
 ---------------------------------------------------------------------------]]
@@ -331,5 +383,17 @@ function ply:GetInventorySize()
 end
 
 function ply:IsHuman()
-	return SCPTeams.HasInfo(self:SCPTeam(), SCPTeams.INFO_HUMAN) or self:GetSCPHuman()
+	return SCPTeams.HasInfo( self:SCPTeam(), SCPTeams.INFO_HUMAN ) or self:GetSCPHuman()
+end
+
+function ply:IsInSafeSpot()
+	local pos = self:GetPos()
+
+	for k, v in pairs( SAFE_SPOTS ) do
+		if pos:WithinAABox( v.mins, v.maxs ) then
+			return true
+		end
+	end
+
+	return false
 end

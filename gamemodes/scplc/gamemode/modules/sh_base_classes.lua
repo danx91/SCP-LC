@@ -53,9 +53,15 @@ SCI_MODELS = {
 }
 
 HEAD_SCI_MODELS = {
-	"models/armacham/scientists/scientists_1.mdl",
-	"models/armacham/scientists/scientists_2.mdl",
-	"models/armacham/scientists/scientists_6.mdl",
+	"models/armacham/yhc/scientists_1.mdl",
+	"models/armacham/yhc/scientists_2.mdl",
+	"models/armacham/yhc/scientists_3.mdl",
+	"models/armacham/yhc/scientists_4.mdl",
+	"models/armacham/yhc/scientists_5.mdl",
+	"models/armacham/yhc/scientists_6.mdl",
+	"models/armacham/yhc/scientists_7.mdl",
+	"models/armacham/yhc/scientists_8.mdl",
+	"models/armacham/yhc/scientists_9.mdl",
 }
 
 GUARD_MODELS = {

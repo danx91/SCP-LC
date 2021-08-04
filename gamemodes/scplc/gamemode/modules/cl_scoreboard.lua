@@ -751,7 +751,7 @@ local function createScoreboard()
 	SCOREBOARD = container
 end
 
-/*function GM:HUDDrawScoreBoard() --TODO: guziki do class viewera i stat
+/*function GM:HUDDrawScoreBoard() --TODO: buttons to class viewer, stat viewer and settings
 	if !ScoreboardVisible then return end
 
 	//local w, h = ScrW(), ScrH()

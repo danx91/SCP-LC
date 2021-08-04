@@ -149,10 +149,3 @@ AddSanityType( "ANOMALY" )
 
 SCPTeams.AddInfo( TEAM_CLASSD, SCPTeams.INFO_SANITY_VULNERABLE_TO_ANOMALY )
 SCPTeams.AddInfo( TEAM_SCI, SCPTeams.INFO_SANITY_VULNERABLE_TO_KILL )
-
-//print( SANITY_TYPE.DEATH, SANITY_TYPE.KILL, SANITY_TYPE.ANOMALY )
-
---TODO: Rem
-/*concommand.Add( "reducesanity", function( ply, cmd, args )
-	Entity( tonumber( args[1] ) ):TakeSanity( tonumber( args[2] ), tonumber( args[3] ) )
-end )*/

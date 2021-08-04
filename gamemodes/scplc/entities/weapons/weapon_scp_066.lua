@@ -2,12 +2,7 @@ SWEP.Base 				= "weapon_scp_base"
 SWEP.DeepBase 			= "weapon_scp_base"
 SWEP.PrintName			= "SCP-066"
 
-SWEP.HoldType 			= "normal"
-
-function SWEP:Initialize()
-	self:SetHoldType( self.HoldType )
-	self:InitializeLanguage( "SCP066" )
-end		
+SWEP.HoldType 			= "normal"	
 
 SWEP.Delay1		= 1.5
 SWEP.Delay2		= 28
@@ -21,12 +16,19 @@ SWEP.NextCharge = 0
 SWEP.ChargeDelay = 20
 //SWEP.Attached = nil
 
+function SWEP:Initialize()
+	self:SetHoldType( self.HoldType )
+	self:InitializeLanguage( "SCP066" )
+	//self:InitializeHUD( "scp066" )
+end	
+
 function SWEP:PrimaryAttack()
 	if ROUND.preparing then return end
 	if self.NextAttack > CurTime() then return end
 
 	if !self.Eric then
 		self.NextAttack = CurTime() + self.Delay1
+		//if CLIENT then self.HUDObject:GetSkill( 1 ):SetCooldown( self.Delay1 ) end
 		self.Eric = true
 
 		if SERVER then
@@ -34,6 +36,7 @@ function SWEP:PrimaryAttack()
 		end
 	else
 		self.NextAttack = CurTime() + self.Delay2
+		//if CLIENT then self.HUDObject:GetSkill( 1 ):SetCooldown( self.Delay2 ) end
 		self.MusicFinish = CurTime() + self.MusicLength
 		self.Eric = false
 
@@ -288,3 +291,43 @@ hook.Add( "EntityTakeDamage", "SCP066DMGMod", function( ent, dmg )
 end )
 
 InstallUpgradeSystem( "scp066", SWEP )
+
+/*if CLIENT then
+	DefineSCPHUD( "scp066",  {
+		name = "SCP066",
+		skills = {
+			{
+				name = "Skill 1",
+				pos = 1,
+				watch = "key_to_watch", --or function
+				show = "key_to_watch", --or function
+				button = "button_name", --will be checked in this order: Settings entry, bind, key
+				material = "slc/hud/scp/3199attack.png",
+			},
+			{
+				name = "Skill 2",
+				pos = 2,
+				watch = "key_to_watch", --or function
+				show = "key_to_watch", --or function
+				button = "button_name", --will be checked in this order: Settings entry, bind, key
+				material = "slc/hud/scp/3199attack.png",
+			},
+			{
+				name = "Skill 3",
+				pos = 3,
+				watch = "key_to_watch", --or function
+				show = "key_to_watch", --or function
+				button = "button_name", --will be checked in this order: Settings entry, bind, key
+				material = "slc/hud/scp/3199attack.png",
+			},
+			{
+				name = "Skill 4",
+				pos = 5,
+				watch = "key_to_watch", --or function
+				show = "key_to_watch", --or function
+				button = "button_name", --will be checked in this order: Settings entry, bind, key
+				material = "slc/hud/scp/3199attack.png",
+			},
+		}
+	} )
+end*/

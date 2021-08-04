@@ -26,7 +26,7 @@ function ENT:Think()
 
 			self.Usable = false
 			self:SetState( STATE_COUNTDOWN )
-			self:SetTime( ct + CVAR.omega_time:GetInt() + 3 )
+			self:SetTime( ct + CVAR.slc_time_omega:GetInt() + 3 )
 		end
 
 		if state == STATE_WAITING and self.Waiting <= ct then

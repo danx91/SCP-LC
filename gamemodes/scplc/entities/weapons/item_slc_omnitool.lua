@@ -56,6 +56,7 @@ end
 
 function SWEP:Initialize()
 	//print( "Omnitool Init" )
+	self:SetModelScale( 2 / 3 )
 
 	self:SetHoldType( self.HoldType )
 	self:InitializeLanguage()
@@ -63,7 +64,7 @@ function SWEP:Initialize()
 	if CLIENT then
 		self.CHIP_LANG = LANG.WEAPONS["ACCESS_CHIP"] or {}
 
-		if !IsValid( self.WModel ) then
+		/*if !IsValid( self.WModel ) then
 			self.WModel = ClientsideModel( self.WorldModel, RENDERGROUP_OPAQUE )
 			self.WModel:SetParent( self )
 			self.WModel:SetPos( self:GetPos() )
@@ -73,7 +74,7 @@ function SWEP:Initialize()
 			mx:Scale( self.WMScale )
 
 			self.WModel:EnableMatrix( "RenderMultiply", mx )
-		end
+		end*/
 
 		self:UpdateDescription()
 	end
@@ -263,7 +264,7 @@ function SWEP:UseOmnitool( ent, data, status, msg, shared )
 					if SERVER then
 						if !isfunction( data.input_override ) or data.input_override( owner ) != true then
 							//ent:Use( owner, owner, USE_TOGGLE )
-							ent:Input( "use", owner, owner )
+							ent:Input( "Use", owner, owner )
 						end
 
 						//print( "granted!" )
@@ -682,18 +683,18 @@ if CLIENT then
 	SWEP.BoneAttachment = "ValveBiped.Bip01_R_Hand"
 	SWEP.PosOffset = Vector( 4, -3.5, -4 )
 	SWEP.AngOffset = Angle( -90, 0, 0 )
-	SWEP.WMScale = Vector( 0.667, 0.667, 0.667 )
+	//SWEP.WMScale = Vector( 0.667, 0.667, 0.667 )
 
 	function SWEP:DrawWorldModel()
 		local owner = self:GetOwner()
 
 		if IsValid( owner ) then
-			local wm = self.WModel
+			/*local wm = self.WModel
 
 			if !IsValid( wm ) then
 				print( "OMNITOOL WM NOT VALID!!!" )
 				return
-			end
+			end*/
 
 			local bone = owner:LookupBone( self.BoneAttachment )
 			if bone then
@@ -701,13 +702,22 @@ if CLIENT then
 				if matrix then
 					local pos, ang = LocalToWorld( self.PosOffset, self.AngOffset, matrix:GetTranslation(), matrix:GetAngles() )
 
-					wm:SetPos( pos )
+					/*wm:SetPos( pos )
 					wm:SetAngles( ang )
 					wm:SetupBones() --remove?
-					wm:DrawModel()
+					wm:DrawModel()*/
+					self:SetRenderOrigin( pos )
+					self:SetRenderAngles( ang )
+					self:SetupBones()
+
+					self:DrawModel()
 				end
 			end
 		else
+			self:SetRenderOrigin()
+			self:SetRenderAngles()
+			self:SetupBones()
+
 			self:DrawModel()
 		end
 	end

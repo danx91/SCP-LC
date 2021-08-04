@@ -232,15 +232,15 @@ end
 local def_wep = surface.GetTextureID( "weapons/swep" )
 local drag = 0
 local function drawItem( i, wx, wy, size, offset )
-	local w, h = ScrW(), ScrH()
+	//local w, h = ScrW(), ScrH()
 
 	local mx, my = input.GetCursorPos()
 
-	local x = ( i - 1 ) % EQ.cols + 1
-	local y = math.floor( ( i - 1 ) / EQ.cols ) + 1
+	local grid_x = ( i - 1 ) % EQ.cols + 1
+	local grid_y = math.floor( ( i - 1 ) / EQ.cols ) + 1
 
-	local cx = wx + x * offset + ( x - 1 ) * size
-	local cy = wy + y * offset + ( y - 1 ) * size
+	local cx = wx + grid_x * offset + ( grid_x - 1 ) * size
+	local cy = wy + grid_y * offset + ( grid_y - 1 ) * size
 	
 	surface.SetDrawColor( 150, 150, 150, 50 )
 
@@ -362,7 +362,7 @@ local function drawItem( i, wx, wy, size, offset )
 			fy = fy + size * 0.25
 		end
 
-		local w, h = draw.Text{
+		draw.Text{
 			text = c_wep.IconLetter or c_wep.ShowName or c_wep.PrintName,
 			pos = { cx + size * 0.5, fy },
 			font = font,
@@ -638,27 +638,27 @@ local function DrawEQ()
 			wep_name = wep_name.." ("..SHOW_WEP_INFO:GetCount()..")"
 		end
 
-		local width = w * 0.4
+		local info_width = w * 0.4
 
 		surface.SetFont( "SCPHUDMedium" )
 		if !info or info == "" then
-			width = surface.GetTextSize( wep_name ) + w * 0.02
+			info_width = surface.GetTextSize( wep_name ) + w * 0.02
 
 			if author and author != "" then
 				local tmp = surface.GetTextSize( LANG.author..": "..author ) + w * 0.02
 
-				if tmp > width then
-					width = tmp
+				if tmp > info_width then
+					info_width = tmp
 				end
 			end
 
-			if width > w * 0.4 then
-				width = w * 0.4
+			if info_width > w * 0.4 then
+				info_width = w * 0.4
 			end
 		end
 
-		if mx + width > w then
-			mx = w - width
+		if mx + info_width > w then
+			mx = w - info_width
 		end
 
 		render.SetStencilTestMask( 0xFF )
@@ -675,7 +675,7 @@ local function DrawEQ()
 
 
 		surface.SetDrawColor( color )
-		surface.DrawRect( mx, my, width, h * 0.05 )
+		surface.DrawRect( mx, my, info_width, h * 0.05 )
 		local cur_y = my + h * 0.05
 
 		draw.LimitedText{
@@ -690,7 +690,7 @@ local function DrawEQ()
 
 		if author and author != "" then
 			surface.SetDrawColor( color )
-			surface.DrawRect( mx, cur_y, width, h * 0.05 )
+			surface.DrawRect( mx, cur_y, info_width, h * 0.05 )
 			cur_y = cur_y + h * 0.05
 
 			draw.Text{
@@ -705,7 +705,7 @@ local function DrawEQ()
 
 		if info and info != "" then
 			surface.SetDrawColor( color )
-			surface.DrawRect( mx, cur_y, width, h * 0.05 )
+			surface.DrawRect( mx, cur_y, info_width, h * 0.05 )
 			cur_y = cur_y + h * 0.05
 
 			draw.Text{
@@ -717,21 +717,21 @@ local function DrawEQ()
 				yalign = TEXT_ALIGN_CENTER,
 			}
 
-			local height = draw.MultilineText( mx + w * 0.015, cur_y, info, "SCPHUDMedium", nil, w * 0.375, 0, 0, TEXT_ALIGN_LEFT, nil, true )
+			local text_height = draw.MultilineText( mx + w * 0.015, cur_y, info, "SCPHUDMedium", nil, w * 0.375, 0, 0, TEXT_ALIGN_LEFT, nil, true )
 
 			surface.SetDrawColor( color )
-			surface.DrawRect( mx, cur_y, width, height )
+			surface.DrawRect( mx, cur_y, info_width, text_height )
 
 			draw.MultilineText( mx + w * 0.015, cur_y, info, "SCPHUDMedium", Color( 255, 255, 255, 255 ), w * 0.375, 0, 0, TEXT_ALIGN_LEFT )
 
-			cur_y = cur_y + height
+			cur_y = cur_y + text_height
 		end
 
 		render.SetStencilCompareFunction( STENCIL_NOTEQUAL )
 		render.SetStencilPassOperation( STENCIL_KEEP )
 
 		surface.SetDrawColor( Color( 150, 150, 150, 50 ) )
-		surface.DrawRect( mx - 2, my - 2, width + 4, cur_y - my + 4 )
+		surface.DrawRect( mx - 2, my - 2, info_width + 4, cur_y - my + 4 )
 
 		render.SetStencilEnable( false )
 	end
@@ -783,7 +783,7 @@ hook.Add( "DrawOverlay", "SCPEQ", DrawEQ )
 	end
 end*/
 
-function UpdatePlayerEQ() --TEST
+function UpdatePlayerEQ()
 	local player_weapons = LocalPlayer():GetWeapons()
 
 	local pwep_lookup = CreateLookupTable( player_weapons )
@@ -792,7 +792,7 @@ function UpdatePlayerEQ() --TEST
 	--remove missing items
 	for k, v in pairs( WEAPONS ) do
 		if !IsValid( v ) or !pwep_lookup[v] then
-			print( "REMOVING ITEM", v, k ) --REMOVE
+			//print( "REMOVING ITEM", v, k )
 			WEAPONS[k] = nil
 		end
 	end
@@ -800,7 +800,7 @@ function UpdatePlayerEQ() --TEST
 	--add new items
 	for i = 1, #player_weapons do
 		local wep = player_weapons[i] --iterate over all items in inventory
-		print( "check", wep, i ) --REMOVE
+		//print( "check", wep, i )
 
 		if IsValid( wep ) and !cwep_lookup[wep] then --is weapon is valid and is not present in local inventory
 			local first_empty = 0
@@ -814,7 +814,7 @@ function UpdatePlayerEQ() --TEST
 
 			if first_empty > 0 then
 				WEAPONS[first_empty] = wep --insert item
-				print( "ADDING ITEM", wep, first_empty ) --REMOVE
+				//print( "ADDING ITEM", wep, first_empty )
 			else
 				print( "Player has too much items!", #player_weapons.."/"..EQ.slots ) --this should never run
 				break

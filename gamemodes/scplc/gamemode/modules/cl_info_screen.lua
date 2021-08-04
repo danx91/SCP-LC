@@ -17,7 +17,7 @@ local function prepare_text( text_data )
 	//local tab_size = #text_data
 	for i, v in ipairs( text_data ) do
 		for line in string.gmatch( v.text, "[^\n]+" ) do
-			local len, pos = utf8.len( line )
+			local len, _ = utf8.len( line )
 			
 			if !len then
 				line = "Invalid UTF8 string!"
@@ -50,7 +50,6 @@ local function parse_key( data )
 
 	local key
 	local args = {}
-	local i = 1
 
 	for line in string.gmatch( data, "[^;]+" ) do
 		//print( "line", line )
@@ -58,8 +57,7 @@ local function parse_key( data )
 		if !key then
 			key = RestoreMessage( line )
 		else
-			args[i] = RestoreMessage( line )
-			i = i + 1
+			table.insert( args, RestoreMessage( line ) )
 		end
 	end
 
@@ -70,6 +68,20 @@ local function parse_key( data )
 		if #args > 0 then
 			if key == "text" then
 				return args[1]
+			elseif key == "table" then
+				local tab = LANG
+
+				for k, v in ipairs( args ) do
+					tab = tab[v]
+
+					if !tab then
+						break
+					elseif isstring( tab ) then
+						return tab
+					end
+				end
+
+				return LANG.info_screen.registry_failed..": "..data
 			end
 
 			local macro = LANG.info_screen_macro[key]
@@ -133,17 +145,17 @@ function InfoScreen( ply, type, duration, data )
 			end
 
 			if istable( v ) then
-				local key
+				--local key
 				local args = {}
 				local index = 1
 
-				for i, key in ipairs( v ) do
-					if !key then
-						key = parse_key( key )
-					else
+				for _, key in ipairs( v ) do
+					--if !key then
+						--key = parse_key( key )
+					--else
 						args[index] = parse_key( key )
 						index = index + 1
-					end
+					--end
 				end
 
 				txt = txt..string.format( table.remove( args, 1 ), unpack( args ) )
@@ -170,8 +182,8 @@ function InfoScreen( ply, type, duration, data )
 	end
 
 	text[1] = {
-		text = string.format( "%s: %s\n%s: %s\n%s: %s\n%s: %s", LANG.info_screen.subject, LocalPlayer():Nick(), LANG.info_screen.class, ( LANG.CLASSES[class] or class ),
-								LANG.info_screen.team, ( LANG.TEAMS[team] or team ), LANG.info_screen.status, status or LANG.info_screen_type.unknown ),
+		text = string.format( "%s: %s\n%s: %s\n%s: %s\n%s: %s", LANG.info_screen.subject, LocalPlayer():Nick(), LANG.info_screen.class, LANG.CLASSES[class] or class,
+								LANG.info_screen.team, LANG.TEAMS[team] or team, LANG.info_screen.status, status or LANG.info_screen_type.unknown ),
 	}
 
 	local lines, num = prepare_text( text )
@@ -233,10 +245,8 @@ hook.Add( "DrawOverlay", "SLCInfoScreen", function()
 		INFO_SCREEN.done = true
 	end
 
-	if ULib then
-		if !INFO_SCREEN.done and input.IsMouseDown( MOUSE_LEFT ) and ULib.ucl.query( LocalPlayer(), "slc skipintro" ) then
-			INFO_SCREEN.done = true
-		end
+	if !INFO_SCREEN.done and input.IsMouseDown( MOUSE_LEFT ) and SLCAuth.HasAccess( LocalPlayer(), "slc skipintro" ) then
+		INFO_SCREEN.done = true
 	end
 
 	if !INFO_SCREEN.done then
@@ -326,6 +336,7 @@ hook.Add( "DrawOverlay", "SLCInfoScreen", function()
 						INFO_SCREEN.last_char = chars + 2
 						//sound.Play( "common/talk.wav", Vector( 0, 0, 0 ), 0, math.random( 100, 120 ), 1 )
 						sound.Play( "scp_lc/misc/text_sound.wav", Vector( 0, 0, 0 ), 0, math.random( 100, 120 ), 1 )
+						//sound.Play( "ambient/machines/keyboard"..math.random(7).."_clicks.wav", Vector( 0, 0, 0 ), 0, math.random( 100, 120 ), 1 )
 					end
 				end
 

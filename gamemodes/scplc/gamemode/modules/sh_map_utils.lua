@@ -1,29 +1,29 @@
 --[[-------------------------------------------------------------------------
 ButtonController
 ---------------------------------------------------------------------------]]
-BUTTON_CONTROLLERS = BUTTON_CONTROLLERS or {}
-CONTROLLERS_CACHE = CONTROLLERS_CACHE or {}
-CONTROLLERS_USE_TIME = CONTROLLERS_USE_TIME or {}
-CONTROLLERS_LAST_SETID = CONTROLLERS_LAST_SETID or {}
+SLC_BUTTON_CONTROLLERS = SLC_BUTTON_CONTROLLERS or {}
+SLC_CONTROLLERS_CACHE = SLC_CONTROLLERS_CACHE or {}
+SLC_CONTROLLERS_USE_TIME = SLC_CONTROLLERS_USE_TIME or {}
+SLC_CONTROLLERS_LAST_SETID = SLC_CONTROLLERS_LAST_SETID or {}
 
 local function internal_use( ply, ent, data )
-	local cached = CONTROLLERS_CACHE[ent]
+	local cached = SLC_CONTROLLERS_CACHE[ent]
 	if cached then
-		if CONTROLLERS_LAST_SETID[data.name] == cached[2] then
+		if SLC_CONTROLLERS_LAST_SETID[data.name] == cached[2] then
 			return true
 		end
 
 		if data.cooldown then
-			if !CONTROLLERS_USE_TIME[data.name] then
-				CONTROLLERS_USE_TIME[data.name] = 0
+			if !SLC_CONTROLLERS_USE_TIME[data.name] then
+				SLC_CONTROLLERS_USE_TIME[data.name] = 0
 			end
 
 			local ct = CurTime()
-			if CONTROLLERS_USE_TIME[data.name] > ct then
+			if SLC_CONTROLLERS_USE_TIME[data.name] > ct then
 				return true
 			end
 
-			CONTROLLERS_USE_TIME[data.name] = CurTime() + data.cooldown
+			SLC_CONTROLLERS_USE_TIME[data.name] = CurTime() + data.cooldown
 		end
 
 		if isfunction( data.on_use ) then
@@ -36,7 +36,7 @@ local function internal_use( ply, ent, data )
 			ent:Fire( "Use" )
 		end
 
-		CONTROLLERS_LAST_SETID[data.name] = cached[2]
+		SLC_CONTROLLERS_LAST_SETID[data.name] = cached[2]
 	end
 end
 
@@ -70,50 +70,20 @@ function ButtonController( name, data )
 	data.access_granted = handle_button_use
 	data.input_override = handle_input
 
-	BUTTON_CONTROLLERS[name] = data
+	SLC_BUTTON_CONTROLLERS[name] = data
 end
 
 hook.Add( "SLCUseOverride", "SLCButtonController", function( ply, ent, data )
-	local cached = CONTROLLERS_CACHE[ent]
-	if cached then
-		return true, nil, BUTTON_CONTROLLERS[cached[1]]
-	end
-end )
+	if !ent.ControllersSearched then
+		ent.ControllersSearched = true
 
-/*hook.Add( "AcceptInput", "SLCButtonController", function( ent, input, activator, caller, value )
-	print( ent, input, activator, caller, value )
-	if input == "Use" then
-		local cached = CONTROLLERS_CACHE[ent]
-		if cached then
-			local data = BUTTON_CONTROLLERS[cached[1]]
-
-			CONTROLLERS_USE_TIME[data.name] = CurTime() + data.cooldown
-			CONTROLLERS_LAST_SETID[data.name] = cached[2]
-			print( "OK", cached[2] )
-		end
-	end
-end )*/
-
-hook.Add( "SLCPreround", "SLCButtonController", function()
-	CONTROLLERS_CACHE = {}
-	CONTROLLERS_USE_TIME = {}
-	CONTROLLERS_LAST_SETID = {}
-
-	for k, v in pairs( BUTTON_CONTROLLERS ) do
-		if v.initial_state then
-			CONTROLLERS_LAST_SETID[v.name] = v.initial_state
-		end
-	end
-
-	--not very optimised way, but the easiest one
-	for _, ent in pairs( ents.GetAll() ) do
-		for name, data in pairs( BUTTON_CONTROLLERS ) do
-			if istable( data.buttons_set ) then
-				for id, set in pairs( data.buttons_set ) do
+		for name, cdata in pairs( SLC_BUTTON_CONTROLLERS ) do
+			if istable( cdata.buttons_set ) then
+				for id, set in pairs( cdata.buttons_set ) do
 					if istable( set ) then
 						for _, pos in pairs( set ) do
 							if ent:GetPos() == pos then
-								CONTROLLERS_CACHE[ent] = { name, id }
+								SLC_CONTROLLERS_CACHE[ent] = { name, id }
 							end
 						end
 					end
@@ -122,8 +92,56 @@ hook.Add( "SLCPreround", "SLCButtonController", function()
 		end
 	end
 
+	local cached = SLC_CONTROLLERS_CACHE[ent]
+	if cached then
+		return true, nil, SLC_BUTTON_CONTROLLERS[cached[1]]
+	end
+end )
+
+/*hook.Add( "AcceptInput", "SLCButtonController", function( ent, input, activator, caller, value )
+	print( ent, input, activator, caller, value )
+	if input == "Use" then
+		local cached = SLC_CONTROLLERS_CACHE[ent]
+		if cached then
+			local data = SLC_BUTTON_CONTROLLERS[cached[1]]
+
+			SLC_CONTROLLERS_USE_TIME[data.name] = CurTime() + data.cooldown
+			SLC_CONTROLLERS_LAST_SETID[data.name] = cached[2]
+			print( "OK", cached[2] )
+		end
+	end
+end )*/
+
+hook.Add( "SLCPreround", "SLCButtonController", function()
+	SLC_CONTROLLERS_CACHE = {}
+	SLC_CONTROLLERS_USE_TIME = {}
+	SLC_CONTROLLERS_LAST_SETID = {}
+
+	for k, v in pairs( SLC_BUTTON_CONTROLLERS ) do
+		if v.initial_state then
+			SLC_CONTROLLERS_LAST_SETID[v.name] = v.initial_state
+		end
+	end
+
+	--not very optimised way, but the easiest one
+	/*for _, ent in pairs( ents.GetAll() ) do
+		for name, data in pairs( SLC_BUTTON_CONTROLLERS ) do
+			if istable( data.buttons_set ) then
+				for id, set in pairs( data.buttons_set ) do
+					if istable( set ) then
+						for _, pos in pairs( set ) do
+							if ent:GetPos() == pos then
+								SLC_CONTROLLERS_CACHE[ent] = { name, id }
+							end
+						end
+					end
+				end
+			end
+		end
+	end*/
+
 	//print( "Controllers set up" )
-	//PrintTable( CONTROLLERS_CACHE )
+	//PrintTable( SLC_CONTROLLERS_CACHE )
 end )
 
 --[[-------------------------------------------------------------------------
@@ -147,10 +165,10 @@ local selobj = {
 		local num = 0
 		local trigger_list = {}
 
-		for id, v in pairs( self.triggers ) do
+		for tid, v in pairs( self.triggers ) do
 			if v.time >= ct then
 				num = num + 1
-				trigger_list[id] = { v.ply, v.ent }
+				trigger_list[tid] = { v.ply, v.ent }
 			end
 		end
 
@@ -215,4 +233,82 @@ end
 
 hook.Add( "SLCPreround", "SLCSynchronousEventListener", function()
 	SEL_REGISTRY = {}
+end )
+
+--[[-------------------------------------------------------------------------
+Blocker
+---------------------------------------------------------------------------]]
+SLC_FILTER_GROUPS = {}
+
+local FilterGroup = {}
+
+function FilterGroup:AddTeam( team )
+	self.teams[team] = true
+
+	return self
+end
+
+function FilterGroup:AddClass( class )
+	self.classes[class] = true
+
+	return self
+end
+
+function FilterGroup:AddFunction( func )
+	table.insert( self.functions, func )
+
+	return self
+end
+
+function AddFilterGroup( name, base )
+	local tab = setmetatable( {
+		base = base,
+		teams = {},
+		classes = {},
+		functions = {},
+	}, { __index = FilterGroup } )
+
+	SLC_FILTER_GROUPS[name] = tab
+	return tab
+end
+
+function GetFilterGroup( name )
+	return SLC_FILTER_GROUPS[name]
+end
+
+function GetFilterGroupData( name )
+	local filter = SLC_FILTER_GROUPS[name]
+	if filter then
+		local data = {
+			teams = filter.teams,
+			classes = filter.classes,
+			players = {},
+		}
+
+		for k, func in pairs( filter.functions ) do
+			local result = func( name )
+			if result then
+				for k2, ply in pairs( result ) do
+					data.players[ply] = true
+				end
+			end
+		end
+
+		return data
+	end
+end
+
+AddFilterGroup( "non_human" ):AddTeam( TEAM_SCP )
+
+BLOCKER_WHITELIST = 0
+BLOCKER_BLACKLIST = 1
+
+hook.Add( "SLCPreround", "SLCBlocker", function()
+	for i, v in ipairs( BLOCKERS ) do
+		local blocker = ents.Create( "slc_blocker" )
+		if IsValid( blocker ) then
+			blocker:SetBlockerID( i )
+			blocker:Spawn()
+		end
+	end
 end )

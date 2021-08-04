@@ -47,7 +47,9 @@ function SWEP:Think()
 	if #self.CCTV != #CCTV then
 		for k, v in pairs( ents.FindByClass( "slc_cctv" ) ) do
 			//print( v, v:GetCam() )
-			self.CCTV[v:GetCam()] = v
+			if v.GetCam then
+				self.CCTV[v:GetCam()] = v
+			end
 		end
 	end
 

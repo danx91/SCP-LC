@@ -13,7 +13,7 @@ if CLIENT then
 	SWEP.SelectColor = Color( 255, 210, 0, 255 )
 end
 
-SWEP.IndicatorRotation = 0 --TODO: Test high ping results
+SWEP.IndicatorRotation = 0 --TEST high ping results
 
 SWEP.Mins = Vector( -24.5, -41, -33 )
 SWEP.Maxs = Vector( 44, 41, 16.5 )
@@ -325,7 +325,7 @@ function SWEP:TraceIndicator( pos, ep, ang )
 end
 
 function SWEP:DrawWorldModel()
-	if !IsValid( self.Owner ) then
+	if !IsValid( self:GetOwner() ) then
 		self:DrawModel()
 	end
 end
@@ -333,14 +333,21 @@ end
 function SWEP:DrawHUD()
 	local place = self:GetPlace()
 	if place != 0 and place > CurTime() then
-		draw.Text{
+		/*draw.Text{
 			text = string.format( "%.2f", place - CurTime() ),
 			pos = { ScrW() * 0.5, ScrH() * 0.5 },
 			color = Color( 0, 255, 0 ),
 			font = "SCPHUDSmall",
 			xalign = TEXT_ALIGN_CENTER,
 			yalign = TEXT_ALIGN_CENTER,
-		}
+		}*/
+
+		if !ProgressBarTick() then
+			ProgressBar( true, self.PlaceTime, "Placing turret", true )
+			SetProgressBarColor( Color( 200, 200, 200, 255 ), Color( 50, 225, 25, 255 ) )
+		end
+
+		SetProgressBarValue( self.PlaceTime - place + CurTime() )
 	end
 end
 

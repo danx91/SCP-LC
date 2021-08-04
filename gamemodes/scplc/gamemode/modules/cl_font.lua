@@ -86,14 +86,62 @@ function RebuildFonts()
 	end )
 end
 
+function RebuildScaledFonts( scale )
+	CreateFont( "SCPScaledHUDVSmall", {
+		font = "Impacted",
+		size = ScrW() * 0.015 * scale,
+		antialias = true,
+		weight = 500,
+		extended = true,
+	} )
+
+	CreateFont( "SCPScaledHUDSmall", {
+		font = "Impacted",
+		size = ScrW() * 0.0175 * scale,
+		antialias = true,
+		weight = 500,
+		extended = true,
+	} )
+
+	CreateFont( "SCPScaledHUDMedium", {
+		font = "Impacted",
+		size = ScrW() * 0.021 * scale,
+		antialias = true,
+		weight = 500,
+		extended = true,
+	} )
+
+	CreateFont( "SCPScaledHUDBig", {
+		font = "Impacted",
+		size = ScrW() * 0.0275 * scale,
+		antialias = true,
+		weight = 500,
+		extended = true,
+	} )
+
+	CreateFont( "SCPScaledNumbersBig", {
+		font = "DS-Digital",
+		size = ScrW() * 0.02 * scale,
+		antialias = true,
+		weight = 500,
+	} )
+
+	CreateFont( "SCPScaledNumbersSmall", {
+		font = "DS-Digital",
+		size = ScrW() * 0.015 * scale,
+		antialias = true,
+		weight = 500,
+	} )
+end
+
 BlurOutlineFonts = {}
-function CreateFont( name, tab, bo, bo_size )
+function CreateFont( name, tab, bo_size )
 	surface.CreateFont( name, tab )
 
-	if bo then
+	if bo_size then
 		local n = name.."_b"
 
-		tab.blursize = bo_size or 2
+		tab.blursize = bo_size
 		surface.CreateFont( n, tab )
 
 		BlurOutlineFonts[name] = n

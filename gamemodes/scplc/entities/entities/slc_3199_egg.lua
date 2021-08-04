@@ -7,7 +7,6 @@ ENT.Locked = NULL
 
 function ENT:SetupDataTables()
 	self:AddNetworkVar( "Active", "Bool" )
-	--self:SetActive( true ) --TODO remove
 end
 
 function ENT:Initialize()

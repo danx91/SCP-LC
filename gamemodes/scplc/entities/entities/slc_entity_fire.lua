@@ -68,8 +68,8 @@ function ENT:Think()
 	end
 
 	local parent = self:GetParent()
-	--I know "and" takes priority over "or", but enclosing "ands" in parentheses makes whole statement easier to read
-	if ( self:Get_DieTime() != -1 and self:Get_DieTime() < CurTime() ) or self:WaterLevel() > 0 or ( IsValid( parent ) and parent:IsPlayer() and !parent:Alive() ) then
+	local water_level = IsValid( parent ) and parent:WaterLevel() or self:WaterLevel()
+	if ( self:Get_DieTime() != -1 and self:Get_DieTime() < CurTime() ) or water_level == 4 or ( IsValid( parent ) and parent:IsPlayer() and !parent:Alive() ) then
 		if CLIENT and IsValid( self.Particles ) then
 			self.Particles:StopEmission()
 		end
@@ -88,14 +88,22 @@ function ENT:Think()
 			end
 		end
 
-		if self.Damage > 0 /*and self.NextDamage < CurTime()*/ then
+		local final_dmg = self.Damage
+
+		if water_level == 1 then
+			final_dmg = final_dmg * 0.66
+		elseif water_level == 2 then
+			final_dmg = final_dmg * 0.33
+		end
+
+		if final_dmg > 0 /*and self.NextDamage < CurTime()*/ then
 			//self.NextDamage = CurTime() + 0.333
 
 			if IsValid( parent ) then
 				if self.HurtOwner or parent != owner then
 					local dmg = DamageInfo()
 
-					dmg:SetDamage( self.Damage )
+					dmg:SetDamage( final_dmg )
 					dmg:SetDamageType( DMG_BURN )
 					dmg:SetInflictor( self )
 
@@ -120,20 +128,22 @@ function ENT:Think()
 							end
 						end
 
-						local dmg = DamageInfo()
-						
-						dmg:SetDamage( self.Damage * 0.5 )
-						dmg:SetDamageType( DMG_BURN )
-						dmg:SetInflictor( self )
+						if final_dmg > 0 then
+							local dmg = DamageInfo()
+							
+							dmg:SetDamage( final_dmg * 0.5 )
+							dmg:SetDamageType( DMG_BURN )
+							dmg:SetInflictor( self )
 
-						if IsValid( owner ) then
-							dmg:SetAttacker( owner )
-						else
-							dmg:SetAttacker( self )
-						end
+							if IsValid( owner ) then
+								dmg:SetAttacker( owner )
+							else
+								dmg:SetAttacker( self )
+							end
 
-						if hook.Run( "SLCFireOnBurnPlayer", self, v, dmg ) != true then
-							v:TakeDamageInfo( dmg )
+							if hook.Run( "SLCFireOnBurnPlayer", self, v, dmg ) != true then
+								v:TakeDamageInfo( dmg )
+							end
 						end
 
 						if self.ShouldSpread then

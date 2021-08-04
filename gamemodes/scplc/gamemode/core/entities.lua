@@ -47,7 +47,7 @@ end
 TakeDamageInfo
 ---------------------------------------------------------------------------]]
 if SERVER then
-_EntityTakeDamageInfo = _EntityTakeDamageInfo or ent.TakeDamageInfo --TODO
+_EntityTakeDamageInfo = _EntityTakeDamageInfo or ent.TakeDamageInfo
 	function ent:TakeDamageInfo( info )
 		local dmgtype = info:GetDamageType()
 		local prevent_forces = bit.band( dmgtype, DMG_PREVENT_PHYSICS_FORCE ) == DMG_PREVENT_PHYSICS_FORCE

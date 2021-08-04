@@ -122,6 +122,7 @@ hook.Add( "RegisterSCP", "RegisterBaseSCPs", function()
 		no_select = true,
 		//no_model = true,
 		no_terror = true,
+		disable_overload = true,
 		reward_override = 3,
 	}, {
 		base_health = 800,
@@ -129,7 +130,7 @@ hook.Add( "RegisterSCP", "RegisterBaseSCPs", function()
 		base_speed = 165,
 		run_speed = 165,
 	}, function( ply, basestats, pos, scp049, hp, speed, damage, ls, model, skin )
-		if hp and speed and damage then --TODO remove check?
+		if hp and speed and damage then
 			basestats.base_health = math.floor( basestats.base_health * hp )
 			basestats.max_health = math.floor( basestats.max_health * hp )
 
@@ -154,6 +155,16 @@ hook.Add( "RegisterSCP", "RegisterBaseSCPs", function()
 
 		CheckRoundEnd()
 	end )
+
+	RegisterSCP( "SCP058", "models/player/alski/scp/scp_058.mdl", "weapon_scp_058", {
+		jump_power = 200,
+		prep_freeze = true,
+	}, {
+		base_health = 2600,
+		max_health = 2600,
+		base_speed = 170,
+		run_speed = 170,
+	} )
 
 	RegisterSCP( "SCP066", "models/player/mrsilver/scp_066pm/scp_066_pm.mdl", "weapon_scp_066", {
 		jump_power = 200,

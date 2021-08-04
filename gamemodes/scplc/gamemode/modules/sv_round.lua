@@ -15,7 +15,7 @@ ROUND = ROUND or {
 Global functions
 ---------------------------------------------------------------------------]]
 function SetupSupportTimer()
-	local time, max = string.match( string.gsub( CVAR.spawnrate:GetString(), "%s", "" ), "(%d+),*(%d*)" )
+	local time, max = string.match( string.gsub( CVAR.slc_support_spawnrate:GetString(), "%s", "" ), "(%d+),*(%d*)" )
 
 	time = tonumber( time )
 	max = tonumber( max )
@@ -42,10 +42,19 @@ function AddTimer( ... )
 	return t
 end
 
+function AddThenableTimer( ... )
+	local p, t = ThenableTimer( ... )
+	table.insert( ROUND.timers, t )
+
+	return p, t
+end
+
 function SetRoundProperty( key, value )
 	if !ROUND.active then return end
 
 	ROUND.properties[key] = value
+	
+	return value
 end
 
 function GetRoundProperty( key )
@@ -122,7 +131,7 @@ function FinishRoundInternal( winner, endcheck )
 
 	hook.Run( "SLCPostround", winner )
 
-	local post = CVAR.posttime:GetInt()
+	local post = CVAR.slc_time_postround:GetInt()
 
 	net.Start( "RoundInfo" )
 		net.WriteTable{
@@ -164,7 +173,7 @@ function RestartRound()
 	print( "Everything is ready!" )
 	//print( string.format( "Took %i ms!", util.TimerCycle() ) )
 
-	if #GetActivePlayers() < CVAR.minplayers:GetInt() then
+	if #GetActivePlayers() < CVAR.slc_min_players:GetInt() then
 		MsgC( Color( 255, 50, 50 ), "Not enough players to start round! Round restart canceled!\n" )
 		ROUND.active = false
 
@@ -191,7 +200,7 @@ function RestartRound()
 	ROUND.preparing = true
 	ROUND.infoscreen = true
 
-	local prep = CVAR.pretime:GetInt()
+	local prep = CVAR.slc_time_preparing:GetInt()
 
 	net.Start( "RoundInfo" )
 		net.WriteTable{
@@ -224,7 +233,7 @@ function RestartRound()
 			hook.Run( "SLCRound" )
 
 			local endcheck = AddTimer( "SLCRoundEndCheck", 10, 0, CheckRoundEnd )
-			local round = CVAR.roundtime:GetInt()
+			local round = CVAR.slc_time_round:GetInt()
 
 			net.Start( "RoundInfo" )
 				net.WriteTable{
@@ -281,18 +290,18 @@ end
 
 local abouttostart = false
 function CheckRoundStart()
-	if !ROUND.active and #GetActivePlayers() >= CVAR.minplayers:GetInt() then
+	if !ROUND.active and #GetActivePlayers() >= CVAR.slc_min_players:GetInt() then
 		if !abouttostart then
 			abouttostart = true
 
-			local time = CVAR.waittime:GetInt()
+			local time = CVAR.slc_time_wait:GetInt()
 			PlayerMessage( "abouttostart$"..time )
 
 			timer.Simple( time, function()
 				abouttostart = false
 
 				if !ROUND.active then
-					if #GetActivePlayers() < CVAR.minplayers:GetInt() then
+					if #GetActivePlayers() < CVAR.slc_min_players:GetInt() then
 						MsgC( Color( 255, 50, 50 ), "Round start terminated due to not enough players!" )
 						return
 					end
@@ -304,7 +313,7 @@ function CheckRoundStart()
 	end
 end
 
-cvars.AddChangeCallback( CVAR.minplayers:GetName(), function()
+cvars.AddChangeCallback( CVAR.slc_min_players:GetName(), function()
 	CheckRoundStart()
 end, "CheckRoundStart" )
 --[[-------------------------------------------------------------------------
@@ -356,7 +365,7 @@ function GM:SLCPostround( winner )
 		specialinfo = tostring( sb )
 	end
 
-	local time = CVAR.posttime:GetInt()
+	local time = CVAR.slc_time_postround:GetInt()
 
 	if !winner then
 		print( "Round has ended! Nobody wins" )
@@ -414,8 +423,8 @@ function GM:SLCPostround( winner )
 		end
 	end
 
-	local pxp = CVAR.pointsxp:GetInt()
-	local alivexp, winxp = string.match( CVAR.winxp:GetString(), "(%d+),(%d+)" )
+	local pxp = CVAR.slc_points_xp:GetInt()
+	local alivexp, winxp = string.match( CVAR.slc_xp_win:GetString(), "(%d+),(%d+)" )
 
 	alivexp = tonumber( alivexp )
 	winxp = tonumber( winxp )

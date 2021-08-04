@@ -26,6 +26,7 @@ function PLAYER:SetupDataTables()
 	ply:AddSCPVar( "Vest", 2, "INT" )
 	ply:AddSCPVar( "MaxStamina", 3, "INT" )
 	ply:AddSCPVar( "StaminaLimit", 4, "INT" )
+	ply:AddSCPVar( "DisableControlsFlag", 5, "INT" )
 
 	//ply:AddSCPVar( "Exhausted", 0, "BOOL" )
 	ply:AddSCPVar( "DisableControls", 0, "BOOL" )
@@ -53,6 +54,7 @@ function PLAYER:SetupDataTables()
 		ply:SetVest( 0 )
 		ply:SetMaxStamina( 100 )
 		ply:SetStaminaLimit( 100 )
+		ply:SetDisableControlsFlag( 0 )
 
 		ply:SetDisableControls( false )
 	end

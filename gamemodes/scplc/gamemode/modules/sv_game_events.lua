@@ -40,7 +40,7 @@ function Use914( ent, ply )
 		SetRoundStat( "914use", false )
 	end )
 
-	if CVAR.scp914kill:GetBool() == true then
+	if CVAR.slc_scp914_kill:GetBool() == true then
 		AddTimer( "SCP914KillPlayers", 7.5, 1, function() 
 			for k, v in pairs( player.GetAll() ) do
 				if v:Alive() then
@@ -151,7 +151,7 @@ function ExplodeGateA( ply )
 
 	//BroadcastLua( 'surface.PlaySound("scp_lc/franklin1.ogg")' )
 
-	local time = CVAR.explodetime:GetInt()
+	local time = CVAR.slc_time_explode:GetInt()
 	PlayerMessage( "gateexplode$"..time )
 
 	AddTimer( "GateExplode", 1, time, function( self, n )
@@ -349,6 +349,7 @@ hook.Add( "SLCPreround", "SLCOmegaWarhead", function()
 		msg_omnitool = "device_noomni",
 		omega_disable = true,
 		alpha_disable = true,
+		disable_overload = true,
 	}
 
 	RegisterButton( omega_access_data, screen1 )
@@ -356,7 +357,7 @@ hook.Add( "SLCPreround", "SLCOmegaWarhead", function()
 end )
 
 function OMEGAWarhead( ply1, ply2 )
-	//print( "OMEGA Activated", ply1, ply2 )
+	print( "OMEGA Activated", ply1, ply2 )
 	
 	if GetRoundStat( "omega_warhead" ) or GetRoundStat( "alpha_warhead" ) then return end
 	SetRoundStat( "omega_warhead", true )
@@ -371,7 +372,7 @@ function OMEGAWarhead( ply1, ply2 )
 
 		//print( "Opening doors..." )
 
-		local time = CVAR.omega_time:GetInt()
+		local time = CVAR.slc_time_omega:GetInt()
 		PlayerMessage( "omega_detonation$"..time )
 		TransmitSound( "scp_lc/warhead/siren.wav", true, 1 )
 
@@ -402,7 +403,7 @@ function OMEGAWarhead( ply1, ply2 )
 				//print( "HOLDING ROUND!" )
 				HoldRound()
 
-				local xp = CVAR.omega_shelter_xp:GetInt()
+				local xp = CVAR.slc_xp_omega_shelter:GetInt()
 				for k, v in pairs( SCPTeams.GetPlayersByInfo( SCPTeams.INFO_HUMAN ) ) do
 					if v:GetPos():WithinAABox( OMEGA_SHELTER[1], OMEGA_SHELTER[2] ) then
 						//CenterMessage( string.format( "offset:75;escaped#255,0,0,SCPHUDVBig;shelter_escape;escapexp$%d", xp ), v )
@@ -531,11 +532,12 @@ hook.Add( "SLCPreround", "SLCAlphaWarhead", function()
 		msg_omnitool = "device_noomni",
 		omega_disable = true,
 		alpha_disable = true,
+		disable_overload = true,
 	}, screen )
 end )
 
 function ALPHAWarhead( ply )
-	//print( "ALPHA activated", ply )
+	print( "ALPHA activated", ply )
 
 	if GetRoundStat( "omega_warhead" ) or GetRoundStat( "alpha_warhead" ) then return end
 	SetRoundStat( "alpha_warhead", true )
@@ -547,7 +549,7 @@ function ALPHAWarhead( ply )
 
 	TransmitSound( "scp_lc/warhead/alarm.ogg", true, 1 )
 	AddTimer( "AlphaSiren", 3, 1, function( self, n )
-		local time = CVAR.alpha_time:GetInt()
+		local time = CVAR.slc_time_alpha:GetInt()
 		PlayerMessage( "alpha_detonation$"..time )
 		TransmitSound( "scp_lc/warhead/siren.wav", true, 1 )
 

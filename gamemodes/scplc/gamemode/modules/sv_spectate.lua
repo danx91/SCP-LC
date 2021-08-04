@@ -150,7 +150,7 @@ end
 function ply:GetValidSpectateTargets( all )
 	local info = SCPTeams.INFO_HUMAN
 
-	if CVAR.spectatescp:GetBool() == true or hook.Run( "SLCCanSpectateSCP", self ) == true then
+	if CVAR.slc_allow_scp_spectate:GetBool() == true or hook.Run( "SLCCanSpectateSCP", self ) == true or SLCAuth.HasAccess( self, "slc spectatescp" ) then --TEST slc al
 		info = SCPTeams.INFO_ALIVE
 	end
 

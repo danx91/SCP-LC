@@ -13,12 +13,13 @@ function ply:SetSCPClass( class )
 end
 
 function ply:Cleanup( norem )
+	hook.Run( "SLCPlayerCleanup", self )
+
 	self:RemoveEffect()
 	self:RemoveEFlags( EFL_NO_DAMAGE_FORCES )
 
 	self.SetupAsSpectator = nil //TODO move to properties
 	self.DeathScreen = nil //TODO move to properties
-	//self.DeathInfoOverride = nil //TODO move to properties
 	self.ClassData = nil
 
 	self:ResetProperties()
@@ -30,6 +31,7 @@ function ply:Cleanup( norem )
 	self:SetStamina( 100 )
 	self:SetMaxStamina( 100 )
 	self:SetStaminaLimit( 100 )
+	self:SetDisableControlsFlag( 0 )
 	self:SetDisableControls( false )
 
 	self:SetRenderMode( RENDERMODE_NORMAL )
@@ -42,6 +44,7 @@ function ply:Cleanup( norem )
 		self:SetBodygroup( i, 0 )
 	end
 
+	self:SetDSP( 1 )
 	self:SetModelScale( 1 )
 	self:Freeze( false )
 	self:SetNoDraw( false )
@@ -54,8 +57,6 @@ function ply:Cleanup( norem )
 		self:SetVest( 0 )
 		self:RemoveAllItems()
 	end
-
-	hook.Run( "SLCPlayerCleanup", self )
 
 	local sig = math.floor( CurTime() )
 	self:SetTimeSignature( sig )
@@ -456,7 +457,7 @@ function ply:SetUserGroup( ... )
 	self:CheckPremium()
 end
 
-cvars.AddChangeCallback( CVAR.groups:GetName(), function( cvar, old, new )
+cvars.AddChangeCallback( CVAR.slc_premium_groups:GetName(), function( cvar, old, new )
 	for k, v in pairs( player.GetAll() ) do
 		v:CheckPremium()
 	end
@@ -466,8 +467,8 @@ function ply:CheckPremium()
 	if !self.PlayerData then return end
 
 	local groups = {}
-	//for s in string.gmatch( string.gsub( CVAR.groups:GetString(), "%s", "" ), "[^,]+" ) do
-	for s in string.gmatch( CVAR.groups:GetString(), "[^,]+" ) do
+	//for s in string.gmatch( string.gsub( CVAR.slc_premium_groups:GetString(), "%s", "" ), "[^,]+" ) do
+	for s in string.gmatch( CVAR.slc_premium_groups:GetString(), "[^,]+" ) do
 		table.insert( groups, string.Trim( s ) )
 	end
 
@@ -582,8 +583,8 @@ end
 	end
 end*/
 
-local function getCrouchValue( ply )
-	for i, v in rpairs( ply.SpeedStack ) do
+local function getCrouchValue( p )
+	for i, v in rpairs( p.SpeedStack ) do
 		local value = v.crouch
 
 		if value != -1 then
@@ -592,10 +593,10 @@ local function getCrouchValue( ply )
 	end
 end
 
-local function getSpeedValue( ply, id )
+local function getSpeedValue( p, id )
 	local mul = 1
 
-	for i, v in rpairs( ply.SpeedStack ) do
+	for i, v in rpairs( p.SpeedStack ) do
 		local value = v[id]
 
 		if value > 0 and value <= 2 then
@@ -777,7 +778,7 @@ end
 --[[-------------------------------------------------------------------------
 Statis
 ---------------------------------------------------------------------------]]
---TODO: Is ammo stored by default?
+--REVIEW: Is ammo stored by default?
 function ply:SetStasis( time )
 	local data = {}
 
@@ -854,8 +855,8 @@ end
 //local nafk = 0
 Timer( "SLCAFKCheck", 10, 0, function( self, n )
 	local rt = RealTime()
-	local afk_time = CVAR.afk_time:GetInt() or 60
-	local afk_mode = CVAR.afk_mode:GetInt() or 1
+	local afk_time = CVAR.slc_afk_time:GetInt() or 60
+	local afk_mode = CVAR.slc_afk_mode:GetInt() or 1
 
 	local players = player.GetAll()
 	local server_full = #players == game.MaxPlayers()
@@ -868,7 +869,7 @@ Timer( "SLCAFKCheck", 10, 0, function( self, n )
 				if v.SLCAFKTimer and v.SLCAFKTimer + afk_time < rt then
 					v:MakeAFK()
 				end
-			elseif !ULib or !ULib.ucl.query( v, "slc afkdontkick" ) then
+			elseif SLCAuth.HasAccess( v, "slc afkdontkick" ) then
 				--print( "Player afk", v, math.floor( rt - v.SLCAFKTimer ) )
 
 				if afk_mode == 1 and server_full then
@@ -896,12 +897,119 @@ function ply:SetProperty( key, value )
 	if !self.SLCProperties then self.SLCProperties = {} end
 
 	self.SLCProperties[key] = value
+	return value
 end
 
 function ply:GetProperty( key )
 	if !self.SLCProperties then self.SLCProperties = {} end
 
 	return self.SLCProperties[key]
+end
+
+--[[-------------------------------------------------------------------------
+SLCTask
+---------------------------------------------------------------------------]]
+function ply:IsDoingSLCTask( name )
+	local task = self:GetProperty( "slc_task" )
+
+	if name then
+		return task and task.name == name
+	else
+		return !!task
+	end
+end
+
+function ply:StartSLCTask( name, time, check, show_bar, block_movement, args )
+	local promise = Promise( function( resolve, reject )
+		if self:IsDoingSLCTask() then
+			self:StopSLCTask( 2 )
+		end
+
+		local end_time = CurTime() + time
+		local old_flag = self:GetDisableControlsFlag()
+
+		self:SetProperty( "slc_task", {
+			name = name,
+			end_time = end_time,
+			resolve = resolve,
+			reject = reject,
+			check = check,
+			block_movement = block_movement,
+			show_bar = show_bar,
+			was_blocked = self:GetDisableControls(),
+			blocked_flag = old_flag,
+			args = args,
+		} )
+
+		if show_bar then
+			local bar_name
+
+			if isstring( show_bar ) then
+				bar_name = show_bar
+			end
+
+			self:EnableProgressBar( true, end_time, bar_name )
+		end
+
+		if block_movement then
+			self:SetDisableControls( true )
+
+			if isnumber( block_movement ) then
+				self:SetDisableControlsFlag( bit.bor( old_flag, block_movement ) )
+			end
+		end
+	end )
+
+	return promise
+end
+
+function ply:StopSLCTask( data )
+	local task = self:GetProperty( "slc_task" )
+	if task.show_bar then
+		self:EnableProgressBar( false )
+	end
+
+	if task.block_movement then
+		local cur = self:GetDisableControls()
+
+		if !cur or !task.was_blocked then
+			self:SetDisableControls( false )
+			self:SetDisableControlsFlag( 0 )
+		else
+			self:SetDisableControlsFlag( task.blocked_flag )
+		end
+	end
+
+	if data then
+		task.reject( data )
+	end
+
+	self:SetProperty( "slc_task", nil )
+end
+
+hook.Add( "Tick", "SLCTaskTick", function()
+	local ct = CurTime()
+
+	for k, v in pairs( player.GetAll() ) do
+		local data = v:GetProperty( "slc_task" )
+		if data then
+			if data.end_time <= ct then
+				data.resolve( data.args )
+				v:StopSLCTask()
+			elseif data.check then
+				if !data.check() then
+					v:StopSLCTask( 1 )
+				end
+			end
+		end
+	end
+end )
+
+--[[-------------------------------------------------------------------------
+Progress Bar Binding
+---------------------------------------------------------------------------]]
+function ply:EnableProgressBar( enable, endtime, text )
+	ProgressBar( self, enable, endtime, text )
 end
 
 --[[-------------------------------------------------------------------------
@@ -935,8 +1043,18 @@ function ply:SetPrestige( p )
 end
 
 function ply:AddPrestige( p )
-	self:SetPrestige( self:Get_SCPPrestige() + p )
-	self:AddPrestigePoints( p * 5 )
+	local cur = self:Get_SCPPrestige()
+	local new = cur + p
+
+	if new > 9999 then
+		p = p - new + 9999
+		new = 9999
+	end
+
+	if p > 0 and new > cur then
+		self:SetPrestige( cur + p )
+		self:AddPrestigePoints( p * 5 )
+	end
 end
 
 function ply:SetSCPLevel( lvl )
@@ -945,7 +1063,7 @@ function ply:SetSCPLevel( lvl )
 end
 
 function ply:AddLevel( lvl )
-	if lvl > 0 then
+	if lvl >= 0 then
 		local pu = false
 		local level = self:Get_SCPLevel() + lvl
 
@@ -969,15 +1087,19 @@ end
 function ply:AddXP( xp )
 	if !isnumber( xp ) then return end
 
-	local lvlxp = CVAR.levelxp:GetInt()
-	local lvlinc = CVAR.levelinc:GetInt()
+	local lvlxp = CVAR.slc_xp_level:GetInt()
+	local lvlinc = CVAR.slc_xp_increase:GetInt()
+
+	self:AddLevel( 0 ) --prestige up check
 
 	local plyxp = self:SCPExp()
+	local level = self:SCPLevel()
+	local prestige = self:SCPPrestige()
 
 	local ref = { 1 }
 
 	if self:IsPremium() then
-		ref[1] = ref[1] + CVAR.premiumxp:GetFloat() - 1
+		ref[1] = ref[1] + CVAR.slc_premium_xp:GetFloat() - 1
 	end
 
 	hook.Run( "SLCScaleXP", self, ref )
@@ -985,39 +1107,35 @@ function ply:AddXP( xp )
 	xp = math.floor( xp * ref[1] )
 	plyxp = plyxp + xp
 
-	/*if plyxp >= lvlxp then
-		local levels = math.floor( plyxp / lvlxp )
-		plyxp = plyxp - levels * lvlxp
+	local req = lvlxp + lvlinc * prestige
+	local lvls = 0
 
-		self:AddLevel( levels )
-		PlayerMessage( "levelup$"..EscapeMessage( self:Nick() )..","..self:SCPLevel() )
-	end*/
-
-	local req = lvlxp + lvlinc * self:SCPPrestige()
-	/*local lvls = 0
 	while plyxp >= req do
-		lvls = lvls + 1
 		plyxp = plyxp - req
-		req = lvlxp + lvlinc * self:SCPPrestige()
+		lvls = lvls + 1
+
+		if level + lvls >= 10 then --this shouldn't be ever greater than 10 because of prestige check few lines above
+			//local p = math.floor( level / 10 )
+			//level = level - p * 10
+			prestige = prestige + 1
+			level = level - 10
+
+			req = lvlxp + lvlinc * prestige
+		end
 	end
 
-	if lvls > 0 then
-		self:AddLevel( lvls )
-		PlayerMessage( "levelup$"..EscapeMessage( self:Nick() )..","..self:SCPLevel() )
-	end*/
-
-	if plyxp >= req then
+	/*if plyxp >= req then
 		plyxp = plyxp - req
 
 		if !self:AddLevel( 1 ) then
 			PlayerMessage( "levelup$"..self:SCPLevel(), self )
 		end
-	end
+	end*/
+
+	self:AddLevel( lvls )
 
 	self:Set_SCPExp( plyxp )
 	self:SetSCPData( "xp", plyxp )
-
-	--print( "adding exp", self, xp, plyxp )
 
 	return xp
 end
@@ -1042,6 +1160,8 @@ function ply:AddHealth( num )
 	end
 
 	self:SetHealth( hp )
+
+	return hp
 end
 
 function ply:SkipNextKillRewards()
@@ -1050,4 +1170,12 @@ end
 
 function ply:IsAboutToSpawn()
 	return !!self:GetProperty( "spawning" ) or !!self:GetProperty( "spawning_scp" )
+end
+
+function ply:IsValidSpectator()
+	return !self:Alive() and self:IsActive() and !self:IsAFK() and self:SCPTeam() == TEAM_SPEC and !self:IsAboutToSpawn()
+end
+
+function ply:SCPCanInteract()
+	return self:GetSCPCanInteract() or self:GetSCPHuman()
 end

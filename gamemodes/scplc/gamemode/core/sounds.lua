@@ -34,6 +34,15 @@ sound.Add{
 	channel = CHAN_STATIC,
 }
 
+sound.Add{
+	name = "SLCMisc.Overload",
+	sound = { "ambient/energy/zap7.wav", "ambient/energy/zap8.wav", "ambient/energy/zap9.wav" },
+	volume = 1,
+	level = 110,
+	pitch = 100,
+	channel = CHAN_STATIC,
+}
+
 function AddSounds( name, sounds, level, volume, pitch, channel, numstart, numend )
 	local tab = {}
 

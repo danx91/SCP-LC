@@ -320,7 +320,7 @@ end
 
 //SWEP.MCPenalty = 0
 //SWEP.ClientValueCheck = 0
-function SWEP:StopMindControl( noanim1, noanim2 ) --STOP EKRAN EFEKTY DLA OFIARY PO KILL OFIARY LUB SCP
+function SWEP:StopMindControl( noanim1, noanim2 )
 	if SERVER and self.MCTarget and IsValid( self.MCTarget[1] ) then
 		net.Start( "SLCMindControl" )
 			net.WriteBool( false )

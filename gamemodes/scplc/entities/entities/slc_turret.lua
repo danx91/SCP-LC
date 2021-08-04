@@ -259,7 +259,7 @@ function ENT:Think()
 	//self:SetAngles( Angle(0) )
 
 	if CLIENT then
-		local ang = self:GetManipulateBoneAngles( 1 ) --TODO test full server manipulation
+		local ang = self:GetManipulateBoneAngles( 1 ) --clientside manipulation because serverside one causes net_graph to cover your whole screen (too much network traffic)
 		local yaw = self:GetDesiredAngleY()
 		local pitch = self:GetDesiredAngleP()
 
@@ -395,6 +395,12 @@ end
 
 if SERVER then
 	SLC_TURRET_FILTER_MODELS = {}
+	/*SLC_TURRET_LOGIC_OVERRIDE = {
+		["models/novux/023/novux_scp-023.mdl"] = {
+			offset = Vector( 0, 0, -8 ),
+			mask = bit.bor( MASK_BLOCKLOS_AND_NPCS, CONTENTS_HITBOX ),
+		}
+	}*/
 
 	function AddTurretFilterModels( mdl )
 		if !istable( mdl ) then
@@ -408,6 +414,14 @@ if SERVER then
 
 	local function turret_test_range_vis( self, target, shoot_pos, shoot_ang, vertical, horizontal )
 		local pos = target:WorldSpaceCenter()
+
+		/*local offset = SLC_TURRET_POSITION_OFFSET[target:GetModel()]
+		if offset then
+			pos = pos + offset
+		end*/
+
+		debugoverlay.Axis( pos, Angle( 0, 0, 0), 5, 0.1, true )
+
 		local ang = (pos - shoot_pos):Angle() - shoot_ang
 		ang:Normalize()
 
@@ -419,7 +433,7 @@ if SERVER then
 				filter = self,
 			}
 
-			if tr.Entity == target then
+			if tr.Entity == target or tr.Entity == NULL then
 				return true
 			end
 		end

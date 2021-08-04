@@ -35,10 +35,10 @@ function SWEP:Initialize()
 	self:CallBaseClass( "Initialize" )
 
 	if CLIENT then
-		self.WModel = ClientsideModel( self.WorldModel, RENDERGROUP_OPAQUE )
+		/*self.WModel = ClientsideModel( self.WorldModel, RENDERGROUP_OPAQUE )
 		self.WModel:SetParent( self )
 		self.WModel:SetNoDraw( true )
-		self.WModel:SetPos( self:GetPos() )
+		self.WModel:SetPos( self:GetPos() )*/
 
 		self.PixelVis = util.GetPixelVisibleHandle()
 	end
@@ -180,11 +180,12 @@ if CLIENT then
 end
 
 function SWEP:CalcViewModelView( vm, oldpos, oldang, pos, ang )
-	if !IsValid( self.Owner ) then return pos, ang end
+	local owner = self:GetOwner()
+	if !IsValid( owner ) then return pos, ang end
 
 	local forward, right, up = self.ViewModelPositionOffset.x, self.ViewModelPositionOffset.y, self.ViewModelPositionOffset.z
 
-	local angs = self.Owner:EyeAngles()
+	local angs = owner:EyeAngles()
 	--ang.pitch = -ang.pitch
 
 	ang:RotateAroundAxis( ang:Forward(), self.ViewModelAngleOffset.pitch )
@@ -211,27 +212,32 @@ local beamrenderer = {}
 
 SWEP.NWorldLight = 0
 function SWEP:DrawWorldModel()
-	if IsValid( self.Owner ) then
-		if !IsValid( self.WModel ) then return end
+	local owner = self:GetOwner()
+	if IsValid( owner ) then
+		//if !IsValid( self.WModel ) then return end
 
-		local boneid = self.Owner:LookupBone( self.BoneAttachment )
+		local boneid = owner:LookupBone( self.BoneAttachment )
 		if not boneid then
 			return
 		end
 
-		local matrix = self.Owner:GetBoneMatrix( boneid )
+		local matrix = owner:GetBoneMatrix( boneid )
 		if not matrix then
 			return
 		end
 
 		local newpos, newang = LocalToWorld( self.WorldModelPositionOffset, self.WorldModelAngleOffset, matrix:GetTranslation(), matrix:GetAngles() )
 
-		self.WModel:SetPos( newpos )
+		/*self.WModel:SetPos( newpos )
 		self.WModel:SetAngles( newang )
 		self.WModel:SetupBones()
-		self.WModel:DrawModel()
+		self.WModel:DrawModel()*/
 
-		--TODO test
+		self:SetRenderOrigin( newpos )
+		self:SetRenderAngles( newang )
+		self:SetupBones()
+		self:DrawModel()
+
 		if !self:GetEnabled() then
 			if self.DLight then
 				self.DLight.dietime = CurTime()
@@ -247,7 +253,7 @@ function SWEP:DrawWorldModel()
 		local tr = util.TraceLine( {
 			start = pos - forward * 15,
 			endpos = endpos,
-			filter = { self, self.Owner },
+			filter = { self, owner },
 			mask = MASK_BLOCKLOS_AND_NPCS
 		} )
 
@@ -297,6 +303,10 @@ function SWEP:DrawWorldModel()
 		//render.DrawSprite( pos, size, size, Color( 255, 255, 255, alpha ) )
 		table.insert( spriterenderer, { pos, size, alpha } )
 	else
+		self:SetRenderOrigin()
+		self:SetRenderAngles()
+		self:SetupBones()
+
 		self:DrawModel()
 
 		if self.DLight then

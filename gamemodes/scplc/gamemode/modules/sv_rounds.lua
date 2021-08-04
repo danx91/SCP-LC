@@ -35,7 +35,7 @@ AddRoundType( "normal", {
 	name = "normal",
 	init = function( self, multi )
 		SetupPlayers( multi )
-		SpawnItems()
+		hook.Run( "SpawnItems" )
 	end,
 	roundstart = function( self )
 		AddTimer( "EscapeTimer", 2, 0, CheckEscape )
@@ -61,8 +61,8 @@ AddRoundType( "normal", {
 		if num == 0 then
 			return true
 		else
-			for t1, v in pairs( teams ) do
-				for t2, v in pairs( teams ) do
+			for t1, _ in pairs( teams ) do
+				for t2, _ in pairs( teams ) do
 					if !SCPTeams.IsAlly( t1, t2 ) then
 						return false
 					end
@@ -73,7 +73,7 @@ AddRoundType( "normal", {
 		end
 	end,
 	getwinner = function( self )
-		if #player.GetAll() < CVAR.minplayers:GetInt() then return true end --TODO check
+		if #player.GetAll() < CVAR.slc_min_players:GetInt() then return true end
 
 		local plys = GetAlivePlayers()
 		local teams = {}

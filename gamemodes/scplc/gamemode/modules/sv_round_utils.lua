@@ -44,14 +44,16 @@ function CheckQueue()
 	local queue = {}
 
 	for i, v in ipairs( ROUND.queue ) do
-		if IsValid( v ) and !v:Alive() and !v:IsAFK() and v:SCPTeam() == TEAM_SPEC and !queueReg[v] then
+		//if IsValid( v ) and !v:Alive() and !v:IsAFK() and v:SCPTeam() == TEAM_SPEC and !queueReg[v] then
+		if IsValid( v ) and v:IsValidSpectator() and !queueReg[v] then
 			table.insert( queue, v )
 			queueReg[v] = true
 		end
 	end
 
 	for i, v in ipairs( SCPTeams.GetPlayersByTeam( TEAM_SPEC ) ) do
-		if !queueReg[v] and !v:Alive() and !v:IsAFK() then
+		//if !queueReg[v] and !v:Alive() and !v:IsAFK() then
+		if !queueReg[v] and v:IsValidSpectator() then
 			table.insert( queue, v )
 			queueReg[v] = true
 		end
@@ -141,8 +143,8 @@ function SetupPlayers( multi )
 		scp = math.floor( ( all - 14 ) / 7 ) + 3
 	end
 
-	local penalty = CVAR.penalty:GetInt()
-	local ppenalty = CVAR.p_penalty:GetInt()
+	local penalty = CVAR.slc_scp_penalty:GetInt()
+	local ppenalty = CVAR.slc_scp_premium_penalty:GetInt()
 
 	local scpply = {}
 
@@ -232,7 +234,7 @@ function SetupPlayers( multi )
 		local torem = {}
 
 		local i = 1
-		repeat --TODO test
+		repeat
 			local index = table.remove( playerindices, math.random( len ) )
 			len = len - 1
 
@@ -336,7 +338,7 @@ function SpawnSupport()
 
 	local num = 0
 	local inuse = {}
-	local max = CVAR.maxsupport:GetInt()
+	local max = CVAR.slc_support_amount:GetInt()
 	local unused = {}
 
 	if data.max > 0 and data.max < max then
@@ -355,8 +357,8 @@ function SpawnSupport()
 			end
 		until #plys == 0*/
 
-		if IsValid( ply ) and ply:IsActive() and !ply:IsAFK() and ply:SCPTeam() == TEAM_SPEC then
-			if !ply:IsAboutToSpawn() then
+		//if IsValid( ply ) and ply:IsActive() and !ply:IsAFK() and ply:SCPTeam() == TEAM_SPEC and !ply:IsAboutToSpawn() then
+			if ply:IsValidSpectator() then
 				local plytab = {}
 
 				for k, v in pairs( classes ) do
@@ -401,7 +403,7 @@ function SpawnSupport()
 					table.insert( unused, ply )
 				end
 			end
-		end
+		//end
 	until num >= max
 
 	if #unused > 0 then
@@ -507,7 +509,7 @@ function CheckEscape()
 					hook.Run( "SLCPlayerEscaped", v, diff, rtime )
 
 					local time = rtime / ttime
-					local min, max = string.match( CVAR.escapexp:GetString(), "^(%d+),(%d+)$" )
+					local min, max = string.match( CVAR.slc_xp_escape:GetString(), "^(%d+),(%d+)$" )
 					local xp = 0
 
 					min = tonumber( min )
@@ -617,7 +619,7 @@ hook.Add( "Tick", "SLCEscapeCheck", function() --TODO remove timer on escape / e
 		TransmitEscapeInfo( tab )
 
 		if GetRoundStat( "alpha_warhead" ) then
-			local xp = CVAR.alpha_escape_xp:GetInt()
+			local xp = CVAR.slc_xp_alpha_escape:GetInt()
 
 			for k, v in pairs( tab ) do
 				CenterMessage( string.format( "offset:75;escaped#255,0,0,SCPHUDVBig;alpha_escape;escapexp$%d", xp ), v )
@@ -652,7 +654,7 @@ hook.Add( "Tick", "SLCEscapeCheck", function() --TODO remove timer on escape / e
 
 				local diff = math.floor( ttime - rtime )
 
-				local min, max = string.match( CVAR.escapexp:GetString(), "^(%d+),(%d+)$" )
+				local min, max = string.match( CVAR.slc_xp_escape:GetString(), "^(%d+),(%d+)$" )
 				min = tonumber( min )
 				max = tonumber( max )
 
@@ -772,7 +774,7 @@ function PlayerEscort( ply )
 
 		local diff = math.floor( ttime - rtime )
 		local time = rtime / ttime
-		local min, max = string.match( CVAR.escapexp:GetString(), "^(%d+),(%d+)$" )
+		local min, max = string.match( CVAR.slc_xp_escape:GetString(), "^(%d+),(%d+)$" )
 		local xp = 0
 
 		min = tonumber( min )
@@ -827,7 +829,7 @@ function PlayerEscort( ply )
 
 		AddRoundStat( "escorts", num )
 
-		local points = num * CVAR.escortpoints:GetInt()
+		local points = num * CVAR.slc_points_escort:GetInt()
 
 		PlayerMessage( "escortpoints$"..points, ply )
 		ply:AddFrags( points )
@@ -954,7 +956,7 @@ local function applyTable( item, tab )
 	end
 end
 
-function SpawnGeneric( class, pos, num, post_tab, post_func )
+function SpawnItemGeneric( class, pos, num, post_tab, post_func )
 	if isfunction( post_tab ) then
 		post_func = post_tab
 		post_tab = nil
@@ -993,37 +995,26 @@ function SpawnGeneric( class, pos, num, post_tab, post_func )
 	end
 end
 
-function SpawnItems() --TODO
+function SpawnItemSingle( class, pos )
+	local item = ents.Create( class )
+	if IsValid( item ) then
+		item:SetPos( pos )
+		item:Spawn()
+		item.Dropped = 0
+	end
+end
+
+function GM:SpawnItems()
+	local post = { Dropped = 0 }
+	local post_dnc = { Dropped = 0, _dnc = true }
+
 	--[[-------------------------------------------------------------------------
 	SCPs
 	---------------------------------------------------------------------------]]
-	local item = ents.Create( "item_scp_714" )
-	if IsValid( item ) then
-		item:SetPos( SPAWN_714 )
-		item:Spawn()
-		item.Dropped = CurTime()
-	end
+	SpawnItemSingle( "item_scp_714", SPAWN_714 )
+	SpawnItemSingle( "item_scp_1025", SPAWN_1025 )
 
-	/*local pos500 = table.Copy( SPAWN_500 )
-	
-	for i = 1, 2 do
-		local item = ents.Create( "item_scp_500" )
-		if IsValid( item ) then
-			local pos = table.Random( pos500 )
-			item:SetPos( pos )
-			item:Spawn()
-			table.RemoveByValue( pos500, pos )
-		end
-	end
-	
-	for k, v in pairs( SPAWN_420 ) do
-		local item = ents.Create( "item_scp_420j" )
-		if IsValid( item ) then
-			local pos = table.Random( v )
-			item:SetPos( pos )
-			item:Spawn()
-		end
-	end*/
+	SpawnItemGeneric( "item_scp_500", SPAWN_500, 3, post )
 
 	--[[-------------------------------------------------------------------------
 	Vests
@@ -1040,32 +1031,29 @@ function SpawnItems() --TODO
 	--[[-------------------------------------------------------------------------
 	Weapons
 	---------------------------------------------------------------------------]]
-	local post = { Dropped = 0 }
-	local post_dnc = { Dropped = 0, _dnc = true }
+	SpawnItemGeneric( "weapon_slc_pc", SPAWN_PARTICLE_CANNON, -1, post )
 
-	SpawnGeneric( "weapon_slc_pc", SPAWN_PARTICLE_CANNON, -1, post )
+	SpawnItemGeneric( { "cw_deagle", "cw_makarov", "cw_mr96" }, SPAWN_PISTOLS, -1, post )
+	SpawnItemGeneric( { "cw_g36c", "cw_ump45", "cw_mp5" }, SPAWN_SMGS, -1, post )
+	SpawnItemGeneric( { "cw_ak74", "cw_ar15", "cw_m14", "cw_scarh", "cw_l85a2" }, SPAWN_RIFLES, -1, post )
+	SpawnItemGeneric( { "cw_shorty", "cw_m3super90" }, SPAWN_PUMP, -1, post )
+	SpawnItemGeneric( "cw_l115", SPAWN_SNIPER, -1, post )
 
-	SpawnGeneric( { "cw_deagle", "cw_makarov", "cw_mr96" }, SPAWN_PISTOLS, -1, post )
-	SpawnGeneric( { "cw_g36c", "cw_ump45", "cw_mp5" }, SPAWN_SMGS, -1, post )
-	SpawnGeneric( { "cw_ak74", "cw_ar15", "cw_m14", "cw_scarh", "cw_l85a2" }, SPAWN_RIFLES, -1, post )
-	SpawnGeneric( { "cw_shorty", "cw_m3super90" }, SPAWN_PUMP, -1, post )
-	SpawnGeneric( "cw_l115", SPAWN_SNIPER, -1, post )
+	SpawnItemGeneric( "weapon_crowbar", SPAWN_MELEE, 3, post )
 
-	SpawnGeneric( "weapon_crowbar", SPAWN_MELEE, 3, post )
-
-	SpawnGeneric( "cw_ammo_kit_regular", SPAWN_AMMO_CW, -1, { AmmoCapacity = 20 } )
+	SpawnItemGeneric( "cw_ammo_kit_regular", SPAWN_AMMO_CW, -1, { AmmoCapacity = 20 } )
 
 	--[[-------------------------------------------------------------------------
 	Items
 	---------------------------------------------------------------------------]]
 	local spawn_items = table.Copy( SPAWN_ITEMS )
 
-	SpawnGeneric( "item_slc_radio", spawn_items, 2, post_dnc )
-	SpawnGeneric( "item_slc_nvg", spawn_items, 3, post_dnc )
-	SpawnGeneric( "item_slc_gasmask", spawn_items, 3, post_dnc )
-	SpawnGeneric( "item_slc_battery", SPAWN_BATTERY, -1, post )
-	SpawnGeneric( "item_slc_flashlight", SPAWN_FLASHLIGHT, 8, post )
-	SpawnGeneric( "item_slc_medkit", SPAWN_MEDKITS, 4, post )
+	SpawnItemGeneric( "item_slc_radio", spawn_items, 2, post_dnc )
+	SpawnItemGeneric( "item_slc_nvg", spawn_items, 3, post_dnc )
+	SpawnItemGeneric( "item_slc_gasmask", spawn_items, 3, post_dnc )
+	SpawnItemGeneric( "item_slc_battery", SPAWN_BATTERY, -1, post )
+	SpawnItemGeneric( "item_slc_flashlight", SPAWN_FLASHLIGHT, 8, post )
+	SpawnItemGeneric( "item_slc_medkit", SPAWN_MEDKITS, 4, post )
 
 	--[[-------------------------------------------------------------------------
 	MedBay
@@ -1075,9 +1063,9 @@ function SpawnItems() --TODO
 	for i = 1, #spawn_medbay do
 		local rng = math.random( 1, 100 )
 		if rng <= 15 then
-			SpawnGeneric( "item_slc_medkitplus", spawn_medbay, 1, post_dnc )
+			SpawnItemGeneric( "item_slc_medkitplus", spawn_medbay, 1, post_dnc )
 		else
-			SpawnGeneric( "item_slc_medkit", spawn_medbay, 1, post_dnc )
+			SpawnItemGeneric( "item_slc_medkit", spawn_medbay, 1, post_dnc )
 		end
 	end
 
@@ -1192,7 +1180,7 @@ function SpawnItems() --TODO
 	--[[-------------------------------------------------------------------------
 	Gas 
 	---------------------------------------------------------------------------]]
-	SpawnGeneric( "slc_trigger", GAS_POS, -1, GAS_TABLE, GAS_POST )
+	SpawnItemGeneric( "slc_trigger", GAS_POS, -1, GAS_TABLE, GAS_POST )
 
 	--[[-------------------------------------------------------------------------
 	Vechicles

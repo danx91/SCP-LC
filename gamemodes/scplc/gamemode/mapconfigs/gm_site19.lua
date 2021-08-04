@@ -1,31 +1,19 @@
 --[[-------------------------------------------------------------------------
 Spawn SCPs
 ---------------------------------------------------------------------------]]
-SPAWN_SCPSantaJ = Vector( 4042.9343261719, 389.60006713867, -383.96875 )
-SPAWN_SCP173 = Vector( 1170.1145019531, 1646.2163085938, 153.03125 )
-SPAWN_SCP689 = Vector( 1960.968994, 2160.669922, 46.133434 )
-SPAWN_SCP106 = Vector( 2216.1745605469, 4706.0395507813, -422.96875 )
-SPAWN_SCP066 = Vector( 86.938972, 3897.577393, -64.033432 )
 SPAWN_SCP049 = Vector( 4718.4541015625, -2004.3891601563, 41.03125 )
-SPAWN_SCP457 = Vector( 6209.917480, -304.609192, 64.031250 )
-SPAWN_SCP966 = Vector( 4385.948730, 2360.432861, 50.031250 )
-SPAWN_SCP939 = Vector( 1141.1956787109, -782.48986816406, -742.96875 )
-SPAWN_SCP682 = Vector( 2053.1604003906, 3009.12109375, -358.96875 )
+SPAWN_SCP058 = Vector( 3724.503662, -1300.921753, -105.968750 )
+SPAWN_SCP066 = Vector( 86.938972, 3897.577393, -64.033432 )
 SPAWN_SCP096 = Vector( 4750.299316, 3653.488525, 25.031250 )
-SPAWN_SCP999 = Vector( -278.488647, 1296.797852, 44.03125 )
-SPAWN_SCP082 = Vector( -1447.897461, 319.761749, -54.50270 )
-SPAWN_SCP1471 = Vector( 2174.361328, 1557.007446, 50.836136 )
-SPAWN_SCP1048A = Vector( 1732.884521, 3500.440674, 50.865131 )
-SPAWN_SCP1048B = Vector( 5531.479492, -113.018181, 64.043182 )
+SPAWN_SCP106 = Vector( 2216.1745605469, 4706.0395507813, -422.96875 )
+SPAWN_SCP173 = Vector( 1170.00, 1646.00, 153.00 )
+SPAWN_SCP457 = Vector( 6209.917480, -304.609192, 64.031250 )
+SPAWN_SCP682 = Vector( 2053.1604003906, 3009.12109375, -358.96875 )
 SPAWN_SCP8602 = Vector( 7284.303711, 5608.904785, -1041.298706 )
-SPAWN_SCP3199 = Vector( 2498.00, 1534.00, 1.00 )
+SPAWN_SCP939 = Vector( 1141.1956787109, -782.48986816406, -742.96875 )
+SPAWN_SCP966 = Vector( 4385.948730, 2360.432861, 50.031250 )
 SPAWN_SCP24273 = Vector( 4016.164551, 3882.115967, 1.00 )
-
-SPAWN_SCP076 = { 
-	Vector( 5440, 1121, -447 ),
-	Vector( -1479, 2758, -64 ),
-	Vector( 200, -1827, -64 )
-}
+SPAWN_SCP3199 = Vector( 2498.00, 1534.00, 1.00 )
 
 SPAWN_SCP023 = {
 	Vector(4140.746094, -194.712585, 25.031250),
@@ -35,43 +23,31 @@ SPAWN_SCP023 = {
 	Vector(-454.112244, 3658.908936, 25.031250),
 }
 
-SPAWN_SCP957 = {
-	Vector( 438.97827148438, -100.25005340576, 1.03125 ),
-	Vector( 1352.8220214844, 2899.0056152344, 65.03125 ),
-	Vector( 5309.6831054688, 2388.4443359375, 1.03125 ),
-}
-
+--[[-------------------------------------------------------------------------
+SCP Items
+---------------------------------------------------------------------------]]
 SPAWN_714 = Vector( 2403.00, 880.00, 42.00 )
 
-SPAWN_500 = {
-	Vector( 339.711914, 2020.880371, 319.977631 ),
-	Vector( 337.75, -619.97, 41.09 ),
-	Vector( 2134.768311, -2141.592041, 64.722740 ),
-	Vector( 1123.22, 575.88, 27.16 ),
-	Vector( 5514.520508, -790.648376, 63.133797 ),
-	Vector( 3992.293213, 185.918579, -320.836975 ),
-	Vector( 5317.263672, 2136.031250, 56.527630 ),
-	Vector( 1568.128418 ,2084.152832, 63.507275 ),
-	Vector( -800.390991, 3044.599365, 47.840244 ),
-	Vector( -988.66, 2669.91, 41.09 ),
-}
+SPAWN_1025 = Vector( 2400.00, 1295.00, 50.00 )
 
-SPAWN_420 = {
-	lcz = {
-		Vector( -392.84, 791.25, 37.06 ),
-		Vector( -313.69, -240.44, -213.44 ),
-		Vector( 2951.84, 346.97, 0.38 ),
-	},
-	hcz = {
-		Vector( 3621.53, -499.47, -210.91 ),
-		Vector( 4113.44, 242.63, -383.50 ),
-		Vector( 4462.44, 2397.47, 1.06 ),
-	},
-	ez = {
-		Vector( 1524.03, 3107.73, 105.06 ),
-		Vector( -958.13, 2671.09, 20.47 ),
-		Vector( 79.16, 3098.78, -48.66 ),
-	}
+SPAWN_500 = {
+	Vector( 215.00, 1927.00, 322.00 ),
+	Vector( -170.00, -100.00, -253.00 ),
+	Vector( 1120.00, 735.00, 2.00 ),
+	Vector( 1980.00, 1365.00, 65.00 ),
+	Vector( 1855.00, -515.00, -697.00 ),
+
+	Vector( 5785.00, 0.00, 38.00 ),
+	Vector( 4115.00, 175.00, -381.00 ),
+	Vector( 5330.00, 2135.00, 30.00 ),
+	Vector( 4182.00, 3768.00, 2.00 ),
+	Vector( 3095.00, 2710.00, -157.00 ),
+
+	Vector( 795.00, 4565.00, 2.00 ),
+	Vector( -77.00, 3590.00, -100.00 ),
+	Vector( -888.00, 2997.00, 2.00 ),
+	Vector( -1830.00, 3530.00, 66.00 ),
+	Vector( 170.00, 2195.00, 38.00 ),
 }
 
 OUTSIDE_966 = Vector(4165.00, 2375.00, 50.00)
@@ -228,7 +204,7 @@ SPAWN_MTF = {
 	Vector( -2530.00, 4104.00, 257.00 ),
 }
 
-SPAWN_SUPPORT_MTF = {
+local support_spawn = {
 	Vector( -7050.00, 3400.00, 2563.00 ),
 	Vector( -7050.00, 3320.00, 2563.00 ),
 	Vector( -7050.00, 3240.00, 2563.00 ),
@@ -243,7 +219,8 @@ SPAWN_SUPPORT_MTF = {
 	Vector( -7150.00, 3000.00, 2563.00 ),
 }
 
-SPAWN_SUPPORT_CI = SPAWN_SUPPORT_MTF
+SPAWN_SUPPORT_MTF = support_spawn
+SPAWN_SUPPORT_CI = support_spawn
 
 --[[-------------------------------------------------------------------------
 Keycards
@@ -731,7 +708,7 @@ SPAWN_VEST = {
 }
 
 --[[-------------------------------------------------------------------------
-Misc Locations
+Misc
 ---------------------------------------------------------------------------]]
 ZERO_POS = Vector( -1100, 500, 0 )
 
@@ -749,6 +726,57 @@ GAS_DIM = {
 	{ mins = Vector( -20, -50, 0 ), maxs = Vector( 20, 40, 48 ), bounds = 1 }
 }
 
+SAFE_SPOTS = {
+	{ mins = Vector( -120, -1925, -130 ), maxs = Vector( 500, -1375, 40 ) }, --omega shelter
+	{ mins = Vector( 1330, -1150, -5 ), maxs = Vector( 1790, -515, 275 ) }, --914
+}
+
+PREVENT_BREAK = {
+	Vector( 1536.00, 3856.00, 74.00 ),
+	Vector( 1536.00, 3440.00, 74.00 ),
+	Vector( 2176.00, 2576.00, 74.00 ),
+	Vector( 2176.00, 2160.00, 74.00 ),
+	Vector( 2816.00, -400.00, 74.00 ),
+	Vector( 2816.00, 16.00, 74.00 ),
+	Vector( 2816.00, 880.00, 74.00 ),
+	Vector( 2816.00, 1296.00, 74.00 ),
+}
+
+--[[-------------------------------------------------------------------------
+Blockers
+---------------------------------------------------------------------------]]
+BLOCKERS = {
+	/*{
+		name = "family_firendly_name",
+		pos = Vector( 0, 0, 0 ),
+		bounds = { Vector( mins ), Vector( maxs ) },
+		filter = {
+			mode = BLOCKER_WHITELIST, --or BLOCKER_BLACKLIST
+			group = "filter_group_name", --this is prefered over options below, however these can be mixed together
+			classes = { "list", "of", "classes" }, --names, not ids - classes are registered few (1?) ticks after map config
+			teams = { TEAM_NAME1, TEAM_NAME2 },
+		}
+	},*/
+	{
+		name = "omega_shelter",
+		pos = Vector( 190, -1390, -80 ),
+		bounds = { Vector( -70, -10, -50 ), Vector( 75, 15, 60 ) },
+		filter = {
+			mode = BLOCKER_BLACKLIST,
+			group = "non_human",
+		}
+	},
+	{
+		name = "pocket_dim",
+		pos = Vector( 2685, 4040, -460 ),
+		bounds = { Vector( -80, -55, 0 ), Vector( 80, 75, 15 ) },
+		filter = {
+			mode = BLOCKER_WHITELIST,
+			classes = { "SCP106" }
+		}
+	},
+}
+
 /*if CLIENT then
 	local showid = 4
 
@@ -764,13 +792,11 @@ SCP 914
 ---------------------------------------------------------------------------]]
 SCP_914_STATUS = "bt_914_4"
 
-SCP_914_INTAKE_MINS = Vector( 1677.00, -549.00, 0.00 )
-SCP_914_INTAKE_MAXS = Vector( 1600.00, -683.00, 128.00 )
-OrderVectors( SCP_914_INTAKE_MINS, SCP_914_INTAKE_MAXS )
+SCP_914_INTAKE_MINS = Vector( 1600.00, -683.00, 0.00 )
+SCP_914_INTAKE_MAXS = Vector( 1677.00, -549.00, 128.00 )
 
-SCP_914_OUTPUT_MINS = Vector( 1675.00, -995.00, 128.00 )
-SCP_914_OUTPUT_MAXS = Vector( 1618.00, -1116.00, 0.00 )
-OrderVectors( SCP_914_OUTPUT_MINS, SCP_914_OUTPUT_MAXS )
+SCP_914_OUTPUT_MINS = Vector( 1618.00, -1116.00, 0.00 )
+SCP_914_OUTPUT_MAXS = Vector( 1675.00, -995.00, 128.00 )
 
 SCP_914_OUTPUT = Vector(1651.584229, -1052.149902, 7.470211)
 SCP_914_DOORS = {
@@ -923,10 +949,9 @@ SOUND_TRANSMISSION_NAME = "sound_lever_106"
 CAGE_INSIDE = Vector( 2498.16, 4482.72, -402.50 )
 CAGE_DOWN_POS = Vector( 2488.00, 4488.00, -307.00 )
 CAGE_BOUNDS = {
-	MINS = Vector( 2325.47, 4651.63, -200.00 ),
-	MAXS = Vector( 2611.38, 4363.59, -403.00 )
+	MINS = Vector( 2325.47, 4363.59, -403.00 ),
+	MAXS = Vector( 2611.38, 4651.63, -200.00 )
 }
-OrderVectors( CAGE_BOUNDS.MINS, CAGE_BOUNDS.MAXS )
 
 DOOR_RESTRICT106 = {
 	Vector( 2190.00, 3968.00, 55.50 ),
@@ -975,9 +1000,8 @@ POS_POCKETD = {
 	Vector(2232.6259765625, 4620.3232421875, 537.03125),
 }
 
-POCKETD_MINS = Vector( 1492.638062, 3762.967285, 481.975006 )
-POCKETD_MAXS = Vector( 4352.205566, 5390.020020, 982.629272 )
-OrderVectors( POCKETD_MINS, POCKETD_MAXS )
+POCKETD_MINS = Vector( 1492.00, 3763.00, 482.00 )
+POCKETD_MAXS = Vector( 4352.00, 5390.00, 982.00 )
 
 --[[-------------------------------------------------------------------------
 Map buttons config
@@ -1070,18 +1094,21 @@ BUTTONS = {
 		name = "Particle Cannon",
 		pos = Vector( 3676.00, 2156.00, 59.00 ),
 		access = ACCESS_PARTICLE,
+		advanced_overload = true,
+		overload_delay = 0,
 	},
 	{
 		name = "Gate A",
 		pos = Vector( -321.00, 4784.00, 53.00 ),
 		access = ACCESS_GATE_A,
 		omega_disable = true,
-		//alpha_disable = true,
+		disable_overload = true,
 	},
 	{
 		name = "Gate B",
 		pos = Vector( -3790.50, 2472.50, 53.00 ),
 		access = ACCESS_GATE_B,
+		disable_overload = true,
 	},
 	{
 		name = "SCP-008 Observation",
@@ -1125,25 +1152,29 @@ BUTTONS = {
 		name = "Checkpoint LCZ1",
 		pos = Vector( 2816.00, -192.00, 53.00 ),
 		access = ACCESS_CHECKPOINT_LCZ,
-		omega_override = true
+		omega_override = true,
+		overload_delay = 0,
 	},
 	{
 		name = "Checkpoint LCZ2",
 		pos = Vector( 2816.00, 1088.00, 53.00 ),
 		access = ACCESS_CHECKPOINT_LCZ,
-		omega_override = true
+		omega_override = true,
+		overload_delay = 0,
 	},
 	{
 		name = "Checkpoint EZ1",
 		pos = Vector( 1536.00, 3648.00, 53.00 ),
 		access = ACCESS_CHECKPOINT_EZ,
-		omega_override = true
+		omega_override = true,
+		overload_delay = 0,
 	},
 	{
 		name = "Checkpoint EZ2",
 		pos = Vector( 2176.00, 2368.00, 53.00 ),
 		access = ACCESS_CHECKPOINT_EZ,
-		omega_override = true
+		omega_override = true,
+		overload_delay = 0,
 	},
 
 	--SCPs--
@@ -1152,6 +1183,7 @@ BUTTONS = {
 		name = "SCP-914",
 		pos = Vector( 1264.00, -958.50, 53.00 ),
 		access = ACCESS_SAFE,
+		advanced_overload = 3,
 	},
 	{
 		name = "SCP-1123",
@@ -1314,6 +1346,7 @@ BUTTONS = {
 		msg_access = "femur_act",
 		msg_deny = "",
 		msg_omnitool = "device_noomni",
+		disable_overload = true,
 	},
 	{
 		name = "ELO-IID",
@@ -1348,6 +1381,14 @@ BUTTONS = {
 		name = "Evacuation Shelter",
 		pos = Vector( 195.679993, -1387.290039, -75.00 ),
 		disabled = true,
+	},
+
+	--gas
+	{
+		name = "Gas",
+		pos = Vector( 2344.010010, -2031.00, 53.00 ),
+		suppress_check = true,
+		cooldown = 10,
 	},
 
 	--SCP use disallow
@@ -1443,6 +1484,9 @@ BUTTONS = {
 	},
 }
 
+--[[-------------------------------------------------------------------------
+Button controllers
+---------------------------------------------------------------------------]]
 ButtonController( "Warhead Elevator", {
 	access = ACCESS_WARHEAD_ELEVATOR,
 	msg_omnitool = "elevator_noomni",
@@ -1456,6 +1500,7 @@ ButtonController( "Warhead Elevator", {
 	cooldown = 15,
 	initial_state = 1,
 	debug_use = 1,
+	disable_overload = true,
 } )
 
 ButtonController( "LCZ Elevator 1", {
@@ -1470,6 +1515,7 @@ ButtonController( "LCZ Elevator 1", {
 	cooldown = 15,
 	initial_state = 1,
 	debug_use = 1,
+	disable_overload = true,
 } )
 
 ButtonController( "LCZ Elevator 2", {
@@ -1484,6 +1530,7 @@ ButtonController( "LCZ Elevator 2", {
 	cooldown = 15,
 	initial_state = 1,
 	debug_use = 1,
+	disable_overload = true,
 } )
 
 ButtonController( "HCZ Elevator 1", {
@@ -1498,6 +1545,7 @@ ButtonController( "HCZ Elevator 1", {
 	cooldown = 15,
 	initial_state = 1,
 	debug_use = 1,
+	disable_overload = true,
 } )
 
 ButtonController( "HCZ Elevator 2", {
@@ -1512,6 +1560,7 @@ ButtonController( "HCZ Elevator 2", {
 	cooldown = 15,
 	initial_state = 1,
 	debug_use = 1,
+	disable_overload = true,
 } )
 
 ButtonController( "Gate A Elevator", {
@@ -1527,6 +1576,7 @@ ButtonController( "Gate A Elevator", {
 	initial_state = 1,
 	debug_use = 1,
 	warhead_lockdown = true,
+	disable_overload = true,
 } )
 
 ButtonController( "Gate B Elevator", {
@@ -1542,6 +1592,7 @@ ButtonController( "Gate B Elevator", {
 	initial_state = 1,
 	debug_use = 1,
 	warhead_lockdown = true,
+	disable_overload = true,
 } )
 
 --[[-------------------------------------------------------------------------
@@ -1708,7 +1759,7 @@ end )
 hook.Add( "EntityKeyValue", "Site19EntityKeyValue", function( ent, key, value )
 	if CLIENT then return end
 
-	if CVAR.doorunblocker:GetBool() then
+	if CVAR.slc_enable_door_unblocker:GetBool() then
 		if !IsValid( LUA_ENT ) then
 			LUA_ENT = ents.Create( "lua_run" )
 			LUA_ENT:SetName( "door_unblocker" )

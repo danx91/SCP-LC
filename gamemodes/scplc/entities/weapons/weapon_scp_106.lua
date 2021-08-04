@@ -275,7 +275,7 @@ end
 --[[-------------------------------------------------------------------------
 106 Collision
 ---------------------------------------------------------------------------]]
-if SERVER then --TODO: do shared version
+if SERVER then --TODO shared version, move to KV hook?
 	hook.Add( "ShouldCollide", "SCP106Collision", function ( ent1, ent2 )
 		if ent1:IsPlayer() and ent1:SCPClass() == CLASSES.SCP106 or ent2:IsPlayer() and ent2:SCPClass() == CLASSES.SCP106 then
 			if ent1.ignorecollide106 or ent2.ignorecollide106 then

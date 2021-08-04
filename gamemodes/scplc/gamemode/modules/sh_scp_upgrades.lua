@@ -1,5 +1,9 @@
 local upgrades = {}
 
+local generic_skill_icons = {
+	nvmod = "slc/hud/upgrades/nvmod.png",
+}
+
 --[[
 data = {
 	grid_x = 3,
@@ -20,6 +24,10 @@ function DefineUpgradeSystem( name, data )
 
 	for i, v in ipairs( data.upgrades ) do
 		ids[v.name] = i
+
+		if !v.icon and generic_skill_icons[v.name] then
+			v.icon = GetMaterial( generic_skill_icons[v.name] )
+		end
 	end
 
 	data.upgradeid = ids
@@ -53,7 +61,7 @@ function InstallUpgradeSystem( name, swep )
 		if SERVER then
 			net.Start( "SCPUpgrade" )
 				net.WriteUInt( self.UpgradeSystemRegistry.points, 8 )
-			net.Send( self.Owner )
+			net.Send( self:GetOwner() )
 		end
 	end
 
@@ -83,7 +91,7 @@ function InstallUpgradeSystem( name, swep )
 			if SERVER and changed then
 				net.Start( "SCPUpgrade" )
 					net.WriteUInt( self.UpgradeSystemRegistry.points, 8 )
-				net.Send( self.Owner )
+				net.Send( self:GetOwner() )
 			end
 		end
 	end
@@ -152,7 +160,7 @@ function InstallUpgradeSystem( name, swep )
 				if SERVER then
 					net.Start( "SCPUpgrade" )
 						net.WriteUInt( self.UpgradeSystemRegistry.points, 8 )
-					net.Send( self.Owner )
+					net.Send( self:GetOwner() )
 				end
 
 				for k, v in pairs( upgrade.mod ) do
@@ -260,7 +268,7 @@ if CLIENT then
 		local cur = wep:GetUpgradePoints()
 
 		if num > cur then
-			local bind = input.LookupBinding( "+zoom" ) --TEST: message not sent if invalid character
+			local bind = input.LookupBinding( "+zoom" )
 
 			if bind then
 				bind = string.upper( bind )
@@ -339,7 +347,7 @@ if CLIENT then
 			MATS.blur:Recompute()
 		end
 
-		surface.SetDrawColor( Color( 150, 150, 150, 100 ) )
+		surface.SetDrawColor( 150, 150, 150, 100 )
 		surface.DrawRect( w * 0.2 - 2, h * 0.05 - 2, w * 0.6 + 4, h * 0.7 + 4 )
 
 		render.SetStencilTestMask( 0xFF )
@@ -365,7 +373,7 @@ if CLIENT then
 
 		render.SetStencilEnable( false )
 
-		surface.SetDrawColor( Color( 0, 0, 0, 175 ) )
+		surface.SetDrawColor( 0, 0, 0, 175 )
 		surface.DrawRect( w * 0.2, h * 0.05, w * 0.6, h * 0.7 )
 
 		draw.Text{
@@ -386,7 +394,7 @@ if CLIENT then
 			yalign = TEXT_ALIGN_CENTER,
 		}
 
-		surface.SetDrawColor( Color( 150, 150, 150, 100 ) )
+		surface.SetDrawColor( 150, 150, 150, 100 )
 		surface.DrawLine( w * 0.225, h * 0.1, w * 0.775, h * 0.1 )
 
 		local drawx = w * 0.2
@@ -394,7 +402,7 @@ if CLIENT then
 		local draww = w * 0.6
 		local drawh = h * 0.65
 
-		surface.SetDrawColor( Color( 255, 50, 50, 100 ) )
+		surface.SetDrawColor( 255, 50, 50, 100 )
 		--surface.DrawOutlinedRect( drawx, drawy, draww, drawh )
 
 		local gridxs = draww / ( upg.grid_x + 1 )
@@ -417,10 +425,10 @@ if CLIENT then
 			local sx = xpos - halfico
 			local sy = ypos - halfico
 
-			surface.SetDrawColor( Color( 150, 150, 150, 255 ) )
+			surface.SetDrawColor( 150, 150, 150, 255 )
 			surface.DrawOutlinedRect( sx - 1, sy - 1, icosize + 2, icosize + 2 )
 
-			surface.SetDrawColor( Color( 0, 0, 0, 200 ) )
+			surface.SetDrawColor( 0, 0, 0, 200 )
 			surface.DrawRect( sx, sy, icosize, icosize )
 
 			//render.PushFilterMin( TEXFILTER.LINEAR )
@@ -434,7 +442,10 @@ if CLIENT then
 			end
 
 			if !wep:HasUpgrade( v.name ) then
-				surface.SetDrawColor( Color( 120, 120, 120, 20 ) )
+				surface.SetDrawColor( 0, 0, 0, 220 )
+				surface.DrawRect( sx, sy, icosize, icosize )
+
+				surface.SetDrawColor( 150, 150, 150, 45 )
 				surface.SetMaterial( MATS.nown )
 				surface.DrawTexturedRect( sx, sy, icosize, icosize )
 
@@ -452,7 +463,7 @@ if CLIENT then
 			end
 
 			if !wep:UpgradeUnlocked( v.name ) then
-				surface.SetDrawColor( Color( 255, 255, 255, 130 ) )
+				surface.SetDrawColor( 255, 255, 255, 175 )
 				surface.SetMaterial( MATS.locked )
 				surface.DrawTexturedRect( sx + halfico * 0.5, sy + halfico * 0.5, halfico, halfico )
 			end
@@ -465,7 +476,7 @@ if CLIENT then
 			for j = 1, rnum do
 				local second = upg.upgrades[upg.upgradeid[v.req[j]]]
 
-				surface.SetDrawColor( Color( 150, 150, 150, 255 ) )
+				surface.SetDrawColor( 150, 150, 150, 255 )
 
 				if v.reqany and v.pos[1] != second.pos[1] then
 					if v.pos[1] > second.pos[1] then
@@ -479,7 +490,7 @@ if CLIENT then
 			end
 
 			if rnum > 1 and !v.reqany then
-				surface.SetDrawColor( Color( 150, 150, 150, 255 ) )
+				surface.SetDrawColor( 150, 150, 150, 255 )
 				draw.NoTexture()
 				surface.DrawFilledCircle( xpos, sy - 1, 5, 10 )
 			end
@@ -522,9 +533,7 @@ if CLIENT then
 			render.ClearStencil()
 			render.SetStencilEnable( true )
 
-			local color = Color( 0, 0, 0, 240 )
-
-			surface.SetDrawColor( color )
+			surface.SetDrawColor( 0, 0, 0, 240 )
 
 			surface.DrawRect( cx, cy, width, math.ceil( h * 0.04 ) )
 			local cur_y = cy + math.ceil( h * 0.04 )
@@ -552,12 +561,25 @@ if CLIENT then
 				yalign = TEXT_ALIGN_CENTER,
 			}
 
-			if clang.info then
-				local height = draw.MultilineText( cx + w * 0.01, cur_y + h * 0.01, clang.info, "SCPHUDSmall", nil, w * 0.28, 0, 0, TEXT_ALIGN_LEFT, nil, true )
+			local dsc = clang.info
+			if dsc then
+				if lang.parse_description == true or clang.parse_description == true then
+					if !wep.cached_description then
+						wep.cached_description = {}
+					end
+
+					if !wep.cached_description[info.name] then
+						wep.cached_description[info.name] = string.gsub( dsc, "%[([%w_]+)%]", info.mod )
+					end
+
+					dsc = wep.cached_description[info.name]
+				end
+
+				local height = draw.MultilineText( cx + w * 0.01, cur_y + h * 0.01, dsc, "SCPHUDSmall", nil, w * 0.28, 0, 0, TEXT_ALIGN_LEFT, nil, true )
 
 				surface.DrawRect( cx, cur_y, width, math.ceil( height + h * 0.015 ) )
 
-				draw.MultilineText( cx + w * 0.01, cur_y + h * 0.01, clang.info, "SCPHUDSmall", color_white, w * 0.28, 0, 0, TEXT_ALIGN_LEFT )
+				draw.MultilineText( cx + w * 0.01, cur_y + h * 0.01, dsc, "SCPHUDSmall", color_white, w * 0.28, 0, 0, TEXT_ALIGN_LEFT )
 
 				cur_y = cur_y + math.ceil( height + h * 0.015 )
 			end
@@ -627,7 +649,7 @@ if CLIENT then
 			render.SetStencilCompareFunction( STENCIL_NOTEQUAL )
 			render.SetStencilPassOperation( STENCIL_KEEP )
 
-			surface.SetDrawColor( Color( 150, 150, 150, 50 ) )
+			surface.SetDrawColor( 150, 150, 150, 50 )
 			surface.DrawRect( cx - 2, cy - 2, width + 4, math.ceil( cur_y - cy + 4 ) )
 
 			render.SetStencilEnable( false )

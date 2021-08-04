@@ -1,4 +1,5 @@
 SWEP.PrintName				= "BASE SCP"
+SWEP.DeepBase 				= "weapon_scp_base"
 
 SWEP.DrawCrosshair			= true
 
@@ -30,11 +31,15 @@ SWEP.ShouldDrawWorldModel 	= false
 SWEP.FreezePlayer = false
 SWEP.ShouldFreezePlayer = false
 
-SWEP.Lang = {}
-
 function SWEP:InitializeLanguage( name )
 	if CLIENT then
 		self.Lang = LANG.WEAPONS[name] or {}
+	end
+end
+
+function SWEP:InitializeHUD( name )
+	if CLIENT then
+		self.HUDObject = CreateSCPHUDObject( name, self )
 	end
 end
 
@@ -73,19 +78,11 @@ function SWEP:PlayerFreeze()
 
 	if ROUND.preparing and self.ShouldFreezePlayer and !self.FreezePlayer then
 		self.FreezePlayer = true
-		/*self.OldStats = {
-			jump = self.Owner:GetJumpPower(),
-			walk = self.Owner:GetWalkSpeed(),
-			run = self.Owner:GetRunSpeed(),
-			crouch = self.Owner:GetCrouchedWalkSpeed()
-		}*/
-		//self.Owner:SetJumpPower( 0 )
-		//self.Owner:SetCrouchedWalkSpeed( 0 )
-		//self.Owner:SetWalkSpeed( 0 )
-		//self.Owner:SetRunSpeed( 0 )
-		self.OldJumpPower = self.Owner:GetJumpPower()
-		self.Owner:SetJumpPower( 0 )
-		self.Owner:PushSpeed( 3, 3, -1, "SLC_SCPFreeze" )
+		
+		local owner = self:GetOwner()
+		self.OldJumpPower = owner:GetJumpPower()
+		owner:SetJumpPower( 0 )
+		owner:PushSpeed( 3, 3, -1, "SLC_SCPFreeze" )
 	end
 
 	if ROUND.preparing or ROUND.post then return end
@@ -93,8 +90,9 @@ function SWEP:PlayerFreeze()
 	if self.FreezePlayer then
 		self.FreezePlayer = false
 
-		self.Owner:PopSpeed( "SLC_SCPFreeze" )
-		self.Owner:SetJumpPower( self.OldJumpPower )
+		local owner = self:GetOwner()
+		owner:PopSpeed( "SLC_SCPFreeze" )
+		owner:SetJumpPower( self.OldJumpPower )
 		/*self.Owner:SetCrouchedWalkSpeed( self.OldStats.crouch )
 		self.Owner:SetJumpPower( self.OldStats.jump )
 		self.Owner:SetWalkSpeed( self.OldStats.walk )
@@ -108,7 +106,7 @@ end
 
 function SWEP:SCPDamageEvent( ent, dmg )
 	if SERVER then
-		hook.Run( "SCPDamage", self.Owner, ent, dmg )
+		hook.Run( "SCPDamage", self:GetOwner(), ent, dmg )
 	end
 end
 
@@ -124,6 +122,11 @@ function SWEP:CheckOwner()
 	return owner:CheckSignature( self.OwnerSignature )
 end
 
+function SWEP:CanTargetPlayer( ply )
+	local t = ply:SCPTeam()
+	return t != TEAM_SPEC and !SCPTeams.IsAlly( TEAM_SCP, t )
+end
+
 SWEP.PrimaryCD = 0
 function SWEP:PrimaryAttack()
 	if ROUND.preparing then return end
@@ -132,12 +135,13 @@ function SWEP:PrimaryAttack()
 	self.PrimaryCD = CurTime() + 0.5
 
 	if SERVER then
-		local spos = self.Owner:GetShootPos()
+		local owner = self:GetOwner()
+		local spos = owner:GetShootPos()
 
 		local trace = util.TraceLine{
 			start = spos,
-			endpos = spos + self.Owner:GetAimVector() * 70,
-			filter = self.Owner,
+			endpos = spos + owner:GetAimVector() * 70,
+			filter = owner,
 			mask = MASK_SHOT,
 		}
 
@@ -151,13 +155,19 @@ function SWEP:PrimaryAttack()
 end
 
 function SWEP:SecondaryAttack()
+
 end
 
 function SWEP:Reload()
+
 end
 
 function SWEP:DrawHUD()
 	if self.DrawSCPHUD and hook.Run( "SLCShouldDrawSCPHUD" ) then
+		if self.HUDObject then
+			self.HUDObject:Render()
+		end
+
 		self:DrawSCPHUD()
 	end
 end

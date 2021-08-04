@@ -23,7 +23,7 @@ Powerful function that draws translated text in chat or on screen center (will a
 @param 		[string] 		msg 		The message. Message structure is described below.
 @param 		[Player] 		ply 		This argument is only for shared usage compatibility.
 										In order to work, must be nil or local player
-@param 		[boolean] 		center 		It true, message will be drawn on the center of screen
+@param 		[boolean] 		center 		If true, message will be drawn on the center of screen
 
 @return 	[nil]			- 			-
 
@@ -65,30 +65,8 @@ function PlayerMessage( msg, ply, center )
 				rawtext = string.gsub( raw, "%.", "," )
 				continue
 			end
-
-			/*local tabinfo, key = string.match( v, "^@(.+):(.+)$" )
-			if !tabinfo then
-				key = string.match( v, "@(.+)" )
-			end
-
-			if tabinfo or key then
-				local tab = LANG
-
-				if tabinfo then
-					for subtable in string.gmatch( tabinfo, "[^%.]+" ) do
-						if !tab[subtable] then
-							break
-						end
-
-						tab = tab[subtable]
-					end
-				end
-
-				table.insert( args, tab[key] or key )
-			else
-				table.insert( args, v )
-			end*/
-			local tabinfo = string.match( v, "^@(.+)$" ) --TODO TEST
+			
+			local tabinfo = string.match( v, "^@(.+)$" )
 			if tabinfo then
 				local tab = LANG
 
@@ -295,29 +273,7 @@ function CenterMessage( msg, ply )
 					continue
 				end
 
-				/*local tabinfo, key = string.match( v, "^@(.+):(.+)$" )
-				if !tabinfo then
-					key = string.match( v, "@(.+)" )
-				end
-
-				if tabinfo or key then
-					local tab = LANG
-
-					if tabinfo then
-						for subtable in string.gmatch( tabinfo, "[^%.]+" ) do
-							if !tab[subtable] then
-								break
-							end
-
-							tab = tab[subtable]
-						end
-					end
-
-					table.insert( args, tab[key] or key )
-				else
-					table.insert( args, v )
-				end*/
-				local tabinfo = string.match( v, "^@(.+)$" ) --TODO TEST
+				local tabinfo = string.match( v, "^@(.+)$" )
 				if tabinfo then
 					local tab = LANG
 
@@ -440,6 +396,27 @@ Wheel menu
 local wheel_visible = false
 local wheel_options = {}
 local wheel_cb, wheel_sc
+
+--[[-------------------------------------------------------------------------
+OpenWheelMenu( options, cb, sc )
+
+Wheel menu. Used by SCP 049
+
+@param		[table]			options
+{
+	@param		[table]			
+	{
+		@param		[string]		1					Path to material
+		@param		[string]		2					Display name of option
+		@param		[any]			3					Any value that is passed to callback
+	}
+	...
+}
+@param		[function]		cb					Optional: Called when option is selected - value from selected option is passed
+@param		[function]		sc					Optional: Called each frame - return true to close wheel menu
+
+@return		[nil]			-					-
+-------------------------------------------------------------------------]]--
 function OpenWheelMenu( options, cb, sc )
 	if wheel_visible then return end
 
@@ -454,6 +431,15 @@ function OpenWheelMenu( options, cb, sc )
 	gui.EnableScreenClicker( true )
 end
 
+
+--[[-------------------------------------------------------------------------
+CloseWheelMenu()
+
+Close wheel menu. Will trigger callback.
+
+
+@return		[nil]			-					-
+-------------------------------------------------------------------------]]--
 function CloseWheelMenu()
 	if !wheel_visible then return end
 
@@ -502,20 +488,20 @@ hook.Add( "HUDPaint", "SLCWheelMenu", function()
 	local segang = ang - 4
 	for i = 1, seg do
 		draw.NoTexture()
-		surface.SetDrawColor( Color( 200, 200, 200 ) )
+		surface.SetDrawColor( 200, 200, 200 )
 		surface.DrawRing( w * 0.5, h * 0.5, w * 0.099, w * 0.057, segang + 2, 40, 1, 1 + ang * (i - 1) )
 
 		local selected =ca > ang * (i - 1) and ca <= ang * i
 
 		if selected then
-			surface.SetDrawColor( Color( 100, 100, 100 ) )
+			surface.SetDrawColor( 100, 100, 100 )
 		else
-			surface.SetDrawColor( Color( 50, 50, 50 ) )
+			surface.SetDrawColor( 50, 50, 50 )
 		end
 
 		surface.DrawRing( w * 0.5, h * 0.5, w * 0.1, w * 0.055, segang, 40, 2, 2 + ang * (i - 1) )
 
-		surface.SetDrawColor( Color( 255, 255, 255 ) )
+		surface.SetDrawColor( 255, 255, 255 )
 		surface.SetMaterial( GetMaterial( wheel_options[i][1] ) )
 
 		local dist = w * 0.1275
@@ -529,7 +515,7 @@ hook.Add( "HUDPaint", "SLCWheelMenu", function()
 			draw.LimitedText{
 				text = wheel_options[i][2],
 				pos = { w * 0.5, h * 0.5 },
-				color = Color( 255, 255, 255, 100 ),
+				color = Color( 255, 255, 255, 255 ),
 				font = "SCPHUDSmall",
 				xalign = TEXT_ALIGN_CENTER,
 				yalign = TEXT_ALIGN_CENTER,
@@ -543,24 +529,257 @@ ProgressBar
 ---------------------------------------------------------------------------]]
 local PROGRESS_ENABLED = false
 local PROGRESS_VALUE = 0
-local PROGRESS_MAX_VALUE = 0
+local PROGRESS_MAX_VALUE = 1
+local PROGRESS_TEXT = ""
+local PROGRESS_ID = ""
+local PROGRESS_TICK_BASED = false
+local PROGRESS_TICK = false
 
-function SetProgressBarEnabled( enable, maxvalue )
+local COLOR_PROGRESS_BORDER = Color( 225, 225, 225, 255 )
+local COLOR_PROGRESS_FILL = Color( 75, 75, 90, 255 )
 
+--[[-------------------------------------------------------------------------
+ProgressBar( enable, maxvalue, text, tick, id )
+
+Enables or disables progress bar. Example of tick based bar can be found in Turret.
+
+@param		[boolean]		enable				True to enable, false to disable
+@param		[number]		maxvalue			Maximum value of progress bar
+@param		[string]		text				Optional: Text displayed below bar
+@param		[boolean]		tick				Optional [default = false]: If true, ProgressBarTick() must be called each tick or bar will be closed
+@param		[any]			id					Optional: If set, SetProgressBarValue and ProgressBarTick will only work if ID provided to them is the same as here
+
+@return		[nil]			-					-
+-------------------------------------------------------------------------]]--
+function ProgressBar( enable, maxvalue, text, tick, id )
+	if enable then
+		PROGRESS_ENABLED = true
+		PROGRESS_MAX_VALUE = tonumber( maxvalue ) or 100
+		PROGRESS_VALUE = 0
+		PROGRESS_ID = id
+		PROGRESS_TEXT = text
+		PROGRESS_TICK_BASED = !!tick
+		PROGRESS_TICK = true
+	else
+		PROGRESS_ENABLED = false
+		PROGRESS_MAX_VALUE = 1
+		PROGRESS_VALUE = 0
+		PROGRESS_TEXT = nil
+		PROGRESS_ID = nil
+		PROGRESS_TICK_BASED = false
+		PROGRESS_TICK = false
+	end
 end
 
-function SetProgressBarValue( value )
+--[[-------------------------------------------------------------------------
+SetProgressBarValue( value, id )
 
+Sets the current value of progress bar
+
+@param		[number]		value				Value
+@param		[any]			id					Optional: If specified, this function will only work if bar has the same ID
+
+@return		[nil]			-					-
+-------------------------------------------------------------------------]]--
+function SetProgressBarValue( value, id )
+	if !id or id == PROGRESS_ID then
+		PROGRESS_VALUE = tonumber( value ) or 0
+	end
 end
+
+--[[-------------------------------------------------------------------------
+SetProgressBarColor( border, fill, blend )
+
+Sets progress bar color
+
+@param		[Color]			border				Color of border
+@param		[Color]			fill				Fill color, can also be function - values passed: fraction, segment, all_segments, current_value, max_value - return color
+@param		[boolean]		blend				Optional: If set, fill alpha will be affected by progress bar status. IMPORTANT: fill must be color, not function
+
+@return		[nil]			-					-
+-------------------------------------------------------------------------]]--
+function SetProgressBarColor( border, fill, blend )
+	if border then
+		COLOR_PROGRESS_BORDER = border
+	end
+
+	if fill then
+		if blend and type( fill ) != "function" then
+			COLOR_PROGRESS_FILL = function( f, i, seg )
+				if i == seg then
+					return Color( fill.r, fill.g, fill.b, ( 1 - i + f / 0.05) * 255 )
+				else
+					return fill
+				end
+			end
+		else
+			COLOR_PROGRESS_FILL = fill
+		end
+	end
+end
+
+--[[-------------------------------------------------------------------------
+ProgressBarTick( id )
+
+Keeps open tick based progress bar
+
+@param		[type]			id					Optional, If specified, this function will only work if bar has the same ID
+
+@return		[boolean]		-					Is progress bar enabled
+-------------------------------------------------------------------------]]--
+function ProgressBarTick( id )
+	if PROGRESS_TICK_BASED and ( !id or id == PROGRESS_ID ) then
+		PROGRESS_TICK = true
+	end
+
+	return PROGRESS_ENABLED
+end
+
+local tbpb_enable = false
+local tbpb_start = 0
+local tbpb_end = 0
+
+--[[-------------------------------------------------------------------------
+TimeBasedProgressBar( start_time, end_time, text )
+
+Starts progress bar based on start and end time
+
+@param		[type]			start_time			CurTime based start time
+@param		[type]			end_time			CurTime based end time
+@param		[type]			text				Optional: Text displayed below bar
+
+@return		[nil]			-					-
+-------------------------------------------------------------------------]]--
+function TimeBasedProgressBar( start_time, end_time, text )
+	ProgressBar( true, 1, text, false, "tbpb" )
+
+	tbpb_enable = true
+	tbpb_start = start_time
+	tbpb_end = end_time
+end
+
+hook.Add( "Tick", "SLCProgressBar", function()
+	if tbpb_enable then
+		local ct = CurTime()
+
+		SetProgressBarValue( ( ct - tbpb_start ) / ( tbpb_end - tbpb_start ), "tbpb" )
+
+		if ct >= tbpb_end then
+			ProgressBar( false )
+		end
+	end
+
+	if PROGRESS_ENABLED and PROGRESS_TICK_BASED then
+		if PROGRESS_TICK then
+			PROGRESS_TICK = false
+		else
+			ProgressBar( false )
+		end
+	end
+end )
 
 hook.Add( "DrawOverlay", "SLCProgressBar", function()
-	
+	if PROGRESS_ENABLED then
+		local w, h = ScrW(), ScrH()
+
+		local ratio = (w * 0.075) / (h * 0.24)
+
+		local bar_w = w * 0.27
+		local bar_h = h * 0.04
+
+		local bx_start = w * 0.5 - bar_w * 0.5
+		local by_start = h * 0.7
+
+		local bar_xoffset = ratio * bar_h
+
+		local b_in = {
+			{ x = bx_start, y = by_start },
+			{ x = bx_start + bar_w, y = by_start },
+			{ x = bx_start + bar_w + bar_xoffset, y = by_start + bar_h },
+			{ x = bx_start + bar_xoffset, y = by_start + bar_h },
+		}
+
+		local b_out = {
+			{ x = bx_start - 4, y = by_start - 2 },
+			{ x = bx_start + bar_w + 2, y = by_start - 2 },
+			{ x = bx_start + bar_w + bar_xoffset + 4, y = by_start + bar_h + 2 },
+			{ x = bx_start + bar_xoffset - 2, y = by_start + bar_h + 2 },
+		}
+
+		draw.NoTexture()
+		surface.SetDrawColor( COLOR_PROGRESS_BORDER )
+		surface.DrawDifference( b_in, b_out )
+
+		local dist = w * 0.004
+
+		local fill_h = bar_h - dist * 2
+		local fill_w = ( bar_w - dist ) / 20 - dist
+
+		local fx_start = bx_start + dist * ratio + dist
+		local fy_start = by_start + dist
+
+		local fill_xoffset = ratio * fill_h
+
+		local isfunc = type( COLOR_PROGRESS_FILL ) == "function"
+		if !isfunc then
+			surface.SetDrawColor( COLOR_PROGRESS_FILL )
+		end
+
+		local f = PROGRESS_VALUE / PROGRESS_MAX_VALUE
+		local seg = math.Clamp( math.ceil( f * 20 ), 0, 20 )
+
+		if seg > 0 then
+			for i = 1, seg do
+				if isfunc then
+					local color = COLOR_PROGRESS_FILL( f, i, seg, PROGRESS_VALUE, PROGRESS_MAX_VALUE )
+					if color then
+						surface.SetDrawColor( color )
+					end
+				end
+
+				surface.DrawPoly{
+					{ x = fx_start, y = fy_start },
+					{ x = fx_start + fill_w, y = fy_start },
+					{ x = fx_start + fill_w + fill_xoffset, y = fy_start + fill_h },
+					{ x = fx_start + fill_xoffset, y = fy_start + fill_h },
+				}
+
+				fx_start = fx_start + fill_w + dist
+			end
+		end
+
+		if PROGRESS_TEXT and PROGRESS_TEXT != "" then
+			draw.Text{
+				text = PROGRESS_TEXT,
+				pos = { w * 0.5, by_start + bar_h + h * 0.01 },
+				font = "SCPHUDBig",
+				color = Color( 225, 225, 225, 255 ),
+				xalign = TEXT_ALIGN_CENTER,
+				yalign = TEXT_ALIGN_TOP,
+			}
+		end
+	end
 end )
+
 --[[-------------------------------------------------------------------------
 Indicator
 ---------------------------------------------------------------------------]]
 INDICATOR_REGISTRY = INDICATOR_REGISTRY or {}
 
+
+--[[-------------------------------------------------------------------------
+CreateIndicator( model, nodraw, rendergroup, rendermode, shouldremove )
+
+Indicator is a clinetside model used internally by Turret and SCP 023
+
+@param		[string]		model				Path to model
+@param		[boolean]		nodraw				SetNoDraw on entity
+@param		[number]		rendergroup			Render group - RENDERGROUP enum
+@param		[number]		rendermode			Render group - RENDERMODE enum
+@param		[function]		shouldremove		Function called each frame - return true to remove indicator
+
+@return		[CSEnt]			-					Clientside model of indicator
+-------------------------------------------------------------------------]]--
 function CreateIndicator( model, nodraw, rendergroup, rendermode, shouldremove )
 	local mdl = ClientsideModel( model, rendergroup )
 
@@ -666,11 +885,17 @@ This function is meant to be accesed by 'PlaySound' net message.
 @param 		[string] 		text 		Popup content, obeys line ends and tabs
 @param 		[boolean] 		keep 		Keep popup always on top, if not clicking outside of popup will close it
 @param 		[function] 		callback 	Called when specified event happens. Number is passed as only param:
-										-1: when popup is opened,0: when exited by clicking outside, other: pressed button id
+										-1: when popup is opened, 0: when exited by clicking outside, other: pressed button id
 @param 		[vararg] 		- 			Names of buttons
 
 @return 	[nil] 			- 			-
 ---------------------------------------------------------------------------*/
+function SLCPopupIfEmpty( ... )
+	if !IsValid( SLC_POPUP ) then
+		SLCPopup( ... )
+	end
+end
+
 function SLCPopup( name, text, keep, callback, ... )
 	if IsValid( SLC_POPUP ) then
 		table.insert( SLC_POPUP_QUEUE, { name, text, keep, callback, {...} } )
@@ -721,16 +946,16 @@ function SLCPopup( name, text, keep, callback, ... )
 			blur:Recompute()
 		end
 
-		surface.SetDrawColor( Color( 255, 255, 255, 255 ) )
+		surface.SetDrawColor( 255, 255, 255, 255 )
 		surface.SetMaterial( blur )
 
 		local x, y = self:GetPos()
 		surface.DrawTexturedRect( -x, -y, w, h )
 
-		surface.SetDrawColor( Color( 10, 10, 10, 225 ) )
+		surface.SetDrawColor( 10, 10, 10, 225 )
 		surface.DrawRect( 0, 0, pw, ph )
 
-		surface.SetDrawColor( Color( 0, 0, 0, 150 ) )
+		surface.SetDrawColor( 0, 0, 0, 150 )
 		surface.DrawRect( 0, 0, pw, h * 0.03 )
 
 		draw.Text{
@@ -749,7 +974,7 @@ function SLCPopup( name, text, keep, callback, ... )
 	cont:Dock( BOTTOM )
 	cont:SetTall( h * 0.05 )
 	cont.Paint = function( self, pw, ph )
-		surface.SetDrawColor( Color( 150, 150, 150, 255 ) )
+		surface.SetDrawColor( 150, 150, 150, 255 )
 		surface.DrawLine( 10, 0, pw - 20, 0 )
 	end
 
@@ -775,7 +1000,7 @@ function SLCPopup( name, text, keep, callback, ... )
 		btn:SetWide( width )
 		btn:SetText( "" )
 		btn.Paint = function( self, pw, ph )
-			surface.SetDrawColor( Color( 255, 255, 255, 255 ) )
+			surface.SetDrawColor( 255, 255, 255, 255 )
 			surface.DrawOutlinedRect( 0, 0, pw, ph )
 
 			draw.Text{

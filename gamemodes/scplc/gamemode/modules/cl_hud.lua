@@ -10,6 +10,13 @@ local hudscales = {
 
 local hudscalecvar = CreateClientConVar( "cvar_slc_hud_scale", 1, true )
 
+cvars.AddChangeCallback( "cvar_slc_hud_scale", function( name, old, new )
+	print( "HUD scale changed! Rebuilding fonts..." )
+
+	RebuildScaledFonts( new )
+	SLC_HUD_END_X = ScrW() * 0.315 * new + ScrH() * 0.01 + 3
+end, "HUDChangeCallback" )
+
 concommand.Add( "slc_hud_scale", function( ply, cmd, args )
 	local size = args[1]
 
@@ -41,6 +48,7 @@ local hide = {
 	CHudSecondaryAmmo = true,
 	CHudWeaponSelection = true,
 	CHudSuitPower = true,
+	CHudDamageIndicator = true, --TODO damage indicator (and maybe hit markers?)
 }
 
 hook.Add( "HUDShouldDraw", "HideDefaultHUD", function( name )
@@ -144,16 +152,34 @@ HUDSpectatorInfo = false
 
 local recomputed = false
 local last_width = ScrW()
+local scaled_fonts_built = false
+
+SLC_HUD_END_X = 0
 
 function GM:HUDPaint()
 	next_frame = true
 	local w, h = ScrW(), ScrH()
+	local scale = hudscalecvar:GetFloat()
+
+	if !scaled_fonts_built then
+		scaled_fonts_built = true
+		print( "Building HUD fonts..." )
+
+		RebuildScaledFonts( scale )
+		SLC_HUD_END_X = w * 0.315 * scale + h * 0.01 + 3
+	end
 
 	if w != last_width then
-		print( "Screen resolution changed! Rebuilding fonts..." )
 		last_width = w
+		print( "Screen resolution changed! Rebuilding fonts..." )
+
 		RebuildFonts()
+		RebuildScaledFonts( scale )
+
+		hook.Run( "SLCResolutionChanged", w, h )
 	end
+
+	if hook.Run( "HUDShouldDraw", "scplc.hud" ) == false then return end
 
 	--[[-------------------------------------------------------------------------
 	Markers
@@ -171,7 +197,7 @@ function GM:HUDPaint()
 				{ x = scr.x - 5, y = scr.y },
 			} )
 
-			local tw, th = draw.Text( {
+			local _, th = draw.Text( {
 				text = v.data.name,
 				font = "SCPHUDSmall",
 				color = COLOR.text_red,
@@ -181,7 +207,7 @@ function GM:HUDPaint()
 			} )
 
 			draw.Text( {
-				text = math.Round( v.data.pos:Distance( LocalPlayer():GetPos() ) * 0.019 ) .. "m",
+				text = math.Round( v.data.pos:Distance( LocalPlayer():GetPos() ) * 0.019 ) .. "m", --1m = 52.49 units --REVIEW 0.0254 (1m = 39.37 units)?
 				font = "SCPHUDSmall",
 				color = COLOR.text_red,
 				pos = { scr.x, scr.y + 10 + th },
@@ -325,20 +351,9 @@ function GM:HUDPaint()
 	local sw = w
 	local addy = 0
 
-	local bigFontOverride, mediumFontOverride, smallFontOverride, numbersFontOverride
-
 	if !isspec then
-		local scale = hudscalecvar:GetFloat()
-
-		if scale <= 0.9 then
-			bigFontOverride = "SCPHUDMedium"
-			mediumFontOverride = "SCPHUDVSmall"
-			smallFontOverride = "SCPHUDVSmall"
-			numbersFontOverride = "SCPNumbersSmall"
-		end
-
-		w = w * 0.95 * scale
-		h = h * 0.95 * scale
+		w = w * 0.9 * scale
+		h = h * 0.9 * scale
 
 		addy = sh - h
 	end
@@ -435,7 +450,7 @@ function GM:HUDPaint()
 			}
 
 			if HUDSpectatorInfo then
-				if ULib and ULib.ucl.query( ply, "slc spectateinfo" ) then
+				if SLCAuth.HasAccess( ply, "slc spectateinfo" ) then
 					surface.SetDrawColor( Color( 150, 150, 150, 255 ) )
 					surface.DrawRect( w * 0.35 - 1, h * 0.25 - 1, w * 0.3 + 2, h * 0.5 + 2 )
 
@@ -485,7 +500,7 @@ function GM:HUDPaint()
 		text = string.sub( ply:Nick(), 1, 24 ),
 		pos = { start + w * 0.0875, h * 0.773 + addy },
 		color = COLOR.text_white,
-		font = bigFontOverride or "SCPHUDBig",
+		font = "SCPScaledHUDBig",
 		xalign = TEXT_ALIGN_CENTER,
 		yalign = TEXT_ALIGN_CENTER,
 		max_width = w * 0.175 - start
@@ -498,7 +513,7 @@ function GM:HUDPaint()
 		text = time,
 		pos = { start + w * 0.225, h * 0.773 + addy },
 		color = COLOR.text_white,
-		font =  numbersFontOverride or "SCPNumbersBig",
+		font = "SCPScaledNumbersBig",
 		xalign = TEXT_ALIGN_CENTER,
 		yalign = TEXT_ALIGN_CENTER,
 	}
@@ -688,7 +703,7 @@ function GM:HUDPaint()
 			text = battery.."%",
 			pos = { start + w * 0.01, h * 0.945 + addy },
 			color = COLOR.text_white,
-			font = "SCPNumbersSmall",
+			font = "SCPScaledNumbersSmall",
 			xalign = TEXT_ALIGN_LEFT,
 			yalign = TEXT_ALIGN_BOTTOM,
 		}
@@ -712,7 +727,7 @@ function GM:HUDPaint()
 					text = string.sub( ply:GetAmmoCount( wep:GetPrimaryAmmoType() ), 1, 23 ),
 					pos = { start + w * 0.1, h * 0.97 + addy },
 					color = COLOR.text_white,
-					font = "SCPNumbersBig",
+					font = "SCPScaledNumbersBig",
 					xalign = TEXT_ALIGN_LEFT,
 					yalign = TEXT_ALIGN_CENTER,
 				}
@@ -726,7 +741,7 @@ function GM:HUDPaint()
 				text = string.sub( wep.GetCustomClip and wep:GetCustomClip() or wep:Clip1(), 1, 23 ),
 				pos = { start + w * 0.235, h * 0.97 + addy },
 				color = COLOR.text_white,
-				font = "SCPNumbersBig",
+				font = "SCPScaledNumbersBig",
 				xalign = TEXT_ALIGN_LEFT,
 				yalign = TEXT_ALIGN_CENTER,
 			}
@@ -791,7 +806,7 @@ function GM:HUDPaint()
 			text = LANG.HUD.class..":",
 			pos = { start + w * 0.02, h * 0.75 + addy },
 			color = COLOR.text_white,
-			font = "SCPHUDVSmall",
+			font = "SCPScaledHUDVSmall",
 			xalign = TEXT_ALIGN_LEFT,
 			yalign = TEXT_ALIGN_TOP,
 		}
@@ -801,7 +816,7 @@ function GM:HUDPaint()
 			text = LANG.CLASSES[class] or class,
 			pos = { start + w * 0.04, h * 0.75 + th * 0.75 + addy },
 			color = COLOR.text_white,
-			font = mediumFontOverride or "SCPHUDMedium",
+			font = "SCPScaledHUDMedium",
 			xalign = TEXT_ALIGN_LEFT,
 			yalign = TEXT_ALIGN_TOP,
 			max_width = w * 0.1125
@@ -811,7 +826,7 @@ function GM:HUDPaint()
 			text = LANG.HUD.team..":",
 			pos = { start + w * 0.1525, h * 0.75 + addy },
 			color = COLOR.text_white,
-			font = "SCPHUDVSmall",
+			font = "SCPScaledHUDVSmall",
 			xalign = TEXT_ALIGN_LEFT,
 			yalign = TEXT_ALIGN_TOP,
 		}
@@ -821,7 +836,7 @@ function GM:HUDPaint()
 			text = LANG.TEAMS[tname] or tname,
 			pos = { start + w * 0.1725, h * 0.75 + th * 0.75 + addy },
 			color = COLOR.text_white,
-			font = mediumFontOverride or "SCPHUDMedium",
+			font = "SCPScaledHUDMedium",
 			xalign = TEXT_ALIGN_LEFT,
 			yalign = TEXT_ALIGN_TOP,
 			max_width = w * 0.1025
@@ -897,7 +912,7 @@ function GM:HUDPaint()
 		surface.DrawDifference( bar:ToPoly(), bar_out:ToPoly() )
 
 		local xp = ply:SCPExp()
-		local maxxp = CVAR.levelxp:GetInt() + CVAR.levelinc:GetInt() * ply:SCPPrestige()
+		local maxxp = CVAR.slc_xp_level:GetInt() + CVAR.slc_xp_increase:GetInt() * ply:SCPPrestige()
 		if xp > 0 then
 			local s = start + xoffset + cxo + ixo + w * 0.004
 
@@ -935,7 +950,7 @@ function GM:HUDPaint()
 			text = LANG.HUD.prestige_points..":\t"..ply:SCPPrestigePoints(),
 			pos = { start + (cxo + xoffset) * 2 + w * 0.01, h * 0.91 + addy },
 			color = COLOR.text_white,
-			font = smallFontOverride or "SCPHUDSmall",
+			font = "SCPScaledHUDSmall",
 			xalign = TEXT_ALIGN_LEFT,
 			yalign = TEXT_ALIGN_TOP,
 		}
@@ -943,7 +958,8 @@ function GM:HUDPaint()
 
 	if maxshow > 0 then
 		local text = string.format( "%i / %i  %s", shownum, maxshow, showtext or "" )
-		local tw, th = draw.TextSize( text, smallFontOverride or "SCPHUDSmall" )
+		//local tw, th = draw.TextSize( text, smallFontOverride or "SCPHUDSmall" )
+		local tw, th = draw.TextSize( text, "SCPScaledHUDSmall" )
 
 		local x, y = input.GetCursorPos()
 
@@ -960,7 +976,7 @@ function GM:HUDPaint()
 			text = text,
 			pos = { x + 4, y + 4 },
 			color = COLOR.hover_text,
-			font = smallFontOverride or "SCPHUDSmall",
+			font = "SCPScaledHUDSmall",
 			xalign = TEXT_ALIGN_LEFT,
 			yalign = TEXT_ALIGN_TOP,
 		}

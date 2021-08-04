@@ -130,21 +130,6 @@ function VEST.GetRandomVest()
 	return table.Random( VEST.rand )
 end
 
--- concommand.Add( "spawnvest", function( ply )
--- 	//VEST.Create( "com", ply:GetPos() )
-
--- 	local vest = ents.Create( "slc_vest" )
--- 	if IsValid( vest ) then
--- 		vest:Spawn()
--- 		vest:SetPos( ply:GetEyeTrace().HitPos )
--- 	end
--- end )
-
---TODO remove
-/*concommand.Add( "getspeed", function( ply )
-	print( ply:GetWalkSpeed(), ply:GetRunSpeed() )
-end )*/
-
 local GUARD_MODELS_LOOKUP
 
 timer.Simple( 0, function()
@@ -157,13 +142,6 @@ local function guard_callback( ply, vest, data )
 		return mdl
 	end
 end
-
-/*VEST.Register( "guard", { model = "models/scp/guard_sci.mdl", damage = { [DMG_BULLET] = 0.7, [DMG_FALL] = 1.3 }, mobility = 0.95, weight = 1 }, true )
-VEST.Register( "specguard", { model = "models/scp/soldier_1.mdl", damage = { [DMG_BULLET] = 0.6, [DMG_FALL] = 1.4 }, mobility = 0.93, weight = 2 } )
-VEST.Register( "heavyguard", { model = "models/scp/guard_noob.mdl", damage = { [DMG_BULLET] = 0.65, [DMG_FALL] = 1.35 }, mobility = 0.94, weight = 1.5 } )
-VEST.Register( "guard_medic", { model = "models/scp/guard_med.mdl", damage = { [DMG_BULLET] = 0.55, [DMG_FALL] = 1.4 }, mobility = 0.9, weight = 2 } )*/
-
-//VEST.Register( "temp1", { model = "models/scp/guard_left.mdl", damage = { [DMG_BULLET] = 0.5, [DMG_FALL] = 1.5 }, mobility = 0.87, weight = 3 } ) --niebieski ntf czapeczka, kamizelka, pakunki
 
 VEST.Register( "guard", { model = GUARD_MODELS, damage = { [DMG_BULLET] = 0.7, [DMG_FALL] = 1.3 }, mobility = 0.95, weight = 1, bodygroups = { vest = 1 } }, true, guard_callback )
 VEST.Register( "specguard", { model = GUARD_MODELS, damage = { [DMG_BULLET] = 0.63, [DMG_FALL] = 1.4 }, mobility = 0.93, weight = 2, bodygroups = { vest = 1 } }, true, guard_callback )

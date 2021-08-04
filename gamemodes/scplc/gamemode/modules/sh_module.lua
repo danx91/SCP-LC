@@ -7,52 +7,130 @@ GM.Website 	= ""
 --[[-------------------------------------------------------------------------
 Static values
 ---------------------------------------------------------------------------]]
-SIGNATURE = "b000702"
-VERSION = "BETA 0.7.2"
-DATE = "31/05/2021"
+SIGNATURE = "b000800"
+VERSION = "BETA 0.8.0"
+DATE = "04/08/2021"
 
 SCPS = {}
 CLASSES = {}
-MAP = {}
 
 INFO_SCREEN_DURATION = 12
 
 --[[-------------------------------------------------------------------------
+Paericles
+---------------------------------------------------------------------------]]
+game.AddParticles( "particles/slc_fire.pcf" )
+game.AddParticles( "particles/slc_blood.pcf" )
+
+PrecacheParticleSystem( "scp_457_fire" )
+PrecacheParticleSystem( "SLCBloodSplash" )
+PrecacheParticleSystem( "SLCPBSplash" )
+
+--[[-------------------------------------------------------------------------
 Convars
 ---------------------------------------------------------------------------]]
-CVAR = {
-	minplayers = CreateConVar( "slc_min_players", 2, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
-	pretime = CreateConVar( "slc_time_preparing", 60, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
-	roundtime = CreateConVar( "slc_time_round", 1500, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
-	posttime = CreateConVar( "slc_time_postround", 30, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
-	waittime = CreateConVar( "slc_time_wait", 15, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
-	blink = CreateConVar( "slc_blink_delay", 5, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
-	groups = CreateConVar( "slc_premium_groups", "", { FCVAR_ARCHIVE } ),
-	premiumxp = CreateConVar( "slc_premium_xp", 2, { FCVAR_ARCHIVE } ),
-	spawnrate = CreateConVar( "slc_support_spawnrate", "360,540", { FCVAR_ARCHIVE } ),
-	penalty = CreateConVar( "slc_scp_penalty", 4, { FCVAR_ARCHIVE } ),
-	p_penalty = CreateConVar( "slc_scp_premium_penalty", 2, { FCVAR_ARCHIVE } ),
-	maxsupport = CreateConVar( "slc_support_amount", 5, { FCVAR_ARCHIVE } ),
-	humanscale = CreateConVar( "slc_scaledamage_human", 1, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
-	scpscale = CreateConVar( "slc_scaledamage_scp", 1, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
-	explodetime = CreateConVar( "slc_time_explode", 30, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
-	levelxp = CreateConVar( "slc_xp_level", 10000, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
-	levelinc = CreateConVar( "slc_xp_increase", 1000, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
-	escapexp = CreateConVar( "slc_xp_escape", "250,2000", { FCVAR_ARCHIVE } ),
-	escortpoints = CreateConVar( "slc_points_escort", 4, { FCVAR_ARCHIVE } ),
-	pointsxp = CreateConVar( "slc_points_xp", 50, { FCVAR_ARCHIVE } ),
-	roundxp = CreateConVar( "slc_xp_round", "100,200,300", { FCVAR_ARCHIVE } ),
-	winxp = CreateConVar( "slc_xp_win", "1500,1000", { FCVAR_ARCHIVE } ),
-	scp914kill = CreateConVar( "slc_scp914_kill", 0, { FCVAR_ARCHIVE } ),
-	doorunblocker = CreateConVar( "slc_enable_door_unblocker", 1, { FCVAR_ARCHIVE } ),
-	spectatescp = CreateConVar( "slc_allow_scp_spectate", 0, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
-	omega_time = CreateConVar( "slc_time_omega", 150, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
-	omega_shelter_xp = CreateConVar( "slc_xp_omega_shelter", 500, { FCVAR_ARCHIVE } ),
-	alpha_time = CreateConVar( "slc_time_alpha", 150, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
-	alpha_escape_xp = CreateConVar( "slc_xp_alpha_escape", 500, { FCVAR_ARCHIVE } ),
-	afk_mode = CreateConVar( "slc_afk_mode", 1, { FCVAR_NOTIFY, FCVAR_ARCHIVE }, "0 - don't do anything, 1 - kick if server is full, >= 2 - kick after x seconds" ),
-	afk_time = CreateConVar( "slc_afk_time", 120, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
-}
+
+local function cvar_checker( num )
+	local pattern = "^%d+"
+
+	for i = 2, num do
+		pattern = pattern..",%d+"
+	end
+
+	pattern = pattern.."$"
+
+	return function( data )
+		return string.match( data, pattern )
+	end
+end
+
+//ROUND
+SLCCVar( "slc_min_players", "round", 2, { FCVAR_NOTIFY, FCVAR_ARCHIVE }, nil, 1, nil, tonumber )
+SLCCVar( "slc_time_wait", { "round", "time" }, 15, { FCVAR_NOTIFY, FCVAR_ARCHIVE }, nil, 1, nil, tonumber )
+SLCCVar( "slc_time_preparing", { "round", "time" }, 60, { FCVAR_NOTIFY, FCVAR_ARCHIVE }, nil, 1, nil, tonumber )
+SLCCVar( "slc_time_round", { "round", "time" }, 1500, { FCVAR_NOTIFY, FCVAR_ARCHIVE }, nil, 1, nil, tonumber )
+SLCCVar( "slc_time_postround", { "round", "time" }, 30, { FCVAR_NOTIFY, FCVAR_ARCHIVE }, nil, 1, nil, tonumber )
+
+//GENERAL
+//SLCCVar( "slc_lcz_gas" )
+SLCCVar( "slc_time_explode", { "general", "time" }, 30, { FCVAR_NOTIFY, FCVAR_ARCHIVE }, nil, 1, nil, tonumber )
+SLCCVar( "slc_scp_penalty", { "general", "scp" }, 4, { FCVAR_ARCHIVE }, nil, 0, nil, tonumber )
+SLCCVar( "slc_blink_delay", "general", 5, { FCVAR_NOTIFY, FCVAR_ARCHIVE }, nil, 1, nil, tonumber )
+SLCCVar( "slc_scp914_kill", { "general", "scp" }, 0, { FCVAR_ARCHIVE }, nil, nil, nil, tonumber )
+SLCCVar( "slc_enable_door_unblocker", "general", 1, { FCVAR_ARCHIVE }, nil, nil, nil, tonumber )
+SLCCVar( "slc_allow_scp_spectate", "general", 0, { FCVAR_NOTIFY, FCVAR_ARCHIVE }, nil, nil, nil, tonumber )
+
+//PREMIUM
+SLCCVar( "slc_premium_groups", "premium", "", { FCVAR_ARCHIVE } )
+SLCCVar( "slc_premium_xp", { "premium", "xp" }, 2, { FCVAR_ARCHIVE }, nil, 0, nil, tonumber )
+SLCCVar( "slc_scp_premium_penalty", { "premium", "general", "scp" }, 2, { FCVAR_ARCHIVE }, nil, 0, nil, tonumber )
+
+//SUPPORT
+SLCCVar( "slc_support_amount", "support", 5, { FCVAR_ARCHIVE }, nil, 0, nil, tonumber )
+SLCCVar( "slc_support_spawnrate", { "support", "time" }, "360,540", { FCVAR_ARCHIVE }, nil, nil, nil, cvar_checker( 2 ) )
+
+//DMG
+//SLCCVar( "slc_scaledamage_human", "damage", 1, { FCVAR_NOTIFY, FCVAR_ARCHIVE } )
+//SLCCVar( "slc_scaledamage_scp", "damage", 1, { FCVAR_NOTIFY, FCVAR_ARCHIVE } )
+
+//XP
+SLCCVar( "slc_xp_level", "xp", 10000, { FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED }, nil, 1, nil, tonumber )
+SLCCVar( "slc_xp_increase", "xp", 1000, { FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED }, nil, 0, nil, tonumber )
+SLCCVar( "slc_points_xp", "xp", 50, { FCVAR_ARCHIVE }, nil, 0, nil, tonumber )
+SLCCVar( "slc_xp_escape", "xp", "250,2000", { FCVAR_ARCHIVE }, nil, nil, nil, cvar_checker( 2 ) )
+SLCCVar( "slc_xp_round", "xp", "100,200,300", { FCVAR_ARCHIVE }, nil, nil, nil, cvar_checker( 3 ) )
+SLCCVar( "slc_xp_win", "xp", "1500,1000", { FCVAR_ARCHIVE }, nil, nil, nil, cvar_checker( 2 ) )
+SLCCVar( "slc_points_escort", "xp", 4, { FCVAR_ARCHIVE }, nil, 0, nil, tonumber )
+
+//WARHEADS
+SLCCVar( "slc_time_alpha", { "warheads", "time" }, 150, { FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED }, nil, 1, nil, tonumber )
+SLCCVar( "slc_xp_alpha_escape", { "warheads", "xp" }, 500, { FCVAR_ARCHIVE }, nil, 0, nil, tonumber )
+SLCCVar( "slc_time_omega", { "warheads", "time" }, 150, { FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED }, nil, 1, nil, tonumber )
+SLCCVar( "slc_xp_omega_shelter", { "warheads", "xp" }, 500, { FCVAR_ARCHIVE }, nil, 0, nil, tonumber )
+
+//AFK
+SLCCVar( "slc_afk_mode", "afk", 1, { FCVAR_NOTIFY, FCVAR_ARCHIVE }, "0 - don't do anything, 1 - kick if server is full, >= 2 - kick after x seconds", 0, nil, tonumber )
+SLCCVar( "slc_afk_time", { "afk", "time" }, 120, { FCVAR_NOTIFY, FCVAR_ARCHIVE }, nil, 0, nil, tonumber )
+
+//SCP
+SLCCVar( "slc_overload_time", { "scp", "time" }, 5, { FCVAR_NOTIFY, FCVAR_ARCHIVE }, nil, 1, nil, tonumber )
+SLCCVar( "slc_overload_cooldown", { "scp", "time" }, 90, { FCVAR_NOTIFY, FCVAR_ARCHIVE }, nil, 0, nil, tonumber )
+SLCCVar( "slc_overload_delay", { "scp", "time" }, 6, { FCVAR_NOTIFY, FCVAR_ARCHIVE }, nil, 0, nil, tonumber )
+SLCCVar( "slc_overload_door_cooldown", { "scp", "time" }, 150, { FCVAR_NOTIFY, FCVAR_ARCHIVE }, nil, 0, nil, tonumber )
+
+//CVAR = {
+	//minplayers = CreateConVar( "slc_min_players", 2, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
+	//pretime = CreateConVar( "slc_time_preparing", 60, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
+	//roundtime = CreateConVar( "slc_time_round", 1500, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
+	//posttime = CreateConVar( "slc_time_postround", 30, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
+	//waittime = CreateConVar( "slc_time_wait", 15, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
+	//blink = CreateConVar( "slc_blink_delay", 5, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
+	//groups = CreateConVar( "slc_premium_groups", "", { FCVAR_ARCHIVE } ),
+	//premiumxp = CreateConVar( "slc_premium_xp", 2, { FCVAR_ARCHIVE } ),
+	//spawnrate = CreateConVar( "slc_support_spawnrate", "360,540", { FCVAR_ARCHIVE } ),
+	//penalty = CreateConVar( "slc_scp_penalty", 4, { FCVAR_ARCHIVE } ),
+	//p_penalty = CreateConVar( "slc_scp_premium_penalty", 2, { FCVAR_ARCHIVE } ),
+	//maxsupport = CreateConVar( "slc_support_amount", 5, { FCVAR_ARCHIVE } ),
+	//humanscale = CreateConVar( "slc_scaledamage_human", 1, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
+	//scpscale = CreateConVar( "slc_scaledamage_scp", 1, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
+	//explodetime = CreateConVar( "slc_time_explode", 30, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
+	//levelxp = CreateConVar( "slc_xp_level", 10000, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
+	//levelinc = CreateConVar( "slc_xp_increase", 1000, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
+	//escapexp = CreateConVar( "slc_xp_escape", "250,2000", { FCVAR_ARCHIVE } ),
+	//escortpoints = CreateConVar( "slc_points_escort", 4, { FCVAR_ARCHIVE } ),
+	//pointsxp = CreateConVar( "slc_points_xp", 50, { FCVAR_ARCHIVE } ),
+	//roundxp = CreateConVar( "slc_xp_round", "100,200,300", { FCVAR_ARCHIVE } ),
+	//winxp = CreateConVar( "slc_xp_win", "1500,1000", { FCVAR_ARCHIVE } ),
+	//scp914kill = CreateConVar( "slc_scp914_kill", 0, { FCVAR_ARCHIVE } ),
+	//doorunblocker = CreateConVar( "slc_enable_door_unblocker", 1, { FCVAR_ARCHIVE } ),
+	//spectatescp = CreateConVar( "slc_allow_scp_spectate", 0, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
+	//omega_time = CreateConVar( "slc_time_omega", 150, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
+	//omega_shelter_xp = CreateConVar( "slc_xp_omega_shelter", 500, { FCVAR_ARCHIVE } ),
+	//alpha_time = CreateConVar( "slc_time_alpha", 150, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
+	//alpha_escape_xp = CreateConVar( "slc_xp_alpha_escape", 500, { FCVAR_ARCHIVE } ),
+	//afk_mode = CreateConVar( "slc_afk_mode", 1, { FCVAR_NOTIFY, FCVAR_ARCHIVE }, "0 - don't do anything, 1 - kick if server is full, >= 2 - kick after x seconds" ),
+	//afk_time = CreateConVar( "slc_afk_time", 120, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
+//}
 
 --[[-------------------------------------------------------------------------
 Update Handler
@@ -150,7 +228,7 @@ local function getSCPBuff()
 	end
 end
 
---It's serverside function, but lets leave it here, next to ScalePlayerDamage
+--It's serverside only function, but lets leave it here, next to ScalePlayerDamage
 function GM:EntityTakeDamage( target, info )
 	local dmg_type = info:GetDamageType()
 	local dmg_orig = info:GetDamage()
@@ -161,6 +239,7 @@ function GM:EntityTakeDamage( target, info )
 
 		if target:IsPlayer() then
 			local t_trg = target:SCPTeam()
+			
 			--vest
 			local vest = target:GetVest()
 
@@ -208,7 +287,7 @@ function GM:EntityTakeDamage( target, info )
 								--info:SetDamage( 0 )
 								return true
 							else
-								--TODO
+								--TODO scp buffs
 								local buff = getSCPBuff()
 							end
 						end
@@ -328,15 +407,24 @@ end
 
 function GM:OnPlayerHitGround( ply, water, floater, speed )
 	if SERVER then
-		if speed > 300 then
-			local n = speed - 300
-			local ang = math.min( n, 750 ) * 0.03
-			ply:ViewPunch( Angle( 0, 0, ang ) )
+		local override, threshold, damage = hook.Run( "SLCFallDamage", ply, water, floater, speed )
 
-			if speed > 450 then
-				--if SERVER then
-					local dmg = calcFallDamage( ply, speed - 450 )
-					--print( dmg )
+		if override then
+			speed = override
+		end
+
+		threshold = threshold or 300
+
+		if speed > threshold then
+			if !water then
+				if speed > 300 then
+					local ang = math.min( speed - 300, 750 ) * 0.03
+					ply:ViewPunch( Angle( 0, 0, ang ) )
+				end
+
+				local dmg_t = threshold + 150
+				if damage or speed > dmg_t then
+					local dmg = damage or calcFallDamage( ply, speed - dmg_t )
 					if dmg > 0 then
 						local info = DamageInfo()
 						info:SetDamageType( DMG_FALL )
@@ -346,17 +434,13 @@ function GM:OnPlayerHitGround( ply, water, floater, speed )
 
 						ply:EmitSound( "Player.FallDamage", 100, 100, 1, CHAN_BODY )
 					end
-				--end
+				end
+			else
+				ply:EmitSound( "Physics.WaterSplash" )
 			end
 		end
 
-		--if SERVER then
-			if speed > 300 and water then
-				ply:EmitSound( "Physics.WaterSplash" )
-			end
-
-			ply:PlayStepSound( 0 )
-		--end
+		ply:PlayStepSound( 0 )
 	end
 
 	return true
