@@ -19,7 +19,7 @@ function GM:ShutDown()
 end
 
 function GM:SCPDamage( ply, ent, dmg )
-	if PREVENT_BREAK then
+	/*if PREVENT_BREAK then
 		local cache = GetRoundProperty( "prevent_break_cache" )
 
 		if !cache then
@@ -41,7 +41,7 @@ function GM:SCPDamage( ply, ent, dmg )
 		if cache[ent] then
 			return false
 		end
-	end
+	end*/
 
 	if IsValid( ply ) and IsValid( ent ) then
 		if ent:GetClass() == "func_breakable" then

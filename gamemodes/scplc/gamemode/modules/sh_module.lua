@@ -230,6 +230,30 @@ end
 
 --It's serverside only function, but lets leave it here, next to ScalePlayerDamage
 function GM:EntityTakeDamage( target, info )
+	if PREVENT_BREAK then --TEST break
+		local cache = GetRoundProperty( "prevent_break_cache" )
+
+		if !cache then
+			cache = SetRoundProperty( "prevent_break_cache", {} )
+		end
+
+		if !cache[ent] and !ent.SkipSCPDamageCheck then
+			local pos = ent:GetPos()
+			for k, v in pairs( PREVENT_BREAK ) do
+				if v == pos then
+					cache[ent] = true
+					break
+				end
+
+				ent.SkipSCPDamageCheck = true
+			end
+		end
+
+		if cache[ent] then
+			return false
+		end
+	end
+
 	local dmg_type = info:GetDamageType()
 	local dmg_orig = info:GetDamage()
 	local hp = target:Health()
