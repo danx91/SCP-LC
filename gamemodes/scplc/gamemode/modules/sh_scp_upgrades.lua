@@ -1,4 +1,4 @@
-local upgrades = {}
+SLC_SCP_UPGRADES = SLC_SCP_UPGRADES or {}
 
 local generic_skill_icons = {
 	nvmod = "slc/hud/upgrades/nvmod.png",
@@ -31,11 +31,11 @@ function DefineUpgradeSystem( name, data )
 	end
 
 	data.upgradeid = ids
-	upgrades[name] = data
+	SLC_SCP_UPGRADES[name] = data
 end
 
 function InstallUpgradeSystem( name, swep )
-	local upg = upgrades[name]
+	local upg = SLC_SCP_UPGRADES[name]
 	if !upg then return end
 
 	swep.UpgradeSystemName = name
@@ -206,7 +206,7 @@ function RestoreUpgradeSystem( swep, data )
 			swep:UpgradeSystemRestored( swep.UpgradeSystemRegistry.upgrades )
 		end
 
-		local upg = upgrades[swep.UpgradeSystemName]
+		local upg = SLC_SCP_UPGRADES[swep.UpgradeSystemName]
 		if upg then
 			for k, v in pairs( upg.upgrades ) do
 				if v.active and v.rowr and swep.OnUpgradeBought and swep.UpgradeSystemRegistry.upgrades[v.name] then
@@ -246,7 +246,7 @@ if CLIENT then
 				if wep.UpgradeSystemMounted then
 					wep.UpgradeSystemRegistry = data[2]
 
-					local upg = upgrades[wep.UpgradeSystemName]
+					local upg = SLC_SCP_UPGRADES[wep.UpgradeSystemName]
 					if upg then
 						for k, v in pairs( upg.upgrades ) do
 							if v.active and v.rowr and wep.OnUpgradeBought and wep.UpgradeSystemRegistry.upgrades[v.name] then
@@ -332,7 +332,7 @@ if CLIENT then
 		local wep = LocalPlayer():GetActiveWeapon()
 		if !IsValid( wep ) or !wep.UpgradeSystemMounted then return end
 
-		local upg = upgrades[wep.UpgradeSystemName]
+		local upg = SLC_SCP_UPGRADES[wep.UpgradeSystemName]
 		if !upg then return end
 
 		local info

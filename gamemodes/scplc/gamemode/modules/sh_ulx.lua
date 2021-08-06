@@ -5,7 +5,7 @@ end
 
 local ULX_CAT = " SCP: Lost Control"
 
-if SERVER and ULib then
+/*if SERVER then
 	/*ULib.ucl.registerAccess( "slc spectatescp", ULib.ACCESS_OPERATOR, "Allows player to bypass anti-ghosting system and let them spectate SCPs", ULX_CAT )
 	ULib.ucl.registerAccess( "slc spectateinfo", ULib.ACCESS_OPERATOR, "Allows player to details about player they are currently spectating", ULX_CAT )
 	ULib.ucl.registerAccess( "slc skipintro", ULib.ACCESS_OPERATOR, "Allows player to skip info screen at the start of the round", ULX_CAT )
@@ -15,17 +15,17 @@ if SERVER and ULib then
 		if ULib.ucl.query( ply, "slc spectatescp" ) then
 			return true
 		end
-	end )*/
+	end )
+end*/
 
-	SLCAuth.AddLibrary( "ulx", "ULX", {
-		CheckAccess = function( ply, access )
-			return ULib.ucl.query( ply, access )
-		end,
-		RegisterAccess = function( name, help )
-			ULib.ucl.registerAccess( name, ULib.ACCESS_ADMIN, help, ULX_CAT )
-		end,
-	} )
-end
+SLCAuth.AddLibrary( "ulx", "ULX", {
+	CheckAccess = function( ply, access )
+		return ULib.ucl.query( ply, access )
+	end,
+	RegisterAccess = function( name, help )
+		ULib.ucl.registerAccess( name, ULib.ACCESS_ADMIN, help, ULX_CAT )
+	end,
+} )
 
 function InitializeSCPULX()
 	local class_names = {}

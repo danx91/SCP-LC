@@ -31,9 +31,9 @@ function SWEP:Equip()
 			local rand = math.random( #diseases )
 
 			self:SetDisease( rand )
-			self.PlayerCache[sig] = { id = rand, triggered = false }
+			self.PlayerCache[sig] = rand
 		else
-			self:SetDisease( self.PlayerCache[sig].id or 0 )
+			self:SetDisease( self.PlayerCache[sig] or 0 )
 		end
 	end
 end
@@ -43,15 +43,12 @@ function SWEP:Deploy()
 		local owner = self:GetOwner()
 		local sig = owner:TimeSignature()
 
-		/*if !self.PlayerCache[sig] then
+		if !self.PlayerCache[sig] then
 			self:Equip()
-		end*/
+		end
 
-		local pc = self.PlayerCache[sig]
-		/*if !pc.triggered and !owner:GetSCP714() then
-			pc.triggered = true*/
-		if !owner:GetProperty( "slc_1025_disease" ) and !owner:GetSCP714() then --TEST use after scp500
-			local cb = callbacks[pc.id]
+		if !owner:GetProperty( "slc_1025_disease" ) and !owner:GetSCP714() then
+			local cb = callbacks[self.PlayerCache[sig]]
 			if cb then
 				cb( owner )
 			end
@@ -188,205 +185,203 @@ AddSCP1025Disease( "adhd", 15, gen_effect_cb( "adhd" ) )
 AddSCP1025Disease( "throm", 66, gen_effect_cb( "throm" ) )
 AddSCP1025Disease( "urbach", 92, gen_effect_cb( "urbach" ) )
 
-hook.Add( "SLCFullyLoaded", "SLCSCP1025Effects", function()
-	local can_target = function( ply )
-		local team = ply:SCPTeam()
+local can_target = function( ply )
+	local team = ply:SCPTeam()
 
-		if team == TEAM_SPEC or team == TEAM_SCP then
-			return false
-		end
+	if team == TEAM_SPEC or team == TEAM_SCP then
+		return false
+	end
 
-		if CLIENT then
-			return true
-		end
-
-		if ply:GetSCP714() then
-			return false
-		end
-
+	if CLIENT then
 		return true
 	end
 
-	EFFECTS.RegisterEffect( "asthma", {
-		duration = -1,
-		stacks = 0,
-		tiers = {
-			{}
-		},
-		cantarget = can_target,
-		think = function( self, ply, tier, args )
-			if SERVER then
-				if ply:GetStamina() < ply:GetMaxStamina() * 0.75 then
-					ply:EmitSound( "SLCEffects.Asthma" )
-					return math.random( 10, 30 )
-				end
+	if ply:GetSCP714() then
+		return false
+	end
+
+	return true
+end
+
+EFFECTS.RegisterEffect( "asthma", {
+	duration = -1,
+	stacks = 0,
+	tiers = {
+		{}
+	},
+	cantarget = can_target,
+	think = function( self, ply, tier, args )
+		if SERVER then
+			if ply:GetStamina() < ply:GetMaxStamina() * 0.75 then
+				ply:EmitSound( "SLCEffects.Asthma" )
+				return math.random( 10, 30 )
 			end
-		end,
-		wait = 3,
-		hide = true,
-	} )
+		end
+	end,
+	wait = 3,
+	hide = true,
+} )
 
-	AddSounds( "SLCEffects.Asthma", "scp_lc/effects/choke/cough%i.ogg", 90, 1, { 90, 110 }, CHAN_STATIC, 1, 3 )
+AddSounds( "SLCEffects.Asthma", "scp_lc/effects/choke/cough%i.ogg", 90, 1, { 90, 110 }, CHAN_STATIC, 1, 3 )
 
-	EFFECTS.RegisterEffect( "blindness", {
-		duration = -1,
-		stacks = 0,
-		tiers = {
-			{}
-		},
-		cantarget = can_target,
-		hide = true,
-	} )
+EFFECTS.RegisterEffect( "blindness", {
+	duration = -1,
+	stacks = 0,
+	tiers = {
+		{}
+	},
+	cantarget = can_target,
+	hide = true,
+} )
 
-	EFFECTS.RegisterEffect( "hemo", {
-		duration = -1,
-		stacks = 0,
-		tiers = {
-			{}
-		},
-		cantarget = can_target,
-		hide = true,
-	} )
+EFFECTS.RegisterEffect( "hemo", {
+	duration = -1,
+	stacks = 0,
+	tiers = {
+		{}
+	},
+	cantarget = can_target,
+	hide = true,
+} )
 
-	EFFECTS.RegisterEffect( "heavy_bleeding", {
-		duration = 300,
-		stacks = 0,
-		tiers = {
-			{ icon = Material( "slc/hud/effects/bleeding3.png" ) },
-		},
-		cantarget = function( ply )
-			local team = ply:SCPTeam()
-			return team != TEAM_SPEC and team != TEAM_SCP
-		end,
-		begin = function( self, ply, tier, args, refresh )
-			if refresh then
-				self.args[2] = 1
+EFFECTS.RegisterEffect( "heavy_bleeding", {
+	duration = 300,
+	stacks = 0,
+	tiers = {
+		{ icon = Material( "slc/hud/effects/bleeding3.png" ) },
+	},
+	cantarget = function( ply )
+		local team = ply:SCPTeam()
+		return team != TEAM_SPEC and team != TEAM_SCP
+	end,
+	begin = function( self, ply, tier, args, refresh )
+		if refresh then
+			self.args[2] = 1
 
-				if IsValid( args[1] ) then
-					self.args[1] = args[1]
-				end
+			if IsValid( args[1] ) then
+				self.args[1] = args[1]
 			end
-		end,
-		finish = function( self, ply, tier, args, interrupt, all )
-			if SERVER and interrupt and !all then
-				ply:AddTimer( "reopen_wound", math.random( 30, 120 ), 1, function()
-					if IsValid( ply ) and !ply:HasEffect( "heavy_bleeding" ) then
-						if math.random( 1, 100 ) <= 50 / args[2] then
-							ply:ApplyEffect( "heavy_bleeding", args[1], args[2] + 1 )
-						end
+		end
+	end,
+	finish = function( self, ply, tier, args, interrupt, all )
+		if SERVER and interrupt and !all then
+			ply:AddTimer( "reopen_wound", math.random( 30, 120 ), 1, function()
+				if IsValid( ply ) and !ply:HasEffect( "heavy_bleeding" ) then
+					if math.random( 1, 100 ) <= 50 / args[2] then
+						ply:ApplyEffect( "heavy_bleeding", args[1], args[2] + 1 )
 					end
-				end )
-			end
-		end,
-		think = function( self, ply, tier, args )
-			if SERVER then
-				if ply:SCPTeam() == TEAM_SPEC or ply:SCPTeam() == TEAM_SCP then return end
-	
-				local att = args[1]
-				local dmg = DamageInfo()
-	
-				dmg:SetDamage( 2 )
-				dmg:SetDamageType( DMG_DIRECT )
-	
-				if IsValid( att ) then
-					dmg:SetAttacker( att )
 				end
-	
-				ply:TakeDamageInfo( dmg )
-				AddRoundStat( "bleed", 2 )
-			else
-				if self.nsound and self.nsound > CurTime() then return end
-				self.nsound = CurTime() + 5
-	
-				ply:EmitSound( "SLCEffects.Bleeding" )
+			end )
+		end
+	end,
+	think = function( self, ply, tier, args )
+		if SERVER then
+			if ply:SCPTeam() == TEAM_SPEC or ply:SCPTeam() == TEAM_SCP then return end
+
+			local att = args[1]
+			local dmg = DamageInfo()
+
+			dmg:SetDamage( 2 )
+			dmg:SetDamageType( DMG_DIRECT )
+
+			if IsValid( att ) then
+				dmg:SetAttacker( att )
 			end
-		end,
-		wait = 3,
-	} )
-	EFFECTS.RegisterEffect( "oste", {
-		duration = -1,
-		stacks = 0,
-		tiers = {
-			{}
-		},
-		cantarget = can_target,
-		hide = true,
-	} )
 
-	EFFECTS.RegisterEffect( "adhd", {
-		duration = -1,
-		stacks = 0,
-		tiers = {
-			{}
-		},
-		cantarget = can_target,
-		hide = true,
-	} )
+			ply:TakeDamageInfo( dmg )
+			AddRoundStat( "bleed", 2 )
+		else
+			if self.nsound and self.nsound > CurTime() then return end
+			self.nsound = CurTime() + 5
 
-	EFFECTS.RegisterEffect( "throm", {
-		duration = -1,
-		stacks = 0,
-		tiers = {
-			{}
-		},
-		cantarget = can_target,
-		hide = true,
-	} )
-	EFFECTS.RegisterEffect( "light_bleeding", {
-		duration = 10,
-		stacks = 0,
-		tiers = {
-			{ icon = Material( "slc/hud/effects/bleeding1.png" ) },
-		},
-		cantarget = function( ply )
-			local team = ply:SCPTeam()
-			return team != TEAM_SPEC and team != TEAM_SCP
-		end,
-		begin = function( self, ply, tier, args, refresh )
-			if refresh then
-				self.args[2] = self.args[2] + 0.5
+			ply:EmitSound( "SLCEffects.Bleeding" )
+		end
+	end,
+	wait = 3,
+} )
+EFFECTS.RegisterEffect( "oste", {
+	duration = -1,
+	stacks = 0,
+	tiers = {
+		{}
+	},
+	cantarget = can_target,
+	hide = true,
+} )
 
-				if self.args[2] > 3 then
-					self.args[2] = 3
-				end
+EFFECTS.RegisterEffect( "adhd", {
+	duration = -1,
+	stacks = 0,
+	tiers = {
+		{}
+	},
+	cantarget = can_target,
+	hide = true,
+} )
 
-				if IsValid( args[1] ) then
-					self.args[1] = args[1]
-				end
+EFFECTS.RegisterEffect( "throm", {
+	duration = -1,
+	stacks = 0,
+	tiers = {
+		{}
+	},
+	cantarget = can_target,
+	hide = true,
+} )
+EFFECTS.RegisterEffect( "light_bleeding", {
+	duration = 10,
+	stacks = 0,
+	tiers = {
+		{ icon = Material( "slc/hud/effects/bleeding1.png" ) },
+	},
+	cantarget = function( ply )
+		local team = ply:SCPTeam()
+		return team != TEAM_SPEC and team != TEAM_SCP
+	end,
+	begin = function( self, ply, tier, args, refresh )
+		if refresh then
+			self.args[2] = self.args[2] + 0.5
+
+			if self.args[2] > 3 then
+				self.args[2] = 3
 			end
-		end,
-		think = function( self, ply, tier, args )
-			if SERVER then
-				if ply:SCPTeam() == TEAM_SPEC or ply:SCPTeam() == TEAM_SCP then return end
-	
-				local att = args[1]
-				local dmg = DamageInfo()
-	
-				dmg:SetDamage( args[2] )
-				dmg:SetDamageType( DMG_DIRECT )
-	
-				if IsValid( att ) then
-					dmg:SetAttacker( att )
-				end
-				
-				ply:TakeDamageInfo( dmg )
-				AddRoundStat( "bleed", args[2] )
-			else
-				ply:EmitSound( "SLCEffects.Bleeding" )
+
+			if IsValid( args[1] ) then
+				self.args[1] = args[1]
 			end
-		end,
-		wait = 2,
-	} )
-	EFFECTS.RegisterEffect( "urbach", {
-		duration = -1,
-		stacks = 0,
-		tiers = {
-			{}
-		},
-		cantarget = can_target,
-		hide = true,
-	} )
-end )
+		end
+	end,
+	think = function( self, ply, tier, args )
+		if SERVER then
+			if ply:SCPTeam() == TEAM_SPEC or ply:SCPTeam() == TEAM_SCP then return end
+
+			local att = args[1]
+			local dmg = DamageInfo()
+
+			dmg:SetDamage( args[2] )
+			dmg:SetDamageType( DMG_DIRECT )
+
+			if IsValid( att ) then
+				dmg:SetAttacker( att )
+			end
+			
+			ply:TakeDamageInfo( dmg )
+			AddRoundStat( "bleed", args[2] )
+		else
+			ply:EmitSound( "SLCEffects.Bleeding" )
+		end
+	end,
+	wait = 2,
+} )
+EFFECTS.RegisterEffect( "urbach", {
+	duration = -1,
+	stacks = 0,
+	tiers = {
+		{}
+	},
+	cantarget = can_target,
+	hide = true,
+} )
 
 hook.Add( "SLCStamina", "SLCSCP1025Stamina", function( ply, data )
 	if ply:HasEffect( "asthma" ) then

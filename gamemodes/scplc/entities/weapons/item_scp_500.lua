@@ -19,7 +19,7 @@ function SWEP:OnSelect()
 		self:Remove()
 
 		local owner = self:GetOwner()
-		if math.random( 10000 ) == 1337 then
+		if math.random( 200 ) == 69 then
 			local sig = owner:TimeSignature()
 			owner:AddTimer( "SCP500Choke", 3, 3, function( t, n )
 				if IsValid( owner ) and owner:CheckSignature( sig ) then

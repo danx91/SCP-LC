@@ -397,8 +397,7 @@ RegisterPlayerStatus( "SCPNoRagdoll", false )
 RegisterPlayerStatus( "SCPDisableOverload", false )
 //RegisterPlayerStatus( "SCPTerror", true )
 
-//RegisterPlayerStatus( "SCP714", false, nil, nil, true ) --REVIEW
-RegisterPlayerStatus( "SCP714", false )
+RegisterPlayerStatus( "SCP714", false, nil, nil, true )
 RegisterPlayerStatus( "SCP096Chase", false )
 --------------------------------------------------------------------
  /*for k, v in pairs( player.GetAll() ) do

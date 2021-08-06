@@ -54,6 +54,7 @@ lang.NRegistry = {
 	afk_end = "You are no longer AFK",
 	overload_cooldown = "Wait %i seconds to overload this door!",
 	advanced_overload = "This door seems to be stronger! Try again in %i seconds",
+	lockdown_once = "Facility lockdown can be activated only once per round!",
 }
 
 lang.NFailed = "Failed to access NRegistry with key: %s"

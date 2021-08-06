@@ -7,13 +7,13 @@ SLCAuth = {
     _NAMES = {}
 }
 
-function SLCAuth.RunHook( name, ... )
+function SLCAuth.RunHook( name, ignore, ... )
     if SLCAuth._PRIMARY_LIB then
         local lib = SLCAuth._LIBRARIES[SLCAuth._PRIMARY_LIB]
         if lib and lib[name] then
             local result = { lib[name]( ... ) }
 
-            if result[1] != nil then
+            if result[1] != nil and result[1] != ignore then
                 return unpack( result )
             end
         end
@@ -23,7 +23,7 @@ function SLCAuth.RunHook( name, ... )
         if v[name] then
             local result = { v[name]( ... ) }
 
-            if result[1] != nil then
+            if result[1] != nil and result[1] != ignore then
                 return unpack( result )
             end
         end
@@ -48,7 +48,7 @@ function SLCAuth.HasAccess( ply, access )
         return true
     end
 
-    local result = SLCAuth.RunHook( "CheckAccess", ply, access )
+    local result = SLCAuth.RunHook( "CheckAccess", false, ply, access )
     if result != nil then
         return result
     end
@@ -57,7 +57,7 @@ function SLCAuth.HasAccess( ply, access )
 end
 
 function SLCAuth.RegisterAccess( access, help )
-    SLCAuth.RunHook( "RegisterAccess", access, help )
+    SLCAuth.RunHook( "RegisterAccess", nil, access, help )
 end
 
 --[[-------------------------------------------------------------------------

@@ -246,6 +246,8 @@ end
 SWEP.DashTime = 0
 SWEP.StopTime = 0
 function SWEP:PrimaryAttack()
+	if ROUND.preparing or ROUND.post then return end
+
 	local ct = CurTime()
 	if self:GetNextPrimaryFire() > ct then return end
 
@@ -266,6 +268,8 @@ end
 SWEP.NSecondaryAttack = 0
 SWEP.MindControl = 0
 function SWEP:SecondaryAttack()
+	if ROUND.preparing or ROUND.post then return end
+
 	local ct = CurTime()
 	if self:GetNextPrimaryFire() > ct or self:GetNextSecondaryFire() > ct then return end
 

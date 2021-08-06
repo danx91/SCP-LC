@@ -1333,6 +1333,7 @@ BUTTONS = {
 		end,
 		suppress_texts = true,
 		scp_disallow = true,
+		cooldown = 1,
 	},
 
 	--scp 106 recontamination
@@ -1389,6 +1390,22 @@ BUTTONS = {
 		pos = Vector( 2344.010010, -2031.00, 53.00 ),
 		suppress_check = true,
 		cooldown = 10,
+	},
+
+	--lockdown
+	{
+		name = "lockdown bullshit",
+		pos = { Vector( -2452.00, 4120.00, 310.00 ), Vector( -2451.979980, 4120.00, 310.50 ) },
+		disabled = true,
+	},
+	{
+		name = "Facility Lockdown",
+		pos = Vector( -2451.989990, 4120.00, 310.25 ),
+		scp_disallow = true,
+		suppress_texts = true,
+		override = function( ply, ent, data )
+			return InitiateLockdown( ply, ent )
+		end,
 	},
 
 	--SCP use disallow
@@ -1455,12 +1472,6 @@ BUTTONS = {
 	{
 		name = "682 acid",
 		pos = Vector( 2264.00, 3396.00, -201.00 ),
-		scp_disallow = true,
-		suppress_check = true,
-	},
-	{
-		name = "lockdown",
-		pos = Vector( -2451.989990, 4120.00, 310.25 ),
 		scp_disallow = true,
 		suppress_check = true,
 	},

@@ -52,6 +52,8 @@ function SWEP:Think()
 end
 
 function SWEP:PrimaryAttack()
+	if ROUND.preparing or ROUND.post then return end
+
 	local ct = CurTime()
 	local owner = self:GetOwner()
 	
@@ -125,6 +127,8 @@ function SWEP:PrimaryAttack()
 end
 
 function SWEP:SecondaryAttack()
+	if ROUND.preparing or ROUND.post then return end
+
 	if self:GetShotStacks() < 1 then return end
 	self:SetShotStacks( self:GetShotStacks() - 1 )
 
@@ -324,14 +328,24 @@ hook.Add( "SLCMovementAnimSpeed", "SCP058", function( ply, vel, speed, len, move
 end )
 
 hook.Add( "PostEntityTakeDamage", "SCP058Explosion", function( ent, dmg, took )
-	if IsValid( ent ) and ent:IsPlayer() and ent:SCPClass() == CLASSES.SCP058 then
-		local wep = ent:GetWeapon( "weapon_scp_058" )
-		if IsValid( wep ) and wep.ExplosionHPTab then
-			local hp = ent:Health()
-			local chpt = math.floor( ( hp + dmg:GetDamage() ) / 1000 )
-			if wep.ExplosionHPTab[chpt] == false and math.floor( hp / 1000 ) < chpt then
-				wep.ExplosionHPTab[chpt] = true
-				wep:MakeExplosion()
+	if IsValid( ent ) and ent:IsPlayer() then
+		local att = dmg:GetAttacker()
+		if IsValid( att ) and att:IsPlayer() and att != ent then
+			local wep = att:GetWeapon( "weapon_scp_058" )
+			if IsValid( wep ) then
+				wep:AddScore( dmg:GetDamage() )
+			end
+		end
+
+		if ent:SCPClass() == CLASSES.SCP058 then
+			local wep = ent:GetWeapon( "weapon_scp_058" )
+			if IsValid( wep ) and wep.ExplosionHPTab then
+				local hp = ent:Health()
+				local chpt = math.floor( ( hp + dmg:GetDamage() ) / 1000 )
+				if wep.ExplosionHPTab[chpt] == false and math.floor( hp / 1000 ) < chpt then
+					wep.ExplosionHPTab[chpt] = true
+					wep:MakeExplosion()
+				end
 			end
 		end
 	end

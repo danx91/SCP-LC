@@ -650,3 +650,33 @@ hook.Add( "SLCRoundCleanup", "SLCWarheadCleanup", function()
 	ALPHA_DESTROY = {}
 	OMEGA_DESTROY = {}
 end )
+
+--[[-------------------------------------------------------------------------
+Lockdown
+---------------------------------------------------------------------------]]
+function InitiateLockdown( ply, ent )
+	local dur = CVAR.slc_lockdown_duration:GetInt()
+	if dur > 0 then
+		local status = GetRoundStat( "facility_lockdown" )
+		if status > 0 then
+			if status == 2 then
+				PlayerMessage( "lockdown_once", ply, true )
+			end
+
+			return false
+		end
+
+		SetRoundStat( "facility_lockdown", 1 )
+
+		AddTimer( "DisableLockdown", dur, 1, function( self, n )
+			if IsValid( ent ) then
+				ent:Fire( "Use" )
+				SetRoundStat( "facility_lockdown", 2 )
+			end
+		end )
+	elseif dur == -1 then
+		return false
+	end
+
+	return true
+end

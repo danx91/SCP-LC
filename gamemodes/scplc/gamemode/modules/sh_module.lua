@@ -50,6 +50,7 @@ SLCCVar( "slc_time_wait", { "round", "time" }, 15, { FCVAR_NOTIFY, FCVAR_ARCHIVE
 SLCCVar( "slc_time_preparing", { "round", "time" }, 60, { FCVAR_NOTIFY, FCVAR_ARCHIVE }, nil, 1, nil, tonumber )
 SLCCVar( "slc_time_round", { "round", "time" }, 1500, { FCVAR_NOTIFY, FCVAR_ARCHIVE }, nil, 1, nil, tonumber )
 SLCCVar( "slc_time_postround", { "round", "time" }, 30, { FCVAR_NOTIFY, FCVAR_ARCHIVE }, nil, 1, nil, tonumber )
+SLCCVar( "slc_lockdown_duration", { "round", "time" }, 180, { FCVAR_NOTIFY, FCVAR_ARCHIVE }, nil, -1, nil, tonumber )
 
 //GENERAL
 //SLCCVar( "slc_lcz_gas" )
@@ -237,20 +238,20 @@ function GM:EntityTakeDamage( target, info )
 			cache = SetRoundProperty( "prevent_break_cache", {} )
 		end
 
-		if !cache[ent] and !ent.SkipSCPDamageCheck then
-			local pos = ent:GetPos()
+		if !cache[target] and !target.SkipSCPDamageCheck then
+			local pos = target:GetPos()
 			for k, v in pairs( PREVENT_BREAK ) do
 				if v == pos then
-					cache[ent] = true
+					cache[target] = true
 					break
 				end
 
-				ent.SkipSCPDamageCheck = true
+				target.SkipSCPDamageCheck = true
 			end
 		end
 
-		if cache[ent] then
-			return false
+		if cache[target] then
+			return true
 		end
 	end
 

@@ -464,13 +464,35 @@ function GM:PlayerUse( ply, ent )
 	end
 
 	--Cache door
-	if !data then
+	if !data and !ent.ButtonCacheChecked then
+		ent.ButtonCacheChecked = true
+
 		local pos = ent:GetPos()
-		for k, v in pairs( BUTTONS ) do
-			if pos == v.pos or v.tolerance and pos:IsInTolerance( v.pos, v.tolerance ) then
-				data = v
-				RegisterButton( v, ent, true )
-				break
+		for _, v in pairs( BUTTONS ) do
+			local btn_pos = v.pos
+
+			if istable( btn_pos ) then
+				local registered = false
+
+				for _, tab_pos in pairs( btn_pos ) do
+					if pos == tab_pos then
+						data = v
+						RegisterButton( v, ent, true )
+						registered = true
+						print( "tab reg" )
+						break
+					end
+				end
+
+				if registered then
+					break
+				end
+			else
+				if pos == v.pos or v.tolerance and pos:IsInTolerance( v.pos, v.tolerance ) then
+					data = v
+					RegisterButton( v, ent, true )
+					break
+				end
 			end
 		end
 	end
@@ -480,15 +502,15 @@ function GM:PlayerUse( ply, ent )
 		return false
 	end
 
-	--Player door cooldown --TEST per player?
-	local pcd = ply:GetProperty( "button_cooldows" )
+	--Player door cooldown --REMOVE useless?
+	/*local pcd = ply:GetProperty( "button_cooldows" )
 	if! pcd then
 		pcd = ply:SetProperty( "button_cooldows", {} )
 	end
 
 	if pcd[ent] and pcd[ent] > ct then
 		return false
-	end
+	end*/
 
 	--Handle usage
 	if data then
@@ -533,6 +555,8 @@ function GM:PlayerUse( ply, ent )
 
 			return handle_result
 		end
+	else
+		ply.NextSLCUse = ct + 1.5
 	end
 
 	return true
@@ -540,19 +564,20 @@ end
 
 function GM:AcceptInput( ent, input, activator, caller, data )
 	if string.lower( input ) == "use" then
-		if IsValid( caller ) and caller:IsPlayer() then
-			caller.NextSLCUse = CurTime() + 1.5
-
-			local pcd = caller:GetProperty( "button_cooldows" )
-			if! pcd then
-				pcd = caller:SetProperty( "button_cooldows", {} )
-			end
-	
-			pcd[ent] = CurTime() + 7.5
-		end
-
 		if ent:GetClass() == "func_button" then
 			local btn_data = BUTTONS_CACHE[ent]
+
+			/*if IsValid( caller ) and caller:IsPlayer() then
+				caller.NextSLCUse = CurTime() + 1.5
+
+				local pcd = caller:GetProperty( "button_cooldows" )
+				if! pcd then
+					pcd = caller:SetProperty( "button_cooldows", {} )
+				end
+				
+				pcd[ent] = CurTime() + ( btn_data and btn_data.player_cooldown or 7.5 )
+			end*/
+
 			ent.NextSLCUse = CurTime() + ( btn_data and btn_data.cooldown or ent.UseCooldown or 3.5 )
 		end
 	end
