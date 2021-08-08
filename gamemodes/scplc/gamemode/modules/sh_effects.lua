@@ -1,4 +1,4 @@
-EFFECTS = {
+EFFECTS = EFFECTS or {
 	registry = {},
 	effects = {}
 }
@@ -6,13 +6,15 @@ EFFECTS = {
 /*
 data = {
 	duration = <time>,
-	think = nil'/function( self, ply, tier, args ) (return <delay> <- not working, use wait instead) end,
+	think = nil'/function( self, ply, tier, args ) (return <delay>) end,
 	wait = 0//time between thinks
-	begin = nil'/function( self, ply, tier, args, refresh ) end,
-	finish = nil'/function( self, ply, tier, args, interrupt ) end,
+	begin = nil'/function( self, ply, tier, args, refresh, decrease ) end,
+	finish = nil'/function( self, ply, tier, args, interrupt, all ) end,
 	stacks = 0(nil)/1/2, //0 - don't stack, refresh duration; 1 - stack effects; 2 - increase effect level, refresh duration
+	finish_type = 0(nil)/1, //0 - end as usual, 1 - decrease tier and refresh duration
 	tiers = { { icon = <material> } },
-	cantarget = nil'/function( ply ) end //return false to disallow
+	cantarget = nil'/function( ply ) end, //return false to disallow
+	hide = false'/true
 }
 */
 
@@ -31,39 +33,54 @@ end
 hook.Add( "PlayerPostThink", "SLCEffectsThink", function( ply )
 	if !ply.EFFECTS then ply.EFFECTS = {} end
 
+	local ct = CurTime()
+
 	for i, v in rpairs( ply.EFFECTS ) do
 		local eff = EFFECTS.effects[v.name]
 
-		if v.endtime != -1 and v.endtime < CurTime() then
-			if eff.finish then
-				eff.finish( v, ply, v.tier, v.args, false )
-			end
+		if v.endtime != -1 and v.endtime < ct then
+			local keep = eff.finish_type == 1 and v.tier > 1
 
-			table.remove( ply.EFFECTS, i )
+			if keep then
+				v.endtime = ct + eff.duration
+				v.tier = v.tier - 1
 
-			local found = false
-			for _, e in pairs( ply.EFFECTS ) do
-				if e.name == v.name then
-					found = true
-					break
+				if eff.begin then
+					eff.begin( v, ply, v.tier, v.args, true, true )
 				end
-			end
+			else
+				if eff.finish then
+					if eff.finish( v, ply, v.tier, v.args, false, false ) then
+						continue
+					end
+				end
 
-			if !found then
-				ply.EFFECTS_REG[v.name] = nil
+				table.remove( ply.EFFECTS, i )
+
+				local found = false
+				for _, e in pairs( ply.EFFECTS ) do
+					if e.name == v.name then
+						found = true
+						break
+					end
+				end
+
+				if !found then
+					ply.EFFECTS_REG[v.name] = nil
+				end
 			end
 		elseif eff.think then
 			if eff.wait then
-				if v.nextthink and v.nextthink > CurTime() then
+				if v.nextthink and v.nextthink > ct then
 					return
 				end
 
-				v.nextthink = CurTime() + eff.wait
+				v.nextthink = ct + eff.wait
 			end
 
 			local override = eff.think( v, ply, v.tier, v.args )
 			if isnumber( override ) then
-				v.nextthink = CurTime() + override
+				v.nextthink = ct + override
 			end
 		end
 	end
@@ -108,6 +125,10 @@ function PLAYER:ApplyEffect( name, ... )
 	if !self.EFFECTS then self.EFFECTS = {} end
 	if !self.EFFECTS_REG then self.EFFECTS_REG = {} end
 
+	if hook.Run( "SLCApplyEffect", self, name, args ) == true then
+		return
+	end
+
 	if !effect.stacks or effect.stacks == 0 or effect.stacks == 2 then
 		if self.EFFECTS_REG[name] then
 			for k, v in pairs( self.EFFECTS ) do
@@ -128,7 +149,7 @@ function PLAYER:ApplyEffect( name, ... )
 					end
 
 					if effect.begin then
-						effect.begin( v, self, v.tier, args, true )
+						effect.begin( v, self, v.tier, args, true, false )
 					end
 
 					if SERVER then
@@ -158,7 +179,7 @@ function PLAYER:ApplyEffect( name, ... )
 	self.EFFECTS_REG[name] = true
 
 	if effect.begin then
-		effect.begin( tab, self, tier, args, false )
+		effect.begin( tab, self, tier, args, false, false )
 	end
 
 	if SERVER then
@@ -181,7 +202,7 @@ function PLAYER:RemoveEffect( name, all )
 			local effect = EFFECTS.effects[v.name]
 
 			if effect and effect.finish then
-				effect.finish( v, self, v.tier, v.args, true )
+				effect.finish( v, self, v.tier, v.args, true, true )
 			end
 		end
 
@@ -209,7 +230,7 @@ function PLAYER:RemoveEffect( name, all )
 					table.remove( self.EFFECTS, i )
 
 					if effect.finish then
-						effect.finish( v, self, v.tier, v.args, true )
+						effect.finish( v, self, v.tier, v.args, true, false )
 					end
 
 					if effect.stacks != 1 or all then
@@ -312,7 +333,7 @@ sound.Add( {
 --[[-------------------------------------------------------------------------
 Door lock
 ---------------------------------------------------------------------------]]
-EFFECTS.RegisterEffect( "doorlock", {
+/*EFFECTS.RegisterEffect( "doorlock", {
 	duration = 10,
 	stacks = 0,
 	tiers = {
@@ -339,7 +360,7 @@ sound.Add( {
 	pitch = 100,
 	sound = "hl1/fvox/beep.wav",
 	channel = CHAN_STATIC,
-} )
+} )*/
 
 --[[-------------------------------------------------------------------------
 AMN-C227
@@ -571,8 +592,142 @@ EFFECTS.RegisterEffect( "deep_wounds", {
 	end,
 } )
 
-hook.Add( "SLCScaleHealing", "SLCDeepWounds", function( ply, source, heal )
-	if ply:HasEffect( "deep_wounds" ) then
-		return heal * 0.25
+--[[-------------------------------------------------------------------------
+Poison
+---------------------------------------------------------------------------]]
+EFFECTS.RegisterEffect( "poison", {
+	duration = 30,
+	stacks = 2,
+	finish_type = 1,
+	tiers = {
+		{ icon = Material( "slc/hud/effects/poison1.png" ) },
+		{ icon = Material( "slc/hud/effects/poison2.png" ) },
+		{ icon = Material( "slc/hud/effects/poison3.png" ) },
+		{ icon = Material( "slc/hud/effects/poison4.png" ) },
+		{ icon = Material( "slc/hud/effects/poison5.png" ) },
+	},
+	cantarget = function( ply )
+		local team = ply:SCPTeam()
+		return team != TEAM_SPEC and team != TEAM_SCP
+	end,
+	begin = function( self, ply, tier, args, refresh, decrease )
+		self.args[1] = args[1] --attacker
+
+		if args[2] > self.args[2] then
+			self.args[2] = args[2] --dmg
+		end
+
+		if SERVER then
+			ply:PopSpeed( "SLC_Poison" )
+
+			local speed = 1 - 0.1 * tier
+			ply:PushSpeed( speed, speed, -1, "SLC_Poison", 1 )
+		end
+
+		if tier == 1 then
+			ply:SetDSP( 1 )
+		elseif tier == 2 then
+			ply:SetDSP( 14 )
+		elseif tier < 5 then
+			ply:SetDSP( 15 )
+		else
+			ply:SetDSP( 16 )
+		end
+	end,
+	finish = function( self, ply, tier, args, interrupt )
+		if SERVER then
+			ply:PopSpeed( "SLC_Poison" )
+		end
+
+		ply:SetDSP( 1 )
+	end,
+	think = function( self, ply, tier, args )
+		if SERVER then
+			if ply:SCPTeam() == TEAM_SPEC or ply:SCPTeam() == TEAM_SCP then return end
+
+			local att = args[1]
+			local dmg = DamageInfo()
+
+			dmg:SetDamage( args[2] )
+			dmg:SetDamageType( DMG_POISON )
+
+			if IsValid( att ) then
+				dmg:SetAttacker( att )
+			end
+
+			ply:TakeDamageInfo( dmg )
+			AddRoundStat( "poison", tier )
+		end
+	end,
+	wait = 1.5,
+} )
+
+local poison_mat = Material( "effects/water_warp01" )
+hook.Add( "DrawOverlay", "SLCPoison", function()
+	local ply = LocalPlayer()
+	if ply.HasEffect and ply:HasEffect( "poison" ) then
+		local tier = 0
+
+		for i, v in ipairs( ply.EFFECTS ) do
+			if v.name == "poison" then
+				tier = v.tier
+				break
+			end
+		end
+
+		if tier >= 4 then
+			render.UpdateScreenEffectTexture()
+
+			poison_mat:SetFloat( "$envmap", 0 )
+			poison_mat:SetFloat( "$envmaptint", 0 )
+			poison_mat:SetFloat( "$refractamount", tier == 5 and 0.075 or 0.03 )
+			poison_mat:SetVector( "$refracttint", tier == 5 and Vector( 0.1, 0.5, 0.1 ) or Vector( 0.3, 0.75, 0.3 ) )
+			poison_mat:SetInt( "$ignorez", 1 )
+
+			render.SetMaterial( poison_mat )
+			render.DrawScreenQuad( true )
+		end
+	end
+end )
+
+hook.Add( "SLCScreenMod", "SLCPoison", function( data )
+	local ply = LocalPlayer()
+	if ply.HasEffect and ply:HasEffect( "poison" ) then
+		local tier = 0
+
+		for i, v in ipairs( ply.EFFECTS ) do
+			if v.name == "poison" then
+				tier = v.tier
+				break
+			end
+		end
+
+		if tier < 4 and tier > 1 then
+			local n = tier - 1
+			data.add_g = data.add_g + 0.06 * n
+			data.brightness = data.brightness - 0.075 * n
+		end
+	end
+end )
+
+hook.Add( "SLCHealing", "SLCEffectsCanHeal", function( action, target, healer, heal_type )
+	if action == "can_heal" then
+		if target:HasEffect( "radiation" ) then return false end
+		if target:HasEffect( "poison" ) then return false end
+	end
+end )
+
+hook.Add( "SLCHealing", "SLCEffectsScaleHeal", function( action, ply, source, heal )
+	if action == "scale_heal" then
+		if ply:HasEffect( "deep_wounds" ) then
+			return heal * 0.25
+		end
+	end
+end )
+
+hook.Add( "SLCHealing", "SLCEffectsHealed", function( action, target, healer )
+	if action == "healed" then
+		target:RemoveEffect( "bleeding", true )
+		target:RemoveEffect( "deep_wounds", true )
 	end
 end )

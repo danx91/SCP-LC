@@ -36,3 +36,10 @@ end
 if !sql.TableExists( "scpplayerdata" ) then
 	sql.Query( "CREATE TABLE IF NOT EXISTS scpplayerdata ( dataid TEXT NOT NULL PRIMARY KEY, value TEXT );" )
 end
+
+if SERVER then
+	hook.Add( "SLCFactoryReset", "ResetDB", function()
+		print( "Dropping database..." )
+		sql.Query( "DROP TABLE scpplayerdata" )
+	end )
+end

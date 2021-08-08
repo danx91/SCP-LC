@@ -2,9 +2,6 @@ local ENTITY = FindMetaTable( "Entity" )
 
 FIRE_REGISTRY = FIRE_REGISTRY or {}
 
-game.AddParticles( "particles/slc_fire.pcf" )
-PrecacheParticleSystem( "scp_457_fire" )
-
 if SERVER then
 	function ENTITY:Burn( time, radius, attacker, dmg, sc, dontoverride, fulloverride )
 		local fire = FIRE_REGISTRY[self]

@@ -51,7 +51,7 @@ local function CheckTable( tab, ref )
 	for k, v in pairs( ref ) do
 		if istable( v ) then
 			if !istable( tab[k] ) then
-				tab[k] = table.Copy( v ) --TODO test
+				tab[k] = table.Copy( v )
 			else
 				CheckTable( tab[k], v )
 			end
@@ -110,6 +110,78 @@ function ChangeLang( lang, force )
 	LANG = tmp
 end
 
+hook.Add( "SLCFactoryReset", "SLCLanguageReset", function()
+	RunConsoleCommand( "slc_language", "default" )
+end )
+
+local function PrintTableDiff( tab, ref, stack )
+	local wrong, err = 0, 0
+	stack = stack or "LANG"
+
+	for k, v in pairs( ref ) do
+		if istable( v ) then
+			if !istable( tab[k] ) then
+				print( "Missing table: "..stack.." > "..k )
+				wrong = wrong + 1
+			else
+				local a_w, a_e = PrintTableDiff( tab[k], v, stack.." > "..k )
+				wrong = wrong + a_w
+				err = err + a_e
+			end
+		elseif tab[k] == nil then
+			print( "Missing value: "..stack.." > "..k )
+			wrong = wrong + 1
+		else
+			local ref_t = type( v )
+			local tab_t = type( tab[k] )
+
+			if ref_t != tab_t then
+				print( "Wrong type: "..stack.." > "..k.." ("..ref_t.." expected, got "..tab_t..")" )
+				err = err + 1
+			end
+		end
+	end
+
+	return wrong, err
+end
+
+concommand.Add( "slc_diff_language", function( ply, cmd, args )
+	local lang_name = args[1]
+	if !isstring( lang_name ) then return end
+
+	local lang = _LANG[lang_name]
+	local default = _LANG[_LANG_ALIASES.default]
+
+	if lang and default then
+		print( "#####################################################################" )
+		local wrong, err = PrintTableDiff( lang, default )
+		print( "#####################################################################" )
+		print( "Language diff: "..lang_name )
+		print( "Total missing values or tables: "..wrong )
+		print( "Total errors: "..err )
+		print()
+		print( "Check logs above for details" )
+		print( "#####################################################################" )
+	end
+end, function( cmd, args )
+	args = string.Trim( args )
+	args = string.lower( args )
+
+	local tab = {}
+
+	if string.find( "default", args ) then
+		table.insert( tab, "slc_diff_language default" )
+	end
+
+	for k, v in pairs( _LANG ) do
+		if string.find( string.lower( k ), args ) then
+			table.insert( tab, "slc_diff_language "..k )
+		end
+	end
+
+	return tab
+end, "" )
+
 --[[-------------------------------------------------------------------------
 Credits
 ---------------------------------------------------------------------------]]
@@ -125,7 +197,7 @@ timer.Create( "Credits", 300, 0, function()
 			key = "+menu"
 		end
 
-		LocalPlayer():PrintMessage( HUD_PRINTTALK, string.format( LANG.eq_key, key ) )
+		//LocalPlayer():PrintMessage( HUD_PRINTTALK, string.format( LANG.eq_key, key ) )
 	end
 end )
 
@@ -141,11 +213,11 @@ end)
 --[[-------------------------------------------------------------------------
 Screen effects
 ---------------------------------------------------------------------------]]
-Material( "slc/misc/blind.png" )
-local blind_mat = CreateMaterial( "mat_SCP_blind", "UnlitGeneric", {
+//Material( "slc/misc/blind.png" )
+/*local blind_mat = CreateMaterial( "mat_SCP_blind", "UnlitGeneric", {
 	["$basetexture"] = "slc/misc/blind.png",
 	["$additive"] = "1",
-} )
+} )*/
 
 local exhaust_mat = GetMaterial( "slc/misc/exhaust.png" )
 
@@ -198,7 +270,7 @@ hook.Add( "RenderScreenspaceEffects", "SCPEffects", function()
 		clr.colour = clr.colour - staminamul * 2
 
 		if stamina_effects <= 30 then
-			surface.SetDrawColor( Color( 255, 255, 255, math.Map( math.min( stamina_effects, 30 ), 0, 30, 511, 0 ) ) ) --TODO: why 511?
+			surface.SetDrawColor( Color( 255, 255, 255, math.Map( math.min( stamina_effects, 30 ), 0, 30, 511, 0 ) ) ) --REVIEW: why 511?
 			surface.SetMaterial( exhaust_mat )
 			surface.DrawTexturedRect( 0, 0, ScrW(), ScrH() )
 		end

@@ -26,6 +26,7 @@ local SCP_VALID_ENTRIES = {
 	no_terror = true,
 	can_interact = true,
 	reward_override = true,
+	disable_overload = true,
 	//disable_crosshair = true,
 }
 
@@ -165,7 +166,7 @@ function ObjectSCP:Create( name, model, weapon, pos, static_stats, dynamic_stats
 			local istab = istable( v )
 			local var = istab and v.var or v
 
-			dd[k] = var --TODO TEST
+			dd[k] = var
 
 			if dv[k] then
 				var = dv[k]
@@ -259,6 +260,7 @@ local function setup_scp_internal( self, ply, ... )
 	ply:SetSCPChat( basestats.allow_chat == true )
 	//ply:SetSCPTerror( basestats.no_terror != true )
 	ply:SetSCPCanInteract( basestats.can_interact == true )
+	ply:SetSCPDisableOverload( basestats.disable_overload == true )
 
 	if !basestats.no_model then
 		ply:SetModel( self.model )
@@ -355,9 +357,16 @@ hook.Add( "SLCGamemodeLoaded", "SLCSCPModule", function()
 	hook.Run( "RegisterSCP" )
 	SaveDynamicVars()
 
-	SetupForceSCP()
+	if SetupForceSCP then SetupForceSCP() end
 
 	//for k, v in pairs( player.GetAll() ) do
 		SendSCPList()
 	//end
+end )
+
+hook.Add( "SLCFactoryReset", "SLCResetSCPs", function()
+	print( "Deleting SCP settings..." )
+
+	file.Delete( "slc/scp_override.txt" )
+	file.Delete( "slc/scp_default.txt" )
 end )

@@ -52,6 +52,9 @@ lang.NRegistry = {
 	destory_scp = "You received %i points for destroying SCP object!",
 	afk = "You are AFK. You will not spawn and receive XP over time!",
 	afk_end = "You are no longer AFK",
+	overload_cooldown = "Wait %i seconds to overload this door!",
+	advanced_overload = "This door seems to be stronger! Try again in %i seconds",
+	lockdown_once = "Facility lockdown can be activated only once per round!",
 }
 
 lang.NFailed = "Failed to access NRegistry with key: %s"
@@ -150,6 +153,8 @@ effects.insane = "Insane"
 effects.gas_choke = "Choking"
 effects.radiation = "Radiation"
 effects.deep_wounds = "Deep Wounds"
+effects.heavy_bleeding = "Heavy Bleeding"
+effects.weak_bleeding = "Weak Bleeding"
 
 --[[-------------------------------------------------------------------------
 Class viewer
@@ -196,6 +201,55 @@ lang.view_cat = {
 }
 
 --[[-------------------------------------------------------------------------
+Settings
+---------------------------------------------------------------------------]]
+lang.settings = {
+	settings = "Gamemode settings",
+
+	none = "NONE",
+	press_key = "> Press a key <",
+	client_reset = "Reset Client Settings to Defaults",
+	server_reset = "Reset Server Settings to Defaults",
+
+	client_reset_desc = "You are about to reset your ALL setting in this gamemode.\nThis action cannot be undone!",
+	server_reset_desc = "Due to security reasons you cannot reset server settings here.\nTo reset server to default settings, enter 'slc_factory_reset' in server console and follow instructions.\nBe careful this action cannot be undone and will reset EVERYTHING!",
+
+	popup_ok = "OK",
+	popup_cancel = "CANCEL",
+	popup_continue = "CONTINUE",
+
+	panels = {
+		binds = "Keybinds",
+		reset = "Reset Gamemode",
+		cvars = "ConVars Editor",
+	},
+
+	binds = {
+		eq_button = "Equipment",
+		upgrade_tree_button = "SCP Upgrade Tree",
+		ppshop_button = "Class Viewer",
+		settings_button = "Gamemode Settings",
+		scp_special = "SCP Special Ability"
+	}
+}
+
+lang.gamemode_config = {
+	loading = "Loading...",
+
+	categories = {
+		general = "General",
+		round = "Round",
+		xp = "XP",
+		support = "Support",
+		warheads = "Warheads",
+		afk = "AFK",
+		time = "Time",
+		premium = "Premium",
+		scp = "SCP",
+	}
+}
+
+--[[-------------------------------------------------------------------------
 Scoreboard
 ---------------------------------------------------------------------------]]
 lang.unconnected = "Unconnected"
@@ -230,6 +284,15 @@ lang.upgrades = {
 	requiresany = "Requires any",
 	blocked = "Blocked by"
 }
+
+--[[-------------------------------------------------------------------------
+SCP HUD
+---------------------------------------------------------------------------]]
+local scp_hud = {}
+lang.SCPHUD = scp_hud
+
+scp_hud.skill_not_ready = "Skill is not ready yet!"
+scp_hud.skill_cant_use = "Skill can't be used now!"
 
 --[[-------------------------------------------------------------------------
 Info screen
@@ -315,6 +378,11 @@ misc.alpha_warhead = {
 	active = "ALPHA Warhead is engaged\n\nProceed to evacuation immediately!\nDetonation in %.2fs",
 }
 
+misc.buttons = {
+	MOUSE1 = "LMB",
+	MOUSE2 = "RMB",
+	MOUSE3 = "MMB",
+}
 --[[-------------------------------------------------------------------------
 Vests
 ---------------------------------------------------------------------------]]
@@ -365,6 +433,7 @@ classes.unknown = "Unknown"
 classes.SCP023 = "SCP 023"
 classes.SCP049 = "SCP 049"
 classes.SCP0492 = "SCP 049-2"
+classes.SCP058 = "SCP 058"
 classes.SCP066 = "SCP 066"
 classes.SCP096 = "SCP 096"
 classes.SCP106 = "SCP 106"
@@ -530,6 +599,8 @@ lang.CLASS_OBJECTIVES = {
 
 	SCP066 = generic_scp_friendly,
 
+	SCP058 = generic_scp,
+
 	SCP096 = generic_scp,
 
 	SCP106 = generic_scp,
@@ -550,195 +621,6 @@ lang.CLASS_OBJECTIVES = {
 
 	SCP3199 = generic_scp,
 }
-
---[[-------------------------------------------------------------------------
-DON'T EDIT - UNUSED
----------------------------------------------------------------------------]]
-/*lang.CLASS_INFO = {
-	classd = [[You are Class D Personnel
-Your objective is to escape from the facility
-Cooperate with others and look for keycards
-Beware of facility staff and SCPs]],
-
-	veterand = [[You are Class D Veteran
-Your objective is to escape from the facility
-Cooperate with others
-Beware of facility staff and SCPs]],
-
-	kleptod = [[You are Class D Kleptomaniac
-Your objective is to escape from the facility
-You stole something from the staff
-Beware of facility staff and SCPs]],
-
-	ciagent = [[You are CI Agent
-Your objective is to protect Class D Personnel
-Escort them to the exit
-Beware of facility staff and SCPs]],
-
-	sciassistant = [[You are Scientist Assistant
-Your objective is to escape from the facility
-Cooperate with other scientists and security staff
-Beware of Chaos Insurgency and SCPs]],
-
-	sci = [[You are Scientist
-Your objective is to escape from the facility
-Cooperate with other scientists and security staff
-Beware of Chaos Insurgency and SCPs]],
-
-	seniorsci = [[You are Senior Scientist
-Your objective is to escape from the facility
-Cooperate with other scientists and security staff
-Beware of Chaos Insurgency and SCPs]],
-
-	headsci = [[You are Head Scientist
-Your objective is to escape from the facility
-Cooperate with other scientists and security staff
-Beware of Chaos Insurgency and SCPs]],
-
-	guard = [[You are Security Guard
-Your objective is to rescue all scientist
-Kill all Class D Personnel and SCPs]],
-
-	lightguard = [[You are Security Guard
-Your objective is to rescue all scientist
-Kill all Class D Personnel and SCPs]],
-
-	heavyguard = [[You are Security Guard
-Your objective is to rescue all scientist
-Kill all Class D Personnel and SCPs]],
-
-	specguard = [[You are Security Guard Specialist
-Your objective is to rescue all scientist
-Kill all Class D Personnel and SCPs]],
-
-	chief = [[You are Security Chief
-Your objective is to rescue all scientist
-Kill all Class D Personnel and SCPs]],
-
-	guardmedic = [[You are Security Guard Medic
-Your objective is to rescue all scientist
-Use your medkit to help your temmates
-Kill all Class D Personnel and SCPs]],
-
-	tech = [[You are Security Technician
-Your objective is to rescue all scientist
-You can place portable turret
-Kill all Class D Personnel and SCPs]],
-
-	cispy = [[You are CI Spy
-Your objective is to help Class D Personnel
-Pretend to be a security guard]],
-
-	ntf_1 = [[You are MTF NTF
-Help staff inside facility
-Don't let Class D Personnel and SCPs escape]],
-
-	ntf_2 = [[You are MTF NTF
-Help staff inside facility
-Don't let Class D Personnel and SCPs escape]],
-
-	ntf_3 = [[You are MTF NTF
-Help staff inside facility
-Don't let Class D Personnel and SCPs escape]],
-
-	ntfmedic = [[You are MTF NTF Medic
-Help staff inside facility
-Use your medkit to help other MTFs]],
-
-	ntfcom = [[You are MTF NTF Commander
-Help staff inside facility
-Don't let Class D Personnel and SCPs escape]],
-
-	ntfsniper = [[You are MTF NTF Sniper
-Protect your team from a distance
-Don't let Class D Personnel and SCPs escape]],
-
-	alpha1 = [[You are MTF Alpha 1
-You work directly for O5 Council
-Protect foundation at all cost
-Your mission is to [REDACTED] ]],
-
-	alpha1sniper = [[You are MTF Alpha 1 Marksman
-You work directly for O5 Council
-Protect foundation at all cost
-Your mission is to [REDACTED] ]],
-
-	ci = [[You are Chaos Insurgency Soldier
-Help Class D Personnel
-Kill MTFs and other facility staff]],
-
-	cicom = [[You are Chaos Insurgency Commander
-Help Class D Personnel
-Kill MTFs and other facility staff]],
-	
-	SCP023 = [[You are SCP 023
-Your objective is to escape from the facility
-You will kill one of the people who saw you
-Click RMB to place spectre]],
-
-	SCP049 = [[You are SCP 049
-Your objective is to escape from the facility
-Your touch is deadly to humans
-You can perform surgery to "cure" people]],
-
-	SCP0492 = [[You are SCP 049-2
-Your objective is to escape from the facility
-Listen to SCP 049's orders and protect him]],
-
-	SCP066 = [[You are SCP 066
-Your objective is to escape from the facility
-You can play very loud music]],
-
-	SCP096 = [[You are SCP 096
-Your objective is to escape from the facility
-You become enraged when someone looks at you
-You can regenerate HP by pressing R]],
-
-	SCP106 = [[You are SCP 106
-Your objective is to escape from the facility
-You can go through doors and teleport to the selected location
-
-LMB: Teleport humans to pocket dimension
-RMB: Mark teleport destination
-R: Teleport]],
-
-	SCP173 = [[You are SCP 173
-Your objective is to escape from the facility
-You can't move while someone is watching you
-Your special ability teleports you to the nearby human]],
-
-	SCP457 = [[You are SCP 457
-Your objective is to escape from the facility
-You are burning and you will ignite everything
-near you
-You can place up to 5 fire traps]],
-
-	SCP682 = [[You are SCP 682
-Your objective is to escape from the facility
-You have a lot of health
-Your special ability makes you immune to any damage]],
-
-	SCP8602 = [[You are SCP 860-2
-Your objective is to escape from the facility
-If you attack someone near wall, you will
-nail him to wall and deal huge damage]],
-
-	SCP939 = [[You are SCP 939
-Your objective is to escape from the facility
-You can talk with humans]],
-
-	SCP966 = [[You are SCP 966
-Your objective is to escape from the facility
-You are invisible]],
-
-	SCP3199 = [[You are SCP 3199
-Your objective is to escape from the facility
-You are agile and deadly hunter
-You can sense heartbeat of nearby humans]],
-}*/
---[[-------------------------------------------------------------------------
-END OF UNUSED PART
----------------------------------------------------------------------------]]
 
 lang.CLASS_DESCRIPTION = {
 	classd = [[Difficulty: Easy
@@ -1082,6 +964,15 @@ Overview:
 You play very loud music damaging all players near you.
 ]],
 
+	SCP058 = [[Difficulty: Medium
+Toughness: Normal
+Agility: Normal
+Damage: Normal
+
+Overview:
+SCP with flexible playstyle. Can attack melee and shot. Has various upgrades which can add poison to attacks, modify shot attack or unlocks ability to explode.
+]],
+
 	SCP096 = [[Difficulty: Hard
 Toughness: High
 Agility: Very Low / Extreme when enraged
@@ -1338,6 +1229,61 @@ wep.SCP066 = {
 			name = "Sticky",
 			info = "After dashing into human, you stick to him for the next 10s",
 		}
+	}
+}
+
+wep.SCP058 = {
+	upgrades = {
+		parse_description = true,
+
+		attack1 = {
+			name = "Poisonous Sting I",
+			info = "Adds poison to primary attacks"
+		},
+		attack2 = {
+			name = "Poisonous Sting II",
+			info = "Buffs attack damage, poison damage and decreases cooldown.\n\t• Adds [prim_dmg] damage to attacks\n\t• Attack poison deals [pp_dmg] damage\n\t• Cooldown is reduced by [prim_cd]s"
+		},
+		attack3 = {
+			name = "Poisonous Sting III",
+			info = "Buffs poison damage and decreases cooldown.\n\t• If target is not poisoned, instantly apply 2 stacks of poison\n\t• Attack poison deals [pp_dmg] damage\n\t• Cooldown is reduced by [prim_cd]s"
+		},
+		shot = {
+			name = "Corrupted Blood",
+			info = "Adds poison to shot attacks"
+		},
+		shot11 = {
+			name = "Surge I",
+			info = "Increases damage and projectile size but also increases cooldown and slows down projectile\n\t• Projectile damage multiplier: [shot_damage]\n\t• Projectile size multiplier: [shot_size]\n\t• Projectile speed multiplier: [shot_size]\n\t• Total cooldown increased by [shot_cd]s"
+		},
+		shot12 = {
+			name = "Surge II",
+			info = "Increases damage and projectile size but also increases cooldown and slows down projectile\n\t• Poison effect is removed\n\t• Projectile damage multiplier: [shot_damage]\n\t• Projectile size multiplier: [shot_size]\n\t• Projectile speed multiplier: [shot_size]\n\t• Total cooldown increased by [shot_cd]s"
+		},
+		shot21 = {
+			name = "Bloody Mist I",
+			info = "Shot leaves mist on impact, hurting and poisoning everyone who touches it.\n\t• Direct and splash damage is removed\n\t• Cloud deals [cloud_damage] damage on contact\n\t• Poison inflicted by cloud deals [sp_dmg] damage\n\t• Shot stacks limited to [stacks]\n\t• Cooldown increased by [shot_cd]s\n\t• Stacks are generated at [regen_rate] rate"
+		},
+		shot22 = {
+			name = "Bloody Mist II",
+			info = "Buffs mist left by shots.\n\t• Cloud deals [cloud_damage] damage on contact\n\t• Poison inflicted by cloud deals [sp_dmg] damage\n\t• Stacks are generated at [regen_rate] rate"
+		},
+		shot31 = {
+			name = "Multishot I",
+			info = "Allows you to shot at rapid speed while holding attack button.\n\t• Unlock ability of rapid shoting\n\t• Direct and splash damage is removed\n\t• Shot stacks limited to [stacks]\n\t• Stacks are generated at [regen_rate] rate\n\t• Projectile size multiplier: [shot_size]\n\t• Projectile speed multiplier: [shot_size]"
+		},
+		shot32 = {
+			name = "Multishot II",
+			info = "Increases maximum stacks and buffs shot speed.\n\t• Shot stacks limited to [stacks]\n\t• Stacks are generated at [regen_rate] rate\n\t• Projectile size multiplier: [shot_size]\n\t• Projectile speed multiplier: [shot_size]"
+		},
+		exp1 = {
+			name = "Aortal Burst",
+			info = "Unlocks ability to explode dealing massive damage when your hp decreases below each 1000 for the first time"
+		},
+		exp2 = {
+			name = "Toxic Blast",
+			info = "Buffs your ability to explode\n\t• Applies 2 stacks of poison\n\t• Radius multiplier: [explosion_radius]"
+		},
 	}
 }
 
@@ -1742,8 +1688,44 @@ wep.SCP3199 = {
 	}
 }
 
+wep.SCP500 = {
+	name = "SCP 500",
+	death_info = "You choked on that SCP 500",
+	text_used = "You soon as you swallowed this pill, you felt better",
+}
+
 wep.SCP714 = {
 	name = "SCP 714"
+}
+
+wep.SCP1025 = {
+	name = "SCP 1025",
+	diseases = {
+		arrest = "Cardiac arrest",
+		mental = "Mental Illness",
+		asthma = "Asthma",
+		blindness = "Blindness",
+		hemo = "Haemophilia",
+		oste = "Osteoporosis",
+
+		adhd = "ADHD",
+		throm = "Thrombocythemia",
+		urbach = "Urbach–Wiethe disease",
+
+		gas = "Tympanites",
+	},
+	descriptions = {
+		arrest = "Cardiac arrest is a sudden loss of blood flow resulting from the failure of the heart to pump effectively. Signs include loss of consciousness and abnormal or absent breathing. Some individuals may experience chest pain, shortness of breath, or nausea immediately before entering cardiac arrest. Radiating pain to one arm is a common symptom, as is long term malaise and general weakness of heart. If not treated within minutes, it typically leads to death.",
+		asthma = "Asthma is a long-term inflammatory disease of the airways of the lungs. It is characterized by variable and recurring symptoms, reversible airflow obstruction, and easily triggered bronchospasms. Symptoms include episodes of wheezing, coughing, chest tightness, and shortness of breath. These may occur a few times a day or a few times per week.",
+		blindness = "Visual impairment, also known as vision impairment or vision loss, is a decreased ability to see to a degree that causes problems not fixable by usual means, such as glasses. Some also include those who have a decreased ability to see because they do not have access to glasses or contact lenses. The term blindness is used for complete or nearly complete vision loss.",
+		hemo = "Haemophilia (also spelled hemophilia) is a mostly inherited genetic disorder that impairs the body's ability to make blood clots, a process needed to stop bleeding. This results in people bleeding for a longer time after an injury, easy bruising, and an increased risk of bleeding inside joints or the brain. Characteristic symptoms vary with severity. In general symptoms are internal or external bleeding episodes.",
+		oste = "Osteoporosis is a systemic skeletal disorder characterized by low bone mass, micro-architectural deterioration of bone tissue leading to bone fragility, and consequent increase in fracture risk. It is the most common reason for a broken bone among the elderly. Bones that commonly break include the vertebrae in the spine, the bones of the forearm, and the hip. Until a broken bone occurs there are typically no symptoms.",
+		
+		adhd = "Attention-deficit/hyperactivity disorder (ADHD) is a neurodevelopmental disorder characterized by inattention, bouts of excessive energy, hyper-fixation, and impulsivity, which are otherwise not appropriate for a person's age. Some individuals with ADHD also display difficulty regulating emotions or problems with executive function. Additionally, it is associated with other mental disorders.",
+		throm = "Thrombocythemia is a condition of high platelet (thrombocyte) count in the blood. High platelet counts do not necessarily signal any clinical problems, and can be picked up on a routine full blood count. However, it is important that a full medical history be elicited to ensure that the increased platelet count is not due to a secondary process.",
+		urbach = "Urbach–Wiethe disease is a very rare recessive genetic disorder. The symptoms of the disease vary greatly from individual to individual. Urbach–Wiethe disease show bilateral symmetrical calcifications on the medial temporal lobes. These calcifications often affect the amygdala. The amygdala is thought to be involved in processing biologically relevant stimuli and in emotional long-term memory, particularly those associated with fear.",
+	},
+	death_info_arrest = "You died due to cardiac arrest"
 }
 
 wep.HOLSTER = {

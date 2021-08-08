@@ -49,7 +49,6 @@ function ClearPlayerIDs()
 	IDs = {}
 end
 
-local nupd = 0
 function GM:HUDDrawTargetID()
 
 	local shouldDraw = hook.Call("HUDShouldDraw", GAMEMODE, "scplc.target")
@@ -70,10 +69,16 @@ function GM:HUDDrawTargetID()
 	if ply:SCPTeam() == TEAM_SPEC then return end
 	if hook.Run( "CanPlayerSeePlayer", lp, ply ) == false then return end
 
-	if nupd < CurTime() then
-		nupd = CurTime() + 0.5
+	if !ply.updated_id then
+		ply.update_id = 0
+	end
+
+	if ply.update_id < CurTime() then
+		ply.update_id = CurTime() + 1
 		UpdatePlayerID( ply )
 	end
+
+	if hook.Run( "HUDShouldDraw", "scplc.target" ) == false then return end
 
 	local color = Color( 200, 200, 200, 255 )
 	local class = nil

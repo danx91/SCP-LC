@@ -4,6 +4,15 @@ hook.Add( "SLCGamemodeLoaded",  "SLCPlayerInfo", function()
 	end
 end )
 
+hook.Add( "SCLFactoryReset", "SLCGameruleReset", function()
+	local files = file.Find( "slc/playerinfo/*.dat", "DATA" )
+	print( "Deleting "..#files.." playerinfo objects..." )
+
+	for k, v in pairs( files ) do
+		file.Delete( "slc/playerinfo/"..v )
+	end
+end )
+
 PlayerInfo = {}
 function PlayerInfo:New( arg )
 	local tab = {}

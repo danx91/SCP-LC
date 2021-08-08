@@ -162,31 +162,44 @@ end
 --[[-------------------------------------------------------------------------
 Base Content
 ---------------------------------------------------------------------------]]
-AddGamemodeContent( "1805069928" ) -- scplc_content
 --AddGamemodeContent( "349050451" ) -- Customizable Weaponry 2.0
-AddGamemodeContent( "1613647269" ) -- Customizable Weaponry 2.0 Fixed
-AddGamemodeContent( "358608166" ) -- Extra Customizable Weaponry 2.0
-AddGamemodeContent( "869104712" ) -- SCP Foundation Models
-AddGamemodeContent( "740748927" ) -- SCP Staff
-AddGamemodeContent( "738724607" ) -- Merryweather Security
-AddGamemodeContent( "676638642" ) -- Black Mesa Scientist-Citizens (Playermodels and NPCs)
-AddGamemodeContent( "923586734" ) -- Passport V2
-AddGamemodeContent( "905114757" ) -- SCP-682 PM
-AddGamemodeContent( "245750342" ) -- CS:GO Zeus x27 Taser
-AddGamemodeContent( "925670022" ) -- SCP:CB Prop pack
-AddGamemodeContent( "871969365" ) -- [Empire]SCP Staff Janitor
-AddGamemodeContent( "737686580" ) -- SCP Foundation - Soldier
-AddGamemodeContent( "1083837237" ) -- SCP:BREACH Staff models
-AddGamemodeContent( "1267850660" ) -- SCP: Containment Breach - Unity: SCP-106 PM & NPC
-AddGamemodeContent( "1350884815" ) -- SCP: Containment Breach - Unity: SCP-173 PM
-AddGamemodeContent( "1272811493" ) -- SCP: Containment Breach - Unity: SCP-939 PM
-AddGamemodeContent( "935624655" ) -- SCP Pack (860-B, 999, 131-A, 131-B)
-AddGamemodeContent( "290599102" ) -- SCP Site 19 (Sandbox)
-AddGamemodeContent( "764329142" ) -- SCP Site 19 (Sounds)
-AddGamemodeContent( "931700563" ) -- SCP-066 Playermodel
-AddGamemodeContent( "910206946" ) -- SCP-966 Playermodel & Ragdoll
-AddGamemodeContent( "183901628" ) -- SCP 049 PM and NPC model
-AddGamemodeContent( "367531149" ) -- SCP 096 - Nextbot
-AddGamemodeContent( "2104194368" ) -- Omnitool
-AddGamemodeContent( "1368927958" ) -- 023
-AddGamemodeContent( "1435327003" ) -- particle cannon
+--AddGamemodeContent( "923586734" ) -- Passport V2
+
+AddGamemodeContent("1805069928") -- SCP: Lost Control - Content Pack
+AddGamemodeContent("1613647269") -- Customizable Weaponry 2.0 | Fixed & Improved
+AddGamemodeContent("358608166") -- Extra Customizable Weaponry 2.0
+AddGamemodeContent("869104712") -- SCP Foundation Models
+AddGamemodeContent("740748927") -- SCP Staff
+AddGamemodeContent("738724607") -- Merryweather Security
+AddGamemodeContent("676638642") -- Black Mesa Scientist-Citizens (Playermodels and NPCs)
+AddGamemodeContent("905114757") -- SCP-682 PM
+AddGamemodeContent("245750342") -- CS:GO Zeus x27 Taser
+AddGamemodeContent("925670022") -- SCP:CB Prop pack
+AddGamemodeContent("871969365") -- [Empire]SCP Staff Janitor
+AddGamemodeContent("737686580") -- SCP Foundation - Soldier
+AddGamemodeContent("1083837237") -- SCP:BREACH Staff models
+AddGamemodeContent("1267850660") -- SCP: Containment Breach - Unity: SCP-106 PM & NPC
+AddGamemodeContent("1350884815") -- SCP: Containment Breach - Unity: SCP-173 PM
+AddGamemodeContent("1272811493") -- SCP: Containment Breach - Unity: SCP-939 PM
+AddGamemodeContent("935624655") -- SCP Pack (860-B, 999, 131-A, 131-B)
+AddGamemodeContent("290599102") -- SCP Site 19 (Sandbox)
+AddGamemodeContent("764329142") -- SCP Site 19 (Sounds)
+AddGamemodeContent("931700563") -- SCP-066 Playermodel
+AddGamemodeContent("910206946") -- SCP-966 Playermodel & Ragdoll
+AddGamemodeContent("183901628") -- SCP 049 PM and NPC model
+AddGamemodeContent("367531149") -- SCP 096 - Nextbot
+AddGamemodeContent("2104194368") -- Omnitool [S.C.P Content]
+AddGamemodeContent("1368927958") -- [Novux Project] Playermodel SCP-023
+AddGamemodeContent("2111632519") -- Scp 3199 - Playermodel for S.C.P : Lost Control
+AddGamemodeContent("2140249780") -- Turret_scp
+AddGamemodeContent("2364118772") -- security
+AddGamemodeContent("2271330776") -- S.C.P 2427-3 [FOR LOST CONTROL]
+AddGamemodeContent("2213313378") -- MTF_support
+AddGamemodeContent("2124819577") -- SCP Zombie Personel
+AddGamemodeContent("2402059605") -- SCP: Lost Control
+AddGamemodeContent("2500124828") -- [SCP:LOST CONTROL CONTENT] CLASS-D Veteran. [ᴘ.ᴍ]
+AddGamemodeContent("2498654543") -- [SCP:LOST CONTROL CONTENT] Chief Scientist [ᴘ.ᴍ]
+AddGamemodeContent("2499221486") -- [SCP LOST CONTROL CONTENT] Scientific Staff [ᴘ.ᴍ]
+AddGamemodeContent("2484281292") -- [SCP:LOST CONTROL CONTENT] PASSPORT
+AddGamemodeContent("1074125384") -- SCP-500 "Panacea" Entity and Model
+AddGamemodeContent("2509724092") -- SCP058

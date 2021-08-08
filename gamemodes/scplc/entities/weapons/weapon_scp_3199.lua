@@ -345,6 +345,18 @@ hook.Add( "StartCommand", "SLCSCP3199Cmd", function( ply, cmd )
 	end
 end )
 
+hook.Add( "SLCMovementAnimSpeed", "SCP3199", function( ply, vel, speed, len, movement )
+	if ply:SCPClass() == CLASSES.SCP3199 then
+		local n = len / 75
+
+		if n < 1.5 then
+			n = 1.5
+		end
+
+		return n, true
+	end
+end )
+
 if SERVER then
 	net.AddTableChannel( "SCP3199_Frenzy" )
 end

@@ -107,7 +107,7 @@ function SWEP:Holster( wep )
 	return true
 end
 
-function SWEP:OwnerChanged() --TODO: TEST
+function SWEP:OwnerChanged()
 	if CLIENT then
 		if IsValid( self:GetOwner() ) then
 			self:Equip()

@@ -137,6 +137,11 @@ if SERVER then
 			file.Write( "slc/gamerule.dat", util.TableToJSON( gamerule.data ) )
 		end
 	end )
+
+	hook.Add( "SCLFactoryReset", "SLCGameruleReset", function()
+		print( "Deleting gamerules..." )
+		file.Delete( "slc/gamerule.dat" )
+	end )
 end
 
 if CLIENT then
@@ -333,3 +338,9 @@ end, function( cmd, args )
 		return tab
 	end
 end, "" )
+
+/*timer.Simple( 0, function()
+	for k, v in pairs( player.GetAll() ) do
+		gamerule.SendAll( v )
+	end 
+end )*/

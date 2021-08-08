@@ -201,18 +201,18 @@ local function addClass( tab, p, h )
 			end
 		end
 
-		local override = CLASS_VIEWER_OVERRIDE[_name]
-		if override then
-			if override.model then
-				model[1] = override.model
+		local mdl_override = CLASS_VIEWER_OVERRIDE[_name]
+		if mdl_override then
+			if mdl_override.model then
+				model[1] = mdl_override.model
 			end
 
-			if override.skin then
-				model[2] = override.skin
+			if mdl_override.skin then
+				model[2] = mdl_override.skin
 			end
 
-			if override.bodygroups then
-				model[3] = override.bodygroups
+			if mdl_override.bodygroups then
+				model[3] = mdl_override.bodygroups
 			end
 		end
 
@@ -665,7 +665,6 @@ local function openViewer()
 			yalign = TEXT_ALIGN_TOP,
 		}
 
-		--TODO
 		if showinfo.details then
 			local desc = LANG.CLASS_DESCRIPTION[showinfo.details.name]
 			if desc then

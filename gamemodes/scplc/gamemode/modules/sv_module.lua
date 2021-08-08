@@ -19,6 +19,30 @@ function GM:ShutDown()
 end
 
 function GM:SCPDamage( ply, ent, dmg )
+	/*if PREVENT_BREAK then
+		local cache = GetRoundProperty( "prevent_break_cache" )
+
+		if !cache then
+			cache = SetRoundProperty( "prevent_break_cache", {} )
+		end
+
+		if !cache[ent] and !ent.SkipSCPDamageCheck then
+			local pos = ent:GetPos()
+			for k, v in pairs( PREVENT_BREAK ) do
+				if v == pos then
+					cache[ent] = true
+					break
+				end
+
+				ent.SkipSCPDamageCheck = true
+			end
+		end
+
+		if cache[ent] then
+			return false
+		end
+	end*/
+
 	if IsValid( ply ) and IsValid( ent ) then
 		if ent:GetClass() == "func_breakable" then
 			ent:TakeDamage( dmg, ply, ply )
@@ -37,20 +61,6 @@ function GM:GetFallDamage( ply, speed )
 	return 1
 end
 
-/*function OnUseEyedrops(ply) --TODO
-	if ply.usedeyedrops == true then
-		ply:PrintMessage(HUD_PRINTTALK, "Don't use them that fast!")
-		return
-	end
-	ply.usedeyedrops = true
-	ply:StripWeapon("item_eyedrops")
-	ply:PrintMessage(HUD_PRINTTALK, "Used eyedrops, you will not be blinking for 10 seconds")
-	timer.Create("Unuseeyedrops" .. ply:SteamID64(), 10, 1, function()
-		ply.usedeyedrops = false
-		ply:PrintMessage(HUD_PRINTTALK, "You will be blinking now")
-	end)
-end*/
-
 local doorBlockers = {}
 function AddDoorBlocker( class )
 	table.insert( doorBlockers, class )
@@ -59,7 +69,7 @@ end
 function GM:SLCOnDoorClosed()
 	local activator, caller = ACTIVATOR, CALLER
 
-	if CVAR.doorunblocker:GetBool() then
+	if CVAR.slc_enable_door_unblocker:GetBool() then
 		local name = activator:GetName()
 		if name and string.match( name, "_door_1_" ) then
 			local dpos = activator:GetPos() - Vector( 0, 0, 55.5 )
@@ -80,11 +90,11 @@ function GM:SLCOnDoorClosed()
 				local rdot = radius:Dot( radius )
 				local up = Vector( 0, 0, 16 )
 
-				for k, v in pairs( found ) do
+				for k1, v in pairs( found ) do
 					local pos = v:GetPos()
 					pos.z = dpos.z --hack?
 
-					for k, bl in pairs( doorBlockers ) do
+					for k2, bl in pairs( doorBlockers ) do
 						if string.find( v:GetClass(), bl ) then
 
 							local frac = 0
@@ -181,9 +191,28 @@ function InfoScreen( ply, t, duration, data, ovteam, ovclass )
 	end
 end
 
-local blinkdelay = CVAR.blink:GetInt()
+function ProgressBar( ply, enable, endtime, text )
+	local ct = CurTime()
+
+	if enable then
+		if endtime > ct then
+			net.Start( "SLCProgressBar" )
+				net.WriteBool( true )
+				net.WriteFloat( ct )
+				net.WriteFloat( endtime )
+				net.WriteString( text or "" )
+			net.Send( ply )
+		end
+	else
+		net.Start( "SLCProgressBar" )
+			net.WriteBool( false )
+		net.Send( ply )
+	end
+end
+
+local blinkdelay = CVAR.slc_blink_delay:GetFloat()
 Timer( "PlayerBlink", blinkdelay, 0, function( self, n )
-	local ntime = CVAR.blink:GetInt()
+	local ntime = CVAR.slc_blink_delay:GetFloat()
 	if blinkdelay != ntime then
 		blinkdelay = ntime
 		self:Change( ntime )
@@ -215,7 +244,7 @@ Timer( "PlayerBlink", blinkdelay, 0, function( self, n )
 end )
 
 Timer( "PlayXP", 300, 0, function()
-	local pspec, pplay, pplus = string.match( CVAR.roundxp:GetString(), "(%d+),(%d+),(%d+)" )
+	local pspec, pplay, pplus = string.match( CVAR.slc_xp_round:GetString(), "(%d+),(%d+),(%d+)" )
 
 	pspec = tonumber( pspec )
 	pplay = tonumber( pplay )
@@ -366,5 +395,54 @@ concommand.Add( "slc_lightstyle", function( ply, cmd, args )
 		--end
 
 		BroadcastLua( "render.RedownloadAllLightmaps( true )" )
+	end
+end )
+
+local reset_confirm = 0
+local should_reset = false
+concommand.Add( "slc_factory_reset", function( ply, cmd, args )
+	if !IsValid( ply ) or ply:IsListenServerHost() then
+		if should_reset then
+			print( "====================================================================" )
+			print( "Factory reset stopped!" )
+			print( "====================================================================" )
+
+			should_reset = false
+			reset_confirm = 0
+
+			local t = GetTimer( "SLCFactoryReset" )
+			if t then
+				t:Destroy()
+			end
+		elseif reset_confirm < CurTime() then
+			reset_confirm = CurTime() + 60
+
+			print( "====================================================================" )
+			print( "You are about to reset gamemode settings to default values!" )
+			print( "It will clear all data about gamemode and players!" )
+			print( "It includes data like levels, unlocked classes, convars and more!" )
+			print( "" )
+			print( "If you are sure and you want to continue, type this command again." )
+			print( "====================================================================" )
+		else
+			print( "====================================================================" )
+			print( "All data will be erased after 60 seconds!" )
+			print( "This process can be stopped by typing 'slc_factory_reset' again!" )
+			print( "====================================================================" )
+
+			reset_confirm = 0
+			should_reset = true
+
+			Timer( "SLCFactoryReset", 60, 1, function( self, n )
+				if should_reset then
+					hook.Run( "SLCFactoryReset" )
+
+					print( "Reset done! Restarting gamemode..." )
+					--timer.Simple( 0, function()
+						RunConsoleCommand( "changelevel", game.GetMap() )
+					--end )
+				end
+			end )
+		end
 	end
 end )

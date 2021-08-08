@@ -46,11 +46,11 @@ function PlayerData:Create( ply )
 	for k, v in pairs( PlayerStatus ) do
 		data.Status[k] = v.def
 
-		ply["Set"..k] = function( ply, value )
+		ply["Set"..k] = function( p, value )
 			data:SetStatus( k, value )
 		end
 
-		ply["Get"..k] = function( ply )
+		ply["Get"..k] = function( p )
 			return data:GetStatus( k )
 		end
 
@@ -124,14 +124,15 @@ function PlayerData:AddStat( name, value, replace )
 end
 
 function PlayerData:GetStat( name )
-	local stat = self.Stat[name]
+	local stat_flag = PlayerStats._STATS[name]
+	local stat = self.Stats[name]
 
 	if !stat then
-		if HasFlag( v, PlayerStats.STAT_NUMBER ) or HasFlag( v, PlayerStats.STAT_INT ) then
+		if HasFlag( stat_flag, PlayerStats.STAT_NUMBER ) or HasFlag( stat_flag, PlayerStats.STAT_INT ) then
 			stat = 0
-		elseif HasFlag( v, PlayerStats.STAT_BOOLEAN ) then
+		elseif HasFlag( stat_flag, PlayerStats.STAT_BOOLEAN ) then
 			stat = false
-		elseif HasFlag( v, PlayerStats.STAT_STRING ) then
+		elseif HasFlag( stat_flag, PlayerStats.STAT_STRING ) then
 			stat = ""
 		end
 	end
@@ -140,14 +141,15 @@ function PlayerData:GetStat( name )
 end
 
 function PlayerData:GetRoundStat( name )
+	local stat_flag = PlayerStats._STATS[name]
 	local stat = self.Round[name]
 
 	if !stat then
-		if HasFlag( v, PlayerStats.STAT_NUMBER ) or HasFlag( v, PlayerStats.STAT_INT ) then
+		if HasFlag( stat_flag, PlayerStats.STAT_NUMBER ) or HasFlag( stat_flag, PlayerStats.STAT_INT ) then
 			stat = 0
-		elseif HasFlag( v, PlayerStats.STAT_BOOLEAN ) then
+		elseif HasFlag( stat_flag, PlayerStats.STAT_BOOLEAN ) then
 			stat = false
-		elseif HasFlag( v, PlayerStats.STAT_STRING ) then
+		elseif HasFlag( stat_flag, PlayerStats.STAT_STRING ) then
 			stat = ""
 		end
 	end
@@ -156,14 +158,15 @@ function PlayerData:GetRoundStat( name )
 end
 
 function PlayerData:GetSessionStat( name )
+	local stat_flag = PlayerStats._STATS[name]
 	local stat = self.Session[name]
 
 	if !stat then
-		if HasFlag( v, PlayerStats.STAT_NUMBER ) or HasFlag( v, PlayerStats.STAT_INT ) then
+		if HasFlag( stat_flag, PlayerStats.STAT_NUMBER ) or HasFlag( stat_flag, PlayerStats.STAT_INT ) then
 			stat = 0
-		elseif HasFlag( v, PlayerStats.STAT_BOOLEAN ) then
+		elseif HasFlag( stat_flag, PlayerStats.STAT_BOOLEAN ) then
 			stat = false
-		elseif HasFlag( v, PlayerStats.STAT_STRING ) then
+		elseif HasFlag( stat_flag, PlayerStats.STAT_STRING ) then
 			stat = ""
 		end
 	end
@@ -202,7 +205,7 @@ function PlayerData:Reset( roundend )
 			end*/
 
 			if v.transmit then
-				table.insert( to_transmit, name )
+				table.insert( to_transmit, k )
 			end
 		end
 	end
@@ -294,7 +297,7 @@ end
 
 setmetatable( PlayerData, { __call = PlayerData.Create } )
 
-local ply = FindMetaTable( "Player" )
+//local ply = FindMetaTable( "Player" )
 --create direct bindings to PlayerData table
 
 /*if CLIENT then
@@ -387,13 +390,14 @@ RegisterPlayerStatus( "InitialTeam", 0, false, true )
 RegisterPlayerStatus( "Blink", false )
 RegisterPlayerStatus( "SightLimit", -1 )
 
-RegisterPlayerStatus( "SCPHuman", false, nil, nil, true ) --TODO test
+RegisterPlayerStatus( "SCPHuman", false, nil, nil, true )
 RegisterPlayerStatus( "SCPCanInteract", false )
 RegisterPlayerStatus( "SCPChat", false )
 RegisterPlayerStatus( "SCPNoRagdoll", false )
+RegisterPlayerStatus( "SCPDisableOverload", false )
 //RegisterPlayerStatus( "SCPTerror", true )
 
-RegisterPlayerStatus( "SCP714", false )
+RegisterPlayerStatus( "SCP714", false, nil, nil, true )
 RegisterPlayerStatus( "SCP096Chase", false )
 --------------------------------------------------------------------
  /*for k, v in pairs( player.GetAll() ) do

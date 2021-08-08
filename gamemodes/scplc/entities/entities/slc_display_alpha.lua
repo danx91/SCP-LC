@@ -70,7 +70,7 @@ function ENT:OnUse( ply )
 	if ALPHA_REMOTE_CHECK() then
 		if ALPHAWarhead( ply ) then
 			self:SetState( STATE_COUNTDOWN )
-			self:SetTime( CurTime() + CVAR.alpha_time:GetInt() + 3 )
+			self:SetTime( CurTime() + CVAR.slc_time_alpha:GetInt() + 3 )
 			self.Usable = false
 		end
 	else

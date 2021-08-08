@@ -71,7 +71,8 @@ function SWEP:PrimaryAttack()
 	if ROUND.post or self.NextHeal > CurTime() then return end
 
 	local owner = self:GetOwner()
-	if owner:HasEffect( "radiation" ) then return end
+	//if hook.Run( "SLCCanHeal", owner, owner, "medkit" ) == false then return end
+	if hook.Run( "SLCHealing", "can_heal", owner, owner, "medkit" ) == false then return end
 
 	self.NextHeal = CurTime() + 0.2
 	self:Heal( owner, true )
@@ -95,7 +96,8 @@ function SWEP:SecondaryAttack()
 	local ent = trace.Entity
 
 	if IsValid( ent ) and ent:IsPlayer() then
-		if !ent:HasEffect( "radiation" ) then 
+		//if hook.Run( "SLCCanHeal", ent, owner, "medkit" ) != false then
+		if hook.Run( "SLCHealing", "can_heal", owner, owner, "medkit" ) != false then
 			self:Heal( ent )
 		end
 	end
@@ -130,7 +132,8 @@ function SWEP:Heal( ply, sh )
 				local rnd = math.random() * 2 - 1
 				local heal = self.HealDmg + math.ceil( self.HealRand * rnd )
 
-				local override = hook.Run( "SLCScaleHealing", self.Healing, owner, heal )
+				//local override = hook.Run( "SLCScaleHealing", self.Healing, owner, heal )
+				local override = hook.Run( "SLCHealing", "scale_heal", self.Healing, owner, heal )
 
 				if override == true then
 					heal = 0
@@ -140,8 +143,7 @@ function SWEP:Heal( ply, sh )
 
 				local hp = math.min( self.Healing:Health() + heal, self.Healing:GetMaxHealth() )
 				self.Healing:SetHealth( hp )
-				self.Healing:RemoveEffect( "bleeding", true )
-				self.Healing:RemoveEffect( "deep_wounds", true )
+				hook.Run( "SLCHealing", "healed", self.Healing, owner )
 				--print( self.Healing, self.Healing:Health(), self.HealDmg + math.ceil( self.HealRand * rnd ) )
 				self:PopSpeed()
 

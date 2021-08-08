@@ -149,22 +149,39 @@ hook.Run( "SLCModulesLoaded" ) --essential gamemode files have been loaded, pre-
 --[[-------------------------------------------------------------------------
 Load map config
 ---------------------------------------------------------------------------]]
+MAP_LOADED = false
+
+local map = game.GetMap()
 print( "---------------Loading Map Config----------------" )
-if file.Exists( MAP_CONFIG_PATH .. "/" .. game.GetMap() .. ".lua", "LUA" ) then
-	local map = "mapconfigs/" .. game.GetMap() .. ".lua"
+if file.Exists( MAP_CONFIG_PATH .. "/" .. map .. ".lua", "LUA" ) then
+	print( "# Loading config for map " .. map )
+
+	local map_file = "mapconfigs/" .. map .. ".lua"
 	if SERVER then
-		AddCSLuaFile( map )
+		AddCSLuaFile( map_file )
 	end
 
-	print( "# Loading config for map " .. game.GetMap() )
-	include( map )
+	include( map_file )
 
-	MAP_LOADED = true
+	MAP_LOADED = map
 else
-	print( "----------------Loading Complete-----------------" )
-	error( "Unsupported map " .. game.GetMap() .. "!" )
+	print( "# Unable to find config for map "..map.."!" )
+	print( "# If you are developer, make sure config file name matches map name!" )
+end
+
+if hook.Run( "SLCCustomMapConfig", map, MAP_LOADED ) and !MAP_LOADED then
+	print( "# SLCCustomMapConfig returned true, assuming that config is loaded!" )
+	MAP_LOADED = map
+end
+
+if !MAP_LOADED then
+	print( "# Map config not found! Make sure you are playing on supported map!" )
+	print( "----------------Loading Completed-----------------" )
+	error( "Unsupported map " .. map .. "!" )
 end
 
 hook.Run( "SLCMapConfigLoaded" )
 
-print( "----------------Loading Complete-----------------" )
+print( "----------------Loading Completed-----------------" )
+
+hook.Run( "SLCFullyLoaded" )

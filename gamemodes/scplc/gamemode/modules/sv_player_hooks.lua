@@ -54,30 +54,6 @@ function GM:PlayerReady( ply )
 	CheckRoundStart()
 end
 
---TODO remove
-/*concommand.Add( "spawn", function( ply, cmd, args )
-	local n = tonumber( args[1] )
-	if n then
-		ply = player.GetAll()[n]
-	end
-
-	if !IsValid( ply ) then return end
-
-	ply:UnSpectate()
-	ply:Spawn()
-	ply:Cleanup()
-	ply:SetupHands()
-
-	ply:SetModel( "models/player/kleiner.mdl" )
-	ply:SetSCPTeam( TEAM_CLASSD )
-end )*/
-
--- concommand.Add( "teams", function( ply, cmd, args )
--- 	for k, v in pairs( player.GetAll() ) do
--- 		print( v, v:SCPTeam(), v:Alive() )
--- 	end
--- end )
-
 function GM:PlayerDisconnected( ply )
 	//ply:InvalidatePlayerForSpectate()
 	ply.Disconnected = true
@@ -125,7 +101,7 @@ function GM:PlayerShouldTakeDamage( ply, attacker )
 end
 
 function GM:PlayerHurt( victim, attacker, health, dmg )
-	--TODO: handle damage stats
+	--TODO: damage stats
 end
 
 function GM:DoPlayerDeath( ply, attacker, dmginfo )
@@ -141,7 +117,7 @@ function GM:DoPlayerDeath( ply, attacker, dmginfo )
 
 	ply.StoredProperties = ply.SLCProperties
 
-	ply:DropEQ() //TODO TEST
+	ply:DropEQ()
 	ply:CreatePlayerRagdoll()
 	//ply:CreateRagdoll()
 	ply:Despawn()
@@ -168,23 +144,29 @@ function GM:PlayerDeath( victim, inflictor, attacker )
 		local killinfo = victim.Logger:GetDeathDetails()
 		local len = #killinfo.assists
 
+		local preventrdm = false
+
+		if !IsValid( attacker ) or !attacker:IsPlayer() or victim == attacker then
+			if len > 0 then
+				local tmp = table.remove( killinfo.assists, 1 )
+
+				attacker = tmp[1]
+				killinfo.killer_pct = tmp[2]
+				preventrdm = true
+
+				len = len - 1
+			end
+		end
+
+		hook.Run( "SLCPlayerDeath", victim, attacker, killinfo.killer_pct )
+
+		for i, v in ipairs( killinfo.assists ) do
+			hook.Run( "SLCKillAssist", victim, attacker, v[1], v[2] )
+		end
+
 		if !victim._skipNextKillRewards then
 			//print( "PRE" )
 			//PrintTable( killinfo )
-
-			local preventrdm = false
-
-			if !IsValid( attacker ) or !attacker:IsPlayer() or victim == attacker then
-				if len > 0 then
-					local tmp = table.remove( killinfo.assists, 1 )
-
-					attacker = tmp[1]
-					killinfo.killer_pct = tmp[2]
-					preventrdm = true
-
-					len = len - 1
-				end
-			end
 
 			//print( "POST" )
 			//PrintTable( killinfo )
@@ -259,9 +241,9 @@ function GM:PlayerDeath( victim, inflictor, attacker )
 					end
 
 					for k, v in pairs( rewardtab ) do
-						local override, points = hook.Run( "SLCKillAssist", k, victim, v )
+						local override, points = hook.Run( "SLCAssistReward", k, victim, v )
 
-						if override != false then
+						if !override then
 							if points then
 								v = points
 							end
@@ -301,6 +283,10 @@ function GM:PlayerDeath( victim, inflictor, attacker )
 		victim:SetProperty( "death_info_override", pprop.death_info_override )
 	end
 
+	if pprop.death_cause_override then
+		victim:SetProperty( "death_cause_override", pprop.death_cause_override )
+	end
+
 	victim:SetSCPTeam( TEAM_SPEC )
 	victim:SetSCPClass( "spectator" )
 	victim.SetupAsSpectator = true
@@ -318,7 +304,7 @@ function GM:PlayerDeath( victim, inflictor, attacker )
 	CheckRoundEnd()
 end
 
-function GM:PlayerDeathThink( ply ) --TODO
+function GM:PlayerDeathThink( ply )
 	if ply.SetupAsSpectator then
 		if ply:KeyPressed( IN_ATTACK ) or ply:KeyPressed( IN_ATTACK2 ) or ply:KeyPressed( IN_JUMP ) then
 			ply.SetupAsSpectator = false
@@ -333,20 +319,32 @@ function GM:PlayerDeathThink( ply ) --TODO
 		else
 			local kill = ply.Logger:GetDeathDetails()
 			local msg = "unknown"
+			//local data
 
-			if IsValid(  kill.killer ) then
-				if kill.killer == ply then
-					msg = "suicide"
-				elseif kill.killer:IsPlayer() then
-					msg = { "killed_by", "text;"..EscapeMessage( kill.killer:Nick() ) }
+			/*local cause = ply:GetProperty( "death_cause_override" )
+			if cause then
+				if istable( cause ) then
+					data = cause
 				else
-					msg = "hazard"
+					msg = cause
 				end
-			end
+			else*/
+				if IsValid(  kill.killer ) then
+					if kill.killer == ply then
+						msg = "suicide"
+					elseif kill.killer:IsPlayer() then
+						msg = { "killed_by", "text;"..EscapeMessage( kill.killer:Nick() ) }
+					else
+						msg = "hazard"
+					end
+				end
+			--end
 
-			InfoScreen( ply, "dead", INFO_SCREEN_DURATION, {
-				msg
-			}, ply:GetProperty( "last_team" ), ply:GetProperty( "last_class" ) )
+			/*if !data then
+				data = { msg }
+			end*/
+
+			InfoScreen( ply, "dead", INFO_SCREEN_DURATION, { msg }, ply:GetProperty( "last_team" ), ply:GetProperty( "last_class" ) )
 		end
 	elseif ply.DeathScreen and ply.DeathScreen < CurTime() then
 		ply.DeathScreen = nil
@@ -447,16 +445,13 @@ end*/
 function GM:PlayerUse( ply, ent )
 	if ply:SCPTeam() == TEAM_SPEC or ply:IsAboutToSpawn() then return false end
 
-	if !ply.NUse then ply.NUse = 0 end
-	if ply.NUse > CurTime() then return false end
+	local ct = CurTime()
 
-	/*if ply.DoorLock and ply.DoorLock > CurTime() then
-		ply.NUse = CurTime() + 2.5
-		PlayerMessage( "acc_denied", ply, true )
+	--Player use cooldown (anti-spamming E)
+	if !ply.NextSLCUse then ply.NextSLCUse = 0 end
+	if ply.NextSLCUse > ct then return false end
 
-		return false
-	end*/
-
+	--Override hook
 	local data = BUTTONS_CACHE[ent]
 	local _, override, result = hook.Run( "SLCUseOverride", ply, ent, data )
 
@@ -468,26 +463,64 @@ function GM:PlayerUse( ply, ent )
 		data = result
 	end
 
-	if !data then
-		local pos = ent:GetPos()
-		for k, v in pairs( BUTTONS ) do
-			if pos == v.pos or v.tolerance and pos:IsInTolerance( v.pos, v.tolerance ) then
-				data = v
+	--Cache door
+	if !data and !ent.ButtonCacheChecked then
+		ent.ButtonCacheChecked = true
 
-				RegisterButton( v, ent, true )
-				break
+		local pos = ent:GetPos()
+		for _, v in pairs( BUTTONS ) do
+			local btn_pos = v.pos
+
+			if istable( btn_pos ) then
+				local registered = false
+
+				for _, tab_pos in pairs( btn_pos ) do
+					if pos == tab_pos then
+						data = v
+						RegisterButton( v, ent, true )
+						registered = true
+						print( "tab reg" )
+						break
+					end
+				end
+
+				if registered then
+					break
+				end
+			else
+				if pos == v.pos or v.tolerance and pos:IsInTolerance( v.pos, v.tolerance ) then
+					data = v
+					RegisterButton( v, ent, true )
+					break
+				end
 			end
 		end
 	end
 
+	--Door cooldown
+	if ent.NextSLCUse and ent.NextSLCUse >= ct then
+		return false
+	end
+
+	--Player door cooldown --REMOVE useless?
+	/*local pcd = ply:GetProperty( "button_cooldows" )
+	if! pcd then
+		pcd = ply:SetProperty( "button_cooldows", {} )
+	end
+
+	if pcd[ent] and pcd[ent] > ct then
+		return false
+	end*/
+
+	--Handle usage
 	if data then
-		ply.NUse = CurTime() + 1
+		//ply.NextSLCUse = ct + 1
 
 		if data.disabled then
 			return false
 		end
 
-		if data.scp_disallow and ply:SCPTeam() == TEAM_SCP and !ply:GetSCPCanInteract() and !ply:GetSCPHuman() then
+		if data.scp_disallow and ply:SCPTeam() == TEAM_SCP and !ply:SCPCanInteract() then
 			return false
 		end
 
@@ -500,13 +533,13 @@ function GM:PlayerUse( ply, ent )
 			return false
 		end
 
-		if omega and data.omega_override then
-			return true
-		end
-
 		local alpha = GetRoundStat( "alpha_warhead" )
 		if alpha and data.alpha_disable then
 			return false
+		end
+
+		if omega and data.omega_override then
+			return true
 		end
 
 		if alpha and data.alpha_override then
@@ -514,18 +547,47 @@ function GM:PlayerUse( ply, ent )
 		end
 
 		if !data.suppress_check then
-			return HandleButtonUse( ply, ent, data )
-		end
-	end
+			local handle_result = HandleButtonUse( ply, ent, data )
 
-	/*if ent:GetClass() == "prop_vehicle_jeep" then
-		if ply:SCPTeam() == TEAM_SCP and !ply:GetSCPHuman() then
-			return false
+			if !handle_result then
+				ply.NextSLCUse = ct + 1.5
+			end
+
+			return handle_result
 		end
-	end*/
+	else
+		ply.NextSLCUse = ct + 1.5
+	end
 
 	return true
 end
+
+function GM:AcceptInput( ent, input, activator, caller, data )
+	if string.lower( input ) == "use" then
+		if ent:GetClass() == "func_button" then
+			local btn_data = BUTTONS_CACHE[ent]
+
+			/*if IsValid( caller ) and caller:IsPlayer() then
+				caller.NextSLCUse = CurTime() + 1.5
+
+				local pcd = caller:GetProperty( "button_cooldows" )
+				if! pcd then
+					pcd = caller:SetProperty( "button_cooldows", {} )
+				end
+				
+				pcd[ent] = CurTime() + ( btn_data and btn_data.player_cooldown or 7.5 )
+			end*/
+
+			ent.NextSLCUse = CurTime() + ( btn_data and btn_data.cooldown or ent.UseCooldown or 3.5 )
+		end
+	end
+end
+
+hook.Add( "EntityKeyValue", "SLCButtons", function( ent, key, value )
+	if ent:GetClass() == "func_button" and key == "wait" then
+		ent.UseCooldown = tonumber( value ) + 0.5
+	end
+end )
 
 function GM:PlayerSay( ply, text, team )
 	return text

@@ -671,8 +671,8 @@ function surface.DrawCooldownHollowRectCW( x, y, width, height, thick, pct, styl
 	end
 end
 
-/*-------------------------------------------------------------------------
-draw.MultilineText( x, y, text, font, color, maxWidth, margin, dist, align, maxRows, simulate, calcW )
+--[[---------------------------------------------------------------------------
+draw.MultilineText( x, y, text, font, color, maxWidth, margin, dist, align, maxRows, simulate, calcW, justify )
 
 Draws multiline text with parameters: maximum width, maximum rows count, margin and distance.
 Function can be used to simulate drawing and get final text params
@@ -692,7 +692,7 @@ Function can be used to simulate drawing and get final text params
 
 @return 	[number] 		height 		Final height of text including margin and distance
 			[number]		width 		Width of the widest line. If simulate == true and calcW == false, maxWidth will be returned instead
----------------------------------------------------------------------------*/
+---------------------------------------------------------------------------]]--
 function draw.MultilineText( x, y, text, font, color, maxWidth, margin, dist, align, maxRows, simulate, calcW )
 	align = align or TEXT_ALIGN_LEFT
 	maxWidth = maxWidth - 2 * margin
@@ -763,28 +763,75 @@ function draw.MultilineText( x, y, text, font, color, maxWidth, margin, dist, al
 		n = maxRows
 	end
 
+	if simulate and !calcW then
+		return margin * 2 + height * n, maxWidth
+	end
+
 	local maxw = 0
+	local justify = false
+
+	if align == "justify" then
+		justify = true
+		align = TEXT_ALIGN_LEFT
+		maxw = maxWidth
+	end
 
 	for i = 1, n do
 		local tw = 0
 
 		if !simulate then
-			local xoffset = 0
+			if justify and i != n then
+				local total_w = surface.GetTextSize( string.gsub( final[i], " ", "" ) )
+				local words = string.Explode( " ", final[i] )
+				local word_count = #words - 1
 
-			if align == TEXT_ALIGN_LEFT then
-				xoffset = margin
-			elseif align == TEXT_ALIGN_RIGHT then
-				xoffset = -margin
+				if word_count > 0 and total_w < maxWidth then
+					local free_space = maxWidth - total_w
+
+					local per_word = math.floor( free_space / word_count )
+					local left = math.floor( free_space - per_word * word_count )
+
+					local cur_x = x + margin
+					for wi, word in ipairs( words ) do
+						local text_w = draw.Text{
+							text = word,
+							pos = { cur_x, y + margin + height * ( i - 1 ) },
+							color = color,
+							font = font,
+							xalign = TEXT_ALIGN_LEFT,
+							yalign = TEXT_ALIGN_TOP,
+						}
+
+						cur_x = cur_x + text_w + per_word + ( wi <= left and 1 or 0 )
+					end
+				else
+					draw.Text{
+						text = final[i],
+						pos = { x + margin, y + margin + height * ( i - 1 ) },
+						color = color,
+						font = font,
+						xalign = TEXT_ALIGN_LEFT,
+						yalign = TEXT_ALIGN_TOP,
+					}
+				end
+			else
+				local xoffset = 0
+
+				if align == TEXT_ALIGN_LEFT then
+					xoffset = margin
+				elseif align == TEXT_ALIGN_RIGHT then
+					xoffset = -margin
+				end
+
+				tw = draw.Text{
+					text = final[i],
+					pos = { x + xoffset, y + margin + height * ( i - 1 ) },
+					color = color,
+					font = font,
+					xalign = align,
+					yalign = TEXT_ALIGN_TOP,
+				}
 			end
-
-			tw = draw.Text{
-				text = final[i],
-				pos = { x + xoffset, y + margin + height * ( i - 1 ) },
-				color = color,
-				font = font,
-				xalign = align,
-				yalign = TEXT_ALIGN_TOP,
-			}
 		elseif calcW then
 			tw = surface.GetTextSize( final[i] )
 		end
@@ -794,7 +841,7 @@ function draw.MultilineText( x, y, text, font, color, maxWidth, margin, dist, al
 		end
 	end
 
-	return margin * 2 + height * n, maxw --TODO margin * 2?
+	return margin * 2 + height * n, maxw
 end
 
 /*-------------------------------------------------------------------------

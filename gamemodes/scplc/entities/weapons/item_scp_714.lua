@@ -81,7 +81,7 @@ if SERVER then
 	hook.Add( "SLCPlayerSanityChange", "SLCSCP714Sanity", func )
 end
 
-if CLIENT then
+/*if CLIENT then
 	local ply = FindMetaTable( "Player" )
 
 	function ply:GetSCP714() --for clientside usage purpose
@@ -92,4 +92,4 @@ if CLIENT then
 
 		return false
 	end
-end
+end*/

@@ -1,7 +1,21 @@
-if not serverguard then print("Serverguard not found") return end
+if not serverguard then
+	print( "# > Serverguard not found" )
+	return
+end
+
+--[[-------------------------------------------------------------------------
+SLC AL
+---------------------------------------------------------------------------]]
+SLCAuth.AddLibrary( "serverguard", "Serverguard", { --TEST testing required
+	CheckAccess = function( ply, access )
+		return serverguard.player:HasPermission( ply, access )
+	end,
+	RegisterAccess = function( name, help )
+		serverguard.permission:Add( name )
+	end,
+} )
 
 -- Force spawn human
-
 local command = {};
 
 command.help				= "Force spawn as Human";

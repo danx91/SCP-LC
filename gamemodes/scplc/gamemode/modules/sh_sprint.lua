@@ -103,39 +103,50 @@ local function CalcStamina( ply )
 	local stamina_limit = ply:GetStaminaLimit()
 	//print( ply, max_stamina )
 
+	local data = {
+		regen_delay = 0.2,
+		regen_rate_exhausted = 1,
+		regen_rate = 2,
+
+		use_delay = 0.125,
+		regen_delay_running = 1,
+		use_rate = 1,
+	}
+	
+	local skip = hook.Run( "SLCStamina", ply, data, stamina, max_stamina, stamina_limit )
+	if skip then
+		return
+	end
+
 	if stamina_limit > max_stamina then
 		stamina_limit = max_stamina
 	end
 
 	if ply.StaminaRegen < CurTime() then
-		ply.StaminaRegen = CurTime() + 0.2
+		ply.StaminaRegen = CurTime() + data.regen_delay
 
 		if ply.Exhausted then
-			stamina = stamina + 1
-
-			if stamina > stamina_limit then
-				stamina = stamina_limit
-			end
+			stamina = stamina + data.regen_rate_exhausted
 		else
-			stamina = stamina + 2
-
-			if stamina > stamina_limit then
-				stamina = stamina_limit
-			end
+			stamina = stamina + data.regen_rate
 		end
 	end
 
+	if stamina > stamina_limit then
+		stamina = stamina_limit
+	end
+
 	if ply.RunCheck < CurTime() then
-		ply.RunCheck = CurTime() + 0.125
+		ply.RunCheck = CurTime() + data.use_delay
 
 		if ply.Running then
 			ply.Running = false
-			ply.StaminaRegen = CurTime() + 1
+			ply.StaminaRegen = CurTime() + data.regen_delay_running
 
 			local mask = ply:GetWeapon( "item_slc_gasmask" )
-			if !IsValid( mask ) or !mask:GetEnabled() or !mask:GetUpgraded() or ply.Stamina > 30 then
+			if !IsValid( mask ) or !mask:GetEnabled() or !mask:GetUpgraded() or stamina > 30 then
 				//ply.Stamina = math.max( ply.Stamina - 1, 0 )
-				stamina = stamina - 1
+				stamina = stamina - data.use_rate
 
 				if stamina < 0 then
 					stamina = 0
@@ -149,15 +160,7 @@ local function CalcStamina( ply )
 
 		if SERVER then
 			ply:PushSpeed( 0.2, -1, -1, "SLC_Exhaust" )
-
-			//net.Start( "SCPForceExhaust" )
-			//net.Send( ply )
 		end
-
-		/*if CLIENT then
-			net.Start( "SCPForceExhaust" )
-			net.SendToServer()
-		end*/
 	elseif stamina >= 30 and ply.Exhausted then
 		ply.Exhausted = false
 

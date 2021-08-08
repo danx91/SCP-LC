@@ -97,7 +97,7 @@ function SWEP:SpecialAttack( ent, p )
 	end
 end
 
-hook.Add( "DoPlayerDeath", "SCP8602Damage", function( ply, attacker, info ) --TODO move to after dmg
+hook.Add( "DoPlayerDeath", "SCP8602Damage", function( ply, attacker, info )
 	if attacker:IsPlayer() and attacker:SCPClass() == CLASSES.SCP8602 then
 	 	local wep = attacker:GetActiveWeapon()
 

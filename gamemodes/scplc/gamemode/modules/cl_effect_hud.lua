@@ -42,59 +42,69 @@ local function DrawEffectsHUD()
 	next_frame = true
 	local w, h = ScrW(), ScrH()
 
-	if !LocalPlayer().EFFECTS then LocalPlayer().EFFECTS = {} end
-	if !LocalPlayer().EFFECTS then return end
+	local ply = LocalPlayer()
+	if !ply.EFFECTS then LocalPlayer().EFFECTS = {} end
+	if !ply.EFFECTS then return end
 
-	local effects = LocalPlayer().EFFECTS
+	local effects = {}
+
+	for i, v in ipairs( ply.EFFECTS ) do
+		local eff = EFFECTS.effects[v.name]
+		if eff and !eff.hide then
+			table.insert( effects, v )
+		end
+	end
+
 	local ec = #effects
-
 	local hide = ec > 5
 	local showtext
+
+	local start_x = w * 0.97
+	local start_y = h * 0.55
+	
+	local size = w * 0.025
+	local margin = w * 0.01
 
 	for i = 1, math.min( ec, 5 ) do
 		local effect = effects[i]
 		local reg = EFFECTS.registry[effect.name.."_"..effect.tier]
 		local eff = EFFECTS.effects[effect.name]
 
-		surface.SetDrawColor( color_white175 )
-		surface.DrawOutlinedRect( w * 0.97 - 1, h * 0.55 + w * 0.035 * ( i - 1 ) - 1, w * 0.025 + 2, w * 0.025 + 2 )
-
 		if hide and i == 5 then
 			draw.Text{
 				text = (ec - 4).."+",
-				pos = { w * 0.9824, h * 0.55 + w * 0.035 * ( i - 1 ) + w * 0.0125 },
+				pos = { w * 0.9824, start_y + ( size + margin ) * ( i - 1 ) + w * 0.0125 },
 				font = "SCPHUDMedium",
 				color = color_white,
 				xalign = TEXT_ALIGN_CENTER,
 				yalign = TEXT_ALIGN_CENTER,
 			}
 
-			local btn = button( w * 0.97, h * 0.55 + w * 0.035 * ( i - 1 ), w * 0.025, w * 0.025 )
+			local btn = button( start_x, start_y + ( size + margin ) * ( i - 1 ), size, size )
 
 			if btn > 0 then
 				showtext = {}
 
 				for j = 5, ec do
 					local name = LANG.EFFECTS[effect.name] or effect.name
-					local tier = eff.tiers > 1 and roman_tab[effect.tier] or ""
+					local tier = eff.tiers > 1 and ( roman_tab[effect.tier] or effect.tier ) or ""
 					local time = effect.endtime == -1 and LANG.EFFECTS.permanent or math.floor( effect.endtime - CurTime() )
 
 					table.insert( showtext, name.." "..tier.." ("..time..")" )
 				end
 			end
 		else
-			local ico = reg.icon
-			if ico then
+			if reg.icon then
 				surface.SetDrawColor( color_25 )
-				surface.DrawRect( w * 0.97, h * 0.55 + w * 0.035 * ( i - 1 ), w * 0.025, w * 0.025 )
+				surface.DrawRect( start_x, start_y + ( size + margin ) * ( i - 1 ), size, size )
 
 				//render.PushFilterMin( TEXFILTER.LINEAR )
 				//render.PushFilterMag( TEXFILTER.LINEAR )
 				PushFilters( TEXFILTER.LINEAR )
 
 				surface.SetDrawColor( reg.color or color_white )
-				surface.SetMaterial( ico )
-				surface.DrawTexturedRect( w * 0.97 + 2, h * 0.55 + w * 0.035 * ( i - 1 ) + 2, w * 0.025 - 4, w * 0.025 - 4 )
+				surface.SetMaterial( reg.icon )
+				surface.DrawTexturedRect( start_x + 2, start_y + ( size + margin ) * ( i - 1 ) + 2, size - 4, size - 4 )
 
 				//render.PopFilterMin()
 				//render.PopFilterMag()
@@ -106,19 +116,22 @@ local function DrawEffectsHUD()
 
 				surface.SetDrawColor( color_black235 )
 				draw.NoTexture()
-				surface.DrawCooldownRectCCW( w * 0.97, h * 0.55 + w * 0.035 * ( i - 1 ), w * 0.025, w * 0.025, 1 - timepct, 0.05 )
+				surface.DrawCooldownRectCCW( start_x, start_y + ( size + margin ) * ( i - 1 ), size, size, 1 - timepct )
 			end
 
-			local btn = button( w * 0.97, h * 0.55 + w * 0.035 * ( i - 1 ), w * 0.025, w * 0.025 )
+			local btn = button( start_x, start_y + ( size + margin ) * ( i - 1 ), size, size )
 
 			if btn > 0 then
 				local name = LANG.EFFECTS[effect.name] or effect.name
-				local tier = eff.tiers > 1 and roman_tab[effect.tier] or ""
+				local tier = eff.tiers > 1 and ( roman_tab[effect.tier] or effect.tier ) or ""
 				local time = effect.endtime == -1 and LANG.EFFECTS.permanent or math.floor( effect.endtime - CurTime() )
 
 				showtext = name.." "..tier.." ("..time..")"
 			end
 		end
+
+		surface.SetDrawColor( color_white175 )
+		surface.DrawOutlinedRect( start_x - 1, start_y + ( size + margin ) * ( i - 1 ) - 1, size + 2, size + 2 )
 	end
 
 	if showtext then
@@ -150,7 +163,7 @@ local function DrawEffectsHUD()
 
 		local cury = my + 4
 		for i = 1, #showtext do
-			local tw, th = draw.Text{
+			local _, th = draw.Text{
 				text = showtext[i],
 				pos = { mx - 8, cury },
 				font = "SCPHUDMedium",

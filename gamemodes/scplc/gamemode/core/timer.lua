@@ -14,9 +14,10 @@ Timer.ncall = 0
 Timer.alive = false
 Timer.destroyed = false
 Timer.dof = false
+Timer.nocache = false
 
 function Timer:Create( name, time, repeats, callback, endcallback, noactivete, nocache )
-	if !name or !time or !repeats or !callback then return end
+	if !name or !time or !repeats then return end
 
 	local t = setmetatable( {}, Timer )
 	t.name = name
@@ -24,11 +25,12 @@ function Timer:Create( name, time, repeats, callback, endcallback, noactivete, n
 	t.repeats = repeats
 	t.callback = callback
 	t.endcallback = endcallback
+	t.nocache = nocache
 
 	t.Create = function() end
 
 	if !nocache then
-		if _TimersCache[name] then
+		if IsValid( _TimersCache[name] ) then
 			_TimersCache[name]:Destroy()
 		end
 
@@ -108,7 +110,9 @@ function Timer:Destroy()
 	self:Stop()
 	self.destroyed = true
 
-	_TimersCache[self.name] = nil
+	if !self.nocache then
+		_TimersCache[self.name] = nil
+	end
 end
 
 function Timer:IsValid()
@@ -118,13 +122,15 @@ end
 function Timer:Call( ... )
 	if self.destroyed then return end
 
-	local suc, err = pcall( self.callback, self, self.current, ... )
-	if !suc then
-		print( "Error in timer "..self.name.."!" )
-		print( err )
+	if self.callback then
+		local suc, err = pcall( self.callback, self, self.current, ... )
+		if !suc then
+			print( "Error in timer "..self.name.."!" )
+			print( err )
 
-		if self.dof then
-			self:Destroy()
+			if self.dof then
+				self:Destroy()
+			end
 		end
 	end
 end
@@ -141,7 +147,7 @@ function Timer:Tick()
 		self:Destroy()
 
 		if self.endcallback then
-			local suc, err = pcall( self.endcallback )
+			local suc, err = pcall( self.endcallback, self.name )
 			if !suc then
 				print( "Error in timer "..self.name.."!" )
 				print( err )
@@ -178,6 +184,19 @@ hook.Add( "Tick", "TimersTick", function()
 		end
 	end
 
+	if SERVER then
+		for k, v in pairs( player.GetAll() ) do
+			local tab = v:GetProperty( "slc_timers" )
+			if tab then
+				for _, t in pairs( tab ) do
+					if t.alive and t.ncall <= CurTime() then
+						t:Tick()
+					end
+				end
+			end
+		end
+	end
+
 	for i, v in rpairs( _TickTimersCache ) do
 		if v[1] <= 0 then
 			table.remove( _TickTimersCache, i )
@@ -192,7 +211,86 @@ function ZeroTimer( func )
 	TickTimer( 0, func )
 end
 
+function ThenableTimer( name, time, repeats, callback, endcallback, noactivete, nocache )
+	local p = Promise()
+
+	local t = Timer( name, time, repeats, callback, function()
+		if endcallback then
+			endcallback( name )
+		end
+
+		p:Resolve()
+	end, noactivete, nocache )
+
+	return p, t
+end
+
+--[[-------------------------------------------------------------------------
+NextTick
+---------------------------------------------------------------------------]]
+_CallNextTick = _CallNextTick or {}
+
+function NextTick( func, ... )
+	table.insert( _CallNextTick, { func, { ... } } )
+end
+
+hook.Add( "Tick", "CallNextTick", function()
+	local len = #_CallNextTick
+	if len > 0 then
+		for i = 1, len do
+			local tab = table.remove( _CallNextTick )
+			tab[1]( unpack( tab[2] ) )
+		end
+	end
+end )
+
 --[[-------------------------------------------------------------------------
 Player Timers
 ---------------------------------------------------------------------------]]
---TODO player/ent timers with string keys like NThink
+if SERVER then
+	local ply = FindMetaTable( "Player" )
+
+	function ply:AddTimer( name, time, repeats, callback, endcallback, noactivete, nooverride )
+		//local t = Timer( name..self:SteamID(), time, repeats, callback, endcallback, noactivete, false )
+		local t = Timer( name, time, repeats, callback, endcallback, noactivete, true )
+
+		local tab = self:GetProperty( "slc_timers" )
+		if !tab then
+			tab = self:SetProperty( "slc_timers", {} )
+		end
+
+		local old = tab[name]
+		if IsValid( old ) then
+			if nooverride then
+				return false
+			end
+
+			old:Destroy()
+		end
+
+		tab[name] = t
+
+		return t
+	end
+
+	function ply:GetTimer( name )
+		local tab = self:GetProperty( "slc_timers" )
+		if !tab then
+			tab = self:SetProperty( "slc_timers", {} )
+		end
+
+		//return tab[name..self:SteamID()]
+		return tab[name]
+	end
+
+	hook.Add( "SLCPlayerCleanup", "SLCPlayerTimers", function( p )
+		local tab = p:GetProperty( "slc_timers" )
+		if tab then
+			for k, v in pairs( tab ) do
+				if IsValid( v ) then
+					v:Destroy()
+				end
+			end
+		end
+	end )
+end

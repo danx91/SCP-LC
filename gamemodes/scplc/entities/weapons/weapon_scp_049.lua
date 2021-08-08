@@ -10,10 +10,11 @@ local zombies = {
 	{ name = "heavy", speed = 0.8, health = 1.4, damage = 1.3, material = "" }, --heavy zombie
 }
 
-local function translateZombieModel( ply )
+local function translate_zombie_model( ply )
 	local team = ply:GetProperty( "last_team" )
-	//print( "zombie translate", team )
-	if team == TEAM_CLASSD then
+	local class = ply:GetProperty( "last_class" )
+	
+	if team == TEAM_CLASSD or class == CLASSES.CIAGENT then
 		return "models/player/alski/scp049-2.mdl", math.random( 0, 4 )
 	elseif team == TEAM_MTF then
 		local random = math.random( 1, 2 )
@@ -234,8 +235,9 @@ function SWEP:FinishSurgery( t, ent )
 		end
 
 		if !ply then
-			local qp = GetQueuePlayers( 1 )[1]
-			if qp then
+			//local qp = GetQueuePlayers( 1 )[1]
+			local qp = QueueRemove()
+			if qp and qp:IsValidSpectator() then
 				ply = qp
 			end
 		end
@@ -245,15 +247,15 @@ function SWEP:FinishSurgery( t, ent )
 
 			local stats = zombies[t] or {}
 			local scp = GetSCP( "SCP0492" )
-			local model, skin = translateZombieModel( ply )
+			local model, skin = translate_zombie_model( ply )
 			scp:SetupPlayer( ply, true, spawnent:GetPos(), owner, (stats.health or 1) + hpbonus, stats.speed or 1, stats.damage or 1, self:GetUpgradeMod( "steal" ) or 0,
 								model, skin )
 
 			if self:HasUpgrade( "rm" ) then
-				local qp = GetQueuePlayers( 1 )[1]
+				local qp = QueueRemove()//GetQueuePlayers( 1 )[1]
 
-				if qp then
-					local model, skin = translateZombieModel( qp )
+				if qp and qp:IsValidSpectator() then
+					local model, skin = translate_zombie_model( qp )
 					scp:SetupPlayer( qp, true, spawnent:GetPos(), owner, ((stats.health or 1) + hpbonus) * 0.5, stats.speed or 1, (stats.damage or 1) * 0.75,
 										self:GetUpgradeMod( "steal" ) or 0, model, skin )
 				end

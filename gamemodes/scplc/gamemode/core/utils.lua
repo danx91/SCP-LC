@@ -1,4 +1,13 @@
 --[[-------------------------------------------------------------------------
+Serverside GetMaterial, for shared compatibility
+---------------------------------------------------------------------------]]
+if SERVER then
+	function GetMaterial( name, args )
+		return Material( name, args )
+	end
+end
+
+--[[-------------------------------------------------------------------------
 rpairs
 ---------------------------------------------------------------------------]]
 local function rpairs_iter( tab, i )
@@ -90,11 +99,9 @@ function RestoreMessage( msg )
 		msg = string.gsub( msg, v, k )
 	end
 
-	return string.gsub( msg, "?q", "?" )
+	local str = string.gsub( msg, "?q", "?" )
+	return str
 end
-
-//local esc = EscapeMessage( "$Alski?" )
-//print( esc, RestoreMessage( esc ) )
 
 function FindInCylinder( orig, radius, zmin, zmax, filter, mask, feed )
 	local result = {}
@@ -140,3 +147,33 @@ function FindInCylinder( orig, radius, zmin, zmax, filter, mask, feed )
 
 	return result
 end
+
+--[[-------------------------------------------------------------------------
+Debounce
+---------------------------------------------------------------------------]]
+/*local debounce_list = setmetatable( {}, { __mode = "v" } )
+
+function Debounce( time, cb )
+	local tab = {
+		time = 0,
+		cb = cb
+	}
+
+	table.insert( debounce_list, tab )
+
+	return function( ... )
+		tab.time = RealTime() + time
+		tab.last_data = { ... }
+	end
+end
+
+hook.Add( "Think", "SLCDebounce", function()
+	local rt = RealTime()
+	for k, v in pairs( debounce_list ) do
+		print( "debounce check", v )
+
+		if v.time != 0 and v.time <= rt then
+			v.cb( v.last_data and unpack( v.last_data ) )
+		end
+	end
+end )*/

@@ -246,6 +246,8 @@ end
 SWEP.DashTime = 0
 SWEP.StopTime = 0
 function SWEP:PrimaryAttack()
+	if ROUND.preparing or ROUND.post then return end
+
 	local ct = CurTime()
 	if self:GetNextPrimaryFire() > ct then return end
 
@@ -266,6 +268,8 @@ end
 SWEP.NSecondaryAttack = 0
 SWEP.MindControl = 0
 function SWEP:SecondaryAttack()
+	if ROUND.preparing or ROUND.post then return end
+
 	local ct = CurTime()
 	if self:GetNextPrimaryFire() > ct or self:GetNextSecondaryFire() > ct then return end
 
@@ -320,7 +324,7 @@ end
 
 //SWEP.MCPenalty = 0
 //SWEP.ClientValueCheck = 0
-function SWEP:StopMindControl( noanim1, noanim2 ) --STOP EKRAN EFEKTY DLA OFIARY PO KILL OFIARY LUB SCP
+function SWEP:StopMindControl( noanim1, noanim2 )
 	if SERVER and self.MCTarget and IsValid( self.MCTarget[1] ) then
 		net.Start( "SLCMindControl" )
 			net.WriteBool( false )
