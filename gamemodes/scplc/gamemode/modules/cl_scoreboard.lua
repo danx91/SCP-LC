@@ -813,7 +813,9 @@ hook.Add( "DrawOverlay", "ScoreboardArrow", function()
 			local px, py = SCOREBOARD.Players:LocalToScreen( tab:GetPos() )
 			local pw, ph = tab:GetSize()
 
-			surface.SetDrawColor( Color( 0, 0, 0, tab.BackgroundAlpha ) )
+			py = py - SCOREBOARD.Players:GetVBar():GetScroll()
+
+			surface.SetDrawColor( 0, 0, 0, tab.BackgroundAlpha )
 			surface.DrawRect( px + pw + w * 0.01, py, w * 0.11, ph )
 
 			surface.SetDrawColor( tab._Color )
@@ -821,7 +823,7 @@ hook.Add( "DrawOverlay", "ScoreboardArrow", function()
 
 			local nx, ny = px + pw + w * 0.02, py + ph * 0.5
 			local nw = w * 0.09
-			surface.SetDrawColor( Color( 75, 75, 75, 255 ) )
+			surface.SetDrawColor( 75, 75, 75, 255 )
 			surface.DrawRect( nx, ny - 1, nw, 2 )
 
 			local muted = tab.Player:IsMuted()
@@ -871,11 +873,11 @@ hook.Add( "DrawOverlay", "ScoreboardArrow", function()
 				tab.Player:SetMuted( false )
 			end
 
-			surface.SetDrawColor( Color( 175, 175, 175, 255 ) )
+			surface.SetDrawColor( 175, 175, 175, 255 )
 			surface.DrawRect( nx, ny - 1, nw * vol, 2 )
 
 			if holdingVC or hover then
-				surface.SetDrawColor( Color( 225, 225, 225, 255 ) )
+				surface.SetDrawColor( 225, 225, 225, 255 )
 			end
 
 			surface.DrawFilledCircle( cpx, ny, 6, 12 )
