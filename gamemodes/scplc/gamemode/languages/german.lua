@@ -1,7 +1,8 @@
 --[[-------------------------------------------------------------------------
 Language: German
-Date: 14.07.2021
+Date: 12.08.2021
 Translated by: Justinnn
+Updated in day 12.08.2021 by: Zaptyp (https://steamcommunity.com/id/Zaptyp/)
 ---------------------------------------------------------------------------]]
 
 local lang = {}

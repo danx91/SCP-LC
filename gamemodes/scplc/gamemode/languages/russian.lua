@@ -1,8 +1,9 @@
 --[[-------------------------------------------------------------------------
 Language: Russian
-Date: 15.03.2021
+Date: 12.08.2021
 Translated by: Deiryn (http://steamcommunity.com/profiles/76561198121822134)
 Updated by: berry (http://steamcommunity.com/profiles/76561198158864042)
+Updated in day 12.08.2021 by: Zaptyp (https://steamcommunity.com/id/Zaptyp/)
 ---------------------------------------------------------------------------]]
 
 local lang = {}

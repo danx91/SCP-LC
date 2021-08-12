@@ -1,7 +1,8 @@
 --[[-------------------------------------------------------------------------
-Language: chinese
-Date: 23.07.2021
-Translated by:xiaobai
+Language: Chinese
+Date: 12.08.2021
+Translated by: xiaobai
+Updated in day 12.08.2021 by: Zaptyp (https://steamcommunity.com/id/Zaptyp/)
 ---------------------------------------------------------------------------]]
 
 local lang = {}

@@ -1,7 +1,8 @@
 --[[-------------------------------------------------------------------------
 Language: Polish
-Date: 19.02.2021
+Date: 12.08.2021
 Translated by: Slusher, alski
+Updated by: Zaptyp (https://steamcommunity.com/id/Zaptyp/)
 ---------------------------------------------------------------------------]]
 
 local lang = {}
