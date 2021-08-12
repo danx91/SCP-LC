@@ -51,7 +51,7 @@ lang.NRegistry = {
 	alpha_detonation = "Detonacja głowicy ALPHA za %i sekund. Wejdź do placówki lub natychmiastowo udaj się do ewakuacji!",
 	alpha_card = "Włożyłeś kartę nuklearną głowicy ALPHA",
 	destory_scp = "Otrzymujesz %i punktów za zniszczenie podmiotu SCP!",
-	afk = "Jesteś AFK. Nie będziesz się spawnował ani otczymywać expa z czasem",
+	afk = "Jesteś AFK. Nie będziesz się respił ani otczymywał expa",
 	afk_end = "Nie jesteś już AFK",
 	overload_cooldown = "Poczekaj %i sekund aby przeciążyć te drzwi!",
 	advanced_overload = "Te drzwi wydają się być za mocne! Spróbuj ponownie za %i sekund",
@@ -89,7 +89,7 @@ lang.NCRegistry = {
 	stat_049 = "Ludzie \"wyleczeni\" przez SCP 049: %i",
 	stat_066 = "Played masterpieces: %i",
 	stat_096 = "Gracze zabici przez SCP 096: %i",
-	stat_106 = "Gracze przeteleportowanii do wymiaru łuzowego: %i",
+	stat_106 = "Gracze przeteleportowani do wymiaru łuzowego: %i",
 	stat_173 = "Snapped necks: %i",
 	stat_457 = "Podpaleni gracze: %i",
 	stat_682 = "Gracze zabici przez SCP 682: %i",
@@ -382,7 +382,7 @@ misc.alpha_warhead = {
 misc.buttons = {
 	MOUSE1 = "LPM",
 	MOUSE2 = "PPM",
-	MOUSE3 = "MMB",
+	MOUSE3 = "ŚPM",
 }
 
 --[[-------------------------------------------------------------------------
@@ -473,7 +473,7 @@ classes.ntfcom = "Dowódca MTF NTF"
 classes.ntfsniper = "Snajper MTF NTF"
 classes.ntfmedic = "Medyk MTF NTF"
 classes.alpha1 = "MTF Alfa-1"
-classes.alpha1sniper = "Snajper MTF Alfa-1"
+classes.alpha1sniper = "Strzelec Wyborowy MTF Alfa-1"
 classes.ci = "Chaos Insurgency"
 classes.cicom = "Dowódca Chaos Insurgency"
 
@@ -1681,7 +1681,7 @@ wep.SCP3199 = {
 wep.SCP500 = {
 	name = "SCP 500",
 	death_info = "Udławiłeś się SCP 500",
-	text_used = "Jak tylko połknąłeś SCP 500, i poczułeś się lepiej",
+	text_used = "Jak tylko połknąłeś SCP 500, poczułeś się lepiej",
 }
 
 wep.SCP714 = {
@@ -1858,11 +1858,11 @@ wep.TURRET = {
 }
 
 wep.ALPHA_CARD1 = {
-	name = "Kod nuklearny głowicy ALPHA nr.1"
+	name = "Kod nuklearny głowicy ALPHA nr 1"
 }
 
 wep.ALPHA_CARD2 = {
-	name = "Kod nuklearny głowicy ALPHA nr.2"
+	name = "Kod nuklearny głowicy ALPHA nr 2"
 }
 
 wep.weapon_stunstick = "Pałka"
