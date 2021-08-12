@@ -74,7 +74,7 @@ lang.NCRegistry = {
 	roundwin = "Zwycięzca rundy: %s",
 	roundwinmulti = "Zwycięzcy rundy: [RAW]",
 	shelter_escape = "Przeżyłeś eksplozję w schronie przeciwwybuchowym",
-	alpha_escape = "Uciekłeś przed wybuchem głowicy",
+	alpha_escape = "Uciekłeś przed wybuchem głowicy ALPHA",
 
 	mvp = "MVP: %s z wynikiem: %i",
 	stat_kill = "Zabici gracze: %i",
@@ -86,11 +86,11 @@ lang.NCRegistry = {
 	stat_escapes = "Graczy uciekło: %i",
 	stat_escorts = "Graczy odeskortowano: %i",
 	stat_023 = "Nagłe zgony spowodowane przez SCP 023: %i",
-	stat_049 = "Ludzie \"wyleczeni\" przez SCP 049: %i",
-	stat_066 = "Played masterpieces: %i",
+	stat_049 = "Gracze \"wyleczeni\" przez SCP 049: %i",
+	stat_066 = "Gracze zabici przez głośną muzykę SCP 066: %i",
 	stat_096 = "Gracze zabici przez SCP 096: %i",
 	stat_106 = "Gracze przeteleportowani do wymiaru łuzowego: %i",
-	stat_173 = "Snapped necks: %i",
+	stat_173 = "Złamane karki przez SCP 173: %i",
 	stat_457 = "Podpaleni gracze: %i",
 	stat_682 = "Gracze zabici przez SCP 682: %i",
 	stat_8602 = "Gracze przybici do ściany przez SCP 860-2: %i",
@@ -137,7 +137,7 @@ lang.protection = "Ochrona"
 lang.weight_unit = "kg"
 lang.eq_buttons = {
 	escort = "Eskortuj",
-	gatea = "Zniszcz Gate A"
+	gatea = "Detonuj Gate A"
 }
 
 --[[-------------------------------------------------------------------------
@@ -205,46 +205,46 @@ lang.view_cat = {
 Settings
 ---------------------------------------------------------------------------]]
 lang.settings = {
-	settings = "Gamemode settings",
+	settings = "Ustawienia trybu gry",
 
 	none = "NONE",
-	press_key = "> Press a key <",
-	client_reset = "Reset Client Settings to Defaults",
-	server_reset = "Reset Server Settings to Defaults",
+	press_key = "> Wciśnij przycisk <",
+	client_reset = "Przywróć ustawienia domyślne klienta",
+	server_reset = "Przywróć ustawienia domyślne serwera",
 
-	client_reset_desc = "You are about to reset your ALL setting in this gamemode.\nThis action cannot be undone!",
-	server_reset_desc = "Due to security reasons you cannot reset server settings here.\nTo reset server to default settings, enter 'slc_factory_reset' in server console and follow instructions.\nBe careful this action cannot be undone and will reset EVERYTHING!",
+	client_reset_desc = "Zaraz zresetujesz swoje WSZYSTKIE ustawienia w tym trybie gry.\nTej czynności nie można cofnąć!",
+	server_reset_desc = "Ze względów bezpieczeństwa nie możesz tutaj zresetować ustawień serwera.\nAby zresetować serwer do ustawień domyślnych, wpisz 'slc_factory_reset' w konsoli serwera i postępuj zgodnie z instrukcjami.\nUważaj, tej czynności nie da się cofnąć i zresetuje WSZYSTKO!",
 
 	popup_ok = "OK",
-	popup_cancel = "CANCEL",
-	popup_continue = "CONTINUE",
+	popup_cancel = "ANULUJ",
+	popup_continue = "KONTYNUUJ",
 
 	panels = {
-		binds = "Keybinds",
-		reset = "Reset Gamemode",
+		binds = "Klawiszologia",
+		reset = "Reset trybu gry",
 		cvars = "ConVars Editor",
 	},
 
 	binds = {
-		eq_button = "Equipment",
-		upgrade_tree_button = "SCP Upgrade Tree",
-		ppshop_button = "Class Viewer",
-		settings_button = "Gamemode Settings",
-		scp_special = "SCP Special Ability"
+		eq_button = "Ekwipunek",
+		upgrade_tree_button = "Drzewko umiejętności SCP",
+		ppshop_button = "Przeglądaj klasy",
+		settings_button = "Ustawienia trybu gry",
+		scp_special = "Specjalne umiejętności SCP"
 	}
 }
 
 lang.gamemode_config = {
-	loading = "Loading...",
+	loading = "Ładowanie...",
 
 	categories = {
-		general = "General",
-		round = "Round",
+		general = "Ogólne",
+		round = "Runda",
 		xp = "XP",
 		support = "Support",
 		warheads = "Warheads",
 		afk = "AFK",
-		time = "Time",
+		time = "Czas",
 		premium = "Premium",
 		scp = "SCP",
 	}
@@ -590,6 +590,8 @@ lang.CLASS_OBJECTIVES = {
 - "Wylecz" innych]],
 
 	SCP0492 = [[]],
+
+	SCP058 = generic_scp,
 
 	SCP066 = generic_scp_friendly,
 
@@ -1120,7 +1122,7 @@ wep.SCP049 = {
 	zombies = {
 		normal = "Standardowy Zombie",
 		light = "Lekki Zombie",
-		heavy = "Ciężki Zombie"
+		heavy = "Ciężki Zombie",
 	},
 	upgrades = {
 		cure1 = {
@@ -1681,7 +1683,7 @@ wep.SCP3199 = {
 wep.SCP500 = {
 	name = "SCP 500",
 	death_info = "Udławiłeś się SCP 500",
-	text_used = "Jak tylko połknąłeś SCP 500, poczułeś się lepiej",
+	text_used = "Jak tylko połknąłeś SCP 500, to poczułeś się lepiej",
 }
 
 wep.SCP714 = {
