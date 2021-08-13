@@ -111,7 +111,7 @@ function SWEP:PrimaryAttack()
 				self.Targets[ent] = { 0, ent:TimeSignature(), 0 }
 			end
 
-			if ent:GetSCP714() then
+			if SERVER and ent:GetSCP714() or CLIENT and ent:CL_GetSCP714() then
 				if SERVER then
 					owner:EmitSound( "SCP049.Remove714" )
 					ent:PlayerDropWeapon( "item_scp_714" )

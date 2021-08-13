@@ -157,10 +157,6 @@ local scaled_fonts_built = false
 SLC_HUD_END_X = 0
 
 function GM:HUDPaint()
-
-	local shouldDraw = hook.Call("HUDShouldDraw", GAMEMODE, "scplc.hud")
-    if shouldDraw == false then return end
-
 	next_frame = true
 	local w, h = ScrW(), ScrH()
 	local scale = hudscalecvar:GetFloat()

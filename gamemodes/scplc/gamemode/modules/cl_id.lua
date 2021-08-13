@@ -50,10 +50,6 @@ function ClearPlayerIDs()
 end
 
 function GM:HUDDrawTargetID()
-
-	local shouldDraw = hook.Call("HUDShouldDraw", GAMEMODE, "scplc.target")
-    if shouldDraw == false then return end
-
 	if hud_disabled then return end
 
 	local lp = LocalPlayer()

@@ -81,10 +81,10 @@ if SERVER then
 	hook.Add( "SLCPlayerSanityChange", "SLCSCP714Sanity", func )
 end
 
-/*if CLIENT then
+if CLIENT then
 	local ply = FindMetaTable( "Player" )
 
-	function ply:GetSCP714() --for clientside usage purpose
+	function ply:CL_GetSCP714() --for clientside usage purpose
 		local scp = self:GetWeapon( "item_scp_714" )
 		if IsValid( scp ) then
 			return scp:GetEnabled()
@@ -92,4 +92,4 @@ end
 
 		return false
 	end
-end*/
+end

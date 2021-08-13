@@ -301,8 +301,9 @@ function DamageLogger.Print( data )
 
 	for i = 1, tl_num do
 		local info = data.TakenLog[i]
+		local name = IsValid( info.attacker ) and info.attacker:GetNameEx( 24, UTF8_4B_CHARSET, "?" ) or "Unknown"
 
-		t2:Insert( 1, 2 + i, IsValid( info.attacker ) and info.attacker:GetNameEx( 24, UTF8_4B_CHARSET, "?" ) or "Unknown", "<&" )
+		t2:Insert( 1, 2 + i, string.gsub( name, "%%", "" ), "<&" )
 		t2:Insert( 2, 2 + i, string.format( "%i", info.damage ) )
 		t2:Insert( 3, 2 + i, string.format( "%i", info.data.dmg_orig ) )
 		t2:Insert( 4, 2 + i, string.format( "%i%%",  100 - info.damage / info.data.dmg_orig * 100 ) )

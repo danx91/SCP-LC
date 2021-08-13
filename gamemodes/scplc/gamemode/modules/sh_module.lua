@@ -231,7 +231,7 @@ end
 
 --It's serverside only function, but lets leave it here, next to ScalePlayerDamage
 function GM:EntityTakeDamage( target, info )
-	if PREVENT_BREAK then --TEST break
+	if PREVENT_BREAK then
 		local cache = GetRoundProperty( "prevent_break_cache" )
 
 		if !cache then
