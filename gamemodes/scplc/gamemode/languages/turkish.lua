@@ -1,7 +1,8 @@
 --[[-------------------------------------------------------------------------
 Language: Türkçe
-Date: 13.03.2021
+Date: 12.08.2021
 Translated by: ๖̶̶̶ζ͜͡Akane
+Updated in day 12.08.2021 by: Zaptyp (https://steamcommunity.com/id/Zaptyp/)
 ---------------------------------------------------------------------------]]
 
 local lang = {}
@@ -322,7 +323,7 @@ vest.specguard = "Uzman Güvenlik Yeleği"
 vest.guard_medic = "Sıhhıyeci Yeleği"
 vest.ntf = "MTF NTF Yeleği"
 vest.mtf_medic = "MTF NTF Sıhhıyeci Yeleği"
-vest.ntf_com = "MTF NTF Komutan Yeleği"
+vest.ntfcom = "MTF NTF Komutan Yeleği"
 vest.alpha1 = "MTF Alfa-1 Yeleği"
 vest.ci = "Kaos İsyancısı Yeleği"
 vest.fire = "Alev Koruması Yeleği"

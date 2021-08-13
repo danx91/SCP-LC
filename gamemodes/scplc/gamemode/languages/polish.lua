@@ -1,7 +1,8 @@
 --[[-------------------------------------------------------------------------
 Language: Polish
-Date: 19.02.2021
+Date: 12.08.2021
 Translated by: Slusher, alski
+Updated by: Zaptyp (https://steamcommunity.com/id/Zaptyp/)
 ---------------------------------------------------------------------------]]
 
 local lang = {}
@@ -16,11 +17,8 @@ lang.NRegistry = {
 	kill = "Otrzymujesz %d punktów za zabójstwo %s: %s!",
 	assist = "Otrzymujesz %d punktów za asystę w zabójstwie gracza: %s!",
 	rdm = "Tracisz %d punktów za zabójstwo %s: %s!",
-	//acc_nocard = "Do obsługi tych drzwi wymagana jest karta",
-	//acc_wrongcard = "Do obsługi tych drzwi wymagana jest karta o wyższym poziomie dostępu",
 	acc_denied = "Brak dostępu",
 	acc_granted = "Dostęp przyznany",
-	//device_nocard = "Do obsługi tego urządzenia wymagana jest karta",
 	acc_omnitool = "Do obsługi tych drzwi wymagany jest Omnitool",
 	device_noomni = "Do obsługi tego urządzenia wymagany jest Omnitool",
 	elevator_noomni = "Do obsługi tej windy wymagany jest Omnitool",
@@ -53,6 +51,11 @@ lang.NRegistry = {
 	alpha_detonation = "Detonacja głowicy ALPHA za %i sekund. Wejdź do placówki lub natychmiastowo udaj się do ewakuacji!",
 	alpha_card = "Włożyłeś kartę nuklearną głowicy ALPHA",
 	destory_scp = "Otrzymujesz %i punktów za zniszczenie podmiotu SCP!",
+	afk = "Jesteś AFK. Nie będziesz się respił ani otrzymywał expa",
+	afk_end = "Nie jesteś już AFK",
+	overload_cooldown = "Poczekaj %i sekund aby przeciążyć te drzwi!",
+	advanced_overload = "Te drzwi wydają się być za mocne! Spróbuj ponownie za %i sekund",
+	lockdown_once = "Blokada placówki może być aktywowana tylko raz na runde",
 }
 
 lang.NFailed = "Nie udało się uzyskać dostępu do NRegistry z kluczem: %s"
@@ -71,7 +74,7 @@ lang.NCRegistry = {
 	roundwin = "Zwycięzca rundy: %s",
 	roundwinmulti = "Zwycięzcy rundy: [RAW]",
 	shelter_escape = "Przeżyłeś eksplozję w schronie przeciwwybuchowym",
-	alpha_escape = "Uciekłeś przed wybuchem głowicy",
+	alpha_escape = "Uciekłeś przed wybuchem głowicy ALPHA",
 
 	mvp = "MVP: %s z wynikiem: %i",
 	stat_kill = "Zabici gracze: %i",
@@ -83,11 +86,11 @@ lang.NCRegistry = {
 	stat_escapes = "Graczy uciekło: %i",
 	stat_escorts = "Graczy odeskortowano: %i",
 	stat_023 = "Nagłe zgony spowodowane przez SCP 023: %i",
-	stat_049 = "Ludzie \"wyleczeni\" przez SCP 049: %i",
-	stat_066 = "Played masterpieces: %i",
-	stat_096 = "Players killed by shy guy: %i",
-	stat_106 = "Players teleported to Pocket Dimension: %i",
-	stat_173 = "Snapped necks: %i",
+	stat_049 = "Gracze \"wyleczeni\" przez SCP 049: %i",
+	stat_066 = "Gracze zabici przez głośną muzykę SCP 066: %i",
+	stat_096 = "Gracze zabici przez SCP 096: %i",
+	stat_106 = "Gracze przeteleportowani do wymiaru łuzowego: %i",
+	stat_173 = "Złamane karki przez SCP 173: %i",
 	stat_457 = "Podpaleni gracze: %i",
 	stat_682 = "Gracze zabici przez SCP 682: %i",
 	stat_8602 = "Gracze przybici do ściany przez SCP 860-2: %i",
@@ -95,6 +98,8 @@ lang.NCRegistry = {
 	stat_966 = "Gracze przecięci przez SCP 966: %i",
 	stat_3199 = "Zabójstwa dokonane przez SCP 3199: %i",
 	stat_24273 = "Osoby osądzone przez SCP 2427-3: %i",
+	stat_omega_warhead = "Głowica OMEGA została zdetonowana",
+	stat_alpha_warhead = "Głowica ALPHA została zdetonowana",
 }
 
 lang.NCFailed = "Nie udało się uzyskać dostępu do NCRegistry z kluczem: %s"
@@ -132,7 +137,7 @@ lang.protection = "Ochrona"
 lang.weight_unit = "kg"
 lang.eq_buttons = {
 	escort = "Eskortuj",
-	gatea = "Zniszcz Gate A"
+	gatea = "Detonuj Gate A"
 }
 
 --[[-------------------------------------------------------------------------
@@ -149,6 +154,8 @@ effects.insane = "Szaleństwo"
 effects.gas_choke = "Duszenie"
 effects.radiation = "Radiacja"
 effects.deep_wounds = "Głębokie rany"
+effects.heavy_bleeding = "Silne krwawienie"
+effects.weak_bleeding = "Słabe krwawienie"
 
 --[[-------------------------------------------------------------------------
 Class viewer
@@ -195,6 +202,55 @@ lang.view_cat = {
 }
 
 --[[-------------------------------------------------------------------------
+Settings
+---------------------------------------------------------------------------]]
+lang.settings = {
+	settings = "Ustawienia trybu gry",
+
+	none = "NONE",
+	press_key = "> Wciśnij przycisk <",
+	client_reset = "Przywróć ustawienia domyślne klienta",
+	server_reset = "Przywróć ustawienia domyślne serwera",
+
+	client_reset_desc = "Zaraz zresetujesz swoje WSZYSTKIE ustawienia w tym trybie gry.\nTej czynności nie można cofnąć!",
+	server_reset_desc = "Ze względów bezpieczeństwa nie możesz tutaj zresetować ustawień serwera.\nAby zresetować serwer do ustawień domyślnych, wpisz 'slc_factory_reset' w konsoli serwera i postępuj zgodnie z instrukcjami.\nUważaj, tej czynności nie da się cofnąć i zresetuje WSZYSTKO!",
+
+	popup_ok = "OK",
+	popup_cancel = "ANULUJ",
+	popup_continue = "KONTYNUUJ",
+
+	panels = {
+		binds = "Klawiszologia",
+		reset = "Reset trybu gry",
+		cvars = "ConVars Editor",
+	},
+
+	binds = {
+		eq_button = "Ekwipunek",
+		upgrade_tree_button = "Drzewko umiejętności SCP",
+		ppshop_button = "Przeglądaj klasy",
+		settings_button = "Ustawienia trybu gry",
+		scp_special = "Specjalne umiejętności SCP"
+	}
+}
+
+lang.gamemode_config = {
+	loading = "Ładowanie...",
+
+	categories = {
+		general = "Ogólne",
+		round = "Runda",
+		xp = "XP",
+		support = "Support",
+		warheads = "Warheads",
+		afk = "AFK",
+		time = "Czas",
+		premium = "Premium",
+		scp = "SCP",
+	}
+}
+
+--[[-------------------------------------------------------------------------
 Scoreboard
 ---------------------------------------------------------------------------]]
 lang.unconnected = "Unconnected"
@@ -229,6 +285,15 @@ lang.upgrades = {
 	requiresany = "Wymaga dowolnego",
 	blocked = "Blokowane przez"
 }
+
+--[[-------------------------------------------------------------------------
+SCP HUD
+---------------------------------------------------------------------------]]
+local scp_hud = {}
+lang.SCPHUD = scp_hud
+
+scp_hud.skill_not_ready = "Umiejętność nie jest jeszcze gotowa!"
+scp_hud.skill_cant_use = "Umiejętność nie może być teraz użyta!"
 
 --[[-------------------------------------------------------------------------
 Info screen
@@ -294,6 +359,7 @@ Nie masz %i addonów z %i. Czy chciałbyś je pobrać?? (Możesz pobrać je prze
 	workshop = "Pokaż stronę na workshopie",
 	downloading = "Pobieranie",
 	mounting = "Montowanie",
+	idle = "Czekam na pobieranie...",
 	processing = "Przetwarzany addon: %s\nStatus: %s",
 	cancel = "Anuluj"
 }
@@ -313,6 +379,12 @@ misc.alpha_warhead = {
 	active = "Głowica ALPHA aktywowana\n\nNatychmiastowo przystąp do ewakuacji!\nDetonacja za %.2fs",
 }
 
+misc.buttons = {
+	MOUSE1 = "LPM",
+	MOUSE2 = "PPM",
+	MOUSE3 = "ŚPM",
+}
+
 --[[-------------------------------------------------------------------------
 Vests
 ---------------------------------------------------------------------------]]
@@ -325,7 +397,7 @@ vest.specguard = "Pancerz specjalisty ochrony"
 vest.guard_medic = "Pancerz sanitariusza ochrony"
 vest.ntf = "Pancerz MTF NTF"
 vest.mtf_medic = "Pancerz medyka MTF NTF"
-vest.ntf_com = "Pancerz dowódcy MTF NTF"
+vest.ntfcom = "Pancerz dowódcy MTF NTF"
 vest.alpha1 = "Pancerz MTF Alfa-1"
 vest.ci = "Pancerz Chaos Insurgency"
 vest.fire = "Kamizelka ognioodporna"
@@ -401,7 +473,7 @@ classes.ntfcom = "Dowódca MTF NTF"
 classes.ntfsniper = "Snajper MTF NTF"
 classes.ntfmedic = "Medyk MTF NTF"
 classes.alpha1 = "MTF Alfa-1"
-classes.alpha1sniper = "Strzelec wyborowy MTF Alfa-1"
+classes.alpha1sniper = "Strzelec Wyborowy MTF Alfa-1"
 classes.ci = "Chaos Insurgency"
 classes.cicom = "Dowódca Chaos Insurgency"
 
@@ -519,7 +591,7 @@ lang.CLASS_OBJECTIVES = {
 
 	SCP0492 = [[]],
 
-	SCP023 = generic_scp,
+	SCP058 = generic_scp,
 
 	SCP066 = generic_scp_friendly,
 
@@ -731,6 +803,7 @@ Potencjał bojowy: Średni
 Czy może uciec: Nie
 Czy może eskortować: Tylko klase D
 Eskortowany przez: Nikogo
+
 Przegląd:
 Szpieg CI. Wysoka użyteczność. Spróbuj wtopić się w ochroniarzy i pomóż klasie D.
 ]],
@@ -826,6 +899,7 @@ Potencjał bojowy: Bardzo Wysoki
 Czy może uciec: Nie
 Czy może eskortować: Tylko naukowców
 Eskortowany przez: Nikogo
+
 Przegląd:
 Jednostka MFO Alpha-1. Mocno opancerzona, bardzo użyteczna jednostka, uzbrojona w karabin wyborowy. Wejdź do placówki i zabezpiecz ją. Pomóż personelowi w środku i zneutralizuj SCP i klasę D.
 ]],
@@ -883,6 +957,14 @@ Przegląd:
 Grasz bardzo głośną muzykę, uszkadzając bębenki słuchowe wszystkich graczy w pobliżu.
 ]],
 
+	SCP058 = [[Poziom trudności: Średni
+Wytrzymałość: Zwykła
+Zwinność: Zwykła
+Obrażenia: Średnie
+
+Overview:
+SCP z elastycznym stylem gry. Może atakować wręcz i strzelać. Posiada różne ulepszenia, które mogą dodać truciznę do ataków, zmodyfikować atak strzału lub odblokować zdolność eksplozji.
+]],
 	SCP096 = [[Poziom trudności: Trudny
 Wytrzymałość: Wysoka
 Zwinność: Bardzo Niska / Ekstremalna kiedy jest rozwścieczony
@@ -1040,7 +1122,7 @@ wep.SCP049 = {
 	zombies = {
 		normal = "Standardowy Zombie",
 		light = "Lekki Zombie",
-		heavy = "Ciężki Zombie"
+		heavy = "Ciężki Zombie",
 	},
 	upgrades = {
 		cure1 = {
@@ -1112,15 +1194,15 @@ wep.SCP066 = {
 			info = "Zasięg obrażeń zostaje zwiększony o 75\n\t• Całkowity wzrost: 225",
 		},
 		damage1 = {
-			name = "Bas I",
+			name = "Bass I",
 			info = "Obrażenia zwiększone do 112,5%, ale zasięg zmniejszony do 90%",
 		},
 		damage2 = {
-			name = "Bas II",
+			name = "Bass II",
 			info = "Obrażenia zwiększone do 135%, ale zasięg zmniejszony do 75%",
 		},
 		damage3 = {
-			name = "Bas III",
+			name = "Bass III",
 			info = "Obrażenia zwiększone do 200%, ale zasięg zmniejszony do 50%",
 		},
 		def1 = {
@@ -1139,6 +1221,61 @@ wep.SCP066 = {
 			name = "Lepki",
 			info = "Po wskoczeniu w człowieka trzymasz się go przez następne 10 sekund",
 		}
+	}
+}
+
+wep.SCP058 = {
+	upgrades = {
+		parse_description = true,
+
+		attack1 = {
+			name = "Jadowite żądło I",
+			info = "Dodaje truciznę do podstawowego ataku"
+		},
+		attack2 = {
+			name = "Jadowite żądło II",
+			info = "Zwiększa obrażenia trucizny i skraca czas odnowienia ataku. \n\t• Dodaje [prim_dmg] obrażeń do ataku\n\t• Atak trucizną zadaje [pp_dmg] obrażeń\n\t• Czas odnowienia zostaje zmniejszony o [prim_cd]s"
+		},
+		attack3 = {
+			name = "Jadowite żądło III",
+			info = "Zwiększa obrażenia trucizny i skraca czas odnowienia ataku.\n\t• Jeśli cel nie jest zatruty, natychmiast nakłada 2 stosy trucizny\n\t• Atak trucizną zadaje [pp_dmg] obrażeń\n\t• Czas odnowienia zostaje zmniejszony o [prim_cd]s"
+		},
+		shot = {
+			name = "Skorumpowana Krew",
+			info = "Dodaje truciznę do ataków strzałami"
+		},
+		shot11 = {
+			name = "Surge I",
+			info = "Zwiększa obrażenia i rozmiar pocisku, ale także wydłuża czas odnowienia i spowalnia pocisk\n\t• Mnożnik obrażeń od pocisków zostaje zwiększony do: [shot_damage]\n\t• Mnożnik wielkości pocisku zostaje zwiększony do: [shot_size]\n\t• Mnożnik prędkości pocisku zostaje zwiększony do: [shot_size]\n\t• Całkowity czas odnowienia zwiększony o [shot_cd]s"
+		},
+		shot12 = {
+			name = "Surge II",
+			info = "Zwiększa obrażenia i rozmiar pocisku, ale także wydłuża czas odnowienia i spowalnia pocisk\n\t• Efekt trucizny zostaje usunięty\n\t• Mnożnik obrażeń od pocisków zostaje zwiększony do: [shot_damage]\n\t• Mnożnik wielkości pocisku zostaje zwiększony do: [shot_size]\n\t• Mnożnik prędkości pocisku zostaje zwiększony do: [shot_size]\n\t• Całkowity czas odnowienia zwiększony o [shot_cd]s"
+		},
+		shot21 = {
+			name = "Krwawa mgła I",
+			info = "Strzał pozostawia po uderzeniu mgłę, raniąc i zatruwając każdego, kto jej dotknie.\n\t• Usuwane są obrażenia bezpośrednie i obszarowe\n\t• Obrażenia chmury wynoszą: [cloud_damage] obrażeń przy kontakcie\n\t• Trucizna zadawana przez chmure wynosi: [sp_dmg] obrażeń\n\t• Stosy strzałów ograniczone do [stacks]\n\t• Czas odnowienia zwiększony o [shot_cd]s\n\t• Stosy są generowane przy mnożniku: [regen_rate]"
+		},
+		shot22 = {
+			name = "Krwawa mgła II",
+			info = "Podkręca obrażenia zadawane przez mgłe.\n\t• Obrażenia chmury wynoszą: [cloud_damage] obrażeń przy kontakcie\n\t• Trucizna zadawana przez chmure: [sp_dmg] obrażeń\n\t• Stosy są generowane przy mnożniku: [regen_rate]"
+		},
+		shot31 = {
+			name = "Multishot I",
+			info = "Pozwala na strzelanie z dużą prędkością podczas trzymania przycisku ataku.\n\t• Odblokowuje możliwość szybkiego oddawania strzałów\n\t• Usuwane są obrażenia bezpośrednie i obszarowe\n\t• Stosy strzałów ograniczone do [stacks]\n\t• Stosy są generowane przy mnożniku: [regen_rate]\n\t• Mnożnik wielkości pocisku zostaje zwiększony do: [shot_size]\n\t• Mnożnik prędkości pocisku zostaje zwiększony do: [shot_size]"
+		},
+		shot32 = {
+			name = "Multishot II",
+			info = "Zwiększa maksymalne stosy i poprawia prędkość strzału.\n\t• Stosy strzałów ograniczone do [stacks]\n\t• Stosy są generowane przy mnożniku: [regen_rate]\n\t• Mnożnik wielkości pocisku zostaje zwiększony do: [shot_size]\n\t• Mnożnik prędkości pocisku zostaje zwiększony do: [shot_size]"
+		},
+		exp1 = {
+			name = "Aortal Burst",
+			info = "Odblokowuje umiejętność eksplozji zadającej ogromne obrażenia, gdy ilość hp spadnie poniżej 1000 po raz pierwszy"
+		},
+		exp2 = {
+			name = "Toksyczny wybuch",
+			info = "Zwiększa twoją zdolność do eksplozji\n\t• Stosuje 2 stosy trucizny\n\t• Mnożnik promienia zostaje zwiększony do: [explosion_radius]"
+		},
 	}
 }
 
@@ -1543,8 +1680,44 @@ wep.SCP3199 = {
 	}
 }
 
+wep.SCP500 = {
+	name = "SCP 500",
+	death_info = "Udławiłeś się SCP 500",
+	text_used = "Jak tylko połknąłeś SCP 500, to poczułeś się lepiej",
+}
+
 wep.SCP714 = {
 	name = "SCP 714"
+}
+
+wep.SCP1025 = {
+	name = "SCP 1025",
+	diseases = {
+		arrest = "Zatrzymanie akcji serca",
+		mental = "Choroba psychiczna",
+		asthma = "Astma",
+		blindness = "Ślepota",
+		hemo = "Hemofilia",
+		oste = "Osteoporoza",
+
+		adhd = "ADHD",
+		throm = "Trombocytemia",
+		urbach = "Choroba Urbacha-Wiethego",
+
+		gas = "Tympanity",
+	},
+	descriptions = {
+		arrest = "Zatrzymanie krążenia to nagła utrata przepływu krwi wynikająca z niewydolności serca. Objawy obejmują utratę przytomności i nieprawidłowy lub brak oddechu. Niektóre osoby mogą odczuwać ból w klatce piersiowej, duszności lub mdłości bezpośrednio przed wystąpieniem zatrzymania krążenia. Ból promieniujący do jednego ramienia jest częstym objawem, podobnie jak długotrwałe złe samopoczucie i ogólne osłabienie serca. Jeśli nie jest leczony w ciągu kilku minut, zwykle prowadzi do śmierci.",
+		asthma = "Astma jest długotrwałą chorobą zapalną dróg oddechowych w płucach. Charakteryzuje się zmiennymi i nawracającymi objawami, odwracalnym upośledzeniem przepływu powietrza oraz łatwo wyzwalanymi skurczami oskrzeli. Objawy obejmują epizody świszczącego oddechu, kaszlu, ucisku w klatce piersiowej i duszności. Mogą one występować kilka razy dziennie lub kilka razy w tygodniu.",
+		blindness = "Upośledzenie wzroku, znane również jako upośledzenie widzenia lub utrata wzroku, to obniżona zdolność widzenia w stopniu powodującym problemy, których nie można rozwiązać za pomocą zwykłych środków, takich jak okulary. Wśród nich są również osoby, które mają obniżoną zdolność widzenia, ponieważ nie mają dostępu do okularów lub soczewek kontaktowych. Termin ślepota jest używany w odniesieniu do całkowitej lub prawie całkowitej utraty wzroku.",
+		hemo = "Hemofilia (pisana również jako hemofilia) jest najczęściej dziedziczonym zaburzeniem genetycznym, które upośledza zdolność organizmu do tworzenia skrzepów krwi, procesu niezbędnego do zatrzymania krwawienia. Powoduje to u ludzi dłuższe krwawienie po urazie, łatwe powstawanie siniaków i zwiększone ryzyko krwawienia w stawach lub mózgu. Charakterystyczne objawy różnią się w zależności od stopnia nasilenia. Ogólnie rzecz biorąc, objawami są epizody krwawienia wewnętrznego lub zewnętrznego.",
+		oste = "Osteoporoza jest ogólnoustrojowym schorzeniem układu kostnego, charakteryzującym się niską masą kostną, mikroarchitektoniczną degradacją tkanki kostnej prowadzącą do kruchości kości, a w konsekwencji do zwiększenia ryzyka złamań. Jest to najczęstsza przyczyna złamania kości u osób starszych. Kości, które często ulegają złamaniu, to kręgi w kręgosłupie, kości przedramienia i biodra. Do momentu wystąpienia złamania kości zazwyczaj nie występują żadne objawy.",
+		
+		adhd = "Zespół nadpobudliwości psychoruchowej z deficytem uwagi (ADHD) jest zaburzeniem neurorozwojowym charakteryzującym się nieuwagą, nadmierną energią, nadmiernym skupieniem i impulsywnością, które w innych przypadkach nie są odpowiednie dla wieku danej osoby. Niektóre osoby z ADHD wykazują również trudności z regulacją emocji lub problemy z funkcjami wykonawczymi. Dodatkowo jest ona związana z innymi zaburzeniami psychicznymi.",
+		throm = "Trombocytemia jest stanem wysokiej liczby płytek krwi (trombocytów) we krwi. Wysoka liczba płytek krwi nie musi sygnalizować żadnych problemów klinicznych i może być wykryta podczas rutynowego badania pełnej morfologii krwi. Ważne jest jednak, aby zebrać pełny wywiad medyczny, aby upewnić się, że zwiększona liczba płytek krwi nie jest spowodowana procesem wtórnym.",
+		urbach = "Choroba Urbacha-Wiethego jest bardzo rzadkim recesywnym zaburzeniem genetycznym. Objawy choroby są bardzo różne u poszczególnych osób. Urbach- Choroba Wiethego wykazuje obustronne symetryczne zwapnienia w przyśrodkowych płatach skroniowych. Zwapnienia te często dotyczą jądra migdałowatego. Uważa się, że migdał jest zaangażowany w przetwarzanie biologicznie istotnych bodźców oraz w emocjonalną pamięć długotrwałą, szczególnie tych związanych z lękiem.",
+	},
+	death_info_arrest = "Umarłeś z powodu zatrzymania akcji serca"
 }
 
 wep.HOLSTER = {
@@ -1613,12 +1786,11 @@ wep.ACCESS_CHIP = {
 		KETER = "Keter",
 		OFFICE = "Biuro",
 		MEDBAY = "Ambulatorium",
-		GENERAL = "Ogólny",
 		CHECKPOINT_LCZ = "Checkpoint LCZ-HCZ",
 		CHECKPOINT_EZ = "Checkpoint EZ-HCZ",
 		WARHEAD_ELEVATOR = "Winda do głowicy",
 		EC = "Centrum elektryczne",
-		ARMORY = "Armory",
+		ARMORY = "Zbrojownia",
 		GATE_A = "Gate A",
 		GATE_B = "Gate B",
 		FEMUR = "Femur Breaker",
@@ -1673,7 +1845,7 @@ wep.BATTERY = {
 
 wep.GASMASK = {
 	name = "Maska gazowa",
-	showname = "Gaz maska"
+	showname = "Maska gazowa"
 }
 
 wep.TURRET = {
@@ -1688,11 +1860,11 @@ wep.TURRET = {
 }
 
 wep.ALPHA_CARD1 = {
-	name = "Kody nuklearne głowicy ALPHA #1"
+	name = "Kod nuklearny głowicy ALPHA nr 1"
 }
 
 wep.ALPHA_CARD2 = {
-	name = "Kody nuklearne głowicy ALPHA #2"
+	name = "Kod nuklearny głowicy ALPHA nr 2"
 }
 
 wep.weapon_stunstick = "Pałka"

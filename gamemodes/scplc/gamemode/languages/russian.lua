@@ -1,8 +1,9 @@
 --[[-------------------------------------------------------------------------
 Language: Russian
-Date: 15.03.2021
+Date: 12.08.2021
 Translated by: Deiryn (http://steamcommunity.com/profiles/76561198121822134)
 Updated by: berry (http://steamcommunity.com/profiles/76561198158864042)
+Updated in day 12.08.2021 by: Zaptyp (https://steamcommunity.com/id/Zaptyp/)
 ---------------------------------------------------------------------------]]
 
 local lang = {}
@@ -323,7 +324,7 @@ vest.specguard = "Бронежилет охранника-специалиста
 vest.guard_medic = "Бронежилет медика"
 vest.ntf = "Бронежилет МОГ NTF"
 vest.mtf_medic = "Бронежилет медика МОГ NTF"
-vest.ntf_com = "Бронежилет командира МОГ NTF"
+vest.ntfcom = "Бронежилет командира МОГ NTF"
 vest.alpha1 = "Бронежилет МОГ Альфа-1"
 vest.ci = "Бронежилет Повстанца Хаоса"
 vest.fire = "Противпожарный бронежилет"

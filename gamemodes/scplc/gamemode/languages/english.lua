@@ -395,7 +395,7 @@ vest.specguard = "Specialist Guard Vest"
 vest.guard_medic = "Medic Guard Vest"
 vest.ntf = "MTF NTF Vest"
 vest.mtf_medic = "MTF NTF Medic Vest"
-vest.ntf_com = "MTF NTF Commander Vest"
+vest.ntfcom = "MTF NTF Commander Vest"
 vest.alpha1 = "MTF Alpha-1 Vest"
 vest.ci = "Chaos Insurgency Vest"
 vest.fire = "Fireproof Vest"
@@ -1824,39 +1824,6 @@ wep.OMNITOOL = {
 		ejectwarn = "Are you sure to eject chip?",
 		ejectconfirm = "Press again to confirm...",
 		chip = "Installed Chip:",
-	},
-}
-
-wep.KEYCARD = {
-	author = "danx91",
-	instructions = "Access:",
-	ACC = {
-		"SAFE",
-		"EUCLID",
-		"KETER",
-		"Checkpoints",
-		"OMEGA Warhead",
-		"General Access",
-		"Gate A",
-		"Gate B",
-		"Armory",
-		"Femur Breaker",
-		"EC",
-	},
-	STATUS = {
-		"ACCESS",
-		"NO ACCESS",
-	},
-	NAMES = {
-		"Keycard Level 1",
-		"Keycard Level 2",
-		"Keycard Level 3",
-		"Researcher Keycard",
-		"MTF Guard Keycard",
-		"MTF Commander Keycard",
-		"Keycard Level OMNI",
-		"Checkpoint Security Keycard",
-		"Hacked CI Keycard",
 	},
 }
 

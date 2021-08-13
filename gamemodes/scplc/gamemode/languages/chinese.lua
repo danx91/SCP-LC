@@ -1,7 +1,8 @@
 --[[-------------------------------------------------------------------------
-Language: chinese
-Date: 23.07.2021
-Translated by:xiaobai
+Language: Chinese
+Date: 12.08.2021
+Translated by: xiaobai
+Updated in day 12.08.2021 by: Zaptyp (https://steamcommunity.com/id/Zaptyp/)
 ---------------------------------------------------------------------------]]
 
 local lang = {}
@@ -326,7 +327,7 @@ vest.specguard = "安保主管护甲"
 vest.guard_medic = "医疗护甲"
 vest.ntf = "九尾狐小队队员护甲"
 vest.mtf_medic = "九尾狐小队队医护甲"
-vest.ntf_com = "九尾狐小队指挥官护甲"
+vest.ntfcom = "九尾狐小队指挥官护甲"
 vest.alpha1 = "MTF 阿尔法 护甲"
 vest.ci = "混沌分裂者护甲"
 vest.fire = "防火服"

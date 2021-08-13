@@ -1,7 +1,8 @@
 --[[-------------------------------------------------------------------------
 Language: German
-Date: 14.07.2021
+Date: 12.08.2021
 Translated by: Justinnn
+Updated in day 12.08.2021 by: Zaptyp (https://steamcommunity.com/id/Zaptyp/)
 ---------------------------------------------------------------------------]]
 
 local lang = {}
@@ -328,7 +329,7 @@ vest.guard_medic = "Medic Guard Weste"
 vest.ntf = "MTF NTF Weste"
 vest.mtf_medic = "MTF NTF Medic Weste"
 vest.jugernautt = "Jugernaut Weste"
-vest.ntf_com = "MTF NTF Commander Weste"
+vest.ntfcom = "MTF NTF Commander Weste"
 vest.alpha1 = "MTF Alpha-1 Weste"
 vest.ci = "Chaos Insurgency Weste"
 vest.fire = "Feuerfeste Weste"
