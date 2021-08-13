@@ -1,3 +1,4 @@
+https://img.shields.io/steam/downloads/2402059605
 # SCP-LC
 SCP: Lost Control is a Garry's mod gamemode. This gamemode is based on SCP universe.
 
