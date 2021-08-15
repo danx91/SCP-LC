@@ -1,4 +1,4 @@
-# SCP-LC
+# SCP: Lost Control
 SCP: Lost Control is a Garry's Mod gamemode. This gamemode is based on SCP universe.
 <br>
 <br>
