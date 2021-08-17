@@ -10,11 +10,8 @@ lang.NRegistry = {
 	kill = "Vous avez reçu %d points pour avoir tué %s: %s!",
 	assist = "Vous avez reçu %d points pour avoir contribué a la mort d'un joueur: %s!",
 	rdm = "Vous avez perdu %d points pour avoir tué %s: %s!",
-	//acc_nocard = "Une carte d'accès est nécessaire pour faire fonctionner cette porte",
-	//acc_wrongcard = "Une carte d'accès avec un niveau d'accréditation plus élevé est nécessaire pour faire fonctionner cette porte",
 	acc_denied = "Accès refusé",
 	acc_granted = "Accès accordé",
-	//device_nocard = "Une carte d'accès est nécessaire pour faire fonctionner cet appareil",
 	acc_omnitool = "Un Omnitool est nécessaire pour faire fonctionner cette porte",
 	device_noomni = "Un Omnitool est nécessaire pour faire fonctionner cet appareil",
 	elevator_noomni = "Un Omnitool est nécessaire pour faire fonctionner cet ascenseur",
@@ -43,6 +40,9 @@ lang.NRegistry = {
 	winalivexp = "Vous avez reçu %i points d'experience car votre équipe a gagné la partie",
 	upgradepoints = "Vous avez reçu de nouveaux points d'amélioration! Appuyez sur '%s' le menu d'amélioration des SCP",
 	prestigeup = "Le joueur %s a gagné un niveau de prestige! Son niveau de prestige actuel est: %i",
+	overload_cooldown = "Wait %i seconds to overload this door!",
+	advanced_overload = "This door seems to be stronger! Try again in %i seconds",
+	lockdown_once = "Facility lockdown can be activated only once per round!",
 }
 
 lang.NFailed = "Echec a accéder NRegistry avec la clé: %s"
@@ -183,6 +183,55 @@ lang.view_cat = {
 }
 
 --[[-------------------------------------------------------------------------
+Settings
+---------------------------------------------------------------------------]]
+lang.settings = {
+	settings = "Gamemode settings",
+
+	none = "NONE",
+	press_key = "> Press a key <",
+	client_reset = "Reset Client Settings to Defaults",
+	server_reset = "Reset Server Settings to Defaults",
+
+	client_reset_desc = "You are about to reset your ALL setting in this gamemode.\nThis action cannot be undone!",
+	server_reset_desc = "Due to security reasons you cannot reset server settings here.\nTo reset server to default settings, enter 'slc_factory_reset' in server console and follow instructions.\nBe careful this action cannot be undone and will reset EVERYTHING!",
+
+	popup_ok = "OK",
+	popup_cancel = "CANCEL",
+	popup_continue = "CONTINUE",
+
+	panels = {
+		binds = "Keybinds",
+		reset = "Reset Gamemode",
+		cvars = "ConVars Editor",
+	},
+
+	binds = {
+		eq_button = "Equipment",
+		upgrade_tree_button = "SCP Upgrade Tree",
+		ppshop_button = "Class Viewer",
+		settings_button = "Gamemode Settings",
+		scp_special = "SCP Special Ability"
+	}
+}
+
+lang.gamemode_config = {
+	loading = "Loading...",
+
+	categories = {
+		general = "General",
+		round = "Round",
+		xp = "XP",
+		support = "Support",
+		warheads = "Warheads",
+		afk = "AFK",
+		time = "Time",
+		premium = "Premium",
+		scp = "SCP",
+	}
+}
+
+--[[-------------------------------------------------------------------------
 Scoreboard
 ---------------------------------------------------------------------------]]
 lang.unconnected = "Non connecté"
@@ -217,14 +266,24 @@ lang.upgrades = {
 }
 
 --[[-------------------------------------------------------------------------
+SCP HUD
+---------------------------------------------------------------------------]]
+local scp_hud = {}
+lang.SCPHUD = scp_hud
+
+scp_hud.skill_not_ready = "Skill is not ready yet!"
+scp_hud.skill_cant_use = "Skill can't be used now!"
+
+--[[-------------------------------------------------------------------------
 Generic
 ---------------------------------------------------------------------------]]
 lang.nothing = "Nothing"
-
+lang.exit = "Exit"
 --[[-------------------------------------------------------------------------
 Misc
 ---------------------------------------------------------------------------]]
 local misc = {}
+lang.MISC = misc
 
 misc.content_checker = {
 	title = "Contenu du Gamemode",
@@ -239,37 +298,56 @@ Vous n'avez pas  %i addons sur %i. Voudriez vous les télécharger maintenant? (
 	cancel = "Annuler"
 }
 
-lang.MISC = misc
+misc.omega_warhead = {
+	idle = "OMEGA Warhead is idle\n\nWaiting for input...",
+	waiting = "OMEGA Warhead is idle\n\nInput accepted!\nWaiting for second input...",
+	failed = "OMEGA Warhead is locked\n\nNo second input detected!\nWait %is",
+	no_remote = "OMEGA Warhead failed\n\nFailed to establish connection to warhead!\t",
+	active = "OMEGA Warhead is engaged\n\nProceed to evacuation immediately!\nDetonation in %.2fs",
+}
 
+misc.alpha_warhead = {
+	idle = "ALPHA Warhead is idle\n\nWaiting for nuclear codes...",
+	ready = "ALPHA Warhead is idle\n\nCodes accepted!\nWaiting for activation...",
+	no_remote = "ALPHA Warhead failed\n\nFailed to establish connection to warhead!\t",
+	active = "ALPHA Warhead is engaged\n\nProceed to evacuation immediately!\nDetonation in %.2fs",
+}
+
+misc.buttons = {
+	MOUSE1 = "LMB",
+	MOUSE2 = "RMB",
+	MOUSE3 = "MMB",
+}
 --[[-------------------------------------------------------------------------
 Vests
 ---------------------------------------------------------------------------]]
 local vest = {}
+lang.VEST = vest
 
 vest.guard = "Tenue de garde de sécurité"
 vest.heavyguard = "Tenue de garde lourd"
 vest.specguard = "Tenue de garde spécial"
-vest.medic = "Tenue de Medecin"
+vest.mtf_medic = "Tenue de Medecin"
+vest.ntfcom = "MTF NTF Commander Vest"
 vest.ntf = "Tenue d'MTF NTF"
+vest.alpha1 = "MTF Alpha-1 Vest"
 vest.ci = "Tenue de l'Insurrection du Chaos"
 vest.fire = "Tenue ignifuge"
 vest.electro = "Tenue resistante a l'électricité"
 
-lang.VEST = vest
-
 local dmg = {}
+lang.DMG = dmg
 
 dmg.BURN = "Dégâts de brûlure"
 dmg.SHOCK = "Dégâts électriques"
 dmg.BULLET = "Dégâts par balle"
 dmg.FALL = "Dégâts"
 
-lang.DMG = dmg
-
 --[[-------------------------------------------------------------------------
 Teams
 ---------------------------------------------------------------------------]]
 local teams = {}
+lang.TEAMS = teams
 
 teams.SPEC = "Spectateurs"
 teams.CLASSD = "Classes D"
@@ -278,19 +356,18 @@ teams.MTF = "MTF"
 teams.CI = "IC"
 teams.SCP = "SCP"
 
-lang.TEAMS = teams
-
-
 --[[-------------------------------------------------------------------------
 Classes
 ---------------------------------------------------------------------------]]
 local classes = {}
+lang.CLASSES = classes
 
 classes.unknown = "Inconnu"
 
 classes.SCP023 = "SCP 023"
 classes.SCP049 = "SCP 049"
 classes.SCP0492 = "SCP 049-2"
+classes.SCP058 = "SCP 058"
 classes.SCP066 = "SCP 066"
 classes.SCP096 = "SCP 096"
 classes.SCP106 = "SCP 106"
@@ -331,10 +408,17 @@ classes.alpha1sniper = "MTF Alpha-1 Tireur d'élite"
 classes.ci = "Insurrection Du Chaos"
 classes.cicom = "Commandant de l'Insurrection Du Chaos"
 
-lang.CLASSES = classes
+local classes_id = {}
+lang.CLASSES_ID = classes_id
+
+classes_id.ntf_1 = "MTF NTF"
+classes_id.ntf_2 = "MTF NTF"
+classes_id.ntf_3 = "MTF NTF"
 
 --[[-------------------------------------------------------------------------
-Class Info
+Class Info - NOTE: Each line is limited to 48 characters!
+Screen is designed to hold max of 5 lines of text and THERE IS NO internal protection!
+Note that last (5th) line should be shorter to prevent text overlaping (about 38 characters)
 ---------------------------------------------------------------------------]]
 lang.CLASS_INFO = {
 	classd = [[Vous êtes un personnel de classe-D
@@ -1470,39 +1554,6 @@ wep.OMNITOOL = {
 		ejectwarn = "Êtes vous sur de vouloir éjecter cette puce?",
 		ejectconfirm = "Re-appuyez pour confirmer...",
 		chip = "Puce installée:",
-	},
-}
-
-wep.KEYCARD = {
-	author = "danx91",
-	instructions = "Accès:",
-	ACC = {
-		"SAFE",
-		"EUCLIDE",
-		"KETER",
-		"Checkpoints",
-		"OMEGA Warhead",
-		"Accès Général",
-		"Gate A",
-		"Gate B",
-		"Armurerie",
-		"Femur Breaker",
-		"Electrical Center",
-	},
-	STATUS = {
-		"Accrédité",
-		"Non accrédité",
-	},
-	NAMES = {
-		"Carte de niveau 1",
-		"Carte de niveau 2",
-		"Carte de niveau 3",
-		"Carte de Chercheur",
-		"Carte de Garde MTF",
-		"Carte de Commandant MTF",
-		"Carte OMNI",
-		"Carte Sécurité de Checkpoint",
-		"Carte piratée de l'Insurrection Du Chaos",
 	},
 }
 

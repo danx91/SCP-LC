@@ -53,6 +53,9 @@ lang.NRegistry = {
 	destory_scp = "你因消灭 SCP 项目而获得 %i 分！",
 	afk = "你现在正在挂机。 随着时间的流逝，你将不会再获得经验！",
 	afk_end = "你已不在挂机",
+	overload_cooldown = "Wait %i seconds to overload this door!",
+	advanced_overload = "This door seems to be stronger! Try again in %i seconds",
+	lockdown_once = "Facility lockdown can be activated only once per round!",
 }
 
 lang.NFailed = "无法使用密钥访问 NRegistry：%s"
@@ -197,6 +200,55 @@ lang.view_cat = {
 }
 
 --[[-------------------------------------------------------------------------
+Settings
+---------------------------------------------------------------------------]]
+lang.settings = {
+	settings = "Gamemode settings",
+
+	none = "NONE",
+	press_key = "> Press a key <",
+	client_reset = "Reset Client Settings to Defaults",
+	server_reset = "Reset Server Settings to Defaults",
+
+	client_reset_desc = "You are about to reset your ALL setting in this gamemode.\nThis action cannot be undone!",
+	server_reset_desc = "Due to security reasons you cannot reset server settings here.\nTo reset server to default settings, enter 'slc_factory_reset' in server console and follow instructions.\nBe careful this action cannot be undone and will reset EVERYTHING!",
+
+	popup_ok = "OK",
+	popup_cancel = "CANCEL",
+	popup_continue = "CONTINUE",
+
+	panels = {
+		binds = "Keybinds",
+		reset = "Reset Gamemode",
+		cvars = "ConVars Editor",
+	},
+
+	binds = {
+		eq_button = "Equipment",
+		upgrade_tree_button = "SCP Upgrade Tree",
+		ppshop_button = "Class Viewer",
+		settings_button = "Gamemode Settings",
+		scp_special = "SCP Special Ability"
+	}
+}
+
+lang.gamemode_config = {
+	loading = "Loading...",
+
+	categories = {
+		general = "General",
+		round = "Round",
+		xp = "XP",
+		support = "Support",
+		warheads = "Warheads",
+		afk = "AFK",
+		time = "Time",
+		premium = "Premium",
+		scp = "SCP",
+	}
+}
+
+--[[-------------------------------------------------------------------------
 Scoreboard
 ---------------------------------------------------------------------------]]
 lang.unconnected = "未连接"
@@ -231,6 +283,15 @@ lang.upgrades = {
     requiresany = "需要任何",
 	blocked = "无法执行"
 }
+
+--[[-------------------------------------------------------------------------
+SCP HUD
+---------------------------------------------------------------------------]]
+local scp_hud = {}
+lang.SCPHUD = scp_hud
+
+scp_hud.skill_not_ready = "Skill is not ready yet!"
+scp_hud.skill_cant_use = "Skill can't be used now!"
 
 --[[-------------------------------------------------------------------------
 Info screen
@@ -315,6 +376,11 @@ misc.alpha_warhead = {
 	active = "阿尔法核弹已启动成功\n\n请立即撤离！\n在爆炸 %.2fs",
 }
 
+misc.buttons = {
+	MOUSE1 = "LMB",
+	MOUSE2 = "RMB",
+	MOUSE3 = "MMB",
+}
 --[[-------------------------------------------------------------------------
 Vests
 ---------------------------------------------------------------------------]]
@@ -365,6 +431,7 @@ classes.unknown = "Unknown"
 classes.SCP023 = "SCP 023"
 classes.SCP049 = "SCP 049"
 classes.SCP0492 = "SCP 049-2"
+classes.SCP058 = "SCP 058"
 classes.SCP066 = "SCP 066"
 classes.SCP096 = "SCP 096"
 classes.SCP106 = "SCP 106"
@@ -529,6 +596,8 @@ lang.CLASS_OBJECTIVES = {
 	SCP0492 = [[]],
 
 	SCP066 = generic_scp_friendly,
+
+	SCP058 = generic_scp,
 
 	SCP096 = generic_scp,
 
@@ -1082,6 +1151,15 @@ Overview:
 您播放非常响亮的音乐，会是你周围玩家的耳朵遭受打击。
 ]],
 
+	SCP058 = [[Difficulty: Medium
+Toughness: Normal
+Agility: Normal
+Damage: Normal
+
+Overview:
+SCP with flexible playstyle. Can attack melee and shot. Has various upgrades which can add poison to attacks, modify shot attack or unlocks ability to explode.
+]],
+
 	SCP096 = [[操作难度: 难
 健壮程度: 强壮
 灵活性: 超级迟钝（看脸前），闪电侠（看脸后）
@@ -1338,6 +1416,61 @@ wep.SCP066 = {
 			name = "火车王",
 			info = "冲入人群后，你在接下来的10秒内非常NB",
 		}
+	}
+}
+
+wep.SCP058 = {
+	upgrades = {
+		parse_description = true,
+
+		attack1 = {
+			name = "Poisonous Sting I",
+			info = "Adds poison to primary attacks"
+		},
+		attack2 = {
+			name = "Poisonous Sting II",
+			info = "Buffs attack damage, poison damage and decreases cooldown.\n\t• Adds [prim_dmg] damage to attacks\n\t• Attack poison deals [pp_dmg] damage\n\t• Cooldown is reduced by [prim_cd]s"
+		},
+		attack3 = {
+			name = "Poisonous Sting III",
+			info = "Buffs poison damage and decreases cooldown.\n\t• If target is not poisoned, instantly apply 2 stacks of poison\n\t• Attack poison deals [pp_dmg] damage\n\t• Cooldown is reduced by [prim_cd]s"
+		},
+		shot = {
+			name = "Corrupted Blood",
+			info = "Adds poison to shot attacks"
+		},
+		shot11 = {
+			name = "Surge I",
+			info = "Increases damage and projectile size but also increases cooldown and slows down projectile\n\t• Projectile damage multiplier: [shot_damage]\n\t• Projectile size multiplier: [shot_size]\n\t• Projectile speed multiplier: [shot_size]\n\t• Total cooldown increased by [shot_cd]s"
+		},
+		shot12 = {
+			name = "Surge II",
+			info = "Increases damage and projectile size but also increases cooldown and slows down projectile\n\t• Poison effect is removed\n\t• Projectile damage multiplier: [shot_damage]\n\t• Projectile size multiplier: [shot_size]\n\t• Projectile speed multiplier: [shot_size]\n\t• Total cooldown increased by [shot_cd]s"
+		},
+		shot21 = {
+			name = "Bloody Mist I",
+			info = "Shot leaves mist on impact, hurting and poisoning everyone who touches it.\n\t• Direct and splash damage is removed\n\t• Cloud deals [cloud_damage] damage on contact\n\t• Poison inflicted by cloud deals [sp_dmg] damage\n\t• Shot stacks limited to [stacks]\n\t• Cooldown increased by [shot_cd]s\n\t• Stacks are generated at [regen_rate] rate"
+		},
+		shot22 = {
+			name = "Bloody Mist II",
+			info = "Buffs mist left by shots.\n\t• Cloud deals [cloud_damage] damage on contact\n\t• Poison inflicted by cloud deals [sp_dmg] damage\n\t• Stacks are generated at [regen_rate] rate"
+		},
+		shot31 = {
+			name = "Multishot I",
+			info = "Allows you to shot at rapid speed while holding attack button.\n\t• Unlock ability of rapid shoting\n\t• Direct and splash damage is removed\n\t• Shot stacks limited to [stacks]\n\t• Stacks are generated at [regen_rate] rate\n\t• Projectile size multiplier: [shot_size]\n\t• Projectile speed multiplier: [shot_size]"
+		},
+		shot32 = {
+			name = "Multishot II",
+			info = "Increases maximum stacks and buffs shot speed.\n\t• Shot stacks limited to [stacks]\n\t• Stacks are generated at [regen_rate] rate\n\t• Projectile size multiplier: [shot_size]\n\t• Projectile speed multiplier: [shot_size]"
+		},
+		exp1 = {
+			name = "Aortal Burst",
+			info = "Unlocks ability to explode dealing massive damage when your hp decreases below each 1000 for the first time"
+		},
+		exp2 = {
+			name = "Toxic Blast",
+			info = "Buffs your ability to explode\n\t• Applies 2 stacks of poison\n\t• Radius multiplier: [explosion_radius]"
+		},
 	}
 }
 
@@ -1742,8 +1875,44 @@ wep.SCP3199 = {
 	}
 }
 
+wep.SCP500 = {
+	name = "SCP 500",
+	death_info = "You choked on that SCP 500",
+	text_used = "You soon as you swallowed this pill, you felt better",
+}
+
 wep.SCP714 = {
 	name = "SCP 714"
+}
+
+wep.SCP1025 = {
+	name = "SCP 1025",
+	diseases = {
+		arrest = "Cardiac arrest",
+		mental = "Mental Illness",
+		asthma = "Asthma",
+		blindness = "Blindness",
+		hemo = "Haemophilia",
+		oste = "Osteoporosis",
+
+		adhd = "ADHD",
+		throm = "Thrombocythemia",
+		urbach = "Urbach–Wiethe disease",
+
+		gas = "Tympanites",
+	},
+	descriptions = {
+		arrest = "Cardiac arrest is a sudden loss of blood flow resulting from the failure of the heart to pump effectively. Signs include loss of consciousness and abnormal or absent breathing. Some individuals may experience chest pain, shortness of breath, or nausea immediately before entering cardiac arrest. Radiating pain to one arm is a common symptom, as is long term malaise and general weakness of heart. If not treated within minutes, it typically leads to death.",
+		asthma = "Asthma is a long-term inflammatory disease of the airways of the lungs. It is characterized by variable and recurring symptoms, reversible airflow obstruction, and easily triggered bronchospasms. Symptoms include episodes of wheezing, coughing, chest tightness, and shortness of breath. These may occur a few times a day or a few times per week.",
+		blindness = "Visual impairment, also known as vision impairment or vision loss, is a decreased ability to see to a degree that causes problems not fixable by usual means, such as glasses. Some also include those who have a decreased ability to see because they do not have access to glasses or contact lenses. The term blindness is used for complete or nearly complete vision loss.",
+		hemo = "Haemophilia (also spelled hemophilia) is a mostly inherited genetic disorder that impairs the body's ability to make blood clots, a process needed to stop bleeding. This results in people bleeding for a longer time after an injury, easy bruising, and an increased risk of bleeding inside joints or the brain. Characteristic symptoms vary with severity. In general symptoms are internal or external bleeding episodes.",
+		oste = "Osteoporosis is a systemic skeletal disorder characterized by low bone mass, micro-architectural deterioration of bone tissue leading to bone fragility, and consequent increase in fracture risk. It is the most common reason for a broken bone among the elderly. Bones that commonly break include the vertebrae in the spine, the bones of the forearm, and the hip. Until a broken bone occurs there are typically no symptoms.",
+		
+		adhd = "Attention-deficit/hyperactivity disorder (ADHD) is a neurodevelopmental disorder characterized by inattention, bouts of excessive energy, hyper-fixation, and impulsivity, which are otherwise not appropriate for a person's age. Some individuals with ADHD also display difficulty regulating emotions or problems with executive function. Additionally, it is associated with other mental disorders.",
+		throm = "Thrombocythemia is a condition of high platelet (thrombocyte) count in the blood. High platelet counts do not necessarily signal any clinical problems, and can be picked up on a routine full blood count. However, it is important that a full medical history be elicited to ensure that the increased platelet count is not due to a secondary process.",
+		urbach = "Urbach–Wiethe disease is a very rare recessive genetic disorder. The symptoms of the disease vary greatly from individual to individual. Urbach–Wiethe disease show bilateral symmetrical calcifications on the medial temporal lobes. These calcifications often affect the amygdala. The amygdala is thought to be involved in processing biologically relevant stimuli and in emotional long-term memory, particularly those associated with fear.",
+	},
+	death_info_arrest = "You died due to cardiac arrest"
 }
 
 wep.HOLSTER = {
@@ -1842,39 +2011,6 @@ wep.OMNITOOL = {
 		ejectwarn = "你确定要弹出芯片吗？",
 		ejectconfirm = "再按一次确认...",
 		chip = "已安装芯片:",
-	},
-}
-
-wep.KEYCARD = {
-	author = "danx91",
-	instructions = "Access:",
-	ACC = {
-		"SAFE",
-		"EUCLID",
-		"KETER",
-		"检查点",
-		"OMNI核弹",
-		"一般访问",
-		"A大门",
-		"B大门",
-		"军械库",
-		"大腿骨粉碎机",
-		"EC",
-	},
-	STATUS = {
-		"ACCESS",
-		"NO ACCESS",
-	},
-	NAMES = {
-		"钥匙卡级别 1",
-		"钥匙卡等级 2",
-		"钥匙卡等级 3",
-		"研究员钥匙卡",
-		"MTF 守卫钥匙卡",
-		"MTF指挥官钥匙卡",
-		"钥匙卡级别 OMNI",
-		"检查站安全钥匙卡",
-		"混沌分裂者的破译钥匙卡",
 	},
 }
 
