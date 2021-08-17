@@ -46,7 +46,7 @@ lang.NRegistry = {
 	winxp = "Otrzymujesz %i doświadczenia ponieważ twoja początkowa drużyna wygrała rundę",
 	winalivexp = "Otrzymujesz %i doświadczenia ponieważ twoja drużyna wygrała rundę",
 	upgradepoints = "Otrzymałeś punkt ulepszeń! Naciśnij '%s' aby otworzyć menu ulepszeń SCP",
-	prestigeup = "Gracz %s zdobył wyższy prestiż! Obecny poziom prestiżu: %i",
+	prestigeup = "Gracz %s zdobył wyższy poziom prestiżu! Obecny poziom prestiżu: %i",
 	omega_detonation = "Detonacja głowicy OMEGA za %i sekund. Wyjdź na powierzchnię lub natychmiastowo udaj się do schronu!",
 	alpha_detonation = "Detonacja głowicy ALPHA za %i sekund. Wejdź do placówki lub natychmiastowo udaj się do ewakuacji!",
 	alpha_card = "Włożyłeś kartę nuklearną głowicy ALPHA",
@@ -564,7 +564,7 @@ lang.CLASS_OBJECTIVES = {
 - Wydawaj rozkazy innym sojusznikom]],
 
 	ntfsniper = [[- Pomóż personelowi wewnątrz placówki
-- Nie pozwól uciec obiektom Klasy D i SCPc
+- Nie pozwól uciec obiektom Klasy D i SCP
 - Wspieraj swoją drużynę zza pleców]],
 
 	alpha1 = [[- Chroń placówkę za wszelką cenę
@@ -661,7 +661,7 @@ Czy może eskortować: Tylko klase D
 Eskortowany przez: Nikogo
 
 Przegląd:
-Uzbrojony w paralizator.Jako agent CI udziel pomocy klasie D i współpracuj z nimi. Możesz eskortować członków klasy D.
+Uzbrojony w paralizator. Jako agent CI udziel pomocy klasie D i współpracuj z nimi. Możesz eskortować członków klasy D.
 ]],
 
 	sciassistant = [[Poziom trudności: Średni
