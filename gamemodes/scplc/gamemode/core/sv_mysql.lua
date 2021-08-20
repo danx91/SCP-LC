@@ -160,11 +160,3 @@ function SLCUseMySQL( cfg )
 end
 
 SLCMySQL.AddPreload( "scp_penalty", 0, tonumber )
-
-SLCUseMySQL( {
-	host = "localhost",
-	username = "scp",
-	password = "password123",
-	database = "gmod",
-	port = 3306,
-} )
