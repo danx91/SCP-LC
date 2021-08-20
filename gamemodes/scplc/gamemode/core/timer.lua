@@ -212,7 +212,7 @@ function ZeroTimer( func )
 end
 
 function ThenableTimer( name, time, repeats, callback, endcallback, noactivete, nocache )
-	local p = Promise()
+	local p = SLCPromise()
 
 	local t = Timer( name, time, repeats, callback, function()
 		if endcallback then

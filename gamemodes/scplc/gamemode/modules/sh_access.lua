@@ -464,7 +464,7 @@ if SERVER then
 				local cd = ply:GetProperty( "overload_cd" )
 				if !cd or cd < ct then
 					ply:SetProperty( "overload_cd", ct + 3 )
-
+					
 					if !ent.OverloadCooldown or ent.OverloadCooldown < ct then
 						local adv = data.advanced_overload
 
@@ -472,6 +472,11 @@ if SERVER then
 							return ply:KeyDown( IN_USE )
 						end, true, IN_USE ):Then( function()
 							local in_ct = CurTime()
+
+							if !IsValid( ent ) or ent.OverloadCooldown and ent.OverloadCooldown >= in_ct then
+								return true
+							end
+
 							ply:SetProperty( "overload_cd", in_ct + CVAR.slc_overload_cooldown:GetInt() )
 
 							local door_cd = CVAR.slc_overload_door_cooldown:GetInt()

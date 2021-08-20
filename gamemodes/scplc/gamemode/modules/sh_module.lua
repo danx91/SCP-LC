@@ -151,13 +151,6 @@ timer.Simple( 0, function()
 	hook.Run( "SLCGamemodeLoaded" )
 end )
 
-/*hook.Add( "SLCVersionChanged", "VCBase", function( old, new )
-	if SERVER and old == "x" then --Delete databases created before ALPHA 0.7 version
-		MsgC( Color( 255, 50, 50 ), "WARNING! Database is outdated, deleting...\n" )
-		sql.Query( "DROP TABLE scpplayerdata" )
-	end
-end )*/
-
 --[[-------------------------------------------------------------------------
 Shared GM hooks
 ---------------------------------------------------------------------------]]

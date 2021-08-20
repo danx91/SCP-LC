@@ -920,7 +920,7 @@ function ply:IsDoingSLCTask( name )
 end
 
 function ply:StartSLCTask( name, time, check, show_bar, block_movement, args )
-	local promise = Promise( function( resolve, reject )
+	local promise = SLCPromise( function( resolve, reject )
 		if self:IsDoingSLCTask() then
 			self:StopSLCTask( 2 )
 		end
