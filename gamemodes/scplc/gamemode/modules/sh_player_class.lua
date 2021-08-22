@@ -42,10 +42,15 @@ function PLAYER:SetupDataTables()
 		ply:Set_SCPClass( "spectator" )
 		ply:Set_SCPPersonaC( "spectator" )
 
-		ply:Set_SCPLevel( tonumber( ply:GetSCPData( "level", 0 ) ) or 0 )
+		/*ply:Set_SCPLevel( tonumber( ply:GetSCPData( "level", 0 ) ) or 0 )
 		ply:Set_SCPExp( tonumber( ply:GetSCPData( "xp", 0 ) ) or 0 )
 		ply:Set_SCPPrestige( tonumber( ply:GetSCPData( "prestige", 0 ) ) or 0 )
-		ply:Set_SCPPrestigePoints( tonumber( ply:GetSCPData( "prestige_points", 0 ) ) or 0 )
+		ply:Set_SCPPrestigePoints( tonumber( ply:GetSCPData( "prestige_points", 0 ) ) or 0 )*/
+		ply:SetDataFromDB( "level", 0, tonumber, "_SCPLevel" )
+		ply:SetDataFromDB( "xp", 0, tonumber, "_SCPExp" )
+		ply:SetDataFromDB( "prestige", 0, tonumber, "_SCPPrestige" )
+		ply:SetDataFromDB( "prestige_points", 0, tonumber, "_SCPPrestigePoints" )
+
 		ply:SetTimeSignature( math.floor( CurTime() ) )
 		ply:SetStamina( 100 )
 

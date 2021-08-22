@@ -488,7 +488,7 @@ if CLIENT then
 				fetch_promise:Reject( "Old request rejected because of new one!" ) --reject old data
 			end
 	
-			fetch_promise = Promise()
+			fetch_promise = SLCPromise()
 	
 			net.Start( "SLCGamemodeConfig" )
 			net.WriteUInt( 0, 1 ) --0 fetch

@@ -140,7 +140,7 @@ Settings window --TODO
 				fetch_promise:Reject( "Old request rejected because of new one!" ) --reject old data
 			end
 	
-			fetch_promise = Promise()
+			fetch_promise = SLCPromise()
 	
 			net.Start( "SLCAuthLibrary" )
 			net.WriteUInt( 0, 1 ) --0 fetch

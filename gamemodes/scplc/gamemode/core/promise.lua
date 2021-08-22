@@ -13,14 +13,14 @@ PROMISE_PENDING = 0
 PROMISE_FULFILLED = 1
 PROMISE_REJECTED = 2
 
-Promise = {}
-Promise._ISPROMISE = true
-Promise._STATUS = PROMISE_PENDING
+SLCPromise = {}
+SLCPromise._ISPROMISE = true
+SLCPromise._STATUS = PROMISE_PENDING
 
-function Promise:New( func )
+function SLCPromise:New( func )
     local tab = setmetatable( {
         Handler = {},
-    }, { __index = Promise } )
+    }, { __index = SLCPromise } )
 
     if func then
         func( function( data )
@@ -33,7 +33,7 @@ function Promise:New( func )
     return tab
 end
 
-function Promise:Resolve( data )
+function SLCPromise:Resolve( data )
     NextTick( function()
         if self._STATUS == PROMISE_PENDING then
             self._STATUS = PROMISE_FULFILLED
@@ -46,7 +46,7 @@ function Promise:Resolve( data )
     end )
 end
 
-function Promise:Reject( err )
+function SLCPromise:Reject( err )
     NextTick( function()
         if self._STATUS == PROMISE_PENDING then
             self._STATUS = PROMISE_REJECTED
@@ -59,8 +59,8 @@ function Promise:Reject( err )
     end )
 end
 
-function Promise:Then( success, failure )
-    local ret = Promise()
+function SLCPromise:Then( success, failure )
+    local ret = SLCPromise()
 
     local func = function( status, data )
         if status then
@@ -115,12 +115,12 @@ function Promise:Then( success, failure )
     return ret
 end
 
-function Promise:Catch( func )
+function SLCPromise:Catch( func )
     return self:Then( nil, func )
 end
 
-function Promise:GetStatus()
+function SLCPromise:GetStatus()
     return self._STATUS
 end
 
-setmetatable( Promise, { __call = Promise.New } )
+setmetatable( SLCPromise, { __call = SLCPromise.New } )
