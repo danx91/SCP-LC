@@ -557,7 +557,7 @@ lang.CLASS_OBJECTIVES = {
 
 	ntfmedic = [[- Pomóż personelowi wewnątrz placówki
 - Nie pozwól uciec obiektom Klasy D i SCP
-- Wspieraj innych ochroniarzy swoją apteczką]],
+- Wspieraj innych MTFów swoją apteczką]],
 
 	ntfcom = [[- Pomóż personelowi wewnątrz placówki
 - Nie pozwól uciec obiektom Klasy D i SCP
@@ -568,7 +568,7 @@ lang.CLASS_OBJECTIVES = {
 - Wspieraj swoją drużynę zza pleców]],
 
 	alpha1 = [[- Chroń placówkę za wszelką cenę
-- Zatrzymaj obiekty Klasy D i SC
+- Zatrzymaj obiekty Klasy D i SCP
 - Jesteś upoważniony do ]].."[ZMIENIONO]",
 
 	alpha1sniper = [[- Chroń placówkę za wszelką cenę
