@@ -1,9 +1,8 @@
 --[[-------------------------------------------------------------------------
 Language: Russian
-Date: 12.08.2021
-Translated by: Deiryn (http://steamcommunity.com/profiles/76561198121822134)
-Updated by: berry (http://steamcommunity.com/profiles/76561198158864042)
-Updated in day 12.08.2021 by: Zaptyp (https://steamcommunity.com/id/Zaptyp/)
+Date of addition: 28.02.2021
+Translated by: Deiryn (http://steamcommunity.com/profiles/76561198121822134), berry (http://steamcommunity.com/profiles/76561198158864042), Zaptyp (http://steamcommunity.com/profiles/76561198806427385)
+Updated: 24.10.2018 | Current version: Prerelease 0.8.0 Rev. 2
 ---------------------------------------------------------------------------]]
 
 local lang = {}
@@ -52,6 +51,11 @@ lang.NRegistry = {
 	alpha_detonation = "Детонация боеголовки АЛЬФА через %i сек. Вернитесь в комплекс или проследуйте к зоне эвакуации немедленно!",
 	alpha_card = "Вы вставили ключ-карту АЛЬФА боеголовки",
 	destory_scp = "Вы получили %i очков за уничтожение объекта SCP!",
+	afk = "Вы в AFK. Вы не заспавнитесь и не будете получить ОО!",
+	afk_end = "Вы вышли из АФК",
+	overload_cooldown = "Подождите %i секунд, чтобы перегрузить дверь!",
+	advanced_overload = "У этой двери повышенная защита! Попробуйте еще раз через %i секунд",
+	lockdown_once = "Facility lockdown can be activated only once per round!",
 }
 
 lang.NFailed = "Невозможно загрузить NRegistry с ключом: %s"
@@ -148,6 +152,8 @@ effects.insane = "Безумность"
 effects.gas_choke = "Удушение"
 effects.radiation = "Радиация"
 effects.deep_wounds = "Глубокие раны"
+effects.heavy_bleeding = "Сильное кровотечение"
+effects.weak_bleeding = "Слабое кровотечение"
 
 --[[-------------------------------------------------------------------------
 Class viewer
@@ -194,6 +200,55 @@ lang.view_cat = {
 }
 
 --[[-------------------------------------------------------------------------
+Settings
+---------------------------------------------------------------------------]]
+lang.settings = {
+	settings = "Настройки игрового режима",
+
+	none = "NONE",
+	press_key = "> Нажмите кнопку <",
+	client_reset = "Сбросить клиентские настройки до настроек по умолчанию",
+	server_reset = "Сбросить серверные настройки до настроек по умолчанию",
+
+	client_reset_desc = "Вы собираетесь сбросить ВСЕ клиентские настройки в этом режиме.\nЭто действие не отменить!",
+	server_reset_desc = "Из соображений безопасности вы не можете сбросить настройки здесь.\nЧтобы сбросить настройки введите 'slc_factory_reset' в серверную консоль и следуйте указаниям.\nБудьте осторожны, ибо это действие не отменить и оно вернет все настройки к НУЛЮ!",
+
+	popup_ok = "OK",
+	popup_cancel = "ОТМЕНА",
+	popup_continue = "ПРОДОЛЖИТЬ",
+
+	panels = {
+		binds = "Клавиши",
+		reset = "Сбросить Режим",
+		cvars = "Редактор ConVars",
+	},
+
+	binds = {
+		eq_button = "Снаряжение",
+		upgrade_tree_button = "Древо улучшений SCP",
+		ppshop_button = "Просмотр классов",
+		settings_button = "Настройки режима",
+		scp_special = "Специальные возможности SCP"
+	}
+}
+
+lang.gamemode_config = {
+	loading = "Загрузка...",
+
+	categories = {
+		general = "Общее",
+		round = "Раунд",
+		xp = "ОО",
+		support = "Поддержка",
+		warheads = "Боеголовки",
+		afk = "AFK",
+		time = "Время",
+		premium = "Премиум",
+		scp = "SCP",
+	}
+}
+
+--[[-------------------------------------------------------------------------
 Scoreboard
 ---------------------------------------------------------------------------]]
 lang.unconnected = "Отключён"
@@ -228,6 +283,15 @@ lang.upgrades = {
 	requiresany = "Требует одну из",
 	blocked = "Блокируется"
 }
+
+--[[-------------------------------------------------------------------------
+SCP HUD
+---------------------------------------------------------------------------]]
+local scp_hud = {}
+lang.SCPHUD = scp_hud
+
+scp_hud.skill_not_ready = "Возможность еще не готова!"
+scp_hud.skill_cant_use = "Возможность не может быть использована сейчас!"
 
 --[[-------------------------------------------------------------------------
 Info screen
@@ -293,6 +357,7 @@ misc.content_checker = {
 	workshop = "Показать страницу в мастерской",
 	downloading = "Скачиваем",
 	mounting = "Устанавливаем",
+	idle = "Ожидаем загрузки...",
 	processing = "Прогрузка: %s\nСостояние: %s",
 	cancel = "Отмена"
 }
@@ -312,6 +377,11 @@ misc.alpha_warhead = {
 	active = "Боеголовка АЛЬФА запущена\n\nЭвакуируйтесь!\nДетонация через %.2fs",
 }
 
+misc.buttons = {
+	MOUSE1 = "ЛКМ",
+	MOUSE2 = "ПКМ",
+	MOUSE3 = "СКМ",
+}
 --[[-------------------------------------------------------------------------
 Vests
 ---------------------------------------------------------------------------]]
@@ -362,6 +432,7 @@ classes.unknown = "Неизвестно"
 classes.SCP023 = "SCP 023"
 classes.SCP049 = "SCP 049"
 classes.SCP0492 = "SCP 049-2"
+classes.SCP058 = "SCP 058"
 classes.SCP066 = "SCP 066"
 classes.SCP096 = "SCP 096"
 classes.SCP106 = "SCP 106"
@@ -518,9 +589,9 @@ lang.CLASS_OBJECTIVES = {
 
 	SCP0492 = [[]],
 
-	SCP023 = generic_scp,
-
 	SCP066 = generic_scp_friendly,
+	
+	SCP058 = generic_scp,
 
 	SCP096 = generic_scp,
 
@@ -529,6 +600,8 @@ lang.CLASS_OBJECTIVES = {
 	SCP173 = generic_scp,
 
 	SCP457 = generic_scp,
+	
+
 
 	SCP682 = generic_scp,
 
@@ -542,195 +615,6 @@ lang.CLASS_OBJECTIVES = {
 
 	SCP3199 = generic_scp,
 }
-
---[[-------------------------------------------------------------------------
-DON'T EDIT - UNUSED
----------------------------------------------------------------------------]]
-/*lang.CLASS_INFO = {
-	classd = [[You are Class D Personnel
-Your objective is to escape from the facility
-Cooperate with others and look for keycards
-Beware of facility staff and SCPs]],
-
-	veterand = [[You are Class D Veteran
-Your objective is to escape from the facility
-Cooperate with others
-Beware of facility staff and SCPs]],
-
-	kleptod = [[You are Class D Kleptomaniac
-Your objective is to escape from the facility
-You stole something from the staff
-Beware of facility staff and SCPs]],
-
-	ciagent = [[You are CI Agent
-Your objective is to protect Class D Personnel
-Escort them to the exit
-Beware of facility staff and SCPs]],
-
-	sciassistant = [[You are Scientist Assistant
-Your objective is to escape from the facility
-Cooperate with other scientists and security staff
-Beware of Chaos Insurgency and SCPs]],
-
-	sci = [[You are Scientist
-Your objective is to escape from the facility
-Cooperate with other scientists and security staff
-Beware of Chaos Insurgency and SCPs]],
-
-	seniorsci = [[You are Senior Scientist
-Your objective is to escape from the facility
-Cooperate with other scientists and security staff
-Beware of Chaos Insurgency and SCPs]],
-
-	headsci = [[You are Head Scientist
-Your objective is to escape from the facility
-Cooperate with other scientists and security staff
-Beware of Chaos Insurgency and SCPs]],
-
-	guard = [[You are Security Guard
-Your objective is to rescue all scientist
-Kill all Class D Personnel and SCPs]],
-
-	lightguard = [[You are Security Guard
-Your objective is to rescue all scientist
-Kill all Class D Personnel and SCPs]],
-
-	heavyguard = [[You are Security Guard
-Your objective is to rescue all scientist
-Kill all Class D Personnel and SCPs]],
-
-	specguard = [[You are Security Guard Specialist
-Your objective is to rescue all scientist
-Kill all Class D Personnel and SCPs]],
-
-	chief = [[You are Security Chief
-Your objective is to rescue all scientist
-Kill all Class D Personnel and SCPs]],
-
-	guardmedic = [[You are Security Guard Medic
-Your objective is to rescue all scientist
-Use your medkit to help your temmates
-Kill all Class D Personnel and SCPs]],
-
-	tech = [[You are Security Technician
-Your objective is to rescue all scientist
-You can place portable turret
-Kill all Class D Personnel and SCPs]],
-
-	cispy = [[You are CI Spy
-Your objective is to help Class D Personnel
-Pretend to be a security guard]],
-
-	ntf_1 = [[You are MTF NTF
-Help staff inside facility
-Don't let Class D Personnel and SCPs escape]],
-
-	ntf_2 = [[You are MTF NTF
-Help staff inside facility
-Don't let Class D Personnel and SCPs escape]],
-
-	ntf_3 = [[You are MTF NTF
-Help staff inside facility
-Don't let Class D Personnel and SCPs escape]],
-
-	ntfmedic = [[You are MTF NTF Medic
-Help staff inside facility
-Use your medkit to help other MTFs]],
-
-	ntfcom = [[You are MTF NTF Commander
-Help staff inside facility
-Don't let Class D Personnel and SCPs escape]],
-
-	ntfsniper = [[You are MTF NTF Sniper
-Protect your team from a distance
-Don't let Class D Personnel and SCPs escape]],
-
-	alpha1 = [[You are MTF Alpha 1
-You work directly for O5 Council
-Protect foundation at all cost
-Your mission is to [REDACTED] ]],
-
-	alpha1sniper = [[You are MTF Alpha 1 Marksman
-You work directly for O5 Council
-Protect foundation at all cost
-Your mission is to [REDACTED] ]],
-
-	ci = [[You are Chaos Insurgency Soldier
-Help Class D Personnel
-Kill MTFs and other facility staff]],
-
-	cicom = [[You are Chaos Insurgency Commander
-Help Class D Personnel
-Kill MTFs and other facility staff]],
-	
-	SCP023 = [[You are SCP 023
-Your objective is to escape from the facility
-You will kill one of the people who saw you
-Click RMB to place spectre]],
-
-	SCP049 = [[You are SCP 049
-Your objective is to escape from the facility
-Your touch is deadly to humans
-You can perform surgery to "cure" people]],
-
-	SCP0492 = [[You are SCP 049-2
-Your objective is to escape from the facility
-Listen to SCP 049's orders and protect him]],
-
-	SCP066 = [[You are SCP 066
-Your objective is to escape from the facility
-You can play very loud music]],
-
-	SCP096 = [[You are SCP 096
-Your objective is to escape from the facility
-You become enraged when someone looks at you
-You can regenerate HP by pressing R]],
-
-	SCP106 = [[You are SCP 106
-Your objective is to escape from the facility
-You can go through doors and teleport to the selected location
-
-LMB: Teleport humans to pocket dimension
-RMB: Mark teleport destination
-R: Teleport]],
-
-	SCP173 = [[You are SCP 173
-Your objective is to escape from the facility
-You can't move while someone is watching you
-Your special ability teleports you to the nearby human]],
-
-	SCP457 = [[You are SCP 457
-Your objective is to escape from the facility
-You are burning and you will ignite everything
-near you
-You can place up to 5 fire traps]],
-
-	SCP682 = [[You are SCP 682
-Your objective is to escape from the facility
-You have a lot of health
-Your special ability makes you immune to any damage]],
-
-	SCP8602 = [[You are SCP 860-2
-Your objective is to escape from the facility
-If you attack someone near wall, you will
-nail him to wall and deal huge damage]],
-
-	SCP939 = [[You are SCP 939
-Your objective is to escape from the facility
-You can talk with humans]],
-
-	SCP966 = [[You are SCP 966
-Your objective is to escape from the facility
-You are invisible]],
-
-	SCP3199 = [[You are SCP 3199
-Your objective is to escape from the facility
-You are agile and deadly hunter
-You can sense heartbeat of nearby humans]],
-}*/
---[[-------------------------------------------------------------------------
-END OF UNUSED PART
----------------------------------------------------------------------------]]
 
 lang.CLASS_DESCRIPTION = {
 	classd = [[Сложность: Лёгкая
@@ -1074,6 +958,14 @@ lang.CLASS_DESCRIPTION = {
 Вы проигрываете громкую музыку и наносите урон игрокам в округе.
 ]],
 
+	SCP058 = [[Сложность: Средняя
+Стойкость: Нормальная
+Выносливость: Нормальная
+Урон: Средний
+	
+Описание:
+SCP с гибким стилем игры. Может атаковать на близком и дальнем расстоянии. Имеет несколько улучшений, позволяющие добавлять отравление к наносимому урону, модифицировать дальние атаки или разблокировать возможность взорваться.
+
 	SCP096 = [[Сложность: Тяжёлая
 Стойкость: Высокая
 Выносливость: Очень низкая / Очень высокая, когда в ярости
@@ -1330,6 +1222,61 @@ wep.SCP066 = {
 			name = "Липкий",
 			info = "После рывка, вы приплипаете к человеку на 10 сек.",
 		}
+	}
+}
+
+wep.SCP058 = {
+	upgrades = {
+		parse_description = true,
+
+		attack1 = {
+			name = "Ядовитый укол I",
+			info = "Наносит урон ядом к основной атаке"
+		},
+		attack2 = {
+			name = "Ядовитый укол II",
+			info = "Увеличивает урон от атаки, урон от яда и уменьшает время восстановления.\n\t• Добавляет [prim_dmg] урона к атакам\n\t• Яд наносит [pp_dmg] урона\n\t• Время восстановления уменьшено на [prim_cd] сек."
+		},
+		attack3 = {
+			name = "Ядовитый укол III",
+			info = "Увеличивает урон от атаки и уменьшает время восстановления.\n\t• Если цель не под эффектом яда, то длительность действия увеличивается в два раза\n\t• Яд наносит [pp_dmg] урона\n\t• Время восстановления уменьшено на [prim_cd] сек."
+		},
+		shot = {
+			name = "Испорченная кровь",
+			info = "Наносит урон ядом к дальней атаке"
+		},
+		shot11 = {
+			name = "Всплеск I",
+			info = "Увеличивает урон и размер снаряда, но также увеличвает время ожидания и замедляет скорость снаряда\n\t• Множитель урона от снаряда: [shot_damage]\n\t• Множитель размера снаряда: [shot_size]\n\t• Множитель скорости снаряда: [shot_size]\n\t• Время восстановления в общем увеличено на [shot_cd] сек."
+		},
+		shot12 = {
+			name = "Всплеск II",
+			info = "Увеличивает урон и размер снаряда, но также увеличвает время ожидания и замедляет скорость снаряда\n\t• Ядовитый эффект убран\n\t• Множитель урона от снаряда: [shot_damage]\n\t• Множитель размера снаряда: [shot_size]\n\t• Множитель скорости снаряда: [shot_size]\n\t• Время восстановления в общем увеличено на [shot_cd] сек."
+		},
+		shot21 = {
+			name = "Кровавое облако I",
+			info = "Выстрел оставляет за собой облако, наносящее урон и отравление всем, кто коснется его.\n\t• Прямой и урон по радиусу убран\n\t• Облако наносит [cloud_damage] урона при контакте\n\t• Ядовитый урон от облака наносит [sp_dmg] урона\n\t• Количество выстрелов уменьшено в [stacks]\n\t• Время восстановления увеличено на [shot_cd] сек.\n\t• Выстрелы восстанавливаются со скоростью в [regen_rate] ед."
+		},
+		shot22 = {
+			name = "Кровавое облако II",
+			info = "Увеличивает облако от выстрела.\n\t• Облако наносит [cloud_damage] урона при контакте\n\t• Ядовитый урон от облака наносит [sp_dmg] урона\n\t• Выстрелы восстанавливаются со скоростью в [regen_rate] ед."
+		},
+		shot31 = {
+			name = "Мультивыстрел I",
+			info = "Позволяет стрелять с большой скоростью при удержании кнопки выстрела.\n\t• Добавляет возможность быстро стрелять\n\t• Прямой и урон по радиусу убран\n\t• Количество выстрелов уменьшено в [stacks]\n\t• Выстрелы восстанавливаются со скоростью в [regen_rate] ед.\n\t• Множитель размера снаряда: [shot_size]\n\t• Множитель скорости снаряда: [shot_size]"
+		},
+		shot32 = {
+			name = "Мультивыстрел II",
+			info = "Increases maximum stacks and buffs shot speed.\n\t• Количество выстрелов уменьшено в [stacks]\n\t• Выстрелы восстанавливаются со скоростью в [regen_rate] ед.\n\t• Множитель размера снаряда: [shot_size]\n\t• Множитель скорости снаряда: [shot_size]"
+		},
+		exp1 = {
+			name = "Разрыв аорты",
+			info = "Открывает возможность взорваться, наносит большой урон, но при каждом взрыве количество ОЗ уменьшается на 1000 единиц"
+		},
+		exp2 = {
+			name = "Токсичный взрыв",
+			info = "Улучшает возможность взрываться\n\t• Наносит длительный урон от яда\n\t• Множитель радиуса: [explosion_radius]"
+		},
 	}
 }
 
@@ -1734,8 +1681,45 @@ wep.SCP3199 = {
 	}
 }
 
+
+wep.SCP500 = {
+	name = "SCP 500",
+	death_info = "Вы подавились SCP 500",
+	text_used = "Как только вы употребили эту таблетку, вы почувствовали себя лучше",
+}
+
 wep.SCP714 = {
 	name = "SCP 714"
+}
+
+wep.SCP1025 = {
+	name = "SCP 1025",
+	diseases = {
+		arrest = "Остановка сердца",
+		mental = "Психическое заболевание",
+		asthma = "Астма",
+		blindness = "Слепота",
+		hemo = "Гемофилия",
+		oste = "Остеопороз ",
+
+		adhd = "СДВГ",
+		throm = "Тромбоцитемия",
+		urbach = "Болезнь Урбаха — Вите",
+
+		gas = "Тимпаниты ",
+	},
+	descriptions = {
+		arrest = "Внезапное и полное прекращение эффективной деятельности сердца с наличием или отсутствием биоэлектрической активности. Признаками являются потери сознания и проблемное дыхание. Некоторые испытывают боль в груди, сбивчивое дыхание, тошноту перед входом в состояние остановки сердца. Боль в руке это частный синдром, также длительное недомогание и общая слабость сердца. Если не выйти из состояния в течении нескольких минут, то остановка сердца приводит к смерти.",
+		asthma = "Хроническое неинфекционное заболевание дыхательных путей. Ключевым звеном является бронхоспазм (сужение просвета бронхов), обусловленный специфическими иммунологическими (сенсибилизация и аллергия) или неспецифическими механизмами, проявляющийся повторяющимися эпизодами свистящих хрипов, одышки, приступов удушья, чувства стеснения в груди и кашля. Бронхиальная обструкция обратима частично или полностью, спонтанно или под влиянием лечения.",
+		blindness = "Медицинский термин, подразумевающий полное отсутствие зрения или его серьёзное повреждение. Различают полную слепоту (амавроз) и частичное выпадение поля зрения (скотома) или половин полей зрения (гемианопсия).",
+		hemo = "Редкое наследственное заболевание, связанное с нарушением коагуляции (процессом свёртывания крови). При этом заболевании возникают кровоизлияния в суставы, мышцы и внутренние органы, как спонтанные, так и в результате травмы или хирургического вмешательства. При гемофилии резко возрастает опасность гибели пациента от кровоизлияния в мозг и другие жизненно важные органы, даже при незначительной травме. Больные с тяжёлой формой гемофилии подвергаются инвалидизации вследствие частых кровоизлияний в суставы (гемартрозы) и мышечные ткани (гематомы). Гемофилия относится к геморрагическим диатезам, обусловленным нарушением плазменного звена гемостаза (коагулопатия).",
+		oste = "Хронически прогрессирующее системное, обменное заболевание скелета или клинический синдром, проявляющийся при других заболеваниях, который характеризуется снижением плотности костей, нарушением их микроархитектоники и усиление хрупкости по причине нарушения метаболизма костной ткани с преобладанием катаболизма над процессами костеобразования, снижением прочности кости и повышением риска переломов.",
+
+		adhd = "Синдром дефицита внимания и гиперактивности, аббр. СДВГ, расстройство внимания с гиперактивностью или гиперактивное расстройство с дефицитом внимания — психическое, поведенческое расстройство, начинающееся в детском возрасте. Проявляется такими симптомами, как трудности концентрации внимания, гиперактивность и плохо управляемая импульсивность.",
+		throm = "Тромбоцитемия (эссенциальная тромбоцитемия, хроническая тромбоцитемия, хронический мегакариоцитарный лейкоз, идиопатическиая тромбоцитемия) – один из вариантов хронических миелоидных лейкозов при котором происходит бесконтрольное накопление опухолевых клеток (тромбоцитов) в костном мозге и периферической крови сопровождающееся нарушением вязкости крови и развитие тромбозов.",
+		urbach = "Болезнь Урбаха — Вите — редкое рецессивное генетическое заболевание. Известно менее 300 случаев с момента его открытия. Впервые оно было официально зарегистрировано в 1929 году Эрихом Урбахом и Камилло Вите, хотя отдельные случаи могут быть определены начиная с 1908 года. У пациентов, миндалевидное тело которых оказалось разрушено вследствие болезни Урбаха — Вите, наблюдается полное отсутствие страха, но инстинкт самосохранения не пропадает.",
+	},
+	death_info_arrest = "Вы умерли из-за остановки сердца"
 }
 
 wep.HOLSTER = {
@@ -1799,12 +1783,11 @@ wep.ACCESS_CHIP = {
 	},
 	ACCESS = {
 		GENERAL = "Базовое",
-		SAFE = "Безопастные",
+		SAFE = "Безопасные",
 		EUCLID = "Евклиды",
 		KETER = "Кетеры",
 		OFFICE = "Офисы",
 		MEDBAY = "Медкрыло",
-		GENERAL = "Базовое",
 		CHECKPOINT_LCZ = "КПП LCZ-HCZ",
 		CHECKPOINT_EZ = "КПП EZ-HCZ",
 		WARHEAD_ELEVATOR = "Лифт к боеголовке",
