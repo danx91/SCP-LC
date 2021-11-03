@@ -34,8 +34,7 @@ function GM:PlayerButtonDown( ply, button )
 				ShowEQ()
 			end
 
-			local t = ply:SCPTeam()
-			if t == TEAM_SPEC then
+			if ply:SCPTeam() == TEAM_SPEC then
 				HUDSpectatorInfo = true
 			end
 		elseif button == GetBindButton( "upgrade_tree_button" ) then
@@ -52,23 +51,16 @@ function GM:PlayerButtonUp( ply, button )
 	if SERVER then numpad.Deactivate( ply, button ) end
 
 	if CLIENT and IsFirstTimePredicted() then
-		local menu_key = input.LookupBinding( "+menu" )
-		if menu_key then
-			if input.GetKeyCode( menu_key ) == button then
+		if button == GetBindButton( "eq_button" ) then
+			if IsEQVisible() then
 				HideEQ()
-
-				local t = ply:SCPTeam()
-				if t == TEAM_SPEC then
-					HUDSpectatorInfo = false
-				end
 			end
-		end
 
-		local zoom_key = input.LookupBinding( "+zoom" )
-		if zoom_key then
-			if input.GetKeyCode( zoom_key ) == button then
-				HideSCPUpgrades()
+			if ply:SCPTeam() == TEAM_SPEC then
+				HUDSpectatorInfo = false
 			end
+		elseif button == GetBindButton( "upgrade_tree_button" ) then
+			HideSCPUpgrades()
 		end
 	end
 end
