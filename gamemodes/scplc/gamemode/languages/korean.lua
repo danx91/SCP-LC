@@ -77,7 +77,7 @@ lang.NCRegistry = {
 
 	mvp = "MVP: %s 의 점수: %i",
 	stat_kill = "사망한 플레이어: %i",
-	stat_rdm = "RDM kills: %i",
+	stat_rdm = "RDM 사살: %i",
 	stat_rdmdmg = "RDM 피해량: %i",
 	stat_dmg = "받은 피해량: %i",
 	stat_bleed = "출혈 피해량: %i",
@@ -1752,7 +1752,7 @@ wep.NVG = {
 }
 
 wep.NVGPLUS = {
-	name = "특수 야간 투시경",
+	name = "NVG+",
 	showname = "NVG+",
 	info = "고감도의 적외선 투시경입니다, 사용하는 동안 다른 아이템을 들 수 있습니다.\n하지만 배터리 수명의 수명이 매우 짧습니다"
 }
