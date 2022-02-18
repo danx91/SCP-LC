@@ -126,6 +126,7 @@ lang.eq_rmb = "RMB - Drop"
 lang.eq_hold = "Hold LMB - Move item"
 lang.eq_vest = "Vest"
 lang.eq_key = "Press '%s' to open EQ"
+lang.eq_unknown = "Unknown item"
 
 lang.info = "Informations"
 lang.author = "Author"
@@ -211,7 +212,7 @@ lang.settings = {
 	client_reset = "Reset Client Settings to Defaults",
 	server_reset = "Reset Server Settings to Defaults",
 
-	client_reset_desc = "You are about to reset your ALL setting in this gamemode.\nThis action cannot be undone!",
+	client_reset_desc = "You are about to reset your ALL settings in this gamemode.\nThis action cannot be undone!",
 	server_reset_desc = "Due to security reasons you cannot reset server settings here.\nTo reset server to default settings, enter 'slc_factory_reset' in server console and follow instructions.\nBe careful this action cannot be undone and will reset EVERYTHING!",
 
 	popup_ok = "OK",
@@ -383,6 +384,10 @@ misc.buttons = {
 	MOUSE2 = "RMB",
 	MOUSE3 = "MMB",
 }
+
+misc.inventory = {
+	unsearched = "Unsearched",
+}
 --[[-------------------------------------------------------------------------
 Vests
 ---------------------------------------------------------------------------]]
@@ -519,7 +524,7 @@ lang.CLASS_OBJECTIVES = {
 
 	kleptod = generic_classd,
 
-	ciagent = [[- Escort Class D memebers
+	ciagent = [[- Escort Class D members
 - Avoid staff and SCP objects
 - Cooperate with others]],
 
@@ -632,7 +637,7 @@ Can escort: None
 Escorted by: CI
 
 Overview:
-Basic class. Cooperate with others to face SCPs and facility staff. You can be escorted by CI memebers.
+Basic class. Cooperate with others to face SCPs and facility staff. You can be escorted by CI members.
 ]],
 
 	veterand = [[Difficulty: Easy
@@ -644,7 +649,7 @@ Can escort: None
 Escorted by: CI
 
 Overview:
-More advanced class. You have basic access in facility. Cooperate with others to face SCPs and facility staff. You can be escorted by CI memebers.
+More advanced class. You have basic access in facility. Cooperate with others to face SCPs and facility staff. You can be escorted by CI members.
 ]],
 
 	kleptod = [[Difficulty: Hard
@@ -656,7 +661,7 @@ Can escort: None
 Escorted by: CI
 
 Overview:
-High utility class. Starts with one random item. Cooperate with others to face SCPs and facility staff. You can be escorted by CI memebers.
+High utility class. Starts with one random item. Cooperate with others to face SCPs and facility staff. You can be escorted by CI members.
 ]],
 
 	ciagent = [[Difficulty: Medium
@@ -668,7 +673,7 @@ Can escort: Class D
 Escorted by: None
 
 Overview:
-Armed with taser CI unit. Provide help to Class D and cooperate with them. You can escort Class D memebers.
+Armed with taser CI unit. Provide help to Class D and cooperate with them. You can escort Class D members.
 ]],
 
 	sciassistant = [[Difficulty: Medium
@@ -680,7 +685,7 @@ Can escort: None
 Escorted by: Security, MTF
 
 Overview:
-Basic class. Cooperate with facility staff and stay away from SCPs. You can be escorted by MTFs memebers.
+Basic class. Cooperate with facility staff and stay away from SCPs. You can be escorted by MTFs members.
 ]],
 
 	sci = [[Difficulty: Medium
@@ -692,7 +697,7 @@ Can escort: None
 Escorted by: Security, MTF
 
 Overview:
-One of the scientists. Cooperate with facility staff and stay away from SCPs. You can be escorted by MTFs memebers.
+One of the scientists. Cooperate with facility staff and stay away from SCPs. You can be escorted by MTFs members.
 ]],
 
 	seniorsci = [[Difficulty: Easy
@@ -704,7 +709,7 @@ Can escort: None
 Escorted by: Security, MTF
 
 Overview:
-One of the scientists. You have higher access level. Cooperate with facility staff and stay away from SCPs. You can be escorted by MTFs memebers.
+One of the scientists. You have higher access level. Cooperate with facility staff and stay away from SCPs. You can be escorted by MTFs members.
 ]],
 
 	headsci = [[Difficulty: Easy
@@ -716,7 +721,7 @@ Can escort: None
 Escorted by: Security, MTF
 
 Overview:
-Best of the scientists. You have higher utility and HP. Cooperate with facility staff and stay away from SCPs. You can be escorted by MTFs memebers.
+Best of the scientists. You have higher utility and HP. Cooperate with facility staff and stay away from SCPs. You can be escorted by MTFs members.
 ]],
 
 	guard = [[Difficulty: Easy
@@ -1254,11 +1259,11 @@ wep.SCP058 = {
 		},
 		shot11 = {
 			name = "Surge I",
-			info = "Increases damage and projectile size but also increases cooldown and slows down projectile\n\t• Projectile damage multiplier: [shot_damage]\n\t• Projectile size multiplier: [shot_size]\n\t• Projectile speed multiplier: [shot_size]\n\t• Total cooldown increased by [shot_cd]s"
+			info = "Increases damage and projectile size but also increases cooldown and slows down projectile\n\t• Projectile damage multiplier: [shot_damage]\n\t• Projectile size multiplier: [shot_size]\n\t• Projectile speed multiplier: [shot_speed]\n\t• Total cooldown increased by [shot_cd]s"
 		},
 		shot12 = {
 			name = "Surge II",
-			info = "Increases damage and projectile size but also increases cooldown and slows down projectile\n\t• Poison effect is removed\n\t• Projectile damage multiplier: [shot_damage]\n\t• Projectile size multiplier: [shot_size]\n\t• Projectile speed multiplier: [shot_size]\n\t• Total cooldown increased by [shot_cd]s"
+			info = "Increases damage and projectile size but also increases cooldown and slows down projectile\n\t• Poison effect is removed\n\t• Projectile damage multiplier: [shot_damage]\n\t• Projectile size multiplier: [shot_size]\n\t• Projectile speed multiplier: [shot_speed]\n\t• Total cooldown increased by [shot_cd]s"
 		},
 		shot21 = {
 			name = "Bloody Mist I",
@@ -1270,15 +1275,15 @@ wep.SCP058 = {
 		},
 		shot31 = {
 			name = "Multishot I",
-			info = "Allows you to shot at rapid speed while holding attack button.\n\t• Unlock ability of rapid shoting\n\t• Direct and splash damage is removed\n\t• Shot stacks limited to [stacks]\n\t• Stacks are generated at [regen_rate] rate\n\t• Projectile size multiplier: [shot_size]\n\t• Projectile speed multiplier: [shot_size]"
+			info = "Allows you to shot at rapid speed while holding attack button.\n\t• Unlock ability of rapid shoting\n\t• Direct and splash damage is removed\n\t• Shot stacks limited to [stacks]\n\t• Stacks are generated at [regen_rate] rate\n\t• Projectile size multiplier: [shot_size]\n\t• Projectile speed multiplier: [shot_speed]"
 		},
 		shot32 = {
 			name = "Multishot II",
-			info = "Increases maximum stacks and buffs shot speed.\n\t• Shot stacks limited to [stacks]\n\t• Stacks are generated at [regen_rate] rate\n\t• Projectile size multiplier: [shot_size]\n\t• Projectile speed multiplier: [shot_size]"
+			info = "Increases maximum stacks and buffs shot speed.\n\t• Shot stacks limited to [stacks]\n\t• Stacks are generated at [regen_rate] rate\n\t• Projectile size multiplier: [shot_size]\n\t• Projectile speed multiplier: [shot_speed]"
 		},
 		exp1 = {
 			name = "Aortal Burst",
-			info = "Unlocks ability to explode dealing massive damage when your hp decreases below each 1000 for the first time"
+			info = "Unlocks ability to explode dealing massive damage when your health decreases below each multiple of 1000 HP for the first time"
 		},
 		exp2 = {
 			name = "Toxic Blast",
@@ -1875,5 +1880,6 @@ wep.ALPHA_CARD2 = {
 }
 
 wep.weapon_stunstick = "Stunstick"
+wep.weapon_crowbar = "Crowbar"
 
 registerLanguage( lang, "english", "en", "default" )

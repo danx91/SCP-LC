@@ -689,11 +689,12 @@ Function can be used to simulate drawing and get final text params
 @param 		[number] 		maxRows 	Maximum amount of rows
 @param 		[boolean] 		simulate 	Don't draw text but calculate height of text
 @param 		[boolean] 		calcW 		If true, width of text will be also calculated instead of returning maxWidth
+@param		[table]			feed		If set, will use this data without spliting text
 
 @return 	[number] 		height 		Final height of text including margin and distance
 			[number]		width 		Width of the widest line. If simulate == true and calcW == false, maxWidth will be returned instead
 ---------------------------------------------------------------------------]]--
-function draw.MultilineText( x, y, text, font, color, maxWidth, margin, dist, align, maxRows, simulate, calcW )
+function draw.MultilineText( x, y, text, font, color, maxWidth, margin, dist, align, maxRows, simulate, calcW, feed )
 	align = align or TEXT_ALIGN_LEFT
 	maxWidth = maxWidth - 2 * margin
 	local texts = string.Split( text , "\n" )
@@ -703,57 +704,59 @@ function draw.MultilineText( x, y, text, font, color, maxWidth, margin, dist, al
 	local fw, fh = surface.GetTextSize( "W" )
 	local height = fh + ( dist or 0 )
 
-	local final = {}
+	local final = feed or {}
 
-	for i, v in ipairs( texts ) do
-		local w, h = surface.GetTextSize( v )
+	if !feed then
+		for i, v in ipairs( texts ) do
+			local w, h = surface.GetTextSize( v )
 
-		if w <= maxWidth then
-			table.insert( final, v )
-		else
-			local cur_txt = v
-			local last_txt = ""
-			local space = 0
+			if w <= maxWidth then
+				table.insert( final, v )
+			else
+				local cur_txt = v
+				local last_txt = ""
+				local space = 0
 
-			local stack = 0
-			repeat
-				stack = stack + 1
+				local stack = 0
+				repeat
+					stack = stack + 1
 
-				local index = string.match( cur_txt, "() ", space )
+					local index = string.match( cur_txt, "() ", space )
 
-				if index == nil then
-					index = string.len( cur_txt ) + 1
-				end
-
-				local next_txt = string.sub( cur_txt, 1, index - 1 )
-				local cw = surface.GetTextSize( next_txt )
-
-				//print( index, next_txt, cw, maxWidth )
-
-				if cw > maxWidth then
-					//print( "greter" )
-					if space > 0 then
-						table.insert( final, last_txt )
-						cur_txt = string.sub( cur_txt, space, string.len( cur_txt ) )
-						space = 0
-						//print( "INSERT", last_txt )
-					else
-						local max_c = string.len( cur_txt ) / cw * maxWidth
-						table.insert( final, string.sub( cur_txt, 0, max_c - 3 ).."..." )
-						//print( "LONG", string.sub( cur_txt, 0, max_c - 3 - 3).."..." )
-						break
+					if index == nil then
+						index = string.len( cur_txt ) + 1
 					end
-				elseif cur_txt == next_txt then
-					//print( "END", cur_txt )
-					table.insert( final, cur_txt )
-					break
-				else
-					space = index + 1
-					last_txt = next_txt
+
+					local next_txt = string.sub( cur_txt, 1, index - 1 )
+					local cw = surface.GetTextSize( next_txt )
+
+					//print( index, next_txt, cw, maxWidth )
+
+					if cw > maxWidth then
+						//print( "greter" )
+						if space > 0 then
+							table.insert( final, last_txt )
+							cur_txt = string.sub( cur_txt, space, string.len( cur_txt ) )
+							space = 0
+							//print( "INSERT", last_txt )
+						else
+							local max_c = string.len( cur_txt ) / cw * maxWidth
+							table.insert( final, string.sub( cur_txt, 0, max_c - 3 ).."..." )
+							//print( "LONG", string.sub( cur_txt, 0, max_c - 3 - 3).."..." )
+							break
+						end
+					elseif cur_txt == next_txt then
+						//print( "END", cur_txt )
+						table.insert( final, cur_txt )
+						break
+					else
+						space = index + 1
+						last_txt = next_txt
+					end
+				until stack > 250
+				if stack > 250 then
+					print( "Overflow!!!" )
 				end
-			until stack > 250
-			if stack > 250 then
-				print( "Overflow!!!" )
 			end
 		end
 	end
@@ -764,7 +767,7 @@ function draw.MultilineText( x, y, text, font, color, maxWidth, margin, dist, al
 	end
 
 	if simulate and !calcW then
-		return margin * 2 + height * n, maxWidth
+		return margin * 2 + height * n, maxWidth, final
 	end
 
 	local maxw = 0
@@ -780,7 +783,7 @@ function draw.MultilineText( x, y, text, font, color, maxWidth, margin, dist, al
 		local tw = 0
 
 		if !simulate then
-			if justify and i != n then
+			if justify and i != n then --TODO save justify data
 				local total_w = surface.GetTextSize( string.gsub( final[i], " ", "" ) )
 				local words = string.Explode( " ", final[i] )
 				local word_count = #words - 1
@@ -841,7 +844,7 @@ function draw.MultilineText( x, y, text, font, color, maxWidth, margin, dist, al
 		end
 	end
 
-	return margin * 2 + height * n, maxw
+	return margin * 2 + height * n, maxw, final
 end
 
 /*-------------------------------------------------------------------------
@@ -862,6 +865,90 @@ Helper function, simplified form of draw.MultilineText for simulation purposes
 ---------------------------------------------------------------------------*/
 function draw.SimulateMultilineText( text, font, maxWidth, margin, dist, maxRows, calcW )
 	return draw.MultilineText( 0, 0, text, font, nil, maxWidth, margin, dist, nil, maxRows, true, calcW )
+end
+
+GLITCH_VERTICAL = 0
+GLITCH_HORIZONTAL = 1
+
+function util.GlitchData( seg, scale )
+	local data = {}
+
+	for i = 1, seg do
+		data[i] = ( math.random() * 2 - 1 ) * scale
+	end
+
+	return data
+end
+
+function draw.Glitch( x, y, w, h, mode, data )
+	if mode == GLITCH_VERTICAL then
+		local xseg = #data
+		local step_u = 1 / xseg
+		local step_x = math.Round( w / xseg )
+
+		for i = 1, xseg do
+			surface.DrawTexturedRectUV( x + step_x * (i - 1), y + data[i] * h, step_x, h, step_u * (i - 1), 0, step_u * i, 1)
+		end
+	elseif mode == GLITCH_HORIZONTAL then
+		local yseg = #data
+		local step_v = 1 / yseg
+		local step_y = math.Round( h / yseg )
+
+		for i = 1, yseg do
+			surface.DrawTexturedRectUV( x + data[i] * w, y + step_y * (i - 1), w, step_y, 0, step_v * (i - 1), 1, step_v * i )
+		end
+	end
+end
+
+function draw.GlitchToTexture( texture, target, mode, data, clear, r, g, b, a )
+	render.PushRenderTarget( target )
+		if clear then
+			render.Clear( r or 0, g or 0, b or 0, a or 255, true, true )
+		end
+
+		cam.Start2D()
+			surface.SetDrawColor( 255, 255, 255, 255 )
+
+			if isnumber( texture ) then
+				surface.SetTexture( texture )
+			else
+				surface.SetMaterial( texture )
+			end
+			
+			draw.Glitch( 0, 0, target:Width(), target:Height(), mode, data )
+		cam.End2D()
+	render.PopRenderTarget()
+end
+
+function draw.WepSelectIcon( ico, cx, cy, size, color )
+	local ico_w, ico_h 
+
+	if isnumber( ico ) then
+		ico_w, ico_h = surface.GetTextureSize( ico )
+		surface.SetTexture( ico )
+	else
+		ico_w = ico:Width()
+		ico_h = ico:Height()
+		surface.SetMaterial( ico )
+	end
+
+	if ico_w == ico_h then
+		ico_w = size
+		ico_h = size
+	elseif ico_w > ico_h then
+		ico_h = size * ico_h / ico_w
+		ico_w = size
+	else//elseif ico_h > ico_w then
+		ico_w = size * ico_w / ico_h
+		ico_h = size
+	end
+
+	PushFilters( TEXFILTER.LINEAR )
+
+	surface.SetDrawColor( color or Color( 255, 255, 255, 255 ) )
+	surface.DrawTexturedRect( cx + size * 0.5 - ico_w * 0.5, cy + size * 0.5 - ico_h * 0.5, ico_w, ico_h )
+
+	PopFilters()
 end
 
 /*-------------------------------------------------------------------------

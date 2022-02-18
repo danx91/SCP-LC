@@ -231,9 +231,9 @@ function DamageLogger:GetDeathDetails( deathid )
 			tab.assists = assists
 			tab.killer_pct = kdmg / total
 		end
-	end
 
-	return tab
+		return tab
+	end
 end
 
 function DamageLogger:Reset( round )

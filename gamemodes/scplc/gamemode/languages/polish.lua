@@ -1167,7 +1167,7 @@ wep.SCP049 = {
 		},
 		doc2 = {
 			name = "Chirurgiczna precyzja II",
-			info = "SCzas operacji skraca się o 5 sekund\n\t• Całkowite skrócenie czasu operacji: 10s",
+			info = "Czas operacji skraca się o 5 sekund\n\t• Całkowite skrócenie czasu operacji: 10s",
 		},
 	}
 }
@@ -1238,43 +1238,43 @@ wep.SCP058 = {
 		},
 		attack3 = {
 			name = "Jadowite żądło III",
-			info = "Zwiększa obrażenia trucizny i skraca czas odnowienia ataku.\n\t• Jeśli cel nie jest zatruty, natychmiast nakłada 2 stosy trucizny\n\t• Atak trucizną zadaje [pp_dmg] obrażeń\n\t• Czas odnowienia zostaje zmniejszony o [prim_cd]s"
+			info = "Zwiększa obrażenia trucizny i skraca czas odnowienia ataku.\n\t• Jeśli cel nie jest zatruty, natychmiast nakłada 2 ładunki trucizny\n\t• Trucizna wywołana atakiem zadaje [pp_dmg] obrażeń\n\t• Czas odnowienia jest zmniejszony o [prim_cd]s"
 		},
 		shot = {
-			name = "Skorumpowana Krew",
-			info = "Dodaje truciznę do ataków strzałami"
+			name = "Spaczona Krew",
+			info = "Dodaje truciznę do ataków dystansowych"
 		},
 		shot11 = {
-			name = "Surge I",
-			info = "Zwiększa obrażenia i rozmiar pocisku, ale także wydłuża czas odnowienia i spowalnia pocisk\n\t• Mnożnik obrażeń od pocisków zostaje zwiększony do: [shot_damage]\n\t• Mnożnik wielkości pocisku zostaje zwiększony do: [shot_size]\n\t• Mnożnik prędkości pocisku zostaje zwiększony do: [shot_size]\n\t• Całkowity czas odnowienia zwiększony o [shot_cd]s"
+			name = "Napływ I",
+			info = "Zwiększa obrażenia i rozmiar pocisku, ale także wydłuża czas odnowienia i spowalnia go\n\t• Mnożnik obrażeń pocisku: [shot_damage]\n\t• Mnożnik wielkości pocisku: [shot_size]\n\t• Mnożnik prędkości pocisku: [shot_speed]\n\t• Całkowity czas odnowienia zwiększony o [shot_cd]s"
 		},
 		shot12 = {
-			name = "Surge II",
-			info = "Zwiększa obrażenia i rozmiar pocisku, ale także wydłuża czas odnowienia i spowalnia pocisk\n\t• Efekt trucizny zostaje usunięty\n\t• Mnożnik obrażeń od pocisków zostaje zwiększony do: [shot_damage]\n\t• Mnożnik wielkości pocisku zostaje zwiększony do: [shot_size]\n\t• Mnożnik prędkości pocisku zostaje zwiększony do: [shot_size]\n\t• Całkowity czas odnowienia zwiększony o [shot_cd]s"
+			name = "Napływ II",
+			info = "Zwiększa obrażenia i rozmiar pocisku, ale także wydłuża czas odnowienia i spowalnia pocisk\n\t• Efekt trucizny jest usunięty\n\t• Mnożnik obrażeń pocisku: [shot_damage]\n\t• Mnożnik wielkości pocisku: [shot_size]\n\t• Mnożnik prędkości pocisku: [shot_speed]\n\t• Całkowity czas odnowienia zwiększony o [shot_cd]s"
 		},
 		shot21 = {
 			name = "Krwawa mgła I",
-			info = "Strzał pozostawia po uderzeniu mgłę, raniąc i zatruwając każdego, kto jej dotknie.\n\t• Usuwane są obrażenia bezpośrednie i obszarowe\n\t• Obrażenia chmury wynoszą: [cloud_damage] obrażeń przy kontakcie\n\t• Trucizna zadawana przez chmure wynosi: [sp_dmg] obrażeń\n\t• Stosy strzałów ograniczone do [stacks]\n\t• Czas odnowienia zwiększony o [shot_cd]s\n\t• Stosy są generowane przy mnożniku: [regen_rate]"
+			info = "Strzał pozostawia po uderzeniu mgłę, raniąc i zatruwając każdego, kto jej dotknie.\n\t• Usunięte obrażenia bezpośrednie i obszarowe\n\t• Mgła zadaje [cloud_damage] obrażeń przy kontakcie\n\t• Trucizna wywołana przez chmure zadaje [sp_dmg] obrażeń\n\t• Ładunki strzałów ograniczone do [stacks]\n\t• Czas odnowienia zwiększony o [shot_cd]s\n\t• Mnożnik czasu regeneracji ładunków: [regen_rate]"
 		},
 		shot22 = {
 			name = "Krwawa mgła II",
-			info = "Podkręca obrażenia zadawane przez mgłe.\n\t• Obrażenia chmury wynoszą: [cloud_damage] obrażeń przy kontakcie\n\t• Trucizna zadawana przez chmure: [sp_dmg] obrażeń\n\t• Stosy są generowane przy mnożniku: [regen_rate]"
+			info = "Zwiększa obrażenia zadawane przez mgłe.\n\t• Mgła zadaje [cloud_damage] obrażeń przy kontakcie\n\t• Trucizna wywołana przez chmure zadaje [sp_dmg] obrażeń\n\t• Mnożnik czasu regeneracji ładunków: [regen_rate]"
 		},
 		shot31 = {
-			name = "Multishot I",
-			info = "Pozwala na strzelanie z dużą prędkością podczas trzymania przycisku ataku.\n\t• Odblokowuje możliwość szybkiego oddawania strzałów\n\t• Usuwane są obrażenia bezpośrednie i obszarowe\n\t• Stosy strzałów ograniczone do [stacks]\n\t• Stosy są generowane przy mnożniku: [regen_rate]\n\t• Mnożnik wielkości pocisku zostaje zwiększony do: [shot_size]\n\t• Mnożnik prędkości pocisku zostaje zwiększony do: [shot_size]"
+			name = "Wielostrzał I",
+			info = "Pozwala na strzelanie z dużą prędkością podczas trzymania przycisku ataku.\n\t• Odblokowuje możliwość szybkiego oddawania strzałów\n\t• Usunięte obrażenia bezpośrednie i obszarowe\n\t• Ładunki strzałów ograniczone do [stacks]\n\t• Mnożnik czasu regeneracji ładunków: [regen_rate]\n\t• Mnożnik wielkości pocisku: [shot_size]\n\t• Mnożnik prędkości pocisku: [shot_speed]"
 		},
 		shot32 = {
-			name = "Multishot II",
-			info = "Zwiększa maksymalne stosy i poprawia prędkość strzału.\n\t• Stosy strzałów ograniczone do [stacks]\n\t• Stosy są generowane przy mnożniku: [regen_rate]\n\t• Mnożnik wielkości pocisku zostaje zwiększony do: [shot_size]\n\t• Mnożnik prędkości pocisku zostaje zwiększony do: [shot_size]"
+			name = "Wielostrzał II",
+			info = "Zwiększa maksymalne ładunki i zwiększa prędkość strzału.\n\t• Ładunki strzałów ograniczone do [stacks]\n\t• Mnożnik czasu regeneracji ładunków: [regen_rate]\n\t• Mnożnik wielkości pocisku: [shot_size]\n\t• Mnożnik prędkości pocisku: [shot_speed]"
 		},
 		exp1 = {
-			name = "Aortal Burst",
-			info = "Odblokowuje umiejętność eksplozji zadającej ogromne obrażenia, gdy ilość hp spadnie poniżej 1000 po raz pierwszy"
+			name = "Tętniczy wybuch",
+			info = "Odblokowuje możliwość eksplozji zadającej ogromne obrażenia, za każdym razem, gdy ilość zdrowia spadnie poniżej każdej wielokrotności 1000 HP po raz pierwszy"
 		},
 		exp2 = {
 			name = "Toksyczny wybuch",
-			info = "Zwiększa twoją zdolność do eksplozji\n\t• Stosuje 2 stosy trucizny\n\t• Mnożnik promienia zostaje zwiększony do: [explosion_radius]"
+			info = "Ulepsza twoją zdolność do eksplozji\n\t• Nakłada 2 ładunki trucizny\n\t• Mnożnik zasięgu: [explosion_radius]"
 		},
 	}
 }

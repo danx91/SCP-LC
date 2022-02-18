@@ -5,19 +5,29 @@ local generic_skill_icons = {
 }
 
 --[[
-data = {
-	grid_x = 3,
-	grid_y = 4,
-	upgrades = {
-		{ name = "", icon = <material>, cost = 1, req = {}, block = {}, reqany = false,  pos = { <xpos>, <ypos> }, mod = {}, active = false, group = nil, rowr = false }, --rowr: repeat on weapon restore
-		//name MUST be unique; reqany = false - All required upgrades are required to unlock; reqany = true - Any required upgrade is required to unlock
-		//mod = { key = <value> } - can be obtained by swep:GetUpgradeMod( key ); active = <any* but false/nil> - will call OnUpgradeBought( <upgrade name>, <any*>, <group> )
-		...
-	},
-	rewards = {
-		{  }
+	data = {
+		grid_x = 3, --X size of grid (width)
+		grid_y = 4, --Y size of grid (height)
+		upgrades = {
+			{
+				name = "", --MUST be unique
+				icon = <material>, --IMaterial
+				cost = 1, --cost of upgrade
+				req = {}, --upgrades required to unlock this upgrade
+				block = {}, --upgrades that block this upgrade
+				reqany = false, --false - All required upgrades are required to unlock; reqany = true - Any required upgrade is required to unlock
+				pos = { <xpos>, <ypos> }, -X and Y position on grid
+				mod = { key = <value> }, --data to save when upgrade is bought, cab be accessed with SWEP:GetUpgadeMod( name )
+				active = false, --active = any* but false/nil -> will call OnUpgradeBought( <upgrade name>, <this field value>, <group> )
+				group = nil, --look above
+				rowr = false --repeat on weapon restore
+			},
+			...
+		},
+		rewards = {
+			
+		}
 	}
-}
 ]]
 function DefineUpgradeSystem( name, data )
 	local ids = {}

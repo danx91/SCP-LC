@@ -135,13 +135,19 @@ function SCPSkillObject:Render( swep )
 
 	self:ParseButton()
 
-	local w, h = ScrW(), ScrH()
+	local scale = GetHUDScale()
+	local sw, sh = ScrW(), ScrH()
+
+	local w = sw * scale
+	local h = sh * scale
+	local addy = sh - h
+
 	local dist = w * 0.03
 	local size = w * 0.045
 	local margin = h * 0.015
 
 	local start_x = SLC_HUD_END_X + margin + dist + ( size + margin ) * ( self.pos - 1 )
-	local start_y = h - margin - size
+	local start_y = h - margin - size + addy
 
 	surface.SetDrawColor( self.inactive and COLOR.inactive or COLOR.white )
 	surface.SetMaterial( self.material )
@@ -173,7 +179,7 @@ function SCPSkillObject:Render( swep )
 	if values.text and values.text != "" then
 		draw.LimitedText( {
 			text = values.text,
-			font = "SCPHUDSmall",
+			font = "SCPScaledHUDSmall",
 			color = COLOR.white,
 			pos = { start_x + size - 8, start_y},
 			xalign = TEXT_ALIGN_RIGHT,
@@ -186,7 +192,7 @@ function SCPSkillObject:Render( swep )
 	if btn_name then
 		draw.Text( {
 			text = LANG.MISC.buttons[btn_name] or string.upper( btn_name ),
-			font = "SCPHUDSmall",
+			font = "SCPScaledHUDSmall",
 			color = COLOR.white,
 			pos = { start_x + size - 8, start_y + size},
 			xalign = TEXT_ALIGN_RIGHT,
@@ -296,7 +302,7 @@ function SCPHUDObject:ButtonPressed( button )
 end
 
 function SCPHUDObject:Render()
-	local w, h = ScrW(), ScrH()
+	local h = ScrH() * GetHUDScale()
 
 	--Skills
 	local start_x, end_x, start_y
@@ -331,7 +337,7 @@ function SCPHUDObject:Render()
 
 		draw.Text( {
 			text = LANG.SCPHUD[self.notify_text] or self.notify_text,
-			font = "SCPHUDVSmall",
+			font = "SCPScaledHUDVSmall",
 			color = color,
 			pos = { ( start_x + end_x ) * 0.5, start_y - h * 0.02 },
 			xalign = TEXT_ALIGN_CENTER,

@@ -41,6 +41,10 @@ end, function( cmd, args )
 	return tbl
 end )
 
+function GetHUDScale()
+	return hudscalecvar:GetFloat()
+end
+
 local hide = {
 	CHudHealth = true,
 	CHudBattery = true,
@@ -159,7 +163,7 @@ SLC_HUD_END_X = 0
 function GM:HUDPaint()
 	next_frame = true
 	local w, h = ScrW(), ScrH()
-	local scale = hudscalecvar:GetFloat()
+	local scale = GetHUDScale()
 
 	if !scaled_fonts_built then
 		scaled_fonts_built = true
@@ -352,8 +356,8 @@ function GM:HUDPaint()
 	local addy = 0
 
 	if !isspec then
-		w = w * 0.9 * scale
-		h = h * 0.9 * scale
+		w = w * 0.85 * scale
+		h = h * 0.85 * scale
 
 		addy = sh - h
 	end
@@ -1060,7 +1064,7 @@ local dishudnf = false
 local wasdisabled = false
 
 function GM:SLCShouldDrawSCPHUD()
-	return !hud_disabled and !HUDDrawInfo /*and HUDDrawSpawnInfo < CurTime()*/ and !ROUND.preparing
+	return !hud_disabled and !HUDDrawInfo and !ROUND.preparing and !ROUND.post
 end
 
 function DisableHUDNextFrame()

@@ -39,6 +39,7 @@ function CheckContent()
 		elseif !subscribed then
 			//table.insert( data.NOT_SUBSCRIBED, id )
 			table.insert( data.NOK, id )
+			print( "Missing addon: "..id )
 			//print( "nsub" )
 			nok = nok + 1
 		elseif !enabled then
@@ -197,9 +198,7 @@ AddGamemodeContent("2271330776") -- S.C.P 2427-3 [FOR LOST CONTROL]
 AddGamemodeContent("2213313378") -- MTF_support
 AddGamemodeContent("2124819577") -- SCP Zombie Personel
 AddGamemodeContent("2402059605") -- SCP: Lost Control
-AddGamemodeContent("2500124828") -- [SCP:LOST CONTROL CONTENT] CLASS-D Veteran. [ᴘ.ᴍ]
-AddGamemodeContent("2498654543") -- [SCP:LOST CONTROL CONTENT] Chief Scientist [ᴘ.ᴍ]
-AddGamemodeContent("2499221486") -- [SCP LOST CONTROL CONTENT] Scientific Staff [ᴘ.ᴍ]
 AddGamemodeContent("2484281292") -- [SCP:LOST CONTROL CONTENT] PASSPORT
 AddGamemodeContent("1074125384") -- SCP-500 "Panacea" Entity and Model
 AddGamemodeContent("2509724092") -- SCP058
+AddGamemodeContent("783530452") --Backpack

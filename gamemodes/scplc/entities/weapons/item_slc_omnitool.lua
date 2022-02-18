@@ -200,6 +200,15 @@ function SWEP:DragAndDrop( wep )
 	end
 end
 
+function SWEP:StoreWeapon( data )
+	data.chip_id = self:GetChipID()
+	data.override = self:GetAccessOverride()
+end
+
+function SWEP:RestoreWeapon( data )
+	self:SetChipData( GetChipByID( data.chip_id ), data.override )
+end
+
 /*function SWEP:QueueAction( state, duration, cb )
 	table.insert( self.ActionQueue, { state = state, duration = duration, cb = cb } )
 
@@ -461,21 +470,51 @@ if CLIENT then
 	--also all these variables will be shared between different omnitools
 	local screen_material = Material( "models/weapons/alski/omnitool/omnitool_screen" )
 
-	local TEX_SIZE = 521
+	local TEX_SIZE = 521 --REVIEW misspell 512?
 	local SCREEN_WIDTH, SCREEN_HEIGHT = 512, 340
 
 	local screen_rt = GetRenderTarget( "SLCOmnitoolScreen", TEX_SIZE, TEX_SIZE )
+	local glitch_rt = GetRenderTarget( "SLCOmnitoolGlitch", TEX_SIZE, TEX_SIZE ) --temp texture to store glitch effect
+
+	/*local glitch_material = CreateMaterial( "omnitool_glitch_material2", "UnlitGeneric", {
+		["$basetexture"] = glitch_rt:GetName(),
+	} )*/
+	
+	local tex_id = surface.GetTextureID( screen_material:GetName() )
+
+	local glitch_vt, glitch_ht = 0, 0
+	local glitch_v, glitch_h
 
 	function SWEP:RenderScreen()
 		screen_material:SetTexture( "$basetexture", screen_rt )
 
 		render.PushRenderTarget( screen_rt )
-
 			render.Clear( 3, 3, 3, 255, true )
+
 			cam.Start2D()
 				self:DrawOmnitoolScreen()
 			cam.End2D()
 		render.PopRenderTarget()
+
+		/*if self:GetState() == STATE.PREPARING then
+			local mag = 1 - (self.ActionFinish - CurTime()) / self.LoadingDuration
+
+			if glitch_vt < CurTime() then
+				glitch_vt = CurTime() + math.random() * 0.25 - mag * 0.1 -- < 0!
+				glitch_v = util.GlitchData( 8 + math.Round( math.random() * 4 ), 0.003 + math.random() * 0.01 )
+			end
+
+			if glitch_ht < CurTime() then
+				glitch_ht = CurTime() + math.random() * 0.15
+				glitch_h = util.GlitchData( 5 + math.Round( math.random() * 5 ), math.random() * 0.03 + mag * 0.02 )
+			end
+
+			draw.GlitchToTexture( tex_id, glitch_rt, GLITCH_VERTICAL, glitch_v, true, 3, 3, 3, 255 ) --first pass - vertical
+			render.CopyTexture( glitch_rt, screen_rt )
+
+			draw.GlitchToTexture( tex_id, glitch_rt, GLITCH_HORIZONTAL, glitch_h, true, 3, 3, 3, 255 ) --seconds pass - horizontal
+			render.CopyTexture( glitch_rt, screen_rt )
+		end*/
 	end
 
 	local COLOR = {
@@ -489,14 +528,22 @@ if CLIENT then
 
 	local alpha = 0
 	local hide = false
+
+	local mal = 0
+	local mb = false
 	function SWEP:DrawOmnitoolScreen()
 		local w, h = SCREEN_WIDTH, SCREEN_HEIGHT
 
 		local state = self:GetState()
 		//if self.Preparing > CurTime() then
 		if state == STATE.PREPARING then
+			/*if mal < CurTime() and ( mb and math.random() < 0.03 or math.random() < 0.02 ) then
+				mal = CurTime() + 0.1
+				mb = !mb
+			end*/
+
 			draw.Text( {
-				text = self.Lang.SCREEN.loading.."...",
+				text = mb and "MalO ver1.0.0" or (self.Lang.SCREEN.loading.."..."),
 				pos = { w * 0.5, h * 0.3 },
 				font = "SCPHUDVBig",
 				color = COLOR.white,

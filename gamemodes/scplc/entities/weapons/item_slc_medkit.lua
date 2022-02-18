@@ -8,7 +8,10 @@ SWEP.ShouldDrawViewModel 	= false
 SWEP.Primary.Automatic 		= true
 SWEP.Secondary.Automatic 	= true
 
-SWEP.SelectFont = "SCPHUDMedium"
+if CLIENT then
+	SWEP.WepSelectIcon = Material( "slc/items/medkit.png" )
+	SWEP.SelectColor = Color( 255, 210, 0, 255 )
+end
 
 SWEP.HealDmg 	= 40
 SWEP.HealRand 	= 10

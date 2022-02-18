@@ -12,7 +12,10 @@ SWEP.HasBattery 	= true
 SWEP.HolsterBatteryUsage = true
 SWEP.BatteryUsage 	= 3.6
 
-SWEP.SelectFont = "SCPHUDMedium"
+if CLIENT then
+	SWEP.WepSelectIcon = Material( "slc/items/radio.png" )
+	SWEP.SelectColor = Color( 255, 210, 0, 255 )
+end
 
 SWEP.NextUse 		= 0
 

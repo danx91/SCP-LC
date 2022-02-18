@@ -140,7 +140,7 @@ local function drawVest( x, y, size )
 
 	render.SetStencilEnable( false )
 
-	surface.SetDrawColor( Color( 0, 0, 0, 125 ) )
+	surface.SetDrawColor( 0, 0, 0, 125 )
 	surface.DrawRect( x, y, size, size )
 
 	local vest = LocalPlayer():GetVest()
@@ -150,7 +150,7 @@ local function drawVest( x, y, size )
 		//render.PushFilterMin( TEXFILTER.LINEAR )
 		PushFilters( TEXFILTER.LINEAR )
 
-		surface.SetDrawColor( Color( 255, 255, 255, 255 ) )
+		surface.SetDrawColor( 255, 255, 255, 255 )
 		surface.SetMaterial( MATS.vest )
 		surface.DrawTexturedRect( x + size * 0.1, y + size * 0.1, size * 0.8, size * 0.8 )
 
@@ -160,7 +160,7 @@ local function drawVest( x, y, size )
 
 		local btn = Button( x, y, size, size )
 		if btn == 1 then
-			surface.SetDrawColor( Color( 50, 50, 50, 75 ) )
+			surface.SetDrawColor( 50, 50, 50, 50 )
 			surface.DrawRect( x, y, size, size )
 		elseif btn == 2 or btn == 3 then
 			net.Start( "DropVest" )
@@ -192,41 +192,6 @@ local function drawVest( x, y, size )
 			end
 		end
 	end
-end
-
-local function drawWepSelectIcon( ico, cx, cy, size, color )
-	local ico_w, ico_h 
-
-	if isnumber( ico ) then
-		ico_w, ico_h = surface.GetTextureSize( ico )
-		surface.SetTexture( ico )
-	else
-		ico_w = ico:Width()
-		ico_h = ico:Height()
-		surface.SetMaterial( ico )
-	end
-
-	if ico_w == ico_h then
-		ico_w = size
-		ico_h = size
-	elseif ico_w > ico_h then
-		ico_h = size * ico_h / ico_w
-		ico_w = size
-	else//elseif ico_h > ico_w then
-		ico_w = size * ico_w / ico_h
-		ico_h = size
-	end
-
-	//render.PushFilterMag( TEXFILTER.LINEAR )
-	//render.PushFilterMin( TEXFILTER.LINEAR )
-	PushFilters( TEXFILTER.LINEAR )
-
-	surface.SetDrawColor( color or Color( 255, 255, 255, 255 ) )
-	surface.DrawTexturedRect( cx + size * 0.5 - ico_w * 0.5, cy + size * 0.5 - ico_h * 0.5, ico_w, ico_h )
-
-	//render.PopFilterMag()
-	//render.PopFilterMin()
-	PopFilters()
 end
 
 local def_wep = surface.GetTextureID( "weapons/swep" )
@@ -266,7 +231,7 @@ local function drawItem( i, wx, wy, size, offset )
 
 	render.SetStencilEnable( false )
 
-	surface.SetDrawColor( Color( 0, 0, 0, 125 ) )
+	surface.SetDrawColor( 0, 0, 0, 125 )
 	surface.DrawRect( cx, cy, size, size )
 
 	local wep = WEAPONS[i]
@@ -290,7 +255,7 @@ local function drawItem( i, wx, wy, size, offset )
 	end
 
 	if btn == 1 then
-		surface.SetDrawColor( Color( 50, 50, 50, 75 ) )
+		surface.SetDrawColor( 50, 50, 50, 50 )
 		surface.DrawRect( cx, cy, size, size )
 
 		if drag > 0 then
@@ -353,7 +318,7 @@ local function drawItem( i, wx, wy, size, offset )
 
 	local s = c_wep.SelectIcon or c_wep.WepSelectIcon
 	if s and s != def_wep then
-		drawWepSelectIcon( s, cx, cy, size, c_wep.SelectColor )
+		draw.WepSelectIcon( s, cx, cy, size, c_wep.SelectColor )
 	elseif c_wep.SelectFont then
 		local font = OVERRIDE_FONTS[c_wep.SelectFont] or c_wep.SelectFont
 		local fy = cy + size * 0.5
@@ -371,7 +336,7 @@ local function drawItem( i, wx, wy, size, offset )
 			yalign = TEXT_ALIGN_CENTER,
 		}
 	else
-		drawWepSelectIcon( def_wep, cx, cy, size, c_wep.SelectColor )
+		draw.WepSelectIcon( def_wep, cx, cy, size, c_wep.SelectColor )
 	end
 
 	if wep.Stacks and wep.Stacks > 1 then
@@ -379,7 +344,7 @@ local function drawItem( i, wx, wy, size, offset )
 			text = wep:GetCount(),
 			pos = { cx + size * 0.95, cy + size * 0.975 },
 			font = "SCPHUDMedium",
-			color = c_wep.SelectColor or Color( 255, 210, 0, 200 ),
+			color = c_wep.SelectColor or Color( 255, 210, 0, 255 ),
 			xalign = TEXT_ALIGN_RIGHT,
 			yalign = TEXT_ALIGN_BOTTOM,
 		}
@@ -388,7 +353,7 @@ local function drawItem( i, wx, wy, size, offset )
 	if wep.Toggleable and wep:GetEnabled() then
 		PushFilters( TEXFILTER.LINEAR )
 			surface.SetMaterial( MATS.gear )
-			surface.SetDrawColor( Color( 155, 155, 155 ) )
+			surface.SetDrawColor( 155, 155, 155, 155 )
 			surface.DrawTexturedRect( cx + size * 0.75 - 2, cy + 2, size * 0.25, size * 0.25 )
 		PopFilters()
 	end
@@ -396,7 +361,7 @@ local function drawItem( i, wx, wy, size, offset )
 	if wep.HasBattery then
 		local pct = wep:GetBattery() * 0.01
 
-		surface.SetDrawColor( Color( 255, 255, 255 ) )
+		surface.SetDrawColor( 255, 255, 255, 255 )
 		surface.DrawOutlinedRect( cx + size * 0.85 + 2 - 2, cy + size * 0.7 + 2 - 2, size * 0.15 - 4, size * 0.3 - 4 )
 
 		surface.SetDrawColor( Color( 255 * ( 1 - pct ), 255 * pct, 0 ) )
@@ -404,7 +369,7 @@ local function drawItem( i, wx, wy, size, offset )
 	end
 
 	if drag != i and LocalPlayer():GetActiveWeapon() == wep then
-		surface.SetDrawColor( Color( 0, 0, 175, 255 ) )
+		surface.SetDrawColor( 0, 0, 175, 175 )
 		surface.DrawOutlinedRect( cx + 1, cy + 1, size - 2, size - 2 )
 		surface.DrawOutlinedRect( cx + 2, cy + 2, size - 4, size - 4 )
 	end
@@ -414,7 +379,7 @@ local function drawSideButton( x, y, w, h, offset, tab )
 	local btn = Button( x, y, w, h )
 
 	if btn == 1 then
-		surface.SetDrawColor( Color( 50, 50, 50, 75 ) )
+		surface.SetDrawColor( 50, 50, 50, 50 )
 		surface.DrawRect( x, y, w, h )
 	elseif btn == 2 or btn == 3 then
 		local cb = tab[4]
@@ -425,7 +390,7 @@ local function drawSideButton( x, y, w, h, offset, tab )
 
 	if tab[2] then
 		surface.SetMaterial( tab[2] )
-		surface.SetDrawColor( Color( 255, 255, 255, 255 ) )
+		surface.SetDrawColor( 255, 255, 255, 255 )
 		surface.DrawOutlinedRect( x + 2, y + 2, h - 4, h - 4 )
 		surface.DrawTexturedRect( x + 2, y + 2, h - 4, h - 4 )
 
@@ -545,12 +510,12 @@ local function DrawEQ()
 	render.SetStencilPassOperation( STENCIL_REPLACE )
 
 	surface.SetMaterial( blur )
-	surface.SetDrawColor( Color( 255, 255, 255, 255 ) )
+	surface.SetDrawColor( 255, 255, 255, 255 )
 	surface.DrawTexturedRect( 0, 0, w, h )
 
 	render.SetStencilEnable( false )
 
-	surface.SetDrawColor( Color( 0, 0, 0, 150 ) )
+	surface.SetDrawColor( 0, 0, 0, 150 )
 	surface.DrawRect( vest_x, wy, vest_width, vest_height )
 	surface.DrawRect( wx, wy, width, height )
 
@@ -624,14 +589,18 @@ local function DrawEQ()
 		local mx, my = input.GetCursorPos()
 
 		local color = Color( 0, 0, 0, 240 )
-		local wep_name = "Unknown Weapon"
 		local author = SHOW_WEP_INFO.Author
 		local info = SHOW_WEP_INFO.Info
 
-		if SHOW_WEP_INFO.PrintName then
-			wep_name = SHOW_WEP_INFO.PrintName
-		elseif SHOW_WEP_INFO.GetPrintName then
-			wep_name = SHOW_WEP_INFO:GetPrintName()
+		local wep_name
+
+		if SHOW_WEP_INFO.GetClass then
+			local tab = LANG.WEAPONS[SHOW_WEP_INFO:GetClass()]
+			wep_name = istable( tab ) and tab.name or isstring( tab ) and tab
+		end
+
+		if !wep_name then
+			wep_name = SHOW_WEP_INFO.PrintName or SHOW_WEP_INFO.GetPrintName and SHOW_WEP_INFO:GetPrintName() or LANG.eq_unknown
 		end
 
 		if SHOW_WEP_INFO.Stacks and SHOW_WEP_INFO.Stacks > 1 then
@@ -730,7 +699,7 @@ local function DrawEQ()
 		render.SetStencilCompareFunction( STENCIL_NOTEQUAL )
 		render.SetStencilPassOperation( STENCIL_KEEP )
 
-		surface.SetDrawColor( Color( 150, 150, 150, 50 ) )
+		surface.SetDrawColor( 150, 150, 150, 150 )
 		surface.DrawRect( mx - 2, my - 2, info_width + 4, cur_y - my + 4 )
 
 		render.SetStencilEnable( false )
@@ -740,48 +709,6 @@ local function DrawEQ()
 end
 
 hook.Add( "DrawOverlay", "SCPEQ", DrawEQ )
-
-/*function UpdatePlayerEQ()
-	local size = EQ.slots
-	local weps = LocalPlayer():GetWeapons()
-
-	for i = 1, size do
-		local remove = true
-
-		for j = 1, size do
-			if WEAPONS[i] == weps[j] then
-				remove = false
-				break
-			end
-		end
-
-		if remove then
-			WEAPONS[i] = nil
-		end
-	end
-
-	for i = 1, size do
-		local first_empty = 0
-		local add = true
-
-		for j = 1, size do
-			local wep = WEAPONS[j]
-
-			if !wep and first_empty == 0 then
-				first_empty = j
-			end
-
-			if wep == weps[i] then
-				add = false
-				break
-			end
-		end
-
-		if add and first_empty != 0 then
-			WEAPONS[first_empty] = weps[i]
-		end
-	end
-end*/
 
 function UpdatePlayerEQ()
 	local player_weapons = LocalPlayer():GetWeapons()
@@ -802,7 +729,7 @@ function UpdatePlayerEQ()
 		local wep = player_weapons[i] --iterate over all items in inventory
 		//print( "check", wep, i )
 
-		if IsValid( wep ) and !cwep_lookup[wep] then --is weapon is valid and is not present in local inventory
+		if IsValid( wep ) and !cwep_lookup[wep] then --if weapon is valid and is not present in local inventory
 			local first_empty = 0
 
 			for j = 1, EQ.slots do

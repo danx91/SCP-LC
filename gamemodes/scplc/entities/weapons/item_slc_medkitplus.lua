@@ -8,3 +8,8 @@ SWEP.MaxCharges = 5
 SWEP.HealTime 	= 4
 
 SWEP.Skin = 1
+
+if CLIENT then
+	SWEP.WepSelectIcon = Material( "slc/items/medkit.png" )
+	SWEP.SelectColor = Color( 0, 123, 255, 255 )
+end

@@ -145,6 +145,22 @@ local function PrintTableDiff( tab, ref, stack )
 	return wrong, err
 end
 
+local function PrintRevDiff( tab, ref, stack )
+	local num = 0
+	stack = stack or "LANG"
+
+	for k, v in pairs( tab ) do
+		if istable( v ) and istable( ref[k] ) then
+				num = num + PrintTableDiff( v, ref[k], stack.." > "..k )
+		elseif ref[k] == nil then
+			print( "Redundant value: "..stack.." > "..k )
+			num = num + 1
+		end
+	end
+
+	return num
+end
+
 concommand.Add( "slc_diff_language", function( ply, cmd, args )
 	local lang_name = args[1]
 	if !isstring( lang_name ) then return end
@@ -155,10 +171,12 @@ concommand.Add( "slc_diff_language", function( ply, cmd, args )
 	if lang and default then
 		print( "#####################################################################" )
 		local wrong, err = PrintTableDiff( lang, default )
+		local num = PrintRevDiff( lang, default )
 		print( "#####################################################################" )
 		print( "Language diff: "..lang_name )
 		print( "Total missing values or tables: "..wrong )
 		print( "Total errors: "..err )
+		print( "Total redundant values: "..num )
 		print()
 		print( "Check logs above for details" )
 		print( "#####################################################################" )

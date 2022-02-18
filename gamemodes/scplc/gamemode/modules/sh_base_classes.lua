@@ -17,15 +17,6 @@ VETERAND_MODELS = {
 	"models/player/kerry/class_jan_7.mdl",
 }
 
-VETERAND_MODELS_V2 = {
-	"models/veteran/1000shells/class_veteran2.mdl",
-	"models/veteran/1000shells/class_veteran3.mdl",
-	"models/veteran/1000shells/class_veteran4.mdl",
-	"models/veteran/1000shells/class_veteran5.mdl",
-	"models/veteran/1000shells/class_veteran6.mdl",
-	"models/veteran/1000shells/class_veteran7.mdl",
-}
-
 SCI_MODELS = {
 	"models/bmscientistcits/p_female_01.mdl",
 	"models/bmscientistcits/p_female_02.mdl",
@@ -50,18 +41,6 @@ SCI_MODELS = {
 	"models/scp/apsci_male_07.mdl",
 	"models/scp/apsci_male_08.mdl",
 	"models/scp/apsci_male_09.mdl",
-}
-
-HEAD_SCI_MODELS = {
-	"models/armacham/yhc/scientists_1.mdl",
-	"models/armacham/yhc/scientists_2.mdl",
-	"models/armacham/yhc/scientists_3.mdl",
-	"models/armacham/yhc/scientists_4.mdl",
-	"models/armacham/yhc/scientists_5.mdl",
-	"models/armacham/yhc/scientists_6.mdl",
-	"models/armacham/yhc/scientists_7.mdl",
-	"models/armacham/yhc/scientists_8.mdl",
-	"models/armacham/yhc/scientists_9.mdl",
 }
 
 GUARD_MODELS = {
@@ -154,7 +133,7 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		max = 0,
 	} )*/
 
-	RegisterClass( "veterand", "classd", VETERAND_MODELS_V2, {
+	RegisterClass( "veterand", "classd", VETERAND_MODELS, {
 		team = TEAM_CLASSD,
 		weapons = {},
 		ammo = {},
@@ -233,7 +212,7 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		max = 0,
 	} )
 
-	RegisterClass( "seniorsci", "sci", "models/player/scientist.mdl", {
+	RegisterClass( "seniorsci", "sci", SCI_MODELS, {
 		team = TEAM_SCI,
 		weapons = {},
 		ammo = {},
@@ -248,7 +227,7 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		max = 1,
 	} )
 
-	RegisterClass( "headsci", "sci", HEAD_SCI_MODELS, {
+	RegisterClass( "headsci", "sci", SCI_MODELS, {
 		team = TEAM_SCI,
 		weapons = {},
 		ammo = {},

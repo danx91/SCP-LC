@@ -1,4 +1,12 @@
 function RebuildFonts()
+	CreateFont( "SCPHUDESmall", {
+		font = "Impacted",
+		size = ScrW() * 0.01,
+		antialias = true,
+		weight = 500,
+		extended = true,
+	} )
+
 	CreateFont( "SCPHUDVSmall", {
 		font = "Impacted",
 		size = ScrW() * 0.015,

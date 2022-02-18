@@ -20,11 +20,11 @@ end
 function SWEP:Think()
 	self:CallBaseClass( "Think" )
 
-	local wep = self.Owner:GetWeapon( "item_slc_nvgplus" )
+	/*local wep = self.Owner:GetWeapon( "item_slc_nvgplus" ) --REMOVE
 
 	if IsValid( wep ) and wep:GetEnabled() and self:GetBattery() > 0 then
 		wep:SetEnabled( false )
-	end
+	end*/
 end
 
 function SWEP:DrawWorldModel()
