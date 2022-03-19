@@ -22,6 +22,7 @@ util.AddNetworkString( "SLCEscape" )
 util.AddNetworkString( "SLCPlayerDataUpdate" )
 util.AddNetworkString( "SLCGamemodeConfig" )
 util.AddNetworkString( "SLCProgressBar" )
+util.AddNetworkString( "SLCLooting" )
 //util.AddNetworkString( "SLCAuthLibrary" )
 
 net.AddTableChannel( "SLCPlayerMeta" )

@@ -3,46 +3,13 @@ Gamemode hooks
 ---------------------------------------------------------------------------]]
 function GM:PlayerSpray( ply )
 	return true
-
-	/*if ply:GTeam() == TEAM_SPEC then
-		return true
-	end
-
-	if ply:GetPos():WithinAABox( POCKETD_MINS, POCKETD_MAXS ) then
-		ply:PrintMessage( HUD_PRINTCENTER, "You can't use spray in Pocket Dimension" )
-		return true
-	end*/
 end
 
 function GM:ShutDown()
-	--
+	
 end
 
 function GM:SCPDamage( ply, ent, dmg )
-	/*if PREVENT_BREAK then
-		local cache = GetRoundProperty( "prevent_break_cache" )
-
-		if !cache then
-			cache = SetRoundProperty( "prevent_break_cache", {} )
-		end
-
-		if !cache[ent] and !ent.SkipSCPDamageCheck then
-			local pos = ent:GetPos()
-			for k, v in pairs( PREVENT_BREAK ) do
-				if v == pos then
-					cache[ent] = true
-					break
-				end
-
-				ent.SkipSCPDamageCheck = true
-			end
-		end
-
-		if cache[ent] then
-			return false
-		end
-	end*/
-
 	if IsValid( ply ) and IsValid( ent ) then
 		if ent:GetClass() == "func_breakable" then
 			ent:TakeDamage( dmg, ply, ply )
@@ -56,9 +23,30 @@ function GM:OnEntityCreated( ent )
 end
 
 function GM:GetFallDamage( ply, speed )
-	//print( speed )
-
 	return 1
+end
+
+function GM:Think()
+	
+end
+
+function GM:PlayerPostThink( ply )
+	--Ragdoll lootable think
+	local ent = ply._RagEntity
+	if IsValid( ent ) and ent.LootableCheck and ent.LootableCheck < RealTime() then
+		ent.LootableCheck = RealTime() + 1
+		ent:CheckListeners()
+	end
+
+	--Weapon holster think
+	local active = ply:GetActiveWeapon()
+	for k, v in pairs( ply:GetWeapons() ) do
+		if IsValid( v ) and v != active then
+			if v.EnableHolsterThink and v.HolsterThink then
+				v:HolsterThink()
+			end
+		end
+	end
 end
 
 local doorBlockers = {}
@@ -119,17 +107,6 @@ end
 AddDoorBlocker( "^item_slc_" )
 AddDoorBlocker( "^weapon_" )
 AddDoorBlocker( "^cw_" )
-
-hook.Add( "PlayerPostThink", "WeaponHolsterThink", function( ply )
-	local active = ply:GetActiveWeapon()
-	for k, v in pairs( ply:GetWeapons() ) do
-		if IsValid( v ) and v != active then
-			if v.EnableHolsterThink and v.HolsterThink then
-				v:HolsterThink()
-			end
-		end
-	end
-end )
 
 --[[-------------------------------------------------------------------------
 Misc functions

@@ -146,7 +146,7 @@ function ent:TestVisibility( ply, mask, headonly )
 	mid_z.z = mid_z.z + 17.5
 
 	local line = ( mid_z - eyepos ):GetNormalized()
-	local angle = math.acos( eyevec:Dot( line ) )
+	local angle = math.acos( eyevec:Dot( line ) ) --TODO remove acos
 
 	if angle <= 0.8 then
 		local trace_top = util.TraceLine{

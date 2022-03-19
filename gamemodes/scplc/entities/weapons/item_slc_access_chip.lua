@@ -82,6 +82,15 @@ function SWEP:OnDrop()
 	self.PreventDropping = false
 end
 
+function SWEP:StoreWeapon( data )
+	data.chip_id = self:GetChipID()
+	data.override = self:GetAccessOverride()
+end
+
+function SWEP:RestoreWeapon( data )
+	self:SetChipData( GetChipByID( data.chip_id ), data.override )
+end
+
 function SWEP:SetChipData( chip, override )
 	self.ChipName = chip.name
 

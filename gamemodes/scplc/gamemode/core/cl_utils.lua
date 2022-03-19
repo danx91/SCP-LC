@@ -390,6 +390,23 @@ hook.Add( "HUDPaint", "CenterMessage", function()
 	end
 end )
 
+function util.ParseLangKey( key )
+	local tabinfo = string.match( key, "^@(.+)$" ) or key
+	local tab = LANG
+
+	if tabinfo then
+		for subtable in string.gmatch( tabinfo, "[^%.]+" ) do
+			if !istable( tab ) then
+				break
+			end
+
+			tab = tab[subtable]
+		end
+	end
+
+	return tab
+end
+
 --[[-------------------------------------------------------------------------
 Wheel menu
 ---------------------------------------------------------------------------]]

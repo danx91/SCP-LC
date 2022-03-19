@@ -1,7 +1,7 @@
-MODULES_PATH = GM.FolderName .. "/gamemode/modules"
-CORE_PATH = GM.FolderName .. "/gamemode/core"
-LANGUAGES_PATH = GM.FolderName .. "/gamemode/languages"
-MAP_CONFIG_PATH = GM.FolderName .. "/gamemode/mapconfigs"
+MODULES_PATH = GM.FolderName.."/gamemode/modules"
+CORE_PATH = GM.FolderName.."/gamemode/core"
+LANGUAGES_PATH = GM.FolderName.."/gamemode/languages"
+MAP_CONFIG_PATH = GM.FolderName.."/gamemode/mapconfigs"
 
 _LANG = {}
 _LANG_ALIASES = {}
@@ -43,8 +43,7 @@ Load mods - TODO
 Load core modules
 ---------------------------------------------------------------------------]]
 print( "--------------Loading Core Modules---------------" )
-local files = file.Find( CORE_PATH.."/*.lua", "LUA" )
-for k, f in pairs( files ) do
+for k, f in pairs( file.Find( CORE_PATH.."/*.lua", "LUA" ) ) do
 
 	if string.len( f ) > 3 then
 		local ext = string.sub( f, 1, 3 )
@@ -53,14 +52,14 @@ for k, f in pairs( files ) do
 			if SERVER then
 				AddCSLuaFile( CORE_PATH.."/"..f )
 			else
-				print("# Loading core module: " .. f )
+				print("# Loading core module: "..f )
 				include( CORE_PATH.."/"..f )
 			end
 		elseif ext == "sv_" then
 			if SERVER then
 				AddCSLuaFile( CORE_PATH.."/"..f )
 
-				print("# Loading core module: " .. f )
+				print("# Loading core module: "..f )
 				include( CORE_PATH.."/"..f )
 			end
 		else
@@ -68,7 +67,7 @@ for k, f in pairs( files ) do
 				AddCSLuaFile( CORE_PATH.."/"..f )
 			end
 
-			print("# Loading core module: " .. f )
+			print("# Loading core module: "..f )
 			include( CORE_PATH.."/"..f )
 		end
 	end
@@ -78,8 +77,7 @@ end
 Load language
 ---------------------------------------------------------------------------]]
 print( "----------------Loading Languages----------------" )
-local files = file.Find( LANGUAGES_PATH.."/*.lua", "LUA" )
-for k, f in pairs( files ) do
+for k, f in pairs( file.Find( LANGUAGES_PATH.."/*.lua", "LUA" ) ) do
 	if SERVER then
 		AddCSLuaFile( LANGUAGES_PATH.."/"..f )
 	end
@@ -106,6 +104,7 @@ end
 print( "-----------------Loading Modules-----------------" )
 local modules = file.Find( MODULES_PATH.."/*.lua", "LUA" )
 local skipped = 0
+
 for k, f in pairs( modules ) do
 	if f == "sv_module.lua" or f == "sh_module.lua" or f == "cl_module.lua" then continue end
 
@@ -119,30 +118,70 @@ for k, f in pairs( modules ) do
 
 		if ext == "cl_" then
 			if SERVER then
-				AddCSLuaFile( MODULES_PATH .. "/" .. f )
+				AddCSLuaFile( MODULES_PATH.."/"..f )
 			else
-				print("# Loading module: " .. f )
-				include( MODULES_PATH .. "/" .. f )
+				print("# Loading module: "..f )
+				include( MODULES_PATH.."/"..f )
 			end
 		elseif ext == "sv_" then
 			if SERVER then
-				print("# Loading module: " .. f )
-				include( MODULES_PATH .. "/" .. f )
+				print("# Loading module: "..f )
+				include( MODULES_PATH.."/"..f )
 			end
 		elseif ext == "sh_" then
 			if SERVER then
-				AddCSLuaFile( MODULES_PATH .. "/" .. f )
+				AddCSLuaFile( MODULES_PATH.."/"..f )
 			end
 
-			print("# Loading module: " .. f )
-			include( MODULES_PATH .. "/" .. f )
+			print("# Loading module: "..f )
+			include( MODULES_PATH.."/"..f )
 		end
 	else
 		skipped = skipped + 1
 	end
 end
+
+/*for _, v in pairs( folders ) do
+	local fp = MODULES_PATH.."/"..v
+	print( "Loading module: "..v )
+
+	for _, f in pairs( file.Find( MODULES_PATH..v.."/*.lua", "LUA" ) ) do
+		if string.sub( f, 1, 1 ) == "_" then
+			skipped = skipped + 1
+			continue
+		end
+	
+		if string.len( f ) > 3 then
+			local ext = string.sub( f, 1, 3 )
+	
+			if ext == "cl_" then
+				if SERVER then
+					AddCSLuaFile( fp.."/"..f )
+				else
+					print( "\t> "..f )
+					include( fp.."/"..f )
+				end
+			elseif ext == "sv_" then
+				if SERVER then
+					print( "\t> "..f )
+					include( fp.."/"..f )
+				end
+			elseif ext == "sh_" then
+				if SERVER then
+					AddCSLuaFile( fp.."/"..f )
+				end
+	
+				print( "\t> "..f )
+				include( fp.."/"..f )
+			end
+		else
+			skipped = skipped + 1
+		end
+	end
+end*/
+
 print( "#" )
-print( "# Skipped files: " .. skipped )
+print( "# Skipped files: "..skipped )
 
 hook.Run( "SLCModulesLoaded" ) --essential gamemode files have been loaded, pre-mapconfig
 
@@ -153,10 +192,10 @@ MAP_LOADED = false
 
 local map = game.GetMap()
 print( "---------------Loading Map Config----------------" )
-if file.Exists( MAP_CONFIG_PATH .. "/" .. map .. ".lua", "LUA" ) then
-	print( "# Loading config for map " .. map )
+if file.Exists( MAP_CONFIG_PATH.."/"..map..".lua", "LUA" ) then
+	print( "# Loading config for map "..map )
 
-	local map_file = "mapconfigs/" .. map .. ".lua"
+	local map_file = "mapconfigs/"..map..".lua"
 	if SERVER then
 		AddCSLuaFile( map_file )
 	end
@@ -164,6 +203,15 @@ if file.Exists( MAP_CONFIG_PATH .. "/" .. map .. ".lua", "LUA" ) then
 	include( map_file )
 
 	MAP_LOADED = map
+
+	if file.Exists( MAP_CONFIG_PATH.."/__"..map.."_overrides.lua", "LUA" ) then
+		local overrides = "mapconfigs/__"..map.."_overrides.lua"
+		if SERVER then
+			AddCSLuaFile( overrides )
+		end
+	
+		include( overrides )
+	end
 else
 	print( "# Unable to find config for map "..map.."!" )
 	print( "# If you are developer, make sure config file name matches map name!" )
@@ -177,7 +225,7 @@ end
 if !MAP_LOADED then
 	print( "# Map config not found! Make sure you are playing on supported map!" )
 	print( "----------------Loading Completed-----------------" )
-	error( "Unsupported map " .. map .. "!" )
+	error( "Unsupported map "..map.."!" )
 end
 
 hook.Run( "SLCMapConfigLoaded" )

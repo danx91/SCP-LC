@@ -590,8 +590,8 @@ local function openViewer()
 									elseif wep and wep.PrintName then
 										txt = txt..wep.PrintName
 									else
-										local name = LANG.WEAPONS[v] or v
-										txt = txt..name
+										local lang_tab = LANG.WEAPONS[v]
+										txt = txt..( istable( lang_tab ) and ( lang_tab.showname or lang_tab.name ) or isstring( lang_tab ) and lang_tab or v )
 									end
 
 									totalh = totalh + basicText( txt, 5, totalh ) - 3
@@ -607,8 +607,8 @@ local function openViewer()
 								elseif wep and wep.PrintName then
 									txt = txt..wep.PrintName
 								else
-									local name = LANG.WEAPONS[data] or data
-									txt = txt..name
+									local lang_tab = LANG.WEAPONS[data]
+									txt = txt..( istable( lang_tab ) and ( lang_tab.showname or lang_tab.name ) or isstring( lang_tab ) and lang_tab or data )
 								end
 							end
 						else

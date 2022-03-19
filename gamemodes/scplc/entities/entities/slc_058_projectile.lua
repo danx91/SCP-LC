@@ -41,7 +41,7 @@ function ENT:Think()
 			start = pos,
 			endpos = pos + self.Velocity,
 			mask = MASK_SHOT,
-			filter = { self, self:GetOwner() },
+			filter = { self, self:GetOwner() }, --TODO ignore SCPs
 			mins = Vector( -hull_size, -hull_size, -hull_size ),
 			maxs = Vector( hull_size, hull_size, hull_size ),
 		}

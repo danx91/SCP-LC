@@ -2,6 +2,11 @@ SWEP.PrintName 				= "Flashlight"
 SWEP.Base 					= "item_slc_base"
 SWEP.Language 				= "FLASHLIGHT"
 
+if CLIENT then
+	SWEP.WepSelectIcon = Material( "slc/items/flashlight.png" )
+	SWEP.SelectColor = Color( 255, 210, 0, 255 )
+end
+
 SWEP.DrawCrosshair			= false
 
 SWEP.ViewModel				= "models/danx91/flashlight/flashlight.mdl"

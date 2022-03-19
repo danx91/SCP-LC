@@ -14,8 +14,6 @@ DATE = "04/08/2021"
 SCPS = {}
 CLASSES = {}
 
-INFO_SCREEN_DURATION = 12
-
 --[[-------------------------------------------------------------------------
 Paericles
 ---------------------------------------------------------------------------]]
@@ -55,6 +53,7 @@ SLCCVar( "slc_lockdown_duration", { "round", "time" }, 180, { FCVAR_NOTIFY, FCVA
 //GENERAL
 //SLCCVar( "slc_lcz_gas" )
 SLCCVar( "slc_time_explode", { "general", "time" }, 30, { FCVAR_NOTIFY, FCVAR_ARCHIVE }, nil, 1, nil, tonumber )
+SLCCVar( "slc_time_looting", { "general", "time" }, 1.5, { FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED }, nil, 0.1, nil, tonumber )
 SLCCVar( "slc_scp_penalty", { "general", "scp" }, 4, { FCVAR_ARCHIVE }, nil, 0, nil, tonumber )
 SLCCVar( "slc_blink_delay", "general", 5, { FCVAR_NOTIFY, FCVAR_ARCHIVE }, nil, 1, nil, tonumber )
 SLCCVar( "slc_scp914_kill", { "general", "scp" }, 0, { FCVAR_ARCHIVE }, nil, nil, nil, tonumber )
@@ -98,40 +97,6 @@ SLCCVar( "slc_overload_time", { "scp", "time" }, 5, { FCVAR_NOTIFY, FCVAR_ARCHIV
 SLCCVar( "slc_overload_cooldown", { "scp", "time" }, 90, { FCVAR_NOTIFY, FCVAR_ARCHIVE }, nil, 0, nil, tonumber )
 SLCCVar( "slc_overload_delay", { "scp", "time" }, 6, { FCVAR_NOTIFY, FCVAR_ARCHIVE }, nil, 0, nil, tonumber )
 SLCCVar( "slc_overload_door_cooldown", { "scp", "time" }, 150, { FCVAR_NOTIFY, FCVAR_ARCHIVE }, nil, 0, nil, tonumber )
-
-//CVAR = {
-	//minplayers = CreateConVar( "slc_min_players", 2, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
-	//pretime = CreateConVar( "slc_time_preparing", 60, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
-	//roundtime = CreateConVar( "slc_time_round", 1500, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
-	//posttime = CreateConVar( "slc_time_postround", 30, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
-	//waittime = CreateConVar( "slc_time_wait", 15, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
-	//blink = CreateConVar( "slc_blink_delay", 5, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
-	//groups = CreateConVar( "slc_premium_groups", "", { FCVAR_ARCHIVE } ),
-	//premiumxp = CreateConVar( "slc_premium_xp", 2, { FCVAR_ARCHIVE } ),
-	//spawnrate = CreateConVar( "slc_support_spawnrate", "360,540", { FCVAR_ARCHIVE } ),
-	//penalty = CreateConVar( "slc_scp_penalty", 4, { FCVAR_ARCHIVE } ),
-	//p_penalty = CreateConVar( "slc_scp_premium_penalty", 2, { FCVAR_ARCHIVE } ),
-	//maxsupport = CreateConVar( "slc_support_amount", 5, { FCVAR_ARCHIVE } ),
-	//humanscale = CreateConVar( "slc_scaledamage_human", 1, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
-	//scpscale = CreateConVar( "slc_scaledamage_scp", 1, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
-	//explodetime = CreateConVar( "slc_time_explode", 30, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
-	//levelxp = CreateConVar( "slc_xp_level", 10000, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
-	//levelinc = CreateConVar( "slc_xp_increase", 1000, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
-	//escapexp = CreateConVar( "slc_xp_escape", "250,2000", { FCVAR_ARCHIVE } ),
-	//escortpoints = CreateConVar( "slc_points_escort", 4, { FCVAR_ARCHIVE } ),
-	//pointsxp = CreateConVar( "slc_points_xp", 50, { FCVAR_ARCHIVE } ),
-	//roundxp = CreateConVar( "slc_xp_round", "100,200,300", { FCVAR_ARCHIVE } ),
-	//winxp = CreateConVar( "slc_xp_win", "1500,1000", { FCVAR_ARCHIVE } ),
-	//scp914kill = CreateConVar( "slc_scp914_kill", 0, { FCVAR_ARCHIVE } ),
-	//doorunblocker = CreateConVar( "slc_enable_door_unblocker", 1, { FCVAR_ARCHIVE } ),
-	//spectatescp = CreateConVar( "slc_allow_scp_spectate", 0, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
-	//omega_time = CreateConVar( "slc_time_omega", 150, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
-	//omega_shelter_xp = CreateConVar( "slc_xp_omega_shelter", 500, { FCVAR_ARCHIVE } ),
-	//alpha_time = CreateConVar( "slc_time_alpha", 150, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
-	//alpha_escape_xp = CreateConVar( "slc_xp_alpha_escape", 500, { FCVAR_ARCHIVE } ),
-	//afk_mode = CreateConVar( "slc_afk_mode", 1, { FCVAR_NOTIFY, FCVAR_ARCHIVE }, "0 - don't do anything, 1 - kick if server is full, >= 2 - kick after x seconds" ),
-	//afk_time = CreateConVar( "slc_afk_time", 120, { FCVAR_NOTIFY, FCVAR_ARCHIVE } ),
-//}
 
 --[[-------------------------------------------------------------------------
 Update Handler

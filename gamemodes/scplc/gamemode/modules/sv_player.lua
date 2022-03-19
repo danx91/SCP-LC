@@ -366,7 +366,7 @@ end
 	end
 end*/
 
-function ply:CreatePlayerRagdoll()
+function ply:CreatePlayerRagdoll( disable_loot )
 	if self:GetSCPNoRagdoll() then return end
 	if self:GetNoDraw() then return end
 
@@ -388,14 +388,10 @@ function ply:CreatePlayerRagdoll()
 		end
 	end
 
-	rag:Spawn()
+	--TODO bodygroups
 
-	/*local phys = rag:GetPhysicsObject()
-	if !IsValid( phys ) then
-		print( "Physics Object Invalid", self, self:GetModel() )
-		rag:Remove()
-		return
-	end*/
+	rag:Spawn()
+	rag:Activate()
 
 	rag:SetCollisionGroup( COLLISION_GROUP_DEBRIS_TRIGGER )
 
@@ -411,7 +407,7 @@ function ply:CreatePlayerRagdoll()
 				physobj:SetAngles( ang )
 			end
 
-			physobj:SetVelocity( vel * 0.2 )
+			physobj:SetVelocity( vel * 0.25 )
 		end
 	end
 
@@ -424,6 +420,47 @@ function ply:CreatePlayerRagdoll()
 		class = self:SCPClass(),
 		persona = { self:SCPPersona() },
 	}
+
+	if !disable_loot and self:IsHuman() then
+		local loot = {}
+
+		for i, v in pairs( self:GetWeapons() ) do
+			if IsValid( v ) and v.Droppable != false and !v.SCP then
+				local stored = self:StoreWeapon( v:GetClass(), true )
+
+				table.insert( loot, {
+					info = {
+						class = stored.class,
+						data = stored,
+					},
+					func = function( p, w_class, data )
+						if p:RestoreWeapon( data ) then
+							return true, false
+						end
+
+						return false, false
+					end
+				} )
+			end
+		end
+
+		rag:InstallTable( "Lootable" )
+		rag:SetLootData( 3, 2, loot )
+
+		rag:CallOnRemove( "looting", function( ent )
+			ent:DropAllListeners()
+
+			local backpack = ents.Create( "slc_lootable" )
+			backpack.Model = "models/blacksnow/backpack.mdl"
+			backpack.RemoveOnEmpty = true
+			backpack:SetPos( ent:GetPos() + Vector( 0, 0, 5 ) )
+			backpack:Spawn()
+
+			backpack:CopyLootData( ent )
+		end )
+
+		rag.LootableCheck = 0
+	end
 
 	self._RagEntity = rag
 	return rag
@@ -722,7 +759,7 @@ function ply:PlayerDropWeapon( class, all, force )
 	end
 end
 
-function ply:StoreWeapon( class )
+function ply:StoreWeapon( class, norem )
 	local wep = self:GetWeapon( class )
 
 	if IsValid( wep ) then
@@ -736,7 +773,9 @@ function ply:StoreWeapon( class )
 			wep:StoreWeapon( data, self )
 		end
 
-		wep:Remove()
+		if !norem then
+			wep:Remove()
+		end
 
 		return data
 	end
@@ -794,7 +833,7 @@ function ply:SetStasis( time )
 	hook.Run( "SLCPlayerStasisStart", self, data )
 	self:SetProperty( "stasis_data", data )
 
-	self:CreatePlayerRagdoll()
+	self:CreatePlayerRagdoll( true )
 	//self:CreateRagdoll()
 
 	--Soft cleanup
@@ -861,7 +900,6 @@ Timer( "SLCAFKCheck", 10, 0, function( self, n )
 	local players = player.GetAll()
 	local server_full = #players == game.MaxPlayers()
 
-
 	for k, v in pairs( players ) do
 		if !v:IsBot() then
 			if !v:IsAFK() then
@@ -869,7 +907,7 @@ Timer( "SLCAFKCheck", 10, 0, function( self, n )
 				if v.SLCAFKTimer and v.SLCAFKTimer + afk_time < rt then
 					v:MakeAFK()
 				end
-			elseif SLCAuth.HasAccess( v, "slc afkdontkick" ) then
+			elseif !SLCAuth.HasAccess( v, "slc afkdontkick" ) then
 				--print( "Player afk", v, math.floor( rt - v.SLCAFKTimer ) )
 
 				if afk_mode == 1 and server_full then

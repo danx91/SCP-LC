@@ -163,12 +163,14 @@ function SWEP:Reload()
 end
 
 function SWEP:DrawHUD()
-	if self.DrawSCPHUD and hook.Run( "SLCShouldDrawSCPHUD" ) then
+	if hook.Run( "SLCShouldDrawSCPHUD" ) then
 		if self.HUDObject then
 			self.HUDObject:Render()
 		end
 
-		self:DrawSCPHUD()
+		if self.DrawSCPHUD then
+			self:DrawSCPHUD()
+		end
 	end
 end
 

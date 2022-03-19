@@ -111,6 +111,16 @@ function SWEP:PrimaryAttack()
 				self.Targets[ent] = { 0, ent:TimeSignature(), 0 }
 			end
 
+			/*local has714 = false
+
+			if SERVER and ent:GetSCP714() then
+				has714 = true
+			end
+
+			if CLIENT and ent:CL_GetSCP714() then
+				has714 = true
+			end*/
+
 			if SERVER and ent:GetSCP714() or CLIENT and ent:CL_GetSCP714() then
 				if SERVER then
 					owner:EmitSound( "SCP049.Remove714" )

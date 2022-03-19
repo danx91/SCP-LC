@@ -1,4 +1,9 @@
 --[[-------------------------------------------------------------------------
+Globals
+---------------------------------------------------------------------------]]
+USE_LEGACY_ITEMS_SPAWN = true
+
+--[[-------------------------------------------------------------------------
 Spawn SCPs
 ---------------------------------------------------------------------------]]
 SPAWN_SCP049 = Vector( 4718.4541015625, -2004.3891601563, 41.03125 )
@@ -160,28 +165,6 @@ SPAWN_SCIENT = {
 }
 
 SPAWN_MTF = {
-	/*Vector( -1440.00, 3490.00, 11.00 ),
-	Vector( -1500.00, 3490.00, 11.00 ),
-	Vector( -1560.00, 3490.00, 11.00 ),
-	Vector( -1620.00, 3490.00, 11.00 ),
-	Vector( -1540.00, 3420.00, 11.00 ),
-	Vector( -1590.00, 3420.00, 11.00 ),
-	Vector( -1640.00, 3420.00, 11.00 ),
-	Vector( -1690.00, 3420.00, 11.00 ),
-	Vector( -1740.00, 3420.00, 11.00 ),
-	Vector( -1790.00, 3420.00, 11.00 ),
-	Vector( -1840.00, 3420.00, 11.00 ),
-	Vector( -1540.00, 3330.00, 11.00 ),
-	Vector( -1590.00, 3330.00, 11.00 ),
-	Vector( -1640.00, 3330.00, 11.00 ),
-	Vector( -1690.00, 3330.00, 11.00 ),
-	Vector( -1740.00, 3330.00, 11.00 ),
-	Vector( -1790.00, 3330.00, 11.00 ),
-	Vector( -1840.00, 3330.00, 11.00 ),
-	Vector( -1940.00, 3315.00, 11.00 ),
-	Vector( -2000.00, 3315.00, 11.00 ),
-	Vector( -2000.00, 3375.00, 11.00 ),
-	Vector( -1940.00, 3375.00, 11.00 ),*/
 	Vector( -2910.00, 3792.00, 257.00 ),
 	Vector( -2910.00, 3851.00, 257.00 ),
 	Vector( -2910.00, 3978.00, 257.00 ),
@@ -223,71 +206,8 @@ SPAWN_SUPPORT_MTF = support_spawn
 SPAWN_SUPPORT_CI = support_spawn
 
 --[[-------------------------------------------------------------------------
-Keycards
+Chips --TODO
 ---------------------------------------------------------------------------]]
-/*KEYCARDS = {
-	lcz = { 
-		amount = 4, --amount of cards to spawn
-		ents = { -- { "card type", chance }
-			{ "safe", 10 },
-			{ "euclid", 15 },
-			{ "keter", 25 },
-			{ "res", 25 },
-			{ "cps", 10 },
-		},
-		spawns = { --spawns
-			Vector( 1264.3239746094, 1535.8773193359, 128.03125 ),
-			Vector( -272.29510498047, 1308.6785888672, 0.03125 ),
-			Vector( -191.65782165527, -325.70556640625, -255.96875 ),
-			Vector( -1647.96875, -577.35321044922, 25.841468811035 ),
-			Vector( -31.443634033203, -673.32745361328, 0.03125 ),
-			Vector( 881.91223144531, 351.52853393555, 0.03125 ),
-			Vector( 1780.2275390625, 248.97598266602, 0.03125 ),
-			Vector( 1157.8663330078, 688.7822265625, 0.03125 ),
-			Vector( 1444.0704345703, 1116.7004394531, 0.03125 ),
-			Vector( 1593.7241210938, -1054.3466796875, -767.96875 ),
-			Vector( 933.1328125, -375.78637695313, -767.96875 ),
-		} 
-	},
-	hcz = { 
-		amount = 3,
-		ents = {
-			{ "keter", 5 },
-			{ "cps", 15 },
-			{ "mtf", 20 },
-		},
-		spawns = {
-			Vector( 4208.623046875, -1349.7138671875, -127.96875 ),
-			Vector( 4452.2543945313, 433.84310913086, 0.03125 ),
-			Vector( 4835.841796875, 1053.3966064453, 0.03125 ),
-			Vector( 4557.5356445313, 3149.1728515625, -127.96875 ),
-			Vector( 5167.5219726563, 3754.4682617188, 0.03125 ),
-			Vector( 4164.9140625, 3005.7626953125, 0.03125 ),
-			Vector( 3164.5285644531, 3183.8132324219, -383.96875 ),
-			Vector( 2231.5495605469, 5024.1376953125, -219.96875 ),
-			Vector( 2935.6857910156, 1673.1829833984, 0.03125 ),
-			Vector( 5773.057617, -316.876556, 40.426548 ),
-		} 
-	},
-	ez = { 
-		amount = 2,
-		ents = {
-			{ "keter", 5 },
-			{ "cps", 10 },
-			{ "mtf", 15 },
-			{ "com", 3 }
-		},
-		spawns = {
-			Vector( 1496.1206054688, 2924.3269042969, 64.03125 ),
-			Vector( 116.39348602295, 2530.421875, 0.24981451034546 ),
-			Vector( -864.25463867188, 3271.2414550781, 0.03125 ),
-			Vector( -986.45147705078, 2494.0771484375, 0.03125 ),
-			Vector( 1209.0721435547, 1974.6939697266, 0.03125 ),
-			Vector( -546.74456787109, 4350.2807617188, -63.96875 ),
-			Vector( -3267.4348144531, 2961.9831542969, 0.03125 ),
-		} 
-	},
-}*/
 CHIPS = {
 	/*group = {
 		amount = <number>,
@@ -318,7 +238,7 @@ CHIPS = {
 		},
 	},
 	lcz_1 = { --lcz post gas open areas and underground
-		amount = 3,
+		amount = 2,
 		level = 1,
 		spawns = {
 			Vector( 3172.00, -1761.00, 1.00 ),
@@ -332,7 +252,7 @@ CHIPS = {
 		},
 	},
 	lcz_2 = { --lcz closed areas
-		amount = 3,
+		amount = 2,
 		level = 2,
 		spawns = {
 			Vector( -1647.00, -575.00, 26.00 ),
@@ -368,7 +288,7 @@ CHIPS = {
 		},
 	},
 	ez_3 = {
-		amount = 3,
+		amount = 2,
 		level = 3,
 		spawns = {
 			Vector( -76.00, 3402.00, -87.00 ),
@@ -381,9 +301,12 @@ CHIPS = {
 	},
 }
 
+--[[-------------------------------------------------------------------------
+Omnitool
+---------------------------------------------------------------------------]]
 OMNITOOLS = {
 	lcz = {
-		amount = 8,
+		amount = 3,
 		spawns = {
 			Vector( -378.00, 866.00, 37.00 ),
 			Vector( -780.00, 344.00, -127.00 ),
@@ -398,7 +321,7 @@ OMNITOOLS = {
 		}
 	},
 	hcz = {
-		amount = 3,
+		amount = 1,
 		spawns = {
 			Vector( 3654.00, -1373.00, -127.00 ),
 			Vector( 5359.00, 180.00, 2.00 ),
@@ -410,10 +333,346 @@ OMNITOOLS = {
 }
 
 --[[-------------------------------------------------------------------------
-Items spawn
+Lootables
+
+{
+	pos = Vector(),
+	bounds = { --optional, if not used default 32x32x32 will be used
+		mins = Vector(),
+		maxs = Vector(),
+	},
+	loot_pool = "",
+	width = 1,
+	height = 1,
+}
+---------------------------------------------------------------------------]]
+LOOTABLES = {
+	{ --guard desk
+		pos = Vector( -2416, 1550, 160 ),
+		bounds = {
+			mins = Vector( -32, -8, -32 ),
+			maxs = Vector( 32, 16, 32 ),
+		},
+		width = 2,
+		height = 4,
+		loot_pool = "guard_desk"
+	},
+	{ --class d office 1
+		pos = Vector( -385, 1198, 20 ),
+		bounds = {
+			mins = Vector( -8, -12, -14 ),
+			maxs = Vector( 8, 12, 12 ),
+		},
+		width = 1,
+		height = 3,
+		loot_pool = "lcz_loose_loot"
+	},
+	{ --class d office 2
+		pos = Vector( -380, 810, 20 ),
+		bounds = {
+			mins = Vector( -12, -8, -14 ),
+			maxs = Vector( 10, 8, 12 ),
+		},
+		width = 1,
+		height = 3,
+		loot_pool = "lcz_loose_loot"
+	},
+	{ --scp 012
+		pos = Vector( -150, 92.5, -222 ),
+		bounds = {
+			mins = Vector( -16, -64, -32 ),
+			maxs = Vector( 8, 64, 32 ),
+		},
+		width = 4,
+		height = 3,
+		loot_pool = "lcz_large_loot"
+	},
+	{ --scp 173
+		pos = Vector( 207, 1984, 289 ),
+		bounds = {
+			mins = Vector( -8, -64, -32 ),
+			maxs = Vector( 16, 64, 32 ),
+		},
+		width = 4,
+		height = 3,
+		loot_pool = "lcz_large_loot"
+	},
+	{ --scp 372
+		pos = Vector( -1144, -527, 33 ),
+		bounds = {
+			mins = Vector( -16, -16, -32 ),
+			maxs = Vector( 16, 8, 32 ),
+		},
+		width = 1,
+		height = 4,
+		loot_pool = "lcz_rare_loot"
+	},
+	{ --scp 372
+		pos = Vector( -1650, -576, 19 ),
+		bounds = {
+			mins = Vector( -16, -22, -16 ),
+			maxs = Vector( 16, 22, 8 ),
+		},
+		width = 2,
+		height = 2,
+		loot_pool = "lcz_valuable_loot"
+	},
+	{ --scp 372
+		pos = Vector( -1072, -1104, 5 ),
+		bounds = {
+			mins = Vector( -18, -24, -4 ),
+			maxs = Vector( 18, 24, 8 ),
+		},
+		width = 3,
+		height = 3,
+		loot_pool = "lcz_military_crate"
+	},
+	{ --corridor
+		pos = Vector( 222, -627, 33 ),
+		bounds = {
+			mins = Vector( -64, -12, -32 ),
+			maxs = Vector( 64, 8, 32 ),
+		},
+		width = 4,
+		height = 3,
+		loot_pool = "lcz_large_loot"
+	},
+	{ --914
+		pos = Vector( 1378, -544, 15 ),
+		bounds = {
+			mins = Vector( -20, -20, -18 ),
+			maxs = Vector( 20, 20, 18 ),
+		},
+		width = 2,
+		height = 2,
+		loot_pool = "lcz_rare_loot"
+	},
+	{ --1123
+		pos = Vector( 664, -1190, 16 ),
+		bounds = {
+			mins = Vector( -12, -12, -16 ),
+			maxs = Vector( 12, 6, 16 ),
+		},
+		width = 1,
+		height = 3,
+		loot_pool = "lcz_loose_loot"
+	},
+	{ --1123
+		pos = Vector( 540, -1312, 33 ),
+		bounds = {
+			mins = Vector( -6, -32, -32 ),
+			maxs = Vector( 12, 32, 32 ),
+		},
+		width = 2,
+		height = 4,
+		loot_pool = "lcz_rare_loot"
+	},
+	{ --205
+		pos = Vector( 2713, -1505, 33 ),
+		bounds = {
+			mins = Vector( -16, -8, -32 ),
+			maxs = Vector( 16, 16, 32 ),
+		},
+		width = 2,
+		height = 4,
+		loot_pool = "lcz_rare_loot"
+	},
+	{ --glass room
+		pos = Vector( 1361, 528, 33 ),
+		bounds = {
+			mins = Vector( -16, -16, -32 ),
+			maxs = Vector( 8, 16, 32 ),
+		},
+		width = 2,
+		height = 4,
+		loot_pool = "lcz_rare_loot"
+	},
+	{ --galass room
+		pos = Vector( 1131, 588, 15 ),
+		bounds = {
+			mins = Vector( -24, -20, -16 ),
+			maxs = Vector( 24, 20, 16 ),
+		},
+		width = 2,
+		height = 2,
+		loot_pool = "lcz_valuable_loot"
+	},
+	{ --1162
+		pos = Vector( 1627, 807, 18 ),
+		bounds = {
+			mins = Vector( -14, -6, -16 ),
+			maxs = Vector( 14, 12, 16 ),
+		},
+		width = 1,
+		height = 3,
+		loot_pool = "lcz_loose_loot"
+	},
+	{ --714
+		pos = Vector( 2240, 797, 33 ),
+		bounds = {
+			mins = Vector( -16, -8, -32 ),
+			maxs = Vector( 16, 16, 32 ),
+		},
+		width = 1,
+		height = 3,
+		loot_pool = "lcz_rare_loot"
+	},
+	{ --860
+		pos = Vector( 1987, 1376, 33 ),
+		bounds = {
+			mins = Vector( -16, -16, -32 ),
+			maxs = Vector( 8, 16, 32 ),
+		},
+		width = 1,
+		height = 3,
+		loot_pool = "lcz_rare_loot"
+	},
+	{ --1025
+		pos = Vector( 2240, 1216, 33 ),
+		bounds = {
+			mins = Vector( -16, -8, -32 ),
+			maxs = Vector( 16, 16, 32 ),
+		},
+		width = 1,
+		height = 3,
+		loot_pool = "lcz_rare_loot"
+	},
+	{ --toilet lcz
+		pos = Vector( 1760, 485, 15 ),
+		bounds = {
+			mins = Vector( -12, -12, -12 ),
+			maxs = Vector( 12, 12, 12 ),
+		},
+		width = 1,
+		height = 1,
+		loot_pool = "toilet"
+	},
+	{ --457
+		pos = Vector( 5784, -400, 33 ),
+		bounds = {
+			mins = Vector( -8, -48, -32 ),
+			maxs = Vector( 16, 48, 32 ),
+		},
+		width = 3,
+		height = 4,
+		loot_pool = "hcz_large_loot"
+	},
+	{ --035
+		pos = Vector( 5200, -1122, 15 ),
+		bounds = {
+			mins = Vector( -64, -18, -12 ),
+			maxs = Vector( 64, 18, 12 ),
+		},
+		width = 7,
+		height = 2,
+		loot_pool = "hcz_035"
+	},
+	{ --096
+		pos = Vector( 5216, 3760, 33 ),
+		bounds = {
+			mins = Vector( -8, -48, -32 ),
+			maxs = Vector( 16, 48, 32 ),
+		},
+		width = 3,
+		height = 4,
+		loot_pool = "hcz_large_loot"
+	},
+	{ --ez room
+		pos = Vector( 1314, 3163, 81 ),
+		bounds = {
+			mins = Vector( -14, -12, -16 ),
+			maxs = Vector( 14, 6, 16 ),
+		},
+		width = 1,
+		height = 3,
+		loot_pool = "ez_loose_loot"
+	},
+	{ --ez room
+		pos = Vector( 1453, 2963, 81 ),
+		bounds = {
+			mins = Vector( -12, -14, -16 ),
+			maxs = Vector( 6, 14, 16 ),
+		},
+		width = 1,
+		height = 3,
+		loot_pool = "ez_loose_loot"
+	},
+	{ --ez office
+		pos = Vector( -1123, 2485, 15 ),
+		bounds = {
+			mins = Vector( -20, -14, -14 ),
+			maxs = Vector( 20, 14, 14 ),
+		},
+		width = 2,
+		height = 2,
+		loot_pool = "ez_valuable_loot"
+	},
+	{ --ec
+		pos = Vector( -2836, 4016, 271 ),
+		bounds = {
+			mins = Vector( -22, -22, -14 ),
+			maxs = Vector( 22, 22, 14 ),
+		},
+		width = 2,
+		height = 2,
+		loot_pool = "ez_valuable_loot"
+	},
+	{ --medbay
+		pos = Vector( -1824, 3536, 33 ),
+		bounds = {
+			mins = Vector( -16, -16, -32 ),
+			maxs = Vector( 16, 8, 32 ),
+		},
+		width = 2,
+		height = 4,
+		loot_pool = "medbay"
+	},
+	{ --ez toilet
+		pos = Vector( -672, 2970, 15 ),
+		bounds = {
+			mins = Vector( -12, -12, -12 ),
+			maxs = Vector( 12, 12, 12 ),
+		},
+		width = 1,
+		height = 1,
+		loot_pool = "toilet"
+	},
+}
+
+--REMOVE
+/*hook.Add( "Think", "gastest", function()
+	local i = 29
+	if LOOTABLES[i] then
+		debugoverlay.Axis( LOOTABLES[i].pos, Angle( 0 ), 5, 0.1, true )
+		debugoverlay.BoxAngles(LOOTABLES[i].pos, LOOTABLES[i].bounds and LOOTABLES[i].bounds.mins or Vector(-16,-16,-16), LOOTABLES[i].bounds and LOOTABLES[i].bounds.maxs or Vector(16,16,16), Angle( 0 ), 0.1, Color( 255, 255, 255, 0 ), true )
+	end
+end )
+
+concommand.Add( "regen", function()
+	for k, v in pairs( ents.FindByClass( "slc_lootable" ) ) do
+		v:Remove()
+	end
+
+	for k, v in pairs( LOOTABLES ) do
+		local ent = ents.Create( "slc_lootable" )
+		if IsValid( ent ) then
+			ent:SetPos( v.pos )
+			ent:Spawn()
+
+			ent:GenerateLoot( v.width, v.height, v.loot_pool )
+
+			if v.bounds then
+				ent:SetCollisionBounds( v.bounds.mins, v.bounds.maxs )
+			end
+		end
+	end
+end )*/
+
+--[[-------------------------------------------------------------------------
+Items spawn --TODO
 ---------------------------------------------------------------------------]]
 SPAWN_MEDKITS = {
-	--ez
+	/*--ez
 	Vector( 234.00, 3339.00, -77.00 ),
 	Vector( 1340.00, 2883.00, 75.00 ),
 
@@ -427,17 +686,17 @@ SPAWN_MEDKITS = {
 	Vector( 1712.00, -1659.00, 11.00 ),
 	Vector( 552.00, -1406.00, 11.00 ),
 	Vector( 1844.00, 1355.00, 11.00 ),
-	Vector( 195.00, -1210.00, -117.00 ),
+	Vector( 195.00, -1210.00, -117.00 ),*/
 }
 
 SPAWN_MEDBAY = {
-	Vector( -1444.00, 3519.00, 1.00 ),
+	/*Vector( -1444.00, 3519.00, 1.00 ),
 	Vector( -1848.00, 3312.00, 1.00 ),
-	Vector( -1444.00, 3428.00, 37.00 ),
+	Vector( -1444.00, 3428.00, 37.00 ),*/
 }
 
 SPAWN_ITEMS = {
-	--lcz
+	/*--lcz
 	Vector( 1375.00, -543.00, 36.00 ),
 	Vector( 374.00, -677.00, 11.00 ),
 	Vector( -582.00, 841.00, 11.00 ),
@@ -455,7 +714,7 @@ SPAWN_ITEMS = {
 	Vector( 2533.00, 1500.00, 11.00 ),
 	Vector( 4770.00, 2328.00, 11.00 ),
 	Vector( 4004.00, -417.00, -245.00 ),
-	Vector( 5162.00, 532.00, 11.00 ),
+	Vector( 5162.00, 532.00, 11.00 ),*/
 }
 
 SPAWN_MELEE = {
@@ -469,7 +728,7 @@ SPAWN_MELEE = {
 
 SPAWN_BATTERY = {
 	//LCZ
-	Vector( -52.00, -620.00, 44.00 ),
+	/*Vector( -52.00, -620.00, 44.00 ),
 	Vector( -41.50, -620.00, 44.00 ),
 	Vector( -33.00, -620.00, 44.00 ),
 	Vector( -26.50, -620.00, 44.00 ),
@@ -517,11 +776,11 @@ SPAWN_BATTERY = {
 	Vector( -2840.00, 4012.00, 286.00 ),
 	Vector( -775.00, 3308.00, 46.00 ),
 	Vector( 285.00, 3607.00, -100.00 ),
-	Vector( -16.00, 3367.00, -100.00 ),
+	Vector( -16.00, 3367.00, -100.00 ),*/
 }
 
 SPAWN_FLASHLIGHT = {
-	//LCZ
+	/*//LCZ
 	Vector( -376.31, 1347.53, 38.13 ),
 	Vector( -380.72, 907.25, 38.09 ),
 	Vector( 12.69, -619.31, 43.88 ),
@@ -537,33 +796,7 @@ SPAWN_FLASHLIGHT = {
 	Vector( -57.69, 3550.63, -85.88 ),
 	Vector( -1634.34, 3534.72, 38.03 ),
 	Vector( -1832.06, 3538.59, 66.38 ),
-	Vector( -110.59, 2545.03, 43.88 ),
-}
-
---[[-------------------------------------------------------------------------
-Spawn vehicles
----------------------------------------------------------------------------]]
-SPAWN_VEHICLE_NTF = { --270 ANG
-	Vector(-7200.00, 2275.00, 2700.00),
-	Vector(-6900.00, 2275.00, 2700.00),
-	Vector(-6600.00, 2275.00, 2700.00),
-	Vector(-6300.00, 2275.00, 2700.00),
-	Vector(-6000.00, 2275.00, 2700.00),
-	Vector(-5700.00, 2275.00, 2700.00),
-	
-	Vector(-7200.00, 2475.00, 2700.00),
-	Vector(-6900.00, 2475.00, 2700.00),
-	Vector(-6600.00, 2475.00, 2700.00),
-	Vector(-6300.00, 2475.00, 2700.00),
-	Vector(-6000.00, 2475.00, 2700.00),
-	Vector(-5700.00, 2475.00, 2700.00),
-}
-
-SPAWN_VEHICLE_GATE_A = { --180 ANG
-	Vector(-120.00, 7050.00, 2300.00),
-	Vector(-120.00, 6860.00, 2300.00),
-
-
+	Vector( -110.59, 2545.03, 43.88 ),*/
 }
 
 --[[-------------------------------------------------------------------------
@@ -621,8 +854,8 @@ SPAWN_PISTOLS = {
 	Vector( 1278.44, -1696.03, 51.78 ),
 
 	--lcz
-	Vector( -1469.00, -1018.00, 12.00 ),
-	Vector( 332.00, -304.00, 11.00 ),
+	//Vector( -1469.00, -1018.00, 12.00 ),
+	//Vector( 332.00, -304.00, 11.00 ),
 	Vector( 2016.00, -770.00, -757.00 ),
 
 	--hcz
@@ -747,7 +980,7 @@ Blockers
 ---------------------------------------------------------------------------]]
 BLOCKERS = {
 	/*{
-		name = "family_firendly_name",
+		name = "family_friendly_name",
 		pos = Vector( 0, 0, 0 ),
 		bounds = { Vector( mins ), Vector( maxs ) },
 		filter = {
@@ -1719,80 +1952,3 @@ CCTV = {
 		destroy_alpha = true,
 	}
 }
-
-hook.Add( "SLCPreround", "Site19Preround", function()
-	for k, v in pairs( ents.GetAll() ) do
-		local name = v:GetName()
-		//local class = v:GetClass()
-
-		if name == "049_hall_button" then
-			v:Fire( "Unlock" )
-		elseif name == "966_door" then
-			v:SetKeyValue( "forceclosed", "1" )
-		elseif name == "049_door" then
-			v:SetKeyValue( "forceclosed", "1" )
-		elseif name == "4016" then
-			v:Remove()
-		end
-		/*local class = v:GetClass()
-		if class == "func_door" then
-			print( "set for", v, name )
-			v:SetCollisionGroup( COLLISION_GROUP_PLAYER )
-			v:SetKeyValue( "dmg", 0 )
-		end*/
-
-		local pos = v:GetPos()
-		if pos == Vector( 3972.00, 264.00, -330.00 ) then
-			local btn = ents.Create( "slc_button" )
-			if IsValid( btn ) then
-				btn:SetName( "warhead_lever_alpha" )
-				btn:Tie( v, 1, 1, Angle( 0, 0, 0 ), Angle( -180, 0, 0 ), true )
-				btn:SetSound( "Buttons.snd21" )
-				btn:Spawn()
-			end
-		elseif pos == Vector( 3972.00, 306.00, -330.00 ) then
-			local btn = ents.Create( "slc_button" )
-			if IsValid( btn ) then
-				btn:SetName( "warhead_lever_omega" )
-				btn:Tie( v, 1, 1, Angle( 0, 0, 0 ), Angle( -180, 0, 0 ), true )
-				btn:SetSound( "Buttons.snd21" )
-				btn:Spawn()
-			end
-		elseif pos == Vector( 228.00, -1388.00, -78.00 ) then
-			v:SetName( "shelter_door_l" )
-		elseif pos == Vector( 156.00, -1388.00, -78.00 ) then
-			v:SetName( "shelter_door_r" )
-		end
-	end
-end )
-
-//STORED_DOORS = STORED_DOORS or {}
-hook.Add( "EntityKeyValue", "Site19EntityKeyValue", function( ent, key, value )
-	if CLIENT then return end
-
-	if CVAR.slc_enable_door_unblocker:GetBool() then
-		if !IsValid( LUA_ENT ) then
-			LUA_ENT = ents.Create( "lua_run" )
-			LUA_ENT:SetName( "door_unblocker" )
-			LUA_ENT:Spawn()
-		end
-
-		local class = ent:GetClass()
-		if class == "func_door" and key == "targetname" then
-			if string.match( value, "^lcz_door_" ) or string.match( value, "^hcz_door_" ) or string.match( value, "^ez_door_" ) then
-				//STORED_DOORS[ent] = true
-
-				--if unblocker then
-					ent:Fire( "AddOutput", "OnClose door_unblocker:RunPassedCode:hook.Run( 'SLCOnDoorClosed' ):0:-1" )
-				--end
-			end
-		end
-	end
-end )
-
-//hook.Add( "AcceptInput", "Site19ChangeDoors", function( ent, input, activator, caller, value )
-	//if ent:GetClass() == "func_button" then
-		//print( ent, input, activator, caller, value, ent:GetName() )
-		//PrintTable( ent:GetKeyValues() )
-	//end
-//end )

@@ -16,7 +16,7 @@
 		max = 0,
 		persona = { class = <fake_class>, team = <fake_team> },
 		override = function( ply ) end, --return false to disallow, nil to do standard check, true to allow
-		--spawn = ? --Vector or table of them. Use only to override group spawn
+		spawn = <Vector or table of vectors> Override group spawn
 	}
 ]]
 
@@ -123,6 +123,7 @@ function RegisterClass( name, group, model, data, support )
 
 		usetab[group][name] = tab
 		print( "Class '"..name.."' is already registered in another group! Copying old data to new group, provided new data is discarded!" )
+		return
 	end
 
 	assert( AllClasses[name] == nil, "Class '"..name.."' is already registered!" )

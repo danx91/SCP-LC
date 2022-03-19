@@ -33,8 +33,6 @@ local SCP_VALID_ENTRIES = {
 local SCP_DYNAMIC_VARS = {}
 local SCP_DYNAMIC_DEFAULT = {}
 
-local lua_override = false
-
 function UpdateDynamicVars()
 	print( "Updating SCPs dynamic vars" )
 
@@ -42,7 +40,7 @@ function UpdateDynamicVars()
 		WriteINI( "slc/scp_override.txt", {} )
 	end
 
-	if lua_override then
+	if DEVELOPER_MODE then
 		print( "Dev mode is enabled! Overwritting INI values..." )
 	else
 		local override = LoadINI( "slc/scp_override.txt" )
