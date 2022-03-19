@@ -127,6 +127,7 @@ lang.eq_rmb = "PPM - Upuść"
 lang.eq_hold = "Przytrzymaj LPM - Przenieś"
 lang.eq_vest = "Pancerz"
 lang.eq_key = "Naciśnij '%s' aby otworzyć EQ"
+lang.eq_unknown = "Nieznany item"
 
 lang.info = "Informacje"
 lang.author = "Autor"
@@ -383,6 +384,10 @@ misc.buttons = {
 	MOUSE1 = "LPM",
 	MOUSE2 = "PPM",
 	MOUSE3 = "ŚPM",
+}
+
+misc.inventory = {
+	unsearched = "Nie przeszukane",
 }
 
 --[[-------------------------------------------------------------------------
