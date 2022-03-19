@@ -1,6 +1,6 @@
 --[[-------------------------------------------------------------------------
 Language: Polish
-Date: 12.08.2021
+Date: 19.03.2022
 Translated by: Slusher, alski
 Updated by: Zaptyp (https://steamcommunity.com/id/Zaptyp/)
 ---------------------------------------------------------------------------]]
