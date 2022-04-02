@@ -1,7 +1,7 @@
 --[[-------------------------------------------------------------------------
 Language: Korean
-Date: 25.12.2021
-Translated by: joon00 (https://steamcommunity.com/profiles/76561198155974087/)
+Date: 02.04.2022
+Translated by: joon00 (https://steamcommunity.com/profiles/76561198155974087)
 ---------------------------------------------------------------------------]]
 
 local lang = {}
