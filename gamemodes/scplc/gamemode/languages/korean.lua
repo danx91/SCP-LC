@@ -1805,7 +1805,7 @@ wep.ACCESS_CHIP = {
 		GATE_A = "게이트 A",
 		GATE_B = "게이트 B",
 		FEMUR = "대퇴골 분쇄",
-		ALPHA = "Alpha 탄두",
+		ALPHA = "Alpha 핵탄두",
 		OMEGA = "Omega 핵탄두",
 		PARTICLE = "고휘도 방전 포탑",
 	},
