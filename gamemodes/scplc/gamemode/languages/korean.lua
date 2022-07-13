@@ -1,7 +1,8 @@
 --[[-------------------------------------------------------------------------
 Language: Korean
-Date: 25.12.2021
-Translated by: joon00 (https://steamcommunity.com/profiles/76561198155974087/)
+Created Date: 25.12.2021
+Last Update: 02.04.2022
+Translated by: joon00 (https://steamcommunity.com/profiles/76561198155974087)
 ---------------------------------------------------------------------------]]
 
 local lang = {}
@@ -182,7 +183,7 @@ lang.details = {
 	hp = "체력",
 	speed = "속도",
 	health = "체력",
-	sanity = "지구력"
+	sanity = "정신력"
 }
 
 lang.headers = {
@@ -382,6 +383,10 @@ misc.buttons = {
 	MOUSE1 = "좌 클릭",
 	MOUSE2 = "우 클릭",
 	MOUSE3 = "휠 클릭",
+}
+
+misc.inventory = {
+    unsearched = "미확인됨", 
 }
 --[[-------------------------------------------------------------------------
 Vests
@@ -630,7 +635,7 @@ lang.CLASS_DESCRIPTION = {
 호위 병력: 혼돈의 반란
 
 미리보기:
-가장 기본적인 클래스. SCP와 재단 직원을 피해 다른 사람들과 렵력해야합니다. 혼돈의 반란에 의해 호송될 수 있습니다.
+가장 기본적인 클래스. SCP와 재단 직원을 피해 다른 사람들과 협력해야합니다. 혼돈의 반란에 의해 호송될 수 있습니다.
 ]],
 
 	veterand = [[난이도: 쉬움
@@ -1768,7 +1773,7 @@ wep.ACCESS_CHIP = {
 		general = "기본",
 		jan1 = "잡역부",
 		jan = "청소부",
-		jan2 = "베테랑 청소부",
+		jan2 = "청소부2",
 		acc = "행정 업무부",
 		log = "물류 처리반",
 		sci1 = "과학자 조수",
@@ -1800,7 +1805,7 @@ wep.ACCESS_CHIP = {
 		GATE_A = "게이트 A",
 		GATE_B = "게이트 B",
 		FEMUR = "대퇴골 분쇄",
-		ALPHA = "Alpha 헥탄두",
+		ALPHA = "Alpha 핵탄두",
 		OMEGA = "Omega 핵탄두",
 		PARTICLE = "고휘도 방전 포탑",
 	},
