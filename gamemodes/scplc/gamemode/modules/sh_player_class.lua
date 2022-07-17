@@ -13,10 +13,9 @@ function PLAYER:SetupDataTables()
 	
 	ply:NetworkVar( "Int", 2, "_SCPLevel" )
 	ply:NetworkVar( "Int", 3, "_SCPExp" )
-	ply:NetworkVar( "Int", 4, "_SCPPrestige" )
-	ply:NetworkVar( "Int", 5, "_SCPPrestigePoints" )
-	ply:NetworkVar( "Int", 6, "TimeSignature" )
-	ply:NetworkVar( "Int", 7, "Stamina" ) --although this could be SCPVar, NetworkVar is more reliable and has prediction error correction
+	ply:NetworkVar( "Int", 4, "_SCPClassPoints" )
+	ply:NetworkVar( "Int", 5, "TimeSignature" )
+	ply:NetworkVar( "Int", 6, "Stamina" ) --although this could be SCPVar, NetworkVar is more reliable and has prediction error correction
 
 	ply:NetworkVar( "String", 0, "_SCPClass" )
 	ply:NetworkVar( "String", 1, "_SCPPersonaC" )
@@ -27,8 +26,8 @@ function PLAYER:SetupDataTables()
 	ply:AddSCPVar( "MaxStamina", 3, "INT" )
 	ply:AddSCPVar( "StaminaLimit", 4, "INT" )
 	ply:AddSCPVar( "DisableControlsFlag", 5, "INT" )
+	ply:AddSCPVar( "_DailyBonus", 6, "INT" )
 
-	//ply:AddSCPVar( "Exhausted", 0, "BOOL" )
 	ply:AddSCPVar( "DisableControls", 0, "BOOL" )
 
 	if SERVER then
@@ -42,15 +41,6 @@ function PLAYER:SetupDataTables()
 		ply:Set_SCPClass( "spectator" )
 		ply:Set_SCPPersonaC( "spectator" )
 
-		/*ply:Set_SCPLevel( tonumber( ply:GetSCPData( "level", 0 ) ) or 0 )
-		ply:Set_SCPExp( tonumber( ply:GetSCPData( "xp", 0 ) ) or 0 )
-		ply:Set_SCPPrestige( tonumber( ply:GetSCPData( "prestige", 0 ) ) or 0 )
-		ply:Set_SCPPrestigePoints( tonumber( ply:GetSCPData( "prestige_points", 0 ) ) or 0 )*/
-		ply:SetDataFromDB( "level", 0, tonumber, "_SCPLevel" )
-		ply:SetDataFromDB( "xp", 0, tonumber, "_SCPExp" )
-		ply:SetDataFromDB( "prestige", 0, tonumber, "_SCPPrestige" )
-		ply:SetDataFromDB( "prestige_points", 0, tonumber, "_SCPPrestigePoints" )
-
 		ply:SetTimeSignature( math.floor( CurTime() ) )
 		ply:SetStamina( 100 )
 
@@ -62,6 +52,11 @@ function PLAYER:SetupDataTables()
 		ply:SetDisableControlsFlag( 0 )
 
 		ply:SetDisableControls( false )
+
+		ply:SetDataFromDB( "level", 0, tonumber, "_SCPLevel" )
+		ply:SetDataFromDB( "xp", 0, tonumber, "_SCPExp" )
+		ply:SetDataFromDB( "class_points", 0, tonumber, "_SCPClassPoints" )
+		ply:SetDataFromDB( "daily_bonus", 0, tonumber, "_DailyBonus" )
 	end
 
 	if CLIENT then

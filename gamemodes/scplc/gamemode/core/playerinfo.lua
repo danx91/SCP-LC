@@ -8,7 +8,7 @@ hook.Add( "SCLFactoryReset", "SLCGameruleReset", function()
 	local files = file.Find( "slc/playerinfo/*.dat", "DATA" )
 	print( "Deleting "..#files.." playerinfo objects..." )
 
-	for k, v in pairs( files ) do
+	for i, v in ipairs( files ) do
 		file.Delete( "slc/playerinfo/"..v )
 	end
 end )

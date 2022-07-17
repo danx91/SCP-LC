@@ -67,7 +67,7 @@ function ENT:AccessOverride( ply, data )
 end
 
 function ENT:OnUse( ply )
-	if ALPHA_REMOTE_CHECK() then
+	if MAP_CHECKERS.ALPHA_REMOTE() then
 		if ALPHAWarhead( ply ) then
 			self:SetState( STATE_COUNTDOWN )
 			self:SetTime( CurTime() + CVAR.slc_time_alpha:GetInt() + 3 )

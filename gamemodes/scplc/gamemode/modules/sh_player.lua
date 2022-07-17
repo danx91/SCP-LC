@@ -171,6 +171,10 @@ function GM:PlayerCanPickupWeapon( ply, wep )
 		return false
 	end
 
+	if hook.Run( "SLCCanPickupWeaponClass", ply, wep:GetClass() ) == false then
+		return false
+	end
+
 	local class = wep:GetClass()
 
 	local has = false
@@ -266,19 +270,113 @@ function GM:UpdateAnimation( ply, velocity, maxseqgroundspeed )
 		GAMEMODE:GrabEarAnimation( ply )
 		GAMEMODE:MouthMoveAnimation( ply )
 	end
-
 end
+
+local ply = FindMetaTable( "Player" )
+--[[-------------------------------------------------------------------------
+Hold manager
+---------------------------------------------------------------------------]]
+function ply:StartHold( id, key, time, cb, tab )
+	if !self:KeyDown( key ) then return end
+
+	if !tab._ButtonHold then
+		tab._ButtonHold = {}
+	end
+
+	id = id..self:SteamID()
+
+	tab._ButtonHold[id] = {
+		key = key,
+		duration = time,
+		time = CurTime() + time,
+		cb = cb,
+	}
+end
+
+function ply:UpdateHold( id, tab )
+	if !tab._ButtonHold then return end
+
+	id = id..self:SteamID()
+
+	local data = tab._ButtonHold[id]
+	if !data then return end
+
+	if data.interrupted or !self:KeyDown( data.key ) then
+		tab._ButtonHold[id] = nil
+		if data.cb then data.cb( false ) end
+		return false
+	end
+
+	if data.time <= CurTime() then
+		tab._ButtonHold[id] = nil
+		if data.cb then data.cb( true ) end
+		return true
+	end
+end
+
+function ply:InterruptHold( id, tab )
+	if !tab._ButtonHold then return end
+
+	id = id..self:SteamID()
+
+	local data = tab._ButtonHold[id]
+	if !data then return end
+
+	tab._ButtonHold[id].interrupted = true
+end
+
+function ply:IsHolding( id, tab )
+	if !tab._ButtonHold then return false end
+
+	id = id..self:SteamID()
+
+	local data = tab._ButtonHold[id]
+	if !data then return false end
+
+	return self:KeyDown( data.key )
+end
+
+function ply:HoldProgress( id, tab )
+	if !tab._ButtonHold then return end
+
+	id = id..self:SteamID()
+
+	local data = tab._ButtonHold[id]
+	if !data then return end
+
+	return math.Clamp( 1 - ( data.time - CurTime() ) / data.duration, 0, 1 )
+end
+
 --[[-------------------------------------------------------------------------
 Player functions
 ---------------------------------------------------------------------------]]
-local ply = FindMetaTable( "Player" )
 
 function ply:DataTables()
 	player_manager.SetPlayerClass( self, "class_slc" )
 	player_manager.RunClass( self, "SetupDataTables" )
 end
 
-function ply:IsActive()
+local function accessor( func, var )
+	var = "Get"..( var or "_"..func )
+
+	ply[func] = function( self )
+		if !self[var] then
+			self:DataTables()
+		end
+
+		return self[var]( self )
+	end
+end
+
+accessor( "IsActive", "_SCPActive" )
+accessor( "IsPremium", "_SCPPremium" )
+accessor( "IsAFK", "_SCPAFK" )
+accessor( "SCPLevel" )
+accessor( "SCPExp" )
+accessor( "SCPClassPoints" )
+accessor( "DailyBonus" )
+
+/*function ply:IsActive()
 	if !self.Get_SCPActive then
 		self:DataTables()
 	end
@@ -318,20 +416,24 @@ function ply:SCPExp()
 	return self:Get_SCPExp()
 end
 
-function ply:SCPPrestige()
-	if !self.Get_SCPPrestige then
+function ply:SCPClassPoints()
+	if !self.Get_SCPClassPoints then
 		self:DataTables()
 	end
 
-	return self:Get_SCPPrestige()
-end
+	return self:Get_SCPClassPoints()
+end*/
 
-function ply:SCPPrestigePoints()
-	if !self.Get_SCPPrestigePoints then
-		self:DataTables()
+function ply:RequiredXP( lvl )
+	if !lvl then
+		lvl = self:SCPLevel()
 	end
 
-	return self:Get_SCPPrestigePoints()
+	if SLC_XP_OVERRIDE then
+		return SLC_XP_OVERRIDE( lvl )
+	else
+		return CVAR.slc_xp_level:GetInt() + CVAR.slc_xp_increase:GetInt() * lvl
+	end
 end
 
 function ply:SCPClass()

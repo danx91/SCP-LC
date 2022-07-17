@@ -6,6 +6,7 @@ SWEP.HoldType		= "melee"
 SWEP.ViewModel		= "models/player/alski/scp/SCP_058VM.mdl"
 //SWEP.ViewModelFOV	= 80
 SWEP.ShouldDrawViewModel = true
+SWEP.ScoreOnDamage = true
 
 SWEP.AttackSlow = 0
 
@@ -315,7 +316,7 @@ function SWEP:OnUpgradeBought( name, info, group )
 	end
 end
 
-hook.Add( "SLCMovementAnimSpeed", "SCP058", function( ply, vel, speed, len, movement )
+SCPHook( "SCP058", "SLCMovementAnimSpeed", function( ply, vel, speed, len, movement )
 	if ply:SCPClass() == CLASSES.SCP058 then
 		local n = len / 56
 
@@ -327,16 +328,8 @@ hook.Add( "SLCMovementAnimSpeed", "SCP058", function( ply, vel, speed, len, move
 	end
 end )
 
-hook.Add( "PostEntityTakeDamage", "SCP058Explosion", function( ent, dmg, took )
+SCPHook( "SCP058", "PostEntityTakeDamage", function( ent, dmg, took )
 	if IsValid( ent ) and ent:IsPlayer() then
-		local att = dmg:GetAttacker()
-		if IsValid( att ) and att:IsPlayer() and att != ent then
-			local wep = att:GetWeapon( "weapon_scp_058" )
-			if IsValid( wep ) then
-				wep:AddScore( dmg:GetDamage() )
-			end
-		end
-
 		if ent:SCPClass() == CLASSES.SCP058 then
 			local wep = ent:GetWeapon( "weapon_scp_058" )
 			if IsValid( wep ) and wep.ExplosionHPTab then

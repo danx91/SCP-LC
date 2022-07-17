@@ -31,6 +31,9 @@ SWEP.ShouldDrawWorldModel 	= false
 SWEP.FreezePlayer = false
 SWEP.ShouldFreezePlayer = false
 
+SWEP.ScoreOnDamage = false
+SWEP.ScoreOnKill = false
+
 function SWEP:InitializeLanguage( name )
 	if CLIENT then
 		self.Lang = LANG.WEAPONS[name] or {}
@@ -174,15 +177,59 @@ function SWEP:DrawHUD()
 	end
 end
 
-hook.Add( "SLCScreenMod", "SCPVisionMod", function( clr )
-	local ply = LocalPlayer()
+/*hook.Add( "PlayerButtonDown", "SLCSCPSpecialAbility", function( ply, btn )
 	local wep = ply:GetActiveWeapon()
-	if IsValid( wep ) and ply:SCPTeam() == TEAM_SCP then
-		if wep.UpgradeSystemMounted then
-			if wep:HasUpgrade( "nvmod" ) then
-				clr.contrast = clr.contrast + 0.75
-				clr.brightness = clr.brightness + 0.01
+	if IsValid( wep ) and wep.SCP and btn == GetBindButton( "upgrade_tree_button" ) then
+	
+end )
+
+hook.Add( "PlayerButtonUp", "SLCSCPSpecialAbility", function( ply, btn )
+	GetBindButton( "upgrade_tree_button" )
+end )*/
+
+if CLIENT then
+	hook.Add( "SLCScreenMod", "SCPVisionMod", function( clr )
+		local ply = LocalPlayer()
+		local wep = ply:GetActiveWeapon()
+		if IsValid( wep ) and ply:SCPTeam() == TEAM_SCP then
+			if wep.UpgradeSystemMounted then
+				if wep:HasUpgrade( "nvmod" ) then
+					clr.contrast = clr.contrast + 0.75
+					clr.brightness = clr.brightness + 0.01
+				end
 			end
 		end
-	end
-end )
+	end )
+end
+
+if SERVER then
+	hook.Add( "PostEntityTakeDamage", "SLCGenericSCPDamage", function( target, dmg, took )
+		if IsValid( target ) and target:IsPlayer() then
+			local att = dmg:GetAttacker()
+			if IsValid( att ) and att:IsPlayer() and att != target and att:SCPTeam() == TEAM_SCP then
+				local wep = att:GetProperty( "scp_weapon" )
+				if IsValid( wep ) and wep.UpgradeSystemMounted and wep.ScoreOnDamage then
+					wep:AddScore( dmg:GetDamage() )
+				end
+			end
+		end
+	end )
+
+	hook.Add( "DoPlayerDeath", "SLCGenericSCPKill", function( ply, att, dmg )
+		if IsValid( ply ) and ply:IsPlayer() then
+			if IsValid( att ) and att:IsPlayer() and att != ply and att:SCPTeam() == TEAM_SCP then
+				local wep = att:GetProperty( "scp_weapon" )
+
+				if IsValid( wep ) then
+					if wep.UpgradeSystemMounted and wep.ScoreOnKill then
+						wep:AddScore( 1 )
+					end
+
+					if wep.OnPlayerKilled then
+						wep:OnPlayerKilled( att, dmg )
+					end
+				end
+			end
+		end
+	end )
+end

@@ -441,7 +441,7 @@ function SWEP:EjectChip( swap )
 end
 
 function SWEP:SetChipData( chip, override )
-	self:SetChipID( chip.id )
+	self:SetChipID( chip and chip.id or -1 )
 	self:SetAccessOverride( override or 0 )
 end
 
@@ -474,18 +474,20 @@ if CLIENT then
 	local SCREEN_WIDTH, SCREEN_HEIGHT = 512, 340
 
 	local screen_rt = GetRenderTarget( "SLCOmnitoolScreen", TEX_SIZE, TEX_SIZE )
-	local glitch_rt = GetRenderTarget( "SLCOmnitoolGlitch", TEX_SIZE, TEX_SIZE ) --temp texture to store glitch effect
+	//local glitch_rt = GetRenderTarget( "SLCOmnitoolGlitch", TEX_SIZE, TEX_SIZE ) --temp texture to store glitch effect
 
 	/*local glitch_material = CreateMaterial( "omnitool_glitch_material2", "UnlitGeneric", {
 		["$basetexture"] = glitch_rt:GetName(),
 	} )*/
 	
-	local tex_id = surface.GetTextureID( screen_material:GetName() )
+	/*local tex_id = surface.GetTextureID( screen_material:GetName() )
 
 	local glitch_vt, glitch_ht = 0, 0
-	local glitch_v, glitch_h
+	local glitch_v, glitch_h*/
 
 	function SWEP:RenderScreen()
+		if screen_material:IsError() then return end
+
 		screen_material:SetTexture( "$basetexture", screen_rt )
 
 		render.PushRenderTarget( screen_rt )
@@ -527,9 +529,9 @@ if CLIENT then
 	}
 
 	local alpha = 0
-	local hide = false
+	//local hide = false
 
-	local mal = 0
+	//local mal = 0
 	local mb = false
 	function SWEP:DrawOmnitoolScreen()
 		local w, h = SCREEN_WIDTH, SCREEN_HEIGHT

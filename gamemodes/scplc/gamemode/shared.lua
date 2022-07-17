@@ -1,7 +1,10 @@
-MODULES_PATH = GM.FolderName.."/gamemode/modules"
-CORE_PATH = GM.FolderName.."/gamemode/core"
-LANGUAGES_PATH = GM.FolderName.."/gamemode/languages"
-MAP_CONFIG_PATH = GM.FolderName.."/gamemode/mapconfigs"
+BASE_LUA_PATH = GM.FolderName
+BASE_GAMEMODE_PATH = GM.FolderName.."/gamemode"
+
+MODULES_PATH = BASE_GAMEMODE_PATH.."/modules"
+CORE_PATH = BASE_GAMEMODE_PATH.."/core"
+LANGUAGES_PATH = BASE_GAMEMODE_PATH.."/languages"
+MAP_CONFIG_PATH = BASE_GAMEMODE_PATH.."/mapconfigs"
 
 _LANG = {}
 _LANG_ALIASES = {}
@@ -35,16 +38,53 @@ function setLanguageFlag( name, flag )
 end
 
 --[[-------------------------------------------------------------------------
-Load mods - TODO
+Load folder
 ---------------------------------------------------------------------------]]
+function LoadFolder( path, t, realm )
+	for k, f in pairs( file.Find( path.."/*.lua", "LUA" ) ) do
+		if string.len( f ) > 3 then
+			local ext = string.sub( f, 1, 3 )
+	
+			if realm == "CLIENT" or ext == "cl_" then
+				if SERVER then
+					AddCSLuaFile( path.."/"..f )
+				else
+					if t then
+						print( t..f )
+					end
 
+					include( path.."/"..f )
+				end
+			elseif realm == "SERVER" or ext == "sv_" then
+				if SERVER then
+					if t then
+						print( t..f )
+					end
+
+					include( path.."/"..f )
+				end
+			else
+				if SERVER then
+					AddCSLuaFile( path.."/"..f )
+				end
+	
+				if t then
+					print( t..f )
+				end
+
+				include( path.."/"..f )
+			end
+		end
+	end
+end
 
 --[[-------------------------------------------------------------------------
 Load core modules
 ---------------------------------------------------------------------------]]
 print( "--------------Loading Core Modules---------------" )
-for k, f in pairs( file.Find( CORE_PATH.."/*.lua", "LUA" ) ) do
+LoadFolder( CORE_PATH, "# Loading core module: " )
 
+/*for k, f in pairs( file.Find( CORE_PATH.."/*.lua", "LUA" ) ) do
 	if string.len( f ) > 3 then
 		local ext = string.sub( f, 1, 3 )
 
@@ -57,8 +97,6 @@ for k, f in pairs( file.Find( CORE_PATH.."/*.lua", "LUA" ) ) do
 			end
 		elseif ext == "sv_" then
 			if SERVER then
-				AddCSLuaFile( CORE_PATH.."/"..f )
-
 				print("# Loading core module: "..f )
 				include( CORE_PATH.."/"..f )
 			end
@@ -71,7 +109,7 @@ for k, f in pairs( file.Find( CORE_PATH.."/*.lua", "LUA" ) ) do
 			include( CORE_PATH.."/"..f )
 		end
 	end
-end
+end*/
 
 --[[-------------------------------------------------------------------------
 Load language
@@ -140,45 +178,6 @@ for k, f in pairs( modules ) do
 		skipped = skipped + 1
 	end
 end
-
-/*for _, v in pairs( folders ) do
-	local fp = MODULES_PATH.."/"..v
-	print( "Loading module: "..v )
-
-	for _, f in pairs( file.Find( MODULES_PATH..v.."/*.lua", "LUA" ) ) do
-		if string.sub( f, 1, 1 ) == "_" then
-			skipped = skipped + 1
-			continue
-		end
-	
-		if string.len( f ) > 3 then
-			local ext = string.sub( f, 1, 3 )
-	
-			if ext == "cl_" then
-				if SERVER then
-					AddCSLuaFile( fp.."/"..f )
-				else
-					print( "\t> "..f )
-					include( fp.."/"..f )
-				end
-			elseif ext == "sv_" then
-				if SERVER then
-					print( "\t> "..f )
-					include( fp.."/"..f )
-				end
-			elseif ext == "sh_" then
-				if SERVER then
-					AddCSLuaFile( fp.."/"..f )
-				end
-	
-				print( "\t> "..f )
-				include( fp.."/"..f )
-			end
-		else
-			skipped = skipped + 1
-		end
-	end
-end*/
 
 print( "#" )
 print( "# Skipped files: "..skipped )

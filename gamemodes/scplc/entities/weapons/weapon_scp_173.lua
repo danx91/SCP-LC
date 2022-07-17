@@ -19,7 +19,7 @@ function SWEP:Initialize()
 end
  
 function SWEP:Think()
-	if CLIENT or ROUND.post or self.StopThink then return end
+	if CLIENT or ROUND.preparing or ROUND.post or self.StopThink then return end
 
 	local owner = self:GetOwner()
 	local freeze = false
@@ -336,7 +336,7 @@ AddSounds( "SCP173.Horror", "scp_lc/scp/173/horror/horror%i.ogg", 0, 1, 100, CHA
 AddSounds( "SCP173.Rattle", "scp_lc/scp/173/rattle%i.ogg", 100, 1, 100, CHAN_STATIC, 1, 3 )
 AddSounds( "SCP173.Snap", "scp_lc/scp/173/neck_snap%i.ogg", 511, 1, 100, CHAN_STATIC, 1, 3 )
 
-hook.Add( "PlayerFootstep", "173Rattle", function( ply, pos, foot, sound, vol, filter )
+SCPHook( "SCP173", "PlayerFootstep", function( ply, pos, foot, sound, vol, filter )
 	if ply:SCPClass() == CLASSES.SCP173 then
 		if SERVER then
 			if !ply.N173Step or ply.N173Step < CurTime() then
@@ -349,7 +349,7 @@ hook.Add( "PlayerFootstep", "173Rattle", function( ply, pos, foot, sound, vol, f
 	end
 end )
 
-hook.Add( "SLCBlink", "SCP173TP", function( time )
+SCPHook( "SCP173", "SLCBlink", function( time )
 	for k, v in pairs( SCPTeams.GetPlayersByTeam( TEAM_SCP ) ) do
 		if v:SCPClass() == CLASSES.SCP173 then
 			local wep = v:GetActiveWeapon()
@@ -360,7 +360,7 @@ hook.Add( "SLCBlink", "SCP173TP", function( time )
 	end
 end )
 
-hook.Add( "EntityTakeDamage", "SCP173DMGMod", function( ent, dmg )
+SCPHook( "SCP173", "EntityTakeDamage", function( ent, dmg )
 	if IsValid( ent ) and ent:IsPlayer() and ent:SCPClass() == CLASSES.SCP173 then
 		local wep = ent:GetActiveWeapon()
 		if IsValid( wep ) and wep.UpgradeSystemMounted then

@@ -348,18 +348,6 @@ function GM:SpawnItems()
 
 	if USE_LEGACY_ITEMS_SPAWN then
 		--[[-------------------------------------------------------------------------
-		Vests
-		---------------------------------------------------------------------------]]
-		for k,v in pairs( SPAWN_VEST ) do
-			local vest = ents.Create( "slc_vest" )
-			if IsValid( vest ) then
-				vest:Spawn()
-				vest:SetPos( v - Vector( 0, 0, 10 ) )
-				vest:SetVest( VEST.GetRandomVest() )
-			end
-		end
-
-		--[[-------------------------------------------------------------------------
 		Weapons
 		---------------------------------------------------------------------------]]
 		SpawnItemGeneric( "weapon_slc_pc", SPAWN_PARTICLE_CANNON, -1, post )
@@ -406,6 +394,18 @@ function GM:SpawnItems()
 	---------------------------------------------------------------------------]]
 	for k, v in pairs( SLC_ITEMS_AUTOSPAWN ) do
 		SpawnUsingRule( v )
+	end
+
+	--[[-------------------------------------------------------------------------
+	Vests
+	---------------------------------------------------------------------------]]
+	for k,v in pairs( SPAWN_VEST ) do
+		local vest = ents.Create( "slc_vest" )
+		if IsValid( vest ) then
+			vest:Spawn()
+			vest:SetPos( v - Vector( 0, 0, 10 ) )
+			vest:SetVest( VEST.GetRandomVest() )
+		end
 	end
 
 	--[[-------------------------------------------------------------------------
@@ -473,6 +473,7 @@ function GM:SpawnItems()
 	for k, v in pairs( LOOTABLES ) do
 		local ent = ents.Create( "slc_lootable" )
 		if IsValid( ent ) then
+			ent:SetShouldRender( false )
 			ent:SetPos( v.pos )
 			ent:Spawn()
 

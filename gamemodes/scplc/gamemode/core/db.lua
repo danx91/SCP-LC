@@ -7,7 +7,11 @@ function SetSCPData( steamid64, name, value, ply )
 	if SLCMySQLEnabled then
 		SLCMySQL.simple_query( string.format( SLCMySQL.q_set, SLCMySQL.escape( key ), SLCMySQL.escape( value ) ) )
 
-		if ply and ply.SLCInMemoryDatabase then
+		if IsValid( ply ) then
+			if !ply.SLCInMemoryDatabase then
+				ply.SLCInMemoryDatabase = {}
+			end
+			
 			ply.SLCInMemoryDatabase[name] = value
 		end
 	else
@@ -95,7 +99,10 @@ function GetSCPData( steamid64, name, def, func, ply, pdk, update, sync )
 	end
 
 	if SLCMySQLEnabled and update and IsValid( ply ) then
-		ply.SLCInMemoryDatabase = ply.SLCInMemoryDatabase or {}
+		if !ply.SLCInMemoryDatabase then
+			ply.SLCInMemoryDatabase = {}
+		end
+
 		ply.SLCInMemoryDatabase[name] = value
 	end
 

@@ -46,7 +46,7 @@ local function initialize_functions( db )
 			end
 
 			q.onError = function( self, err, sql_q )
-				MsgC( Color( 200, 0, 0 ), "MySQL query error! "..sql_q.."\n" )
+				MsgC( Color( 200, 0, 0 ), "MySQL query error! "..(sql_q or "[???]").."\n" )
 				print( err )
 
 				reject( err )
@@ -160,3 +160,4 @@ function SLCUseMySQL( cfg )
 end
 
 SLCMySQL.AddPreload( "scp_penalty", 0, tonumber )
+SLCMySQL.AddPreload( "daily_bonus_reset", 0, tonumber )

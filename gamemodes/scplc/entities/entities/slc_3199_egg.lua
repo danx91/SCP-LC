@@ -53,8 +53,8 @@ function ENT:OnTakeDamage( dmg )
 				self.NRegen = CurTime() + 1
 
 				if self.EHealth <= 0 then
-					att:AddFrags( 10 )
-					PlayerMessage( "destory_scp$10", att )
+					att:AddFrags( 5 )
+					PlayerMessage( "destory_scp$5", att )
 					self:Destroy()
 				end
 			end

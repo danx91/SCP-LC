@@ -1,7 +1,8 @@
 if SERVER then
 	util.AddNetworkString( "SLCPing" )
 	util.AddNetworkString( "SLCSendTable" )
-	//util.AddNetworkString( "SLCSharedHook" )
+	util.AddNetworkString( "SLCSharedHook" )
+	util.AddNetworkString( "SLCPropertyChanged" )
 end
 
 --[[-------------------------------------------------------------------------
@@ -307,20 +308,45 @@ end
 --[[-------------------------------------------------------------------------
 Shared hooks
 ---------------------------------------------------------------------------]]
-/*function hook.RunShared( name, ... )
-	net.Start( "SLCSharedHook" )
-		net.WriteString( name )
-		net.WriteTable( {...} )
-	net.Broadcast()
+function hook.RunClient( ply, ... )
+	if SERVER then
+		net.Start( "SLCSharedHook" )
+			net.WriteTable( {...} )
+		net.Send( ply )
+	end
 
-	return hook.Run( name, ... )
+	return hook.Run( ... )
 end
 
-function hook.RunSharedPlayer( ply, name, ... )
-	net.Start( "SLCSharedHook" )
-		net.WriteString( name )
-		net.WriteTable( {...} )
-	net.Send( ply )
+function hook.RunShared( ... )
+	if SERVER then
+		net.Start( "SLCSharedHook" )
+			net.WriteTable( {...} )
+		net.Broadcast()
+	end
 
-	return hook.Run( name, ... )
-end*/
+	return hook.Run( ... )
+end
+
+if CLIENT then
+	net.Receive( "SLCSharedHook", function( len )
+		hook.Run( unpack( net.ReadTable() ) )
+	end )
+end
+
+--[[-------------------------------------------------------------------------
+Property Changed
+---------------------------------------------------------------------------]]
+SLCPropertyCallbacks = SLCPropertyCallbacks or {}
+
+net.Receive( "SLCPropertyChanged", function( len )
+	local name = net.ReadString()
+	local cb = SLCPropertyCallbacks[name]
+	if !cb then return end
+
+	cb( name, net.ReadTable()[1] )
+end )
+
+function OnPropertyChanged( name, cb )
+	SLCPropertyCallbacks[name] = cb
+end

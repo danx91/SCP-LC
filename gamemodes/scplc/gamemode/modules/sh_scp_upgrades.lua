@@ -75,8 +75,8 @@ function InstallUpgradeSystem( name, swep )
 		end
 	end
 
-	swep.HasUpgrade = function( self, name )
-		return self.UpgradeSystemRegistry.upgrades[name] == true
+	swep.HasUpgrade = function( self, u_name )
+		return self.UpgradeSystemRegistry.upgrades[u_name] == true
 	end
 
 	swep.AddScore = function( self, score )
@@ -106,8 +106,8 @@ function InstallUpgradeSystem( name, swep )
 		end
 	end
 
-	swep.UpgradeBlocked = function( self, name )
-		local id = upg.upgradeid[name]
+	swep.UpgradeBlocked = function( self, u_name )
+		local id = upg.upgradeid[u_name]
 		if id then
 			local block = upg.upgrades[id].block
 			if block and #block > 0 then
@@ -120,10 +120,10 @@ function InstallUpgradeSystem( name, swep )
 		end
 	end
 
-	swep.UpgradeUnlocked = function( self, name )
-		if self:UpgradeBlocked( name ) then return false end
+	swep.UpgradeUnlocked = function( self, u_name )
+		if self:UpgradeBlocked( u_name ) then return false end
 
-		local id = upg.upgradeid[name]
+		local id = upg.upgradeid[u_name]
 		if id then
 			local req = upg.upgrades[id].req
 			local reqany = upg.upgrades[id].reqany
@@ -148,12 +148,12 @@ function InstallUpgradeSystem( name, swep )
 		end
 	end
 
-	swep.CanBuyUpgrade = function( self, name )
-		if self:HasUpgrade( name ) then return false end
-		if !self:UpgradeUnlocked( name ) then return false end
-		//if self:UpgradeBlocked( name ) then return false end
+	swep.CanBuyUpgrade = function( self, u_name )
+		if self:HasUpgrade( u_name ) then return false end
+		if !self:UpgradeUnlocked( u_name ) then return false end
+		//if self:UpgradeBlocked( u_name ) then return false end
 
-		local id = upg.upgradeid[name]
+		local id = upg.upgradeid[u_name]
 		if id then
 			return self.UpgradeSystemRegistry.points >= upg.upgrades[id].cost
 		end
@@ -184,8 +184,8 @@ function InstallUpgradeSystem( name, swep )
 		end
 	end
 
-	swep.GetUpgradeMod = function( self, name, def )
-		return self.UpgradeSystemRegistry.mod[name] or def
+	swep.GetUpgradeMod = function( self, m_name, def )
+		return self.UpgradeSystemRegistry.mod[m_name] or def
 	end
 
 	/*swep.StoreUpgradeSystem = function( self, data )
@@ -531,7 +531,7 @@ if CLIENT then
 				cx = w - width
 			end
 
-			render.SetStencilTestMask( 0xFF )
+			/*render.SetStencilTestMask( 0xFF )
 			render.SetStencilWriteMask( 0xFF )
 			render.SetStencilPassOperation( STENCIL_REPLACE )
 			render.SetStencilFailOperation( STENCIL_KEEP )
@@ -541,7 +541,7 @@ if CLIENT then
 			render.SetStencilReferenceValue( 1 )
 
 			render.ClearStencil()
-			render.SetStencilEnable( true )
+			render.SetStencilEnable( true )*/
 
 			surface.SetDrawColor( 0, 0, 0, 240 )
 
@@ -608,16 +608,16 @@ if CLIENT then
 				}
 
 				for i, v in ipairs( info.req ) do
-					local owned = wep:HasUpgrade( v )
+					local v_owned = wep:HasUpgrade( v )
 
 					surface.DrawRect( cx, cur_y, width, math.ceil( h * 0.03 ) )
 					cur_y = cur_y + math.ceil( h * 0.03 )
 
 					draw.LimitedText{
-						text = "\t"..( lang[v] and lang[v].name or v )..( owned and " ✓" or " ✗" ),
+						text = "\t"..( lang[v] and lang[v].name or v )..( v_owned and " ✓" or " ✗" ),
 						pos = { cx + w * 0.01, cur_y - h * 0.02 },
 						font = "SCPHUDSmall",
-						color = owned and color_white or Color( 225, 55, 55, 255 ),
+						color = v_owned and color_white or Color( 225, 55, 55, 255 ),
 						xalign = TEXT_ALIGN_LEFT,
 						yalign = TEXT_ALIGN_CENTER,
 						max_width = w * 0.28
@@ -656,13 +656,13 @@ if CLIENT then
 				end
 			end
 
-			render.SetStencilCompareFunction( STENCIL_NOTEQUAL )
-			render.SetStencilPassOperation( STENCIL_KEEP )
+			//render.SetStencilCompareFunction( STENCIL_NOTEQUAL )
+			//render.SetStencilPassOperation( STENCIL_KEEP )
 
 			surface.SetDrawColor( 150, 150, 150, 50 )
-			surface.DrawRect( cx - 2, cy - 2, width + 4, math.ceil( cur_y - cy + 4 ) )
+			surface.DrawOutlinedRect( cx - 2, cy - 2, width + 4, math.ceil( cur_y - cy + 4 ), 2 )
 
-			render.SetStencilEnable( false )
+			//render.SetStencilEnable( false )
 		end
 	end
 

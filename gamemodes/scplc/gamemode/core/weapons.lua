@@ -55,8 +55,18 @@ timer.Simple( 0, function()
 	end
 end )
 
-hook.Add( "PlayerCanPickupWeapon", "CW20Pickup", function( ply, wep )
-	if string.sub( wep:GetClass(), 1, 3 ) == "cw_" then
+/*hook.Add( "PlayerCanPickupWeapon", "CW20Pickup", function( ply, wep_p )
+	if string.sub( wep_p:GetClass(), 1, 3 ) == "cw_" then
+		for k, v in pairs( ply:GetWeapons() ) do
+			if string.sub( v:GetClass(), 1, 3 ) == "cw_" then
+				return false
+			end
+		end
+	end
+end )*/
+
+hook.Add( "SLCCanPickupWeaponClass", "CW20Pickup", function( ply, class )
+	if string.sub( class, 1, 3 ) == "cw_" then
 		for k, v in pairs( ply:GetWeapons() ) do
 			if string.sub( v:GetClass(), 1, 3 ) == "cw_" then
 				return false

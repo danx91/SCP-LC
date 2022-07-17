@@ -2,6 +2,7 @@ SWEP.Base 				= "weapon_scp_base"
 SWEP.PrintName			= "SCP-049-2"
 
 SWEP.ViewModel 			= "models/weapons/v_zombiearms.mdl"
+//SWEP.ViewModel 			= "models/player/alski/scp049-2classdarms.mdl"
 SWEP.ShouldDrawViewModel= true
 
 SWEP.HoldType 			= "knife"
@@ -148,7 +149,7 @@ function SWEP:ApplyDamage( strong )
 end
 
 if SERVER then
-	hook.Add( "EntityTakeDamage", "SLCSCP0492Debuff", function( target, info )
+	SCPHook( "SCP0492", "EntityTakeDamage", function( target, info )
 		if IsValid( target ) and target:IsPlayer() and target:SCPClass() == CLASSES.SCP0492 then
 			local shouldScale = true
 			local wep = target:GetWeapon( "weapon_scp_0492" )
@@ -167,7 +168,7 @@ if SERVER then
 		end
 	end )
 
-	/*hook.Add( "DoPlayerDeath", "SCP0492Kill", function( ply, attacker, info )
+	/*SCPHook( "SCP0492", "DoPlayerDeath", function( ply, attacker, info )
 		if attacker:IsPlayer() and attacker:SCPClass() == CLASSES.SCP0492 then
 		 	AddRoundStat( "0492" )
 		end

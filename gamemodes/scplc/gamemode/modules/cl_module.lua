@@ -55,7 +55,7 @@ local function CheckTable( tab, ref )
 			else
 				CheckTable( tab[k], v )
 			end
-		elseif tab[k] == nil then
+		elseif type( tab[k] ) != type( v ) then
 			tab[k] = v
 		end
 	end
@@ -151,7 +151,7 @@ local function PrintRevDiff( tab, ref, stack )
 
 	for k, v in pairs( tab ) do
 		if istable( v ) and istable( ref[k] ) then
-				num = num + PrintTableDiff( v, ref[k], stack.." > "..k )
+				num = num + PrintRevDiff( v, ref[k], stack.." > "..k )
 		elseif ref[k] == nil then
 			print( "Redundant value: "..stack.." > "..k )
 			num = num + 1
@@ -231,26 +231,12 @@ end)
 --[[-------------------------------------------------------------------------
 Screen effects
 ---------------------------------------------------------------------------]]
-//Material( "slc/misc/blind.png" )
-/*local blind_mat = CreateMaterial( "mat_SCP_blind", "UnlitGeneric", {
-	["$basetexture"] = "slc/misc/blind.png",
-	["$additive"] = "1",
-} )*/
-
 local exhaust_mat = GetMaterial( "slc/misc/exhaust.png" )
 
 local stamina_effects = 100
 local color_mat = Material( "pp/colour" )
 hook.Add( "RenderScreenspaceEffects", "SCPEffects", function()
 	local ply = LocalPlayer()
-	
-	/*if LocalPlayer().n420endtime and LocalPlayer().n420endtime > CurTime() then
-		DrawMotionBlur( 1 - ( LocalPlayer().n420endtime - CurTime() ) / 15 , 0.3, 0.025 )
-		DrawSharpen( ( LocalPlayer().n420endtime - CurTime() ) / 3, ( LocalPlayer().n420endtime - CurTime() ) / 20 )
-		clr_r = ( LocalPlayer().n420endtime - CurTime() ) * 2
-		clr_g = ( LocalPlayer().n420endtime - CurTime() ) * 2
-		clr_b = ( LocalPlayer().n420endtime - CurTime() ) * 2
-	end*/
 
 	local clr = {}
 
@@ -269,14 +255,14 @@ hook.Add( "RenderScreenspaceEffects", "SCPEffects", function()
 		local t = ply:SCPTeam()
 		
 		if ply:Alive() and t != TEAM_SPEC and t != TEAM_SCP and hp < 25 then
-			local scale = math.max( hp / 25, 0.2 )
-			clr.colour = clr.colour * scale
-			clr.add_r = clr.add_r + ( 1 - scale ) * 0.1
-			clr.mul_r = clr.mul_r + ( 1 - scale ) * 0.7
-			clr.brightness = clr.brightness - ( 1 - scale ) * 0.075
+			local scale = 1 - hp / 25, 0.2
+			clr.colour = clr.colour * ( 1 - scale )
+			clr.add_r = clr.add_r + scale * 0.1
+			clr.mul_r = clr.mul_r + scale * 0.7
+			clr.brightness = clr.brightness - scale * 0.075
 
 			DrawMotionBlur( 0.5, 0.6, 0.01 )
-			DrawSharpen( 0.8, 2.25 )
+			DrawSharpen( 0.8, 2.25 * scale )
 		end
 	end
 
@@ -322,12 +308,17 @@ local blink = false
 local endblink = 0
 local nextblink = 0
 
+local fade_flag = bit.bor( SCREENFADE.IN, SCREENFADE.OUT )
 net.Receive( "PlayerBlink", function( len )
 	local duration = net.ReadFloat()
 	local delay = net.ReadUInt( 6 )
 
 	if duration > 0 then
-		blink = true
+		if GetSettingsValue( "smooth_blink" ) then
+			LocalPlayer():ScreenFade( fade_flag, Color( 0, 0, 0 ), 0.075, duration )
+		else
+			blink = true
+		end
 	end
 
 	endblink = CurTime() + duration
@@ -350,14 +341,16 @@ local blink_mat = CreateMaterial( "mat_SCP_blink", "UnlitGeneric", {
 	["$color"] = "{ 0 0 0 }"
 } )
 
-hook.Add( "PostDrawHUD", "SLCBlink", function()
+hook.Add( "PreDrawHUD", "SLCBlink", function()
 	if blink then
-		surface.SetDrawColor( 0, 0, 0, 255 )
-		surface.SetMaterial( blink_mat )
-		surface.DrawTexturedRect( 0, 0, ScrW(), ScrH() )
+		render.SetMaterial( blink_mat )
+		render.DrawScreenQuad()
 	end
 end )
 
+hook.Add( "SLCRegisterSettings", "SLCBlinkSettings", function()
+	RegisterSettingsEntry( "smooth_blink", "switch", true )
+end )
 
 --[[-------------------------------------------------------------------------
 Commands
@@ -402,17 +395,6 @@ net.ReceivePing( "SLCPlayerSync", function( data )
 	WaitingSync = tonumber( data )
 end )
 
-/*gameevent.Listen( "entity_killed" )
-function GM:entity_killed( data )
-	local inflictor = Entity( data.entindex_inflictor )
-	local attacker = Entity( data.entindex_attacker )
-	local victim = Entity( data.entindex_killed )
-
-	if victim == LocalPlayer() then
-		ClearPlayerIDs()
-	end
-end*/
-
 function GM:OnPlayerChat( ply, text, team, dead )
 	if IsValid( ply ) then
 		local t = GetPlayerID( ply )
@@ -422,10 +404,7 @@ function GM:OnPlayerChat( ply, text, team, dead )
 
 		if t and t.team then
 			local n = SCPTeams.GetName( t.team )
-			name = LANG.TEAMS[n] or n
-			clr = SCPTeams.GetColor( t.team )
-
-			chat.AddText( clr, "["..name.."] ", Color( 100, 200, 100 ), ply:Nick(), Color( 255, 255, 255 ), ": ", text )
+			chat.AddText( SCPTeams.GetColor( t.team ), "["..( LANG.TEAMS[n] or n ).."] ", Color( 100, 200, 100 ), ply:Nick(), Color( 255, 255, 255 ), ": ", text )
 		else
 			chat.AddText( Color( 150, 150, 150 ), "[???] ", Color( 100, 200, 100 ), ply:Nick(), Color( 255, 255, 255 ), ": ", text )
 		end
@@ -471,63 +450,8 @@ function GM:CalcView( ply, origin, angles, fov, znear, zfar )
 end
 
 function  GM:SetupWorldFog()
-	/*if LocalPlayer():GetNClass() == ROLES.ROLE_SCP9571 then
-		if OUTSIDE_BUFF and OUTSIDE_BUFF( ply:GetPos() ) then return end
-		render.FogMode( MATERIAL_FOG_LINEAR )
-		render.FogColor( 0, 0, 0 )
-		render.FogStart( 250 )
-		render.FogEnd( 500 )
-		render.FogMaxDensity( 1 )
-		return true
-	end
-
-	if !Effect957 then return end
-
-	if Effect957Mode == 0 then
-		if Effect957Density < 1 then
-			Effect957Density = math.Clamp( math.abs( Effect957 - CurTime() ), 0, 1 )
-		elseif Effect957Density >= 1 then
-			Effect957 = CurTime() + 3
-			Effect957Mode = 1
-		end
-	elseif Effect957Mode == 1 then
-		Effect957Density = 1
-		if Effect957 < CurTime() then
-			Effect957 = CurTime() + 1
-			Effect957Mode = 2
-		end
-	else
-		Effect957Density = math.Clamp( Effect957 - CurTime(), 0, 1 )
-		if Effect957Density == 0 then
-			Effect957 = false
-			Effect957Mode = 0
-		end
-	end
-
-
-
-	render.FogMode( MATERIAL_FOG_LINEAR )
-	render.FogColor( 0, 0, 0 )
-	render.FogStart( 50 )
-	render.FogEnd( 250 )
-	render.FogMaxDensity( Effect957Density )
-	return true*/
+	
 end
-
-/*Effect957 = false
-Effect957Density = 0
-Effect957Mode = 0
-net.Receive( "957Effect", function( len )
-	local status = net.ReadBool()
-	if status then
-		Effect957 = CurTime()
-		Effect957Mode = 0
-	elseif Effect957 then
-		//Effect957 = false
-		Effect957Mode = 2
-		Effect957 = CurTime() + 1
-	end
-end )*/
 
 function GM:PreRender()
 	local lp = LocalPlayer()
@@ -543,18 +467,6 @@ function GM:PreRender()
 	end
 end
 
-/*function GM:PrePlayerDraw( ply )
-	local lp = LocalPlayer()
-
-	//for k, v in pairs( player.GetAll() ) do
-		if v != lp then
-			if hook.Run( "CanPlayerSeePlayer", lp, ply ) == false then
-				return true
-			end
-		end
-	//end
-end*/
-
 hook.Add( "PreDrawHalos", "PickupWeapon", function()
 	/*debugoverlay.Axis(trace.HitPos, trace.HitNormal:Angle(), 5, 0.1 )
 	debugoverlay.Text(trace.HitPos + Vector( 0, 0, -5 ), tostring(trace.Entity), 0.1 )*/
@@ -563,14 +475,6 @@ hook.Add( "PreDrawHalos", "PickupWeapon", function()
 	if t == TEAM_SPEC or ( t == TEAM_SCP and !ply:GetSCPHuman() ) then return end
 	local wep = ply:GetEyeTrace().Entity
 	if IsValid( wep ) and wep:IsWeapon() then
-		/*if ply:HasWeapon( wep:GetClass() ) and ( !wep.Stacks or wep.Stacks <= 1 ) then return end
-		if wep.Stacks and wep.Stacks > 1 then
-			local pwep = LocalPlayer():GetWeapon( wep:GetClass() )
-			if IsValid( pwep ) and !pwep:CanStack() then return end
-		--elseif ply: then
-			--return
-		end*/
-
 		if ply:GetPos():DistToSqr( wep:GetPos() ) < 4500 or ply:EyePos():DistToSqr( wep:GetPos() ) < 3700 then
 			if !hook.Run( "WeaponPickupHover", wep ) and hook.Run( "PlayerCanPickupWeapon", ply, wep ) != false then
 				halo.Add( { wep }, Color( 125, 100, 200 ), 2, 2, 1, true, true )
@@ -595,6 +499,7 @@ end )
 
 timer.Simple( 0, function()
 	ChangeLang( cur_lang, true )
+	OpenMenuScreen()
 
 	print( "Almost ready! Waiting for additional info..." )
 
@@ -608,14 +513,16 @@ timer.Simple( 0, function()
 			hook.Remove( "Tick", "SLCPlayerReady" )
 
 			ErrorNoHalt( "ReadyCheck timed out!\n" )
-			MakePlayerReady()
+			_SLCPlayerReady = true
+			//MakePlayerReady()
 		end
 
 		if NetTablesReceived then
 			hook.Remove( "Tick", "SLCPlayerReady" )
 			
 			print( "Everything is set up! Updating our status on server...", RealTime() - timeout + 10 )
-			MakePlayerReady()
+			_SLCPlayerReady = true
+			//MakePlayerReady()
 		end
 	end )
 	--MakePlayerReady()

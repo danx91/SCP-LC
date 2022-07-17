@@ -1,8 +1,18 @@
 //CLASS_VIEWER = CLASS_VIEWER
+local roman_tab = { "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X" }
 
 local MATS = {
 	blur = Material( "pp/blurscreen" ),
-	exit = Material( "slc/hud/exit.png" )
+	exit = Material( "slc/hud/exit.png", "smooth" ),
+	locked = Material( "slc/hud/upgrades/locked.png", "smooth" ),
+}
+
+local COLOR = {
+	outline = Color( 150, 150, 150, 100 ),
+	unlocked = Color( 120, 150, 120, 75 ),
+	locked = Color( 150, 120, 120, 75 ),
+	tier_locked = Color( 120, 120, 120, 75 ),
+	white = Color( 255, 255, 255, 255 ),
 }
 
 local cache = {}
@@ -16,7 +26,7 @@ local showinfo = {
 local showdetails = {
 	"name",
 	"team",
-	"price",
+	"tier",
 	"health",
 	"sanity",
 	"walk_speed",
@@ -53,17 +63,17 @@ function addHeader( name, p, h, id )
 	button:SetTall( h )
 	button:SetText( "" )
 	button.Paint = function( self, pw, ph )
-		surface.SetDrawColor( Color( 150, 150, 150, 100 ) )
+		surface.SetDrawColor( COLOR.outline )
 		surface.DrawOutlinedRect( 0, 0, pw, ph )
 
-		surface.SetDrawColor( Color( 150, 150, 150, 50 ) )
+		surface.SetDrawColor( 150, 150, 150, 50 )
 		surface.DrawRect( 0, 0, pw, ph )
 
 		draw.Text{
 			text = name,
 			pos = { pw * 0.5, ph * 0.5 },
 			font = "SCPHUDMedium",
-			color = Color( 255, 255, 255, 255 ),
+			color = COLOR.white,
 			xalign = TEXT_ALIGN_CENTER,
 			yalign = TEXT_ALIGN_CENTER,
 		}
@@ -92,17 +102,17 @@ function addCategory( name, p, h, id )
 	button:SetTall( h )
 	button:SetText( "" )
 	button.Paint = function( self, pw, ph )
-		surface.SetDrawColor( Color( 150, 150, 150, 100 ) )
+		surface.SetDrawColor( COLOR.outline )
 		surface.DrawOutlinedRect( pw * 0.05, 0, pw * 0.9, ph )
 
-		surface.SetDrawColor( Color( 150, 150, 175, 100 ) )
+		surface.SetDrawColor( 150, 150, 175, 100 )
 		surface.DrawRect( pw * 0.05, 0, pw * 0.9, ph )
 
 		draw.Text{
 			text = name,
 			pos = { pw * 0.5, ph * 0.5 },
 			font = "SCPHUDMedium",
-			color = Color( 255, 255, 255, 255 ),
+			color = COLOR.white,
 			xalign = TEXT_ALIGN_CENTER,
 			yalign = TEXT_ALIGN_CENTER,
 		}
@@ -138,34 +148,32 @@ local function addClass( tab, p, h )
 		end
 	end
 
-	/*if owned == nil then
-		//owned = ply:SCPLevel() >= tab.level
-		owned = ply:IsClassUnlocked( tab.name )
-	end*/
-
 	local button = vgui.Create( "DButton", p )
 	button:Dock( TOP )
 	button:DockMargin( 5, 5, 5, 0 )
 	button:SetTall( h )
 	button:SetText( "" )
 	button.Paint = function( self, pw, ph )
-		surface.SetDrawColor( Color( 150, 150, 150, 100 ) )
+		surface.SetDrawColor( COLOR.outline )
 		surface.DrawOutlinedRect( pw * 0.1, 0, pw * 0.8, ph )
 
+		local tier_lock = !ply:CanUnlockClassTier( tab.tier )
+
 		if override == true or override == nil and ply:IsClassUnlocked( tab.name ) then
-			surface.SetDrawColor( Color( 120, 150, 120, 75 ) )
+			surface.SetDrawColor( COLOR.unlocked )
+		elseif tier_lock then
+			surface.SetDrawColor( COLOR.tier_locked )
 		else
-			surface.SetDrawColor( Color( 150, 120, 120, 75 ) )
+			surface.SetDrawColor( COLOR.locked )
 		end
 
-		//surface.SetDrawColor( owned and Color( 120, 150, 120, 75 ) or Color( 150, 120, 120, 75 ) )
 		surface.DrawRect( pw * 0.1, 0, pw * 0.8, ph )
 
 		draw.Text{
 			text = name,
 			pos = { pw * 0.5, ph * 0.5 },
 			font = "SCPHUDMedium",
-			color = Color( 255, 255, 255, 255 ),
+			color = tier_lock and Color( 225, 225, 225, 175 ) or COLOR.white,
 			xalign = TEXT_ALIGN_CENTER,
 			yalign = TEXT_ALIGN_CENTER,
 		}
@@ -177,6 +185,23 @@ local function addClass( tab, p, h )
 			{ x = pw * 0.9 - ph * 0.1, y = ph * 0.1 },
 			{ x = pw * 0.9 - ph * 0.1, y = ph * 0.5 },
 		}
+
+		if tab.tier and tab.tier > 0 then
+			draw.Text{
+				text = roman_tab[tab.tier] or ( "T"..tab.tier  ),
+				pos = { pw * 0.05, ph * 0.5 },
+				font = "SCPInfoScreenSmall",
+				color = COLOR.white,
+				xalign = TEXT_ALIGN_CENTER,
+				yalign = TEXT_ALIGN_CENTER,
+			}
+		end
+
+		if tier_lock then
+			surface.SetDrawColor( 255, 255, 255, 33 )
+			surface.SetMaterial( MATS.locked )
+			surface.DrawTexturedRect( pw * 0.1 + ph * 0.1, ph * 0.1, ph * 0.8, ph * 0.8 )
+		end
 	end
 
 	button.DoClick = function( self )
@@ -243,6 +268,12 @@ local function addClass( tab, p, h )
 
 		showinfo.mvp:Update( tab.name )
 	end
+
+	button.DoDoubleClick = function( self )
+		if !ply:IsClassUnlocked( tab.name ) and ply:UnlockClass( tab.name ) then
+			showinfo.mvp.buy:SetVisible( false )
+		end
+	end
 end
 
 local function addSCP( tab, p, h )
@@ -255,17 +286,17 @@ local function addSCP( tab, p, h )
 	button:SetTall( h )
 	button:SetText( "" )
 	button.Paint = function( self, pw, ph )
-		surface.SetDrawColor( Color( 150, 150, 150, 100 ) )
+		surface.SetDrawColor( COLOR.outline )
 		surface.DrawOutlinedRect( pw * 0.1, 0, pw * 0.8, ph )
 
-		surface.SetDrawColor( Color( 120, 150, 120, 75 ) )
+		surface.SetDrawColor( COLOR.unlocked )
 		surface.DrawRect( pw * 0.1, 0, pw * 0.8, ph )
 
 		draw.Text{
 			text = name,
 			pos = { pw * 0.5, ph * 0.5 },
 			font = "SCPHUDMedium",
-			color = Color( 255, 255, 255, 255 ),
+			color = COLOR.white,
 			xalign = TEXT_ALIGN_CENTER,
 			yalign = TEXT_ALIGN_CENTER,
 		}
@@ -321,8 +352,8 @@ function rebuildView()
 
 		if i == showinfo.major then
 			if v == "scp" then
-				for i, v in ipairs( ShowSCPs ) do
-					addSCP( v, panel, h * 0.05 )
+				for _, scp in ipairs( ShowSCPs ) do
+					addSCP( scp, panel, h * 0.05 )
 				end
 			else
 				local usetab = v == "support" and groups.SUPPORT or groups
@@ -334,14 +365,11 @@ function rebuildView()
 						if showinfo.minor == category_name then
 							local class_tab = {}
 
-							for k, v in pairs( tab ) do
-								//local nt = table.Copy( v )
-								//nt.name = k
-
-								table.insert( class_tab, v )
+							for k, val in pairs( tab ) do
+								table.insert( class_tab, val )
 							end
 
-							table.sort( class_tab, function( a, b ) return a.price < b.price end )
+							table.sort( class_tab, function( a, b ) return ( a.tier or 0 ) < ( b.tier or 0 ) end )
 
 							for _, class in pairs( class_tab ) do
 								addClass( class, panel, h * 0.05 )
@@ -359,7 +387,7 @@ local function basicText( text, x, y, maxw )
 		text = text,
 		pos = { x, y },
 		font = "SCPHUDSmall",
-		color = Color( 255, 255, 255, 255 ),
+		color = COLOR.white,
 		xalign = TEXT_ALIGN_LEFT,
 		yalign = TEXT_ALIGN_TOP,
 		max_width = maxw
@@ -370,6 +398,8 @@ end
 
 local function openViewer()
 	local ply = LocalPlayer()
+	if !ply.playermeta then return end
+
 	local w, h = ScrW(), ScrH()
 
 	local window = vgui.Create( "DFrame" )
@@ -390,30 +420,28 @@ local function openViewer()
 			MATS.blur:Recompute()
 		end
 
-		surface.SetDrawColor( Color( 255, 255, 255, 255 ) )
+		surface.SetDrawColor( COLOR.white )
 		surface.SetMaterial( MATS.blur )
 		surface.DrawTexturedRect( -w * 0.1, -h * 0.1, w, h )
 
-		surface.SetDrawColor( Color( 0, 0, 0, 150 ) )
+		surface.SetDrawColor( 0, 0, 0, 150 )
 		surface.DrawRect( 0, 0, pw, ph )
-
-		surface.SetDrawColor( Color( 0, 0, 0, 150 ) )
 		surface.DrawRect( 0, 0, pw, h * 0.035 )
 
 		draw.Text{
 			text = LANG.classviewer,
 			pos = { pw * 0.01, ph * 0.02 },
 			font = "SCPHUDMedium",
-			color = Color( 255, 255, 255, 255 ),
+			color = COLOR.white,
 			xalign = TEXT_ALIGN_LEFT,
 			yalign = TEXT_ALIGN_CENTER,
 		}
 
 		draw.Text{
-			text = LANG.HUD.prestige_points..": "..ply:SCPPrestigePoints(),
+			text = LANG.HUD.class_points..": "..ply:SCPClassPoints(),
 			pos = { pw * 0.48, ph * 0.02 },
 			font = "SCPHUDSmall",
-			color = Color( 255, 255, 255, 255 ),
+			color = COLOR.white,
 			xalign = TEXT_ALIGN_LEFT,
 			yalign = TEXT_ALIGN_CENTER,
 		}
@@ -421,18 +449,18 @@ local function openViewer()
 
 	local refound_b = vgui.Create( "DButton", window )
 	refound_b:SetSize( w * 0.1, h * 0.03 )
-	refound_b:AlignRight( w * 0.15 - 14 )
+	refound_b:AlignRight( w * 0.125 - 14 )
 	refound_b:AlignTop( h * 0.0025 )
 	refound_b:SetText( "" )
 	refound_b.Paint = function( self, pw, ph )
-		surface.SetDrawColor( Color( 150, 150, 150, 100 ) )
+		surface.SetDrawColor( COLOR.outline )
 		surface.DrawOutlinedRect( 0, 0, pw, ph )
 
 		draw.Text{
 			text = LANG.refound,
 			pos = { pw * 0.5, ph * 0.5 },
 			font = "SCPHUDSmall",
-			color = Color( 255, 255, 255, 255 ),
+			color = COLOR.white,
 			xalign = TEXT_ALIGN_CENTER,
 			yalign = TEXT_ALIGN_CENTER,
 		}
@@ -451,9 +479,9 @@ local function openViewer()
 	exit_b:AlignTop( h * 0.0075 )
 	exit_b:SetText( "" )
 	exit_b.Paint = function( self, pw, ph )
-		draw.RoundedBox( 6, 0, 0, pw, ph, Color( 255, 0, 0, 150 ))
+		draw.RoundedBox( 6, 0, 0, pw, ph, Color( 255, 0, 0, 150 ) )
 
-		surface.SetDrawColor( Color( 255, 255, 255, 255 ) )
+		surface.SetDrawColor( COLOR.white )
 		surface.SetMaterial( MATS.exit )
 		surface.DrawTexturedRect( pw * 0.5 - h * 0.008, ph * 0.5 - h * 0.007, h * 0.0175, h * 0.0175 )
 	end
@@ -467,7 +495,7 @@ local function openViewer()
 	classselect:DockMargin( 2, 14, 2, 2 )
 	classselect:SetWide( w * 0.35 )
 	classselect.Paint = function( self, pw, ph )
-		surface.SetDrawColor( Color( 150, 150, 150, 100 ) )
+		surface.SetDrawColor( COLOR.outline )
 		surface.DrawOutlinedRect( 0, 0, pw, ph )
 	end
 	classselect:GetVBar():SetWide( 0 )
@@ -493,14 +521,14 @@ local function openViewer()
 	mv.Paint = function( self, pw, ph )
 		paint( self, pw, ph )
 
-		surface.SetDrawColor( Color( 150, 150, 150, 100 ) )
+		surface.SetDrawColor( COLOR.outline )
 		surface.DrawOutlinedRect( 0, 0, pw, ph )
 
 		draw.Text{
 			text = LANG.preview,
 			pos = { 5, 0 },
 			font = "SCPHUDSmall",
-			color = Color( 255, 255, 255, 255 ),
+			color = COLOR.white,
 			xalign = TEXT_ALIGN_LEFT,
 			yalign = TEXT_ALIGN_TOP,
 		}
@@ -513,29 +541,32 @@ local function openViewer()
 
 	local buy = vgui.Create( "DButton", mv )
 	buy:Dock( BOTTOM )
-	buy:DockMargin( 4, 4, 4, 4 )
+	buy:DockMargin( 8, 8, 8, 8 )
 	buy:SetTall( h * 0.04 )
 	buy:SetText( "" )
+
 	buy.Paint = function( self, pw, ph )
-		surface.SetDrawColor( Color( 150, 150, 150, 100 ) )
+		surface.SetDrawColor( COLOR.outline )
 		surface.DrawOutlinedRect( 0, 0, pw, ph )
 
 		if self.cur then
 			draw.Text{
-				text = LANG.buy.." ("..showinfo.details.price..")",
+				text = LANG.buy,
 				pos = { pw * 0.5, ph * 0.5 },
 				font = "SCPHUDSmall",
-				color = ply:CanUnlockClass( self.cur ) and Color( 255, 255, 255, 255 ) or Color( 255, 120, 120, 255 ),
+				color = ply:CanUnlockClass( self.cur ) and COLOR.white or Color( 200, 50, 50, 225 ),
 				xalign = TEXT_ALIGN_CENTER,
 				yalign = TEXT_ALIGN_CENTER,
 			}
 		end
 	end
+
 	buy.DoClick = function( self )
 		if ply:UnlockClass( self.cur ) then
 			self:SetVisible( false )
 		end
 	end
+
 	buy:SetVisible( false )
 
 	mv.buy = buy
@@ -545,7 +576,7 @@ local function openViewer()
 	details:Dock( FILL )
 	details:DockMargin( 4, 0, 0, 0 )
 	details.Paint = function( self, pw, ph )
-		surface.SetDrawColor( Color( 150, 150, 150, 100 ) )
+		surface.SetDrawColor( COLOR.outline )
 		surface.DrawOutlinedRect( 0, 0, pw, ph )
 
 		local totalh = -self.scroll + 5
@@ -561,6 +592,8 @@ local function openViewer()
 					elseif v == "team" then
 						local t = SCPTeams.GetName( val )
 						val = LANG.TEAMS[t] or val
+					elseif v == "tier" then
+						val = val and val <= 0 and 0 or val <= 10 and roman_tab[val] or ( "T"..val )
 					elseif v == "chip" then
 						if !val or val == "" then
 							val = LANG.none
@@ -579,19 +612,19 @@ local function openViewer()
 							if istable( data ) then
 								txt = txt..LANG.random..":"
 								totalh = totalh + basicText( txt, 5, totalh ) - 3
-								for _, v in pairs( data ) do
+								for _, wep_class in pairs( data ) do
 									txt = "\t\t\t\t"
 
-									local wep = weapons.GetStored( v )
+									local wep = weapons.GetStored( wep_class )
 
 									if wep and wep.Language then
-										local name = LANG.WEAPONS[wep.Language] and ( LANG.WEAPONS[wep.Language].showname or LANG.WEAPONS[wep.Language].name ) or v
+										local name = LANG.WEAPONS[wep.Language] and ( LANG.WEAPONS[wep.Language].showname or LANG.WEAPONS[wep.Language].name ) or wep_class
 										txt = txt..name
 									elseif wep and wep.PrintName then
 										txt = txt..wep.PrintName
 									else
-										local lang_tab = LANG.WEAPONS[v]
-										txt = txt..( istable( lang_tab ) and ( lang_tab.showname or lang_tab.name ) or isstring( lang_tab ) and lang_tab or v )
+										local lang_tab = LANG.WEAPONS[wep_class]
+										txt = txt..( istable( lang_tab ) and ( lang_tab.showname or lang_tab.name ) or isstring( lang_tab ) and lang_tab or wep_class )
 									end
 
 									totalh = totalh + basicText( txt, 5, totalh ) - 3
@@ -653,14 +686,14 @@ local function openViewer()
 	info:Dock( FILL )
 	info:DockMargin( 2, 2, 2, 2 )
 	info.Paint = function( self, pw, ph )
-		surface.SetDrawColor( Color( 150, 150, 150, 100 ) )
+		surface.SetDrawColor( COLOR.outline )
 		surface.DrawOutlinedRect( 0, 0, pw, ph )
 
-		local tw, th = draw.Text{
+		local _, th = draw.Text{
 			text = LANG.info..":",
 			pos = { 5, 0 },
 			font = "SCPHUDSmall",
-			color = Color( 255, 255, 255, 255 ),
+			color = COLOR.white,
 			xalign = TEXT_ALIGN_LEFT,
 			yalign = TEXT_ALIGN_TOP,
 		}
@@ -673,7 +706,7 @@ local function openViewer()
 
 				render.SetScissorRect( px, py + sy + 10, px + pw, py + ph - 20, true )
 
-				local height = draw.MultilineText( sx, sy - self.scroll, desc, "SCPHUDSmall", Color( 255, 255, 255, 255 ), pw - 20, 10 )
+				local height = draw.MultilineText( sx, sy - self.scroll, desc, "SCPHUDSmall", COLOR.white, pw - 20, 10 )
 				self.maxScroll = math.max( height - ph + sy + 10, 0 )
 
 				render.SetScissorRect( 0, 0, 0, 0, false )

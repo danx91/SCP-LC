@@ -45,7 +45,6 @@ lang.NRegistry = {
 	winxp = "You received %i experience because your initial team won the game",
 	winalivexp = "You received %i experience because your team won the game",
 	upgradepoints = "You received new upgrade point(s)! Press '%s' to open SCP upgrade menu",
-	prestigeup = "Player %s earned higher prestige! Their current prestige level: %i",
 	omega_detonation = "OMEGA Warhead detonation in %i seconds. Get on the surface or proceed to the blast shelter immediately!",
 	alpha_detonation = "ALPHA Warhead detonation in %i seconds. Get in the facility or proceed to the evacuation immediately!",
 	alpha_card = "You've inserted ALPHA Warhead nuclear card",
@@ -55,6 +54,7 @@ lang.NRegistry = {
 	overload_cooldown = "Wait %i seconds to overload this door!",
 	advanced_overload = "This door seems to be stronger! Try again in %i seconds",
 	lockdown_once = "Facility lockdown can be activated only once per round!",
+	dailybonus = "Remaining daily bonus: %i XP\nNext reset in: %s"
 }
 
 lang.NFailed = "Failed to access NRegistry with key: %s"
@@ -103,6 +103,56 @@ lang.NCRegistry = {
 
 lang.NCFailed = "Failed to access NCRegistry with key: %s"
 
+
+--[[-------------------------------------------------------------------------
+Main menu
+---------------------------------------------------------------------------]]
+local main_menu = {}
+lang.MenuScreen = main_menu
+
+main_menu.start = "Start"
+main_menu.settings = "Settings"
+main_menu.precache = "Precache models"
+main_menu.credits = "Credits"
+main_menu.quit = "Quit"
+
+main_menu.quit_server = "Quit server?"
+main_menu.quit_server_confirmation = "Are you sure?"
+main_menu.model_precache = "Precache models"
+main_menu.model_precache_text = "Models are precached automatically when it's required, but it happens during gameplay so it may cause lag spikes. To avoid it, you can precache them now manually.\nYor game can freeze during this process!"
+main_menu.yes = "Yes"
+main_menu.no = "No"
+main_menu.all = "Precache models"
+main_menu.cancel = "Cancel"
+
+
+main_menu.credits_text = [[Gamemode created by ZGFueDkx (aka danx91)
+Gamemode is based on SCP and released under CC BY-SA 3.0 license
+
+Menu animations are created by Madow
+
+Models:
+	Alski - guards, omnitool, turret and more
+	
+Materials:
+	Foer - Workshop logo and few other graphics
+	SCP Containment Breach
+
+Sounds:
+	SCP Containment Breach
+
+Main translators:
+	Chinese - xiaobai
+	German - Justinnn
+	Korean - joon00
+	Polish - Slusher, Alski
+	Russian - Deiryn, berry
+	Turkish - Akane
+
+Special thanks:
+	1000 Shells for help with models
+	PolishLizard for hosting test server
+]]
 --[[-------------------------------------------------------------------------
 HUD
 ---------------------------------------------------------------------------]]
@@ -112,11 +162,13 @@ lang.HUD = hud
 hud.pickup = "Pick up"
 hud.class = "Class"
 hud.team = "Team"
-hud.prestige_points = "Prestige Points"
+hud.class_points = "Class Unlock Points"
 hud.hp = "HP"
 hud.stamina = "STAMINA"
 hud.sanity = "SANITY"
 hud.xp = "XP"
+
+hud.escaping = "Escaping..."
 
 --[[-------------------------------------------------------------------------
 EQ
@@ -138,6 +190,20 @@ lang.weight_unit = "kg"
 lang.eq_buttons = {
 	escort = "Escort",
 	gatea = "Destroy Gate A"
+}
+
+--[[-------------------------------------------------------------------------
+XP Bar
+---------------------------------------------------------------------------]]
+lang.XP_BAR = {
+	general = "General experience",
+	round = "Staying on this server",
+	escape = "Escape from the facility",
+	score = "Score earned during round",
+	win = "Winning the round",
+	vip = "VIP bonus",
+	daily = "Daily bonus",
+	cmd = "Divine power",
 }
 
 --[[-------------------------------------------------------------------------
@@ -163,17 +229,16 @@ Class viewer
 lang.classviewer = "Class Viewer"
 lang.preview = "Preview"
 lang.random = "Random"
-lang.price = "Price"
 lang.buy = "Buy"
 lang.refound = "Refund"
 lang.none = "None"
-lang.refounded = "All removed classes has been refunded. You've recived %d prestige points."
+lang.refounded = "All removed classes has been refunded. You've recived %d class points."
 
 lang.details = {
 	details = "Details",
 	name = "Name",
+	tier = "Tier",
 	team = "Team",
-	price = "Prestige Points price",
 	walk_speed = "Walk Speed",
 	run_speed = "Run Speed",
 	chip = "Access Chip",
@@ -195,7 +260,7 @@ lang.headers = {
 lang.view_cat = {
 	classd = "Class D",
 	sci = "Scientists",
-	mtf = "Security",
+	guard = "Security",
 	mtf_ntf = "MTF Epsilon-11",
 	mtf_alpha = "MTF Alpha-1",
 	ci = "Chaos Insurgency",
@@ -221,6 +286,8 @@ lang.settings = {
 
 	panels = {
 		binds = "Keybinds",
+		config = "Config",
+		skins = "GUI Skins",
 		reset = "Reset Gamemode",
 		cvars = "ConVars Editor",
 	},
@@ -231,7 +298,15 @@ lang.settings = {
 		ppshop_button = "Class Viewer",
 		settings_button = "Gamemode Settings",
 		scp_special = "SCP Special Ability"
-	}
+	},
+
+	config = {
+		search_indicator = "Search indicator",
+		scp_hud_skill_time = "Show SCP skill cooldown",
+		smooth_blink = "Smooth blink",
+		scp_hud_overload_cd = "Show overload cooldown",
+		any_button_close_search = "Press any button to close serach menu",
+	},
 }
 
 lang.gamemode_config = {
@@ -259,7 +334,6 @@ lang.scoreboard = {
 	name = "Scoreboard",
 	playername = "Name",
 	ping = "Ping",
-	prestige = "Prestige",
 	level = "Level",
 	score = "Score",
 	ranks = "Ranks",
@@ -289,11 +363,12 @@ lang.upgrades = {
 --[[-------------------------------------------------------------------------
 SCP HUD
 ---------------------------------------------------------------------------]]
-local scp_hud = {}
-lang.SCPHUD = scp_hud
-
-scp_hud.skill_not_ready = "Skill is not ready yet!"
-scp_hud.skill_cant_use = "Skill can't be used now!"
+lang.SCPHUD = {
+	skill_not_ready = "Skill is not ready yet!",
+	skill_cant_use = "Skill can't be used now!",
+	overload_cd = "Next overload: ",
+	overload_ready = "Overload ready!",
+}
 
 --[[-------------------------------------------------------------------------
 Info screen
@@ -387,7 +462,11 @@ misc.buttons = {
 
 misc.inventory = {
 	unsearched = "Unsearched",
+	search = "Press [%s] to search",
 }
+
+misc.placing_turret = "Placing turret"
+misc.scanning = "SCANNING"
 --[[-------------------------------------------------------------------------
 Vests
 ---------------------------------------------------------------------------]]
@@ -946,7 +1025,7 @@ Agility: High
 Damage: Instant Death
 
 Overview:
-You can walk through walls. If someone sees you, they will be put on your list. Once in a while you teleport to one player on list and burn them to death. You can place your clone.
+If someone sees you, they will be put on your list. Once in a while you teleport to one player on list and burn them to death. You can place your clone.
 ]],
 
 	SCP049 = [[Difficulty: Hard
@@ -1189,55 +1268,14 @@ wep.SCP0492 = {
 	too_far = "You are becoming weaker!"
 }
 
-wep.SCP066 = {
-	wait = "Next attack: %is",
-	ready = "Attack is ready!",
-	chargecd = "Dash cooldown: %is",
-	upgrades = {
-		range1 = {
-			name = "Resonance I",
-			info = "Damage radius is increased by 75",
-		},
-		range2 = {
-			name = "Resonance II",
-			info = "Damage radius is increased by 75\n\t• Total increase: 150",
-		},
-		range3 = {
-			name = "Resonance III",
-			info = "Damage radius is increased by 75\n\t• Total increase: 225",
-		},
-		damage1 = {
-			name = "Bass I",
-			info = "Damage is increased to 112.5%, but radius is reduced to 90%",
-		},
-		damage2 = {
-			name = "Bass II",
-			info = "Damage is increased to 135%, but radius is reduced to 75%",
-		},
-		damage3 = {
-			name = "Bass III",
-			info = "Damage is increased to 200%, but radius is reduced to 50%",
-		},
-		def1 = {
-			name = "Negation Wave I",
-			info = "While playing music, you negate 10% of incoming damage",
-		},
-		def2 = {
-			name = "Negation Wave II",
-			info = "While playing music, you negate 25% of incoming damage",
-		},
-		charge = {
-			name = "Dash",
-			info = "Unlocks ability to dash forward by pressing reload key\n\t• Ability cooldown: 20s",
-		},
-		sticky = {
-			name = "Sticky",
-			info = "After dashing into human, you stick to him for the next 10s",
-		}
-	}
-}
-
 wep.SCP058 = {
+	skills = {
+		primary_attack = {
+			name = "Primary attack",
+			dsc = "TODO",
+		},
+	},
+
 	upgrades = {
 		parse_description = true,
 
@@ -1289,6 +1327,54 @@ wep.SCP058 = {
 			name = "Toxic Blast",
 			info = "Buffs your ability to explode\n\t• Applies 2 stacks of poison\n\t• Radius multiplier: [explosion_radius]"
 		},
+	}
+}
+
+wep.SCP066 = {
+	wait = "Next attack: %is",
+	ready = "Attack is ready!",
+	chargecd = "Dash cooldown: %is",
+	upgrades = {
+		range1 = {
+			name = "Resonance I",
+			info = "Damage radius is increased by 75",
+		},
+		range2 = {
+			name = "Resonance II",
+			info = "Damage radius is increased by 75\n\t• Total increase: 150",
+		},
+		range3 = {
+			name = "Resonance III",
+			info = "Damage radius is increased by 75\n\t• Total increase: 225",
+		},
+		damage1 = {
+			name = "Bass I",
+			info = "Damage is increased to 112.5%, but radius is reduced to 90%",
+		},
+		damage2 = {
+			name = "Bass II",
+			info = "Damage is increased to 135%, but radius is reduced to 75%",
+		},
+		damage3 = {
+			name = "Bass III",
+			info = "Damage is increased to 200%, but radius is reduced to 50%",
+		},
+		def1 = {
+			name = "Negation Wave I",
+			info = "While playing music, you negate 10% of incoming damage",
+		},
+		def2 = {
+			name = "Negation Wave II",
+			info = "While playing music, you negate 25% of incoming damage",
+		},
+		charge = {
+			name = "Dash",
+			info = "Unlocks ability to dash forward by pressing reload key\n\t• Ability cooldown: 20s",
+		},
+		sticky = {
+			name = "Sticky",
+			info = "After dashing into human, you stick to him for the next 10s",
+		}
 	}
 }
 
@@ -1816,8 +1902,8 @@ wep.ACCESS_CHIP = {
 wep.OMNITOOL = {
 	name = "Omnitool",
 	cname = "Omnitool - %s",
-	showname = "OMNITOOL",
-	pickupname = "OMNITOOL",
+	showname = "Omnitool",
+	pickupname = "Omnitool",
 	none = "NONE",
 	chip = "Installed Chip: %s",
 	clearance = "Clearance level: %i",

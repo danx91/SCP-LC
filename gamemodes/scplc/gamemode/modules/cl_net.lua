@@ -6,6 +6,10 @@ net.ReceiveTable( "SLCPlayerMeta", function( data )
 end )
 
 net.ReceiveTable( "SLCInfoScreen", function( data )
+	if data.type == "spawn" and !system.HasFocus() then
+		system.FlashWindow()
+	end
+
 	InfoScreen( { team = data.team, class = data.class }, data.type, data.time, data.data )
 end )
 
@@ -59,19 +63,19 @@ net.Receive( "SLCProgressBar", function( len )
 		local start_time = net.ReadFloat()
 		local end_time = net.ReadFloat()
 		local text = net.ReadString()
+		local col1 = net.ReadColor()
+		local col2 = net.ReadColor()
 
 		if text == "" then
 			text = nil
 		end
 
-		SetProgressBarColor( Color( 225, 225, 225, 255 ), Color( 75, 75, 90, 255 ) )
+		SetProgressBarColor( col1, col2 )
 		TimeBasedProgressBar( start_time, end_time, text )
 	else
 		ProgressBar( false )
 	end
 end )
-
-
 
 net.Receive( "CameraDetect", function( len )
 	local tab = net.ReadTable()
@@ -140,6 +144,53 @@ net.Receive( "RoundInfo", function( len )
 		ROUND.infoscreen = false
 		ROUND.post = true
 	end
+end )
+
+net.Receive( "SLCHooks", function( len )
+	local mode = net.ReadBool()
+
+	if mode then
+		local tab = net.ReadTable()
+
+		ClearSCPHooks()
+
+		for k, v in pairs( tab ) do
+			EnableSCPHook( k )
+		end
+	else
+		local scp = net.ReadString()
+		EnableSCPHook( scp )
+	end
+end )
+
+net.Receive( "SLCXPSummary", function( len )
+	local data = net.ReadTable()
+
+	HUDXPSummaryData = nil
+
+	local tab = {}
+	local general_index
+
+	for i, v in ipairs( XPSUMMARY_ORDER ) do
+		if data[v] then
+			local index = table.insert( tab, { data[v], v } )
+			data[v] = nil
+
+			if v == "general" then
+				general_index = index
+			end
+		end
+	end
+
+	for k, v in pairs( data ) do
+		if !general_index then
+			general_index = table.insert( tab, { 0, "general" } )
+		end
+		
+		tab[general_index][1] = tab[general_index][1] + v
+	end
+
+	HUDXPSummary = tab
 end )
 
 --[[-------------------------------------------------------------

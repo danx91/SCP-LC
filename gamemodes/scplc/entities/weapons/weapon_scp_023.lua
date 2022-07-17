@@ -492,7 +492,17 @@ if CLIENT then
 	end
 end
 
-hook.Add( "CanPlayerSeePlayer", "SCP023Visibility", function( p1, p2 )
+if SERVER then --Let's just copy 106 door behaviour
+	SCPHook( "SCP023", "ShouldCollide", function ( ent1, ent2 )
+		if ent1:IsPlayer() and ent1:SCPClass() == CLASSES.SCP023 or ent2:IsPlayer() and ent2:SCPClass() == CLASSES.SCP023 then
+			if ent1.ignorecollide106 or ent2.ignorecollide106 then
+				return false
+			end
+		end
+	end )
+end
+
+SCPHook( "SCP023", "CanPlayerSeePlayer", function( p1, p2 )
 	if p2:SCPClass() == CLASSES.SCP023 then
 		local dist = p1:GetPos():Distance( p2:GetPos() )
 		if dist > 700 then
@@ -506,17 +516,7 @@ hook.Add( "CanPlayerSeePlayer", "SCP023Visibility", function( p1, p2 )
 	end
 end )
 
-if SERVER then --Let's just copy 106 door behaviour
-	hook.Add( "ShouldCollide", "SCP023Collision", function ( ent1, ent2 )
-		if ent1:IsPlayer() and ent1:SCPClass() == CLASSES.SCP023 or ent2:IsPlayer() and ent2:SCPClass() == CLASSES.SCP023 then
-			if ent1.ignorecollide106 or ent2.ignorecollide106 then
-				return false
-			end
-		end
-	end )
-end
-
-hook.Add( "EntityTakeDamage", "SCP106DMGMod", function( ent, dmg )
+SCPHook( "SCP023", "EntityTakeDamage", function( ent, dmg )
 	if IsValid( ent ) and ent:IsPlayer() and ent:SCPClass() == CLASSES.SCP023 then
 		local wep = ent:GetActiveWeapon()
 		if IsValid( wep ) and wep.UpgradeSystemMounted then

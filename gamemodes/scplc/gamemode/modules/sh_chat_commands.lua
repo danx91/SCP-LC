@@ -32,6 +32,7 @@ else
 			local cb = commands_registry[cmd]
 			if cb then
 				cb( ply, string.Explode( " ", sargs ), sargs )
+				return true
 			end
 		end
 	end )
@@ -39,15 +40,25 @@ end
 
 if SERVER then
 	AddChatCommand( "scp", function( ply )
-		if !ply.nscpcmdcheck or ply.nscpcmdcheck < CurTime() then
-			ply.nscpcmdcheck = CurTime() + 10
+		if ply.ncmdcheck and ply.ncmdcheck > CurTime() then return end
+		ply.ncmdcheck = CurTime() + 5
 
-			PrintSCPNotice( ply )
-		end
+		PrintSCPNotice( ply )
 	end )
 
 	AddChatCommand( "afk", function( ply )
+		if ply.ncmdcheck and ply.ncmdcheck > CurTime() then return end
+		ply.ncmdcheck = CurTime() + 5
+
 		ply:MakeAFK()
+	end )
+
+	AddChatCommand( "bonus", function( ply )
+		if ply.ncmdcheck and ply.ncmdcheck > CurTime() then return end
+		ply.ncmdcheck = CurTime() + 5
+
+		local next_reset = ( SLC_UNIX_DAY + 1 ) * 86400 + CVAR.slc_dailyxp_time:GetInt() - os.time()
+		PlayerMessage( string.format( "dailybonus$%i,%02ih %02im", ply:DailyBonus(), math.floor( next_reset / 3600 ), math.floor( next_reset % 3600 / 60 ) ), ply )
 	end )
 else
 	AddChatCommand( "muteall", function( ply )

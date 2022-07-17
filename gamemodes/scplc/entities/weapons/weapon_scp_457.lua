@@ -131,7 +131,7 @@ function SWEP:DrawSCPHUD()
 	}
 end
 
-hook.Add( "EntityTakeDamage", "SCP457Damage", function( ply, dmg )
+SCPHook( "SCP457", "EntityTakeDamage", function( ply, dmg )
 	if !ply:IsPlayer() then return end
 	if ply:SCPClass() == CLASSES.SCP457 then
 		if dmg:IsDamageType( DMG_BURN ) then
@@ -140,7 +140,7 @@ hook.Add( "EntityTakeDamage", "SCP457Damage", function( ply, dmg )
 	end
 end )
 
-hook.Add( "SLCFireOnBurnPlayer", "SCP457BurnDamage", function( fire, target, dmg )
+SCPHook( "SCP457", "SLCFireOnBurnPlayer", function( fire, target, dmg )
 	local owner = fire:GetOwner()
 
 	if owner:IsPlayer() and owner:SCPClass() == CLASSES.SCP457 then
@@ -163,13 +163,13 @@ hook.Add( "SLCFireOnBurnPlayer", "SCP457BurnDamage", function( fire, target, dmg
 	end
 end )
 
-hook.Add( "DoPlayerDeath", "SCP457Damage", function( ply, attacker, info )
+SCPHook( "SCP457", "DoPlayerDeath", function( ply, attacker, info )
 	if attacker:IsPlayer() and attacker:SCPClass() == CLASSES.SCP457 then
 	 	AddRoundStat( "457" )
 	end
 end )
 
-hook.Add( "SLCOnEntityIgnited", "SCP457Fire", function( ent, fire )
+SCPHook( "SCP457", "SLCOnEntityIgnited", function( ent, fire )
 	if CLIENT and ent == LocalPlayer() then
 		if ent:SCPClass() == CLASSES.SCP457 then
 			fire:SetShouldCreateParticles( false )
@@ -177,11 +177,11 @@ hook.Add( "SLCOnEntityIgnited", "SCP457Fire", function( ent, fire )
 	end
 end )
 
-hook.Add( "CanPlayerSeePlayer", "SCP457Visibility", function( ply, target )
+/*SCPHook( "SCP457", "CanPlayerSeePlayer", function( ply, target )
 	if target:SCPClass() == CLASSES.SCP457 then
 		return false
 	end
-end )
+end )*/
 
 DefineUpgradeSystem( "scp457", {
 	grid_x = 4,

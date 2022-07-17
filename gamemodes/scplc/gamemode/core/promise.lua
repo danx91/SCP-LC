@@ -124,3 +124,10 @@ function SLCPromise:GetStatus()
 end
 
 setmetatable( SLCPromise, { __call = SLCPromise.New } )
+
+--[[-------------------------------------------------------------------------
+ispromise
+---------------------------------------------------------------------------]]
+function ispromise( arg )
+    return istable( arg ) and arg._ISPROMISE == true
+end

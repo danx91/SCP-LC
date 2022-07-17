@@ -31,8 +31,8 @@ lang.NRegistry = {
 	explodeterminated = "Wybuch Gate A zakończony",
 	r106used = "Procedura zabezpieczenia SCP 106 może zostać uruchomiona tylko raz na rundę",
 	r106eloiid = "Wyłącz elektromagnes ELO-IID, aby rozpocząć procedurę zabezpieczania SCP 106",
-	r106sound = "Uruchom transmisję dźwięku, aby rozpocząć procedurę zatrzymania SCP 106",
-	r106human = "W klatce musi znajdować się żywy człowiek, aby rozpocząć procedurę zabezpieczenia SCP 106",
+	r106sound = "Uruchom transmisję dźwięku, aby rozpocząć procedurę zabezpieczania SCP 106",
+	r106human = "W klatce musi znajdować się żywy człowiek, aby rozpocząć procedurę zabezpieczania SCP 106",
 	r106already = "SCP 106 jest już zabezpieczony",
 	r106success = "Otrzymujesz %i punktów za zabezpieczenie SCP 106!",
 	vestpickup = "Podniosłeś pancerz",
@@ -46,7 +46,6 @@ lang.NRegistry = {
 	winxp = "Otrzymujesz %i doświadczenia ponieważ twoja początkowa drużyna wygrała rundę",
 	winalivexp = "Otrzymujesz %i doświadczenia ponieważ twoja drużyna wygrała rundę",
 	upgradepoints = "Otrzymałeś punkt ulepszeń! Naciśnij '%s' aby otworzyć menu ulepszeń SCP",
-	prestigeup = "Gracz %s zdobył wyższy poziom prestiżu! Obecny poziom prestiżu: %i",
 	omega_detonation = "Detonacja głowicy OMEGA za %i sekund. Wyjdź na powierzchnię lub natychmiastowo udaj się do schronu!",
 	alpha_detonation = "Detonacja głowicy ALPHA za %i sekund. Wejdź do placówki lub natychmiastowo udaj się do ewakuacji!",
 	alpha_card = "Włożyłeś kartę nuklearną głowicy ALPHA",
@@ -56,6 +55,7 @@ lang.NRegistry = {
 	overload_cooldown = "Poczekaj %i sekund aby przeciążyć te drzwi!",
 	advanced_overload = "Te drzwi wydają się być za mocne! Spróbuj ponownie za %i sekund",
 	lockdown_once = "Blokada placówki może być aktywowana tylko raz na runde",
+	dailybonus = "Pozostały dzienny bonus: %i XP\nNastępny reset za: %s"
 }
 
 lang.NFailed = "Nie udało się uzyskać dostępu do NRegistry z kluczem: %s"
@@ -105,6 +105,54 @@ lang.NCRegistry = {
 lang.NCFailed = "Nie udało się uzyskać dostępu do NCRegistry z kluczem: %s"
 
 --[[-------------------------------------------------------------------------
+Main menu
+---------------------------------------------------------------------------]]
+local main_menu = {}
+lang.MenuScreen = main_menu
+
+main_menu.start = "Rozpocznij"
+main_menu.settings = "Ustawienia"
+main_menu.precache = "Załaduj modele"
+main_menu.credits = "Autorzy"
+main_menu.quit = "Wyjdź"
+
+main_menu.quit_server = "Wyjść z serwera?"
+main_menu.quit_server_confirmation = "Jesteś pewien?"
+main_menu.model_precache = "Załaduj modele"
+main_menu.model_precache_text = "Modele są wstępnie buforowane automatycznie, gdy jest to wymagane, ale dzieje się to podczas rozgrywki, więc może powodować lekkie ścinki. Aby tego uniknąć, możesz je teraz wstępnie buforować ręcznie.\nTwoja gra może się chwilowo zawiesić podczas tego procesu!"
+main_menu.yes = "Tak"
+main_menu.no = "Nie"
+main_menu.all = "Załaduj modele"
+main_menu.cancel = "Anuluj"
+
+main_menu.credits_text = [[Tryb stworzony przez ZGFueDkx (aka danx91)
+Tryb jest oparty na SCP i wydany na licencji CC BY-SA 3.0
+
+Animacje menu są stworzone przez Madow
+
+Modele:
+	Alski - strażnicy, omnitool, wieżyczka i nie tylko
+	
+Materiały:
+	Foer - Logo trybu i kilka innych grafik
+	SCP Containment Breach
+
+Dźwięki:
+	SCP Containment Breach
+
+Główni tłumacze:
+	Chinese - xiaobai
+	German - Justinnn
+	Korean - joon00
+	Polish - Slusher, Alski
+	Russian - Deiryn, berry
+	Turkish - Akane
+
+Specjalne podziękowania:
+	1000 Shells za pomoc z modelami
+	PolishLizard za hosting serwera testowego
+]]
+--[[-------------------------------------------------------------------------
 HUD
 ---------------------------------------------------------------------------]]
 local hud = {}
@@ -113,11 +161,13 @@ lang.HUD = hud
 hud.pickup = "Podnieś"
 hud.class = "Klasa"
 hud.team = "Drużyna"
-hud.prestige_points = "Punkty prestiżu"
+hud.class_points = "Punkty Klas"
 hud.hp = "HP"
 hud.stamina = "ENERGIA"
 hud.sanity = "PSYCHIKA"
 hud.xp = "PD"
+
+hud.escaping = "Uciekanie..."
 
 --[[-------------------------------------------------------------------------
 EQ
@@ -127,6 +177,7 @@ lang.eq_rmb = "PPM - Upuść"
 lang.eq_hold = "Przytrzymaj LPM - Przenieś"
 lang.eq_vest = "Pancerz"
 lang.eq_key = "Naciśnij '%s' aby otworzyć EQ"
+lang.eq_unknown = "Nieznany przedmiot"
 
 lang.info = "Informacje"
 lang.author = "Autor"
@@ -138,6 +189,20 @@ lang.weight_unit = "kg"
 lang.eq_buttons = {
 	escort = "Eskortuj",
 	gatea = "Detonuj Gate A"
+}
+
+--[[-------------------------------------------------------------------------
+XP Bar
+---------------------------------------------------------------------------]]
+lang.XP_BAR = {
+	general = "Ogólne doświadczenie",
+	round = "Granie na serwerze",
+	escape = "Ucieczka z placówki",
+	score = "Punktacja zdobyta podczas rundy",
+	win = "Wygranie rundy",
+	vip = "Bonus VIP",
+	daily = "Bonus dzienny",
+	cmd = "Boska moc",
 }
 
 --[[-------------------------------------------------------------------------
@@ -163,7 +228,6 @@ Class viewer
 lang.classviewer = "Katalog klas"
 lang.preview = "Podgląd"
 lang.random = "Losowo"
-lang.price = "Cena"
 lang.buy = "Kup"
 lang.refound = "Zwróć"
 lang.none = "Brak"
@@ -172,8 +236,8 @@ lang.refounded = "Wszystkie usunięte klasy zostały zwrócone. Otrzymałeś %d 
 lang.details = {
 	details = "Szczegóły",
 	name = "Nazwa",
+	tier = "Tier",
 	team = "Drużyna",
-	price = "Ilość punktów prestiżu",
 	walk_speed = "Szybkość chodzenia",
 	run_speed = "Szybkość biegania",
 	chip = "Chip dostępu",
@@ -195,7 +259,7 @@ lang.headers = {
 lang.view_cat = {
 	classd = "Klasa D",
 	sci = "Naukowcy",
-	mtf = "Ochrona",
+	guard = "Ochrona",
 	mtf_ntf = "MTF Epsilon-11",
 	mtf_alpha = "MTF Alfa-1",
 	ci = "Chaos Insurgency",
@@ -207,7 +271,7 @@ Settings
 lang.settings = {
 	settings = "Ustawienia trybu gry",
 
-	none = "NONE",
+	none = "BRAK",
 	press_key = "> Wciśnij przycisk <",
 	client_reset = "Przywróć ustawienia domyślne klienta",
 	server_reset = "Przywróć ustawienia domyślne serwera",
@@ -220,9 +284,11 @@ lang.settings = {
 	popup_continue = "KONTYNUUJ",
 
 	panels = {
-		binds = "Klawiszologia",
+		binds = "Klawiatura",
+		config = "Konfiguracja",
+		skins = "Skórki GUI",
 		reset = "Reset trybu gry",
-		cvars = "ConVars Editor",
+		cvars = "Edytor ConVarów",
 	},
 
 	binds = {
@@ -231,7 +297,15 @@ lang.settings = {
 		ppshop_button = "Przeglądaj klasy",
 		settings_button = "Ustawienia trybu gry",
 		scp_special = "Specjalne umiejętności SCP"
-	}
+	},
+	
+	config = {
+		search_indicator = "Wskaźnik przeszukiwania",
+		scp_hud_skill_time = "Pokaż czas odnowienia umiejętności SCP",
+		smooth_blink = "Płynne mruganie",
+		scp_hud_overload_cd = "Pokaż czas odnowienia przeciążenia",
+		any_button_close_search = "Zamknij menu przeszukania dowolnym klawiszem",
+	},
 }
 
 lang.gamemode_config = {
@@ -241,8 +315,8 @@ lang.gamemode_config = {
 		general = "Ogólne",
 		round = "Runda",
 		xp = "XP",
-		support = "Support",
-		warheads = "Warheads",
+		support = "Wsparcie",
+		warheads = "Głowice",
 		afk = "AFK",
 		time = "Czas",
 		premium = "Premium",
@@ -253,13 +327,12 @@ lang.gamemode_config = {
 --[[-------------------------------------------------------------------------
 Scoreboard
 ---------------------------------------------------------------------------]]
-lang.unconnected = "Unconnected"
+lang.unconnected = "Niepodłączony"
 
 lang.scoreboard = {
 	name = "Tablica wyników",
 	playername = "Nazwa",
 	ping = "Ping",
-	prestige = "Prestiż",
 	level = "Poziom",
 	score = "Wynik",
 	ranks = "Rangi",
@@ -289,11 +362,12 @@ lang.upgrades = {
 --[[-------------------------------------------------------------------------
 SCP HUD
 ---------------------------------------------------------------------------]]
-local scp_hud = {}
-lang.SCPHUD = scp_hud
-
-scp_hud.skill_not_ready = "Umiejętność nie jest jeszcze gotowa!"
-scp_hud.skill_cant_use = "Umiejętność nie może być teraz użyta!"
+lang.SCPHUD = {
+	skill_not_ready = "Umiejętność nie jest jeszcze gotowa!",
+	skill_cant_use = "Umiejętność nie może być teraz użyta!",
+	overload_cd = "Następne przeciążenie: ",
+	overload_ready = "Przeciążenie gotowe!",
+}
 
 --[[-------------------------------------------------------------------------
 Info screen
@@ -341,7 +415,7 @@ lang.info_screen_macro = {
 --[[-------------------------------------------------------------------------
 Generic
 ---------------------------------------------------------------------------]]
-lang.nothing = "Nothing"
+lang.nothing = "Nic"
 lang.exit = "Wyjdź"
 
 --[[-------------------------------------------------------------------------
@@ -385,6 +459,13 @@ misc.buttons = {
 	MOUSE3 = "ŚPM",
 }
 
+misc.inventory = {
+	unsearched = "Nieprzeszukane",
+	search = "Naciśnij [%s] aby przeszukać",
+}
+
+misc.placing_turret = "Stawianie wieżyczki"
+misc.scanning = "SKANOWANIE"
 --[[-------------------------------------------------------------------------
 Vests
 ---------------------------------------------------------------------------]]
@@ -435,6 +516,7 @@ classes.unknown = "Nieznana"
 classes.SCP023 = "SCP 023"
 classes.SCP049 = "SCP 049"
 classes.SCP0492 = "SCP 049-2"
+classes.SCP058 = "SCP 058"
 classes.SCP066 = "SCP 066"
 classes.SCP096 = "SCP 096"
 classes.SCP106 = "SCP 106"
@@ -476,6 +558,13 @@ classes.alpha1 = "MTF Alfa-1"
 classes.alpha1sniper = "Strzelec Wyborowy MTF Alfa-1"
 classes.ci = "Chaos Insurgency"
 classes.cicom = "Dowódca Chaos Insurgency"
+
+local classes_id = {}
+lang.CLASSES_ID = classes_id
+
+classes_id.ntf_1 = "MTF NTF"
+classes_id.ntf_2 = "MTF NTF"
+classes_id.ntf_3 = "MTF NTF"
 
 --[[-------------------------------------------------------------------------
 Class Info - NOTE: Each line is limited to 48 characters!
@@ -557,7 +646,7 @@ lang.CLASS_OBJECTIVES = {
 
 	ntfmedic = [[- Pomóż personelowi wewnątrz placówki
 - Nie pozwól uciec obiektom Klasy D i SCP
-- Wspieraj innych ochroniarzy swoją apteczką]],
+- Wspieraj innych MTFów swoją apteczką]],
 
 	ntfcom = [[- Pomóż personelowi wewnątrz placówki
 - Nie pozwól uciec obiektom Klasy D i SCP
@@ -568,7 +657,7 @@ lang.CLASS_OBJECTIVES = {
 - Wspieraj swoją drużynę zza pleców]],
 
 	alpha1 = [[- Chroń placówkę za wszelką cenę
-- Zatrzymaj obiekty Klasy D i SC
+- Zatrzymaj obiekty Klasy D i SCP
 - Jesteś upoważniony do ]].."[ZMIENIONO]",
 
 	alpha1sniper = [[- Chroń placówkę za wszelką cenę
@@ -796,7 +885,7 @@ Przegląd:
 Jeden ze strażników. Ma możliwą do postawienia wieżyczkę z 3 trybami ognia (przytrzymaj E na wieżczce, aby zobaczyć jej menu). Wykorzystaj swoją broń i narzędzia, aby pomóc innym członkom personelu oraz zneutralizować obiekty SCP i klasy D. Możesz eskortować naukowców.
 ]],
 
-	cispy = [[Poziom trudności: Bardzo Trundy
+	cispy = [[Poziom trudności: Bardzo Trudny
 Wytrzymałość: Zwykła
 Zwinność: Wysoka
 Potencjał bojowy: Średni
@@ -934,7 +1023,7 @@ Zwinność: Wysoka
 Obrażenia: Natychmiast zabija
 
 Przegląd:
-Możesz przechodzić przez ściany. Jeśli ktoś cię zobaczy, zostanie umieszczony na Twojej liście. Raz na jakiś czas teleportujesz się do jednego gracza z listy i spalasz go na śmierć. Możesz stawiać swojego klona.
+Jeśli ktoś cię zobaczy, zostanie umieszczony na Twojej liście. Raz na jakiś czas teleportujesz się do jednego gracza z listy i spalasz go na śmierć. Możesz stawiać swojego klona.
 ]],
 
 	SCP049 = [[Poziom trudności: Trudny
@@ -1046,7 +1135,7 @@ Przegląd:
 Możesz doskoczyć do przodu, aby zadać obrażenia pierwszemu trafionemu graczowi. Specjalna zdolność pozwala przez krótki czas sterować innym graczem. Sprowadzenie do ciebie kontrolowanego gracza pozwoli ci natychmiast go zabić. Popełnienie samobójstwa podczas kontrolowania gracza spowoduje utratę zdrowia.
 ]],
 
-	SCP3199 = [[Poziom trudności: Bardzo Trundy
+	SCP3199 = [[Poziom trudności: Bardzo Trudny
 Wytrzymałość: Niska
 Zwinność: Bardzo Wysoka
 Obrażenia: niskie / średnie
@@ -1225,6 +1314,13 @@ wep.SCP066 = {
 }
 
 wep.SCP058 = {
+	skills = {
+		primary_attack = {
+			name = "Atak podstawowy",
+			dsc = "TODO",
+		},
+	},
+
 	upgrades = {
 		parse_description = true,
 
@@ -1721,13 +1817,13 @@ wep.SCP1025 = {
 }
 
 wep.HOLSTER = {
-	name = "Holster",
+	name = "Dłonie",
 }
 
 wep.ID = {
 	name = "ID",
-	pname = "Name:",
-	server = "Server:",
+	pname = "Nazwa:",
+	server = "Serwer:",
 }
 
 wep.CAMERA = {
@@ -1752,10 +1848,10 @@ wep.NVGPLUS = {
 }
 
 wep.ACCESS_CHIP = {
-	name = "Chip dostępu",
-	cname = "Chip dostępu - %s",
-	showname = "CHIP",
-	pickupname = "CHIP",
+	name = "Czip dostępu",
+	cname = "Czip dostępu - %s",
+	showname = "CZIP",
+	pickupname = "CZIP",
 	clearance = "Poziom dostępu: %i",
 	hasaccess = "Zapewnia dostęp do:",
 	NAMES = {
@@ -1791,8 +1887,8 @@ wep.ACCESS_CHIP = {
 		WARHEAD_ELEVATOR = "Winda do głowicy",
 		EC = "Centrum elektryczne",
 		ARMORY = "Zbrojownia",
-		GATE_A = "Gate A",
-		GATE_B = "Gate B",
+		GATE_A = "Brama A",
+		GATE_B = "Brama B",
 		FEMUR = "Femur Breaker",
 		ALPHA = "Głowica Alfa",
 		OMEGA = "Głowica Omega",
@@ -1803,9 +1899,9 @@ wep.ACCESS_CHIP = {
 wep.OMNITOOL = {
 	name = "Omnitool",
 	cname = "Omnitool - %s",
-	showname = "OMNITOOL",
-	pickupname = "OMNITOOL",
-	none = "NONE",
+	showname = "Omnitool",
+	pickupname = "Omnitool",
+	none = "BRAK",
 	chip = "Włożony chip: %s",
 	clearance = "Poziom dostępu: %i",
 	SCREEN = {
@@ -1844,8 +1940,7 @@ wep.BATTERY = {
 }
 
 wep.GASMASK = {
-	name = "Maska gazowa",
-	showname = "Maska gazowa"
+	name = "Maska gazowa"
 }
 
 wep.TURRET = {
@@ -1868,5 +1963,6 @@ wep.ALPHA_CARD2 = {
 }
 
 wep.weapon_stunstick = "Pałka"
+wep.weapon_crowbar = "Łom"
 
 registerLanguage( lang, "polish", "polski", "pl" )

@@ -117,7 +117,6 @@ net.Receive( "SLCLooting", function( len, ply )
 	local ent = ply.ActiveLootable
 	if IsValid( ent ) and ent.Listeners[ply] then
 		local status = net.ReadBool()
-
 		if status then
 		 	if ent:CanLoot( ply ) then
 				local item = net.ReadUInt( 8 )
@@ -132,12 +131,14 @@ net.Receive( "SLCLooting", function( len, ply )
 				if obj and cache[item] then
 					local result = false
 					local upd = false
-					if obj.func then
-						result, upd = obj.func( ply, obj.info.class, obj.info.data, obj.ntd )
-					else
-						local wep
+					local wep
 
-						if table.Count( ply:GetWeapons() ) < 8 then
+					if obj.func then
+						result, upd, wep = obj.func( ply, obj.info.class, obj.info.data, obj.ntd )
+					end
+						
+					if !result and !upd then
+						if !IsValid( wep ) and table.Count( ply:GetWeapons() ) < 8 and hook.Run( "SLCCanPickupWeaponClass", ply, obj.info.class ) != false then
 							wep = ply:Give( obj.info.class )
 						end
 
@@ -218,6 +219,7 @@ net.Receive( "SLCLooting", function( len, ply )
 					ply.SearchingLoot = CurTime() + dur
 					AddTimer( ply:SteamID().."Examine", dur, 1, function()
 						if IsValid( ply ) and IsValid( ent ) and ent.LootItems[item] and ply:CheckSignature( sig ) and ent.Listeners[ply] and ent:CanLoot( ply ) then
+							ply.SearchingLoot = 0
 							cache[item] = true
 
 							net.Start( "SLCLooting" )
@@ -325,10 +327,11 @@ AddLootPool( "lcz_rare_loot", {
 	items = {
 		{ class = "item_slc_battery", weight = 5, data = { amount = 3 } },
 		{ class = "item_slc_nvg", weight = 5 },
+		{ class = "item_slc_nvgplus", weight = 2 },
 		{ class = "item_slc_medkit", weight = 5 },
 		{ class = "item_slc_omnitool", weight = 5, ntd = { chip_chance = 1, chip_max = 2 }, post = omnitool_post },
 		{ class = "item_slc_access_chip", weight = 5, ntd = { chip_max = 2 }, post = chip_post, roll = chip_roll },
-		{ class = "cw_mr96", weight = 5 },
+		{ class = "cw_mr96", weight = 3 },
 	}
 } )
 
@@ -336,11 +339,13 @@ AddLootPool( "lcz_valuable_loot", {
 	value_limit = 200,
 	chance = 0.333,
 	items = {
+		{ class = "item_slc_nvg", weight = 5, value = 25 },
+		{ class = "item_slc_nvgplus", weight = 3, value = 125 },
 		{ class = "item_slc_medkit", weight = 5, value = 50 },
-		{ class = "item_slc_medkitplus", weight = 2, value = 100 },
+		{ class = "item_slc_medkitplus", weight = 1, value = 150 },
 		{ class = "item_slc_omnitool", weight = 5, value = 150, ntd = { chip_chance = 1, chip_max = 2 }, post = omnitool_post },
 		{ class = "item_slc_access_chip", weight = 5, value = 100, ntd = { chip_max = 2 }, post = chip_post, roll = chip_roll },
-		{ class = "weapon_taser", weight = 5, value = 150 },
+		{ class = "weapon_taser", weight = 3, value = 160 },
 		{ class = "item_scp_500", weight = 1, value = 999 },
 	}
 } )
@@ -352,7 +357,7 @@ AddLootPool( "lcz_military_crate", {
 		{ class = "cw_deagle", weight = 5 },
 		{ class = "cw_makarov", weight = 5 },
 		{ class = "cw_mr96", weight = 5 },
-		{ class = "weapon_taser", weight = 5, max = 1 },
+		{ class = "weapon_taser", weight = 3, max = 1 },
 	}
 } )
 
@@ -385,6 +390,7 @@ AddLootPool( "hcz_035", {
 		{ class = "item_slc_battery", weight = 7, value = 75, data = { amount = 2 } },
 		{ class = "item_slc_radio", weight = 9, value = 50 },
 		{ class = "item_slc_nvg", weight = 9, value = 50 },
+		{ class = "item_slc_nvgplus", weight = 3, value = 200 },
 		{ class = "item_slc_camera", weight = 7, value = 100 },
 		{ class = "item_slc_flashlight", weight = 9, value = 50 },
 		{ class = "item_slc_gasmask", weight = 9, value = 50 },
@@ -400,9 +406,11 @@ AddLootPool( "ez_loose_loot", {
 	max = 3,
 	chance = 0.333,
 	items = {
-		{ class = "item_slc_battery", weight = 8, value = 25, },
-		{ class = "item_slc_flashlight", weight = 8, value = 30 },
-		{ class = "item_slc_radio", weight = 8, value = 75, max = 1 },
+		{ class = "item_slc_battery", weight = 8 },
+		{ class = "item_slc_flashlight", weight = 8 },
+		{ class = "item_slc_radio", weight = 8, max = 1 },
+		{ class = "item_slc_nvg", weight = 5, max = 1 },
+		{ class = "item_slc_nvgplus", weight = 1, max = 1 },
 		{ class = "item_slc_access_chip", weight = 5, ntd = { chip_min = 2, chip_max = 3 }, post = chip_post, roll = chip_roll },
 		{ class = "item_slc_camera", weight = 5, max = 1 },
 	}
@@ -412,6 +420,8 @@ AddLootPool( "ez_valuable_loot", {
 	value_limit = 200,
 	chance = 0.333,
 	items = {
+		{ class = "item_slc_nvg", weight = 5, value = 30 },
+		{ class = "item_slc_nvgplus", weight = 2, value = 175 },
 		{ class = "item_slc_medkit", weight = 5, value = 50 },
 		{ class = "item_slc_medkitplus", weight = 2, value = 100 },
 		{ class = "item_slc_omnitool", weight = 5, value = 150, ntd = { chip_chance = 1, chip_min = 2, chip_max = 3 }, post = omnitool_post },
@@ -435,7 +445,7 @@ AddLootPool( "guard_desk", {
 } )
 
 AddLootPool( "toilet", {
-	chance = 0.25,
+	chance = 0.66,
 	items = {
 		{ class = "item_slc_alpha_card1", weight = 1 },
 		{ class = "item_slc_alpha_card2", weight = 1 },

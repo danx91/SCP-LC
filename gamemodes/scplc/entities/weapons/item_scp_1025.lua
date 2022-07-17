@@ -432,9 +432,7 @@ hook.Add( "SLCSCP500Used", "SLCSCP1025SCP500", function( ply )
 	ply:SetProperty( "slc_1025_disease", nil )
 end )
 
-hook.Add( "SLCHealing", "SLCSCP1035Healed", function( action, target, healer )
-	if action == "healed" then
-		target:RemoveEffect( "heavy_bleeding", true )
-		target:RemoveEffect( "light_bleeding", true )
-	end
+hook.Add( "SLCHealed", "SLCSCP1035Healed", function( action, target, healer )
+	target:RemoveEffect( "heavy_bleeding", true )
+	target:RemoveEffect( "light_bleeding", true )
 end )

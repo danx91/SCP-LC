@@ -80,7 +80,7 @@ CI_MODELS = {
 hook.Add( "SLCRegisterClassGroups", "BaseGroups", function()
 	AddClassGroup( "classd", 49, SPAWN_CLASSD )
 	AddClassGroup( "sci", 21, SPAWN_SCIENT )
-	AddClassGroup( "mtf", 30, SPAWN_MTF )
+	AddClassGroup( "guard", 30, SPAWN_MTF )
 
 	AddSupportGroup( "mtf_ntf", 70, SPAWN_SUPPORT_MTF, -1, function()
 		TransmitSound( string.format( "scp_lc/announcements/ntf_entered%i.ogg", math.random( 3 ) ), true, 1 )
@@ -114,8 +114,8 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		run_speed = 225,
 		sanity = 75,
 		vest = nil,
-		price = 0,
 		max = 0,
+		tier = 0,
 	} )
 
 	/*RegisterClass( "test1", "classd", CLASSD_MODELS, {
@@ -129,8 +129,8 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		run_speed = 225,
 		sanity = 75,
 		vest = nil,
-		price = 10,
 		max = 0,
+		price = 1,
 	} )*/
 
 	RegisterClass( "veterand", "classd", VETERAND_MODELS, {
@@ -139,13 +139,13 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		ammo = {},
 		chip = "jan",
 		omnitool = true,
-		health = 130,
+		health = 125,
 		walk_speed = 100,
-		run_speed = 240,
+		run_speed = 230,
 		sanity = 100,
 		vest = nil,
-		price = 3,
-		max = 3,
+		max = 4,
+		tier = 1,
 	} )
 
 	RegisterClass( "kleptod", "classd", CLASSD_MODELS, {
@@ -159,8 +159,8 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		run_speed = 260,
 		sanity = 50,
 		vest = nil,
-		price = 5,
 		max = 1,
+		tier = 1,
 	} )
 
 	RegisterClass( "ciagent", "classd", CLASSD_MODELS, {
@@ -169,34 +169,19 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		ammo = {},
 		chip = "jan",
 		omnitool = true,
-		health = 150,
+		health = 140,
 		walk_speed = 110,
 		run_speed = 250,
 		sanity = 100,
 		vest = nil,
-		price = 8,
 		max = 1,
+		tier = 2,
 		persona = { team = TEAM_CLASSD, class = "classd" },
 	} )
 
 	--[[-------------------------------------------------------------------------
 	SCI
 	---------------------------------------------------------------------------]]
-	RegisterClass( "sci", "sci", SCI_MODELS, {
-		team = TEAM_SCI,
-		weapons = {},
-		ammo = {},
-		chip = "sci2",
-		omnitool = true,
-		health = 100,
-		walk_speed = 100,
-		run_speed = 225,
-		sanity = 100,
-		vest = nil,
-		price = 2,
-		max = 0,
-	} )
-
 	RegisterClass( "sciassistant", "sci", SCI_MODELS, {
 		team = TEAM_SCI,
 		weapons = {},
@@ -208,8 +193,23 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		run_speed = 225,
 		sanity = 50,
 		vest = nil,
-		price = 0,
 		max = 0,
+		tier = 0,
+	} )
+
+	RegisterClass( "sci", "sci", SCI_MODELS, {
+		team = TEAM_SCI,
+		weapons = {},
+		ammo = {},
+		chip = "sci2",
+		omnitool = true,
+		health = 100,
+		walk_speed = 100,
+		run_speed = 225,
+		sanity = 100,
+		vest = nil,
+		max = 0,
+		tier = 1,
 	} )
 
 	RegisterClass( "seniorsci", "sci", SCI_MODELS, {
@@ -223,8 +223,8 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		run_speed = 225,
 		sanity = 125,
 		vest = nil,
-		price = 6,
 		max = 1,
+		tier = 2,
 	} )
 
 	RegisterClass( "headsci", "sci", SCI_MODELS, {
@@ -238,14 +238,14 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		run_speed = 240,
 		sanity = 150,
 		vest = nil,
-		price = 10,
 		max = 1,
+		tier = 3,
 	} )
 
 	--[[-------------------------------------------------------------------------
-	MTF
+	Guards
 	---------------------------------------------------------------------------]]
-	RegisterClass( "guard", "mtf", GUARD_MODELS, {
+	RegisterClass( "guard", "guard", GUARD_MODELS, {
 		team = TEAM_MTF,
 		weapons = { "weapon_stunstick", "item_slc_radio", "item_slc_camera", "cw_mp5" },
 		ammo = { cw_mp5 = 180 },
@@ -256,12 +256,12 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		run_speed = 230,
 		sanity = 100,
 		vest = "guard",
-		price = 0,
 		max = 0,
+		tier = 0,
 		skin = 4,
 	} )
 
-	RegisterClass( "lightguard", "mtf", GUARD_MODELS, {
+	RegisterClass( "lightguard", "guard", GUARD_MODELS, {
 		team = TEAM_MTF,
 		weapons = { "weapon_stunstick", "item_slc_radio", "item_slc_flashlight", "item_slc_battery", "cw_makarov" },
 		ammo = { cw_makarov = 120 },
@@ -272,12 +272,12 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		run_speed = 250,
 		sanity = 100,
 		vest = nil,
-		price = 2,
 		max = 0,
+		tier = 1,
 		skin = 4,
 	} )
 
-	RegisterClass( "heavyguard", "mtf", GUARD_MODELS, {
+	RegisterClass( "heavyguard", "guard", GUARD_MODELS, {
 		team = TEAM_MTF,
 		weapons = { "weapon_stunstick", "item_slc_radio", "item_slc_camera", "cw_m3super90" },
 		ammo = { cw_m3super90 = 32 },
@@ -288,29 +288,12 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		run_speed = 230,
 		sanity = 100,
 		vest = "heavyguard",
-		price = 3,
 		max = 0,
+		tier = 1,
 		skin = 4,
 	} )
 
-	RegisterClass( "specguard", "mtf", GUARD_MODELS, {
-		team = TEAM_MTF,
-		weapons = { "weapon_stunstick", "item_slc_radio", "item_slc_nvg", "item_slc_gasmask", "cw_g36c" },
-		ammo = { cw_g36c = 180 },
-		chip = "guard",
-		omnitool = true,
-		health = 125,
-		walk_speed = 100,
-		run_speed = 230,
-		sanity = 120,
-		vest = "specguard",
-		price = 5,
-		max = 0,
-		skin = 3,
-		bodygroups = { nvg = 1 }
-	} )
-
-	RegisterClass( "chief", "mtf", GUARD_MODELS, {
+	RegisterClass( "chief", "guard", GUARD_MODELS, {
 		team = TEAM_MTF,
 		weapons = { "weapon_stunstick", "item_slc_radio", "item_slc_camera", "weapon_taser", "cw_ump45" },
 		ammo = { cw_ump45 = 150 },
@@ -321,12 +304,29 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		run_speed = 230,
 		sanity = 100,
 		vest = "guard",
-		price = 4,
 		max = 1,
+		tier = 2,
 		skin = 2,
 	} )
 
-	RegisterClass( "guardmedic", "mtf", GUARD_MODELS, {
+	RegisterClass( "specguard", "guard", GUARD_MODELS, {
+		team = TEAM_MTF,
+		weapons = { "weapon_stunstick", "item_slc_radio", "item_slc_nvg", "item_slc_gasmask", "cw_g36c" },
+		ammo = { cw_g36c = 180 },
+		chip = "guard",
+		omnitool = true,
+		health = 125,
+		walk_speed = 100,
+		run_speed = 230,
+		sanity = 120,
+		vest = "specguard",
+		max = 2,
+		tier = 2,
+		skin = 3,
+		bodygroups = { nvg = 1 },
+	} )
+
+	RegisterClass( "guardmedic", "guard", GUARD_MODELS, {
 		team = TEAM_MTF,
 		weapons = { "weapon_stunstick", "item_slc_radio", "item_slc_medkitplus", "weapon_taser", "cw_fiveseven" },
 		ammo = { cw_fiveseven = 80 },
@@ -337,12 +337,12 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		run_speed = 260,
 		sanity = 100,
 		vest = "guard_medic",
-		price = 8,
 		max = 2,
+		tier = 3,
 		skin = 1,
 	} )
 
-	RegisterClass( "tech", "mtf", GUARD_MODELS, {
+	RegisterClass( "tech", "guard", GUARD_MODELS, {
 		team = TEAM_MTF,
 		weapons = { "weapon_stunstick", "item_slc_radio", "item_slc_camera", "cw_ump45", "item_slc_turret" },
 		ammo = { cw_ump45 = 150 },
@@ -353,12 +353,12 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		run_speed = 230,
 		sanity = 100,
 		vest = "guard",
-		price = 10,
 		max = 1,
+		tier = 3,
 		skin = 3,
 	} )
 
-	RegisterClass( "cispy", "mtf", GUARD_MODELS, {
+	RegisterClass( "cispy", "guard", GUARD_MODELS, {
 		team = TEAM_CI,
 		weapons = { "weapon_stunstick", "item_slc_radio", "item_slc_camera", "cw_mp5" },
 		ammo = { cw_mp5 = 180 },
@@ -369,8 +369,8 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		run_speed = 230,
 		sanity = 100,
 		vest = "guard",
-		price = 6,
 		max = 2,
+		tier = 2,
 		persona = { team = TEAM_MTF, class = "guard" },
 		skin = 4,
 	} )
@@ -390,8 +390,8 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		run_speed = 250,
 		sanity = 125,
 		vest = "ntf",
-		price = 4,
 		max = 0,
+		tier = 0,
 	} )
 
 	RegisterSupportClass( "ntf_2", "mtf_ntf", MTF_MODELS, {
@@ -405,8 +405,8 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		run_speed = 250,
 		sanity = 125,
 		vest = "ntf",
-		price = 5,
 		max = 0,
+		tier = 0,
 	} )
 
 	RegisterSupportClass( "ntf_3", "mtf_ntf", MTF_MODELS, {
@@ -420,8 +420,8 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		run_speed = 250,
 		sanity = 125,
 		vest = "ntf",
-		price = 6,
 		max = 0,
+		tier = 1,
 	} )
 
 	RegisterSupportClass( "ntfmedic", "mtf_ntf", MTF_MODELS, {
@@ -435,8 +435,8 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		run_speed = 250,
 		sanity = 150,
 		vest = "mtf_medic",
-		price = 8,
 		max = 1,
+		tier = 2,
 	} )
 
 	RegisterSupportClass( "ntfcom", "mtf_ntf", MTF_MODELS, {
@@ -450,8 +450,8 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		run_speed = 255,
 		sanity = 150,
 		vest = "ntfcom",
-		price = 10,
 		max = 1,
+		tier = 3,
 	} )
 
 	RegisterSupportClass( "ntfsniper", "mtf_ntf", MTF_MODELS, {
@@ -465,8 +465,8 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		run_speed = 230,
 		sanity = 100,
 		vest = "ntf",
-		price = 6,
 		max = 1,
+		tier = 2,
 	} )
 
 	--Alpha-1
@@ -481,8 +481,8 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		run_speed = 260,
 		sanity = 175,
 		vest = "alpha1",
-		price = 15,
 		max = 2,
+		tier = 2,
 	} )
 
 	RegisterSupportClass( "alpha1sniper", "mtf_alpha", MTF_MODELS, {
@@ -496,8 +496,8 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		run_speed = 255,
 		sanity = 175,
 		vest = "alpha1",
-		price = 15,
 		max = 2,
+		tier = 3,
 	} )
 
 	--CI
@@ -512,8 +512,8 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		run_speed = 245,
 		sanity = 125,
 		vest = "ci",
-		price = 6,
 		max = 0,
+		tier = 1,
 	} )
 
 	RegisterSupportClass( "cicom", "ci", CI_MODELS, {
@@ -527,8 +527,8 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		run_speed = 250,
 		sanity = 125,
 		vest = "ci",
-		price = 12,
 		max = 1,
+		tier = 2,
 	} )
 end )
 

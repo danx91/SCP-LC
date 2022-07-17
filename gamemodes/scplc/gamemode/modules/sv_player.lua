@@ -16,7 +16,8 @@ function ply:Cleanup( norem )
 	hook.Run( "SLCPlayerCleanup", self )
 
 	self:RemoveEffect()
-	self:RemoveEFlags( EFL_NO_DAMAGE_FORCES )
+	//self:RemoveEFlags( EFL_NO_DAMAGE_FORCES )
+	self:AddEFlags( EFL_NO_DAMAGE_FORCES )
 
 	self.SetupAsSpectator = nil //TODO move to properties
 	self.DeathScreen = nil //TODO move to properties
@@ -82,9 +83,14 @@ end*/
 function ply:DropEQ()
 	self:DropVest( true )
 
-	for k, wep in pairs( self:GetWeapons() ) do
+	local wep = self:GetActiveWeapon()
+	if IsValid( wep ) then
 		self:PlayerDropWeapon( wep:GetClass(), true, true )
 	end
+
+	/*for k, wep in pairs( self:GetWeapons() ) do
+		self:PlayerDropWeapon( wep:GetClass(), true, true )
+	end*/
 end
 
 local function setup_player_internal( self, class, spawn )
@@ -377,6 +383,11 @@ function ply:CreatePlayerRagdoll( disable_loot )
 	rag:SetModel( self:GetModel() )
 	rag:SetColor( self:GetColor() )
 	rag:SetMaterial( self:GetMaterial() )
+	rag:SetSkin( self:GetSkin() )
+
+	for i = 0, self:GetNumBodyGroups() - 1 do
+		rag:SetBodygroup( i, self:GetBodygroup( i ) )
+	end
 
 	rag:SetOwner( self )
 
@@ -387,8 +398,6 @@ function ply:CreatePlayerRagdoll( disable_loot )
 			rag:SetSubMaterial( i - 1, mat )
 		end
 	end
-
-	--TODO bodygroups
 
 	rag:Spawn()
 	rag:Activate()
@@ -434,11 +443,9 @@ function ply:CreatePlayerRagdoll( disable_loot )
 						data = stored,
 					},
 					func = function( p, w_class, data )
-						if p:RestoreWeapon( data ) then
-							return true, false
-						end
+						local wep = p:RestoreWeapon( data )
 
-						return false, false
+						return false, false, wep
 					end
 				} )
 			end
@@ -453,6 +460,7 @@ function ply:CreatePlayerRagdoll( disable_loot )
 			local backpack = ents.Create( "slc_lootable" )
 			backpack.Model = "models/blacksnow/backpack.mdl"
 			backpack.RemoveOnEmpty = true
+			backpack:SetShouldRender( true )
 			backpack:SetPos( ent:GetPos() + Vector( 0, 0, 5 ) )
 			backpack:Spawn()
 
@@ -585,7 +593,6 @@ function ply:PushSpeed( walk, run, crouch, id, maxstack )
 	elseif run != -1 then
 		self:SetRunSpeed( run )
 	end
-
 
 	if crouch != -1 then
 		self:SetCrouchedWalkSpeed( crouch )
@@ -792,10 +799,13 @@ function ply:StoreWeapons()
 	return data
 end
 
-function ply:RestoreWeapon( data )
+function ply:RestoreWeapon( data, wep )
 	local class = data.class
 
-	local wep = self:Give( class )
+	if !IsValid( wep ) and table.Count( self:GetWeapons() ) < 8 and hook.Run( "SLCCanPickupWeaponClass", self, class ) != false then
+		wep = self:Give( class )
+	end
+
 	if IsValid( wep ) then
 		wep:SetClip1( data.clip1 )
 		wep:SetClip2( data.clip2 )
@@ -929,10 +939,19 @@ SLCProperties
 ---------------------------------------------------------------------------]]
 function ply:ResetProperties()
 	self.SLCProperties = {}
+	//self.SLCPropertiesSync = {}
 end
 
-function ply:SetProperty( key, value )
+function ply:SetProperty( key, value, sync )
 	if !self.SLCProperties then self.SLCProperties = {} end
+	//if !self.SLCPropertiesSync then self.SLCPropertiesSync = {} end
+
+	if sync then
+		net.Start( "SLCPropertyChanged" )
+			net.WriteString( key )
+			net.WriteTable( { value } )
+		net.Send( self )
+	end
 
 	self.SLCProperties[key] = value
 	return value
@@ -1046,8 +1065,8 @@ end )
 --[[-------------------------------------------------------------------------
 Progress Bar Binding
 ---------------------------------------------------------------------------]]
-function ply:EnableProgressBar( enable, endtime, text )
-	ProgressBar( self, enable, endtime, text )
+function ply:EnableProgressBar( enable, endtime, text, col1, col2 )
+	ProgressBar( self, enable, endtime, text, col1, col2 )
 end
 
 --[[-------------------------------------------------------------------------
@@ -1066,33 +1085,13 @@ function ply:AddFrags( f )
 	Player_AddFrags( self, f )
 end
 
-function ply:SetPrestigePoints( pp )
-	self:Set_SCPPrestigePoints( pp )
-	self:SetSCPData( "prestige_points", pp )
+function ply:SetClassPoints( cp )
+	self:Set_SCPClassPoints( cp )
+	self:SetSCPData( "class_points", cp )
 end
 
-function ply:AddPrestigePoints( pp )
-	self:SetPrestigePoints( self:Get_SCPPrestigePoints() + pp )
-end
-
-function ply:SetPrestige( p )
-	self:Set_SCPPrestige( p )
-	self:SetSCPData( "prestige", p )
-end
-
-function ply:AddPrestige( p )
-	local cur = self:Get_SCPPrestige()
-	local new = cur + p
-
-	if new > 9999 then
-		p = p - new + 9999
-		new = 9999
-	end
-
-	if p > 0 and new > cur then
-		self:SetPrestige( cur + p )
-		self:AddPrestigePoints( p * 5 )
-	end
+function ply:AddClassPoints( cp )
+	self:SetClassPoints( self:Get_SCPClassPoints() + cp )
 end
 
 function ply:SetSCPLevel( lvl )
@@ -1102,73 +1101,82 @@ end
 
 function ply:AddLevel( lvl )
 	if lvl >= 0 then
-		local pu = false
 		local level = self:Get_SCPLevel() + lvl
 
-		if level >= 10 then
-			local p = math.floor( level / 10 )
-			level = level - p * 10
-
-			self:AddPrestige( p )
-			PlayerMessage( "prestigeup$"..EscapeMessage( self:Nick() )..","..self:SCPPrestige().."#255,250,75" )
-
-			pu = true
-		end
-
 		self:SetSCPLevel( level )
-		self:AddPrestigePoints( lvl )
-
-		return pu
+		self:AddClassPoints( lvl )
 	end
 end
 
-function ply:AddXP( xp )
+local xp_scale_mfn = function( tab, mul, cat )
+	cat = cat or "general"
+
+	if !tab.categories[cat] then
+		tab.categories[cat] = 0
+	end
+
+	tab.value = tab.value + mul
+	tab.categories[cat] = tab.categories[cat] + mul
+end
+
+function ply:AddXP( xp, category )
 	if !isnumber( xp ) then return end
+	category = category or self.main_category
 
-	local lvlxp = CVAR.slc_xp_level:GetInt()
-	local lvlinc = CVAR.slc_xp_increase:GetInt()
+	if !self._SLCXPCategories then
+		self._SLCXPCategories = {}
+	end
 
-	self:AddLevel( 0 ) --prestige up check
+	//local lvlxp = CVAR.slc_xp_level:GetInt()
+	//local lvlinc = CVAR.slc_xp_increase:GetInt()
 
 	local plyxp = self:SCPExp()
 	local level = self:SCPLevel()
-	local prestige = self:SCPPrestige()
 
-	local ref = { 1 }
+	local ref = setmetatable( {
+		value = 1,
+		main_category = category,
+		categories = {
+			[category] = 1,
+		},
+	}, { __call = xp_scale_mfn } )
 
 	if self:IsPremium() then
-		ref[1] = ref[1] + CVAR.slc_premium_xp:GetFloat() - 1
+		ref( CVAR.slc_premium_xp:GetFloat() - 1, "vip" )
 	end
 
 	hook.Run( "SLCScaleXP", self, ref )
 
-	xp = math.floor( xp * ref[1] )
+	for k, v in pairs( ref.categories ) do
+		self._SLCXPCategories[k] = ( self._SLCXPCategories[k] or 0 ) + math.floor( xp * v )
+	end
+
+	xp = math.floor( xp * ref.value )
 	plyxp = plyxp + xp
 
-	local req = lvlxp + lvlinc * prestige
+	local daily_bonus = self:DailyBonus()
+	if daily_bonus > 0 then
+		local bonus = math.floor( xp * CVAR.slc_dailyxp_mul:GetFloat() )
+		if bonus > daily_bonus then
+			bonus = daily_bonus
+		end
+
+		plyxp = plyxp + bonus
+		self._SLCXPCategories.daily = ( self._SLCXPCategories.daily or 0 ) + bonus
+
+		daily_bonus = daily_bonus - bonus
+		self:Set_DailyBonus( daily_bonus )
+		self:SetSCPData( "daily_bonus", daily_bonus )
+	end
+
+	local req = self:RequiredXP( level ) //lvlxp + lvlinc * level
 	local lvls = 0
 
 	while plyxp >= req do
 		plyxp = plyxp - req
 		lvls = lvls + 1
-
-		if level + lvls >= 10 then --this shouldn't be ever greater than 10 because of prestige check few lines above
-			//local p = math.floor( level / 10 )
-			//level = level - p * 10
-			prestige = prestige + 1
-			level = level - 10
-
-			req = lvlxp + lvlinc * prestige
-		end
+		req = self:RequiredXP( level + lvls ) //lvlxp + lvlinc * ( level + lvls )
 	end
-
-	/*if plyxp >= req then
-		plyxp = plyxp - req
-
-		if !self:AddLevel( 1 ) then
-			PlayerMessage( "levelup$"..self:SCPLevel(), self )
-		end
-	end*/
 
 	self:AddLevel( lvls )
 
@@ -1178,15 +1186,31 @@ function ply:AddXP( xp )
 	return xp
 end
 
+function ply:ExperienceSummary()
+	local tmp = self._SLCXPCategories
+	self._SLCXPCategories = {}
+
+	return tmp or {}
+end
+
+function ply:ResetDailyBonus()
+	local rs = tonumber( self:GetSCPData( "daily_bonus_reset", 0 ) ) or 0
+	if rs < SLC_UNIX_DAY then
+		print( "Resetting daily XP bonus", self )
+
+		self:SetSCPData( "daily_bonus_reset", SLC_UNIX_DAY )
+
+		local amount = CVAR.slc_dailyxp_amount:GetInt()
+		self:Set_DailyBonus( amount )
+		self:SetSCPData( "daily_bonus", amount )
+	end
+end
+
 function ply:AddSanity( s )
 	local sanity = self:GetSanity()
 	local maxsanity = self:GetMaxSanity()
 
 	self:SetSanity( math.Clamp( sanity + s, 0, maxsanity ) )
-
-	/*if sanity / maxsanity < 0.1 and !self:HasEffect( "insane" ) then
-		self:ApplyEffect( "insane" )
-	end*/
 end
 
 function ply:AddHealth( num )
@@ -1203,7 +1227,7 @@ function ply:AddHealth( num )
 end
 
 function ply:SkipNextKillRewards()
-	self._skipNextKillRewards = true
+	self._SkipNextKillRewards = true
 end
 
 function ply:IsAboutToSpawn()

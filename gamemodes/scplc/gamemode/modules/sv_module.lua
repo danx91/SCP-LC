@@ -168,7 +168,7 @@ function InfoScreen( ply, t, duration, data, ovteam, ovclass )
 	end
 end
 
-function ProgressBar( ply, enable, endtime, text )
+function ProgressBar( ply, enable, endtime, text, col1, col2 )
 	local ct = CurTime()
 
 	if enable then
@@ -178,6 +178,8 @@ function ProgressBar( ply, enable, endtime, text )
 				net.WriteFloat( ct )
 				net.WriteFloat( endtime )
 				net.WriteString( text or "" )
+				net.WriteColor( col1 or Color( 225, 225, 225, 255 ) )
+				net.WriteColor( col2 or Color( 75, 75, 90, 255 ) )
 			net.Send( ply )
 		end
 	else
@@ -235,14 +237,14 @@ Timer( "PlayXP", 300, 0, function()
 			if !v:IsAFK() then
 				if SCPTeams.HasInfo( v:SCPTeam(), SCPTeams.INFO_ALIVE ) then
 					if plus then
-						v:AddXP( pplus )
+						v:AddXP( pplus, "round" )
 						PlayerMessage( "rxpplus$"..pplus, v )
 					else
-						v:AddXP( pplay )
+						v:AddXP( pplay, "round" )
 						PlayerMessage( "rxpplay$"..pplay, v )
 					end
 				else
-					v:AddXP( pspec )
+					v:AddXP( pspec, "round" )
 					PlayerMessage( "rxpspec$"..pspec, v )
 				end
 			end
@@ -250,7 +252,7 @@ Timer( "PlayXP", 300, 0, function()
 	else
 		for k, v in pairs( player.GetAll() ) do
 			if !v:IsAFK() then
-				v:AddXP( pspec )
+				v:AddXP( pspec, "round" )
 				PlayerMessage( "rxpspec$"..pspec, v )
 			end
 		end
@@ -332,6 +334,12 @@ function ServerSound( file, ent, filter )
 
 	return sound
 end
+
+function SLCUpdateUnixDay()
+	SLC_UNIX_DAY = math.floor( ( os.time() - CVAR.slc_dailyxp_time:GetInt() ) / 86400 )
+end
+
+SLCUpdateUnixDay()
 
 hook.Add( "PostGamemodeLoaded", "SCPLCLightStyle", function()
 	timer.Simple( 0, function()

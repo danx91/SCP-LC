@@ -1,3 +1,37 @@
+function Setup106Collision( ent )
+	if !IsValid( ent ) then return end
+
+	local class = ent:GetClass()
+	if class != "func_door" and class != "func_door_rotating" and class != "prop_dynamic" then return end
+
+	if class == "prop_dynamic" then
+		local ennt = ents.FindInSphere( ent:GetPos(), 50 )
+		local neardors = false
+
+		for k, v in pairs( ennt ) do
+			local fc = v:GetClass()
+			if fc == "func_door" or fc == "func_door_rotating" then
+				neardors = true
+				break
+			end
+		end
+
+		if !neardors then
+			ent.ignorecollide106 = false
+			return
+		end
+	end
+
+	for _, pos in pairs( DOOR_RESTRICT106 ) do
+		if ent:GetPos():Distance( pos ) < 100 then
+			ent.ignorecollide106 = false
+			return
+		end
+	end
+	
+	ent.ignorecollide106 = true
+end
+
 hook.Add( "SLCPreround", "Site19Preround", function()
 	for k, v in pairs( ents.GetAll() ) do
 		local name = v:GetName()
@@ -12,6 +46,7 @@ hook.Add( "SLCPreround", "Site19Preround", function()
 		elseif name == "4016" then
 			v:Remove()
 		end
+		
 		/*local class = v:GetClass()
 		if class == "func_door" then
 			print( "set for", v, name )
@@ -67,6 +102,22 @@ hook.Add( "EntityKeyValue", "Site19EntityKeyValue", function( ent, key, value )
 		end
 	end
 end )
+
+if CLIENT then
+	hook.Add( "OnEntityCreated", "SCP106Collision", function( ent )
+		timer.Simple( 0, function()
+			Setup106Collision( ent )
+		end )
+	end )
+end
+
+if SERVER then
+	hook.Add( "PostCleanupMap", "SCP106Collision", function()
+		for k, v in pairs( ents.GetAll() ) do
+			Setup106Collision( v )
+		end
+	end )
+end
 
 //hook.Add( "AcceptInput", "Site19ChangeDoors", function( ent, input, activator, caller, value )
 	//if ent:GetClass() == "func_button" then

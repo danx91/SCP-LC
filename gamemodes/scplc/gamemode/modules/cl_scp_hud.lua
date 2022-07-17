@@ -143,15 +143,22 @@ function SCPSkillObject:Render( swep )
 	local addy = sh - h
 
 	local dist = w * 0.03
-	local size = w * 0.045
+	local size = w * 0.04
 	local margin = h * 0.015
 
-	local start_x = SLC_HUD_END_X + margin + dist + ( size + margin ) * ( self.pos - 1 )
-	local start_y = h - margin - size + addy
+	local total_w = ( size + margin ) * self.hud_object.max_pos - margin
+	local start_x = sw * 0.5 - total_w * 0.5
+
+	if start_x < SLC_HUD_END_X + dist then
+		start_x = SLC_HUD_END_X + dist
+	end
+
+	local draw_x = start_x + ( size + margin ) * ( self.pos - 1 )
+	local draw_y = h - margin - size + addy
 
 	surface.SetDrawColor( self.inactive and COLOR.inactive or COLOR.white )
 	surface.SetMaterial( self.material )
-	surface.DrawTexturedRect( start_x, start_y, size, size )
+	surface.DrawTexturedRect( draw_x, draw_y, size, size )
 
 	local ct = CurTime()
 	if self.cd_end >= ct then
@@ -161,19 +168,19 @@ function SCPSkillObject:Render( swep )
 		if dur > 0 then
 			draw.NoTexture()
 			surface.SetDrawColor( COLOR.cooldown )
-			surface.DrawCooldownRectCW( start_x, start_y, size, size, left / dur )
+			surface.DrawCooldownRectCW( draw_x, draw_y, size, size, left / dur )
 		end
 
-		/*if true then --TODO
+		if GetSettingsValue( "scp_hud_skill_time" ) then
 			draw.Text( {
 				text = left > 1 and math.floor( left ) or string.format( "%.1f", left ),
 				font = "SCPHUDMedium",
 				color = COLOR.white,
-				pos = { start_x + size / 2, start_y + size / 2 },
+				pos = { draw_x + size / 2, draw_y + size / 2 },
 				xalign = TEXT_ALIGN_CENTER,
 				yalign = TEXT_ALIGN_CENTER,
 			} )
-		end*/
+		end
 	end
 
 	if values.text and values.text != "" then
@@ -181,7 +188,7 @@ function SCPSkillObject:Render( swep )
 			text = values.text,
 			font = "SCPScaledHUDSmall",
 			color = COLOR.white,
-			pos = { start_x + size - 8, start_y},
+			pos = { draw_x + size - 8, draw_y },
 			xalign = TEXT_ALIGN_RIGHT,
 			yalign = TEXT_ALIGN_TOP,
 			max_width = size,
@@ -194,16 +201,24 @@ function SCPSkillObject:Render( swep )
 			text = LANG.MISC.buttons[btn_name] or string.upper( btn_name ),
 			font = "SCPScaledHUDSmall",
 			color = COLOR.white,
-			pos = { start_x + size - 8, start_y + size},
+			pos = { draw_x + size - 8, draw_y + size },
 			xalign = TEXT_ALIGN_RIGHT,
 			yalign = TEXT_ALIGN_BOTTOM,
 		} )
 	end
 
 	surface.SetDrawColor( self.inactive and COLOR.inactive or COLOR.white )
-	surface.DrawOutlinedRect( start_x - 1, start_y - 1, size + 2, size + 2 )
+	surface.DrawOutlinedRect( draw_x - 1, draw_y - 1, size + 2, size + 2 )
 
-	return start_x, start_y, size
+	if vgui.CursorVisible() then
+		local mx, my = input.GetCursorPos()
+
+		if mx >= draw_x and mx <= draw_x + size and my >= draw_y and my <= draw_y + size then
+			self.hud_object.draw_info = self.name
+		end
+	end
+
+	return draw_x, draw_y, size
 end
 
 local function CreateSCPSkillObject( data )
@@ -347,6 +362,54 @@ function SCPHUDObject:Render()
 
 	--Messages
 	--TODO
+	local s_name = self.draw_info
+	if s_name then
+		self.draw_info = nil
+
+
+		local lang = LANG.WEAPONS[self.name]
+		if lang and lang.skills and lang.skills[s_name] then
+			local sw, sh = ScrW(), ScrH()
+			local mx, my = input.GetCursorPos()
+
+			local clang = lang.skills[s_name]
+			local marg = sh * 0.015
+			local name_h = sh * 0.04
+			local total_h = name_h
+			local feed
+
+			surface.SetFont( "SCPHUDMedium" )
+			local info_w = surface.GetTextSize( clang.name or s_name ) + marg * 4
+
+			if clang.dsc then
+				local th, tw
+				th, tw, feed = draw.SimulateMultilineText( clang.dsc, "SCPHUDSmall", sw * 0.3, marg, 0, 6, true )
+				total_h = total_h + th
+				if tw + marg * 2 > info_w then
+					info_w = tw + marg * 2
+				end
+			end
+
+			if mx + info_w > sw then
+				mx = sw - info_w
+			end
+
+			local dy = my - total_h
+
+			surface.SetDrawColor( 0, 0, 0, 240 )
+			surface.DrawRect( mx, dy, info_w, total_h )
+
+			surface.SetDrawColor( 255, 255, 255, 255 )
+			surface.DrawOutlinedRect( mx - 1, dy - 1, info_w + 2, total_h + 2, 1 )
+
+			draw.SimpleText( clang.name or s_name, "SCPHUDMedium", mx + marg, dy + name_h / 2, COLOR.white, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER )
+			dy = dy + name_h
+
+			if clang.dsc and feed then
+				draw.MultilineText( mx, dy, nil, "SCPHUDSmall", COLOR.white, sw * 0.3, marg, 0, TEXT_ALIGN_LEFT, 6, false, false, feed )
+			end
+		end
+	end
 end
 
 function CreateSCPHUDObject( name, swep )
@@ -358,13 +421,14 @@ function CreateSCPHUDObject( name, swep )
 		skill_id = {},
 		notify_end = 0,
 		notify_text = "",
-		//last_skill_pos = 0,
+		max_pos = 0,
 	}, { __index = SCPHUDObject } )
 
 	local data = SLC_SCP_HUD[name]
 	if data then
 		local obj_name = data.name or name
 		tab.name = obj_name
+		tab.max_pos = 0
 
 		local lang = LANG.WEAPONS[data.language or obj_name]
 		if lang and lang.HUD then
@@ -378,9 +442,9 @@ function CreateSCPHUDObject( name, swep )
 			skill.hud_object = tab
 			tab.skills[i] = skill
 
-			/*if data.pos > tab.last_skill_pos then
-				tab.last_skill_pos = data.pos
-			end*/
+			if v.pos > tab.max_pos then
+				tab.max_pos = v.pos
+			end
 		end
 	end
 
@@ -395,6 +459,30 @@ function DefineSCPHUD( scp, data )
 end
 
 hook.Add( "SLCRegisterSettings", "SLCSCPHUDSettings", function()
-	//RegisterSettingsEntry( "scp_special", "bind", "key:G" )
-	//RegisterSettingsEntry( "scp_hud_show_skill_time", "gui", false )
+	RegisterSettingsEntry( "scp_special", "bind", "key:G" )
+	RegisterSettingsEntry( "scp_hud_skill_time", "switch", true )
+	RegisterSettingsEntry( "scp_hud_overload_cd", "switch", true )
+end )
+
+OnPropertyChanged( "overload_cd", function( name, value )
+	if !isnumber( value ) then return end
+
+	_SCPOverloadCooldown = value
+end )
+
+hook.Add( "PostDrawHUD", "TempSCPOverloadCD", function()
+	if LocalPlayer():SCPTeam() == TEAM_SCP and LocalPlayer():SCPClass() != CLASSES.SCP0492 and GetSettingsValue( "scp_hud_overload_cd" ) then
+		local text, color
+
+		local ct = CurTime()
+		if !_SCPOverloadCooldown or _SCPOverloadCooldown < ct then
+			text = LANG.SCPHUD.overload_ready
+			color = Color( 25, 200, 45 )
+		else
+			text = LANG.SCPHUD.overload_cd..math.ceil( _SCPOverloadCooldown - CurTime() )
+			color = Color( 200, 25, 45 )
+		end
+		
+		draw.SimpleText( text, "SCPHUDMedium", ScrW() / 2, 16, color, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP )
+	end
 end )

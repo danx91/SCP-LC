@@ -260,14 +260,9 @@ function command:Execute(player, silent, arguments)
         target:SetSCPData( "xp", 0 )
 
         rem_info( ply, target, atype, silent )
-    elseif atype == "prestige" then
-        target:Set_SCPPrestige( 0 )
-        target:SetSCPData( "prestige", 0 )
-
-        rem_info( ply, target, atype, silent )
-    elseif atype == "prestige_points" then
-        target:Set_SCPPrestigePoints( 0 )
-        target:SetSCPData( "prestige_points", 0 )
+    elseif atype == "class_points" then
+        target:Set_SCPClassPoints( 0 )
+        target:SetSCPData( "class_points", 0 )
 
         rem_info( ply, target, atype, silent )
     elseif atype == "owned_classes" then
@@ -279,10 +274,8 @@ function command:Execute(player, silent, arguments)
         target:SetSCPData( "level", 0 )
         target:Set_SCPExp( 0 )
         target:SetSCPData( "xp", 0 )
-        target:Set_SCPPrestige( 0 )
-        target:SetSCPData( "prestige", 0 )
-        target:Set_SCPPrestigePoints( 0 )
-        target:SetSCPData( "prestige_points", 0 )
+        target:Set_SCPClassPoints( 0 )
+        target:SetSCPData( "class_points", 0 )
         target.PlayerInfo:Set( "unlocked_classes", {} )
 
         rem_info( ply, target, atype, silent )
@@ -298,8 +291,7 @@ end;
 local dataType = {
     ["level"] = "Level",
     ["xp"] = "XP",
-    ["prestige"] = "Prestige",
-    ["prestige_points"] = "Prestige points",
+    ["class_points"] = "Class points",
     ["owned_classes"] = "Owned Classes",
     ["all"] = "All",
 }

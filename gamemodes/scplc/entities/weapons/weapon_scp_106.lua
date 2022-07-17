@@ -275,52 +275,13 @@ end
 --[[-------------------------------------------------------------------------
 106 Collision
 ---------------------------------------------------------------------------]]
-if SERVER then --TODO shared version, move to KV hook?
-	hook.Add( "ShouldCollide", "SCP106Collision", function ( ent1, ent2 )
-		if ent1:IsPlayer() and ent1:SCPClass() == CLASSES.SCP106 or ent2:IsPlayer() and ent2:SCPClass() == CLASSES.SCP106 then
-			if ent1.ignorecollide106 or ent2.ignorecollide106 then
-				return false
-			end
-		end
-	end )
-
-	local function Setup106Collision()
-		for k, v in pairs( ents.GetAll() ) do
-			if v and v:GetClass() == "func_door" or v:GetClass() == "prop_dynamic" then
-				if v:GetClass() == "prop_dynamic" then
-					local ennt = ents.FindInSphere( v:GetPos(), 5 )
-					local neardors = false
-					for k, v in pairs( ennt ) do
-						if v:GetClass() == "func_door" then
-							neardors = true
-							break
-						end
-					end
-					if !neardors then 
-						v.ignorecollide106 = false
-						continue
-					end
-				end
-
-				local changed
-				for _, pos in pairs( DOOR_RESTRICT106 ) do
-					if v:GetPos():Distance( pos ) < 100 then
-						v.ignorecollide106 = false
-						changed = true
-						break
-					end
-				end
-				
-				if !changed then
-					v.ignorecollide106 = true
-				end
-			end
+SCPHook( "SCP106", "ShouldCollide", function ( ent1, ent2 )
+	if ent1:IsPlayer() and ent1:SCPClass() == CLASSES.SCP106 or ent2:IsPlayer() and ent2:SCPClass() == CLASSES.SCP106 then
+		if ent1.ignorecollide106 or ent2.ignorecollide106 then
+			return false
 		end
 	end
-
-	hook.Add( "PostCleanupMap", "SCP106Collision", Setup106Collision )
-	timer.Simple( 0, Setup106Collision )
-end
+end )
 
 game.AddDecal( "Decal106", "decals/decal106" )
 
@@ -386,7 +347,7 @@ function SWEP:OnUpgradeBought( name, info, group )
 	end
 end
 
-hook.Add( "EntityTakeDamage", "SCP106DMGMod", function( ent, dmg )
+SCPHook( "SCP106", "EntityTakeDamage", function( ent, dmg )
 	if IsValid( ent ) and ent:IsPlayer() and ent:SCPClass() == CLASSES.SCP106 then
 		local wep = ent:GetActiveWeapon()
 		if IsValid( wep ) and wep.UpgradeSystemMounted then

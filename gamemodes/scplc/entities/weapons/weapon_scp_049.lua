@@ -10,22 +10,26 @@ local zombies = {
 	{ name = "heavy", speed = 0.8, health = 1.4, damage = 1.3, material = "" }, --heavy zombie
 }
 
-local function translate_zombie_model( ply )
+local function translate_zombie_model( ply, rag )
 	local team = ply:GetProperty( "last_team" )
 	local class = ply:GetProperty( "last_class" )
 	
 	if team == TEAM_CLASSD or class == CLASSES.CIAGENT then
 		return "models/player/alski/scp049-2.mdl", math.random( 0, 4 )
 	elseif team == TEAM_MTF then
-		local random = math.random( 1, 2 )
-
-		if random == 1 then
-			return "models/player/alski/scp049-2mtf.mdl", math.random( 0, 4 )
+		if string.find( rag:GetModel(), "models/player/alski/security" ) then
+			return "models/player/alski/049-2_security.mdl", math.random( 0, 4 ) * 5 + rag:GetSkin()
 		else
-			return "models/player/alski/scp049-2mtf2.mdl", math.random( 0, 4 )
+			if math.random( 1, 2 ) == 1 then
+				return "models/player/alski/scp049-2mtf.mdl", math.random( 0, 4 )
+			else
+				return "models/player/alski/scp049-2mtf2.mdl", math.random( 0, 4 )
+			end
 		end
 	elseif team == TEAM_SCI then
 		return "models/player/alski/scp049-2_scientist.mdl", math.random( 0, 4 )
+	elseif team == TEAM_GUARD then
+
 	end
 end
 
@@ -247,7 +251,7 @@ function SWEP:FinishSurgery( t, ent )
 		if !ply then
 			//local qp = GetQueuePlayers( 1 )[1]
 			local qp = QueueRemove()
-			if qp and qp:IsValidSpectator() then
+			if IsValid( qp ) and qp:IsValidSpectator() then
 				ply = qp
 			end
 		end
@@ -257,17 +261,17 @@ function SWEP:FinishSurgery( t, ent )
 
 			local stats = zombies[t] or {}
 			local scp = GetSCP( "SCP0492" )
-			local model, skin = translate_zombie_model( ply )
-			scp:SetupPlayer( ply, true, spawnent:GetPos(), owner, (stats.health or 1) + hpbonus, stats.speed or 1, stats.damage or 1, self:GetUpgradeMod( "steal" ) or 0,
+			local model, skin = translate_zombie_model( ply, ent )
+			scp:SetupPlayer( ply, true, spawnent:GetPos() + Vector( 0, 0, 8 ), owner, (stats.health or 1) + hpbonus, stats.speed or 1, stats.damage or 1, self:GetUpgradeMod( "steal" ) or 0,
 								model, skin )
 
 			if self:HasUpgrade( "rm" ) then
 				local qp = QueueRemove()//GetQueuePlayers( 1 )[1]
 
-				if qp and qp:IsValidSpectator() then
-					local model, skin = translate_zombie_model( qp )
-					scp:SetupPlayer( qp, true, spawnent:GetPos(), owner, ((stats.health or 1) + hpbonus) * 0.5, stats.speed or 1, (stats.damage or 1) * 0.75,
-										self:GetUpgradeMod( "steal" ) or 0, model, skin )
+				if IsValid( qp ) and qp:IsValidSpectator() then
+					//local model, skin = translate_zombie_model( qp, ent )
+					scp:SetupPlayer( qp, true, spawnent:GetPos() + Vector( 0, 0, 8 ), owner, ((stats.health or 1) + hpbonus) * 0.5, stats.speed or 1, (stats.damage or 1) * 0.75,
+										self:GetUpgradeMod( "steal" ) or 0 /*, model, skin*/ )
 				end
 			end
 
@@ -396,7 +400,7 @@ if SERVER then
 		end
 	end )
 
-	hook.Add( "EntityTakeDamage", "SLCSCP049Surgery", function( target, info )
+	SCPHook( "SCP049", "EntityTakeDamage", function( target, info )
 		if IsValid( target ) and target:IsPlayer() and target:SCPClass() == CLASSES.SCP049 then
 			local wep = target:GetWeapon( "weapon_scp_049" )
 			if IsValid( wep ) then
@@ -432,7 +436,7 @@ if CLIENT then
 	end )
 end
 
-hook.Add( "StartCommand", "SLCSCP049Zombify", function( ply, cmd )
+SCPHook( "SCP049", "StartCommand", function( ply, cmd )
 	if IsValid( ply ) and ply:SCPClass() == CLASSES.SCP049 then
 		local wep = ply:GetWeapon( "weapon_scp_049" )
 		if IsValid( wep ) then
@@ -486,7 +490,7 @@ DefineUpgradeSystem( "scp049", {
 
 function SWEP:OnUpgradeBought( name, info, group )
 	if SERVER and name == "merci" then
-		self:GetOwner():SetSCPTerror( false )
+		//self:GetOwner():SetSCPTerror( false )
 	end
 end
 

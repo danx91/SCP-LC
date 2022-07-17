@@ -53,9 +53,17 @@ function SWEP:Think()
 		end
 	end
 
-	if self.CurScan + 0.2 < CurTime() then
-		self.ScanEnd = 0
-		self.CurScan = 0
+	local status = self:GetOwner():UpdateHold( "cctv_scan", self )
+	if status == false then
+		self.ScanCD = CurTime() + 1
+		
+
+	elseif status == true then
+		self.ScanCD = CurTime() + 5
+
+		if SERVER then
+			self:Scan()
+		end
 	end
 end
 
@@ -86,26 +94,15 @@ end
 function SWEP:Reload()
 	if !self:GetEnabled() or !IsValid( self.CCTV[self:GetCAM()] ) then return end
 	if self.ScanCD > CurTime() then return end
-	self.ScanCD = CurTime() + 0.1
 
-	if self.ScanEnd == 0 then 
-		self.ScanEnd = CurTime() + 3
-		self.CurScan = CurTime()
-	else
-		self.CurScan = CurTime()
-
-		if self.CurScan > self.ScanEnd then
-			self.ScanEnd = 0
-			self.CurScan = 0
-			self.ScanCD = CurTime() + 5
-
-			if SERVER then
-				self:Scan()
-			end
-		end
-	end
+	local owner = self:GetOwner()
+	if owner:IsHolding( "cctv_scan", self ) then return end
+	
+	owner:StartHold( "cctv_scan", IN_RELOAD, 3, nil, self )
+	self:SetBattery( self:GetBattery() - 3 )
 end
 
+SWEP.ScansPerPoint = 3
 function SWEP:Scan()
 	local CAM = self:GetCAM()
 	if !IsValid( self.CCTV[CAM] ) then return end
@@ -129,11 +126,25 @@ function SWEP:Scan()
 
 	local num = #detected
 	if num > 0 then
-		self.Owner:AddFrags( num )
-		PlayerMessage( "detectscp$"..num, self.Owner )
+		local owner = self:GetOwner()
 
-		BroadcastDetection( self.Owner, detected )
+		local scans = owner:GetProperty( "camera_scans" ) or 0
+		scans = scans + num
+
+		local points = math.floor( scans / self.ScansPerPoint )
+		scans = scans % self.ScansPerPoint
+
+		owner:SetProperty( "camera_scans", scans )
+
+		if points > 0 then
+			owner:AddFrags( points )
+			PlayerMessage( "detectscp$"..points, owner )
+		end
+
+		BroadcastDetection( owner, detected )
 	end
+
+	self:SetBattery( self:GetBattery() - 7 )
 end
 
 function SWEP:CalcView( ply, pos, ang, fov )
@@ -156,7 +167,7 @@ function SWEP:CalcView( ply, pos, ang, fov )
 end
 
 function SWEP:DrawWorldModel()
-	if !IsValid( self.Owner ) then
+	if !IsValid( self:GetOwner() ) then
 		self:DrawModel()
 	end
 end
@@ -220,21 +231,22 @@ function SWEP:DrawHUD()
 
 			for i = 1, 10 do
 				local ry = math.random( h )
-				local h = math.random( 1, 5 )
+				local nh = math.random( 1, 5 )
 				local c = math.random( 100, 200 )
 				local a = math.random( 0, 10 )
 
 				surface.SetDrawColor( Color( c, c, c, a ) )
-				surface.DrawRect( 0, ry, w, h )
+				surface.DrawRect( 0, ry, w, nh )
 			end
 		--end
 
-		if self.ScanEnd != 0 then
+		local progress = self:GetOwner():HoldProgress( "cctv_scan", self )
+		if progress then
 			surface.SetDrawColor( Color( 255, 255, 255 ) )
-			surface.DrawRing( w * 0.5, h * 0.5, 40, 5, 360 - 360 * (self.ScanEnd - CurTime()) / 3, 30 )
+			surface.DrawRing( w * 0.5, h * 0.5, 40, 5, 360 * progress, 30 )
 
 			draw.Text( {
-				text = "SCANNING",
+				text = LANG.MISC.scanning,
 				font = "SCPHUDBig",
 				color = Color( 255, 255, 255, math.TimedSinWave( 0.8, 1, 255 ) ),
 				pos = { w * 0.5, h * 0.5 + 55 },

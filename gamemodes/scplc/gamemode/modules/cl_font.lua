@@ -1,6 +1,10 @@
 function RebuildFonts()
+	local font = SLC_PRIMARY_FONT or "Impacted"
+	local font_digit = SLC_DIGITS_FONT or "DS-Digital"
+	local font_info = SLC_INFO_FONT or "unispace"
+
 	CreateFont( "SCPHUDESmall", {
-		font = "Impacted",
+		font = font,
 		size = ScrW() * 0.01,
 		antialias = true,
 		weight = 500,
@@ -8,7 +12,7 @@ function RebuildFonts()
 	} )
 
 	CreateFont( "SCPHUDVSmall", {
-		font = "Impacted",
+		font = font,
 		size = ScrW() * 0.015,
 		antialias = true,
 		weight = 500,
@@ -16,7 +20,7 @@ function RebuildFonts()
 	} )
 
 	CreateFont( "SCPHUDSmall", {
-		font = "Impacted",
+		font = font,
 		size = ScrW() * 0.0175,
 		antialias = true,
 		weight = 500,
@@ -24,7 +28,7 @@ function RebuildFonts()
 	} )
 
 	CreateFont( "SCPHUDMedium", {
-		font = "Impacted",
+		font = font,
 		size = ScrW() * 0.021,
 		antialias = true,
 		weight = 500,
@@ -32,7 +36,7 @@ function RebuildFonts()
 	} )
 
 	CreateFont( "SCPHUDBig", {
-		font = "Impacted",
+		font = font,
 		size = ScrW() * 0.0275,
 		antialias = true,
 		weight = 500,
@@ -40,7 +44,7 @@ function RebuildFonts()
 	} )
 
 	CreateFont( "SCPHUDVBig", {
-		font = "Impacted",
+		font = font,
 		size = ScrW() * 0.035,
 		antialias = true,
 		weight = 500,
@@ -48,21 +52,21 @@ function RebuildFonts()
 	} )
 
 	CreateFont( "SCPNumbersBig", {
-		font = "DS-Digital",
+		font = font_digit,
 		size = ScrW() * 0.02,
 		antialias = true,
 		weight = 500,
 	} )
 
 	CreateFont( "SCPNumbersSmall", {
-		font = "DS-Digital",
+		font = font_digit,
 		size = ScrW() * 0.015,
 		antialias = true,
 		weight = 500,
 	} )
 
 	CreateFont( "SCPInfoScreenBig", {
-		font = "unispace",
+		font = font_info,
 		size = ScrW() * 0.04,
 		antialias = true,
 		weight = 500,
@@ -70,8 +74,16 @@ function RebuildFonts()
 	} )
 
 	CreateFont( "SCPInfoScreenMedium", {
-		font = "unispace",
+		font = font_info,
 		size = ScrW() * 0.0325,
+		antialias = true,
+		weight = 500,
+		extended = true,
+	} )
+
+	CreateFont( "SCPInfoScreenSmall", {
+		font = font_info,
+		size = ScrW() * 0.015,
 		antialias = true,
 		weight = 500,
 		extended = true,
@@ -95,8 +107,11 @@ function RebuildFonts()
 end
 
 function RebuildScaledFonts( scale )
+	local font = SLC_PRIMARY_FONT or "Impacted"
+	local font_digit = SLC_DIGITS_FONT or "DS-Digital"
+
 	CreateFont( "SCPScaledHUDVSmall", {
-		font = "Impacted",
+		font = font,
 		size = ScrW() * 0.015 * scale,
 		antialias = true,
 		weight = 500,
@@ -104,7 +119,7 @@ function RebuildScaledFonts( scale )
 	} )
 
 	CreateFont( "SCPScaledHUDSmall", {
-		font = "Impacted",
+		font = font,
 		size = ScrW() * 0.0175 * scale,
 		antialias = true,
 		weight = 500,
@@ -112,7 +127,7 @@ function RebuildScaledFonts( scale )
 	} )
 
 	CreateFont( "SCPScaledHUDMedium", {
-		font = "Impacted",
+		font = font,
 		size = ScrW() * 0.021 * scale,
 		antialias = true,
 		weight = 500,
@@ -120,7 +135,7 @@ function RebuildScaledFonts( scale )
 	} )
 
 	CreateFont( "SCPScaledHUDBig", {
-		font = "Impacted",
+		font = font,
 		size = ScrW() * 0.0275 * scale,
 		antialias = true,
 		weight = 500,
@@ -128,14 +143,14 @@ function RebuildScaledFonts( scale )
 	} )
 
 	CreateFont( "SCPScaledNumbersBig", {
-		font = "DS-Digital",
+		font = font_digit,
 		size = ScrW() * 0.02 * scale,
 		antialias = true,
 		weight = 500,
 	} )
 
 	CreateFont( "SCPScaledNumbersSmall", {
-		font = "DS-Digital",
+		font = font_digit,
 		size = ScrW() * 0.015 * scale,
 		antialias = true,
 		weight = 500,

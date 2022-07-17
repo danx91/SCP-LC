@@ -63,6 +63,8 @@ function CheckQueue()
 end
 
 function QueueInsert( ply, num )
+	if ply:SCPClass() != "spectator" then return end
+
 	if !queueReg[ply] then
 		queueReg[ply] = true
 
@@ -135,12 +137,16 @@ function SetupPlayers( multi )
 
 	local scp = 0
 
-	if all < 9 then
-		scp = 1
-	elseif all < 15 then
-		scp = 2
+	if SLC_SCP_OVERRIDE then
+		scp = SLC_SCP_OVERRIDE( all )
 	else
-		scp = math.floor( ( all - 14 ) / 7 ) + 3
+		if all < 13 then
+			scp = 1
+		elseif all < 21 then
+			scp = 2
+		else
+			scp = math.floor( ( all - 20 ) / 12 ) + 3
+		end
 	end
 
 	local penalty = CVAR.slc_scp_penalty:GetInt()
@@ -304,7 +310,7 @@ function SetupPlayers( multi )
 					if class.spawn then
 						if istable( class.spawn ) then
 							if !classspawns[cname] or #classspawns[cname] == 0 then
-								classspawns[cname] = table.Copy( cname )
+								classspawns[cname] = table.Copy( class.spawn )
 							end
 
 							pos = table.remove( classspawns[cname], math.random( #classspawns[cname] ) )
@@ -343,6 +349,10 @@ function SpawnSupport()
 
 	if data.max > 0 and data.max < max then
 		max = data.max
+	end
+
+	if SLC_SUPPORT_OVERRIDE then
+		max = SLC_SUPPORT_OVERRIDE( max )
 	end
 
 	repeat
@@ -488,60 +498,6 @@ function CheckEscape()
 
 			TransmitEscapeInfo( blocked and all or tab )
 		end
-
-		/*local players = {}
-		local teams = {}
-
-		for k, v in pairs( player.GetAll() ) do
-			local team = v:SCPTeam()
-			if SCPTeams.CanEscape( team ) then
-				local ist = istable( POS_ESCAPE )
-				if ist and v:GetPos():WithinAABox( POS_ESCAPE[1], POS_ESCAPE[2] ) or !ist and v:GetPos():DistToSqr( POS_ESCAPE ) <= 22500 then
-					table.insert( players, v )
-					teams[team] = true*/
-
-
-
-					/*local rtime = t:GetRemainingTime()
-					local ttime = t:GetTime()
-
-					local diff = math.floor( ttime - rtime )
-					hook.Run( "SLCPlayerEscaped", v, diff, rtime )
-
-					local time = rtime / ttime
-					local min, max = string.match( CVAR.slc_xp_escape:GetString(), "^(%d+),(%d+)$" )
-					local xp = 0
-
-					min = tonumber( min )
-					max = tonumber( max )
-
-					if time < 0.2 then
-						xp = min
-					elseif time > 0.8 then
-						xp = max
-					else
-						xp = math.Map( time, 0.2, 0.8, min, max )
-					end
-
-					xp = math.floor( xp )
-
-					CenterMessage( string.format( "offset:75;escaped#255,0,0,SCPHUDVBig;escapeinfo$%s;escapexp$%d", string.ToMinutesSeconds( diff ), xp ), v )
-
-					v:AddXP( xp )
-					SCPTeams.AddScore( team, SCPTeams.GetReward( team ) * 3 )
-
-					v:Despawn()
-
-					v:KillSilent()
-					v:SetupSpectator()
-					QueueInsert( v )
-
-					AddRoundStat( "escapes" )
-
-					CheckRoundEnd()*/
-				--end
-			--end
-		--end
 	end
 end
 
@@ -629,7 +585,7 @@ hook.Add( "Tick", "SLCEscapeCheck", function() --TODO remove timer on escape / e
 					{ "escape_xp", "text;"..xp }
 				} )
 
-				v:AddXP( xp )
+				v:AddXP( xp, "escape" )
 
 				local team = v:SCPTeam()
 				SCPTeams.AddScore( team, SCPTeams.GetReward( team ) * 2 )
@@ -649,17 +605,14 @@ hook.Add( "Tick", "SLCEscapeCheck", function() --TODO remove timer on escape / e
 		else
 			local t = GetTimer( "SLCRound" )
 			if IsValid( t ) or ROUND.aftermatch then
-				local rtime = t:GetRemainingTime()
-				local ttime = t:GetTime()
-
-				local diff = math.floor( ttime - rtime )
-
 				local min, max = string.match( CVAR.slc_xp_escape:GetString(), "^(%d+),(%d+)$" )
 				min = tonumber( min )
 				max = tonumber( max )
 
 				local xp = 0
 				local msg
+
+				local rtime, ttime, diff
 
 				if ROUND.aftermatch then
 					xp = min
@@ -669,6 +622,10 @@ hook.Add( "Tick", "SLCEscapeCheck", function() --TODO remove timer on escape / e
 						{ "escape_xp", "text;"..xp }
 					}
 				else
+					rtime = t:GetRemainingTime()
+					ttime = t:GetTime()
+					diff = math.floor( ttime - rtime )
+
 					local time = rtime / ttime
 					if time < 0.2 then
 						xp = min
@@ -688,12 +645,12 @@ hook.Add( "Tick", "SLCEscapeCheck", function() --TODO remove timer on escape / e
 				end
 
 				for k, v in pairs( tab ) do
-					hook.Run( "SLCPlayerEscaped", v, diff, rtime )
+					hook.Run( "SLCPlayerEscaped", v, diff or -1, rtime or -1 )
 
 					//CenterMessage( string.format( "offset:75;escaped#255,0,0,SCPHUDVBig;escapeinfo$%s;escapexp$%d", string.ToMinutesSeconds( diff ), xp ), v )
 					InfoScreen( v, "escaped", INFO_SCREEN_DURATION, msg )
 
-					v:AddXP( xp )
+					v:AddXP( xp, "escape" )
 
 					local team = v:SCPTeam()
 					SCPTeams.AddScore( team, SCPTeams.GetReward( team ) * 3 )
@@ -812,7 +769,7 @@ function PlayerEscort( ply )
 			InfoScreen( v, "escaped", INFO_SCREEN_DURATION, msg )
 			hook.Run( "SLCPlayerEscorted", v, ply )
 
-			v:AddXP( xp )
+			v:AddXP( xp, "escape" )
 			local vteam = v:SCPTeam()
 			SCPTeams.AddScore( vteam, SCPTeams.GetReward( vteam ) * 3 )
 

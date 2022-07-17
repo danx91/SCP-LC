@@ -5,7 +5,10 @@ SWEP.WorldModel		= "models/mishka/models/gasmask.mdl"
 
 SWEP.ShouldDrawViewModel = false
 
-SWEP.SelectFont = "SCPHUDMedium"
+if CLIENT then
+	SWEP.WepSelectIcon = Material( "slc/items/gas_mask.png" )
+	SWEP.SelectColor = Color( 255, 210, 0, 255 )
+end
 
 SWEP.Toggleable = true
 SWEP.Selectable = false

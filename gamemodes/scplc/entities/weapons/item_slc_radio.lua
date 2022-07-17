@@ -10,7 +10,7 @@ SWEP.Toggleable 	= true
 SWEP.EnableHolsterThink	= true
 SWEP.HasBattery 	= true
 SWEP.HolsterBatteryUsage = true
-SWEP.BatteryUsage 	= 3.6
+SWEP.BatteryUsage 	= 6
 
 if CLIENT then
 	SWEP.WepSelectIcon = Material( "slc/items/radio.png" )

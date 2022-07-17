@@ -524,7 +524,7 @@ function SWEP:DrawSCPHUD()
 	end
 end
 
-hook.Add( "EntityTakeDamage", "SCP066DMGMod", function( ent, dmg )
+SCPHook( "SCP096", "EntityTakeDamage", function( ent, dmg )
 	if IsValid( ent ) and ent:IsPlayer() and ent:SCPClass() == CLASSES.SCP096 then
 		local wep = ent:GetActiveWeapon()
 		if IsValid( wep ) then
@@ -542,7 +542,7 @@ hook.Add( "EntityTakeDamage", "SCP066DMGMod", function( ent, dmg )
 	end
 end )
 
-hook.Add( "CalcMainActivity", "SLCSCP096Act", function( ply, vel )
+SCPHook( "SCP096", "CalcMainActivity", function( ply, vel )
 	if ply:SCPClass() == CLASSES.SCP096 then
 		local wep = ply:GetActiveWeapon()
 		if IsValid( wep ) then
@@ -596,7 +596,7 @@ hook.Add( "CalcMainActivity", "SLCSCP096Act", function( ply, vel )
 end )
 
 //SWEP.AttackAngle
-hook.Add( "StartCommand", "SLCSCP096Cmd", function( ply, cmd )
+SCPHook( "SCP096", "StartCommand", function( ply, cmd )
 	if ply:SCPClass() == CLASSES.SCP096 then
 		local wep = ply:GetActiveWeapon()
 		if IsValid( wep ) then
@@ -644,7 +644,7 @@ if CLIENT then
 		end
 	end )
 
-	hook.Add( "PreDrawHalos", "SLCSCP096Halos", function()
+	SCPHook( "SCP096", "PreDrawHalos", function()
 		local ply = LocalPlayer()
 		if ply:SCPClass() == CLASSES.SCP096 then
 			local wep = ply:GetActiveWeapon()
@@ -658,7 +658,7 @@ if CLIENT then
 	end )
 
 	local overlay = GetMaterial( "slc/scp/096overlay" )
-	hook.Add( "SLCScreenMod", "SLCSCP096", function( clr )
+	SCPHook( "SCP096", "SLCScreenMod", function( clr )
 		local ply = LocalPlayer()
 
 		if ply:SCPClass() == CLASSES.SCP096 then

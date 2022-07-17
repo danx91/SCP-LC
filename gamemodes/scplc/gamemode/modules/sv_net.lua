@@ -23,7 +23,8 @@ util.AddNetworkString( "SLCPlayerDataUpdate" )
 util.AddNetworkString( "SLCGamemodeConfig" )
 util.AddNetworkString( "SLCProgressBar" )
 util.AddNetworkString( "SLCLooting" )
-//util.AddNetworkString( "SLCAuthLibrary" )
+util.AddNetworkString( "SLCHooks" )
+util.AddNetworkString( "SLCXPSummary" )
 
 net.AddTableChannel( "SLCPlayerMeta" )
 net.AddTableChannel( "SLCGameruleData" )
@@ -90,6 +91,7 @@ net.Receive( "PlayerReady", function( len, ply )
 		ErrorNoHalt( "Error! Player.playermeta is nil!\n", ply )
 	end
 
+	TransmitSCPHooks( ply )
 	net.SendTable( "SLCPlayerMeta", ply.playermeta or {}, ply )
 
 	if !ply.FullyLoaded then
@@ -151,10 +153,9 @@ end )
 --[[-------------------------------------------------------------
 SCP VARS
 ---------------------------------------------------------------]]
-local ply = FindMetaTable( "Player" )
-local _type = type
+local PLAYER = FindMetaTable( "Player" )
 
-function ply:SetupSCPVarTable()
+function PLAYER:SetupSCPVarTable()
 	self.scp_var_table = {
 		BOOL = {},
 		INT = {},
@@ -172,110 +173,94 @@ function ply:SetupSCPVarTable()
 	}
 end
 
-function ply:SCPVarUpdated( id, type, newVal )
+function PLAYER:SCPVarUpdated( id, var_type, newVal )
 	if newVal != nil then
-		local cb = self.scp_var_callbacks[type][id]
+		local cb = self.scp_var_callbacks[var_type][id]
 		if cb then
 			cb( self, newVal )
 		end
 	end
 
 	for i, v in ipairs( self.scp_update_var ) do
-		if v[1] == id and v[2] == type then
+		if v[1] == id and v[2] == var_type then
 			return
 		end
 	end
 
-	table.insert( self.scp_update_var, { id, type } )
+	table.insert( self.scp_update_var, { id, var_type } )
 end
 
-function ply:SetSCPVarCallback( id, type, cb )
-	assert( _type( cb ) == "function", "Bad argument #1 to function SetSCPVarCallback. Function expected got ".._type( cb ) )
+function PLAYER:SetSCPVarCallback( id, var_type, cb )
+	assert( type( cb ) == "function", "Bad argument #1 to function SetSCPVarCallback. Function expected got "..type( cb ) )
 
-	self.scp_var_callbacks[type][id] = cb
+	self.scp_var_callbacks[var_type][id] = cb
 end
 
-function ply:AddSCPVar( name, id, type )
-	if !name or !id or !type then return end
+function PLAYER:AddSCPVar( name, id, var_type )
+	if !name or !id or !var_type then return end
 
 	if !self.scp_var_table then
 		self:SetupSCPVarTable()
 	end
 
-	/*assert( self.scp_var_table[type], "Invalid type '"..type.."'!" )
-
-	if !id then
-		id = self.scp_var_lookup[type][name]
-
-		if !id then
-			for i = 0, 15 do
-				if self.scp_var_table[type][i] == nil then
-					id = i
-					break
-				end
-			end
-		end
-	end
-	
-	assert( id, "Failed to assign ID for SCPVar '"..name.."'! " )
-	assert( id < 16, "You can only create maximum of 16 SCPVars of each type!" )*/
+	assert( self.scp_var_table[var_type], "Invalid var_type '"..var_type.."'!" )
 	assert( id < 16, "Too big ID in AddSCPVar function. IDs cannot be greater than 15!" )
 	assert( id >= 0, "ID in AddSCPVar cannot be negative!" )
 
-	if type == "BOOL" then
+	if var_type == "BOOL" then
 		self.scp_var_table.BOOL[id] = false
-		self["Set"..name] = function( self, b )
-			assert( _type( b ) == "boolean", "Bad argument #1 to function Set"..name..". Boolean expected, got ".._type( b ) )
-			if self.scp_var_table.BOOL[id] != b then
-				self.scp_var_table.BOOL[id] = b
-				self:SCPVarUpdated( id, "BOOL", b )
+		self["Set"..name] = function( this, b )
+			assert( type( b ) == "boolean", "Bad argument #1 to function Set"..name..". Boolean expected, got "..type( b ) )
+			if this.scp_var_table.BOOL[id] != b then
+				this.scp_var_table.BOOL[id] = b
+				this:SCPVarUpdated( id, "BOOL", b )
 			end
 		end
-		self["Get"..name] = function( self )
-			return self.scp_var_table.BOOL[id]
+		self["Get"..name] = function( this )
+			return this.scp_var_table.BOOL[id]
 		end
 
 		self:SCPVarUpdated( id, "BOOL" )
-	elseif type == "INT" then
+	elseif var_type == "INT" then
 		self.scp_var_table.INT[id] = 0
-		self["Set"..name] = function( self, int )
-			assert( _type( int ) == "number", "Bad argument #1 to function Set"..name..". Number expected, got ".._type( int ) )
+		self["Set"..name] = function( this, int )
+			assert( type( int ) == "number", "Bad argument #1 to function Set"..name..". Number expected, got "..type( int ) )
 			int = math.floor( int )
-			if self.scp_var_table.INT[id] != int then
-				self.scp_var_table.INT[id] = int
-				self:SCPVarUpdated( id, "INT", int )
+			if this.scp_var_table.INT[id] != int then
+				this.scp_var_table.INT[id] = int
+				this:SCPVarUpdated( id, "INT", int )
 			end
 		end
-		self["Get"..name] = function( self )
-			return self.scp_var_table.INT[id]
+		self["Get"..name] = function( this )
+			return this.scp_var_table.INT[id]
 		end
 
 		self:SCPVarUpdated( id, "INT" )
-	elseif type == "FLOAT" then
+	elseif var_type == "FLOAT" then
 		self.scp_var_table.FLOAT[id] = 0
-		self["Set"..name] = function( self, f )
-			assert( _type( f ) == "number", "Bad argument #1 to function Set"..name..". Number expected, got ".._type( f ) )
-			if self.scp_var_table.FLOAT[id] != f then
-				self.scp_var_table.FLOAT[id] = f
-				self:SCPVarUpdated( id, "FLOAT", f )
+		self["Set"..name] = function( this, f )
+			assert( type( f ) == "number", "Bad argument #1 to function Set"..name..". Number expected, got "..type( f ) )
+			if this.scp_var_table.FLOAT[id] != f then
+				this.scp_var_table.FLOAT[id] = f
+				this:SCPVarUpdated( id, "FLOAT", f )
 			end
 		end
-		self["Get"..name] = function( self )
-			return self.scp_var_table.FLOAT[id]
+		self["Get"..name] = function( this )
+			return this.scp_var_table.FLOAT[id]
 		end
 
 		self:SCPVarUpdated( id, "FLOAT" )
-	elseif type == "STRING" then
+	elseif var_type == "STRING" then
 		self.scp_var_table.STRING[id] = ""
-		self["Set"..name] = function( self, str )
-			assert( _type( str ) == "string", "Bad argument #1 to function Set"..name..". String expected, got ".._type( str ) )
-			if self.scp_var_table.STRING[id] != str then
-				self.scp_var_table.STRING[id] = str
-				self:SCPVarUpdated( id, "STRING", str )
+		self["Set"..name] = function( this, str )
+			assert( type( str ) == "string", "Bad argument #1 to function Set"..name..". String expected, got "..type( str ) )
+			if this.scp_var_table.STRING[id] != str then
+				this.scp_var_table.STRING[id] = str
+				this:SCPVarUpdated( id, "STRING", str )
 			end
 		end
-		self["Get"..name] = function( self )
-			return self.scp_var_table.STRING[id]
+		self["Get"..name] = function( this )
+			return this.scp_var_table.STRING[id]
 		end
 
 		self:SCPVarUpdated( id, "STRING" )
@@ -287,7 +272,7 @@ function UpdateSCPVars( ply )
 		local num = #ply.scp_update_var
 		if num > 0 then
 			net.Start( "UpdateSCPVars" )
-			net.WriteUInt( num, 6 ) --max 64 values, 16 of each type
+			net.WriteUInt( num, 6 ) --max 64 values, 16 of each var_type
 
 			for _, var in pairs( ply.scp_update_var ) do
 				if var[2] == "BOOL" then

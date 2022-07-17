@@ -36,6 +36,9 @@ AddRoundType( "normal", {
 	init = function( self, multi )
 		SetupPlayers( multi )
 		hook.Run( "SpawnItems" )
+
+		DestroyAll()
+		UseAll()
 	end,
 	roundstart = function( self )
 		AddTimer( "EscapeTimer", 2, 0, CheckEscape )

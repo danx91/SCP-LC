@@ -430,3 +430,67 @@ function SimpleMatrix:ToPoly()
 end
 
 setmetatable( SimpleMatrix, { __call = SimpleMatrix.New } )
+
+--[[-------------------------------------------------------------------------
+Cubic Bezier
+---------------------------------------------------------------------------]]
+function math.CubicBezier( x1, y1, x2, y2 )
+	return function( n )
+		local x = 3 * n * ( 1 - n ) * ( 1 - n ) * x1 + 3 * n * n * ( 1 - n ) * x2 + n * n * n
+		local y = 3 * n * ( 1 - n ) * ( 1 - n ) * y1 + 3 * n * n * ( 1 - n ) * y2 + n * n * n
+
+		return x, y
+	end
+end
+
+function math.CubicBezierYFromX( x1, y1, x2, y2, precision )
+	precision = precision or 0.0001
+
+	return function( x )
+		local upper = 1
+		local lower = 0
+		local n = ( upper + lower ) / 2
+		local nx = 3 * n * ( 1 - n ) * ( 1 - n ) * x1 + 3 * n * n * ( 1 - n ) * x2 + n * n * n
+
+		while math.abs( nx - x ) > precision do
+			if nx > x then
+				upper = n
+			else
+				lower = n
+			end
+
+			n = ( upper + lower ) / 2
+			nx = 3 * n * ( 1 - n ) * ( 1 - n ) * x1 + 3 * n * n * ( 1 - n ) * x2 + n * n * n
+		end
+
+		local y = 3 * n * ( 1 - n ) * ( 1 - n ) * y1 + 3 * n * n * ( 1 - n ) * y2 + n * n * n
+
+		return y
+	end
+end
+
+function math.CubicBezierXFromY( x1, y1, x2, y2, precision )
+	precision = precision or 0.0001
+
+	return function( y )
+		local upper = 1
+		local lower = 0
+		local n = ( upper + lower ) / 2
+		local ny = 3 * n * ( 1 - n ) * ( 1 - n ) * y1 + 3 * n * n * ( 1 - n ) * y2 + n * n * n
+
+		while math.abs( ny - y ) > precision do
+			if ny > y then
+				upper = n
+			else
+				lower = n
+			end
+
+			n = ( upper + lower ) / 2
+			ny = 3 * n * ( 1 - n ) * ( 1 - n ) * y1 + 3 * n * n * ( 1 - n ) * y2 + n * n * n
+		end
+
+		local x = 3 * n * ( 1 - n ) * ( 1 - n ) * x1 + 3 * n * n * ( 1 - n ) * x2 + n * n * n
+
+		return x
+	end
+end

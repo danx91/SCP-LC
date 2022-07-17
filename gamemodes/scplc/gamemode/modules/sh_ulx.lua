@@ -44,7 +44,7 @@ function InitializeSCPULX()
 	end
 
 	function ulx.forcespawn( ply, plyt, class_n, silent )
-		if !class_n then return end
+		if !class_n or !ROUND.active then return end
 		
 		if !plyt:GetActive() then
 			ULib.tsayError( ply, "Player "..plyt:Nick().." is inactive! Force spawn failed", true )
@@ -105,7 +105,7 @@ function InitializeSCPULX()
 	function ulx.slcxp( ply, plyt, xp, silent )
 		if !isnumber( xp ) then return end
 
-		plyt:AddXP( xp )
+		plyt:AddXP( xp, "cmd" )
 
 		if silent then
 			ulx.fancyLogAdmin( ply, true, "#A gave #T "..xp.." experience", plyt )
@@ -265,14 +265,9 @@ function InitializeSCPULX()
 			target:SetSCPData( "xp", 0 )
 
 			rem_info( ply, target, atype, silent )
-		elseif atype == "prestige" then
-			target:Set_SCPPrestige( 0 )
-			target:SetSCPData( "prestige", 0 )
-
-			rem_info( ply, target, atype, silent )
-		elseif atype == "prestige_points" then
-			target:Set_SCPPrestigePoints( 0 )
-			target:SetSCPData( "prestige_points", 0 )
+		elseif atype == "class_points" then
+			target:Set_SCPClassPoints( 0 )
+			target:SetSCPData( "class_points", 0 )
 
 			rem_info( ply, target, atype, silent )
 		elseif atype == "owned_classes" then
@@ -284,21 +279,19 @@ function InitializeSCPULX()
 			target:SetSCPData( "level", 0 )
 			target:Set_SCPExp( 0 )
 			target:SetSCPData( "xp", 0 )
-			target:Set_SCPPrestige( 0 )
-			target:SetSCPData( "prestige", 0 )
-			target:Set_SCPPrestigePoints( 0 )
-			target:SetSCPData( "prestige_points", 0 )
+			target:Set_SCPClassPoints( 0 )
+			target:SetSCPData( "class_points", 0 )
 			target.PlayerInfo:Set( "unlocked_classes", {} )
 
 			rem_info( ply, target, atype, silent )
 		else
-			ULib.tsayError( ply, "Unknown type '"..atype.."'!", true )
+			ULib.tsayError( ply, "Unknown type '"..tostring( atype ).."'!", true )
 		end
 	end
 
 	local removedata = ulx.command( ULX_CAT, "ulx remove_data", ulx.removedata )
 	removedata:addParam{ type = ULib.cmds.PlayerArg, hint = "Target" }
-	removedata:addParam{ type = ULib.cmds.StringArg, hint = "Type", completes = { "level", "xp", "prestige", "prestige_points", "owned_classes", "all" } }
+	removedata:addParam{ type = ULib.cmds.StringArg, hint = "Type", completes = { "level", "xp", "class_points", "owned_classes", "all" } }
 	removedata:addParam{ type = ULib.cmds.BoolArg, invisible = true }
 	removedata:setOpposite( "ulx silent remove_data", { nil, nil, true } )
 	removedata:defaultAccess( ULib.ACCESS_SUPERADMIN )
@@ -307,7 +300,7 @@ end
 
 function SetupForceSCP()
 	function ulx.forcescp( plyc, plyt, scp, silent )
-		if !scp then return end
+		if !scp or !ROUND.active then return end
 
 		if !plyt:GetActive() then
 			ULib.tsayError( plyc, "Player "..plyt:GetName().." is inactive! Force spawn failed", true )

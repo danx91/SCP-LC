@@ -74,13 +74,16 @@ SLCCVar( "slc_support_spawnrate", { "support", "time" }, "360,540", { FCVAR_ARCH
 //SLCCVar( "slc_scaledamage_scp", "damage", 1, { FCVAR_NOTIFY, FCVAR_ARCHIVE } )
 
 //XP
-SLCCVar( "slc_xp_level", "xp", 10000, { FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED }, nil, 1, nil, tonumber )
-SLCCVar( "slc_xp_increase", "xp", 1000, { FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED }, nil, 0, nil, tonumber )
+SLCCVar( "slc_xp_level", "xp", 7500, { FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED }, nil, 1, nil, tonumber )
+SLCCVar( "slc_xp_increase", "xp", 1250, { FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED }, nil, 0, nil, tonumber )
 SLCCVar( "slc_points_xp", "xp", 50, { FCVAR_ARCHIVE }, nil, 0, nil, tonumber )
-SLCCVar( "slc_xp_escape", "xp", "250,2000", { FCVAR_ARCHIVE }, nil, nil, nil, cvar_checker( 2 ) )
-SLCCVar( "slc_xp_round", "xp", "100,200,300", { FCVAR_ARCHIVE }, nil, nil, nil, cvar_checker( 3 ) )
+SLCCVar( "slc_xp_escape", "xp", "300,1500", { FCVAR_ARCHIVE }, nil, nil, nil, cvar_checker( 2 ) )
+SLCCVar( "slc_xp_round", "xp", "100,150,200", { FCVAR_ARCHIVE }, nil, nil, nil, cvar_checker( 3 ) )
 SLCCVar( "slc_xp_win", "xp", "1500,1000", { FCVAR_ARCHIVE }, nil, nil, nil, cvar_checker( 2 ) )
-SLCCVar( "slc_points_escort", "xp", 4, { FCVAR_ARCHIVE }, nil, 0, nil, tonumber )
+SLCCVar( "slc_points_escort", "xp", 2, { FCVAR_ARCHIVE }, nil, 0, nil, tonumber )
+SLCCVar( "slc_dailyxp_amount", "xp", 2500, { FCVAR_ARCHIVE }, nil, 0, nil, tonumber )
+SLCCVar( "slc_dailyxp_mul", "xp", 0.5, { FCVAR_ARCHIVE }, nil, 0.1, nil, tonumber )
+SLCCVar( "slc_dailyxp_time", "xp", 0, { FCVAR_ARCHIVE }, nil, nil, nil, tonumber )
 
 //WARHEADS
 SLCCVar( "slc_time_alpha", { "warheads", "time" }, 150, { FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED }, nil, 1, nil, tonumber )
@@ -94,9 +97,9 @@ SLCCVar( "slc_afk_time", { "afk", "time" }, 120, { FCVAR_NOTIFY, FCVAR_ARCHIVE }
 
 //SCP
 SLCCVar( "slc_overload_time", { "scp", "time" }, 5, { FCVAR_NOTIFY, FCVAR_ARCHIVE }, nil, 1, nil, tonumber )
-SLCCVar( "slc_overload_cooldown", { "scp", "time" }, 90, { FCVAR_NOTIFY, FCVAR_ARCHIVE }, nil, 0, nil, tonumber )
+SLCCVar( "slc_overload_cooldown", { "scp", "time" }, 60, { FCVAR_NOTIFY, FCVAR_ARCHIVE }, nil, 0, nil, tonumber )
 SLCCVar( "slc_overload_delay", { "scp", "time" }, 6, { FCVAR_NOTIFY, FCVAR_ARCHIVE }, nil, 0, nil, tonumber )
-SLCCVar( "slc_overload_door_cooldown", { "scp", "time" }, 150, { FCVAR_NOTIFY, FCVAR_ARCHIVE }, nil, 0, nil, tonumber )
+SLCCVar( "slc_overload_door_cooldown", { "scp", "time" }, 60, { FCVAR_NOTIFY, FCVAR_ARCHIVE }, nil, 0, nil, tonumber )
 
 --[[-------------------------------------------------------------------------
 Update Handler
@@ -128,6 +131,7 @@ function GM:PreGamemodeLoaded()
     hook.Remove( "PlayerTick", "TickWidgets" )
    // hook.Remove( "RenderScene", "RenderStereoscopy" )
 end
+
 /*function GM:EntityTakeDamage( target, dmginfo ) --TODO
 	if target:IsPlayer() and target:HasWeapon( "item_scp_500" ) then
 		if target:Health() <= dmginfo:GetDamage() then
@@ -195,6 +199,8 @@ function GM:EntityTakeDamage( target, info )
 		if !cache then
 			cache = SetRoundProperty( "prevent_break_cache", {} )
 		end
+
+		if !cache then return end --round is not active
 
 		if !cache[target] and !target.SkipSCPDamageCheck then
 			local pos = target:GetPos()

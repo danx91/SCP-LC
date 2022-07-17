@@ -479,7 +479,7 @@ if CLIENT then
 			end )
 		end, function()
 			return SLCAuth.HasAccess( LocalPlayer(), "slc gamemodeconfig" )
-		end )
+		end, 1000 )
 
 		local fetch_promise
 

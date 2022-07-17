@@ -15,6 +15,12 @@ function GM:PlayerInitialSpawn( ply )
 
 	//table.insert( ROUND.queue, ply )
 	//QueueInsert( ply )
+
+	timer.Simple( 15, function()
+		if !IsValid( ply ) then return end
+
+		ply:ResetDailyBonus()
+	end )
 end
 
 function GM:PlayerSpawn( ply )
@@ -117,9 +123,8 @@ function GM:DoPlayerDeath( ply, attacker, dmginfo )
 
 	ply.StoredProperties = ply.SLCProperties
 
-	ply:DropVest( true )
+	ply:DropEQ()
 	ply:CreatePlayerRagdoll()
-	//ply:DropEQ()
 	ply:Despawn()
 
 	if attacker:IsPlayer() then
@@ -165,7 +170,7 @@ function GM:PlayerDeath( victim, inflictor, attacker )
 				hook.Run( "SLCKillAssist", victim, attacker, v[1], v[2] )
 			end
 
-			if !victim._skipNextKillRewards then
+			if !victim._SkipNextKillRewards then
 				//print( "PRE" )
 				//PrintTable( killinfo )
 
@@ -270,7 +275,7 @@ function GM:PlayerDeath( victim, inflictor, attacker )
 					//end
 				end
 			else
-				victim._skipNextKillRewards = false
+				victim._SkipNextKillRewards = false
 				print( "Skipping rewards", victim )
 			end
 		end
@@ -473,7 +478,7 @@ function GM:PlayerUse( ply, ent )
 	end
 
 	--Cache door
-	if !data and !ent.ButtonCacheChecked then
+	if !data and !ent.ButtonCacheChecked or DEVELOPER_MODE then
 		ent.ButtonCacheChecked = true
 
 		local pos = ent:GetPos()
@@ -488,7 +493,7 @@ function GM:PlayerUse( ply, ent )
 						data = v
 						RegisterButton( v, ent, true )
 						registered = true
-						print( "tab reg" )
+						//print( "tab reg" )
 						break
 					end
 				end
@@ -549,13 +554,13 @@ function GM:PlayerUse( ply, ent )
 			local handle_result = HandleButtonUse( ply, ent, data )
 
 			if !handle_result then
-				ply.NextSLCUse = ct + 1.5
+				ply.NextSLCUse = ct + 0.5
 			end
 
 			return handle_result
 		end
 	else
-		ply.NextSLCUse = ct + 1.5
+		ply.NextSLCUse = ct + 0.5
 	end
 
 	return true
@@ -587,6 +592,7 @@ end
 
 function GM:PlayerCanHearPlayersVoice( listener, talker )
 	if ROUND.infoscreen then return false end
+	if !listener:IsActive() then return false end
 
 	local t_lis = listener:SCPTeam()
 	local t_tal = talker:SCPTeam()

@@ -95,10 +95,10 @@ hook.Add( "RegisterSCP", "RegisterBaseSCPs", function()
 		jump_power = 200,
 		prep_freeze = true,
 	}, {
-		base_health = 2150,
-		max_health = 2150,
-		base_speed = 185,
-		run_speed = 185,
+		base_health = 1950,
+		max_health = 1950,
+		base_speed = 175,
+		run_speed = 175,
 	}, nil, function( ply )
 		ply:SetRenderMode( RENDERMODE_TRANSCOLOR )
 		ply:SetCustomCollisionCheck( true )
@@ -258,10 +258,10 @@ hook.Add( "RegisterSCP", "RegisterBaseSCPs", function()
 	RegisterSCP( "SCP966", "models/player/mishka/966_new.mdl", "weapon_scp_966", {
 		jump_power = 200,
 	}, {
-		base_health = 1250,
-		max_health = 1250,
-		base_speed = 190,
-		run_speed = 190,
+		base_health = 1050,
+		max_health = 1050,
+		base_speed = 185,
+		run_speed = 185,
 	} )
 
 	RegisterSCP( "SCP24273", "models/player/alski/scp2427-3.mdl", "weapon_scp_24273", {

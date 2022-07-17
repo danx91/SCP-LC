@@ -570,6 +570,21 @@ Enables or disables progress bar. Example of tick based bar can be found in Turr
 -------------------------------------------------------------------------]]--
 function ProgressBar( enable, maxvalue, text, tick, id )
 	if enable then
+		if text and string.sub( text, 1, 5 ) == "lang:" then
+			local tab = LANG
+			
+			for k, v in ipairs( string.Explode( ".", string.sub( text, 6 ) ) ) do
+				tab = tab[v]
+
+				if !tab then
+					break
+				elseif isstring( tab ) then
+					text = tab
+					break
+				end
+			end
+		end
+
 		PROGRESS_ENABLED = true
 		PROGRESS_MAX_VALUE = tonumber( maxvalue ) or 100
 		PROGRESS_VALUE = 0
@@ -682,6 +697,7 @@ hook.Add( "Tick", "SLCProgressBar", function()
 		SetProgressBarValue( ( ct - tbpb_start ) / ( tbpb_end - tbpb_start ), "tbpb" )
 
 		if ct >= tbpb_end then
+			tbpb_enable = false
 			ProgressBar( false )
 		end
 	end
@@ -941,7 +957,9 @@ function SLCPopup( name, text, keep, callback, ... )
 	popup:DockPadding( 0, 0, 0, 0 )
 	popup:MakePopup()
 	popup.Think = function( self )
-		if !self:HasFocus() then
+		if self:HasFocus() then
+			self.WasFocused = true
+		elseif self.WasFocused then
 			if keep then
 				self:MakePopup()
 			else

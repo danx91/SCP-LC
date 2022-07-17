@@ -5,7 +5,8 @@ local WINDOW_PANELS = {}
 local MATS = {
 	blur = Material( "pp/blurscreen" ),
 	exit = Material( "slc/hud/exit.png", "smooth" ),
-	reset = Material( "slc/hud/refresh.png", "smooth" )
+	reset = Material( "slc/hud/refresh.png", "smooth" ),
+	fade = Material( "vgui/gradient-l" ),
 }
 
 local COLOR = {
@@ -13,7 +14,7 @@ local COLOR = {
 	black = Color( 0, 0, 0, 255 ),
 	inactive = Color( 125, 125, 125, 255 ),
 	border = Color( 175, 175, 175, 255 ),
-	hover = Color( 75, 75, 75, 255 ),
+	hover = Color( 75, 75, 75, 200 ),
 	selected = Color( 115, 115, 115, 25 ),
 	conflict = Color( 225, 50, 50, 255 ),
 }
@@ -22,6 +23,8 @@ local COLOR = {
 Local functions
 ---------------------------------------------------------------------------]]
 local function translateButton( button )
+	if !isstring( button ) then return end
+
 	local t, key = string.match( button, "(%a+):(.+)" )
 	if t and key then
 		key = string.lower( key )
@@ -54,18 +57,10 @@ local function checkForConflicts()
 				if bind1 != bind2 and bind2.stype == "bind" then
 					if bind1.key_code and bind2.key_code and bind1.key_code == bind2.key_code then
 						bind1.key_conflict = true
-						//bind2.key_conflict = true
 						break
 					end
 				end
 			end
-
-			/*if bind1.key_code then
-				local bind = input.LookupKeyBinding( bind1.key_code )
-				if bind then
-					//bind1.key_conflict = true
-				end
-			end*/
 		end
 	end
 end
@@ -86,6 +81,8 @@ local function processSettingsEntry( k )
 			end
 
 			v.bind = bind
+		elseif v.stype == "switch" then
+			v.value = tobool( v.value )
 		end
 	end
 end
@@ -105,9 +102,14 @@ function GetSettingsEntry( name )
 	return SLC_SETTINGS[name]
 end
 
+function GetSettingsValue( name )
+	return SLC_SETTINGS[name] and SLC_SETTINGS[name].value
+end
+
 function GetBindButton( name )
-	if SLC_SETTINGS[name] then
-		return SLC_SETTINGS[name].key_code, SLC_SETTINGS[name].key
+	local v = SLC_SETTINGS[name]
+	if v and v.stype == "bind" then
+		return v.key_code, v.key
 	end
 end
 
@@ -122,19 +124,21 @@ function SaveSettings()
 end
 
 local settingsID = 1
-function RegisterSettingsEntry( name, stype, default )
+function RegisterSettingsEntry( name, stype, default, data, panel )
 	SLC_SETTINGS[name] = {
 		id = settingsID,
 		stype = stype,
 		default = default,
+		data = data,
+		panel = panel,
 		//value = nil,
 	}
 
 	settingsID = settingsID + 1
 end
 
-function AddSettingsPanel( name, fn, show )
-	table.insert( WINDOW_PANELS, { name = name, create = fn, show = show } )
+function AddSettingsPanel( name, fn, show, z )
+	table.insert( WINDOW_PANELS, { name = name, create = fn, show = show, z = z } )
 end
 
 --[[-------------------------------------------------------------------------
@@ -243,6 +247,10 @@ function OpenSettingsWindow()
 	main_panel.Paint = function( self, pw, ph )
 	end
 
+	table.sort( WINDOW_PANELS, function( a, b )
+		return ( a.z or 0 ) > ( b.z or 0 )
+	end )
+
 	for i, v in ipairs( WINDOW_PANELS ) do
 		if !v.show or v.show() then
 			local btn = vgui.Create( "DButton", side_menu )
@@ -253,20 +261,26 @@ function OpenSettingsWindow()
 			btn.Paint = function( self, pw, ph )
 				if i == main_panel.SelectedMenu then
 					surface.SetDrawColor( COLOR.selected )
-					surface.DrawRect( 0, 0, pw, ph )
+					surface.SetMaterial( MATS.fade )
+					surface.DrawTexturedRect( 0, 0, pw * 0.75, ph )
 				end
 
 				if self:IsHovered() then
 					surface.SetDrawColor( COLOR.hover )
-					surface.DrawRect( 0, 0, pw, ph )
+					surface.SetMaterial( MATS.fade )
+					surface.DrawTexturedRect( 0, 0, pw * 0.9, ph )
 				end
 
 				if i == main_panel.SelectedMenu then
 					surface.SetDrawColor( COLOR.white )
-					surface.DrawLine( 0, ph - 1, pw * 0.8, ph - 1 )
+					//surface.DrawLine( 0, ph - 1, pw * 0.8, ph - 1 )
+					surface.SetMaterial( MATS.fade )
+					surface.DrawTexturedRect( 0, ph - 1, pw * 0.8, 1 )
 				else
-					surface.SetDrawColor( Color( 100, 100, 100, 255 ) )
-					surface.DrawLine( 0, ph - 1, pw * 0.8, ph - 1 )
+					surface.SetDrawColor( COLOR.inactive )
+					//surface.DrawLine( 0, ph - 1, pw * 0.8, ph - 1 )
+					surface.SetMaterial( MATS.fade )
+					surface.DrawTexturedRect( 0, ph - 1, pw * 0.8, 1 )
 				end
 
 				draw.Text{
@@ -298,6 +312,8 @@ function OpenSettingsWindow()
 		main_panel.SelectedMenuName = first.name
 		first.create( main_panel )
 	end
+
+	return window
 end
 
 --[[-------------------------------------------------------------------------
@@ -305,8 +321,9 @@ Base hooks
 ---------------------------------------------------------------------------]]
 hook.Add( "SLCGamemodeLoaded", "SLCSettings", function()
 	hook.Run( "SLCRegisterSettings" )
+
 	for k, v in pairs( SLC_SETTINGS ) do
-		DEFAULT_SETTINGS[k] = v.defalt
+		DEFAULT_SETTINGS[k] = v.default
 	end
 
 	local data = {}
@@ -323,7 +340,12 @@ hook.Add( "SLCGamemodeLoaded", "SLCSettings", function()
 	end
 
 	for k, v in pairs( SLC_SETTINGS ) do
-		v.value = data[k] or v.default
+		if data[k] != nil then
+			v.value = data[k]
+		else
+			v.value = v.default
+		end
+		
 		processSettingsEntry( k )
 	end
 
@@ -355,7 +377,7 @@ AddSettingsPanel( "binds", function( parent )
 	local binds = {}
 
 	for k, v in pairs( SLC_SETTINGS ) do
-		if v.stype == "bind" then
+		if v.stype == "bind" and ( !v.panel or v.panel == "binds" ) then
 			table.insert( binds, { name = k, data = v } )
 		end
 	end
@@ -511,11 +533,16 @@ AddSettingsPanel( "binds", function( parent )
 		end
 
 		binder.OnChange = function( self, value )
-			if value != v.data.key_code then
-				if value == 66 then
+			if value != v.data.key_code and value != MOUSE_LEFT and value != MOUSE_RIGHT then
+				if !value or value == 66 then
 					v.data.value = "none"
 				else
-					v.data.value = "key:"..string.upper( input.GetKeyName( value ) )
+					local name = input.GetKeyName( value )
+					if name then
+						v.data.value = "key:"..name
+					else
+						v.data.value = "code:"..value
+					end
 				end
 
 				reset_btn:SetEnabled( v.data.value != v.data.default )
@@ -527,10 +554,9 @@ AddSettingsPanel( "binds", function( parent )
 			end
 		end
 
-		local name = vgui.Create( "DLabel", pnl )
+		local name = vgui.Create( "DPanel", pnl )
 		name:Dock( FILL )
 		name:DockMargin( options_margin, options_margin, options_margin, options_margin )
-		name:SetText( "" )
 
 		name.Paint = function( self, pw, ph )
 			//surface.SetDrawColor( COLOR.white )
@@ -546,7 +572,135 @@ AddSettingsPanel( "binds", function( parent )
 			}
 		end
 	end
-end)
+end, nil, 10000 )
+
+--[[-------------------------------------------------------------------------
+General config
+---------------------------------------------------------------------------]]
+local function add_control( parent, data, marg )
+	local w = ScrW()
+
+	if data.stype == "switch" then
+		marg = marg * 1.5
+
+		local inner
+		local switch = vgui.Create( "DButton", parent )
+		switch:SetText( "" )
+		switch:Dock( RIGHT )
+		switch:DockMargin( marg, marg, marg, marg )
+		switch:SetWide( w * 0.066 )
+
+		switch.color = data.value and Color( 0, 175, 0 ) or Color( 175, 0, 0 )
+
+		switch.Paint = function( this, pw, ph )
+			draw.RoundedBox( 8, 0, 0, pw, ph, Color( 255, 255, 255 ) )
+			draw.RoundedBox( 8, 1, 1, pw - 2, ph - 2, this.color )
+		end
+
+		switch.DoClick = function( this )
+			inner:DoClick()
+		end
+
+		inner = vgui.Create( "DButton", switch )
+		inner:SetText( "" )
+		inner:SetPos( 0, 0 )
+
+		switch.state = data.value
+
+		inner.DoClick = function( this )
+			if this.anim then return end
+
+			switch.state = !switch.state
+			data.value = switch.state
+
+			this.anim = true
+
+			local anim = this:NewAnimation( 0.25, 0, -1, function( tab, pnl )
+				this.anim = false
+			end)
+
+			anim.Think = function( tab, pnl, f )
+				if !switch.state then
+					f = 1 - f
+				end
+
+				switch.color = Color( 175 * ( 1 - f ), 175 * f, 0 )
+
+				pnl:SetPos( switch:GetWide() * 0.5 * f )
+			end
+
+			processSettingsEntry( switch.state )
+			SaveSettings()
+		end
+
+		inner.Paint = function( this, pw, ph )
+			draw.RoundedBox( 8, 1, 1, pw - 2, ph - 2, Color( 155, 155, 155 ) )
+		end
+
+		switch.PerformLayout = function( this, pw, ph )
+			this:SetWide( ph * 2 )
+			inner:SetSize( ph, ph )
+
+			if this.state then
+				inner:SetPos( ph, 0 )
+			end
+		end
+	end
+end
+
+local order = {
+	switch = 1,
+	dropbox = 3,
+}
+
+AddSettingsPanel( "config", function( parent )
+	local tab = {}
+
+	for k, v in pairs( SLC_SETTINGS ) do
+		if order[v.stype] and ( !v.panel or v.panel == "config" ) then
+			table.insert( tab, { name = k, data = v, sorting = order[v.stype] } )
+		end
+	end
+
+	table.sort( tab, function( a, b )
+		if a.sorting == b.sorting then
+			return a.sorting < b.sorting
+		end
+
+		return a.data.id < b.data.id
+	end )
+
+	local w, h = ScrW(), ScrH()
+	local options_margin = w * 0.008
+
+	for i, v in ipairs( tab ) do
+		local pnl = vgui.Create( "DPanel", parent )
+		pnl:SetTall( h * 0.08 )
+		pnl:Dock( TOP )
+		pnl:DockMargin( 0, h * 0.01, 0, 0 )
+
+		pnl.Paint = function( this, pw, ph )
+			surface.SetDrawColor( COLOR.border )
+			surface.DrawLine( 0, ph - 1, pw, ph - 1 )
+		end
+
+		add_control( pnl, v.data, options_margin )
+
+		local name = vgui.Create( "DPanel", pnl )
+		name:Dock( FILL )
+		name:DockMargin( options_margin, options_margin, options_margin, options_margin )
+		name.Paint = function( this, pw, ph )
+			draw.Text{
+				text = LANG.settings.config[v.name] or v.name,
+				pos = { 0, ph * 0.5 },
+				font = "SCPHUDMedium",
+				color = COLOR.white,
+				xalign = TEXT_ALIGN_LEFT,
+				yalign = TEXT_ALIGN_CENTER,
+			}
+		end
+	end
+end, nil, 9000 )
 
 --[[-------------------------------------------------------------------------
 Reset panel
@@ -628,7 +782,7 @@ AddSettingsPanel( "reset", function( parent )
 			SLCPopupIfEmpty( LANG.settings.server_reset, LANG.settings.server_reset_desc, true, nil, LANG.settings.popup_ok )
 		end
 	end
-end )
+end, nil, 100 )
 
 /*timer.Simple( 0.1, function()
 	if IsValid( SLC_SETTINGS_WINDOW ) then SLC_SETTINGS_WINDOW:Close() end

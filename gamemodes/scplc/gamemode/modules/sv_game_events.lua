@@ -55,31 +55,35 @@ function Use914( ent, ply )
 	end
 
 	AddTimer( "SCP914Upgrade", 10, 1, function() 
-		local items = ents.FindInBox( SCP_914_INTAKE_MINS, SCP_914_INTAKE_MAXS )
-		for k, v in pairs( items ) do
-			if IsValid( v ) then
-				if v.HandleUpgrade then
-					v:HandleUpgrade( mode, nummode, SCP_914_OUTPUT, ply )
-				elseif v.scp914upgrade then
-					local item_class
+		InternalUpgrade914( mode, nummode, ply )
+	end )
 
-					if isstring( v.scp914upgrade ) and nummode > 2 then item_class = v.scp914upgrade end
-					if isfunction( v.scp914upgrade ) then item_class = v:scp914upgrade( mode, nummode ) end
+	return true
+end
 
-					if item_class then
-						local item = ents.Create( item_class )
-						if IsValid( item ) then
-							v:Remove()
-							item:SetPos( SCP_914_OUTPUT )
-							item:Spawn()
-						end
+function InternalUpgrade914( mode, nummode, ply )
+	local items = ents.FindInBox( SCP_914_INTAKE_MINS, SCP_914_INTAKE_MAXS )
+	for k, v in pairs( items ) do
+		if IsValid( v ) then
+			if v.HandleUpgrade then
+				v:HandleUpgrade( mode, nummode, SCP_914_OUTPUT, ply )
+			elseif v.scp914upgrade then
+				local item_class
+
+				if isstring( v.scp914upgrade ) and nummode > 2 then item_class = v.scp914upgrade end
+				if isfunction( v.scp914upgrade ) then item_class = v.scp914upgrade( v, mode, nummode ) end
+
+				if item_class then
+					local item = ents.Create( item_class )
+					if IsValid( item ) then
+						v:Remove()
+						item:SetPos( SCP_914_OUTPUT )
+						item:Spawn()
 					end
 				end
 			end
 		end
-	end )
-
-	return true
+	end
 end
 
 --[[-------------------------------------------------------------------------
@@ -199,21 +203,13 @@ function Recontain106( ply )
 		return false
 	end
 
-	local cage
-	for k, v in pairs( ents.GetAll() ) do
-		if v:GetPos() == CAGE_DOWN_POS then
-			cage = v
-			break
-		end
-	end
-	if !cage then
+	if !MAP_CHECKERS.SCP106_CAGE() then
 		PlayerMessage( "r106eloiid", ply, true )
 		//ply:PrintMessage( HUD_PRINTCENTER, "Power down ELO-IID electromagnet in order to start SCP 106 recontain procedure" )
 		return false
 	end
 
-	local e = ents.FindByName( SOUND_TRANSMISSION_NAME )[1]
-	if e:GetAngles().roll == 0 then
+	if !MAP_CHECKERS.SCP106_SOUND() then
 		PlayerMessage( "r106sound", ply, true )
 		//ply:PrintMessage( HUD_PRINTCENTER, "Enable sound transmission in order to start SCP 106 recontain procedure" )
 		return false
@@ -251,7 +247,7 @@ function Recontain106( ply )
 
 	SetRoundStat( "106recontain", true )
 
-	AddTimer( "106Recontain", 6, 1, function( self, n )
+	AddTimer( "106Recontain", 6, 1, function()
 		if ROUND.post or !GetRoundStat( "106recontain" ) then return end
 		for k, v in pairs( plys ) do
 			if IsValid( v ) then
@@ -269,7 +265,7 @@ function Recontain106( ply )
 			end
 		end
 
-		AddTimer( "106Recontain", 11, 1, function( self, n )
+		AddTimer( "106Recontain", 11, 1, function()
 			if ROUND.post or !GetRoundStat( "106recontain" ) then return end
 
 			hook.Run( "SLCSCP106Recontained", ply )
@@ -307,11 +303,11 @@ Omega Warhead
 OMEGA_DESTROY = OMEGA_DESTROY or {}
 
 hook.Add( "SLCPreround", "SLCOmegaWarhead", function()
-	local listener = SynchronousEventListener( "OmegaWarhead", 2, 2, function( listener, info )
-		if OMEGA_REMOTE_CHECK() then
+	local listener = SynchronousEventListener( "OmegaWarhead", 2, 2, function( lis, info )
+		if MAP_CHECKERS.OMEGA_REMOTE() then
 			OMEGAWarhead( info[1][1], info[2][1] )
 		else
-			listener:Broadcast( NULL, false, 1 )
+			lis:Broadcast( NULL, false, 1 )
 		end
 	end )
 
@@ -368,7 +364,7 @@ function OMEGAWarhead( ply1, ply2 )
 	end
 
 	TransmitSound( "scp_lc/warhead/alarm.ogg", true, 1 )
-	AddTimer( "OmegaSiren", 3, 1, function( self, n )
+	AddTimer( "OmegaSiren", 3, 1, function()
 
 		//print( "Opening doors..." )
 
@@ -386,7 +382,7 @@ function OMEGAWarhead( ply1, ply2 )
 			end
 		end
 
-		AddTimer( "OmegaCountdown", time - 10, 1, function( self, n )
+		AddTimer( "OmegaCountdown", time - 10, 1, function()
 			//print( "closig shelter, lockdown" )
 
 			SetRoundStat( "warhead_lockdown", true )
@@ -397,7 +393,7 @@ function OMEGAWarhead( ply1, ply2 )
 				end
 			end
 
-			AddTimer( "OmegaShelter", 5, 1, function( self, n )
+			AddTimer( "OmegaShelter", 5, 1, function()
 				TransmitSound( "scp_lc/warhead/siren.wav", false, 1 )
 
 				//print( "HOLDING ROUND!" )
@@ -412,7 +408,7 @@ function OMEGAWarhead( ply1, ply2 )
 							{ "escape_xp", "text;"..xp }
 						} )
 
-						v:AddXP( xp )
+						v:AddXP( xp, "escape" )
 
 						local team = v:SCPTeam()
 						SCPTeams.AddScore( team, SCPTeams.GetReward( team ) * 2 )
@@ -433,7 +429,7 @@ function OMEGAWarhead( ply1, ply2 )
 				end
 			end )
 
-			AddTimer( "OmegaExplosion", 10, 1, function( self, n )
+			AddTimer( "OmegaExplosion", 10, 1, function()
 				local surface = {}
 				local facility = {}
 
@@ -548,7 +544,7 @@ function ALPHAWarhead( ply )
 	end
 
 	TransmitSound( "scp_lc/warhead/alarm.ogg", true, 1 )
-	AddTimer( "AlphaSiren", 3, 1, function( self, n )
+	AddTimer( "AlphaSiren", 3, 1, function()
 		local time = CVAR.slc_time_alpha:GetInt()
 		PlayerMessage( "alpha_detonation$"..time )
 		TransmitSound( "scp_lc/warhead/siren.wav", true, 1 )
@@ -559,7 +555,7 @@ function ALPHAWarhead( ply )
 			//print( "SUPPORT TIMER DESTROYED" )
 		end
 
-		AddTimer( "AlphaCountdown", time - 10, 1, function( self, n )
+		AddTimer( "AlphaCountdown", time - 10, 1, function()
 			//print( "Lockdown" )
 			SetRoundStat( "warhead_lockdown", true )
 
@@ -569,11 +565,11 @@ function ALPHAWarhead( ply )
 				//print( "ESCAPE TIMER DESTROYED" )
 			end
 
-			AddTimer( "AlphaSiren", 5, 1, function( self, n )
+			AddTimer( "AlphaSiren", 5, 1, function()
 				TransmitSound( "scp_lc/warhead/siren.wav", false, 1 )
 			end )
 
-			AddTimer( "AlphaExplosion", 10, 1, function( self, n )
+			AddTimer( "AlphaExplosion", 10, 1, function()
 				//print( "HOLDING ROUND" )
 				HoldRound()
 

@@ -13,18 +13,15 @@ if CLIENT then
 	SWEP.SelectColor = Color( 255, 210, 0, 255 )
 end
 
-SWEP.IndicatorRotation = 0 --TEST high ping results
-
 SWEP.Mins = Vector( -24.5, -41, -33 )
 SWEP.Maxs = Vector( 44, 41, 16.5 )
 
 SWEP.PlaceTime = 5
-
-SWEP.Place = 0
-SWEP.LPrimary = 0
+SWEP.RotationSpeed = 90
 
 function SWEP:SetupDataTables()
 	self:AddNetworkVar( "Place", "Float" )
+	self:AddNetworkVar( "Rotation", "Float" )
 end
 
 function SWEP:Initialize()
@@ -33,74 +30,53 @@ function SWEP:Initialize()
 end
 
 function SWEP:Think()
-		//if !self.Hold then
-			local owner = self:GetOwner()
+	local owner = self:GetOwner()
+	if !IsValid( owner ) then return end
 
-			if IsValid( owner ) then
-				local pos = owner:EyePos()
-				local ea = owner:EyeAngles()
-				local ep = pos + ea:Forward() * 125
+	local status = owner:UpdateHold( "turret_place", self )
 
-				//self.LastPos = pos
-				//self.LastEP = ep
-
-				local ang = Angle( 0, ea.y + self.IndicatorRotation, 0 )
-
-				//self.LastAng = ang
-
-				local ct = CurTime()
-
-				local place = self:GetPlace()
-				if place == 0 then
-					local result, valid = self:TraceIndicator( pos, ep, ang )
-
-					if valid and self.LPrimary + 0.15 >= ct then
-						self.LastResult = result
-						self.LastAngle = ang
-						//self.LastEA = ea
-
-						self:SetPlace( CurTime() + self.PlaceTime )
-					end
-
-					if CLIENT and IsValid( self.Indicator ) then
-						self.Indicator:SetColor( valid and Color( 0, 255, 0, 50 ) or Color( 255, 0, 0, 50 ) )
-						self.Indicator:SetPos( result )
-						self.Indicator:SetAngles( ang )
-					end
-				elseif place <= ct then
-					self:SetPlace( 0 )
-					-- if CLIENT and IsValid( self.Indicator ) then
-					-- 	self.Indicator:Remove()
-					-- end
-
-					if SERVER then
-						local turret = ents.Create( "slc_turret" )
-						if IsValid( turret ) then
-							turret:Spawn()
-							turret:SetPos( self.LastResult )
-							turret:SetAngles( self.LastAngle )
-							turret:SetTurretOwner( owner )
-							turret:SetOwnerSignature( owner:TimeSignature() )
-						end
-
-						local holster = owner:GetWeapon( "item_slc_holster" )
-						if IsValid( holster ) then
-							owner:SetActiveWeapon( holster )
-						end
-						
-						self:Remove()
-					end
-				else
-					local result, valid = self:TraceIndicator( pos, ep, ang )
-					if self.LPrimary + 0.15 < ct or !valid then
-						self:SetPlace( 0 )
-					end
-				end
+	if status == true then
+		if SERVER then
+			local turret = ents.Create( "slc_turret" )
+			if IsValid( turret ) then
+				turret:Spawn()
+				turret:SetPos( self.LastPos )
+				turret:SetAngles( self.LastAng )
+				turret:SetTurretOwner( owner )
+				turret:SetOwnerSignature( owner:TimeSignature() )
 			end
-		//else
-			//self:TraceIndicator( self.LastPos, self.LastEP, self.LastAng )
-		//end
-	--end
+
+			local holster = owner:GetWeapon( "item_slc_holster" )
+			if IsValid( holster ) then
+				owner:SetActiveWeapon( holster )
+			end
+			
+			self:Remove()
+		end
+	elseif status == false then
+		if SERVER then
+			owner:EnableProgressBar( false )
+		else
+			//self.Indicator:SetNoDraw( false )
+		end
+	else
+		local valid, pos, ang = self:TestIndicator()
+
+		if owner:IsHolding( "turret_place", self ) then
+			if !valid then
+				owner:InterruptHold( "turret_place", self )
+			end
+		else
+			self.LastPos = pos
+			self.LastAng = ang
+
+			if CLIENT and IsValid( self.Indicator ) then
+				self.Indicator:SetColor( valid and Color( 0, 255, 0, 50 ) or Color( 255, 0, 0, 50 ) )
+				self.Indicator:SetPos( pos )
+				self.Indicator:SetAngles( ang )
+			end
+		end
+	end
 end
 
 function SWEP:Deploy()
@@ -118,7 +94,7 @@ function SWEP:Deploy()
 		self.Indicator:SetNoDraw( false )
 	end
 
-	self.IndicatorRotation = 0
+	self:SetRotation( 0 )
 end
 
 function SWEP:Holster()
@@ -136,28 +112,47 @@ function SWEP:OnRemove()
 end
 
 function SWEP:PrimaryAttack()
-	self.LPrimary = CurTime()
+	local owner = self:GetOwner()
+	if owner:IsHolding( "turret_place", self ) then return end
+	
+	local valid, _, _ = self:TestIndicator()
+	if !valid then return end
+
+	owner:StartHold( "turret_place", IN_ATTACK, self.PlaceTime, nil, self )
+
+	if SERVER then
+		owner:EnableProgressBar( true, CurTime() + self.PlaceTime, "lang:MISC.placing_turret", Color( 200, 200, 200, 255 ), Color( 50, 225, 25, 255 ) )
+	else
+		//self.Indicator:SetNoDraw( true )
+	end
 end
 
 function SWEP:SecondaryAttack()
-	/*if IsFirstTimePredicted() then
-		self.Hold = !self.Hold
-	end*/
+	self:SetRotation( 0 )
 end
 
 SWEP.NReload = 0
 function SWEP:Reload()
 	if ROUND.preparing then return end
-	
-	if self.NReload < CurTime() then
-		self.NReload = CurTime() + 0.05
 
-		self.IndicatorRotation = self.IndicatorRotation + 6
+	local rot = self:GetRotation() + FrameTime() * self.RotationSpeed * ( self:GetOwner():KeyDown( IN_SPEED ) and -1 or 1 )
 
-		if self.IndicatorRotation >= 360 then
-			self.IndicatorRotation = self.IndicatorRotation - 360
-		end
+	if rot >= 360 then
+		rot = rot - 360
 	end
+
+	self:SetRotation( rot )
+end
+
+function SWEP:TestIndicator()
+	local owner = self:GetOwner()
+	local pos = owner:EyePos()
+	local ea = owner:EyeAngles()
+	local ep = pos + ea:Forward() * 125
+	local ang = Angle( 0, ea.y + self:GetRotation(), 0 )
+
+	local valid, result = self:TraceIndicator( pos, ep, ang )
+	return valid, result, ang
 end
 
 local trace_mask = MASK_SHOT//MASK_SOLID_BRUSHONLY
@@ -230,7 +225,7 @@ function SWEP:TraceIndicator( pos, ep, ang )
 		if !trace3.Hit then
 			//debugoverlay.Line( result + mins1, result + maxs1, 0, Color( 255, 255, 255 ), false )
 
-			local rot = Angle( 0, -90, 0 )
+			//local rot = Angle( 0, -90, 0 )
 			//mins:Rotate( rot )
 			//maxs:Rotate( rot )
 
@@ -283,20 +278,18 @@ function SWEP:TraceIndicator( pos, ep, ang )
 							local add = Vector( 19, 0, mins1.z )
 							add:Rotate( ang )
 
-							local pos = result + add
+							local npos = result + add
 
 							local trace_ground3 = util.TraceLine{
-								start = pos,
-								endpos = pos + Vector( 0, 0, -5 ),
+								start = npos,
+								endpos = npos + Vector( 0, 0, -5 ),
 								mask = trace_mask,
 							}
 
 							if trace_ground3.Hit then
-								//debugoverlay.Line( pos, pos + Vector( 0, 0, -5 ), 0, Color( 255, 255, 255 ), false )
-
-								
+								//debugoverlay.Line( npos, npos + Vector( 0, 0, -5 ), 0, Color( 255, 255, 255 ), false )
 							else
-								//debugoverlay.Line( pos, pos + Vector( 0, 0, -5 ), 0, Color( 200, 100, 100 ), false )
+								//debugoverlay.Line( npos, npos + Vector( 0, 0, -5 ), 0, Color( 200, 100, 100 ), false )
 								valid = false
 							end
 						else
@@ -321,7 +314,7 @@ function SWEP:TraceIndicator( pos, ep, ang )
 		end
 	end
 
-	return result, valid
+	return valid, result
 end
 
 function SWEP:DrawWorldModel()
@@ -330,31 +323,10 @@ function SWEP:DrawWorldModel()
 	end
 end
 
-function SWEP:DrawHUD()
-	local place = self:GetPlace()
-	if place != 0 and place > CurTime() then
-		/*draw.Text{
-			text = string.format( "%.2f", place - CurTime() ),
-			pos = { ScrW() * 0.5, ScrH() * 0.5 },
-			color = Color( 0, 255, 0 ),
-			font = "SCPHUDSmall",
-			xalign = TEXT_ALIGN_CENTER,
-			yalign = TEXT_ALIGN_CENTER,
-		}*/
-
-		if !ProgressBarTick() then
-			ProgressBar( true, self.PlaceTime, "Placing turret", true )
-			SetProgressBarColor( Color( 200, 200, 200, 255 ), Color( 50, 225, 25, 255 ) )
-		end
-
-		SetProgressBarValue( self.PlaceTime - place + CurTime() )
-	end
-end
-
 hook.Add( "StartCommand", "SLCTurretSWEPCMD", function( ply, cmd )
 	local wep = ply:GetWeapon( "item_slc_turret" )
 	if IsValid( wep ) then
-		if wep.GetPlace and wep:GetPlace() != 0 and wep:GetPlace() > CurTime() then
+		if ply:IsHolding( "turret_place", wep ) then
 			cmd:ClearMovement()
 
 			if !wep.ViewAngles then wep.ViewAngles = cmd:GetViewAngles() end

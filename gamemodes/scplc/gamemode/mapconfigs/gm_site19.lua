@@ -1021,6 +1021,38 @@ BLOCKERS = {
 end*/
 
 --[[-------------------------------------------------------------------------
+Map checkers
+---------------------------------------------------------------------------]]
+local function v_lever_check( name )
+	return function()
+		local ent = CacheEntity( name )
+		return IsValid( ent ) and ent:GetState()
+	end
+end
+
+local function lever_check( name, roll )
+	return function()
+		local ent = CacheEntity( name )
+		return IsValid( ent ) and ent:GetAngles().roll == roll
+	end
+end
+
+MAP_CHECKERS = {
+	ALPHA_REMOTE = v_lever_check( "warhead_lever_alpha" ),
+	OMEGA_REMOTE = v_lever_check( "warhead_lever_omega" ),
+	SCP106_SOUND = lever_check( "sound_lever_106", 0 ),
+	SCP106_CAGE = function()
+		for k, v in pairs( ents.GetAll() ) do
+			if v:GetPos() == CAGE_DOWN_POS then
+				return true
+			end
+		end
+
+		return false
+	end,
+}
+
+--[[-------------------------------------------------------------------------
 SCP 914
 ---------------------------------------------------------------------------]]
 SCP_914_STATUS = "bt_914_4"
@@ -1074,11 +1106,6 @@ ALPHA_CARD_SPAWN = {
 
 ALPHA_ACTIVATION = { Vector( -1275.00, 2678.00, 51.00 ), Angle( 0, -90, 0 ) }
 
-ALPHA_REMOTE_CHECK = function()
-	local remote = ents.FindByName( "warhead_lever_alpha" )[1]
-
-	return IsValid( remote ) and remote:GetState()
-end
 --[[-------------------------------------------------------------------------
 Omega warhead
 ---------------------------------------------------------------------------]]
@@ -1092,12 +1119,6 @@ OMEGA_SHELTER_DOOR_L = "shelter_door_l"
 OMEGA_SHELTER_DOOR_R = "shelter_door_r"
 
 OMEGA_SHELTER = { Vector( -110, -1918, -128 ), Vector( 495, -1408, 30 ) }
-
-OMEGA_REMOTE_CHECK = function()
-	local remote = ents.FindByName( "warhead_lever_omega" )[1]
-
-	return IsValid( remote ) and remote:GetState()
-end
 
 --[[-------------------------------------------------------------------------
 Escape/Escort
@@ -1178,7 +1199,6 @@ FORCE_DESTROY = {}
 SCP 106 config
 ---------------------------------------------------------------------------]]
 ELO_IID_NAME = "magnet_lever_106"
-SOUND_TRANSMISSION_NAME = "sound_lever_106"
 CAGE_INSIDE = Vector( 2498.16, 4482.72, -402.50 )
 CAGE_DOWN_POS = Vector( 2488.00, 4488.00, -307.00 )
 CAGE_BOUNDS = {
@@ -1634,11 +1654,12 @@ BUTTONS = {
 	{
 		name = "Facility Lockdown",
 		pos = Vector( -2451.989990, 4120.00, 310.25 ),
-		scp_disallow = true,
+		disabled = true,
+		/*scp_disallow = true,
 		suppress_texts = true,
 		override = function( ply, ent, data )
 			return InitiateLockdown( ply, ent )
-		end,
+		end,*/
 	},
 
 	--SCP use disallow
@@ -1675,14 +1696,16 @@ BUTTONS = {
 	{
 		name = "966 door",
 		pos = Vector( 4216.00, 2256.00, 38.00 ),
-		scp_disallow = true,
-		suppress_check = true,
+		disabled = true,
+		//scp_disallow = true,
+		//suppress_check = true,
 	},
 	{
 		name = "049 door",
 		pos = Vector( 5040.00, -2376.00, 54.00 ),
-		scp_disallow = true,
-		suppress_check = true,
+		disabled = true,
+		//scp_disallow = true,
+		//suppress_check = true,
 	},
 	{
 		name = "Alpha Lever",
@@ -1744,7 +1767,7 @@ ButtonController( "Warhead Elevator", {
 	cooldown = 15,
 	initial_state = 1,
 	debug_use = 1,
-	disable_overload = true,
+	//disable_overload = true,
 } )
 
 ButtonController( "LCZ Elevator 1", {

@@ -33,6 +33,7 @@ function SLCInventory:New( name, size_x, size_y )
 	tab.Name = name
 	tab.Valid = true
 	tab.Visible = false
+	tab.Drawn = false
 
 	local w, h = ScrW(), ScrH()
 	local s = math.min( w, h * 16 / 9 )
@@ -93,6 +94,7 @@ function SLCInventory:Show()
 	if !self.Valid then return end
 	
 	self.Visible = true
+	self.Drawn = false
 	self.WasMouseDown = false
 	gui.EnableScreenClicker( true )
 end
@@ -112,6 +114,7 @@ Drawing has 3 passes:
 ---------------------------------------------------------------------------]]
 function SLCInventory:Draw()
 	if !self.Valid then return end
+	self.Drawn = true
 
 	local mouse_down = input.IsMouseDown( MOUSE_LEFT )
 	if mouse_down and self.WasMouseDown then
@@ -160,15 +163,17 @@ function SLCInventory:Draw()
 		end
 	end
 
-	if input.IsButtonDown( KEY_ESCAPE ) or input.IsButtonDown( GetBindButton( "eq_button" ) ) then
+	local mx, my = input.GetCursorPos()
+	if self.MouseDown and ( mx < self.PosX or mx > self.PosX + self.DimX or my < self.PosY or my > self.PosY + self.DimY ) then
+		self:OnClick( -1, -1, -1 )
 	end
 
-	if self.MouseDown or input.IsButtonDown( KEY_ESCAPE ) or input.IsButtonDown( GetBindButton( "eq_button" ) ) then
+	/*if self.MouseDown or input.IsButtonDown( KEY_ESCAPE ) or input.IsButtonDown( GetBindButton( "eq_button" ) ) then
 		local mx, my = input.GetCursorPos()
 		if !self.MouseDown or mx < self.PosX or mx > self.PosX + self.DimX or my < self.PosY or my > self.PosY + self.DimY then
 			self:OnClick( -1, -1, -1 )
 		end
-	end
+	end*/
 end
 
 function SLCInventory:DrawBackground( s, pass )
@@ -312,4 +317,18 @@ hook.Add( "DrawOverlay", "SLCInventory", function()
 			v:Draw()
 		end
 	end
+end )
+
+hook.Add( "PlayerButtonDown", "SLCInventory", function( ply, btn )
+	if btn >= KEY_FIRST and btn <= KEY_LAST and GetSettingsValue( "any_button_close_search" ) then
+		for k, v in pairs( _SLCInventoryCache ) do
+			if IsValid( v ) and v:IsVisible() and v.Drawn then
+				v:OnClick( -1, -1, -1 )
+			end
+		end
+	end
+end )
+
+hook.Add( "SLCRegisterSettings", "SLCSearching", function()
+	RegisterSettingsEntry( "any_button_close_search", "switch", true )
 end )

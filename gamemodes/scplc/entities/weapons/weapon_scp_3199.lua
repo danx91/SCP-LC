@@ -7,6 +7,7 @@ SWEP.ShouldDrawViewModel = true
 
 SWEP.HoldType 			= "melee"
 
+SWEP.ScoreOnDamage = true
 SWEP.Frenzy = 0
 SWEP.Penalty = 0
 SWEP.Tokens = 0
@@ -155,7 +156,7 @@ function SWEP:PrimaryAttack()
 
 							local has_deep_wounds = ent:HasEffect( "deep_wounds" )
 							if has_deep_wounds then
-								dmg = math.floor( dmg - 20 )
+								dmg = math.floor( dmg - 25 )
 							end
 
 							ent:TakeDamage( dmg, owner, owner )
@@ -289,6 +290,11 @@ function SWEP:StopFrenzy()
 	self:SetPenalty( self.Penalty )
 end
 
+function SWEP:OnPlayerKilled( ply, dmg )
+	AddRoundStat( "3199" )
+	self.Killed = true
+end
+
 function SWEP:TranslateActivity( act )
 	if act == ACT_MP_WALK or act == ACT_MP_RUN then
 		if self:GetFrenzy() != 0 then
@@ -318,7 +324,7 @@ function SWEP:TranslateFOV( fov )
 	end
 end
 
-hook.Add( "StartCommand", "SLCSCP3199Cmd", function( ply, cmd )
+SCPHook( "SCP3199", "StartCommand", function( ply, cmd )
 	if ply:SCPClass() == CLASSES.SCP3199 then
 		local wep = ply:GetActiveWeapon()
 		if IsValid( wep ) then
@@ -345,7 +351,7 @@ hook.Add( "StartCommand", "SLCSCP3199Cmd", function( ply, cmd )
 	end
 end )
 
-hook.Add( "SLCMovementAnimSpeed", "SCP3199", function( ply, vel, speed, len, movement )
+SCPHook( "SCP3199", "SLCMovementAnimSpeed", function( ply, vel, speed, len, movement )
 	if ply:SCPClass() == CLASSES.SCP3199 then
 		local n = len / 75
 
@@ -438,19 +444,7 @@ if CLIENT then
 end
 
 if SERVER then
-	hook.Add( "DoPlayerDeath", "SCP3199Kills", function( ply, attacker, info )
-		if IsValid( attacker ) and attacker:IsPlayer() and attacker:SCPClass() == CLASSES.SCP3199 then
-		 	local wep = attacker:GetActiveWeapon()
-
-		 	if IsValid( wep ) then
-		 		wep.Killed = true
-		 		wep:AddScore( 1 )
-		 		AddRoundStat( "3199" )
-		 	end
-		end
-	end )
-
-	hook.Add( "EntityTakeDamage", "SCP3199Damage", function( target, dmg )
+	SCPHook( "SCP3199", "EntityTakeDamage", function( target, dmg )
 		if IsValid( target ) and target:IsPlayer() then
 			if target:SCPClass() == CLASSES.SCP3199 then
 				if dmg:GetDamage() >= target:Health() then
@@ -488,13 +482,13 @@ if SERVER then
 		end
 	end )
 
-	hook.Add( "SLCPlayerStasisStart", "SLCSCP3199Stasis", function( ply, data )
+	SCPHook( "SCP3199", "SLCPlayerStasisStart", function( ply, data )
 		if ply:SCPClass() == CLASSES.SCP3199 then
 			data.health = data.max_health
 		end
 	end )
 
-	hook.Add( "SLCPlayerStasisEnd", "SLCSCP3199Stasis", function( ply, data )
+	SCPHook( "SCP3199", "SLCPlayerStasisEnd", function( ply, data )
 		if ply:SCPClass() == CLASSES.SCP3199 then
 			local egg = ply:GetProperty( "3199_respawn" )
 
@@ -527,11 +521,11 @@ DefineUpgradeSystem( "scp3199", {
 		{ name = "nvmod", cost = 1, req = {}, reqany = false,  pos = { 4, 2 }, mod = {}, active = false },
 	},
 	rewards = { -- ~55%-60% --8 + 1
-		{ 1, 1 },
-		{ 2, 1 },
-		{ 3, 2 },
-		{ 4, 2 },
-		{ 6, 2 },
+		{ 100, 1 },
+		{ 200, 1 },
+		{ 350, 2 },
+		{ 500, 2 },
+		{ 750, 2 },
 	}
 } )
 

@@ -382,7 +382,7 @@ function SWEP:StopMindControl( noanim1, noanim2 )
 	end
 end
 
-hook.Add( "CalcMainActivity", "SLCSCP2427Activity", function( ply, vel )
+SCPHook( "SCP24273", "CalcMainActivity", function( ply, vel )
 	if ply:SCPClass() == CLASSES.SCP24273 then
 		local wep = ply:GetActiveWeapon()
 		if IsValid( wep ) then
@@ -404,7 +404,7 @@ hook.Add( "CalcMainActivity", "SLCSCP2427Activity", function( ply, vel )
 	end
 end )
 
-hook.Add( "DoAnimationEvent", "SLCSCP2427AnimEvent", function( ply, event, data )
+SCPHook( "SCP24273", "DoAnimationEvent", function( ply, event, data )
 	if ply:SCPClass() == CLASSES.SCP24273 then
 		if event == PLAYERANIMEVENT_CUSTOM then
 			ply:AddVCDSequenceToGestureSlot( GESTURE_SLOT_CUSTOM, data, 0, true )
@@ -412,7 +412,7 @@ hook.Add( "DoAnimationEvent", "SLCSCP2427AnimEvent", function( ply, event, data 
 	end
 end )
 
-hook.Add( "Move", "SLCSCP2427Move", function( ply, mv )
+SCPHook( "SCP24273", "Move", function( ply, mv )
 	if ply:SCPClass() == CLASSES.SCP24273 then
 		local wep = ply:GetActiveWeapon()
 		if IsValid( wep ) then
@@ -436,7 +436,7 @@ hook.Add( "Move", "SLCSCP2427Move", function( ply, mv )
 end )
 
 local buttons_filter = bit.bor( IN_USE, IN_SPEED, IN_DUCK, IN_JUMP )
-hook.Add( "StartCommand", "SLCSCP2427Control", function( ply, cmd )
+SCPHook( "SCP24273", "StartCommand", function( ply, cmd )
 	local wep = ply:GetActiveWeapon()
 	local ct = CurTime()
 
@@ -545,7 +545,7 @@ hook.Add( "StartCommand", "SLCSCP2427Control", function( ply, cmd )
 	end
 end )
 
-hook.Add( "CanPlayerSeePlayer", "SLCSCP2427CanSee", function( ply1, ply2 )
+SCPHook( "SCP24273", "CanPlayerSeePlayer", function( ply1, ply2 )
 	if ply1:SCPClass() == CLASSES.SCP24273 then
 		local wep = ply1:GetActiveWeapon()
 		if IsValid( wep ) then
@@ -559,7 +559,7 @@ hook.Add( "CanPlayerSeePlayer", "SLCSCP2427CanSee", function( ply1, ply2 )
 	end
 end )
 
-hook.Add( "PlayerButtonDown", "SLCSCP2427Buttons", function( ply, button )
+SCPHook( "SCP24273", "PlayerButtonDown", function( ply, button )
 	if SERVER then
 		local ctrl = ply:GetProperty( "mind_control" )
 		if ctrl and ctrl[1] < CurTime() then
@@ -574,7 +574,7 @@ hook.Add( "PlayerButtonDown", "SLCSCP2427Buttons", function( ply, button )
 	end
 end )
 
-hook.Add( "PlayerPostThink", "SLCSCP2427Monitor", function( ply )
+SCPHook( "SCP24273", "PlayerPostThink", function( ply )
 	if SERVER then
 		local ctrl = ply:GetProperty( "mind_control" )
 		if ctrl and ctrl[1] < CurTime() then
@@ -595,7 +595,7 @@ end )
 if SERVER then
 	util.AddNetworkString( "SLCMindControl" )
 
-	hook.Add( "SetupPlayerVisibility", "SLCSCP2427Vis", function( ply, ent )
+	SCPHook( "SCP24273", "SetupPlayerVisibility", function( ply, ent )
 		if ply:SCPClass() == CLASSES.SCP24273 then
 			local wep = ply:GetActiveWeapon()
 			if IsValid( wep ) then
@@ -609,12 +609,12 @@ if SERVER then
 		end
 	end )
 
-	hook.Add( "DoPlayerDeath", "SLCSCP2427Death", function( ply, att, dmg )
+	SCPHook( "SCP24273", "DoPlayerDeath", function( ply, att, dmg )
 		local ctrl = ply:GetProperty( "mind_control" )
 		if ctrl and IsValid( ctrl[2] ) then
 			ctrl[2]:StopMindControl( true )
 
-			if !IsValid( att ) or !att:IsPlayer() or att == ply and !att.Disconnected then
+			if !IsValid( att ) or !att:IsPlayer() or att == ply and !ply.Disconnected then
 				local owner = ctrl[2]:GetOwner()
 
 				local hp = owner:Health() - 1500
@@ -634,7 +634,7 @@ if SERVER then
 		end
 	end )
 
-	hook.Add( "PlayerCanHearPlayersVoice", "SLCSCP2427Voice", function( listener, talker )
+	SCPHook( "SCP24273", "PlayerCanHearPlayersVoice", function( listener, talker )
 		local ply
 
 		if talker:SCPClass() == CLASSES.SCP24273 then
@@ -657,7 +657,7 @@ if SERVER then
 		end
 	end )
 
-	hook.Add( "PlayerCanPickupWeapon", "SLCSCP2427Pickup", function( ply, wep )
+	SCPHook( "SCP24273", "PlayerCanPickupWeapon", function( ply, wep )
 		//if ply.MindControlTime and ply.MindControlTime >= CurTime() then
 		if ply:GetProperty( "mind_control" ) then
 			return false
@@ -685,7 +685,7 @@ if CLIENT then
 	end )
 
 	local overlay = GetMaterial( "slc/scp/2427overlay.png" )
-	hook.Add( "SLCScreenMod", "SLCSCP2427Screen", function( clr )
+	SCPHook( "SCP24273", "SLCScreenMod", function( clr )
 		local ply = LocalPlayer()
 		local ct = CurTime()
 
@@ -712,7 +712,7 @@ if CLIENT then
 		end
 	end )
 
-	hook.Add( "PreDrawHalos", "SLCSCP2427Halo", function()
+	SCPHook( "SCP24273", "PreDrawHalos", function()
 		local ply = LocalPlayer()
 		if ply:SCPClass() == CLASSES.SCP24273 then
 			local wep = ply:GetActiveWeapon()
@@ -724,7 +724,7 @@ if CLIENT then
 		end
 	end )
 
-	/*hook.Add( "PlayerBindPress", "SLCSCP2427Bind", function( ply, bind )
+	/*SCPHook( "SCP24273", "PlayerBindPress", function( ply, bind )
 		if ply.MindControlTime and ply.MindControlTime >= CurTime() then
 			return true
 		end
@@ -841,7 +841,7 @@ DefineUpgradeSystem( "scp24273", {
 	}
 } )
 
-hook.Add( "EntityTakeDamage", "SCP24273DMGMod", function( ent, dmg )
+SCPHook( "SCP24273", "EntityTakeDamage", function( ent, dmg )
 	if IsValid( ent ) and ent:IsPlayer() and ent:SCPClass() == CLASSES.SCP24273 then
 		local wep = ent:GetActiveWeapon()
 		if IsValid( wep ) and wep.UpgradeSystemMounted then

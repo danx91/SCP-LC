@@ -4,6 +4,8 @@ SWEP.PrintName			= "SCP-066"
 
 SWEP.HoldType 			= "normal"	
 
+SWEP.ScoreOnDamage = true
+
 SWEP.Delay1		= 1.5
 SWEP.Delay2		= 28
 SWEP.MusicLength = 22
@@ -57,7 +59,6 @@ function SWEP:PrimaryAttack()
 					if IsValid( v ) and v:IsPlayer() then
 						if v:SCPTeam() != TEAM_SCP and  v:SCPTeam() != TEAM_SPEC then
 							v:TakeDamage( damage, self.Owner, self.Owner )
-							self:AddScore( damage )
 						end
 					end
 				end
@@ -131,7 +132,7 @@ function SWEP:Reload()
 	end
 end
 
-hook.Add( "DoPlayerDeath", "SCP066PlayerDeath", function( ply, attacker, dmginfo )
+SCPHook( "SCP066", "DoPlayerDeath", function( ply, attacker, dmginfo )
 	if IsValid( ply ) then
 		if ply:SCPClass() == CLASSES.SCP066 then
 			local wep = ply:GetActiveWeapon()
@@ -173,7 +174,7 @@ hook.Add( "DoPlayerDeath", "SCP066PlayerDeath", function( ply, attacker, dmginfo
 	end
 end )
 
-hook.Add( "Move", "SCP066Move", function( ply, mv )
+SCPHook( "SCP066", "Move", function( ply, mv )
 	if IsValid( ply ) and ply:IsPlayer() and ply:SCPClass() == CLASSES.SCP066 then
 		local vel = mv:GetVelocity()
 		local len = vel:LengthSqr()
@@ -275,7 +276,7 @@ DefineUpgradeSystem( "scp066", {
 	}
 } )
 
-hook.Add( "EntityTakeDamage", "SCP066DMGMod", function( ent, dmg )
+SCPHook( "SCP066", "EntityTakeDamage", function( ent, dmg )
 	if IsValid( ent ) and ent:IsPlayer() and ent:SCPClass() == CLASSES.SCP066 then
 		local wep = ent:GetActiveWeapon()
 		if IsValid( wep ) and wep.UpgradeSystemMounted then

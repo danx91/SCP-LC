@@ -3,6 +3,8 @@ SWEP.PrintName		= "SCP-682"
 
 SWEP.HoldType		= "normal"
 
+SWEP.ScoreOnKill 	= true
+
 SWEP.NextPrimary 	= 0
 SWEP.NextSpecial 	= 0
 
@@ -42,11 +44,6 @@ function SWEP:PrimaryAttack()
 				if ent:SCPTeam() == TEAM_SCP or ent:SCPTeam() == TEAM_SPEC then return end
 
 				ent:TakeDamage( 75, self.Owner, self.Owner )
-
-				if ent:Health() <= 0 then
-					self:AddScore( 1 )
-					AddRoundStat( "682" )
-				end
 			else
 				self:SCPDamageEvent( ent, 50 )
 			end	
@@ -55,6 +52,7 @@ function SWEP:PrimaryAttack()
 end
 
 function SWEP:SecondaryAttack()
+	if ROUND.preparing or ROUND.post then return end
 	if self.NextSpecial > CurTime() then return end
 
 	local duration = self.SpecialTime + ( self:GetUpgradeMod( "duration" ) or 0 )
@@ -75,6 +73,10 @@ function SWEP:SecondaryAttack()
 			self.Immortal = false
 		end
 	end )
+end
+
+function SWEP:OnPlayerKilled( ply, dmg )
+	AddRoundStat( "682" )
 end
 
 function SWEP:DrawSCPHUD()
@@ -102,7 +104,7 @@ function SWEP:DrawSCPHUD()
 	}
 end
 
-hook.Add( "EntityTakeDamage", "SCP682Damage", function( ply, dmg )
+SCPHook( "SCP682", "EntityTakeDamage", function( ply, dmg )
 	if !ply:IsPlayer() or !ply:Alive() then return end
 
 	if ply:SCPClass() == CLASSES.SCP682 then

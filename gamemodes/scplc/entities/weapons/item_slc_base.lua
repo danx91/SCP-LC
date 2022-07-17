@@ -218,6 +218,26 @@ function SWEP:DragAndDrop( wep )
 	return false
 end
 
+function SWEP:StoreWeapon( data )
+	if self.Stacks > 1 then
+		data.amount = self:GetCount()
+	end
+
+	if self.HasBattery then
+		data.battery = self:GetBattery()
+	end
+end
+
+function SWEP:RestoreWeapon( data )
+	/*if data.stacks then
+		self:SetCount( data.stacks )
+	end*/
+
+	if data.battery then
+		self:SetBattery( data.battery )
+	end
+end
+
 function SWEP:PreDrawViewModel( vm )
 	//print( vm, vm:HasBoneManipulations() )
 end

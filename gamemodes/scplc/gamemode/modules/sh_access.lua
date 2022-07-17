@@ -452,7 +452,6 @@ if SERVER then
 		end )
 	end
 
-	--TODO display cooldown on SCP hud
 	function SCPButtonOverload( ply, ent, data )
 		if ply:SCPTeam() == TEAM_SCP and !ply:GetSCPHuman() and !ply:GetSCPDisableOverload() then
 			if ROUND.post or ROUND.preparing then
@@ -463,7 +462,7 @@ if SERVER then
 				local ct = CurTime()
 				local cd = ply:GetProperty( "overload_cd" )
 				if !cd or cd < ct then
-					ply:SetProperty( "overload_cd", ct + 3 )
+					ply:SetProperty( "overload_cd", ct + 3, true )
 					
 					if !ent.OverloadCooldown or ent.OverloadCooldown < ct then
 						local adv = data.advanced_overload
@@ -477,7 +476,7 @@ if SERVER then
 								return true
 							end
 
-							ply:SetProperty( "overload_cd", in_ct + CVAR.slc_overload_cooldown:GetInt() )
+							ply:SetProperty( "overload_cd", in_ct + CVAR.slc_overload_cooldown:GetInt(), true )
 
 							local door_cd = CVAR.slc_overload_door_cooldown:GetInt()
 
@@ -541,7 +540,7 @@ if SERVER then
 	hook.Add( "EntityTakeDamage", "SLCButtonOverload", function( ply, info )
 		if IsValid( ply ) and ply:IsPlayer() and ply:IsDoingSLCTask( "button_overload" ) then
 			ply:StopSLCTask( 3 )
-			ply:SetProperty( "overload_cd", CurTime() + 3 )
+			ply:SetProperty( "overload_cd", CurTime() + 3, true )
 		end
 	end )
 
@@ -558,10 +557,6 @@ if SERVER then
 	
 	hook.Add( "SLCRoundCleanup", "SLCClearDoorCache", function()
 		BUTTONS_CACHE = {}
-	end )
-
-	concommand.Add( "efff", function( ply )
-		overload_effect( ply )
 	end )
 end
 

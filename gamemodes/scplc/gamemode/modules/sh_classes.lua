@@ -12,8 +12,8 @@
 		sanity = 100,
 		max_sanity = 100, --can be nil
 		vest = nil,
-		price = 1,
 		max = 0,
+		tier = 0,
 		persona = { class = <fake_class>, team = <fake_team> },
 		override = function( ply ) end, --return false to disallow, nil to do standard check, true to allow
 		spawn = <Vector or table of vectors> Override group spawn
@@ -33,6 +33,7 @@ local SelectClasses = {}
 SelectClasses.SUPPORT = {}
 
 local AllClasses = {}
+local ClassTiers = {}
 
 local SpawnInfo = {}
 SpawnInfo.SUPPORT = {}
@@ -133,15 +134,26 @@ function RegisterClass( name, group, model, data, support )
 
 	data.support = support
 	data.name = name
-	//data.group = group
+	data.group = group
 	data.model = model
 
 	AllClasses[name] = data
 	usetab[group][name] = data
+
+	local tier = data.tier or 1
+	if !ClassTiers[tier] then
+		ClassTiers[tier] = {}
+	end
+
+	ClassTiers[tier][name] = true
 end
 
 function RegisterSupportClass( name, group, model, data )
 	RegisterClass( name, group, model, data, true )
+end
+
+function GetAllClasses()
+	return AllClasses
 end
 
 function GetClassData( name )
@@ -231,14 +243,23 @@ end )
 
 fully_registered = CurTime() + 1
 
+--[[-------------------------------------------------------------------------
+Player functions
+---------------------------------------------------------------------------]]
 local ply = FindMetaTable( "Player" )
+
 function ply:IsClassUnlocked( name )
 	if self:IsBot() then return true end
 	if gamerule.Get( "lan" ) then return true end
 
+	local override = hook.Run( "SLCIsClassUnlocked", self, name )
+	if override != nil then
+		return override
+	end
+
 	local class = AllClasses[name]
 	if class then
-		return !class.price or class.price == 0 or self.playermeta.classes[name]
+		return !class.tier or class.tier == 0 or self.playermeta.classes[name]
 	end
 
 	return true
@@ -246,110 +267,93 @@ end
 
 function ply:CanUnlockClass( name )
 	local class = AllClasses[name]
-	if class and class.price and class.price > 0 then
-		return self:SCPPrestigePoints() >= class.price
+	if !class or self:SCPClassPoints() < 1 then return false end
+	if self.playermeta.classes[name] then return false end
+	if class.tier and !self:CanUnlockClassTier( class.tier ) then return false end
+
+	return true
+end
+
+function ply:CanUnlockClassTier( tier )
+	if tier and tier > 1 then
+		for k, v in pairs( ClassTiers[tier - 1] ) do
+			if !self.playermeta.classes[k] then
+				return false
+			end
+		end
 	end
 
-	return false
+	return true
 end
 
 function ply:UnlockClass( name )
-	if self:CanUnlockClass( name ) then
-		if SERVER then
-			local price = AllClasses[name].price
+	if !self:CanUnlockClass( name ) then return false end
 
-			self:AddPrestigePoints( -price )
-			self.PlayerInfo:Get( "unlocked_classes" )[name] = price
-			self.PlayerInfo:Update()
-		end
-
-		self.playermeta.classes[name] = true
-
-		if CLIENT then
-			net.Start( "ClassUnlock" )
-				net.WriteString( name )
-			net.SendToServer()
-		end
-		return true
+	if SERVER then
+		self:AddClassPoints( -1 )
+		self.PlayerInfo:Get( "unlocked_classes" )[name] = true
+		self.PlayerInfo:Update()
 	end
 
-	return false
+	self.playermeta.classes[name] = true
+
+	if CLIENT then
+		net.Start( "ClassUnlock" )
+			net.WriteString( name )
+		net.SendToServer()
+	end
+	
+	return true
 end
 
 if SERVER then
-	hook.Add( "SLCPlayerMeta", "SLCClassInfo", function( ply, playermeta )
-		local classinfo = ply.PlayerInfo:Get( "unlocked_classes" )
+	hook.Add( "SLCPlayerMeta", "SLCClassInfo", function( p, playermeta )
+		local classinfo = p.PlayerInfo:Get( "unlocked_classes" )
 
 		if !classinfo then
 			classinfo = {}
-			ply.PlayerInfo:Set( "unlocked_classes", classinfo )
+			p.PlayerInfo:Set( "unlocked_classes", classinfo )
 		end
 
 		local classmeta = {}
 		local refound = false
 		for k, v in pairs( classinfo ) do
 			if v then
-				local class = AllClasses[k]
-
-				if class then
-					if !isnumber( v ) then
-						//ply.PlayerInfo:Get( "unlocked_classes" )[k] = class.price
-						classinfo[k] = class.price
-					elseif v > class.price then
-						refound = true
-					end
-
+				if AllClasses[k] then
 					classmeta[k] = true
 				else
-					if isnumber( v ) then
-						refound = true
-					else
-						//ply.PlayerInfo:Get( "unlocked_classes" )[k] = nil
-						classinfo[k] = nil
-					end
+					refound = true
 				end
 			else
-				//ply.PlayerInfo:Get( "unlocked_classes" )[k] = nil
 				classinfo[k] = nil
 			end
 		end
 
-		ply.PlayerInfo:Update()
+		p.PlayerInfo:Update()
 
 		playermeta.refound = refound
 		playermeta.classes = classmeta
 	end )
 
-	net.ReceivePing( "SLCRefoundClasses", function( data, ply )
+	net.ReceivePing( "SLCRefoundClasses", function( data, p )
 		local points = 0
 
-		local classinfo = ply.PlayerInfo:Get( "unlocked_classes" )
+		local classinfo = p.PlayerInfo:Get( "unlocked_classes" )
 		if classinfo then
 			for k, v in pairs( classinfo ) do
-				if v then
-					local class = AllClasses[k]
-
-					if class then
-						if isnumber( v ) and v > class.price then
-							classinfo[k] = class.price
-							points = points + (v - class.price)
-						end
-					else
-						if isnumber( v ) then
-							classinfo[k] = nil
-							points = points + v
-						end
-					end
+				if !AllClasses[k] then
+					classinfo[k] = nil
+					points = points + 1
 				end
 			end
 
-			ply.PlayerInfo:Update()
+			p.PlayerInfo:Update()
 		end
 
 		if points > 0 then
-			net.Ping( "SLCRefoundClasses", points, ply )
-			//print( "Refounded", points, ply )
-			ply:AddPrestigePoints( points )
+			net.Ping( "SLCRefoundClasses", points, p )
+			//print( "Refounded", points, p )
+			p:AddClassPoints( points )
 		end
 	end )
 

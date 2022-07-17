@@ -9,6 +9,7 @@ ROUND = ROUND or {
 	queue = {},
 	properties = {},
 	freeze = false,
+	winners = {},
 }
 
 --[[-------------------------------------------------------------------------
@@ -78,9 +79,12 @@ end
 
 local function CleanupPlayers()
 	for k, v in pairs( player.GetAll() ) do
+		v._SLCXPCategories = {}
+
 		v.PlayerData:RoundReset()
 		v.Logger:Reset( true )
 		v:Cleanup()
+		v:ResetDailyBonus()
 
 		if v:IsAFK() then
 			v:InvalidatePlayerForSpectate()
@@ -100,9 +104,13 @@ local function ResetEvents()
 	ROUND.roundtype = ROUNDS.dull
 
 	ROUND.properties = {}
+	ROUND.winners = {}
 
 	//ROUND.queue = {}
 	ClearQueue()
+	ClearSCPHooks()
+
+	SLCUpdateUnixDay()
 end
 
 --[[-------------------------------------------------------------------------
@@ -150,28 +158,24 @@ function RestartRound()
 	assert( MAP_LOADED, "Map config is not loaded and game will not start! Change map to supported one in order to play this gamemode!" )
 
 	print( "(Re)starting round..." )
-	//util.TimerCycle()
+	local t_start = SysTime()
+	util.TimerCycle()
 
 	DestroyTimers()
-	print( "Timers destroyed!" )
-	//print( string.format( "Took %i ms!", util.TimerCycle() ) )
+	print( string.format( "Timers destroyed - %i ms!", util.TimerCycle() ) )
 
 	CleanupPlayers()
-	print( "Players cleaned!" )
-	//print( string.format( "Took %i ms!", util.TimerCycle() ) )
+	print( string.format( "Players cleaned - %i ms!", util.TimerCycle() ) )
 
 	ResetEvents()
 	ResetRoundStats()
-	print( "Round data reset!" )
-	//print( string.format( "Took %i ms!", util.TimerCycle() ) )
+	print( string.format( "Round data reset - %i ms!", util.TimerCycle() ) )
 
 	game.CleanUpMap()
-	print( "Map cleaned!" )
-	//print( string.format( "Took %i ms!", util.TimerCycle() ) )
+	print( string.format( "Map cleaned - %i ms!", util.TimerCycle() ) )
 
 	hook.Run( "SLCRoundCleanup" )
-	print( "Everything is ready!" )
-	//print( string.format( "Took %i ms!", util.TimerCycle() ) )
+	print( string.format( "Everything is ready -  total time: %.5f ms!", ( SysTime() - t_start ) * 1000 ) )
 
 	if #GetActivePlayers() < CVAR.slc_min_players:GetInt() then
 		MsgC( Color( 255, 50, 50 ), "Not enough players to start round! Round restart canceled!\n" )
@@ -195,7 +199,12 @@ function RestartRound()
 	UpdateRoundType()
 
 	print( "Initializing round..." )
+
+	SLCHooks.__PreventUpdate = true
 	ROUND.roundtype:init()
+	SLCHooks.__PreventUpdate = false
+
+	TransmitSCPHooks()
 
 	ROUND.preparing = true
 	ROUND.infoscreen = true
@@ -211,11 +220,11 @@ function RestartRound()
 	net.Broadcast()
 	//print( string.format( "Took %i ms!", util.TimerCycle() ) )
 
-	AddTimer( "SLCSetup", INFO_SCREEN_DURATION, 1, function( self, n )
+	AddTimer( "SLCSetup", INFO_SCREEN_DURATION, 1, function()
 		CheckSpectatorMode( true )
 
 		ROUND.infoscreen = false
-		hook.Run( "SLCPreround" )
+		hook.Run( "SLCPreround", prep )
 
 		net.Start( "RoundInfo" )
 			net.WriteTable{
@@ -225,15 +234,15 @@ function RestartRound()
 			}
 		net.Broadcast()
 
-		AddTimer( "SLCPreround", prep, 1, function( self, n )
+		AddTimer( "SLCPreround", prep, 1, function()
 			print( "Preparing end, starting round..." )
 			ROUND.preparing = false
 			ROUND.roundtype:roundstart()
 
-			hook.Run( "SLCRound" )
-
 			local endcheck = AddTimer( "SLCRoundEndCheck", 10, 0, CheckRoundEnd )
 			local round = CVAR.slc_time_round:GetInt()
+
+			hook.Run( "SLCRound", round )
 
 			net.Start( "RoundInfo" )
 				net.WriteTable{
@@ -242,7 +251,7 @@ function RestartRound()
 				}
 			net.Broadcast()
 
-			AddTimer( "SLCRound", round, 1, function( self, n, winner )
+			AddTimer( "SLCRound", round, 1, function( _, _, winner )
 				if winner != nil or ESCAPE_STATUS == 0 then
 					FinishRoundInternal( winner, endcheck )
 				else
@@ -321,32 +330,26 @@ GM hooks
 ---------------------------------------------------------------------------]]
 function GM:SLCPreround()
 	TransmitSound( "scp_lc/round_start.ogg", true )
-	/*net.Start( "PlaySound" )
-		net.WriteUInt( 1, 1 )
-		net.WriteString( "Alarm2.ogg" )
-	net.Broadcast()*/
 end
 
 function GM:SLCRound()
 	TransmitSound( "scp_lc/bell2.ogg", true )
-	/*net.Start( "PlaySound" )
-		net.WriteUInt( 1, 1 )
-		net.WriteString( "Bell2.ogg" )
-	net.Broadcast()*/
 end
 
 --winner can be: team id, table of team ids, false (time's up) or true (not enough players)
 function GM:SLCPostround( winner )
-	//BroadcastLua( "surface.PlaySound('Bell1.ogg')" )
 	TransmitSound( "scp_lc/bell1.ogg", true )
-	/*net.Start( "PlaySound" )
-		net.WriteUInt( 1, 1 )
-		net.WriteString( "Bell1.ogg" )
-	net.Broadcast()*/
 
+	/*net.SendTable( "SLCRoundSummary", {
+		stats = GetRoundSummary(),
+		mvp = GetRoundMVP(),
+		time = CVAR.slc_time_postround:GetInt(),
+		winner = winner,
+	}, nil, false, true )*/
+	
 	local specialinfo
 
-	if /*winner and*/ winner != true then
+	if winner != true then
 		local sb = StringBuilder()
 
 		local mvp, points = GetRoundMVP()
@@ -413,15 +416,19 @@ function GM:SLCPostround( winner )
 		CenterMessage( msg )
 	end
 
-	local wintab
+	local wintab = {}
 
 	if winner and winner != true then
 		if istable( winner ) then
-			wintab = winner
+			for k, v in pairs( winner ) do
+				wintab[v] = true
+			end
 		else
-			wintab = { winner }
+			wintab = { [winner] = true }
 		end
 	end
+
+	ROUND.winners = wintab
 
 	local pxp = CVAR.slc_points_xp:GetInt()
 	local alivexp, winxp = string.match( CVAR.slc_xp_win:GetString(), "(%d+),(%d+)" )
@@ -436,33 +443,23 @@ function GM:SLCPostround( winner )
 		if frags > 0 then
 			local xp = pxp * frags
 
-			v:AddXP( xp )
+			v:AddXP( xp, "score" )
 			PlayerMessage( "roundxp$"..xp, v )
 		end
 
-		if wintab then
-			local rewarded = false
-
-			local vteam = v:SCPTeam()
-			for _, t in pairs( wintab ) do
-				if vteam == t then
-					v:AddXP( alivexp )
-					PlayerMessage( "winalivexp$"..alivexp, v )
-					rewarded = true
-					break
-				end
-			end
-
-			if !rewarded then
-				local viteam = v:GetInitialTeam()
-				for _, t in pairs( wintab ) do
-					if viteam == t then
-						v:AddXP( winxp )
-						PlayerMessage( "winxp$"..winxp, v )
-						break
-					end
-				end
-			end
+		if wintab[v:SCPTeam()] then
+			v:AddXP( alivexp, "win" )
+			PlayerMessage( "winalivexp$"..alivexp, v )
+		elseif wintab[v:GetInitialTeam()] then
+			v:AddXP( winxp, "win" )
+			PlayerMessage( "winxp$"..winxp, v )
 		end
+	end
+
+	--Send xp summary
+	for k, v in pairs( player.GetAll() ) do
+		net.Start( "SLCXPSummary" )
+			net.WriteTable( v:ExperienceSummary() )
+		net.Send( v )
 	end
 end

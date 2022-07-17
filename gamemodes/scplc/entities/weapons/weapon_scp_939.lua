@@ -96,7 +96,7 @@ function SWEP:PrimaryAttack()
 end
 
 if CLIENT then
-	hook.Add( "SLCScreenMod", "939ScreenMod", function( clr )
+	SCPHook( "SCP939", "SLCScreenMod", function( clr )
 		if LocalPlayer():HasEffect( "amnc227" ) then
 			DrawMotionBlur( 0.1, 1, 0.01 )
 			clr.colour = 0
@@ -140,3 +140,12 @@ sound.Add( {
 	sound = "scp_lc/scp/939/attack.ogg",
 	channel = CHAN_STATIC,
 } )
+
+--[[
+	cmod:
+		con = 0.3
+		bright = 2
+		col = 0
+
+	sobel = 0.01
+]]

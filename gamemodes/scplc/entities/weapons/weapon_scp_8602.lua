@@ -3,6 +3,8 @@ SWEP.PrintName			= "SCP-860-2"
 
 SWEP.HoldType 			= "normal"
 
+SWEP.ScoreOnKill		= true
+
 SWEP.NextPrimary = 0
 SWEP.AttackDelay = 1.5
 
@@ -96,16 +98,6 @@ function SWEP:SpecialAttack( ent, p )
 		end
 	end
 end
-
-hook.Add( "DoPlayerDeath", "SCP8602Damage", function( ply, attacker, info )
-	if attacker:IsPlayer() and attacker:SCPClass() == CLASSES.SCP8602 then
-	 	local wep = attacker:GetActiveWeapon()
-
-	 	if IsValid( wep ) then
-	 		wep:AddScore( 1 )
-	 	end
-	end
-end )
 
 DefineUpgradeSystem( "scp8602", {
 	grid_x = 3,

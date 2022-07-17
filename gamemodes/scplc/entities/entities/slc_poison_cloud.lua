@@ -25,7 +25,7 @@ function ENT:Initialize()
 
 	local ct = CurTime()
 	self.RemoveTime = ct + dur
-	self.ArmTime = ct + 2
+	self.ArmTime = ct + 1.5
 
 	self:SetModel( "models/hunter/plates/plate.mdl" )
 	self:PhysicsInit( SOLID_NONE )
@@ -57,7 +57,7 @@ function ENT:Think()
 			return
 		end
 
-		if self.ArmTime <= ct and self.NDamageTick <= ct then --TEST arm time
+		if self.ArmTime <= ct and self.NDamageTick <= ct then
 			self.NDamageTick = ct + 0.5
 
 			local owner = self:GetOwner()

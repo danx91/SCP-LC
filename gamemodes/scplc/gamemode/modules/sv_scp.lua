@@ -279,6 +279,8 @@ local function setup_scp_internal( self, ply, ... )
 		if IsValid( wep ) then
 			wep.ShouldFreezePlayer = basestats.prep_freeze == true
 		end
+
+		ply:SetProperty( "scp_weapon", wep )
 	end
 
 	ply:SetArmor( 0 )
@@ -319,6 +321,8 @@ local function setup_scp_internal( self, ply, ... )
 end
 
 function ObjectSCP:SetupPlayer( ply, instant, ... )
+	EnableSCPHook( self.name )
+
 	if instant then
 		setup_scp_internal( self, ply, ... )
 	else

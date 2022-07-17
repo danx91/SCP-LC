@@ -118,7 +118,19 @@ if SERVER then
 		if !file.Exists( "slc/gamerule.dat", "DATA" ) then
 			file.Write( "slc/gamerule.dat", util.TableToJSON( gamerule.data ) )
 		else
-			local data = util.JSONToTable( file.Read( "slc/gamerule.dat", "DATA" ) )
+			local f = file.Read( "slc/gamerule.dat", "DATA" )
+			local data = util.JSONToTable( f )
+
+			if !data then
+				print( "Gamerule file is corrupted! Fixing..." )
+				
+				if f then
+					file.Write( "slc/gamerule_corrupted.dat", f )
+				end
+	
+				file.Write( "slc/gamerule.dat", util.TableToJSON( gamerule.data ) )
+				return
+			end
 
 			for k, v in pairs( data ) do
 				local wasRegistered = false

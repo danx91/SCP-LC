@@ -697,18 +697,17 @@ Function can be used to simulate drawing and get final text params
 function draw.MultilineText( x, y, text, font, color, maxWidth, margin, dist, align, maxRows, simulate, calcW, feed )
 	align = align or TEXT_ALIGN_LEFT
 	maxWidth = maxWidth - 2 * margin
-	local texts = string.Split( text , "\n" )
 
 	surface.SetFont( font )
 
-	local fw, fh = surface.GetTextSize( "W" )
+	local _, fh = surface.GetTextSize( "W" )
 	local height = fh + ( dist or 0 )
 
 	local final = feed or {}
 
 	if !feed then
-		for i, v in ipairs( texts ) do
-			local w, h = surface.GetTextSize( v )
+		for i, v in ipairs( string.Split( text , "\n" ) ) do
+			local w, _ = surface.GetTextSize( v )
 
 			if w <= maxWidth then
 				table.insert( final, v )
@@ -961,7 +960,7 @@ draw.BlurOutlinedText( table )
 @return 	[number] 		width 		
 			[number]		height 		
 ---------------------------------------------------------------------------*/
-function draw.BlurOutlinedText( table )
+function draw.BlurOutlinedText( tab )
 
 end
 

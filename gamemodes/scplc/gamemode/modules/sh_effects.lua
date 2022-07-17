@@ -100,7 +100,6 @@ if CLIENT then
 end
 
 local PLAYER = FindMetaTable( "Player" )
-
 function PLAYER:ApplyEffect( name, ... )
 	if CLIENT and self != LocalPlayer() then return end
 	
@@ -710,24 +709,18 @@ hook.Add( "SLCScreenMod", "SLCPoison", function( data )
 	end
 end )
 
-hook.Add( "SLCHealing", "SLCEffectsCanHeal", function( action, target, healer, heal_type )
-	if action == "can_heal" then
-		if target:HasEffect( "radiation" ) then return false end
-		if target:HasEffect( "poison" ) then return false end
+hook.Add( "SLCCanHeal", "SLCEffectsCanHeal", function( target, healer, heal_type )
+	if target:HasEffect( "radiation" ) then return false end
+	if target:HasEffect( "poison" ) then return false end
+end )
+
+hook.Add( "SLCScaleHealing", "SLCEffectsScaleHeal", function( ply, source, heal )
+	if ply:HasEffect( "deep_wounds" ) then
+		return heal * 0.25
 	end
 end )
 
-hook.Add( "SLCHealing", "SLCEffectsScaleHeal", function( action, ply, source, heal )
-	if action == "scale_heal" then
-		if ply:HasEffect( "deep_wounds" ) then
-			return heal * 0.25
-		end
-	end
-end )
-
-hook.Add( "SLCHealing", "SLCEffectsHealed", function( action, target, healer )
-	if action == "healed" then
-		target:RemoveEffect( "bleeding", true )
-		target:RemoveEffect( "deep_wounds", true )
-	end
+hook.Add( "SLCHealed", "SLCEffectsHealed", function( target, healer )
+	target:RemoveEffect( "bleeding", true )
+	target:RemoveEffect( "deep_wounds", true )
 end )

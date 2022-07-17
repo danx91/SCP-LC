@@ -112,7 +112,7 @@ end )
 	end
 end )*/
 
-hook.Add( "SLCPreround", "SLCButtonController", function()
+hook.Add( "SLCRoundCleanup", "SLCButtonController", function()
 	SLC_CONTROLLERS_CACHE = {}
 	SLC_CONTROLLERS_USE_TIME = {}
 	SLC_CONTROLLERS_LAST_SETID = {}
@@ -231,7 +231,7 @@ function GetSELObject( name )
 	return SEL_REGISTRY[name]
 end
 
-hook.Add( "SLCPreround", "SLCSynchronousEventListener", function()
+hook.Add( "SLCRoundCleanup", "SLCSynchronousEventListener", function()
 	SEL_REGISTRY = {}
 end )
 
@@ -311,4 +311,24 @@ hook.Add( "SLCPreround", "SLCBlocker", function()
 			blocker:Spawn()
 		end
 	end
+end )
+
+--[[-------------------------------------------------------------------------
+EntityCache
+---------------------------------------------------------------------------]]
+SLC_ENTITY_CACHE = {}
+
+function CacheEntity( name )
+	if SLC_ENTITY_CACHE[name] then
+		return SLC_ENTITY_CACHE[name]
+	end
+
+	local tmp = ents.FindByName( name )[1]
+	SLC_ENTITY_CACHE[name] = tmp
+
+	return tmp
+end
+
+hook.Add( "SLCRoundCleanup", "EntityCache", function()
+	SLC_ENTITY_CACHE = {}
 end )

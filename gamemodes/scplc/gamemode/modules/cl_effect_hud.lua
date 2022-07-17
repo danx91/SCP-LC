@@ -98,16 +98,12 @@ local function DrawEffectsHUD()
 				surface.SetDrawColor( color_25 )
 				surface.DrawRect( start_x, start_y + ( size + margin ) * ( i - 1 ), size, size )
 
-				//render.PushFilterMin( TEXFILTER.LINEAR )
-				//render.PushFilterMag( TEXFILTER.LINEAR )
 				PushFilters( TEXFILTER.LINEAR )
 
 				surface.SetDrawColor( reg.color or color_white )
 				surface.SetMaterial( reg.icon )
 				surface.DrawTexturedRect( start_x + 2, start_y + ( size + margin ) * ( i - 1 ) + 2, size - 4, size - 4 )
 
-				//render.PopFilterMin()
-				//render.PopFilterMag()
 				PopFilters()
 			end
 

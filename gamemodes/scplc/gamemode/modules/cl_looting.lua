@@ -57,7 +57,7 @@ function SearchItem( num, item )
 	local ct = CurTime()
 
 	if item.unknown then
-		if searching_time < ct then
+		if searching_time < ct and searching_slot == 0 then
 			searching_time = ct + CVAR.slc_time_looting:GetFloat()
 			searching_slot = num
 		else
