@@ -46,7 +46,6 @@ lang.NRegistry = {
 	winxp = "시작할때 당신의 진영이 승리하여 %i 경험치를 얻었습니다",
 	winalivexp = "당신의 진영이 승리하여 %i 경험치를 얻었습니다",
 	upgradepoints = "새 업그레이드 포인트를 얻었습니다! '%s' 키를 눌러 사용하세요",
-	prestigeup = " %s 님이 명성을 얻었습니다! 해당 플레이어의 명성 레벨: %i",
 	omega_detonation = "OMEGA 핵탄두 폭발까지 %i 초 남았습니다. 즉시 지상으로 탈출하거나 방공호로 대피하세요!",
 	alpha_detonation = "ALPHA 핵탄두 폭발까지 %i 초 남았습니다. 시설 내부로 대피하십시오!",
 	alpha_card = "ALPHA 핵탄두 제어 카드를 삽입했습니다",
@@ -56,9 +55,10 @@ lang.NRegistry = {
 	overload_cooldown = "이 출입 장치의 과부하까지 %i 초 남았습니다!",
 	advanced_overload = "이 문은 과부화 상태입니다! %i 초 뒤에 다시 시도하세요",
 	lockdown_once = "시설 폐쇄는 라운드당 한번만 가능합니다!",
+	dailybonus = "일일 경험치 보상: %i XP\n다음 지급까지: %s"
 }
 
-lang.NFailed = "NRegistry 접근에 실패함: %s"
+lang.NFailed = "Failed to access NRegistry with key: %s"
 
 --[[-------------------------------------------------------------------------
 NCRegistry
@@ -102,8 +102,58 @@ lang.NCRegistry = {
 	stat_alpha_warhead = "알파 핵탄두가 폭발함",
 }
 
-lang.NCFailed = "NCRegistry 접근에 실패함: %s"
+lang.NCFailed = "Failed to access NCRegistry with key: %s"
 
+
+--[[-------------------------------------------------------------------------
+Main menu
+---------------------------------------------------------------------------]]
+local main_menu = {}
+lang.MenuScreen = main_menu
+
+main_menu.start = "시작"
+main_menu.settings = "설정"
+main_menu.precache = "모델 프리캐시"
+main_menu.credits = "크레딧"
+main_menu.quit = "종료"
+
+main_menu.quit_server = "서버를 나갑니까?"
+main_menu.quit_server_confirmation = "확실합니까?"
+main_menu.model_precache = "모델 프리캐시"
+main_menu.model_precache_text = "모델이 필요할때 자동으로 캐시되지만 게임 플레이중에 끊김 현상이 발생할 수 있습니다. 이를 방지하기위해 수동으로 캐시합니다.\n이 작업을 수행하는 중 게임이 멈출수 있습니다!"
+main_menu.yes = "네"
+main_menu.no = "아니요"
+main_menu.all = "모델 프리캐시"
+main_menu.cancel = "취소"
+
+
+main_menu.credits_text = [[이 게임모드는 ZGFueDkx 가 제작하였습니다 (별칭 danx91)
+게임모드는 SCP 에 기반하고있으며 CC BY-SA 3.0 license 를 따릅니다
+
+메인 메뉴 애니메이션은 Madow 에 의해 제작되었습니다.
+
+모델:
+	Alski - guards, omnitool, turret and more
+	
+재질:
+	Foer - Workshop logo and few other graphics
+	SCP Containment Breach
+
+사운드:
+	SCP Containment Breach
+
+메인 번역자들:
+	중국어 - xiaobai
+	독일어 - Justinnn
+	한국어 - joon00
+	폴란드어 - Slusher, Alski
+	러시아어 - Deiryn, berry
+	튀르키예어 - Akane
+
+Special thanks:
+	1000 Shells - 모델 관련 지원
+	PolishLizard - 테스트 서버 호스팅
+]]
 --[[-------------------------------------------------------------------------
 HUD
 ---------------------------------------------------------------------------]]
@@ -113,23 +163,26 @@ lang.HUD = hud
 hud.pickup = "줍기"
 hud.class = "클래스"
 hud.team = "진영"
-hud.prestige_points = "명성 점수"
+hud.class_points = "클래스 해금 포인트"
 hud.hp = "HP"
-hud.stamina = "스테미너"
+hud.stamina = "지구력"
 hud.sanity = "정신력"
 hud.xp = "XP"
+
+hud.escaping = "탈출중..."
 
 --[[-------------------------------------------------------------------------
 EQ
 ---------------------------------------------------------------------------]]
-lang.eq_lmb = "좌 클릭 - 선택"
-lang.eq_rmb = "우 클릭 - 버리기"
-lang.eq_hold = "좌 클릭 유지 - 옮기기"
-lang.eq_vest = "조끼"
-lang.eq_key = "'%s' 키를 눌러 인벤토리를 엽니다"
+lang.eq_lmb = "좌클릭 - 선택"
+lang.eq_rmb = "우클릭 - Drop"
+lang.eq_hold = "좌클릭 유지 - 아이템 옮기기"
+lang.eq_vest = "방탄복"
+lang.eq_key = "'%s' 를 눌러 EQ 열기"
+lang.eq_unknown = "알려지지않은 아이템"
 
 lang.info = "정보"
-lang.author = "제작"
+lang.author = "제작자"
 lang.mobility = "기동성"
 lang.weight = "무게"
 lang.protection = "방호력"
@@ -137,7 +190,21 @@ lang.protection = "방호력"
 lang.weight_unit = "kg"
 lang.eq_buttons = {
 	escort = "호위 요청",
-	gatea = "게이트 A 폭파"
+	gatea = "게이트 A 폭파요청"
+}
+
+--[[-------------------------------------------------------------------------
+XP Bar
+---------------------------------------------------------------------------]]
+lang.XP_BAR = {
+	general = "일반 경험치",
+	round = "서버에 머물음",
+	escape = "시설 탈출",
+	score = "라운드 진행중 점수",
+	win = "라운드 승리",
+	vip = "VIP 보너스",
+	daily = "일일 보너스",
+	cmd = "권력",
 }
 
 --[[-------------------------------------------------------------------------
@@ -163,19 +230,18 @@ Class viewer
 lang.classviewer = "클래스 뷰어"
 lang.preview = "미리보기"
 lang.random = "무작위"
-lang.price = "가격"
 lang.buy = "구매"
 lang.refound = "환불"
 lang.none = "없음"
-lang.refounded = "제거된 모든 클래스들이 환불됨. %d 명성 점수를 얻음."
+lang.refounded = "모든 제거된 클래스가 환불되었습니다. 환불로 %d 클래스 포인트를 흭득했습니다."
 
 lang.details = {
 	details = "세부정보",
 	name = "이름",
+	tier = "티어",
 	team = "진영",
-	price = "필요한 명성 점수",
 	walk_speed = "걷는 속도",
-	run_speed = "달리는 속도",
+	run_speed = "뛰는 속도",
 	chip = "접근 권한",
 	persona = "가짜 ID",
 	weapons = "무기",
@@ -189,15 +255,15 @@ lang.details = {
 lang.headers = {
 	support = "지원 병력",
 	classes = "시설 인력",
-	scp = "SCP"
+	scp = "SCPs"
 }
 
 lang.view_cat = {
 	classd = "D계급 인원",
 	sci = "과학자",
-	mtf = "시설 경비",
-	mtf_ntf = "특무부대 Epsilon-11",
-	mtf_alpha = "특무부대 Alpha-1",
+	guard = "시설 경비",
+	mtf_ntf = "MTF Epsilon-11",
+	mtf_alpha = "MTF Alpha-1",
 	ci = "혼돈의 반란",
 }
 
@@ -215,14 +281,17 @@ lang.settings = {
 	client_reset_desc = "당신은 게임모드의 모든 클라이언트 설정을 초기화할려고 합니다.\n이 작업은 되돌릴 수 없습니다!",
 	server_reset_desc = "보안상의 이유 여기서 서버 설정을 초기화할 수 없습니다.\n서버 설정을 초기화할려면, 콘솔창에 'slc_factory_reset' 를 입력하고 절차를 따르십시오.\n이 작업은 취소할 수 없으며 모든 것이 재설정되므로 주의하십시오!",
 
+
 	popup_ok = "예",
 	popup_cancel = "취소",
 	popup_continue = "계속",
 
 	panels = {
 		binds = "단축키",
+		config = "Config",
+		skins = "GUI 스킨",
 		reset = "게임모드 초기화",
-		cvars = "게임모드 설정편집",
+		cvars = "ConVars 설정",
 	},
 
 	binds = {
@@ -231,11 +300,19 @@ lang.settings = {
 		ppshop_button = "클래스 뷰어",
 		settings_button = "게임모드 설정",
 		scp_special = "SCP 특수 능력"
-	}
+	},
+
+	config = {
+		search_indicator = "Search indicator",
+		scp_hud_skill_time = "SCP 기술 쿨타임 표시",
+		smooth_blink = "자연스러운 깜빡임",
+		scp_hud_overload_cd = "과충전 쿨타임 표시",
+		any_button_close_search = "검색 메뉴를 닫으려면 아무 키를 누르세요",
+	},
 }
 
 lang.gamemode_config = {
-	loading = "불러오는 중...",
+	loading = "불러오는중...",
 
 	categories = {
 		general = "일반",
@@ -243,7 +320,7 @@ lang.gamemode_config = {
 		xp = "XP",
 		support = "지원",
 		warheads = "핵탄두",
-		afk = "잠수",
+		afk = "AFK",
 		time = "시간",
 		premium = "프리미엄",
 		scp = "SCP",
@@ -253,13 +330,12 @@ lang.gamemode_config = {
 --[[-------------------------------------------------------------------------
 Scoreboard
 ---------------------------------------------------------------------------]]
-lang.unconnected = "미연결"
+lang.unconnected = "미연결됨"
 
 lang.scoreboard = {
 	name = "스코어보드",
 	playername = "이름",
 	ping = "핑",
-	prestige = "명성",
 	level = "레벨",
 	score = "점수",
 	ranks = "등급",
@@ -283,17 +359,18 @@ lang.upgrades = {
 	owned = "소유중",
 	requiresall = "다음이 필요함",
 	requiresany = "다음이 필요함",
-	blocked = "다음에 의해 막힘"
+	blocked = "다음에 의해 불가능"
 }
 
 --[[-------------------------------------------------------------------------
 SCP HUD
 ---------------------------------------------------------------------------]]
-local scp_hud = {}
-lang.SCPHUD = scp_hud
-
-scp_hud.skill_not_ready = "능력이 아직 준비되지 않았습니다!"
-scp_hud.skill_cant_use = "지금은 능력을 사용할 수 없습니다!"
+lang.SCPHUD = {
+	skill_not_ready = "스킬이 아직 준비중이다!",
+	skill_cant_use = "지금은 사용할 수 없다!",
+	overload_cd = "다음 과충전까지: ",
+	overload_ready = "과충전 준비됨!",
+}
 
 --[[-------------------------------------------------------------------------
 Info screen
@@ -301,11 +378,11 @@ Info screen
 lang.info_screen = {
 	subject = "실험체",
 	class = "클래스",
-	team = "소속",
+	team = "진영",
 	status = "상태",
 	objectives = "목표",
 	details = "세부 정보",
-	registry_failed = "info_screen_registry 오류"
+	registry_failed = "info_screen_registry failed"
 }
 
 lang.info_screen_registry = {
@@ -386,8 +463,12 @@ misc.buttons = {
 }
 
 misc.inventory = {
-    unsearched = "미확인됨", 
+	unsearched = "미조사됨",
+	search = "[%s] 를 눌러 조사",
 }
+
+misc.placing_turret = "터렛 배치중"
+misc.scanning = "스캐닝중"
 --[[-------------------------------------------------------------------------
 Vests
 ---------------------------------------------------------------------------]]
@@ -484,9 +565,9 @@ classes.cicom = "혼돈의 반란 현장지휘관"
 local classes_id = {}
 lang.CLASSES_ID = classes_id
 
-classes_id.ntf_1 = "구미호"
-classes_id.ntf_2 = "구미호"
-classes_id.ntf_3 = "구미호"
+classes_id.ntf_1 = "MTF 구미호"
+classes_id.ntf_2 = "MTF 구미호"
+classes_id.ntf_3 = "MTF 구미호"
 
 --[[-------------------------------------------------------------------------
 Class Info - NOTE: Each line is limited to 48 characters!
@@ -1878,6 +1959,7 @@ wep.ALPHA_CARD2 = {
 }
 
 wep.weapon_stunstick = "진압봉"
+wep.weapon_crowbar = "빠루"
 
 registerLanguage( lang, "korean", "ko" )
 setLanguageFlag( "korean", LANGUAGE.EQ_LONG_TEXT )
