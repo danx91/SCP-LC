@@ -97,6 +97,8 @@ lang.NCRegistry = {
 	stat_966 = "Коварных порезов: %i",
 	stat_3199 = "Жертв SCP 3199: %i",
 	stat_24273 = "Игроков убитых SCP 2427-3: %i",
+	stat_omega_warhead = "Боеголовка Омега была взорвана",
+	stat_alpha_warhead = "Боеголовка Альфа была взорвана",
 }
 
 lang.NCFailed = "Невозможно получить NCRegistry с ключом: %s"
@@ -126,15 +128,19 @@ main_menu.cancel = "Отмена"
 
 main_menu.credits_text = [[Игровой режим, созданный ZGFueDkx (aka danx91)
 Игровой режим основан на SCP и выпущен под лицензией CC BY-SA 3.0
+
 Создатель анимации меню: Madow
+
 Модели:
 	Alski - Охранники, омни-инструмент, турель и другое
 	
 Материалы:
 	Foer - Логотип в мастерской и несколько других графических элементов
 	SCP Containment Breach
+
 Звуки:
 	SCP Containment Breach
+
 Главные переводчики:
 	Китайский - xiaobai
 	Немецкий - Justinnn
@@ -142,6 +148,7 @@ main_menu.credits_text = [[Игровой режим, созданный ZGFueDk
 	Польский - Slusher, Alski
 	Русский - Deiryn, berry
 	Турецкий - Akane
+
 Отдельная благодарность:
 	1000 Shells за помощь с моделями
 	PolishLizard за создание тестировочного сервера
@@ -272,7 +279,6 @@ lang.settings = {
 
 	client_reset_desc = "Вы собираетесь сбросить ВСЕ клиентские настройки в этом режиме.\nЭто действие не отменить!",
 	server_reset_desc = "Из соображений безопасности вы не можете сбросить настройки здесь.\nЧтобы сбросить настройки, введите 'slc_factory_reset' в серверную консоль и следуйте указаниям.\nБудьте осторожны, ибо это действие не отменить и оно вернёт все настройки к НУЛЮ!",
-
 
 	popup_ok = "OK",
 	popup_cancel = "ОТМЕНА",
@@ -554,6 +560,13 @@ classes.alpha1sniper = "Стрелок МОГ Альфа-1"
 classes.ci = "Повстанец Хаоса"
 classes.cicom = "Командир повстанцев Хаоса"
 
+local classes_id = {}
+lang.CLASSES_ID = classes_id
+
+classes_id.ntf_1 = "МОГ «Лиса»"
+classes_id.ntf_2 = "МОГ «Лиса»"
+classes_id.ntf_3 = "МОГ «Лиса»"
+
 --[[-------------------------------------------------------------------------
 Class Info - NOTE: Each line is limited to 48 characters!
 Screen is designed to hold max of 5 lines of text and THERE IS NO internal protection!
@@ -679,8 +692,6 @@ lang.CLASS_OBJECTIVES = {
 	SCP173 = generic_scp,
 
 	SCP457 = generic_scp,
-	
-
 
 	SCP682 = generic_scp,
 
@@ -1768,7 +1779,6 @@ wep.SCP3199 = {
 	}
 }
 
-
 wep.SCP500 = {
 	name = "SCP 500",
 	death_info = "Вы подавились SCP 500",
@@ -1899,7 +1909,7 @@ wep.OMNITOOL = {
 	clearance = "Уровень доступ: %i",
 	SCREEN = {
 		loading = "Загрузка",
-		name = "Омни-инструмент вер. 4.78",
+		name = "Омни-инструмент вер.4.78",
 		installing = "Установка нового чипа...",
 		ejecting = "Выброс чипа...",
 		ejectwarn = "Вы уверены?",
