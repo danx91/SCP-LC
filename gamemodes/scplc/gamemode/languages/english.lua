@@ -305,7 +305,7 @@ lang.settings = {
 		scp_hud_skill_time = "Show SCP skill cooldown",
 		smooth_blink = "Smooth blink",
 		scp_hud_overload_cd = "Show overload cooldown",
-		any_button_close_search = "Press any button to close serach menu",
+		any_button_close_search = "Press any button to close search menu",
 	},
 }
 
