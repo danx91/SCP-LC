@@ -1,0 +1,123 @@
+
+
+body {
+	background-color: #0f0f0f;
+}
+
+#logo {
+	display: block;
+	width: 55%;
+	height: auto;
+	max-height: 20vh;
+	margin: 20vh auto 0px auto;
+}
+
+#license {
+	border-width: 0;
+}
+
+#button-row {
+	display: flex;
+	justify-content: space-evenly;
+	margin-top: 20vh;
+	height: 15vh;
+}
+
+#item {
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+
+	color: #fff;
+	text-align: center;
+	font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+	text-decoration: none;
+	font-size: 1.75rem;
+
+	min-width: 10vw;
+	width: auto;
+	padding: 0 2vw;
+	margin: 0;
+	border: 1px solid #f0f0f0;
+    box-shadow: 0 0 10px #9ecaed;
+	border-radius: 2vh;
+	transition: 50ms;
+	overflow: hidden;
+}
+
+#item:hover {
+	box-shadow: 0 0 25px #9ecaed;
+}
+
+#item > p {
+	margin: 0;
+	margin-top: 0.5vw;
+}
+
+#item > img {
+	color: #fff;
+	height: 40%;
+	width: auto;
+	margin: auto auto;
+}
+
+#item > .steam {
+	color: #fff;
+	height: 30%;
+	width: auto;
+	margin: auto auto;
+}
+
+@media (max-width: 500px) {
+	:root {
+		font-size: 1.5vh;
+	}
+
+	#logo {
+		width: 80%;
+		height: auto;
+		max-height: 10vh;
+		margin: 10vh auto 0px auto;
+	}
+
+	#button-row {
+		flex-direction: column;
+		align-items: center;
+		margin-top: 5vh;
+		height: 65vh;
+	}
+
+	#item {
+		width: 66%;
+		height: 20%;
+	}
+}
+
+footer {
+	color: #fff;
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 0.75rem;
+	text-align: center;
+	position: fixed;
+	width: 100%;
+	bottom: 0;
+	border-top: 1px solid #f0f0f0;
+	padding-top: 1vh;
+	padding-bottom: 1vh;
+}
+
+a:link {
+	color: #a0a0a0;
+}
+
+a:visited {
+	color: #a0a0a0;
+}
+
+a:hover {
+	color: #f0f0f0;
+}
+
+a:active {
+	color: #808080;
+}
