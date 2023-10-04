@@ -1,5 +1,5 @@
 # SCP: Lost Control Changelog
-**This is the official changelog of the SCP: Lost Control Changelog**  
+**This is the official changelog of the SCP: Lost Control**  
 **This place is used for more deatiled versions of changelogs that can be found on [official Discod server](https://discord.gg/fAsEAYZ).**<br><br>
 *Please keep in mind that this page is made by me as fun project, so bugs may be present.*
 
