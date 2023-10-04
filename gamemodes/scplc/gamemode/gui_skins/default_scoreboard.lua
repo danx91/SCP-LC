@@ -3,6 +3,7 @@ local MATS = {
 	arrow_down = GetMaterial( "slc/hud/arrow_down.png" ),
 	muted = Material( "icon32/muted.png" ),
 	unmuted = Material( "icon32/unmuted.png" ),
+	muteall = Material( "slc/hud/mute_all.png" ),
 }
 
 local COLOR = {
@@ -125,6 +126,8 @@ local function createPlayerTab( ply, pnl )
 		self:SetWide( pnl:GetWide() * 0.25 )
 	end
 
+	local islp = ply == LocalPlayer()
+
 	local mute = vgui.Create( "DButton", tab )
 	mute:Dock( RIGHT )
 	mute:DockMargin( 4, 4, 4, 4 )
@@ -132,7 +135,9 @@ local function createPlayerTab( ply, pnl )
 	mute.Paint = function( self, pw, ph )
 		surface.SetDrawColor( COLOR.white )
 
-		if IsValid( ply ) and ply:IsMuted() then
+		if islp then
+			surface.SetMaterial( MATS.muteall )
+		elseif IsValid( ply ) and ply:IsMuted() then
 			surface.SetMaterial( MATS.muted )
 		else
 			surface.SetMaterial( MATS.unmuted )
@@ -144,7 +149,22 @@ local function createPlayerTab( ply, pnl )
 		surface.DrawOutlinedRect( 0, 0, pw, ph )
 	end
 	mute.DoClick = function( self )
-		if input.IsKeyDown( KEY_LCONTROL ) then
+		if islp then
+			local all_muted = true
+
+			for k, v in pairs( player.GetAll() ) do
+				if !v:IsMuted() then
+					all_muted = false
+					break
+				end
+			end
+
+			for k, v in pairs( player.GetAll() ) do
+				v:SetMuted( !all_muted )
+			end
+
+			SCOREBOARD.VolumeSlider = nil
+		elseif input.IsKeyDown( KEY_LCONTROL ) then
 			ply:SetMuted( !ply:IsMuted() )
 			SCOREBOARD.VolumeSlider = nil
 		else
@@ -156,7 +176,14 @@ local function createPlayerTab( ply, pnl )
 		end
 	end
 	mute.DoRightClick = function( self )
-		ply:SetMuted( !ply:IsMuted() )
+		if islp then
+			for k, v in pairs( player.GetAll() ) do
+				v:SetMuted( false )
+			end
+		else
+			ply:SetMuted( !ply:IsMuted() )
+		end
+
 		SCOREBOARD.VolumeSlider = nil
 	end
 	mute.PerformLayout = function( self, pw, ph )
@@ -238,7 +265,13 @@ local function createPlayerTab( ply, pnl )
 		surface.SetDrawColor( tab.Color )
 		surface.DrawOutlinedRect( 0, 0, pw, ph )
 
-		local text = IsValid( ply ) and math.Clamp( ply:Frags(), 0, 9999 ) or "-"
+		local text = "--"
+		local lp = LocalPlayer()
+
+		if IsValid( ply ) and ( ply == lp or !lp:Alive() ) then
+			text = math.Clamp( ply:Frags(), 0, 9999 )
+		end
+
 		draw.Text{
 			text = text,
 			pos = { pw * 0.5, ph * 0.5 },
@@ -282,10 +315,10 @@ local function createPlayerTab( ply, pnl )
 
 				draw.Text{
 					text = texts[i],
-					pos = { totalw + ( widths[i] + 8 ) * 0.5, ph * 0.5 },
+					pos = { totalw + 4, ph * 0.5 },
 					color = COLOR.white,
 					font = "SCPHUDVSmall",
-					xalign = TEXT_ALIGN_CENTER,
+					xalign = TEXT_ALIGN_LEFT,
 					yalign = TEXT_ALIGN_CENTER,
 				}
 
@@ -316,7 +349,7 @@ local function createPlayerTab( ply, pnl )
 					if btn == 0 then
 						tab.crank = 0
 					else
-						cw = math.min( cw + RealFrameTime() * 150, widths[i] )
+						cw = math.min( cw + RealFrameTime() * 175, widths[i] )
 					end
 				elseif cw > 8 then
 					cw = math.max( cw - RealFrameTime() * 150, 8 )
@@ -328,10 +361,10 @@ local function createPlayerTab( ply, pnl )
 				if cw > 8 then
 					draw.LimitedText{
 						text = texts[i],
-						pos = { totalw + ( cw + 8 ) * 0.5, ph * 0.5 },
+						pos = { totalw + 4, ph * 0.5 },
 						color = COLOR.white,
 						font = "SCPHUDVSmall",
-						xalign = TEXT_ALIGN_CENTER,
+						xalign = TEXT_ALIGN_LEFT,
 						yalign = TEXT_ALIGN_CENTER,
 						max_width = cw,
 					}
@@ -344,7 +377,7 @@ local function createPlayerTab( ply, pnl )
 	end
 
 	tab.Paint = function( self, pw, ph )
-		surface.SetDrawColor( Color( 0, 0, 0, self.DrawAlpha ) )
+		surface.SetDrawColor( 0, 0, 0, self.DrawAlpha )
 		surface.DrawRect( 0, 0, pw, ph )
 
 		surface.SetDrawColor( self.Color )
@@ -409,7 +442,7 @@ local function create_scoreboard()
 		render.SetStencilEnable( true )
 
 		draw.NoTexture()
-		surface.SetDrawColor( Color( 0, 0, 0, 225 ) )
+		surface.SetDrawColor( 0, 0, 0, 225 )
 		surface.DrawPoly{
 			{ x = ph * 0.02, y = 0 },
 			{ x = pw - ph * 0.02, y = 0 },
@@ -428,7 +461,7 @@ local function create_scoreboard()
 
 		render.SetStencilCompareFunction( STENCIL_EQUAL )
 
-		surface.SetDrawColor( Color( 200, 200, 200, 200 ) )
+		surface.SetDrawColor( 200, 200, 200, 200 )
 		surface.DrawRect( 0, 0, pw, ph * 0.1 )
 
 		render.SetStencilEnable( false )
@@ -599,12 +632,12 @@ local function overlay_scoreboard()
 
 		if SCOREBOARD.DrawArrowUp then
 			surface.SetMaterial( MATS.arrow_up )
-			surface.SetDrawColor( Color( 255, 255, 255, math.TimedSinWave( 0.75, 0, 255 ) ) )
+			surface.SetDrawColor( 255, 255, 255, math.TimedSinWave( 0.75, 0, 255 ) )
 			surface.DrawTexturedRect( x + pw, y, 32, 32 )
 		end
 
 		if SCOREBOARD.DrawArrowDown then
-			surface.SetDrawColor( Color( 255, 255, 255, math.TimedSinWave( 0.75, 0, 255 ) ) )
+			surface.SetDrawColor( 255, 255, 255, math.TimedSinWave( 0.75, 0, 255 ) )
 			surface.SetMaterial( MATS.arrow_down )
 			surface.DrawTexturedRect( x + pw, y + ph - 32, 32, 32 )
 		end

@@ -1,5 +1,6 @@
-SLC_ITEMS_DATA = {}
+SLC_ITEMS_DATA = SLC_ITEMS_DATA or {}
 SLC_ITEMS_AUTOSPAWN = SLC_ITEMS_AUTOSPAWN or {}
+SLC_ITEMS_FUNCTION = SLC_ITEMS_FUNCTION or {}
 
 /*
 	data = {
@@ -132,7 +133,13 @@ function ItemSpawnRule( name, data, auto )
 			}
 
 			if auto then
-				table.insert( SLC_ITEMS_AUTOSPAWN, name )
+				SLC_ITEMS_AUTOSPAWN[name] = true
+			end
+		end
+
+		if DEVELOPER_MODE then
+			for i, v in ipairs( data.spawns ) do
+				table.insert( dev_item_draw_em, { v, name } )
 			end
 		end
 	elseif data.item_set then
@@ -158,7 +165,7 @@ function ItemSpawnRule( name, data, auto )
 		}
 
 		if auto then
-			table.insert( SLC_ITEMS_AUTOSPAWN, name )
+			SLC_ITEMS_AUTOSPAWN[name] = true
 		end
 	end
 end
@@ -231,7 +238,6 @@ function SpawnUsingRule( name )
 					ent_class = tab.item
 				else
 					local item, num = select_item( tab )
-					PrintTable( item )
 
 					if !item then
 						break
@@ -253,7 +259,46 @@ function SpawnUsingRule( name )
 					end
 				end
 
-				if ent_class then
+				local args = string.Explode( ":", ent_class )
+				local key = table.remove( args, 1 )
+				local fn_name = table.remove( args, 1 )
+
+				if key == "loadout" and fn_name then
+					ent_class = GetLoadoutWeapon( fn_name )
+				end
+
+				if ent_class == "_none" then
+					if post_func then
+						post_func( nil, i )
+					end
+				elseif key == "func" and fn_name then
+					if !SLC_ITEMS_FUNCTION[fn_name] then
+						print( "Unknown custom spawn function!", fn_name )
+						continue
+					end
+
+					local data = {}
+					local ent = SLC_ITEMS_FUNCTION[fn_name]( args, data )
+					if IsValid( ent ) then
+						local pos = table.remove( tab.spawns, math.random( slen ) )
+
+						if data.offset then
+							pos = pos + data.offset
+						end
+
+						ent:SetPos( pos )
+
+						if post_tab then
+							apply_table( ent, post_tab )
+						end
+
+						ent:Spawn()
+
+						if post_func then
+							post_func( ent, i )
+						end
+					end
+				elseif ent_class then
 					local ent = ents.Create( ent_class )
 					if IsValid( ent ) then
 						ent:SetPos( table.remove( tab.spawns, math.random( slen ) ) )
@@ -322,6 +367,10 @@ function SpawnItemSingle( class, pos )
 	end
 end
 
+function ItemSpawnFunction( name, fn )
+	SLC_ITEMS_FUNCTION[name] = fn
+end
+
 --[[-------------------------------------------------------------------------
 Item spawn
 ---------------------------------------------------------------------------]]
@@ -344,7 +393,7 @@ end
 
 function GM:SpawnItems()
 	local post = { Dropped = 0 }
-	local post_dnc = { Dropped = 0, _dnc = true }
+	//local post_dnc = { Dropped = 0, _dnc = true }
 
 	if USE_LEGACY_ITEMS_SPAWN then
 		--[[-------------------------------------------------------------------------
@@ -352,119 +401,102 @@ function GM:SpawnItems()
 		---------------------------------------------------------------------------]]
 		SpawnItemGeneric( "weapon_slc_pc", SPAWN_PARTICLE_CANNON, -1, post )
 
-		SpawnItemGeneric( { "cw_deagle", "cw_makarov", "cw_mr96" }, SPAWN_PISTOLS, -1, post )
-		SpawnItemGeneric( { "cw_g36c", "cw_ump45", "cw_mp5" }, SPAWN_SMGS, -1, post )
-		SpawnItemGeneric( { "cw_ak74", "cw_ar15", "cw_m14", "cw_scarh", "cw_l85a2" }, SPAWN_RIFLES, -1, post )
-		SpawnItemGeneric( { "cw_shorty", "cw_m3super90" }, SPAWN_PUMP, -1, post )
-		SpawnItemGeneric( "cw_l115", SPAWN_SNIPER, -1, post )
+		SpawnItemGeneric( { "cw_deagle", "cw_makarov", "cw_mr96", "cw_p99" }, SPAWN_PISTOLS, -1, post )
+		SpawnItemGeneric( { "cw_g36c", "cw_ump45", "cw_mp5", "cw_mac11" }, SPAWN_SMGS, -1, post )
+		SpawnItemGeneric( { "cw_ak74", "cw_ar15", "cw_m14", "cw_scarh", "cw_l85a2", "cw_g3a3" }, SPAWN_RIFLES, -1, post )
+		SpawnItemGeneric( { "cw_shorty", "cw_m3super90", "cw_xm1014_official", "cw_saiga12k_official" }, SPAWN_PUMP, -1, post )
+		SpawnItemGeneric( "cw_svd_official", SPAWN_SNIPER, -1, post )
 
 		SpawnItemGeneric( "weapon_crowbar", SPAWN_MELEE, 3, post )
 
 		SpawnItemGeneric( "cw_ammo_kit_regular", SPAWN_AMMO_CW, -1, { AmmoCapacity = 20 } )
 
 		--[[-------------------------------------------------------------------------
-		Items
+		SCP Items
 		---------------------------------------------------------------------------]]
-		//local spawn_items = table.Copy( SPAWN_ITEMS )
+		SpawnItemSingle( "item_scp_714", SPAWN_714 )
+		SpawnItemSingle( "item_scp_1025", SPAWN_1025 )
 
-		//SpawnItemGeneric( "item_slc_radio", spawn_items, 2, post_dnc )
-		//SpawnItemGeneric( "item_slc_nvg", spawn_items, 3, post_dnc )
-		//SpawnItemGeneric( "item_slc_gasmask", spawn_items, 3, post_dnc )
-		//SpawnItemGeneric( "item_slc_battery", SPAWN_BATTERY, -1, post )
-		//SpawnItemGeneric( "item_slc_flashlight", SPAWN_FLASHLIGHT, 8, post )
-		//SpawnItemGeneric( "item_slc_medkit", SPAWN_MEDKITS, 4, post )
+		SpawnItemGeneric( "item_scp_500", SPAWN_500, 3, post )
 
 		--[[-------------------------------------------------------------------------
-		MedBay
+		Vests
 		---------------------------------------------------------------------------]]
-		/*local spawn_medbay = table.Copy( SPAWN_MEDBAY )
+		for k,v in pairs( SPAWN_VEST ) do
+			VEST.Create( VEST.GetRandomVest(), v - Vector( 0, 0, 10 ) )
+		end
 
-		for i = 1, #spawn_medbay do
-			local rng = math.random( 1, 100 )
-			if rng <= 15 then
-				SpawnItemGeneric( "item_slc_medkitplus", spawn_medbay, 1, post_dnc )
-			else
-				SpawnItemGeneric( "item_slc_medkit", spawn_medbay, 1, post_dnc )
+		--[[-------------------------------------------------------------------------
+		Omnitools
+		---------------------------------------------------------------------------]]
+		for k, v in pairs( OMNITOOLS ) do
+			local spawns = table.Copy( v.spawns )
+
+			local amt = istable( v.amount ) and math.random( v.amount[1], v.amount[2] ) or v.amount
+			for i = 1, amt do
+				local len = #spawns
+
+				if len == 0 then
+					break
+				end
+
+				local omnitool = ents.Create( "item_slc_omnitool" )
+				if IsValid( omnitool ) then
+					omnitool:SetPos( table.remove( spawns, math.random( len ) ) )
+					omnitool:Spawn()
+					omnitool.Dropped = 0
+
+					local chip
+					local rng = math.random()
+					if rng < 0.05 then --5%
+						chip = SelectChip( 3 )
+					elseif rng < 0.2 then --15%
+						chip = SelectChip( 2 )
+					elseif rng < 0.6 then --40%
+						chip = SelectChip( 1 )
+					end
+
+					if chip then
+						local obj = GetChip( chip )
+						omnitool:SetChipData( obj, GenerateAccessOverride( obj ) )
+					end
+				end
 			end
-		end*/
+		end
+
+		--[[-------------------------------------------------------------------------
+		Chips
+		---------------------------------------------------------------------------]]
+		for k, v in pairs( CHIPS ) do
+			local spawns = table.Copy( v.spawns )
+			local amount = v.amount
+
+			if istable( amount ) then
+				amount = math.random( amount[1], amount[2] )
+			end
+
+			for i = 1, amount do
+				local len = #spawns
+
+				if len == 0 then
+					break
+				end
+
+				local chip = CreateChip( SelectChip( v.level ) )
+				if IsValid( chip ) then
+					chip:SetPos( table.remove( spawns, math.random( len ) ) )
+					chip:Spawn()
+					chip.Dropped = 0
+				end
+			end
+		end
 	end
 
 	--[[-------------------------------------------------------------------------
 	Auto-spawn
 	---------------------------------------------------------------------------]]
 	for k, v in pairs( SLC_ITEMS_AUTOSPAWN ) do
-		SpawnUsingRule( v )
-	end
-
-	--[[-------------------------------------------------------------------------
-	Vests
-	---------------------------------------------------------------------------]]
-	for k,v in pairs( SPAWN_VEST ) do
-		local vest = ents.Create( "slc_vest" )
-		if IsValid( vest ) then
-			vest:Spawn()
-			vest:SetPos( v - Vector( 0, 0, 10 ) )
-			vest:SetVest( VEST.GetRandomVest() )
-		end
-	end
-
-	--[[-------------------------------------------------------------------------
-	Chips
-	---------------------------------------------------------------------------]]
-	for k, v in pairs( CHIPS ) do
-		local spawns = table.Copy( v.spawns )
-
-		for i = 1, v.amount do
-			local len = #spawns
-
-			if len == 0 then
-				break
-			end
-
-			local chip = CreateChip( SelectChip( v.level ) )
-			if IsValid( chip ) then
-				chip:SetPos( table.remove( spawns, math.random( len ) ) )
-				chip:Spawn()
-				chip.Dropped = 0
-			end
-		end
-	end
-
-	--[[-------------------------------------------------------------------------
-	Omnitool
-	---------------------------------------------------------------------------]]
-	for k, v in pairs( OMNITOOLS ) do
-		local spawns = table.Copy( v.spawns )
-
-		for i = 1, v.amount do
-			local len = #spawns
-
-			if len == 0 then
-				break
-			end
-
-			local omnitool = ents.Create( "item_slc_omnitool" )
-			if IsValid( omnitool ) then
-				omnitool:SetPos( table.remove( spawns, math.random( len ) ) )
-				omnitool:Spawn()
-				omnitool.Dropped = 0
-
-				local chip
-				local rng = math.random()
-				if rng < 0.05 then --5%
-					chip = SelectChip( 3 )
-				elseif rng < 0.2 then --15%
-					chip = SelectChip( 2 )
-				elseif rng < 0.5 then --30%
-					chip = SelectChip( 1 )
-				end
-
-				if chip then
-					local obj = GetChip( chip )
-					omnitool:SetChipData( obj, GenerateOverride( obj ) )
-				end
-			end
-		end
+		SpawnUsingRule( k )
 	end
 
 	--[[-------------------------------------------------------------------------
@@ -484,14 +516,6 @@ function GM:SpawnItems()
 			end
 		end
 	end
-
-	--[[-------------------------------------------------------------------------
-	SCPs
-	---------------------------------------------------------------------------]]
-	SpawnItemSingle( "item_scp_714", SPAWN_714 )
-	SpawnItemSingle( "item_scp_1025", SPAWN_1025 )
-
-	SpawnItemGeneric( "item_scp_500", SPAWN_500, 3, post )
 
 	--[[-------------------------------------------------------------------------
 	Cameras
@@ -520,3 +544,43 @@ function GM:SpawnItems()
 
 	hook.Run( "SLCSpawnItems" )
 end
+
+ItemSpawnFunction( "omnitool", function( args )
+	local omnitool = ents.Create( "item_slc_omnitool" )
+	if IsValid( omnitool ) then
+
+		local chip
+		local rng = math.random()
+
+		for i = #args, 1, -1 do
+			if rng < tonumber( args[i] ) / 100 then
+				chip = SelectChip( i )
+				break
+			end
+		end
+
+		if chip then
+			local obj = GetChip( chip )
+			omnitool:SetChipData( obj, GenerateAccessOverride( obj ) )
+		end
+
+		return omnitool
+	end
+end )
+
+ItemSpawnFunction( "chip", function( args )
+	return CreateChip( SelectChip( tonumber( args[1] ) or 1 ) )
+end )
+
+ItemSpawnFunction( "vest", function( args, data )
+	data.offset = Vector( 0, 0, tonumber( args[2] ) or 0 )
+	return VEST.Create( args[1] == "?" and VEST.GetRandomVest() or args[1], nil )
+end )
+
+ItemSpawnFunction( "fuse", function( args, data )
+	local fuse = ents.Create( "item_slc_fuse" )
+	if IsValid( fuse ) then
+		fuse:SetRating( args[2] and math.random( args[1], args[2] ) or args[1] or 5 )
+		return fuse
+	end
+end )

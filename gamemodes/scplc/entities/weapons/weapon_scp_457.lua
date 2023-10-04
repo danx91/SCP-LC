@@ -11,7 +11,7 @@ SWEP.NextDMG = 0
 SWEP.NCheck = 0
 
 function SWEP:SetupDataTables()
-	self:NetworkVar( "Int", 0, "Traps" )
+	self:AddNetworkVar( "Traps", "Int" )
 end
 
 function SWEP:Initialize()
@@ -66,6 +66,12 @@ function SWEP:SecondaryAttack()
 		self.TrapCD = CurTime() + 8
 
 		if SERVER then
+			for i, v in pairs( ents.FindInSphere( tr.HitPos, 125 ) ) do
+				if string.find( v:GetName(), "elev_" ) then
+					return
+				end
+			end
+
 			local traps = #self.Traps
 
 			if traps >= self.MaxTraps then
@@ -93,23 +99,25 @@ function SWEP:SecondaryAttack()
 		end
 
 		self:SetTraps( math.min( self:GetTraps() + 1, self.MaxTraps ) )
-		self.Owner:SetHealth( hp - maxhp * 0.04 )
+		self.Owner:SetHealth( hp - maxhp * 0.02 )
 	end
 end
 
+local color_red = Color( 255, 0, 0 )
+local color_green = Color( 0, 255, 0 )
 function SWEP:DrawSCPHUD()
 	//if hud_disabled or HUDDrawInfo or ROUND.preparing then return end
 
 	local txt, color
 	if self.TrapCD > CurTime() then
 		txt = string.format( self.Lang.swait, math.ceil( self.TrapCD - CurTime() ) )
-		color = Color( 255, 0, 0 )
+		color = color_red
 	elseif self.Owner:Health() <= self.Owner:GetMaxHealth() * 0.1 then
 		txt = self.Lang.nohp
-		color = Color( 255, 0, 0 )
+		color = color_red
 	else
 		txt = self.Lang.sready
-		color = Color( 0, 255, 0 )
+		color = color_green
 	end
 
 	local tw, th = draw.Text{
@@ -124,7 +132,7 @@ function SWEP:DrawSCPHUD()
 	draw.Text{
 		text = string.format( self.Lang.placed, self:GetTraps(), self.MaxTraps ),
 		pos = { ScrW() * 0.5, ScrH() * 0.97 - th },
-		color = Color( 0, 255, 0 ),
+		color = color_green,
 		font = "SCPHUDSmall",
 		xalign = TEXT_ALIGN_CENTER,
 		yalign = TEXT_ALIGN_CENTER,
@@ -169,7 +177,9 @@ SCPHook( "SCP457", "DoPlayerDeath", function( ply, attacker, info )
 	end
 end )
 
-SCPHook( "SCP457", "SLCOnEntityIgnited", function( ent, fire )
+--Can't use SCPHook because it is added too late
+hook.Add( "SLCOnEntityIgnited", "SCP457", function( ent, fire )
+	//print( "ENT IGNITED!", ent, fire, ent:SCPClass() )
 	if CLIENT and ent == LocalPlayer() then
 		if ent:SCPClass() == CLASSES.SCP457 then
 			fire:SetShouldCreateParticles( false )
@@ -199,7 +209,7 @@ DefineUpgradeSystem( "scp457", {
 		{ name = "heal2", cost = 4, req = { "heal1" }, reqany = false,  pos = { 2, 3 }, mod = { heal = 2 }, active = false },
 
 		{ name = "speed", cost = 3, req = {}, reqany = false,  pos = { 4, 1 }, mod = {}, active = true },
-		{ name = "nvmod", cost = 1, req = {}, reqany = false,  pos = { 4, 2 }, mod = {}, active = false },
+		{ name = "outside_buff", cost = 1, req = {}, reqany = false,  pos = { 4, 2 }, mod = {}, active = false },
 	},
 	rewards = {
 		{ 50, 1 },

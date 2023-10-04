@@ -10,8 +10,6 @@ if SERVER then
 			local space = string.find( msg, " " ) or ( string.len( msg ) + 1 )
 			local cmd, sargs = string.sub( msg, 2, space - 1 ), string.sub( msg, space + 1 )
 
-			//print( cmd, sargs )
-
 			local cb = commands_registry[cmd]
 			if cb then
 				cb( ply, string.Explode( " ", sargs ), sargs )
@@ -26,8 +24,6 @@ else
 		if string.StartWith( msg, "!" ) then
 			local space = string.find( msg, " " ) or ( string.len( msg ) + 1 )
 			local cmd, sargs = string.sub( msg, 2, space - 1 ), string.sub( msg, space + 1 )
-
-			//print( cmd, sargs )
 
 			local cb = commands_registry[cmd]
 			if cb then

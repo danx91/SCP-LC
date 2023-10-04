@@ -1,7 +1,8 @@
 --[[
 	data = {
 		team = TEAM_*,
-		weapons = {},
+		loadout = "", --defaults to class name, allows to override loadout name
+		weapons = {}, --NOTE: it will give both loadout and this!
 		ammo = {},
 		chip = "", --GetChip?
 		omnitool = true/false,
@@ -12,15 +13,18 @@
 		sanity = 100,
 		max_sanity = 100, --can be nil
 		vest = nil,
+		backpack = nil,
 		max = 0,
 		tier = 0,
 		persona = { class = <fake_class>, team = <fake_team> },
 		override = function( ply ) end, --return false to disallow, nil to do standard check, true to allow
 		spawn = <Vector or table of vectors> Override group spawn
+		select_override = function( cur, total ) end, --wheater this class can be selected, return true to allow
+		callback = function( ply, class ) end,
 	}
 ]]
 
-if fully_registered and fully_registered > CurTime() then return end --DEBUG function
+if slc_classes_fully_registered and slc_classes_fully_registered > CurTime() then return end --DEBUG function
 
 local gwarn = true
 local cwarn = true
@@ -71,17 +75,20 @@ function AddSupportGroup( name, weight, spawn, max, callback, spawnrule )
 	assert( SelectClasses.SUPPORT[name] == nil, "Group '"..name.."' is already registered!" )
 	assert( istable( spawn ), "Spawn info is not valid!" )
 
-	local cvar
-	if SERVER then
-		cvar = CreateConVar( "slc_support_"..name.."_chance", "0", { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE } )
-		cvar:SetInt( weight )
+	local cvar_name = "slc_support_"..name.."_chance"
+	local cvar = GetConVar( cvar_name )
+	if SERVER and !cvar then
+		cvar = CreateConVar( cvar_name, weight, { FCVAR_SERVER_CAN_EXECUTE, FCVAR_ARCHIVE } )
 	end
 
 	SelectClasses.SUPPORT[name] = {}
 	SpawnInfo.SUPPORT[name] = spawn
 	SupportData[name] = { max = max or 0, callback = callback, spawnrule = spawnrule }
 
-	table.insert( SuppWeightList, { name, cvar } )
+	table.insert( SuppWeightList, {
+		name = name,
+		cvar = cvar,
+	} )
 end
 
 function GetClassGroup( name )
@@ -127,6 +134,7 @@ function RegisterClass( name, group, model, data, support )
 		return
 	end
 
+	assert( data.team, "Invalid team" )
 	assert( AllClasses[name] == nil, "Class '"..name.."' is already registered!" )
 	assert_warn( _LANG["english"]["CLASSES"][name] != nil and _LANG["english"]["CLASS_OBJECTIVES"][name] != nil, "No language entry for: "..name )
 
@@ -136,6 +144,7 @@ function RegisterClass( name, group, model, data, support )
 	data.name = name
 	data.group = group
 	data.model = model
+	data.loadout = data.loadout or name
 
 	AllClasses[name] = data
 	usetab[group][name] = data
@@ -194,35 +203,73 @@ function SelectSupportGroup()
 
 	local newlist = {}
 
-	for i, v in pairs( SuppWeightList ) do
-		local data = SupportData[v[1]]
+	for i, v in ipairs( SuppWeightList ) do
+		if GetRoundProperty( "support_fail" ) == v.name then continue end
 
-		if !data.spawnrule or data.spawnrule() then
-			table.insert( newlist, v )
+		local data = SupportData[v.name]
+		local cvar = v.cvar:GetInt()
+
+		if data.spawnrule then
+			local rule, override = data.spawnrule( cvar )
+			if rule != true then continue end
+
+			if override == true then
+				return v.name, SupportData[v.name]
+			else
+				table.insert( newlist, { name = v.name, weight = override or cvar } )
+			end
+		else
+			table.insert( newlist, { name = v.name, weight = cvar } )
 		end
 	end
 
 	local total = 0
 	for i, v in ipairs( newlist ) do
-		total = total + v[2]:GetInt()
+		total = total + v.weight
 	end
 
 	local dice = math.random( total )
 	total = 0
 
 	for i, v in ipairs( newlist ) do
-		total = total + v[2]:GetInt()
+		total = total + v.weight
 
 		if total >= dice then
-			return v[1], SupportData[v[1]]
+			return v.name, SupportData[v.name]
 		end
 	end
 end
 
-timer.Simple( 0, function()
+hook.Add( "SLCGamemodeLoaded", "SLCRegisterClasses", function()
+	if slc_classes_fully_registered and slc_classes_fully_registered > CurTime() then return end
+	slc_classes_fully_registered = CurTime() + 1
+
 	gwarn = false
 	hook.Run( "SLCRegisterClassGroups" )
 	gwarn = true
+
+	if file.Exists( "slc/classes_data.txt", "DATA" ) then
+		local override = LoadINI( "slc/classes_data.txt" )
+		if override.ENABLED then
+			for i, v in ipairs( SelectInfo ) do
+				//print( "WEIGHT OVERRIDE", v[1], v[2], override.WEIGHTS[v[1]], "USING", override.WEIGHTS[v[1]] or v[2] )
+				v[2] = tonumber( override.WEIGHTS[v[1]] ) or v[2]
+			end
+		end
+	end
+
+	if !file.Exists( "slc/classes_data.txt", "DATA" ) then
+		local tab = {}
+
+		for i, v in ipairs( SelectInfo ) do
+			tab[v[1]] = v[2]
+		end
+
+		WriteINI( "slc/classes_data.txt", {
+			WEIGHTS = tab,
+			ENABLED = false,
+		}, false, ".", "This file has spawn weights for spawnable teams. To use change ENABLED to true then edit values as you wish.\n# To disable change ENABLED to false. To restore default values delete this file and restart the game" )
+	end
 
 	table.sort( SelectInfo, function( a, b ) return a[2] > b[2] end )
 
@@ -241,14 +288,16 @@ timer.Simple( 0, function()
 	cwarn = true
 end )
 
-fully_registered = CurTime() + 1
+hook.Add( "SLCVersionChanged", "ClassesOverride", function( new, old )
+	file.Rename( "slc/classes_data.txt", "slc/classes_data_old.txt" )
+end )
 
 --[[-------------------------------------------------------------------------
 Player functions
 ---------------------------------------------------------------------------]]
-local ply = FindMetaTable( "Player" )
+local PLAYER = FindMetaTable( "Player" )
 
-function ply:IsClassUnlocked( name )
+function PLAYER:IsClassUnlocked( name )
 	if self:IsBot() then return true end
 	if gamerule.Get( "lan" ) then return true end
 
@@ -265,7 +314,7 @@ function ply:IsClassUnlocked( name )
 	return true
 end
 
-function ply:CanUnlockClass( name )
+function PLAYER:CanUnlockClass( name )
 	local class = AllClasses[name]
 	if !class or self:SCPClassPoints() < 1 then return false end
 	if self.playermeta.classes[name] then return false end
@@ -274,7 +323,7 @@ function ply:CanUnlockClass( name )
 	return true
 end
 
-function ply:CanUnlockClassTier( tier )
+function PLAYER:CanUnlockClassTier( tier )
 	if tier and tier > 1 then
 		for k, v in pairs( ClassTiers[tier - 1] ) do
 			if !self.playermeta.classes[k] then
@@ -286,7 +335,7 @@ function ply:CanUnlockClassTier( tier )
 	return true
 end
 
-function ply:UnlockClass( name )
+function PLAYER:UnlockClass( name )
 	if !self:CanUnlockClass( name ) then return false end
 
 	if SERVER then
@@ -357,7 +406,7 @@ if SERVER then
 		end
 	end )
 
-	hook.Add( "SLCRegisterGamerules", "SLCPlayerInfoRule", function()
+	hook.Add( "SLCRegisterGamerules", "SLCLANRule", function()
 		gamerule.Register( "lan", { value = false } )
 	end )
 end

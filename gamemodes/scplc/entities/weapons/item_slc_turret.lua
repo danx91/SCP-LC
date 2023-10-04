@@ -8,6 +8,8 @@ SWEP.Primary.Automatic 		= true
 SWEP.ShouldDrawViewModel 	= false
 SWEP.ShouldDrawWorldModel 	= false
 
+SWEP.DrawCrosshair = false
+
 if CLIENT then
 	SWEP.WepSelectIcon = Material( "slc/items/turret.png" )
 	SWEP.SelectColor = Color( 255, 210, 0, 255 )
@@ -121,7 +123,7 @@ function SWEP:PrimaryAttack()
 	owner:StartHold( "turret_place", IN_ATTACK, self.PlaceTime, nil, self )
 
 	if SERVER then
-		owner:EnableProgressBar( true, CurTime() + self.PlaceTime, "lang:MISC.placing_turret", Color( 200, 200, 200, 255 ), Color( 50, 225, 25, 255 ) )
+		owner:EnableProgressBar( true, CurTime() + self.PlaceTime, "lang:WEAPONS.TURRET.placing_turret", Color( 200, 200, 200, 255 ), Color( 50, 225, 25, 255 ) )
 	else
 		//self.Indicator:SetNoDraw( true )
 	end
@@ -315,12 +317,6 @@ function SWEP:TraceIndicator( pos, ep, ang )
 	end
 
 	return valid, result
-end
-
-function SWEP:DrawWorldModel()
-	if !IsValid( self:GetOwner() ) then
-		self:DrawModel()
-	end
 end
 
 hook.Add( "StartCommand", "SLCTurretSWEPCMD", function( ply, cmd )

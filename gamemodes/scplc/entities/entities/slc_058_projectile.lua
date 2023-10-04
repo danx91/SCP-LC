@@ -8,7 +8,7 @@ ENT.AdminSpawnable		= false
 
 ENT.Speed = 11
 ENT.Size = 1
-ENT.Gravity = Vector( 0, 0, 0.085 )
+ENT.Gravity = Vector( 0, 0, 0.07 )
 ENT.EffectName = "SLCBloodSplash"
  
 function ENT:SetupDataTables()
@@ -37,11 +37,14 @@ function ENT:Think()
 		local pos = self:GetPos()
 		local hull_size = 3 * self:GetSize()
 
+		local filter = SCPTeams.GetPlayersByTeam( TEAM_SCP )
+		filter[#filter + 1] = self
+
 		local trace = util.TraceHull{
 			start = pos,
 			endpos = pos + self.Velocity,
 			mask = MASK_SHOT,
-			filter = { self, self:GetOwner() }, --TODO ignore SCPs
+			filter = filter,
 			mins = Vector( -hull_size, -hull_size, -hull_size ),
 			maxs = Vector( hull_size, hull_size, hull_size ),
 		}

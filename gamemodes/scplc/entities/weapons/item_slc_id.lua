@@ -11,6 +11,8 @@ SWEP.HoldType 		= "pistol"
 
 SWEP.SelectFont = "SCPHUDMedium"
 
+SWEP.DrawCrosshair = false
+
 function SWEP:Initialize()
 	self:SetHoldType( self.HoldType )
 	self:SetModelScale( 2 / 3 )
@@ -32,6 +34,9 @@ function SWEP:Initialize()
 	self.mat_ply = Material( "null" )
 end
 
+local color_black255 = Color( 0, 0, 0, 255 )
+local color_black200 = Color( 0, 0, 0, 200 )
+
 function SWEP:ViewModelDrawn()
 	local vm = self.Owner:GetViewModel()
 	if !IsValid( vm ) then return end
@@ -48,12 +53,12 @@ function SWEP:ViewModelDrawn()
 			ang:RotateAroundAxis( ang:Up(), 93 )
 
 			cam.Start3D2D( pos + ang:Right() * 3 + ang:Forward() * -1.80 + ang:Up() * 1.0, ang, 0.02 )
-		        draw.SimpleText( self.Lang.pname, "PassHud2", 40, -50, Color( 0, 0, 0, 255 ) )
-				draw.SimpleText( self.Owner:Name() or "Unknown", "PassHud", 40, -40, Color( 0, 0, 0, 255 ) )
-				draw.SimpleText( self.Lang.server, "PassHud2", 40, 15, Color( 0, 0, 0, 255 ) )
-				draw.SimpleText( string.sub( GetHostName(), 1, 20 ), "PassHud3", 40, 30, Color( 0, 0, 0, 255 ) )
-				draw.SimpleText( "<G<<<<<<<<<<<"..self.Owner:SteamID().."<<<<", "PassHud2", -60, 60, Color( 0, 0, 0, 200 ) )
-				draw.SimpleText( "<G<<<2281337<<<<777<<<<06<<<<<<<<<<", "PassHud2", -60, 75, Color( 0, 0, 0, 200 ) )
+		        draw.SimpleText( self.Lang.pname, "PassHud2", 40, -50, color_black255 )
+				draw.SimpleText( self.Owner:Name() or "Unknown", "PassHud", 40, -40, color_black255 )
+				draw.SimpleText( self.Lang.server, "PassHud2", 40, 15, color_black255 )
+				draw.SimpleText( string.sub( GetHostName(), 1, 20 ), "PassHud3", 40, 30, color_black255 )
+				draw.SimpleText( "<G<<<<<<<<<<<"..self.Owner:SteamID().."<<<<", "PassHud2", -60, 60, color_black200 )
+				draw.SimpleText( "<G<<<2281337<<<<777<<<<06<<<<<<<<<<", "PassHud2", -60, 75, color_black200 )
 			cam.End3D2D()
 		end
 end

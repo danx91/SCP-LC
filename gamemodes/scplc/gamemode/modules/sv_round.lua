@@ -27,7 +27,7 @@ function SetupSupportTimer()
 
 	AddTimer( "SupportTimer", time, 1, function( self, n )
 		if !SpawnSupport() then
-			self:Change( 30, 0 )
+			self:Change( 10, 0 )
 			self:Start()
 		else
 			self:Destroy()
@@ -54,15 +54,15 @@ function SetRoundProperty( key, value )
 	if !ROUND.active then return end
 
 	ROUND.properties[key] = value
-	
 	return value
 end
 
-function GetRoundProperty( key )
+function GetRoundProperty( key, def )
 	if !ROUND.active then return end
 
-	return ROUND.properties[key]
+	return ROUND.properties[key] or def
 end
+
 --[[-------------------------------------------------------------------------
 Local util functions
 ---------------------------------------------------------------------------]]
@@ -145,6 +145,7 @@ function FinishRoundInternal( winner, endcheck )
 		net.WriteTable{
 			status = "post",
 			time = CurTime() + post,
+			duration = post,
 		}
 	net.Broadcast()
 
@@ -215,6 +216,7 @@ function RestartRound()
 		net.WriteTable{
 			status = "inf",
 			time = CurTime() + INFO_SCREEN_DURATION,
+			duration = INFO_SCREEN_DURATION,
 			name = ROUND.roundtype.name,
 		}
 	net.Broadcast()
@@ -230,6 +232,7 @@ function RestartRound()
 			net.WriteTable{
 				status = "pre",
 				time = CurTime() + prep,
+				duration = prep,
 				name = ROUND.roundtype.name,
 			}
 		net.Broadcast()
@@ -248,6 +251,7 @@ function RestartRound()
 				net.WriteTable{
 					status = "live",
 					time = CurTime() + round,
+					duration = round
 				}
 			net.Broadcast()
 
@@ -328,11 +332,11 @@ end, "CheckRoundStart" )
 --[[-------------------------------------------------------------------------
 GM hooks
 ---------------------------------------------------------------------------]]
-function GM:SLCPreround()
+function GM:SLCPreround( time )
 	TransmitSound( "scp_lc/round_start.ogg", true )
 end
 
-function GM:SLCRound()
+function GM:SLCRound( time )
 	TransmitSound( "scp_lc/bell2.ogg", true )
 end
 
@@ -372,10 +376,10 @@ function GM:SLCPostround( winner )
 
 	if !winner then
 		print( "Round has ended! Nobody wins" )
-		CenterMessage( "time:"..time..";offset:75;roundend#255,0,0,SCPHUDVBig;nowinner"..specialinfo )
+		CenterMessage( "time:"..time..";offset:-250;roundend#255,0,0,SCPHUDVBig;nowinner"..specialinfo )
 	elseif winner == true then
 		print( "Round has ended due to not enough players!" )
-		CenterMessage( "time:"..time..";offset:75;roundend#255,0,0,SCPHUDVBig;roundnep" )
+		CenterMessage( "time:"..time..";offset:-250;roundend#255,0,0,SCPHUDVBig;roundnep" )
 	elseif istable( winner ) then
 		local txt = ""
 		local raw = ""
@@ -395,7 +399,7 @@ function GM:SLCPostround( winner )
 
 		print( "Round has ended! Winners: "..show )
 
-		local msg = "time:"..time..";offset:75;roundend#255,0,0,SCPHUDVBig;roundwinmulti$"..txt..",raw:"..raw
+		local msg = "time:"..time..";offset:-250;roundend#255,0,0,SCPHUDVBig;roundwinmulti$"..txt..",raw:"..raw
 
 		if specialinfo and specialinfo != "" then
 			msg = msg..specialinfo
@@ -407,7 +411,7 @@ function GM:SLCPostround( winner )
 
 		print( "Round has ended! Winner: "..name )
 
-		local msg = "time:"..time..";offset:75;roundend#255,0,0,SCPHUDVBig;roundwin$@TEAMS."..name
+		local msg = "time:"..time..";offset:-250;roundend#255,0,0,SCPHUDVBig;roundwin$@TEAMS."..name
 
 		if specialinfo and specialinfo != "" then
 			msg = msg..specialinfo

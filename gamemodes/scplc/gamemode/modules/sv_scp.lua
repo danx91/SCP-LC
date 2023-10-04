@@ -1,5 +1,4 @@
 local SCPObjects = {}
-local SCPNoSelectObjects = {}
 local TransmitSCPS = {}
 
 local SCP_VALID_ENTRIES = {
@@ -23,11 +22,10 @@ local SCP_VALID_ENTRIES = {
 	scp_human = true,
 	no_damage_forces = true,
 	dynamic_spawn = true,
-	no_terror = true,
 	can_interact = true,
 	reward_override = true,
 	disable_overload = true,
-	//disable_crosshair = true,
+	no_chase = true,
 }
 
 local SCP_DYNAMIC_VARS = {}
@@ -44,7 +42,6 @@ function UpdateDynamicVars()
 		print( "Dev mode is enabled! Overwritting INI values..." )
 	else
 		local override = LoadINI( "slc/scp_override.txt" )
-
 		for k, v in pairs( override ) do
 			if istable( v ) then
 				for _k, _v in pairs( v ) do
@@ -60,21 +57,23 @@ function UpdateDynamicVars()
 end
 
 function SaveDynamicVars()
-	//WriteINI( "slc/scp_default.txt", SCP_DYNAMIC_VARS, false, ".", "For reference use only (this file is not used anywhere)! Use scp_override.txt instead!\n# Changes in scp_override.txt will affect this file so 'real' default values are gone!" )
 	WriteINI( "slc/scp_default.txt", SCP_DYNAMIC_DEFAULT, false, ".", "For reference use only (this file is not used anywhere)! Use scp_override.txt instead.\n# Copy and paste SCP header (e.g. [SCP173]), then just below it paste attribute that you want to edit and change its value" )
 end
+
+hook.Add( "SLCVersionChanged", "SCPOverride", function( new, old )
+	file.Rename( "slc/scp_override.txt", "slc/scp_override_old.txt" )
+end )
 
 function SendSCPList( ply )
 	local data = {}
 
-	for i, v in ipairs( SCPS ) do
+	for i, v in ipairs( TransmitSCPS ) do
 		local obj = SCPObjects[v]
-		table.insert( data, { name = v, model = obj.model, hp = obj.basestats.base_health, speed = obj.basestats.base_speed } )
+		table.insert( data, { name = v, model = obj.model, hp = obj.basestats.base_health, speed = obj.basestats.base_speed, no_select = obj.basestats.no_select } )
 	end
 
 	net.Start( "SCPList" )
 		net.WriteTable( data )
-		net.WriteTable( TransmitSCPS )
 
 	if ply then
 		net.Send( ply )
@@ -84,7 +83,7 @@ function SendSCPList( ply )
 end
 
 function GetSCP( name )
-	return SCPObjects[name] or SCPNoSelectObjects[name]
+	return SCPObjects[name]
 end
 
 function RegisterSCP( name, model, weapon, static_stats, dynamic_stats, custom_callback, post_callback )
@@ -120,12 +119,11 @@ function RegisterSCP( name, model, weapon, static_stats, dynamic_stats, custom_c
 		scp:SetCallback( post_callback, true )
 	end
 
+	SCPObjects[name] = scp
+	table.insert( TransmitSCPS, name )
+
 	if !scp.basestats.no_select then
-		SCPObjects[name] = scp
 		table.insert( SCPS, name )
-	else
-		SCPNoSelectObjects[name] = scp
-		table.insert( TransmitSCPS, name )
 	end
 
 	print( name.." has been registered!" )
@@ -226,7 +224,6 @@ local function setup_scp_internal( self, ply, ... )
 
 	ply:UnSpectate()
 	ply:Cleanup( basestats.no_strip == true )
-	//ply:GodDisable()
 
 	/*if !self.basestats.no_strip then
 		ply:SetVest( 0 )
@@ -256,7 +253,7 @@ local function setup_scp_internal( self, ply, ... )
 
 	ply:SetSCPHuman( basestats.scp_human == true )
 	ply:SetSCPChat( basestats.allow_chat == true )
-	//ply:SetSCPTerror( basestats.no_terror != true )
+	ply:SetSCPChase( basestats.no_chase != true )
 	ply:SetSCPCanInteract( basestats.can_interact == true )
 	ply:SetSCPDisableOverload( basestats.disable_overload == true )
 
@@ -280,7 +277,7 @@ local function setup_scp_internal( self, ply, ... )
 			wep.ShouldFreezePlayer = basestats.prep_freeze == true
 		end
 
-		ply:SetProperty( "scp_weapon", wep )
+		ply:SetProperty( "scp_weapon", wep, true )
 	end
 
 	ply:SetArmor( 0 )
@@ -288,17 +285,11 @@ local function setup_scp_internal( self, ply, ... )
 	ply:Flashlight( false )
 	ply:AllowFlashlight( false )
 
-	/*if basestats.disable_crosshair == true then
-		ply:CrosshairDisable()
-	else
-		ply:CrosshairEnable()
-	end*/
-
 	ply:SetNoDraw( basestats.no_draw == true )
 
-	if basestats.no_damage_forces == true then
+	//if basestats.no_damage_forces == true then
 		ply:AddEFlags( EFL_NO_DAMAGE_FORCES )
-	end
+	//end
 
 	//ply.noragdoll = basestats.no_ragdoll == true
 	ply:SetSCPNoRagdoll( basestats.no_ragdoll == true )
@@ -311,10 +302,7 @@ local function setup_scp_internal( self, ply, ... )
 	ply:SetupHands()
 
 	hook.Run( "SLCSCPSetup", ply, self.name )
-
-	//net.Start( "PlayerSetup" )
-	//net.Send( ply )
-
+	
 	if self.post then
 		self.post( ply, ... )
 	end
@@ -341,7 +329,7 @@ end
 hook.Add( "Tick", "SLCSpawnSCPTick", function()
 	local ct = CurTime()
 
-	for k, v in pairs( player.GetAll() ) do
+	for i, v in ipairs( player.GetAll() ) do
 		local data = v:GetProperty( "spawning_scp" )
 		if data and data.time < ct then
 			v:SetProperty( "spawning_scp", nil )
@@ -359,7 +347,8 @@ hook.Add( "SLCGamemodeLoaded", "SLCSCPModule", function()
 	hook.Run( "RegisterSCP" )
 	SaveDynamicVars()
 
-	if SetupForceSCP then SetupForceSCP() end
+	//if SetupForceSCP then SetupForceSCP() end
+	hook.Run( "SetupForceSCP" )
 
 	//for k, v in pairs( player.GetAll() ) do
 		SendSCPList()

@@ -27,7 +27,7 @@ function AddRoundType( name, tab, base, chance )
 	ROUNDS[name] = tab
 end
 
-function SelectRoundType() --TODO
+function SelectRoundType() --TODO add round types
 
 end
 

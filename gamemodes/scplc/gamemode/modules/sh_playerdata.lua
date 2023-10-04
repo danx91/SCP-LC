@@ -71,14 +71,14 @@ function PlayerData:Create( ply )
 			end
 
 			if use then
-				local id = ply:AddSCPVar( "PD_"..k, use )
+				local id = ply:AddSLCVar( "PD_"..k, use )
 
 				if id then
 					v.transmit_ok = true
 				end
 
 				if CLIENT then
-					ply:SetSCPVarCallback( id, use, function( p, val )
+					ply:SetSLCVarCallback( id, use, function( p, val )
 						/*if v[2] then
 							v[2]( p, k, val )
 						end*/
@@ -297,53 +297,6 @@ end
 
 setmetatable( PlayerData, { __call = PlayerData.Create } )
 
-//local ply = FindMetaTable( "Player" )
---create direct bindings to PlayerData table
-
-/*if CLIENT then
-	net.ReceivePing( "SLCPlayerData", function( data )
-		local name, value = string.match( data, "(.-):(.+)" )
-
-		if !name then
-			name = data
-
-			local obj = PlayerStatus[name]
-			if !obj then return end
-
-			value = obj[1]
-		end
-
-		if name == "_reset" then
-			for line in string.gmatch( value, "[^;]+" ) do
-				local obj = PlayerStatus[line]
-
-				if obj then
-					LocalPlayer().PlayerData.Status[line] = obj[1]
-					//print( "PD reset", line )
-				end
-			end
-		else
-			local obj = PlayerStatus[name]
-
-			if obj then
-				local t = type( obj[1] )
-
-				if t == "number" then
-					value = tonumber( value )
-				elseif t == "boolean" then
-					value = tobool( value )
-				end
-
-				//print( "casted", value, type( value ) )
-				if value != nil then
-					LocalPlayer().PlayerData.Status[name] = value
-					//print( "PD set", name, value )
-				end
-			end
-		end
-	end )
-end*/
-
 if CLIENT then
 	net.Receive( "SLCPlayerDataUpdate", function( len )
 		local ply = LocalPlayer()
@@ -378,7 +331,7 @@ end
 --------------------------------------------------------------------
 
 ---------------------------- BASE STATUS ----------------------------
-//RegisterPlayerStatus( "name", <initial value>, func/false[nil], nil/func/ture/false* )
+//RegisterPlayerStatus( "name", <initial value>, func/false[nil], nil/func/ture/false*, transmit )
 //* - true: only on roundend, false: never, nil: always, func: return true to suppress
 //name cannot contain ':'
 
@@ -394,8 +347,10 @@ RegisterPlayerStatus( "SCPHuman", false, nil, nil, true )
 RegisterPlayerStatus( "SCPCanInteract", false )
 RegisterPlayerStatus( "SCPChat", false )
 RegisterPlayerStatus( "SCPNoRagdoll", false )
-RegisterPlayerStatus( "SCPDisableOverload", false )
-//RegisterPlayerStatus( "SCPTerror", true )
+RegisterPlayerStatus( "SCPDisableOverload", false, nil, nil, true )
+
+RegisterPlayerStatus( "SCPChase", false )
+RegisterPlayerStatus( "ChaseLevel", 0 )
 
 RegisterPlayerStatus( "SCP714", false, nil, nil, true )
 RegisterPlayerStatus( "SCP096Chase", false )

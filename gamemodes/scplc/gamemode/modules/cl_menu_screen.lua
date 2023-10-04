@@ -1,5 +1,9 @@
 local color_white = Color( 255, 255, 255 )
 local color_inactive = Color( 155, 155, 155 )
+local color_black125 = Color( 0, 0, 0, 125)
+local color_black250 = Color( 0, 0, 0, 250 )
+local color_light = Color( 100, 100, 100, 255 )
+local color_dark = Color( 40, 40, 40, 255 )
 
 local logo_mat = GetMaterial( "slc/logo.png" )
 local logo_ratio = logo_mat:Height() / logo_mat:Width()
@@ -32,11 +36,12 @@ local function add_button( text, func, pnl, dock )
 
 		this.pct = math.Clamp( this.pct + delta * RealFrameTime() * 5, 0, 1 )
 
-		local tw = draw.SimpleText( text, "SCPHUDMedium", pw * 0.01, ph / 2, enabled and color_white or color_inactive, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER )
+		local tw = draw.SimpleText( LANG.MenuScreen[text] or text, "SCPHUDMedium", pw * 0.01, ph / 2, enabled and color_white or color_inactive, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER )
 
 		surface.SetDrawColor( 255, 255, 255, 80 )
 		surface.SetMaterial( grad )
 		surface.DrawTexturedRect( 0, ph - 8, tw + (pw - tw) * ( bezier( this.pct ) * 0.9 + 0.1 ), 2 )
+		//this:DrawOutlinedRect()
 	end
 
 	return btn
@@ -50,13 +55,14 @@ end
 
 function OpenMenuScreen()
 	if IsValid( SLCMenuScreen ) then SLCMenuScreen:Remove() end
-	if DEVELOPER_MODE then return end
+	if LocalPlayer().IsActive and LocalPlayer():IsActive() then return end
 
 	local url = "https://github.com/danx91/scp-lc-menu-videos/raw/main/vid"..math.random(4)..".webm"
 
 	SLCMenuScreen = vgui.Create( "HTML" )
 
-	SLCMenuScreen:SetHTML(
+	if system.IsWindows() then
+		SLCMenuScreen:SetHTML(
 [[<!DOCTYPE html>
 <style type="text/css">
 html, body {
@@ -88,6 +94,7 @@ html, body {
   </video>
  </body>
 </html>]] )
+	end
 
 	local w, h = ScrW(), ScrH()
 
@@ -116,19 +123,22 @@ html, body {
 
 	local pnl = vgui.Create( "DPanel", SLCMenuScreen )
 	pnl:SetPos( h * 0.1, h * 0.1 )
-	pnl:SetSize( w * 0.25, h * 0.55 )
+	pnl:SetSize( w * 0.25, h * 0.6 )
 
 	pnl.Paint = function( this, pw, ph )
-		draw.RoundedBox( 16, 0, 0, pw, ph, Color( 0, 0, 0, 200 ) )
+		draw.RoundedBox( 32, 1, 1, pw - 2, ph - 2, color_black125 )
+
+		surface.SetDrawColor( 255, 255, 255 )
+		surface.OutlinedRoundedRect( 0, 0, pw, ph, 32, 1 )
 	end
 
 	pnl.PerformLayout = function( this, pw, ph )
-		this.Logo:SetTall( h * 0.1 )
+		this.Logo:SetTall( h * 0.08 )
 		this.Logo:DockMargin( pw * 0.1, 0, 0, ph * 0.075 )
 
 		for k, v in pairs( this.Buttons ) do
-			v:DockMargin( pw * 0.075, 0, pw * 0.25, ph * 0.05 )
-			v:SetTall( ph * 0.075 )
+			v:DockMargin( pw * 0.075, 0, pw * 0.1, ph * 0.025 )
+			v:SetTall( ph * 0.07 )
 		end
 	end
 
@@ -148,7 +158,7 @@ html, body {
 	pnl.Buttons = {}
 
 	--Start button
-	local sbt = add_button( lang.start, function()
+	local sbt = add_button( "start", function()
 		SLCMenuScreen:Remove()
 		MakePlayerReady()
 	end, pnl )
@@ -156,24 +166,22 @@ html, body {
 	sbt:SetEnabled( false )
 
 	sbt.Think = function( this )
-		if !this:IsEnabled() and _SLCPlayerReady then
-			this:SetEnabled( true )
-		end
+		this:SetEnabled( _SLCPlayerReady and ( SLC_CONTENT.status == SCS_DONE or SLC_CONTENT.status == SCS_WAITING ) )
 	end
 
 	--Settings button
-	add_button( lang.settings, function()
+	add_button( "settings", function()
 		OpenSettingsWindow()
 		pnl.LockIfValid = SLC_SETTINGS_WINDOW
 		SLC_SETTINGS_WINDOW.Think = function( this )
-			if !this:HasFocus() and !IsValid( SLC_POPUP ) then
+			if !this:HasFocus() and !IsValid( SLC_POPUP ) and !IsValid( SLC_SETTINGS_WINDOW ) then
 				this:MakePopup()
 			end
 		end
 	end, pnl )
 
 	--Precache button
-	local pre = add_button( lang.precache, function()
+	local pre_btn = add_button( "precache", function()
 		SLCPopup( lang.model_precache, lang.model_precache_text, false, function( i )
 			if i == 1 then
 				local models = {}
@@ -237,10 +245,10 @@ html, body {
 		pnl.LockIfValid = SLC_POPUP
 	end, pnl )
 
-	pre:SetEnabled( false )
+	pre_btn:SetEnabled( false )
 
 	--Credits button
-	add_button( lang.credits, function()
+	add_button( "credits", function()
 		local credpnl = vgui.Create( "DScrollPanel" )
 		pnl.LockIfValid = credpnl
 
@@ -256,7 +264,10 @@ html, body {
 		placeholder.Paint = function() end
 
 		credpnl.Paint = function( this, pw, ph )
-			draw.RoundedBox( 16, 0, 0, pw, ph, Color( 0, 0, 0, 200 ) )
+			draw.RoundedBox( 16, 1, 1, pw - 2, ph - 2, color_black250 )
+
+			surface.SetDrawColor( 255, 255, 255 )
+			surface.OutlinedRoundedRect( 0, 0, pw, ph, 16, 1 )
 
 			local th, _, feed = draw.MultilineText( 0, credpnl.VBar:GetOffset(), lang.credits_text, "SCPHUDSmall", color_white, pw, pw * 0.03, 0, TEXT_ALIGN_LEFT, nil, false, false, this.Feed )
 			if !this.Feed then
@@ -282,16 +293,16 @@ html, body {
 		local m = h * 0.01
 		vbar:DockMargin( 0, m, m, m )
 		vbar.Paint = function( this, pw, ph )
-			draw.RoundedBox( 15, 0, 0, pw, ph, Color( 100, 100, 100, 255 ) )
+			draw.RoundedBox( 15, 0, 0, pw, ph, color_light )
 		end
 
 		grip.Paint = function( this, pw, ph )
-			draw.RoundedBox( 15, 2, 2, pw - 4, ph - 4, Color( 40, 40, 40, 255 ) )
+			draw.RoundedBox( 15, 2, 2, pw - 4, ph - 4, color_dark )
 		end
 	end, pnl )
 
 	--Quit button
-	add_button( lang.quit, function()
+	add_button( "quit", function()
 		SLCPopup( lang.quit_server, lang.quit_server_confirmation, false, function( i )
 			if i == 1 then
 				RunConsoleCommand( "disconnect" )
@@ -300,4 +311,182 @@ html, body {
 
 		pnl.LockIfValid = SLC_POPUP
 	end, pnl, BOTTOM )
+
+	local marg = h * 0.015
+
+	local content = vgui.Create( "DPanel", SLCMenuScreen )
+	content:SetPos( pnl:GetX() + pnl:GetWide() + h * 0.1, h * 0.1 )
+	content:SetSize( w * 0.45, h * 0.4 )
+
+	content.Paint = function( this, pw, ph )
+		draw.RoundedBox( 32, 1, 1, pw - 2, ph - 2, color_black125 )
+
+		surface.SetDrawColor( 255, 255, 255 )
+		surface.OutlinedRoundedRect( 0, 0, pw, ph, 32, 1 )
+	end
+
+	content.PerformLayout = function( this, pw, ph )
+		this.Buttons:SetTall( ph * 0.09 )
+		this.Buttons:DockMargin( pw * 0.1, 0, pw * 0.1, ph * 0.03 )
+
+		this.Checkbox:SetTall( ph * 0.07 )
+		this.Checkbox:DockMargin( pw * 0.1, 0, pw * 0.1, ph * 0.03 )
+	end
+
+	local auto = cookie.GetNumber( "slc_auto_content_check", 1 ) != 0
+
+	local btn_cont = vgui.Create( "DPanel", content )
+	content.Buttons = btn_cont
+	btn_cont:Dock( BOTTOM )
+
+	btn_cont.Paint = function( this, pw, ph ) end
+
+	btn_cont.PerformLayout = function( this, pw, ph )
+		this.Download:SetWide( pw * 0.475 )
+		this.Workshop:SetWide( pw * 0.475 )
+	end
+
+	local btn_dnw = vgui.Create( "DButton", btn_cont )
+	btn_cont.Download = btn_dnw
+	btn_dnw:Dock( LEFT )
+
+	btn_dnw:SetText( "" )
+	btn_dnw:SetEnabled( false )
+	btn_dnw.Text = ""
+
+	btn_dnw.Think = function( this )
+		this.Text = LANG.MISC.content_checker.btn_check
+
+		local status = SLC_CONTENT.status
+		if status == SCS_WAITING then
+			this:SetEnabled( true )
+		/*else
+			this.Text = clang.btn_download
+			this:SetEnabled( status == SCS_DONE and #SLC_CONTENT.info.nsub > 0 )*/
+		end
+	end
+
+	btn_dnw.Paint = function( this, pw, ph )
+		draw.SimpleText( this.Text, "SCPHUDVSmall", pw * 0.5, ph * 0.5, this:IsEnabled() and color_white or color_light, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+
+		surface.SetDrawColor( 255, 255, 255 )
+		surface.DrawOutlinedRect( 0, 0, pw, ph )
+	end
+
+	btn_dnw.DoClick = function( this )
+		this:SetEnabled( false )
+
+		local status = SLC_CONTENT.status
+		if status == SCS_WAITING then
+			CheckContent()
+		/*elseif status == SCS_DONE and #SLC_CONTENT.info.nsub > 0 then
+			DownloadAddons()*/
+		end
+	end
+
+	local btn_ws = vgui.Create( "DButton", btn_cont )
+	btn_cont.Workshop = btn_ws
+	btn_ws:Dock( RIGHT )
+
+	btn_ws:SetText( "" )
+
+	btn_ws.Paint = function( this, pw, ph )
+		draw.SimpleText( LANG.MISC.content_checker.btn_workshop, "SCPHUDVSmall", pw * 0.5, ph * 0.5, this:IsEnabled() and color_white or color_light, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+
+		surface.SetDrawColor( 255, 255, 255 )
+		surface.DrawOutlinedRect( 0, 0, pw, ph )
+	end
+
+	btn_ws.DoClick = function( this )
+		gui.OpenURL( "https://steamcommunity.com/sharedfiles/filedetails/?id=2037536745" )
+	end
+
+	local cb = vgui.Create( "SLCCheckbox", content )
+	content.Checkbox = cb
+	cb:Dock( BOTTOM )
+
+	cb:SetFont( "SCPHUDVSmall" )
+	cb:SetText( "Auto" )
+	cb:SetState( auto )
+
+	cb.Think = function( this )
+		this:SetText( LANG.MISC.content_checker.auto_check )
+	end
+
+	cb.OnUpdate = function( this, new )
+		cookie.Set( "slc_auto_content_check", new and 1 or 0 )
+	end
+
+	local status_pnl = vgui.Create( "DPanel", content )
+	status_pnl:Dock( FILL )
+
+	status_pnl.Paint = function( this, pw, ph )
+		local clang = LANG.MISC.content_checker
+		local status = SLC_CONTENT.status
+		local p_show, p_cur, p_max, p_txt = false, 0, 0
+		local cy = marg
+		local tw, th
+
+		tw, th = draw.SimpleText( clang.title, "SCPHUDMedium", pw * 0.5, cy, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP )
+		cy = cy + th
+
+		tw, th = draw.SimpleText( clang.status..":  "..( clang.slist[status] or "" ), "SCPHUDMedium", marg, cy, color_white, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
+		cy = cy + th * 1.15
+
+		if status == SCS_CHECKING then
+			p_show = true
+			p_cur = SLC_CONTENT.info.nok + SLC_CONTENT.info.ok
+			p_max = #SLC_CONTENT.registry
+		elseif status == SCS_MOUNTING or status == SCS_DOWNLOADING then
+			p_show = true
+			p_cur = SLC_CONTENT.progress.current
+			p_max = SLC_CONTENT.progress.total
+			p_txt = SLC_CONTENT.progress.name
+		elseif status == SCS_DONE then
+			if SLC_CONTENT.info.nok > 0 then
+				local txt = ""
+
+				if SLC_CONTENT.info.was_nsub > 0 then
+					txt = txt..clang.nsub_warn
+				end
+
+				if SLC_CONTENT.info.was_disabled > 0 then
+					txt = txt..clang.disabled_warn
+				end
+
+				th = draw.MultilineText( marg, cy, txt, "SCPHUDVSmall", color_white, pw - marg * 2, 0, 0, TEXT_ALIGN_LEFT )
+				cy = cy + th * 1.15
+				tw, th = draw.SimpleText( clang.missing..":  "..SLC_CONTENT.info.was_nsub, "SCPHUDVSmall", marg, cy, color_white, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
+				cy = cy + th
+				tw, th = draw.SimpleText( clang.disabled..":  "..SLC_CONTENT.info.was_disabled, "SCPHUDVSmall", marg, cy, color_white, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
+				cy = cy + th
+			else
+				tw, th = draw.SimpleText( clang.allok, "SCPHUDVSmall", marg, cy, color_white, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
+				cy = cy + th
+			end
+		end
+
+		if p_show then
+			local p_m = pw * 0.1
+			local p_h = ph * 0.075
+			local dy = cy + ( ph - cy ) / 2 - p_h * 0.5
+			local f = math.Clamp( p_cur / p_max, 0, 1 )
+
+			surface.SetDrawColor( 255, 255, 255 )
+			surface.DrawOutlinedRect( p_m, dy, pw - p_m * 2, p_h )
+			surface.DrawRect( p_m, dy, ( pw - p_m * 2 ) * f, p_h )
+
+			tw, th = draw.SimpleText( " / ", "SCPHUDSmall", pw * 0.5, dy + p_h, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP )
+			draw.SimpleText( p_cur, "SCPHUDSmall", pw * 0.5 - tw * 0.5, dy + p_h, color_white, TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP )
+			draw.SimpleText( p_max, "SCPHUDSmall", pw * 0.5 + tw * 0.5, dy + p_h, color_white, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
+
+			if p_txt then
+				draw.SimpleText( p_txt, "SCPHUDSmall", pw * 0.5, dy, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_BOTTOM )
+			end
+		end
+	end
+
+	if auto then
+		CheckContent()
+	end
 end

@@ -11,7 +11,7 @@ function UpdatePlayerID( ply )
 	local tc, tt
 
 	if IsValid( wep ) and wep:GetClass() == "item_slc_id" then
-		if SCPTeams.IsAlly( lpt, team ) then
+		if SCPTeams.IsAlly( team, lpt ) then
 			tc = class
 			tt = team
 		else
@@ -32,6 +32,16 @@ function UpdatePlayerID( ply )
 	end
 end
 
+function SetupInitialIDs( tab )
+	local lp = LocalPlayer()
+	local _, lppt = lp:SCPPersona()
+
+	for k, v in pairs( tab ) do
+		if !IsValid( v ) or v == lp then continue end
+		IDs[v] = { class = "unknown", team = lppt }
+	end
+end
+
 function GetPlayerID( ply )
 	if ply == LocalPlayer() then
 		return { class = ply:SCPClass(), team = ply:SCPTeam() }
@@ -43,7 +53,6 @@ end
 function RemovePlayerID( ply )
 	IDs[ply] = nil
 end
-
 
 function ClearPlayerIDs()
 	IDs = {}
@@ -63,7 +72,7 @@ function GM:HUDDrawTargetID()
 	if ROUND.infoscreen then return end
 	if ply:GetPos():DistToSqr( lp:GetPos() ) > 90000 then return end
 	if ply:SCPTeam() == TEAM_SPEC then return end
-	if hook.Run( "CanPlayerSeePlayer", lp, ply ) == false then return end
+	if ply:GetNoDraw() or hook.Run( "CanPlayerSeePlayer", lp, ply ) == false then return end
 
 	if !ply.updated_id then
 		ply.update_id = 0
@@ -96,14 +105,21 @@ function GM:HUDDrawTargetID()
 		yalign = TEXT_ALIGN_BOTTOM,
 	}
 
-	if class then
-		draw.Text{
-			text = LANG.CLASSES_ID[class] or LANG.CLASSES[class] or class,
-			pos = { w * 0.5, h * 0.575 },
-			color = color,
-			font = "SCPHUDSmall",
-			xalign = TEXT_ALIGN_CENTER,
-			yalign = TEXT_ALIGN_TOP,
-		}
+	if !class then return end
+
+	local txt = LANG.CLASSES_ID[class] or LANG.CLASSES[class] or class
+
+	if class == "unknown" then
+		local t_name = SCPTeams.GetName( id.team )
+		txt = t_name and LANG.UNK_CLASSES[t_name] or txt
 	end
+
+	draw.Text{
+		text = txt,
+		pos = { w * 0.5, h * 0.575 },
+		color = color,
+		font = "SCPHUDSmall",
+		xalign = TEXT_ALIGN_CENTER,
+		yalign = TEXT_ALIGN_TOP,
+	}
 end

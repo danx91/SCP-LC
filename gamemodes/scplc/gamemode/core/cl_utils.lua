@@ -1,3 +1,4 @@
+local color_white = Color( 255, 255, 255 )
 --[[-------------------------------------------------------------------------
 Player message
 ---------------------------------------------------------------------------]]
@@ -5,7 +6,7 @@ CENTERINFO = {}
 
 local function add_text( txt, clr, c )
 	if c then
-		CENTERINFO = { text = txt, color = clr or Color( 255, 255, 255 ), time = CurTime() + 3 }
+		CENTERINFO = { text = txt, color = clr or color_white, time = CurTime() + 3 }
 	else
 		if clr then
 			chat.AddText( clr, txt )
@@ -229,7 +230,7 @@ function CenterMessage( msg, ply )
 			continue
 		end
 
-		local yoff = string.match( s, "^offset:(%d+)$" )
+		local yoff = string.match( s, "^offset:(-?%d+)$" )
 		if yoff then
 			yoffset = tonumber( yoff ) / 1000
 			continue
@@ -374,12 +375,12 @@ hook.Add( "HUDPaint", "CenterMessage", function()
 
 		local w, h = ScrW(), ScrH()
 
-		local y = h * ( 0.05 + msg.yoffset )
+		local y = h * ( 0.3 + msg.yoffset )
 		for k, v in pairs( msg.lines ) do
 			local _, th = draw.Text{
 				text = v.txt,
 				pos = { w * 0.5, y },
-				color = v.color or Color( 255, 255, 255 ),
+				color = v.color or color_white,
 				font = v.font or msg.font,
 				xalign = TEXT_ALIGN_CENTER,
 				yalign = TEXT_ALIGN_TOP,
@@ -391,7 +392,13 @@ hook.Add( "HUDPaint", "CenterMessage", function()
 end )
 
 function util.ParseLangKey( key )
-	local tabinfo = string.match( key, "^@(.+)$" ) or key
+	if !key then return end
+
+	local tabinfo, args = string.match( key, "^@(.+):(.+)$" )
+	if !tabinfo then
+		tabinfo = string.match( key, "^@(.+)$" ) or key
+	end
+
 	local tab = LANG
 
 	if tabinfo then
@@ -402,9 +409,17 @@ function util.ParseLangKey( key )
 
 			tab = tab[subtable]
 		end
+
+		if isstring( tab ) then
+			if args then
+				tab = string.format( tab, unpack( string.Explode( ",", args ) ) )
+			end
+
+			return tab
+		end
 	end
 
-	return tab
+	return tabinfo
 end
 
 --[[-------------------------------------------------------------------------
@@ -434,10 +449,10 @@ Wheel menu. Used by SCP 049
 
 @return		[nil]			-					-
 -------------------------------------------------------------------------]]--
-function OpenWheelMenu( options, cb, sc )
+function OpenWheelMenu( options, cb, sc, exmat )
 	if wheel_visible then return end
 
-	wheel_options = { { "exit", LANG.exit, nil } }
+	wheel_options = { { exmat, LANG.exit } }
 	for i, v in ipairs( options ) do
 		table.insert( wheel_options, { v[1], v[2], v[3] } )
 	end
@@ -461,13 +476,21 @@ function CloseWheelMenu()
 	if !wheel_visible then return end
 
 	local x, y = input.GetCursorPos()
-	local ca = math.deg( math.atan2( x - ScrW() * 0.5, -y + ScrH() * 0.5 ) )
+	local w, h = ScrW(), ScrH()
+	local selected = 1
 
-	if ca < 0 then
-		ca = 360 + ca
+	local dx, dy = x - w * 0.5,  -y + h * 0.5
+	local min_dist = w * 0.02
+
+	if dx * dx + dy * dy >= min_dist * min_dist then
+		local ca = math.deg( math.atan2( dx, dy ) )
+
+		if ca < 0 then
+			ca = 360 + ca
+		end
+
+		selected = math.floor( ca * #wheel_options / 360 ) + 1
 	end
-
-	local selected = math.floor( ca * #wheel_options / 360 ) + 1
 
 	if wheel_cb then
 		wheel_cb( wheel_options[selected][3] )
@@ -491,47 +514,68 @@ end )
 hook.Add( "HUDPaint", "SLCWheelMenu", function()
 	if !wheel_visible then return end
 
-	local w, h = ScrW(), ScrH()
-
 	local x, y = input.GetCursorPos()
-	local ca = math.deg( math.atan2( x - w * 0.5, -y + h * 0.5 ) )
+	local w, h = ScrW(), ScrH()
+	local selected = 1
 
-	if ca < 0 then
-		ca = 360 + ca
+	local dx, dy = x - w * 0.5,  -y + h * 0.5
+	local min_dist = w * 0.02
+
+	if dx * dx + dy * dy >= min_dist * min_dist then
+		local ca = math.deg( math.atan2( dx, dy ) )
+
+		if ca < 0 then
+			ca = 360 + ca
+		end
+
+		selected = math.floor( ca * #wheel_options / 360 ) + 1
 	end
 
 	local seg = #wheel_options
 	local ang = 360 / seg
-	local segang = ang - 4
+	local inner = w * 0.1
+	local thickness = w * 0.055
+	local outer = inner + thickness
+	local cx, cy = w * 0.5, h * 0.5
+
 	for i = 1, seg do
-		draw.NoTexture()
-		surface.SetDrawColor( 200, 200, 200 )
-		surface.DrawRing( w * 0.5, h * 0.5, w * 0.099, w * 0.057, segang + 2, 40, 1, 1 + ang * (i - 1) )
-
-		local selected =ca > ang * (i - 1) and ca <= ang * i
-
-		if selected then
+		if i == selected then
 			surface.SetDrawColor( 100, 100, 100 )
 		else
 			surface.SetDrawColor( 50, 50, 50 )
 		end
+		
+		draw.NoTexture()
+		surface.DrawRing( cx, cy, inner, thickness, ang, 40, 2, ang * (i - 1) )
 
-		surface.DrawRing( w * 0.5, h * 0.5, w * 0.1, w * 0.055, segang, 40, 2, 2 + ang * (i - 1) )
+		local la = math.rad( ang * (i - 1) )
+		local dlx, dly = math.sin( la ), -math.cos( la )
 
-		surface.SetDrawColor( 255, 255, 255 )
-		surface.SetMaterial( GetMaterial( wheel_options[i][1] ) )
+		surface.SetDrawColor( 200, 200, 200 )
+		surface.DrawLine( cx + dlx * inner, cy + dly * inner, cx + dlx * outer, cy + dly * outer )
+		
+		if wheel_options[i][1] then
+			surface.SetDrawColor( 255, 255, 255 )
+			surface.SetMaterial( GetMaterial( wheel_options[i][1], "smooth" ) )
 
-		local dist = w * 0.1275
-		local a = math.rad( ang * 0.5 + ang * (i - 1) )
-		local dx, dy = math.sin( a ) * dist, -math.cos( a ) * dist
+			local dist = inner + thickness * 0.5
+			local a = math.rad( ang * 0.5 + ang * (i - 1) )
+			local drx, dry = math.sin( a ) * dist, -math.cos( a ) * dist
 
-		local size = w * 0.035
-		surface.DrawTexturedRect( w * 0.5 + dx - size * 0.5, h * 0.5 + dy - size * 0.5, size, size )
+			local size = w * 0.035
+			surface.DrawTexturedRect( cx + drx - size * 0.5, cy + dry - size * 0.5, size, size )
+		end
 
-		if selected then
+		if i == selected then
+			local marg_w, marg_h = w * 0.01, h * 0.005
+			local tw, th = draw.TextSize( wheel_options[i][2], "SCPHUDSmall" )
+
+			surface.SetDrawColor( 0, 0, 0, 150 )
+			surface.DrawRect( cx - tw * 0.5 - marg_w, h * 0.45 - th * 0.5 - marg_h, tw + marg_w * 2, th + marg_h * 2 )
+
 			draw.LimitedText{
 				text = wheel_options[i][2],
-				pos = { w * 0.5, h * 0.5 },
+				pos = { cx, h * 0.45 },
 				color = Color( 255, 255, 255, 255 ),
 				font = "SCPHUDSmall",
 				xalign = TEXT_ALIGN_CENTER,
@@ -786,7 +830,7 @@ hook.Add( "DrawOverlay", "SLCProgressBar", function()
 				text = PROGRESS_TEXT,
 				pos = { w * 0.5, by_start + bar_h + h * 0.01 },
 				font = "SCPHUDBig",
-				color = Color( 225, 225, 225, 255 ),
+				color = color_white,
 				xalign = TEXT_ALIGN_CENTER,
 				yalign = TEXT_ALIGN_TOP,
 			}
@@ -997,12 +1041,12 @@ function SLCPopup( name, text, keep, callback, ... )
 			text = name or "Information",
 			pos = { pw * 0.01, h * 0.015 },
 			font = "SCPHUDSmall",
-			color = Color( 255, 255, 255, 255 ),
+			color = color_white,
 			xalign = TEXT_ALIGN_LEFT,
 			yalign = TEXT_ALIGN_CENTER,
 		}
 
-		draw.MultilineText( 0, h * 0.03, popup.text, "SCPHUDSmall", Color( 255, 255, 255, 255 ), w * 0.5, 10, 0, TEXT_ALIGN_LEFT )
+		draw.MultilineText( 0, h * 0.03, popup.text, "SCPHUDSmall", color_white, w * 0.5, 10, 0, TEXT_ALIGN_LEFT )
 	end
 
 	local cont = vgui.Create( "DPanel", popup )
@@ -1041,8 +1085,8 @@ function SLCPopup( name, text, keep, callback, ... )
 			draw.Text{
 				text = options[i],
 				pos = { pw * 0.5, ph * 0.5 },
-				font = "SCPHUDMedium",
-				color = Color( 255, 255, 255, 255 ),
+				font = "SCPHUDSmall",
+				color = color_white,
 				xalign = TEXT_ALIGN_CENTER,
 				yalign = TEXT_ALIGN_CENTER,
 			}

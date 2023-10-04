@@ -6,6 +6,8 @@ SWEP.WorldModel		= "models/mishka/models/radio.mdl"
 SWEP.ShouldDrawViewModel 	= false
 SWEP.ShouldDrawWorldModel 	= false
 
+SWEP.DrawCrosshair = false
+
 SWEP.Toggleable 	= true
 SWEP.EnableHolsterThink	= true
 SWEP.HasBattery 	= true
@@ -64,12 +66,7 @@ function SWEP:SecondaryAttack()
 	self:SetChannel( ch )
 end
 
-function SWEP:DrawWorldModel()
-	if !IsValid( self.Owner ) then
-		self:DrawModel()
-	end
-end
-
+local color_black = Color( 0, 0, 0, 255 )
 local radio = Material( "slc/misc/radioHUD.png" )
 function SWEP:DrawHUD()
 	if hud_disabled then return end
@@ -85,7 +82,7 @@ function SWEP:DrawHUD()
 	draw.Text{
 		text = self:GetChannel(),
 		pos = { w * 0.839, h - w * 0.09 },
-		color = Color( 0, 0, 0, 255 ),
+		color = color_black,
 		font = "SCPRadioHUD",
 		xalign = TEXT_ALIGN_LEFT,
 		yalign = TEXT_ALIGN_CENTER,

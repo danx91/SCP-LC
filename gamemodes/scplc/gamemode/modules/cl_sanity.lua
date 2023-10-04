@@ -50,7 +50,7 @@ end, function( ply )
 	ply.InsaneScreenEffect = 0
 end )
 
-hook.Add( "RenderScreenspaceEffects", "InsaneBlur", function()
+hook.Add( "SLCScreenMod", "InsaneBlur", function()
 	local ply = LocalPlayer()
 
 	if ply.InsaneScreenEffect and ply.InsaneScreenEffect > CurTime() then

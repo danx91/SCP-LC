@@ -45,13 +45,13 @@ function SWEP:SetupDataTables()
 	self:AddNetworkVar( "ShowText", "Float" )
 	self:AddNetworkVar( "Text", "String" )
 
-	self:NetworkVarNotify( "ChipID",  function( ent, name, old, new )
+	/*self:NetworkVarNotify( "ChipID",  function( ent, name, old, new )
 		if CLIENT then
-			--ent:UpdateDescription( new )
+			ent:UpdateDescription( new )
 		end
-	end )
+	end )*/
 
-	self:ActionQueueSetup()
+	self:ActionQueueSetup( true )
 end
 
 function SWEP:Initialize()
@@ -63,19 +63,6 @@ function SWEP:Initialize()
 
 	if CLIENT then
 		self.CHIP_LANG = LANG.WEAPONS["ACCESS_CHIP"] or {}
-
-		/*if !IsValid( self.WModel ) then
-			self.WModel = ClientsideModel( self.WorldModel, RENDERGROUP_OPAQUE )
-			self.WModel:SetParent( self )
-			self.WModel:SetPos( self:GetPos() )
-			self.WModel:SetNoDraw( true )
-
-			local mx = Matrix()
-			mx:Scale( self.WMScale )
-
-			self.WModel:EnableMatrix( "RenderMultiply", mx )
-		end*/
-
 		self:UpdateDescription()
 	end
 
@@ -102,7 +89,7 @@ end
 //SWEP.NOwner
 function SWEP:Think()
 	local ct = CurTime()
-	local state = self:GetState()
+	//local state = self:GetState()
 	local owner = self:GetOwner()
 
 	if self.NextIdle < ct then
@@ -136,7 +123,7 @@ end
 function SWEP:Holster()
 	local state = self:GetState()
 
-	if state == STATE.INSERTING or state == STATE.EJECTING then
+	if self.PreventDropping or state == STATE.INSERTING or state == STATE.EJECTING then
 		return false
 	end
 
@@ -153,7 +140,6 @@ end
 
 function SWEP:OnDrop()
 	self:CallBaseClass( "OnDrop" )
-
 	self.PreventDropping = false
 end
 
@@ -305,6 +291,7 @@ function SWEP:InstallChip( chip, ent )
 		if self:GetChipID() != -1 then
 			self:QueueAction( STATE.IDLE, 0, function( time, duration )
 				if IsValid( ent ) then
+					//print( "SWAP PREVENTING", ent )
 					ent.PreventDropping = true
 				end
 			end )
@@ -320,10 +307,17 @@ function SWEP:InstallChip( chip, ent )
 			seq, dur = vm:LookupSequence( "install" )
 		end
 
+		local new_override = 0
+
+		if IsValid( ent ) then
+			new_override = ent:GetAccessOverride()
+		end
+
 		self:QueueAction( STATE.INSERTING, dur, function( time, duration )
 			self.PreventDropping = true
 
 			if IsValid( ent ) then
+				//print( "INSERT PREVENTING" )
 				ent.PreventDropping = true
 			end
 
@@ -337,14 +331,15 @@ function SWEP:InstallChip( chip, ent )
 		end )
 
 		self:QueueAction( STATE.INSTALLING, 2, function( time, duration )
-			self:SetChipData( chip, ent:GetAccessOverride() )
 			self.PreventDropping = false
+			self:SetChipData( chip, new_override )
 
 			if CLIENT then
 				self:UpdateDescription()
 			end
 			
 			if IsValid( ent ) then
+				//print( "STOP PREVENTING" )
 				ent.PreventDropping = false
 
 				if SERVER then
@@ -370,9 +365,9 @@ function SWEP:EjectChip( swap )
 	if id != -1 then
 		if self:GetState() == STATE.IDLE then
 			local owner = self:GetOwner()
-			if owner:HasWeapon( "item_slc_access_chip" ) and !swap then
+			/*if owner:HasWeapon( "item_slc_access_chip" ) and !swap then
 				return false
-			end
+			end*/
 
 			local vm = owner:GetViewModel()
 			if IsValid( vm ) then
@@ -404,7 +399,7 @@ function SWEP:EjectChip( swap )
 
 					if SERVER then
 						if chip then
-							if #owner:GetWeapons() < 8 and !owner:HasWeapon( "item_slc_access_chip" ) then
+							if #owner:GetWeapons() < owner:GetInventorySize() and !owner:HasWeapon( "item_slc_access_chip" ) then
 								local ent = owner:Give( "item_slc_access_chip" )
 								ent:SetChipData( chip, override )
 							else
@@ -519,10 +514,8 @@ if CLIENT then
 		end*/
 	end
 
-	local COLOR = {
-		white = Color( 255, 255, 255 ),
-		gray = Color( 100, 100, 100 ),
-	}
+	local color_white = Color( 255, 255, 255 )
+	//local color_gray = Color( 100, 100, 100 )
 
 	local MATS = {
 		logo = Material( "slc/misc/scp_logo_128.png" ),
@@ -548,12 +541,12 @@ if CLIENT then
 				text = mb and "MalO ver1.0.0" or (self.Lang.SCREEN.loading.."..."),
 				pos = { w * 0.5, h * 0.3 },
 				font = "SCPHUDVBig",
-				color = COLOR.white,
+				color = color_white,
 				xalign = TEXT_ALIGN_CENTER,
 				yalign = TEXT_ALIGN_CENTER,
 			})
 
-			surface.SetDrawColor( COLOR.white )
+			surface.SetDrawColor( color_white )
 
 			for i = 1, 3 do
 				surface.DrawOutlinedRect( w * 0.1 - i, h * 0.5 - i, w * 0.8 + i * 2, h * 0.15 + i * 2 )
@@ -567,7 +560,7 @@ if CLIENT then
 
 			local width = ( 1 - t / self.LoadingDuration ) * w * 0.8
 
-			surface.SetDrawColor( COLOR.white )
+			surface.SetDrawColor( color_white )
 			surface.DrawRect( w * 0.1, h * 0.5, width, h * 0.15 )
 
 			if alpha > 0 then
@@ -587,7 +580,7 @@ if CLIENT then
 
 		surface.SetAlphaMultiplier( alpha )
 		
-		surface.SetDrawColor( COLOR.white )
+		surface.SetDrawColor( color_white )
 		surface.SetMaterial( MATS.logo )
 		surface.DrawTexturedRect( 32, 32, 128, 128 )
 
@@ -595,7 +588,7 @@ if CLIENT then
 			text = self.Lang.SCREEN.name,
 			pos = { 512, 50 },
 			font = "SCPHUDBig",
-			color = Color( 255, 255, 255 ),
+			color = color_white,
 			xalign = TEXT_ALIGN_RIGHT,
 			yalign = TEXT_ALIGN_CENTER,
 		})
@@ -604,7 +597,7 @@ if CLIENT then
 			text = os.date( "%H:%M", os.time() ),
 			pos = { 512, 340 },
 			font = "SCPHUDBig",
-			color = Color( 255, 255, 255 ),
+			color = color_white,
 			xalign = TEXT_ALIGN_RIGHT,
 			yalign = TEXT_ALIGN_BOTTOM,
 		})
@@ -616,7 +609,7 @@ if CLIENT then
 				text = self.Lang.SCREEN.ejectwarn,
 				pos = { w * 0.5, h * 0.6 },
 				font = "SCPHUDBig",
-				color = Color( 255, 255, 255 ),
+				color = color_white,
 				xalign = TEXT_ALIGN_CENTER,
 				yalign = TEXT_ALIGN_CENTER,
 				max_width = SCREEN_WIDTH,
@@ -625,7 +618,7 @@ if CLIENT then
 				text = self.Lang.SCREEN.ejectconfirm,
 				pos = { w * 0.5, h * 0.7 },
 				font = "SCPHUDBig",
-				color = Color( 255, 255, 255 ),
+				color = color_white,
 				xalign = TEXT_ALIGN_CENTER,
 				yalign = TEXT_ALIGN_CENTER,
 				max_width = SCREEN_WIDTH,
@@ -666,7 +659,7 @@ if CLIENT then
 						text = LANG.NRegistry[text]
 					end
 
-					draw.MultilineText( 256, 140, text, "SCPHUDBig", Color( 255, 255, 255 ), SCREEN_WIDTH, 15, 0, TEXT_ALIGN_CENTER, 3 )
+					draw.MultilineText( 256, 140, text, "SCPHUDBig", color_white, SCREEN_WIDTH, 15, 0, TEXT_ALIGN_CENTER, 3 )
 					surface.SetAlphaMultiplier( 1 )
 					return
 				end
@@ -676,7 +669,7 @@ if CLIENT then
 				text = self.Lang.SCREEN.chip,
 				pos = { 40, 180 },
 				font = "SCPHUDVBig",
-				color = Color( 255, 255, 255 ),
+				color = color_white,
 				xalign = TEXT_ALIGN_LEFT,
 				yalign = TEXT_ALIGN_CENTER,
 			})
@@ -693,7 +686,7 @@ if CLIENT then
 				text = name or self.Lang.none,
 				pos = { 70, 240 },
 				font = "SCPHUDVBig",
-				color = Color( 255, 255, 255 ),
+				color = color_white,
 				xalign = TEXT_ALIGN_LEFT,
 				yalign = TEXT_ALIGN_CENTER,
 				max_width = SCREEN_WIDTH - 75,
@@ -738,23 +731,12 @@ if CLIENT then
 		local owner = self:GetOwner()
 
 		if IsValid( owner ) then
-			/*local wm = self.WModel
-
-			if !IsValid( wm ) then
-				print( "OMNITOOL WM NOT VALID!!!" )
-				return
-			end*/
-
 			local bone = owner:LookupBone( self.BoneAttachment )
 			if bone then
 				local matrix = owner:GetBoneMatrix( bone )
 				if matrix then
 					local pos, ang = LocalToWorld( self.PosOffset, self.AngOffset, matrix:GetTranslation(), matrix:GetAngles() )
 
-					/*wm:SetPos( pos )
-					wm:SetAngles( ang )
-					wm:SetupBones() --remove?
-					wm:DrawModel()*/
 					self:SetRenderOrigin( pos )
 					self:SetRenderAngles( ang )
 					self:SetupBones()
@@ -779,6 +761,12 @@ if CLIENT then
 			omnitool:UseOmnitool( nil, nil, data == "true" )
 		end
 	end )
+end
+
+function SWEP:DebugInfo( indent )
+	local t = string.rep( "\t", indent or 1 )
+	print( t.."Class ->", self:GetClass() )
+	print( t.."Access ->", self:GetChipID(), self:GetAccessOverride() )
 end
 
 InstallTable( "ActionQueue", SWEP )

@@ -10,8 +10,8 @@ ENT.HurtOwner = true
 ENT.CreateParticles = true
 
 function ENT:SetupDataTables()
-	self:NetworkVar( "Float", 0, "_DieTime" )
-	self:NetworkVar( "Float", 1, "_BurnTime" )
+	self:AddNetworkVar( "_DieTime", "Float" )
+	self:AddNetworkVar( "_BurnTime", "Float" )
 
 	self:Set_BurnTime( 3 )
 end

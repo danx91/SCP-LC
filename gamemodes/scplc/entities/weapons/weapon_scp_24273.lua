@@ -18,7 +18,7 @@ function SWEP:Initialize()
 	self.MindControlBuffer = {}
 end		
 
-SWEP.PopSpeed = 0 --TODO: move all to networkvars (?)
+SWEP.PopSpeed = 0
 SWEP.PrepareMindControl = 0
 SWEP.EnableDash = false
 SWEP.NTargetTrace = 0
@@ -52,7 +52,7 @@ function SWEP:Think()
 				self:SetMindControlTarget( ply )
 
 				self:SetNextPrimaryFire( ct + self:GetMindControlDuration() + 5 )
-				self:SetNextSecondaryFire( ct + self:GetMindControlDuration() + 60 + self:GetUpgradeMod( "mc_cd", 0 ) )
+				self:SetNextSecondaryFire( ct + self:GetMindControlDuration() + 90 + self:GetUpgradeMod( "mc_cd", 0 ) )
 
 				local oa = owner:EyeAngles()
 				self.RestoreEyeAngles = oa
@@ -164,6 +164,7 @@ function SWEP:Think()
 
 		self.DashDirection = ang:Forward()
 		self.DashTime = ct + 0.15
+		self.DashHit = {}
 
 		self.PopSpeed = ct + 3 - self:GetUpgradeMod( "dash_ptime", 0 )
 
@@ -193,12 +194,14 @@ function SWEP:Think()
 		if trace.Hit then
 			local ent = trace.Entity
 
-			if IsValid( ent ) then
+			if IsValid( ent ) and !self.DashHit[ent] then
+				self.DashHit[ent] = true
+
 				if ent:IsPlayer() then
 					local team = ent:SCPTeam()
 					if team != TEAM_SPEC and team != TEAM_SCP then
-						self.DashTime = 0
-						self.StopTime = ct + 0.2
+						//self.DashTime = 0
+						//self.StopTime = ct + 0.2
 
 						//ent:SetVelocity( self.DashDirection * 400 )
 
@@ -283,7 +286,7 @@ function SWEP:SecondaryAttack()
 	if len > 0 then
 		local final = {}
 		for k, v in pairs( plys ) do
-			if owner_pos:DistToSqr( v:GetPos() ) >= 90000 then
+			if owner_pos:DistToSqr( v:GetPos() ) >= 90000 and ( SERVER and !v:GetSCP714() or CLIENT and !v:CL_GetSCP714() ) then
 				table.insert( final, v )
 			end
 		end
@@ -498,7 +501,7 @@ SCPHook( "SCP24273", "StartCommand", function( ply, cmd )
 	if SERVER then
 		if scpok then
 			if mctime then
-				if cmd:KeyDown( IN_RELOAD ) then
+				if cmd:KeyDown( IN_RELOAD ) and wep.MCTarget and IsValid( wep.MCTarget[1] ) and wep.MCTarget[1]:IsOnGround() then
 					wep:StopMindControl( false, false )
 					return true
 				end
@@ -704,7 +707,7 @@ if CLIENT then
 						local f = 1 - (time - ct) / wep:GetMindControlDuration()
 
 						surface.SetMaterial( overlay )
-						surface.SetDrawColor( Color( 155 + 100 * f, 100, 100, math.TimedSinWave( 0.7, 25 + 150 * f, 120 + 135 * f ) ) )
+						surface.SetDrawColor( 155 + 100 * f, 100, 100, math.TimedSinWave( 0.7, 25 + 150 * f, 120 + 135 * f ) )
 						surface.DrawTexturedRect( 0, 0, ScrW(), ScrH() )
 					end
 				end
@@ -712,13 +715,14 @@ if CLIENT then
 		end
 	end )
 
+	local color_red = Color( 255, 0, 0 )
 	SCPHook( "SCP24273", "PreDrawHalos", function()
 		local ply = LocalPlayer()
 		if ply:SCPClass() == CLASSES.SCP24273 then
 			local wep = ply:GetActiveWeapon()
 			if IsValid( wep ) then
 				if IsValid( wep.Clone ) then
-					halo.Add( { wep.Clone }, Color( 255, 0, 0 ), 2, 2, 1, true, true )
+					halo.Add( { wep.Clone }, color_red, 2, 2, 1, true, true )
 				end
 			end
 		end
@@ -745,13 +749,15 @@ function SWEP:CalcView( ply, origin, angles, fov )
 	end
 end
 
+local color_red = Color( 255, 0, 0 )
+local color_green = Color( 0, 255, 0 )
 function SWEP:DrawSCPHUD()
 	//if hud_disabled or HUDDrawInfo or ROUND.preparing then return end
 
 	local ct = CurTime()
 	local ctime = self:GetMindControl()
 	if ctime >= ct then
-		surface.SetDrawColor( Color( 50, 20, 155 ) )
+		surface.SetDrawColor( 50, 20, 155 )
 		surface.DrawOutlinedRect( ScrW() * 0.4, ScrH() * 0.9, ScrW() * 0.2, ScrH() * 0.03 )
 
 		local f = ( ctime - ct ) / self:GetMindControlDuration()
@@ -776,10 +782,10 @@ function SWEP:DrawSCPHUD()
 
 	if nsf > ct then
 		txt = string.format( self.Lang.mind_control_cd, math.ceil( nsf - ct ) )
-		color = Color( 255, 0, 0 )
+		color = color_red
 	else
 		txt = self.Lang.mind_control
-		color = Color( 0, 255, 0 )
+		color = color_green
 	end
 
 	draw.Text( {
@@ -793,10 +799,10 @@ function SWEP:DrawSCPHUD()
 
 	if npf > ct then
 		txt = string.format( self.Lang.dash_cd, math.ceil( npf - ct ) )
-		color = Color( 255, 0, 0 )
+		color = color_red
 	else
 		txt = self.Lang.dash
-		color = Color( 0, 255, 0 )
+		color = color_green
 	end
 
 	draw.Text( {
@@ -827,7 +833,7 @@ DefineUpgradeSystem( "scp24273", {
 
 		{ name = "mc3", cost = 2, req = { "mc21" }, reqany = false,  pos = { 4, 2 }, mod = { mc_def = 0.5 }, active = false },
 
-		{ name = "nvmod", cost = 1, req = {}, reqany = false,  pos = { 4, 3 }, mod = {}, active = false },
+		{ name = "outside_buff", cost = 1, req = {}, reqany = false,  pos = { 4, 3 }, mod = {}, active = false },
 	},
 	rewards = { --15, mc kill grants 2 points, normal kill 1 point
 		{ 1, 2 },

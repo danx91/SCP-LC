@@ -4,7 +4,7 @@ ENT.Base = "base_entity"
 ENT.Type = "anim"
 
 function ENT:Initialize()
-	self:SetModel( "models/slc/cctvcamera.mdl" )
+	self:SetModel( "models/slc/cctv/cctvcamera.mdl" )
 
 	//self:SetModelScale( 100 )
 
@@ -48,3 +48,12 @@ end
 function ENT:Draw()
 	self:DrawModel()
 end
+
+hook.Add( "SetupPlayerVisibility", "CCTVPVS", function( ply, viewentity )
+	local wep = ply:GetActiveWeapon()
+	if IsValid( wep ) and wep:GetClass() == "item_slc_camera" then
+		if wep:GetEnabled() and IsValid( CCTV[wep:GetCAM()].ent ) then
+			AddOriginToPVS( CCTV[wep:GetCAM()].pos )
+		end
+	end
+end )

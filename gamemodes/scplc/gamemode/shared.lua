@@ -40,11 +40,18 @@ end
 --[[-------------------------------------------------------------------------
 Load folder
 ---------------------------------------------------------------------------]]
+local skipped = 0
+
 function LoadFolder( path, t, realm )
 	for k, f in pairs( file.Find( path.."/*.lua", "LUA" ) ) do
 		if string.len( f ) > 3 then
+			if string.sub( f, 1, 1 ) == "_" then
+				skipped = skipped + 1
+				continue
+			end
+
 			local ext = string.sub( f, 1, 3 )
-	
+
 			if realm == "CLIENT" or ext == "cl_" then
 				if SERVER then
 					AddCSLuaFile( path.."/"..f )
@@ -84,32 +91,29 @@ Load core modules
 print( "--------------Loading Core Modules---------------" )
 LoadFolder( CORE_PATH, "# Loading core module: " )
 
-/*for k, f in pairs( file.Find( CORE_PATH.."/*.lua", "LUA" ) ) do
-	if string.len( f ) > 3 then
-		local ext = string.sub( f, 1, 3 )
+if DEVELOPER_MODE then
+	print( "\n\n\n\n\n" )
+	MsgC( Color( 230, 20, 20 ), "=================================================\n" )
+	MsgC( Color( 230, 20, 20 ), "================ DEVELOPER MODE =================\n" )
+	MsgC( Color( 230, 20, 20 ), "=================================================\n" )
+	print( "\n\n" )
+	MsgC( Color( 230, 20, 20 ), "# SCP: Lost Control currently runs in DEVELOPER MODE!\n" )
 
-		if ext == "cl_" then
-			if SERVER then
-				AddCSLuaFile( CORE_PATH.."/"..f )
-			else
-				print("# Loading core module: "..f )
-				include( CORE_PATH.."/"..f )
-			end
-		elseif ext == "sv_" then
-			if SERVER then
-				print("# Loading core module: "..f )
-				include( CORE_PATH.."/"..f )
-			end
-		else
-			if SERVER then
-				AddCSLuaFile( CORE_PATH.."/"..f )
-			end
+	local dev_file = CORE_PATH.."/_developer.lua"
 
-			print("# Loading core module: "..f )
-			include( CORE_PATH.."/"..f )
-		end
+	if SERVER then
+		AddCSLuaFile( dev_file )
 	end
-end*/
+
+	MsgC( Color( 230, 20, 20 ), "# Loading file: "..dev_file.."\n" )
+	include( dev_file )
+
+	print( "\n\n" )
+	MsgC( Color( 230, 20, 20 ), "=================================================\n" )
+	MsgC( Color( 230, 20, 20 ), "=================================================\n" )
+	MsgC( Color( 230, 20, 20 ), "=================================================\n" )
+	print( "\n\n\n\n\n" )
+end
 
 --[[-------------------------------------------------------------------------
 Load language
@@ -141,7 +145,6 @@ end
 
 print( "-----------------Loading Modules-----------------" )
 local modules = file.Find( MODULES_PATH.."/*.lua", "LUA" )
-local skipped = 0
 
 for k, f in pairs( modules ) do
 	if f == "sv_module.lua" or f == "sh_module.lua" or f == "cl_module.lua" then continue end
@@ -223,12 +226,12 @@ end
 
 if !MAP_LOADED then
 	print( "# Map config not found! Make sure you are playing on supported map!" )
-	print( "----------------Loading Completed-----------------" )
+	print( "----------------Loading Completed----------------" )
 	error( "Unsupported map "..map.."!" )
 end
 
 hook.Run( "SLCMapConfigLoaded" )
 
-print( "----------------Loading Completed-----------------" )
+print( "----------------Loading Completed----------------" )
 
 hook.Run( "SLCFullyLoaded" )

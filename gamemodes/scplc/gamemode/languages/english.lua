@@ -6,6 +6,9 @@ Translated by: danx91 (aka ZGFueDkx)
 
 local lang = {}
 
+lang.self = "English" --Language name (not translated)
+lang.self_en = "English" --Language name (in english)
+
 --[[-------------------------------------------------------------------------
 NRegistry
 ---------------------------------------------------------------------------]]
@@ -14,6 +17,7 @@ lang.NRegistry = {
 	scpwait = "You have to wait %i rounds to be able to play as SCP",
 	abouttostart = "Game will start in %i seconds!",
 	kill = "You received %d points for killing %s: %s!",
+	kill_n = "You killed %s: %s!",
 	assist = "You received %d points for assisting in kill of player: %s!",
 	rdm = "You lost %d points for killing %s: %s!",
 	acc_denied = "Access denied",
@@ -54,7 +58,17 @@ lang.NRegistry = {
 	overload_cooldown = "Wait %i seconds to overload this door!",
 	advanced_overload = "This door seems to be stronger! Try again in %i seconds",
 	lockdown_once = "Facility lockdown can be activated only once per round!",
-	dailybonus = "Remaining daily bonus: %i XP\nNext reset in: %s"
+	dailybonus = "Remaining daily bonus: %i XP\nNext reset in: %s",
+	xp_goc_device = "You received %i XP for successfully deploying a GOC device!",
+	goc_device_destroyed = "You received %i points for destroying GOC device!",
+	goc_detonation = "OMEGA and ALPHA Warhead detonation in %i seconds. Proceed to the evacuation or enter the blast shelter immediately!",
+	fuserating = "You need a fuse with a higher rating!",
+	nofuse = "You need a fuse to use this device",
+	nopower = "You've pressed the button, but nothing happened...",
+	nopower_omni = "You've put omnitool to the reader, but nothing happened...",
+	docs = "You received %i points for escaping with %i document(s)",
+	docs_pick = "You obtained valuable documents of SCP Foundation - escape with it to get reward!",
+	gaswarn = "%s decontamination in 60 seconds",
 }
 
 lang.NFailed = "Failed to access NRegistry with key: %s"
@@ -99,6 +113,7 @@ lang.NCRegistry = {
 	stat_24273 = "People judged by SCP 2427-3: %i",
 	stat_omega_warhead = "Omega warhead has been detonated",
 	stat_alpha_warhead = "Alpha warhead has been detonated",
+	stat_goc_warhead = "GOC device was activated",
 }
 
 lang.NCFailed = "Failed to access NCRegistry with key: %s"
@@ -167,8 +182,10 @@ hud.hp = "HP"
 hud.stamina = "STAMINA"
 hud.sanity = "SANITY"
 hud.xp = "XP"
+hud.extra_hp = "Extra HP"
 
 hud.escaping = "Escaping..."
+hud.escape_blocked = "Escape Blocked!"
 
 --[[-------------------------------------------------------------------------
 EQ
@@ -179,17 +196,29 @@ lang.eq_hold = "Hold LMB - Move item"
 lang.eq_vest = "Vest"
 lang.eq_key = "Press '%s' to open EQ"
 lang.eq_unknown = "Unknown item"
+lang.eq_backpack = "Backpack"
+lang.eq_swapping = "Swapping items"
 
-lang.info = "Informations"
+lang.info = "Information"
 lang.author = "Author"
 lang.mobility = "Mobility"
 lang.weight = "Weight"
-lang.protection = "Protection"
+lang.vest_multiplier = "Damage multiplier"
+lang.durability = "Durability"
 
 lang.weight_unit = "kg"
 lang.eq_buttons = {
 	escort = "Escort",
 	gatea = "Destroy Gate A"
+}
+
+lang.pickup_msg = {
+	max_eq = "Your EQ is full!",
+	cant_stack = "You can't carry more of this item!",
+	has_already = "You already have this item!",
+	same_type = "You already has item of the same type!",
+	one_weapon = "You can carry only one firearm at the time!",
+	goc_only = "Only GOC members can pick this up!"
 }
 
 --[[-------------------------------------------------------------------------
@@ -220,8 +249,18 @@ effects.insane = "Insane"
 effects.gas_choke = "Choking"
 effects.radiation = "Radiation"
 effects.deep_wounds = "Deep Wounds"
+effects.poison = "Poison"
 effects.heavy_bleeding = "Heavy Bleeding"
 effects.weak_bleeding = "Weak Bleeding"
+effects.spawn_protection = "Spawn Protection"
+effects.fracture = "Fracture"
+effects.decay = "Decay"
+effects.scp_chase = "Chase"
+effects.human_chase = "Chase"
+effects.expd_rubber_bones = "Experimental Effect"
+effects.expd_stamina_tweaks = "Experimental Effect"
+effects.expd_revive = "Experimental Effect"
+effects.expd_recovery = "Recovery"
 
 --[[-------------------------------------------------------------------------
 Class viewer
@@ -233,6 +272,7 @@ lang.buy = "Buy"
 lang.refound = "Refund"
 lang.none = "None"
 lang.refounded = "All removed classes has been refunded. You've recived %d class points."
+lang.tierlocked = "You have to buy every class from previous tiers in order to unlock classes in this tier (also classes from other categories)"
 
 lang.details = {
 	details = "Details",
@@ -243,12 +283,15 @@ lang.details = {
 	run_speed = "Run Speed",
 	chip = "Access Chip",
 	persona = "Fake ID",
-	weapons = "Weapons",
+	loadout = "Main weapon",
+	weapons = "Items",
 	class = "Class",
 	hp = "Health",
 	speed = "Speed",
 	health = "Health",
-	sanity = "Sanity"
+	sanity = "Sanity",
+	slots = "Support Slots",
+	no_select = "Can't spawn in round"
 }
 
 lang.headers = {
@@ -264,7 +307,35 @@ lang.view_cat = {
 	mtf_ntf = "MTF Epsilon-11",
 	mtf_alpha = "MTF Alpha-1",
 	ci = "Chaos Insurgency",
+	goc = "GOC",
 }
+
+local l_weps = {
+	pistol = "pistol",
+	smg = "SMG",
+	rifle = "rifle",
+	shotgun = "shotgun",
+}
+
+local l_tiers = {
+	low = "Low tier",
+	mid = "Mid tier",
+	high = "High tier",
+}
+
+lang.loadouts = {
+	grenade = "Random grenade",
+	pistol_all = "Random pistol",
+	smg_all = "Random SMG",
+	rifle_all = "Random rifle",
+	shotgun_all = "Random shotgun",
+}
+
+for k_wep, wep in pairs( l_weps ) do
+	for k_tier, tier in pairs( l_tiers ) do
+		lang.loadouts[k_wep.."_"..k_tier] = tier.." "..wep
+	end
+end
 
 --[[-------------------------------------------------------------------------
 Settings
@@ -286,10 +357,11 @@ lang.settings = {
 
 	panels = {
 		binds = "Keybinds",
-		config = "Config",
+		general_config = "General config",
+		scp_config = "SCP config",
 		skins = "GUI Skins",
-		reset = "Reset Gamemode",
-		cvars = "ConVars Editor",
+		reset = "Reset gamemode",
+		cvars = "ConVars editor",
 	},
 
 	binds = {
@@ -301,11 +373,29 @@ lang.settings = {
 	},
 
 	config = {
-		search_indicator = "Search indicator",
+		search_indicator = "Show search indicator",
 		scp_hud_skill_time = "Show SCP skill cooldown",
-		smooth_blink = "Smooth blink",
+		smooth_blink = "Enable smooth blink",
 		scp_hud_overload_cd = "Show overload cooldown",
 		any_button_close_search = "Press any button to close search menu",
+		hud_hitmarker = "Show hitmarkers",
+		hud_damage_indicator = "Show damage indicator",
+		scp_hud_dmg_mod = "Show SCP received damage modificator",
+		scp_nvmod = "Increase screen brightness when playing SCP",
+		dynamic_fov = "Dynamic FOV",
+		hud_draw_crosshair = "Draw crosshair",
+		hud_hl2_crosshair = "Legacy HL2 crosshair",
+
+		cvar_slc_language = "Language",
+		cvar_slc_hud_scale = "HUD Scale",
+		cvar_slc_hud_scale_options = {
+			normal = "Normal",
+			big = "Big",
+			vbig = "Very big",
+			small = "Small",
+			vsmall = "Very small",
+			imretard = "Tiny",
+		},
 	},
 }
 
@@ -322,6 +412,8 @@ lang.gamemode_config = {
 		time = "Time",
 		premium = "Premium",
 		scp = "SCP",
+		gas = "Gas",
+		feature = "Features"
 	}
 }
 
@@ -340,11 +432,15 @@ lang.scoreboard = {
 }
 
 lang.ranks = {
+	superadmin = "Superadmin",
+	admin = "Admin",
 	author = "Author",
 	vip = "VIP",
-	tester = "Tester",
 	contributor = "Contributor",
 	translator = "Translator",
+	tester = "Tester",
+	patron = "Patron",
+	hunter = "Bug Hunter"
 }
 
 --[[-------------------------------------------------------------------------
@@ -368,6 +464,7 @@ lang.SCPHUD = {
 	skill_cant_use = "Skill can't be used now!",
 	overload_cd = "Next overload: ",
 	overload_ready = "Overload ready!",
+	damage_scale = "Received damage"
 }
 
 --[[-------------------------------------------------------------------------
@@ -396,6 +493,7 @@ lang.info_screen_registry = {
 	hazard = "You have been killed by hazard",
 	alpha_mia = "Last known location: Surface",
 	omega_mia = "Last known location: Facility",
+	killer_t = "Your killer's team: %s"
 }
 
 lang.info_screen_type = {
@@ -406,18 +504,12 @@ lang.info_screen_type = {
 	unknown = "Unknown",
 }
 
-lang.info_screen_macro = {
-	time = function( args )
-		local t = tonumber( args[1] )
-		return t and string.ToMinutesSeconds( t ) or "--:--"
-	end
-}
-
 --[[-------------------------------------------------------------------------
 Generic
 ---------------------------------------------------------------------------]]
 lang.nothing = "Nothing"
 lang.exit = "Exit"
+lang.default = "Default"
 
 --[[-------------------------------------------------------------------------
 Misc
@@ -427,16 +519,23 @@ lang.MISC = misc
 
 misc.content_checker = {
 	title = "Gamemode Content",
-	msg = [[It looks like you don't have some addons. It may cause errors like missing content (textures/models/sounds) and may break your gameplay experience.
-You don't have %i addons out of %i. Would you like to download it now? (you can either download it through game or do it manually on workshop page)]],
-	no = "No",
-	download = "Download now",
-	workshop = "Show workshop page",
-	downloading = "Downloading",
-	mounting = "Mounting",
-	idle = "Waiting for download...",
-	processing = "Processing addon: %s\nStatus: %s",
-	cancel = "Cancel"
+	status = "Status",
+	auto_check = "Run automatically",
+	slist = {
+		"Disabled",
+		"Checking",
+		"Mounting",
+		"Downloading",
+		"Done",
+	},
+	btn_workshop = "Workshop Collection",
+	btn_download = "Download",
+	btn_check = "Check & Download",
+	allok = "All addons are installed!",
+	nsub_warn = "You don't have some of the requreired addons! We downloaded and mounted them, but please download them using Steam Workshop. Check console to see which addons are missing.",
+	disabled_warn = "Some of required addons are disabled! gamemode mounted it for you, but some content may still be missing. Please head to the menu and enable disabled addons (list in the console).",
+	missing = "Missing addons",
+	disabled = "Disabled addons",
 }
 
 misc.omega_warhead = {
@@ -454,6 +553,12 @@ misc.alpha_warhead = {
 	active = "ALPHA Warhead is engaged\n\nProceed to evacuation immediately!\nDetonation in %.2fs",
 }
 
+misc.zones = {
+	lcz = "LCZ",
+	hcz = "HCZ",
+	ez = "EZ",
+}
+
 misc.buttons = {
 	MOUSE1 = "LMB",
 	MOUSE2 = "RMB",
@@ -463,10 +568,33 @@ misc.buttons = {
 misc.inventory = {
 	unsearched = "Unsearched",
 	search = "Press [%s] to search",
+	unknown_chip = "Unknown chip",
+	name = "Name",
+	team = "Team",
+	death_time = "Death time",
+	time = {
+		[0] = "Just now",
+		"About one minute ago",
+		"About two minutes ago",
+		"About three minutes ago",
+		"About four minutes ago",
+		"About five minutes ago",
+		"About six minutes ago",
+		"About seven minutes ago",
+		"About eight minutes ago",
+		"About nine minutes ago",
+		"About ten minutes ago",
+		long = "More than ten minutes ago",
+	},
 }
 
-misc.placing_turret = "Placing turret"
-misc.scanning = "SCANNING"
+misc.font = {
+	name = "Fonts",
+	content = [[Custom gamemode font failed to load! Falling back to system font...
+It's gmod issue and I can't fix it. To fix it, you have to manually delete some files.
+Navigate to 'steamapps/common/GarrysMod/garrysmod/cache/workshop/resource/fonts' and delete following files: 'impacted.ttf', 'ds-digital.ttf' and 'unispace.ttf']],
+	ok = "OK"
+}
 --[[-------------------------------------------------------------------------
 Vests
 ---------------------------------------------------------------------------]]
@@ -482,8 +610,14 @@ vest.mtf_medic = "MTF NTF Medic Vest"
 vest.ntfcom = "MTF NTF Commander Vest"
 vest.alpha1 = "MTF Alpha-1 Vest"
 vest.ci = "Chaos Insurgency Vest"
+vest.cicom = "CI Commander Vest"
+vest.cimedic = "CI Medic Vest"
+vest.goc = "GOC Vest"
+vest.gocmedic = "GOC Medic Vest"
+vest.goccom = "GOC Commander Vest"
 vest.fire = "Fireproof Vest"
 vest.electro = "Electroproof Vest"
+vest.hazmat = "Hazmat"
 
 local dmg = {}
 lang.DMG = dmg
@@ -492,6 +626,7 @@ dmg.BURN = "Fire Damage"
 dmg.SHOCK = "Electrical Damage"
 dmg.BULLET = "Bullet Damage"
 dmg.FALL = "Fall Damage"
+dmg.POISON = "Poison Damage"
 
 --[[-------------------------------------------------------------------------
 Teams
@@ -499,16 +634,26 @@ Teams
 local teams = {}
 lang.TEAMS = teams
 
+teams.unknown = "Unknown"
+
 teams.SPEC = "Spectators"
 teams.CLASSD = "Class D"
 teams.SCI = "Scientists"
+teams.GUARD = "Security"
 teams.MTF = "MTF"
 teams.CI = "CI"
+teams.GOC = "GOC"
 teams.SCP = "SCP"
 
 --[[-------------------------------------------------------------------------
 Classes
 ---------------------------------------------------------------------------]]
+lang.UNK_CLASSES = { 
+	CLASSD = "Unknown Class D",
+	SCI = "Unknown Scientist",
+	GUARD = "Unknown Guard",
+}
+
 local classes = {}
 lang.CLASSES = classes
 
@@ -533,12 +678,15 @@ classes.SCP24273 = "SCP 2427-3"
 classes.classd = "Class D"
 classes.veterand = "Class D Veteran"
 classes.kleptod = "Class D Kleptomaniac"
+classes.contrad = "Class D with Contraband"
 classes.ciagent = "CI Agent"
+classes.expd = "Experimental Class D"
 
 classes.sciassistant = "Scientist Assistant"
 classes.sci = "Scientist"
 classes.seniorsci = "Senior Scientist"
 classes.headsci = "Head Scientist"
+classes.contspec = "Containment Specialist"
 
 classes.guard = "Security Guard"
 classes.chief = "Security Chief"
@@ -557,8 +705,16 @@ classes.ntfsniper = "MTF NTF Sniper"
 classes.ntfmedic = "MTF NTF Medic"
 classes.alpha1 = "MTF Alpha-1"
 classes.alpha1sniper = "MTF Alpha-1 Marksman"
+classes.alpha1medic = "MTF Alpha-1 Medic"
+classes.alpha1com = "MTF Alpha-1 Commander"
 classes.ci = "Chaos Insurgency"
 classes.cicom = "Chaos Insurgency Commander"
+classes.cimedic = "Chaos Insurgency Medic"
+classes.cispec = "Chaos Insurgency Specialist"
+classes.ciheavy = "Chaos Insurgency Heavy Unit"
+classes.goc = "GOC Soldier"
+classes.gocmedic = "GOC Medic"
+classes.goccom = "GOC Commander"
 
 local classes_id = {}
 lang.CLASSES_ID = classes_id
@@ -603,9 +759,15 @@ lang.CLASS_OBJECTIVES = {
 
 	kleptod = generic_classd,
 
+	contrad = generic_classd,
+
 	ciagent = [[- Escort Class D members
 - Avoid staff and SCP objects
 - Cooperate with others]],
+
+	expd = [[- Escape from the facility
+- Avoid staff and SCP objects
+- You underwent some strange experiments]],
 
 	sciassistant = generic_sci,
 
@@ -614,6 +776,8 @@ lang.CLASS_OBJECTIVES = {
 	seniorsci = generic_sci,
 
 	headsci = generic_sci,
+
+	contspec = generic_sci,
 
 	guard = generic_guard,
 
@@ -665,6 +829,14 @@ lang.CLASS_OBJECTIVES = {
 - Stop SCPs and Class D
 - You are authorized to ]].."[REDACTED]",
 
+	alpha1medic = [[- Protect foundation at all cost
+- Support your unit with healing
+- You are authorized to ]].."[REDACTED]",
+
+	alpha1com = [[- Protect foundation at all cost
+- Give orders to your unit
+- You are authorized to ]].."[REDACTED]",
+
 	ci = [[- Help Class D Personnel
 - Eliminate all facility staff
 - Listen to your supervisor]],
@@ -672,6 +844,30 @@ lang.CLASS_OBJECTIVES = {
 	cicom = [[- Help Class D Personnel
 - Eliminate all facility staff
 - Give orders to other CIs]],
+
+	cimedic = [[- Help Class D Personnel
+- Help other CIs with your medkit
+- Listen to your supervisor]],
+
+	cispec = [[- Help Class D Personnel
+- Support CIs with your turret
+- Listen to your supervisor]],
+
+	ciheavy = [[- Help Class D Personnel
+- Provide covering fire
+- Listen to your supervisor]],
+
+	goc = [[- Destroy all SCPs
+- Locate and deploy GOC device
+- Listen to your supervisor]],
+
+	gocmedic = [[- Destroy all SCPs
+- Help GOC soldiers with your medkit
+- Listen to your supervisor]],
+
+	goccom = [[- Destroy all SCPs
+- Locate and deploy GOC device
+- Give orders to GOC soldiers]],
 
 	SCP023 = generic_scp,
 
@@ -722,7 +918,7 @@ Basic class. Cooperate with others to face SCPs and facility staff. You can be e
 	veterand = [[Difficulty: Easy
 Toughness: High
 Agility: High
-Combat potential: Normal
+Combat potential: Low
 Can escape: Yes
 Can escort: None
 Escorted by: CI
@@ -743,6 +939,18 @@ Overview:
 High utility class. Starts with one random item. Cooperate with others to face SCPs and facility staff. You can be escorted by CI members.
 ]],
 
+	contrad = [[Difficulty: Medium
+Toughness: Normal
+Agility: Normal
+Combat potential: Normal
+Can escape: Yes
+Can escort: None
+Escorted by: CI
+
+Overview:
+Class with contraband weapon. Use it wisely because this weapon isn't durable.
+]],
+
 	ciagent = [[Difficulty: Medium
 Toughness: Very High
 Agility: High
@@ -755,9 +963,21 @@ Overview:
 Armed with taser CI unit. Provide help to Class D and cooperate with them. You can escort Class D members.
 ]],
 
+	expd = [[Difficulty: ?
+Toughness: ?
+Agility: ?
+Combat potential: ?
+Can escape: No
+Can escort: Class D
+Escorted by: None
+
+Overview:
+Class that underwent some strange experiments inside the facility. Who knows what was the subject of said experiments...
+]],
+
 	sciassistant = [[Difficulty: Medium
-Toughness: Normal
-Agility: Normal
+Toughness: Low
+Agility: Low
 Combat potential: Low
 Can escape: Yes
 Can escort: None
@@ -788,19 +1008,31 @@ Can escort: None
 Escorted by: Security, MTF
 
 Overview:
-One of the scientists. You have higher access level. Cooperate with facility staff and stay away from SCPs. You can be escorted by MTFs members.
+One of the scientists. You have higher access level. You've also found a primitive weapon. Cooperate with facility staff and stay away from SCPs. You can be escorted by MTFs members.
 ]],
 
 	headsci = [[Difficulty: Easy
-Toughness: High
-Agility: High
-Combat potential: Normal
+Toughness: Very High
+Agility: Very High
+Combat potential: Low
 Can escape: Yes
 Can escort: None
 Escorted by: Security, MTF
 
 Overview:
 Best of the scientists. You have higher utility and HP. Cooperate with facility staff and stay away from SCPs. You can be escorted by MTFs members.
+]],
+
+	contspec = [[Difficulty: Medium
+Toughness: Very High
+Agility: Very High
+Combat potential: Low
+Can escape: Yes
+Can escort: None
+Escorted by: Security, MTF
+
+Overview:
+One of the scientists with high utility and HP, also have best access level. Cooperate with facility staff and stay away from SCPs. You can be escorted by MTFs members.
 ]],
 
 	guard = [[Difficulty: Easy
@@ -995,6 +1227,30 @@ Overview:
 MTF Alpha-1 Unit. Heavly armored, high utility unit, armed with marksman rifle. Get into facility and secure it. Help staff inside and kill SCPs and Class D.
 ]],
 
+	alpha1medic = [[Difficulty: Hard
+Toughness: Very High
+Agility: Very High
+Combat potential: Very High
+Can escape: No
+Can escort: Scientists
+Escorted by: None
+
+Overview:
+MTF Alpha-1 Unit. Heavly armored, high utility unit, provides heal. Get into facility and secure it. Help staff inside and kill SCPs and Class D.
+]],
+
+	alpha1com = [[Difficulty: Hard
+Toughness: Very High
+Agility: Very High
+Combat potential: Very High
+Can escape: No
+Can escort: Scientists
+Escorted by: None
+
+Overview:
+MTF Alpha-1 Unit. Heavly armored, high utility unit. Get into facility and secure it. Help staff inside and kill SCPs and Class D.
+]],
+
 	ci = [[Difficulty: Medium
 Toughness: High
 Agility: High
@@ -1019,6 +1275,78 @@ Overview:
 Chaos Insurgency unit. Higher combat potential. Get into facility, help Class D and kill facility staff.
 ]],
 
+	cimedic = [[Difficulty: Medium
+Toughness: High
+Agility: High
+Combat potential: Normal
+Can escape: No
+Can escort: Class D
+Escorted by: None
+
+Overview:
+Chaos Insurgency unit. Get into facility and help Class D and kill facility staff. You spawn with medkit
+]],
+
+	cispec = [[Difficulty: Medium
+Toughness: Medium/High
+Agility: Medium/High
+Combat potential: High
+Can escape: No
+Can escort: Class D
+Escorted by: None
+
+Overview:
+Chaos Insurgency unit. Get into facility and help Class D and kill facility staff. You can place turret.
+]],
+
+	ciheavy = [[Difficulty: Medium
+Toughness: Medium/High
+Agility: Medium/High
+Combat potential: Very High
+Can escape: No
+Can escort: Class D
+Escorted by: None
+
+Overview:
+Chaos Insurgency unit. Get into facility and help Class D and kill facility staff. You are in possession of heavy machine gun.
+]],
+
+	goc = [[Difficulty: Medium
+Toughness: High
+Agility: High
+Combat potential: High
+Can escape: No
+Can escort: No
+Escorted by: None
+
+Overview:
+Basic Global Occult Coalition soldier. Destroy all SCPs, use your personal tablet to locate GOC device that was earlier delivered to the facility then deploy and protect it. Escape to the evacuation shelter after successfuly deploying the device.
+]],
+
+	gocmedic = [[Difficulty: Medium
+Toughness: High
+Agility: High
+Combat potential: High
+Can escape: No
+Can escort: No
+Escorted by: None
+
+Overview:
+Basic Global Occult Coalition soldier. Destroy all SCPs, use your personal tablet to locate GOC device that was earlier delivered to the facility then deploy and protect it. Escape to the evacuation shelter after successfuly deploying the device. You sapwn with the medkit.
+]],
+
+	goccom = [[Difficulty: Medium
+Toughness: High
+Agility: High
+Combat potential: Very High
+Can escape: No
+Can escort: No
+Escorted by: None
+
+Overview:
+Basic Global Occult Coalition soldier. Destroy all SCPs, use your personal tablet to locate GOC device that was earlier delivered to the facility then deploy and protect it. Escape to the evacuation shelter after successfuly deploying the device. You have smoke grenades.
+]],
+
 	SCP023 = [[Difficulty: Hard
 Toughness: Low
 Agility: High
@@ -1037,7 +1365,24 @@ Overview:
 Attack player 3 times to kill them. You can create zombies out of bodies (reload key).
 ]],
 
-	SCP0492 = [[]],
+	SCP0492 = [[General:
+A zombie created by SCP-049. Comes as one of selected types:
+
+Normal zombie:
+Difficulty: Low     |  Toughness: Normal
+Agility: Normal     |  Damage: Normal/High
+Standard zombie with balanced stats
+
+Light zombie:
+Difficulty: Medium  |  Toughness: Low
+Agility: High       |  Damage: Normal/High
+Faster version of zombie but has less HP and damage
+
+Heavy zombie:
+Difficulty: Medium  |  Toughness: High
+Agility: Low        |  Damage: Normal/High
+Slow zombie that can tank more damage and can perform more powerful attacks
+]],
 
 	SCP066 = [[Difficulty: Medium
 Toughness: High
@@ -1152,9 +1497,9 @@ Attacking the player grants you frenzy and inflicts deep wounds. While in frenzy
 Weapons
 ---------------------------------------------------------------------------]]
 lang.GenericUpgrades = {
-	nvmod = {
-		name = "Extra Vision",
-		info = "Brightness of your vision is increased\nDark areas will no longer stop you"
+	outside_buff = {
+		name = "Outside buff",
+		info = "Receive passive healing when on surface (scales with remaining round time) and receive extreme damage protection when on non-blocked escape or during aftermatch"
 	}
 }
 
@@ -1272,7 +1617,15 @@ wep.SCP058 = {
 	skills = {
 		primary_attack = {
 			name = "Primary attack",
-			dsc = "TODO",
+			dsc = "Attack with your sting directly in front of you. Applies poison if an appropriate upgrade is bought.",
+		},
+		shot = {
+			name = "Shot",
+			dsc = "Shots projectile in your aim direction. Projectile will move in ballistic curve. Shot related upgrades affect cooldown, speed, size and effects of this ability.",
+		},
+		shot_stacks = {
+			name = "Shot stacks",
+			dsc = "Show stored amount of shots. Various shot related upgrades affect maximum amount and cooldown time.",
 		},
 	},
 
@@ -1337,23 +1690,23 @@ wep.SCP066 = {
 	upgrades = {
 		range1 = {
 			name = "Resonance I",
-			info = "Damage radius is increased by 75",
+			info = "Damage radius is increased by 100",
 		},
 		range2 = {
 			name = "Resonance II",
-			info = "Damage radius is increased by 75\n\t• Total increase: 150",
+			info = "Damage radius is increased by 100\n\t• Total increase: 200",
 		},
 		range3 = {
 			name = "Resonance III",
-			info = "Damage radius is increased by 75\n\t• Total increase: 225",
+			info = "Damage radius is increased by 100\n\t• Total increase: 300",
 		},
 		damage1 = {
 			name = "Bass I",
-			info = "Damage is increased to 112.5%, but radius is reduced to 90%",
+			info = "Damage is increased to 115%, but radius is reduced to 90%",
 		},
 		damage2 = {
 			name = "Bass II",
-			info = "Damage is increased to 135%, but radius is reduced to 75%",
+			info = "Damage is increased to 150%, but radius is reduced to 75%",
 		},
 		damage3 = {
 			name = "Bass III",
@@ -1361,11 +1714,11 @@ wep.SCP066 = {
 		},
 		def1 = {
 			name = "Negation Wave I",
-			info = "While playing music, you negate 10% of incoming damage",
+			info = "While playing music, you negate 20% of incoming damage",
 		},
 		def2 = {
 			name = "Negation Wave II",
-			info = "While playing music, you negate 25% of incoming damage",
+			info = "While playing music, you negate 50% of incoming damage",
 		},
 		charge = {
 			name = "Dash",
@@ -1833,6 +2186,8 @@ wep.CAMERA = {
 	name = "Surveillance System",
 	showname = "Cameras",
 	info = "Cameras allow you to see what is happening in the facility.\nThey also provide you an ability to scan SCPs and transmit this information to your current radio channel",
+	scanning = "Scanning...",
+	scan_info = "Press [%s] to scan SCPs",
 }
 
 wep.RADIO = {
@@ -1848,6 +2203,11 @@ wep.NVGPLUS = {
 	name = "Enhanced NVG",
 	showname = "NVG+",
 	info = "Enhanced version of NVG, allows you to use it while holding other items in hands.\nUnfortunately battery lasts only for 10 seconds"
+}
+
+wep.THERMAL = {
+	showname = "THERMAL",
+	name = "Thermal Vision Device"
 }
 
 wep.ACCESS_CHIP = {
@@ -1876,7 +2236,30 @@ wep.ACCESS_CHIP = {
 		hacked4 = "Hacked 4",
 		hacked5 = "Hacked 5",
 		director = "Site Director",
-		o5 = "O5"
+		o5 = "O5",
+		goc = "GOC Hacked",
+	},
+	SHORT = {
+		general = "General",
+		jan1 = "Janitor",
+		jan = "Janitor",
+		jan2 = "Senior Jan.",
+		acc = "Accountant",
+		log = "Logistician",
+		sci1 = "Res. lvl. 1",
+		sci2 = "Res. lvl. 2",
+		sci3 = "Res. lvl. 3",
+		spec = "Cont. Spec.",
+		guard = "Security",
+		chief = "Sec. Chief",
+		mtf = "MTF",
+		com = "MTF Com.",
+		hacked3 = "Hacked 3",
+		hacked4 = "Hacked 4",
+		hacked5 = "Hacked 5",
+		director = "Director",
+		o5 = "O5",
+		goc = "GOC Hacked",
 	},
 	ACCESS = {
 		GENERAL = "General",
@@ -1892,6 +2275,7 @@ wep.ACCESS_CHIP = {
 		ARMORY = "Armory",
 		GATE_A = "Gate A",
 		GATE_B = "Gate B",
+		GATE_C = "Gate C",
 		FEMUR = "Femur Breaker",
 		ALPHA = "Alpha Warhead",
 		OMEGA = "Omega Warhead",
@@ -1930,10 +2314,6 @@ wep.MEDKITPLUS = {
 	pickupname = "Medkit+",
 }
 
-wep.TASER = {
-	name = "Taser"
-}
-
 wep.FLASHLIGHT = {
 	name = "Flashlight"
 }
@@ -1946,14 +2326,26 @@ wep.GASMASK = {
 	name = "Gas Mask"
 }
 
+wep.HEAVYMASK = {
+	name = "Heavy Gas Mask"
+}
+
+wep.FUSE = {
+	name = "Fuse",
+	name_f = "Fuse %iA",
+}
+
 wep.TURRET = {
 	name = "Turret",
+	placing_turret = "Placing turret",
 	pickup = "Pick up",
 	MODES = {
 		off = "Disable",
 		filter = "Filter staff",
+		target = "Target staff",
 		all = "Target everything",
-		supp = "Suppressing fire"
+		supp = "Suppressive fire",
+		scp = "Target SCPs"
 	}
 }
 
@@ -1964,6 +2356,88 @@ wep.ALPHA_CARD1 = {
 wep.ALPHA_CARD2 = {
 	name = "ALPHA Warhead Codes #2"
 }
+
+wep.COM_TAB = {
+	name = "NTF Tablet",
+	loading = "Loading",
+	eta = "ETA: ",
+	detected = "Detected subjects:",
+	tesla_deactivated = "Teslas deactivated: ",
+	change = "RMB - change",
+	confirm = "LMB - confirm",
+	options = {
+		scan = "Facility scan",
+		tesla = "Request tesla"
+	},
+	actions = {
+		scan = "Scanning facility...",
+		tesla = "Disabling tesla...",
+	}
+}
+
+wep.GOC_TAB = {
+	name = "GOC Tablet",
+	info = "Personal GOC tablet. Contains a small explosive that destroys tablet in the event of user's death",
+	loading = "Loading",
+	status = "Status:",
+	dist = "Distance to target",
+	objectives = {
+		failed = "Device destroyed",
+		nothing = "Unknown",
+		find = "Find device",
+		deliver = "Deliver device",
+		escort = "Escort Device",
+		protect = "Protect Device",
+		escape = "Escape"
+	}
+}
+
+wep.GOCDEVICE = {
+	name = "GOC Device",
+	placing = "Placing GOC device..."
+}
+
+wep.DOCUMENT = {
+	name = "Documents",
+	info = "Bundle of several documents that may contain valuable information about SCPs, facility and staff",
+	types = {
+
+	}
+}
+
+wep.ADRENALINE = {
+	name = "Adrenaline",
+	info = "Provides momentary boost to stamina for a short time",
+}
+
+wep.ADRENALINE_BIG = {
+	name = "Large Adrenaline",
+	info = "Provides momentary boost to stamina for a considerable amount of time",
+}
+
+wep.MORPHINE = {
+	name = "Morphine",
+	info = "Provides some temporary health that decreases over time",
+}
+
+wep.MORPHINE_BIG = {
+	name = "Large Morphine",
+	info = "Provides a lot of temporary health that decreases over time",
+}
+
+wep.TASER = {
+	name = "Taser"
+}
+
+wep.PIPE = {
+	name = "Metal pipe"
+}
+
+wep.GLASS_KNIFE = {
+	name = "Glass knife"
+}
+
+wep.__slc_ammo = "Ammo"
 
 wep.weapon_stunstick = "Stunstick"
 wep.weapon_crowbar = "Crowbar"

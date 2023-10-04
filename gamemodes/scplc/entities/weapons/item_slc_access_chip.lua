@@ -5,8 +5,8 @@ SWEP.WorldModel		= "models/weapons/alski/chip.mdl"
 
 SWEP.ShouldDrawViewModel 	= false
 SWEP.ShouldDrawWorldModel 	= false
-SWEP.EnableHolsterThink = true
 
+SWEP.EnableHolsterThink = true
 SWEP.Selectable = false
 
 if CLIENT then
@@ -125,4 +125,10 @@ if CLIENT then
 			end
 		end
 	end
+end
+
+function SWEP:DebugInfo( indent )
+	local t = string.rep( "\t", indent or 1 )
+	print( t.."Basic Info ->", self:GetClass(), self.PrintName )
+	print( t.."Access ->", self:GetChipID(), self:GetAccessOverride() )
 end

@@ -18,7 +18,6 @@ local COLOR = {
 	text_white = Color( 255, 255, 255, 100 ),
 	gray_bg = Color( 150, 150, 150, 100 ),
 	black_bg = Color( 0, 0, 0, 150 ),
-	hp_bar = Color( 175, 0, 25, 175 ),
 	stamina = Color( 150, 175, 0, 175 ),
 	stamina_alt = Color( 75, 125, 25, 75 ),
 	sanity = Color( 100, 100, 150, 175 ),
@@ -79,6 +78,7 @@ end
 
 local recomputed = false
 
+local last_extra = 0
 local shownum = 0
 local maxshow = 0
 local showtext
@@ -96,7 +96,6 @@ Spectator HUD
 ---------------------------------------------------------------------------]]
 local function spec_hud()
 	local w, h = ScrW(), ScrH()
-
 	local ply = LocalPlayer()
 
 	local spectarget = ply:GetObserverTarget()
@@ -183,10 +182,10 @@ local function spec_hud()
 
 		if HUDSpectatorInfo then
 			if SLCAuth.HasAccess( ply, "slc spectateinfo" ) then
-				surface.SetDrawColor( Color( 150, 150, 150, 255 ) )
+				surface.SetDrawColor( 150, 150, 150, 255 )
 				surface.DrawRect( w * 0.35 - 1, h * 0.25 - 1, w * 0.3 + 2, h * 0.5 + 2 )
 
-				surface.SetDrawColor( Color( 40, 40, 40, 255 ) )
+				surface.SetDrawColor( 40, 40, 40, 255 )
 				surface.DrawRect( w * 0.35, h * 0.25, w * 0.3, h * 0.5 )
 
 				local dx, max_w = w * 0.35 + 8, w * 0.3 - 16
@@ -250,8 +249,8 @@ local function hud()
 	local sw = w
 	local addy = 0
 
-	w = w * 0.85 * scale
-	h = h * 0.85 * scale
+	w = w * scale
+	h = h * scale
 
 	addy = sh - h
 
@@ -402,10 +401,15 @@ local function hud()
 
 	draw.NoTexture()
 	surface.SetDrawColor( COLOR.gray_bg )
-	surface.DrawDifference( bar:ToPoly(), bar_out:ToPoly() )
+	local hp_out_poly = bar_out:ToPoly()
+	surface.DrawDifference( bar:ToPoly(), hp_out_poly )
 
+	
 	local hp = ply:Health()
 	local maxhp = ply:GetMaxHealth()
+	local extra_hp = ply:GetExtraHealth()
+	local max_extra_hp = ply:GetMaxExtraHealth()
+	local extra = extra_hp > 0 and max_extra_hp > 0 or last_extra > 0
 
 	local hpperseg = maxhp / 20
 	local hp_segments = math.min( math.ceil( hp / maxhp * 20 ), 20 )
@@ -417,15 +421,42 @@ local function hud()
 		intense = 1
 	end
 
+	if extra then
+		render.SetStencilPassOperation( STENCIL_REPLACE )
+	
+		render.SetStencilCompareFunction( STENCIL_ALWAYS )
+		render.SetStencilReferenceValue( 1 )
+	
+		render.SetStencilEnable( true )
+	end
+
 	for i = 1, hp_segments do
 		if i == hp_segments then
-			surface.SetDrawColor( Color( 175, 0, 25, 175 * intense ) )
+			surface.SetDrawColor( 175, 0, 25, 175 * intense )
 		else
-			surface.SetDrawColor( COLOR.hp_bar )
+			surface.SetDrawColor( 175, 0, 25, 175 )
 		end
 
 		surface.DrawPoly( nico:ToPoly() )
 		nico = nico + ico_offset
+	end
+
+	if extra then
+		render.SetStencilCompareFunction( STENCIL_EQUAL )
+		render.SetStencilPassOperation( STENCIL_KEEP )
+
+		local f = extra_hp / max_extra_hp
+
+		if last_extra != last_extra then --NaN protection
+			last_extra = f
+		end
+
+		last_extra = Lerp( RealFrameTime() * 4, last_extra, f )
+
+		surface.SetDrawColor( 255, 150, 150 )
+		surface.DrawRect( hp_out_poly[1].x, hp_out_poly[1].y, ( hp_out_poly[3].x - hp_out_poly[1].x ) * last_extra, hp_out_poly[3].y - hp_out_poly[1].y )
+
+		render.SetStencilEnable( false )
 	end
 
 	surface.SetDrawColor( COLOR.text_white )
@@ -433,9 +464,15 @@ local function hud()
 	surface.DrawTexturedRect( h * -0.005 + w * 0.1475 + xoffset + cxo, h * 0.8625 + addy, h * 0.03, h * 0.03 )
 
 	if mxButton( bar, bw, bh ) > 0 then
-		shownum = hp
-		maxshow = maxhp
-		showtext = LANG.HUD.hp
+		if extra then
+			shownum = extra_hp
+			maxshow = max_extra_hp
+			showtext = LANG.HUD.extra_hp
+		else
+			shownum = hp
+			maxshow = maxhp
+			showtext = LANG.HUD.hp
+		end
 	end
 
 	//surface.SetDrawColor( Color( 150, 150, 150, 100 ) )
@@ -445,35 +482,58 @@ local function hud()
 	bar_out = bar_out + bar_offset
 	ico = ico + bar_offset
 
+	
 	draw.NoTexture()
 	surface.SetDrawColor( COLOR.gray_bg )
-	surface.DrawDifference( bar:ToPoly(), bar_out:ToPoly() )
+	
+	local stm_out_poly = bar_out:ToPoly()
+	surface.DrawDifference( bar:ToPoly(), stm_out_poly )
+	
+	local stamina = ply:GetStamina()
+	local max_stamina = ply:GetMaxStamina()
+	local boost = ply:GetStaminaBoost() > CurTime()
 
-	if ply.GetStamina then
-		local stamina = ply:GetStamina()
-		local max_stamina = ply:GetMaxStamina()
+	local segments = math.Clamp( math.ceil( stamina / max_stamina * 20 ), 0, 20 )
 
-		local segments = math.Clamp( math.ceil( stamina / max_stamina * 20 ), 0, 20 )
+	//local intense = 1 //- segments + stamina / 5
+	local nico = SimpleMatrix( 2, 4, ico )
 
-		//local intense = 1 //- segments + stamina / 5
-		local nico = SimpleMatrix( 2, 4, ico )
+	if boost then
+		render.SetStencilPassOperation( STENCIL_REPLACE )
+	
+		render.SetStencilCompareFunction( STENCIL_ALWAYS )
+		render.SetStencilReferenceValue( 1 )
+	
+		render.SetStencilEnable( true )
+	end
+	
+	if ply:GetExhausted() then
+		surface.SetDrawColor( COLOR.stamina_alt )
+	else
+		surface.SetDrawColor( COLOR.stamina )
+	end
 
-		for i = 1, segments do
-			if ply.Exhausted then
-				surface.SetDrawColor( COLOR.stamina_alt )
-			else
-				surface.SetDrawColor( COLOR.stamina )
-			end
+	for i = 1, segments do
+		surface.DrawPoly( nico:ToPoly() )
+		nico = nico + ico_offset
+	end
 
-			surface.DrawPoly( nico:ToPoly() )
-			nico = nico + ico_offset
-		end
+	if boost then
+		render.SetStencilCompareFunction( STENCIL_EQUAL )
+		render.SetStencilPassOperation( STENCIL_KEEP )
 
-		if mxButton( bar, bw, bh ) > 0 then
-			shownum = stamina
-			maxshow = max_stamina
-			showtext = LANG.HUD.stamina
-		end
+		local f = ( ply:GetStaminaBoost() - CurTime() ) / ply:GetStaminaBoostDuration()
+
+		surface.SetDrawColor( 125, 135, 255 )
+		surface.DrawRect( stm_out_poly[1].x, stm_out_poly[1].y, ( stm_out_poly[3].x - stm_out_poly[1].x ) * f, stm_out_poly[3].y - stm_out_poly[1].y )
+
+		render.SetStencilEnable( false )
+	end
+
+	if mxButton( bar, bw, bh ) > 0 then
+		shownum = stamina
+		maxshow = max_stamina
+		showtext = LANG.HUD.stamina
 	end
 
 	surface.SetDrawColor( COLOR.white )
@@ -493,7 +553,7 @@ local function hud()
 		local pct = battery / 100
 
 		draw.NoTexture()
-		surface.SetDrawColor( Color( (1 - pct) * 200, pct * 200, 0, 50 ) )
+		surface.SetDrawColor( (1 - pct) * 200, pct * 200, 0, 50 )
 
 		local xo = ratio * ( h * 0.12 )
 		local bat = {
@@ -569,8 +629,8 @@ local function a_hud()
 	local sw = w
 	local addy = 0
 
-	w = w * 0.85 * scale
-	h = h * 0.85 * scale
+	w = w * scale
+	h = h * scale
 
 	addy = sh - h
 

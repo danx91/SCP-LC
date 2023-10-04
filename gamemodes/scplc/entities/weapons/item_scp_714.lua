@@ -3,6 +3,7 @@ SWEP.Language  		= "SCP714"
 
 SWEP.WorldModel		= "models/mishka/models/scp714.mdl"
 
+SWEP.ShouldDrawWorldModel 	= false
 SWEP.ShouldDrawViewModel = false
 
 SWEP.SelectFont = "SCPHUDMedium"
@@ -27,12 +28,6 @@ function SWEP:HolsterThink()
 				owner:TakeSanity( -1, SANITY_TYPE.ANOMALY, "scp714" )
 			end
 		end
-	end
-end
-
-function SWEP:DrawWorldModel()
-	if !IsValid( self.Owner ) then
-		self:DrawModel()
 	end
 end
 
@@ -82,9 +77,9 @@ if SERVER then
 end
 
 if CLIENT then
-	local ply = FindMetaTable( "Player" )
+	local PLAYER = FindMetaTable( "Player" )
 
-	function ply:CL_GetSCP714() --for clientside usage purpose
+	function PLAYER:CL_GetSCP714() --for clientside usage purpose
 		local scp = self:GetWeapon( "item_scp_714" )
 		if IsValid( scp ) then
 			return scp:GetEnabled()

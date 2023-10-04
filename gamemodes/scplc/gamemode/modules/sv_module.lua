@@ -23,7 +23,7 @@ function GM:OnEntityCreated( ent )
 end
 
 function GM:GetFallDamage( ply, speed )
-	return 1
+	return 0
 end
 
 function GM:Think()
@@ -31,6 +31,8 @@ function GM:Think()
 end
 
 function GM:PlayerPostThink( ply )
+	ply:ChaseThink()
+
 	--Ragdoll lootable think
 	local ent = ply._RagEntity
 	if IsValid( ent ) and ent.LootableCheck and ent.LootableCheck < RealTime() then
@@ -47,66 +49,96 @@ function GM:PlayerPostThink( ply )
 			end
 		end
 	end
-end
 
-local doorBlockers = {}
-function AddDoorBlocker( class )
-	table.insert( doorBlockers, class )
-end
+	--Extra HP
+	local extra = ply:GetExtraHealth()
+	if extra > 0 then
+		local ct = CurTime()
+		local nth = ply:GetProperty( "extra_hp_think", 0 )
+		if nth == 0 then
+			ply:SetProperty( "extra_hp_think", ct + 1 )
+		elseif nth <= ct then
+			ply:SetProperty( "extra_hp_think", ct + 1 )
 
-function GM:SLCOnDoorClosed()
-	local activator, caller = ACTIVATOR, CALLER
+			extra = extra - 1
 
-	if CVAR.slc_enable_door_unblocker:GetBool() then
-		local name = activator:GetName()
-		if name and string.match( name, "_door_1_" ) then
-			local dpos = activator:GetPos() - Vector( 0, 0, 55.5 )
-			local forward = activator:GetKeyValues().movedir
-
-			dpos = dpos + forward * -32
-			local radius = forward * -55
-
-			local mins = dpos * 1
-			local maxs = mins + radius
-			OrderVectors( mins, maxs )
-
-			mins = mins - Vector( 0, 0, 0 )
-			maxs = maxs + Vector( 0, 0, 32 )
-
-			local found = ents.FindInBox( mins, maxs )
-			if #found > 0 then
-				local rdot = radius:Dot( radius )
-				local up = Vector( 0, 0, 16 )
-
-				for k1, v in pairs( found ) do
-					local pos = v:GetPos()
-					pos.z = dpos.z --hack?
-
-					for k2, bl in pairs( doorBlockers ) do
-						if string.find( v:GetClass(), bl ) then
-
-							local frac = 0
-							if rdot != 0 then
-								frac = (pos - dpos):Dot( radius ) / rdot --fraction
-							end
-							local pline = (dpos + radius * frac) --point on line
-							local vec = pos - pline --vector pointing from pline to item
-							vec:Normalize() --normalize it so we can multiply it
-
-							v:SetPos( pline + vec * 64 + up ) --set object pos 64 units away from door, perpendicularly to door
-							v:PhysWake()
-							//print( frac, vec, dpos + radius * frac, pos + norm * 32 )
-						end
-					end
-				end
+			if extra <= 0 then
+				extra = 0
+				ply:SetMaxExtraHealth( 0 )
 			end
+
+			ply:SetExtraHealth( extra )
 		end
 	end
 end
 
-AddDoorBlocker( "^item_slc_" )
-AddDoorBlocker( "^weapon_" )
-AddDoorBlocker( "^cw_" )
+--[[-------------------------------------------------------------------------
+Door unblocker
+---------------------------------------------------------------------------]]
+local door_blockers = {}
+local door_blockers_pattern = {}
+
+function AddDoorBlocker( class, pattern )
+	table.insert( pattern and door_blockers_pattern or door_blockers, class )
+end
+
+function GM:SLCOnDoorClosed( ply, retry, act )
+	if !CVAR.slc_door_unblocker:GetBool() then return end
+
+	local activator = act or ACTIVATOR
+
+	if retry and retry > 1 then
+		timer.Simple( 0.25, function()
+			hook.Run( "SLCOnDoorClosed",  ply, retry - 1, activator )
+		end )
+	end
+
+	local dpos = activator:GetPos() - Vector( 0, 0, 55.5 )
+	local forward = activator:GetKeyValues().movedir
+	local right = forward:Angle():Right()
+
+	local pos_start = dpos - forward * 30 + right * 10
+	local pos_end = dpos - forward * 92 - right * 3 + Vector( 0, 0, 32 )
+
+	local found = ents.FindInBox( pos_start, pos_end )
+	if #found <= 0 then return end
+
+	local up = Vector( 0, 0, 16 )
+	local mid = ( pos_start + pos_end ) / 2
+	mid.z = dpos.z
+
+	for _, item in ipairs( found ) do
+		local class = item:GetClass()
+		local pos = item:GetPos()
+		pos.z = dpos.z
+
+		local is_blocker = ply and item:IsPlayer() or door_blockers[class]
+
+		if !is_blocker then
+			for _, pattern in ipairs( door_blockers_pattern ) do
+				if string.find( class, pattern ) then
+					is_blocker = true
+					break
+				end
+			end
+		end
+
+		if !is_blocker then continue end
+
+		local diff = ( pos - mid ):GetNormalized()
+		local dot = diff:Dot( right )
+
+		item:SetPos( pos + up + right * 64 * ( dot >= 0 and 1 or -1 ) )
+		item:DropToFloor()
+	end
+end
+
+AddDoorBlocker( "^item_slc_", true )
+AddDoorBlocker( "^weapon_", true )
+AddDoorBlocker( "^cw_", true )
+AddDoorBlocker( "^khr_", true )
+AddDoorBlocker( "slc_turret", true )
+AddDoorBlocker( "slc_vest", true )
 
 --[[-------------------------------------------------------------------------
 Misc functions
@@ -259,7 +291,7 @@ Timer( "PlayXP", 300, 0, function()
 	end
 end )
 
---TransmitSound( snd, status, player, volume )
+--TransmitSound( snd, status, player, volume or 1 )
 --TransmitSound( snd, status, vector, radius )
 --TransmitSound( snd, status, volume )
 function TransmitSound( snd, status, arg1, arg2 )
@@ -335,15 +367,38 @@ function ServerSound( file, ent, filter )
 	return sound
 end
 
+SLC_UNIX_DAY = -1
+
 function SLCUpdateUnixDay()
 	SLC_UNIX_DAY = math.floor( ( os.time() - CVAR.slc_dailyxp_time:GetInt() ) / 86400 )
 end
 
-SLCUpdateUnixDay()
+timer.Simple( 0, SLCUpdateUnixDay )
+
+function LocateEntity( class )
+	for i, v in ipairs( player.GetAll() ) do
+		local wep = v:GetWeapon( class )
+		if IsValid( wep ) then
+			return wep, v
+		end
+	end
+
+	for i, v in ipairs( ents.GetAll() ) do
+		if v:GetClass() == class then
+			return v, nil
+		elseif v:InstanceOf( "Lootable" ) then
+			for _, item in pairs( v.LootItems ) do
+				if item.info.class == class then
+					return true, v
+				end
+			end
+		end
+	end
+end
 
 hook.Add( "PostGamemodeLoaded", "SCPLCLightStyle", function()
 	timer.Simple( 0, function()
-		engine.LightStyle( 0, "g" )
+		engine.LightStyle( 0, "k" )
 	end )
 end )
 
@@ -356,17 +411,28 @@ concommand.Add( "slc_debuginfo", function( ply, cmd, args )
 		for k, v in pairs( player.GetAll() ) do
 			print( "->", v, v:Nick(), v:SteamID() )
 			print( "\tGeneral info -> ", v:SCPTeam(), v:SCPClass(), v:Alive(), v:IsAFK(), v:GetModel(), v:GetObserverMode(), v:GetObserverTarget() )
+			print( "\tMisc -> ", v:IsBurning(), v:GetVest() )
 			print( "\tSpeed -> ", v:GetWalkSpeed(), v:GetRunSpeed(), v:GetCrouchedWalkSpeed() )
 			if v.SpeedStack then PrintTable( v.SpeedStack, 2 ) end
 			print( "\tInventory ->" )
 			PrintTable( v:GetWeapons(), 2 )
+			print( "Weapons debug info ->" )
+			for i, wep in ipairs( v:GetWeapons() ) do
+				if wep.DebugInfo then
+					print( "\t", wep )
+					wep:DebugInfo( 3 )
+				end
+			end
 			print( "\tPData ->" )
 			PrintTable( v.PlayerData.Status, 2 )
-			print( "\tSCPVars ->" )
+			print( "\tSLCVars ->" )
 			PrintTable( v.scp_var_table, 2 )
 			print( "\tProperties ->" )
 			PrintTable( v.SLCProperties, 2 )
-			print( "\tMisc -> ", v:IsBurning(), v:GetVest() )
+			print( "\tEffects registry ->" )
+			PrintTable( v.EFFECTS_REG, 2 )
+			print( "\tEffects ->" )
+			PrintTable( v.EFFECTS, 2 )
 			print( "--------------------" )
 		end
 		print( "==================" )

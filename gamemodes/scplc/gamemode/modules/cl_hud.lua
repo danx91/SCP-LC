@@ -1,8 +1,10 @@
-local hudscales = {
+--[[-------------------------------------------------------------------------
+HUD Scaling
+---------------------------------------------------------------------------]]
+HUD_SCALES = {
 	vbig = 1.1,
 	big = 1.05,
 	normal = 1,
-	default = 1,
 	small = 0.9,
 	vsmall = 0.8,
 	imretard = 0.6,
@@ -13,26 +15,26 @@ local hudscalecvar = CreateClientConVar( "cvar_slc_hud_scale", 1, true )
 cvars.AddChangeCallback( "cvar_slc_hud_scale", function( name, old, new )
 	print( "HUD scale changed! Rebuilding fonts..." )
 
-	RebuildScaledFonts( new )
+	RebuildScaledFonts( GetHUDScale( new ) )
 	SLC_HUD_END_X = ScrW() * 0.315 * new + ScrH() * 0.01 + 3
 end, "HUDChangeCallback" )
 
 concommand.Add( "slc_hud_scale", function( ply, cmd, args )
 	local size = args[1]
 
-	if !size or size == "" or !hudscales[size] then
+	if !size or size == "" or !HUD_SCALES[size] then
 		print( "Unknown HUD size! Available sizes: vbig, big, normal, small, vsmall, imretard" )
 		return
 	end
 
-	RunConsoleCommand( "cvar_slc_hud_scale", hudscales[size] )
+	RunConsoleCommand( "cvar_slc_hud_scale", HUD_SCALES[size] )
 end, function( cmd, args )
 	args = string.Trim( args )
 	args = string.lower( args )
 
 	local tbl = {}
 
-	for k, v in pairs( hudscales ) do
+	for k, v in pairs( HUD_SCALES ) do
 		if string.find( k, args ) then
 			table.insert( tbl, cmd.." "..k )
 		end
@@ -41,10 +43,41 @@ end, function( cmd, args )
 	return tbl
 end )
 
-function GetHUDScale()
-	return hudscalecvar:GetFloat()
+hook.Add( "SLCRegisterSettings", "SLCHUDScale", function()
+	local tab = {}
+
+	for k, v in pairs( HUD_SCALES ) do
+		table.insert( tab, k )
+	end
+
+	table.sort( tab, function( a, b )
+		return HUD_SCALES[a] < HUD_SCALES[b]
+	end )
+
+	RegisterSettingsEntry( "cvar_slc_hud_scale", "dropbox", "!CVAR", {
+		list = tab,
+		parse = function( value )
+			value = tonumber( value )
+			for k, v in pairs( HUD_SCALES ) do
+				if v == value then
+					return k
+				end
+			end
+		end,
+		callback = function( value )
+			RunConsoleCommand( "slc_hud_scale", value )
+			return true
+		end,
+	} )
+end )
+
+function GetHUDScale( val )
+	return ( val or hudscalecvar:GetFloat() ) * 0.8
 end
 
+--[[-------------------------------------------------------------------------
+Hide HL2 HUD
+---------------------------------------------------------------------------]]
 local hide = {
 	CHudHealth = true,
 	CHudBattery = true,
@@ -52,16 +85,25 @@ local hide = {
 	CHudSecondaryAmmo = true,
 	CHudWeaponSelection = true,
 	CHudSuitPower = true,
-	CHudDamageIndicator = true, --TODO damage indicator (and maybe hit markers?)
+	CHudDamageIndicator = true,
+	CHudPoisonDamageIndicator = true,
+	//CHudCrosshair = true,
 }
 
-hook.Add( "HUDShouldDraw", "HideDefaultHUD", function( name )
+function GM:HUDShouldDraw( name )
 	if hide[name] then return false end
-end )
+	if name == "CHudCrosshair" and ( !GetSettingsValue( "hud_draw_crosshair" ) or !GetSettingsValue( "hud_hl2_crosshair" ) ) then return false end
 
-function GM:DrawDeathNotice( x,  y )
+	return true
 end
 
+function GM:DrawDeathNotice( x, y )
+
+end
+
+--[[-------------------------------------------------------------------------
+HUDPaint
+---------------------------------------------------------------------------]]
 local MATS = {
 	button = Material( "slc/hud/key.png" ),
 	escape_blocked = Material( "slc/hud/escape_blocked.png" ),
@@ -76,8 +118,6 @@ local COLOR = {
 
 SCPMarkers = {}
 HUDDrawSpawnInfo = 0
-EscapeStatus = 0
-EscapeTimer = 0
 hud_disabled = false
 HUDDrawInfo = false
 HUDBlink = 1
@@ -114,6 +154,8 @@ function GM:HUDPaint()
 
 	if hook.Run( "HUDShouldDraw", "scplc.hud" ) == false then return end
 
+	local ply = LocalPlayer()
+
 	--[[-------------------------------------------------------------------------
 	Markers
 	---------------------------------------------------------------------------]]
@@ -140,7 +182,7 @@ function GM:HUDPaint()
 			} )
 
 			draw.Text( {
-				text = math.Round( v.data.pos:Distance( LocalPlayer():GetPos() ) * 0.019 ) .. "m", --1m = 52.49 units --REVIEW 0.0254 (1m = 39.37 units)?
+				text = math.Round( v.data.pos:Distance( ply:GetPos() ) * 0.01905 ) .. "m", --1m = 52.49 units --REVIEW 0.0254 (1m = 39.37 units)?
 				font = "SCPHUDSmall",
 				color = COLOR.text_red,
 				pos = { scr.x, scr.y + 10 + th },
@@ -155,18 +197,18 @@ function GM:HUDPaint()
 	end
 
 	--[[-------------------------------------------------------------------------
-	EscapeTimer
+	ESCAPE_TIMER
 	---------------------------------------------------------------------------]]
 	if !ROUND.post then
-		if EscapeStatus != 0 then
-			local x = w * 0.4625
-			local y = h * 0.15
+		if ESCAPE_STATUS != 0 then
+			local y = h * 0.2
 			local s = w * 0.075
+			local x = ( w - s ) * 0.5
 
-			if EscapeStatus == 1 then
+			if ESCAPE_STATUS == 1 then
 				draw.Text{
 					text = LANG.HUD.escaping,
-					pos = { w * 0.5, y - h * 0.025 },
+					pos = { w * 0.5, y - h * 0.02 },
 					color = COLOR.white,
 					font = "SCPHUDVBig",
 					xalign = TEXT_ALIGN_CENTER,
@@ -187,25 +229,25 @@ function GM:HUDPaint()
 				mx:Translate( Vector( -cx, -cy ) )
 
 				cam.PushModelMatrix( mx )
-					local f = (EscapeTimer - CurTime()) / 20
+					local f = (ESCAPE_TIMER - CurTime()) / 20
 
 					surface.SetDrawColor( COLOR.white )
 					draw.NoTexture()
-					surface.DrawCooldownHollowRectCW( x + diff, y + diff, a, a, 10, f, HRCSTYLE_RECT_SOLID )
+					surface.DrawCooldownHollowRectCW( x + diff, y + diff, a, a, s * 0.075, f, HRCSTYLE_RECT_SOLID )
 				cam.PopModelMatrix()
 
 				draw.Text{
-					text = math.Round(EscapeTimer - CurTime()),
+					text = math.Round(ESCAPE_TIMER - CurTime()),
 					pos = { cx, cy },
 					color = COLOR.white,
 					font = "SCPHUDVBig",
 					xalign = TEXT_ALIGN_CENTER,
 					yalign = TEXT_ALIGN_CENTER,
 				}
-			elseif EscapeStatus == 2 then
+			elseif ESCAPE_STATUS == 2 then
 				draw.Text{
-					text = "Escape Blocked!",
-					pos = { w * 0.5, y - h * 0.025 },
+					text = LANG.HUD.escape_blocked,
+					pos = { w * 0.5, y - h * 0.02 },
 					color = COLOR.escape_blocked,
 					font = "SCPHUDVBig",
 					xalign = TEXT_ALIGN_CENTER,
@@ -235,14 +277,18 @@ function GM:HUDPaint()
 	---------------------------------------------------------------------------]]
 	if hud_disabled then return end
 
-	RunGUISkinFunction( "pre_hud" )
+	hook.Run( "SLCPreDrawHUD" )
 
-	local ply = LocalPlayer()
+	RunGUISkinFunction( "pre_hud" )
 	RunGUISkinFunction( ply:SCPTeam() == TEAM_SPEC and "spectator_hud" or "hud" )
-	if ply:SCPTeam() == TEAM_SPEC then return end
 
 	if HUDDrawInfo or ROUND.post then
 		RunGUISkinFunction( "additional_hud" )
+	end
+
+	if ply:SCPTeam() == TEAM_SPEC then
+		hook.Run( "SLCPostDrawHUD" )
+		return
 	end
 
 	RunGUISkinFunction( "post_hud" )
@@ -250,11 +296,11 @@ function GM:HUDPaint()
 	--[[-------------------------------------------------------------------------
 	Pickup hint
 	---------------------------------------------------------------------------]]
-	if HUDPickupHint then
-		if !IsValid( HUDPickupHint ) then
-			HUDPickupHint = nil
-		end
+	if HUDPickupHint and !IsValid( HUDPickupHint ) then
+		HUDPickupHint = nil
+	end
 
+	if HUDPickupHint then
 		local key = input.LookupBinding( "+use" )
 
 		if key then
@@ -270,18 +316,20 @@ function GM:HUDPaint()
 			tw = th
 		end
 
-		surface.SetDrawColor( COLOR.hint )
-		surface.SetMaterial( MATS.button )
-		surface.DrawTexturedRect( w * 0.49 - tw * 0.5, h * 0.75 - th * 0.5 - w * 0.01, w * 0.02 + tw, w * 0.02 + th )
+		if !HUDPickupHintMsg then
+			surface.SetDrawColor( COLOR.hint )
+			surface.SetMaterial( MATS.button )
+			surface.DrawTexturedRect( w * 0.49 - tw * 0.5, h * 0.75 - th * 0.5 - w * 0.01, w * 0.02 + tw, w * 0.02 + th )
 
-		draw.Text{
-			text = key,
-			pos = { w * 0.5, h * 0.75 - th * 0.1 },
-			color = COLOR.white,
-			font = "SCPHUDBig",
-			xalign = TEXT_ALIGN_CENTER,
-			yalign = TEXT_ALIGN_CENTER,
-		}
+			draw.Text{
+				text = key,
+				pos = { w * 0.5, h * 0.75 - th * 0.1 },
+				color = COLOR.white,
+				font = "SCPHUDBig",
+				xalign = TEXT_ALIGN_CENTER,
+				yalign = TEXT_ALIGN_CENTER,
+			}
+		end
 
 		local text = LANG.HUD.pickup
 
@@ -296,7 +344,7 @@ function GM:HUDPaint()
 			end
 		end
 
-		draw.Text{
+		local _, hth = draw.Text{
 			text = text,
 			pos = { w * 0.5, h * 0.75 - th - w * 0.02 },
 			color = COLOR.white,
@@ -305,14 +353,42 @@ function GM:HUDPaint()
 			yalign = TEXT_ALIGN_CENTER,
 		}
 
+		if HUDPickupHintMsg then
+			draw.Text{
+				text = LANG.pickup_msg[HUDPickupHintMsg] or HUDPickupHintMsg,
+				pos = { w * 0.5, h * 0.75 - th - w * 0.02 + hth },
+				color = COLOR.text_red,
+				font = "SCPHUDMedium",
+				xalign = TEXT_ALIGN_CENTER,
+				yalign = TEXT_ALIGN_CENTER,
+			}
+		end
+
 		HUDPickupHint = nil
+		HUDPickupHintMsg = nil
 	end
 
 	--From base gamemode
 	hook.Run( "HUDDrawTargetID" )
 	hook.Run( "HUDDrawPickupHistory" )
+
+	hook.Run( "SLCPostDrawHUD" )
+
+	--[[-------------------------------------------------------------------------
+	Crosshair
+	---------------------------------------------------------------------------]]
+	if !GetSettingsValue( "hud_draw_crosshair" ) then return true end
+	if GetSettingsValue( "hud_hl2_crosshair" ) then return end
+
+	local wep = ply:GetActiveWeapon()
+	if IsValid( wep ) and ( !wep:IsScripted() or wep.DrawCrosshair == true and ( !wep.DoDrawCrosshair or wep:DoDrawCrosshair() != true ) ) then
+		DrawSLCCrossHair( w / 2, h / 2 )
+	end
 end
 
+--[[-------------------------------------------------------------------------
+DrawOverlay
+---------------------------------------------------------------------------]]
 local function create_bar( x, y, w, h, xoff )
 	return {
 		{ x = x, y = y },
@@ -330,6 +406,8 @@ local drop_dur = 0.2
 
 function GM:DrawOverlay()
 	local w, h = ScrW(), ScrH()
+	local ply = LocalPlayer()
+	if !ply.FullyLoaded then return end
 
 	--[[-------------------------------------------------------------------------
 	XP Bar
@@ -349,8 +427,6 @@ function GM:DrawOverlay()
 
 				//local req = CVAR.slc_xp_level:GetInt()
 				//local inc = CVAR.slc_xp_increase:GetInt()
-
-				local ply = LocalPlayer()
 				show_xp = ply:SCPExp()
 				show_lvl = ply:SCPLevel()
 				show_maxxp = ply:RequiredXP( show_lvl ) //req + inc * show_lvl
@@ -513,16 +589,50 @@ function GM:DrawOverlay()
 				render.SetScissorRect( 0, 0, 0, 0, false )
 			end
 
-			draw.SimpleText( show_lvl, "SCPHUDVBig", bar_x - w * 0.01, bar_y + bar_h * 0.5, Color( 255, 255, 255 ), TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER )
+			draw.SimpleText( show_lvl, "SCPHUDVBig", bar_x - w * 0.01, bar_y + bar_h * 0.5, COLOR.white, TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER )
 
 			surface.SetFont( "SCPHUDBig" )
 			local max_w = surface.GetTextSize( show_maxxp )
 
 			local text_x, text_y =  bar_x + xoffset, bar_y + bar_h + h * 0.01
-			local _, th = draw.SimpleText( show_xp + math.ceil( cur_xp ), "SCPHUDBig", text_x, text_y, Color( 255, 255, 255 ), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
-			local slash_w = draw.SimpleText( " / ", "SCPHUDBig", text_x + max_w, text_y + th * 0.1, Color( 255, 255, 255 ), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
-			draw.SimpleText( show_maxxp, "SCPHUDMedium", text_x + max_w + slash_w, text_y + th * 0.333, Color( 255, 255, 255 ), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
+			local _, th = draw.SimpleText( show_xp + math.ceil( cur_xp ), "SCPHUDBig", text_x, text_y, COLOR.white, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
+			local slash_w = draw.SimpleText( " / ", "SCPHUDBig", text_x + max_w, text_y + th * 0.1, COLOR.white, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
+			draw.SimpleText( show_maxxp, "SCPHUDMedium", text_x + max_w + slash_w, text_y + th * 0.333, COLOR.white, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
 		end
+	end
+
+	--[[-------------------------------------------------------------------------
+	AFK Warning
+	---------------------------------------------------------------------------]]
+	local is_afk = ply:IsAFK()
+	if is_afk or SLCAFKWarning then
+		local ww, wh = w * 0.4, h * 0.2
+		local wx, wy = ( w - ww ) * 0.5, h * 0.3
+
+		if math.floor( RealTime() ) % 2 == 0 then
+			surface.SetDrawColor( 120, 60, 60 )
+		else
+			surface.SetDrawColor( 140, 80, 80 )
+		end
+
+		surface.DrawRect( wx, wy, ww, wh )
+
+		surface.SetDrawColor( 200, 200, 200 )
+		surface.DrawOutlinedRect( wx, wy, ww, wh )
+
+		local dy = wy + wh * 0.05
+		local _, th = draw.SimpleText( is_afk and "Jesteś AFK!" or "Ostrzeżenie AFK", "SCPHUDBig", wx + ww * 0.5, dy, clr, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP )
+		dy = dy + th + wh * 0.05
+
+		if !is_afk then
+			_, th = draw.SimpleText( "Niedługo zostaniesz zabity i oznaczony jako AFK!", "SCPHUDSmall", wx + ww * 0.5, dy, clr, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP )
+			dy = dy + th
+		else
+			_, th = draw.SimpleText( "Nie będziesz się odradzać jako wsparcie oraz na początku rundy!", "SCPHUDSmall", wx + ww * 0.5, dy, clr, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP )
+			dy = dy + th
+		end
+
+		_, th = draw.SimpleText( "-- Nacisnij dowolny klawisz aby stać się aktywnym --", "SCPHUDSmall", wx + ww * 0.5, wy + wh - wh * 0.05, clr, TEXT_ALIGN_CENTER, TEXT_ALIGN_BOTTOM )
 	end
 end
 
@@ -548,4 +658,31 @@ hook.Add( "Think", "SCPHUDThink", function()
 	elseif hud_disabled and wasdisabled == false then
 		hud_disabled = false
 	end
+end )
+
+--[[-------------------------------------------------------------------------
+Crosshair
+---------------------------------------------------------------------------]]
+function DrawSLCCrossHair( x, y )
+	local h = ScrH()
+	local d = math.ceil( h * 0.005 )
+	local l = math.ceil( h * 0.005 )
+
+	surface.SetDrawColor( 255, 255, 255, hitmarker )
+	surface.DrawRect( x - d - l, y - 1, l, 1 )
+	surface.DrawRect( x + d, y - 1, l, 1 )
+	surface.DrawRect( x - 1, y - d - l, 1, l )
+	surface.DrawRect( x - 1, y + d, 1, l )
+
+	surface.SetDrawColor( 0, 0, 0, hitmarker )
+	surface.DrawOutlinedRect( x - d - l - 1, y - 2, l + 2, 3 )
+	surface.DrawOutlinedRect( x + d - 1, y - 2, l + 2, 3 )
+	surface.DrawOutlinedRect( x - 2, y - d - l - 1, 3, l + 2 )
+	surface.DrawOutlinedRect( x - 2, y + d - 1, 3, l + 2 )
+end
+
+
+hook.Add( "SLCRegisterSettings", "SLCCrosshairSettings", function()
+	RegisterSettingsEntry( "hud_draw_crosshair", "switch", true )
+	RegisterSettingsEntry( "hud_hl2_crosshair", "switch", false )
 end )

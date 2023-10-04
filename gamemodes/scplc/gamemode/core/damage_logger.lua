@@ -14,7 +14,7 @@ end )
 
 DamageLogger = {}
 
-function DamageLogger:New( ply ) --TEST memory usage
+function DamageLogger:New( ply )
 	local logger = setmetatable( {}, { __index = DamageLogger } )
 
 	logger.New = function() end
@@ -41,7 +41,8 @@ end
 
 function DamageLogger:DamageTaken( dmg, attacker, data )
 	local ivp = IsValid( attacker ) and attacker:IsPlayer()
-	local rdm = ivp and SCPTeams.IsAlly( self.Player:SCPTeam(), attacker:SCPTeam() )
+	local rdm = ivp and SCPTeams.IsAlly( attacker:SCPTeam(), self.Player:SCPTeam() )
+	local enemy = ivp and SCPTeams.IsEnemy( attacker:SCPTeam(), self.Player:SCPTeam() )
 
 	table.insert( self.TakenLog, { attacker = attacker, attackername = ivp and attacker:GetName() or "NULL", attackerid = ivp and attacker:SteamID64() or "NULL", damage = dmg, data = data, rdm = rdm } )
 
@@ -57,7 +58,7 @@ function DamageLogger:DamageTaken( dmg, attacker, data )
 	self.TakenSourceLog[attacker].dmg = self.TakenSourceLog[attacker].dmg + dmg
 	self.TakenSourceLog[attacker].orig = self.TakenSourceLog[attacker].orig + data.dmg_orig
 
-	if !rdm then
+	if enemy then
 		self.TakenSourceLog[attacker].nrdm = self.TakenSourceLog[attacker].nrdm + dmg
 	end
 
@@ -67,6 +68,7 @@ end
 function DamageLogger:DamageDealt( dmg, target, data )
 	local ivp = IsValid( target ) and target:IsPlayer()
 	local rdm = ivp and SCPTeams.IsAlly( self.Player:SCPTeam(), target:SCPTeam() )
+	local enemy = ivp and SCPTeams.IsEnemy( self.Player:SCPTeam(), target:SCPTeam() )
 
 	table.insert( self.DealtLog, { target = target, targetname = ivp and target:GetName() or "NULL", targetid = ivp and target:SteamID64() or "NULL", damage = dmg, data = data, rdm = rdm } )
 
@@ -82,7 +84,7 @@ function DamageLogger:DamageDealt( dmg, target, data )
 	self.DealtTargetLog[target].dmg = self.DealtTargetLog[target].dmg + dmg
 	self.DealtTargetLog[target].final = self.DealtTargetLog[target].final + data.dmg_final
 
-	if !rdm then
+	if enemy then
 		self.DealtTargetLog[target].nrdm = self.DealtTargetLog[target].nrdm + data.dmg_final
 	end
 
@@ -281,7 +283,7 @@ function DamageLogger.Print( data )
 		t1:Insert( 1, 3 + i, IsValid( info.attacker ) and info.attacker:GetNameEx( 24, UTF8_4B_CHARSET, "?" ) or "Unknown", "<&" )
 		t1:Insert( 2, 3 + i, string.format( "%i", info.dmg ) )
 		t1:Insert( 3, 3 + i, string.format( "%i", info.orig ) )
-		t1:Insert( 4, 3 + i, string.format( "%i%%",  100 - info.dmg / info.orig * 100 ) )
+		t1:Insert( 4, 3 + i, string.format( "%i%%",  info.orig == 0 and 0 or ( 100 - info.dmg / info.orig * 100 ) ) )
 	end
 
 	t1:Print()
@@ -306,7 +308,7 @@ function DamageLogger.Print( data )
 		t2:Insert( 1, 2 + i, string.gsub( name, "%%", "" ), "<&" )
 		t2:Insert( 2, 2 + i, string.format( "%i", info.damage ) )
 		t2:Insert( 3, 2 + i, string.format( "%i", info.data.dmg_orig ) )
-		t2:Insert( 4, 2 + i, string.format( "%i%%",  100 - info.damage / info.data.dmg_orig * 100 ) )
+		t2:Insert( 4, 2 + i, string.format( "%i%%",  info.data.dmg_orig == 0 and 0 or ( 100 - info.damage / info.data.dmg_orig * 100 ) ) )
 		t2:Insert( 5, 2 + i, info.data.hp )
 	end
 

@@ -1,6 +1,8 @@
 SWEP.Base 					= "item_slc_medkit"
 SWEP.Language 				= "MEDKITPLUS"
 
+SWEP.scp914upgrade = "item_scp_500"
+
 SWEP.HealDmg 	= 60
 SWEP.HealRand 	= 15
 SWEP.Charges 	= 5

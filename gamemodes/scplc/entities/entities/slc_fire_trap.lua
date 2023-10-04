@@ -91,7 +91,7 @@ function ENT:Draw()
 	--self:DrawModel()
 
 	cam.Start3D2D( self.RenderPos, self.RenderAng + Angle( 90, 0, 0 ), 0.4 )
-		surface.SetDrawColor( Color( 255, 255, 255, 255 ) )
+		surface.SetDrawColor( 255, 255, 255 )
 		surface.SetMaterial( mat )
 		surface.DrawTexturedRect( -64, -64, 128, 128 )
 	cam.End3D2D()

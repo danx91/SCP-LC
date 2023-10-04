@@ -18,6 +18,9 @@ SWEP.SelectFont = "SCPHUDMedium"
 SWEP.Toggleable = true
 SWEP.HasBattery = true
 SWEP.BatteryUsage = 2
+SWEP.ScansPerPoint = 3
+
+SWEP.DrawCrosshair = false
 
 function SWEP:SetupDataTables()
 	self:CallBaseClass( "SetupDataTables" )
@@ -45,7 +48,7 @@ function SWEP:Think()
 	self:CallBaseClass( "Think" )
 
 	if #self.CCTV != #CCTV then
-		for k, v in pairs( ents.FindByClass( "slc_cctv" ) ) do
+		for i, v in ipairs( ents.FindByClass( "slc_cctv" ) ) do
 			//print( v, v:GetCam() )
 			if v.GetCam then
 				self.CCTV[v:GetCam()] = v
@@ -98,11 +101,10 @@ function SWEP:Reload()
 	local owner = self:GetOwner()
 	if owner:IsHolding( "cctv_scan", self ) then return end
 	
-	owner:StartHold( "cctv_scan", IN_RELOAD, 3, nil, self )
-	self:SetBattery( self:GetBattery() - 3 )
+	owner:StartHold( "cctv_scan", IN_RELOAD, 1.5, nil, self )
+	self:SetBattery( self:GetBattery() - 1 )
 end
 
-SWEP.ScansPerPoint = 3
 function SWEP:Scan()
 	local CAM = self:GetCAM()
 	if !IsValid( self.CCTV[CAM] ) then return end
@@ -128,7 +130,7 @@ function SWEP:Scan()
 	if num > 0 then
 		local owner = self:GetOwner()
 
-		local scans = owner:GetProperty( "camera_scans" ) or 0
+		local scans = owner:GetProperty( "camera_scans", 0 )
 		scans = scans + num
 
 		local points = math.floor( scans / self.ScansPerPoint )
@@ -144,10 +146,10 @@ function SWEP:Scan()
 		BroadcastDetection( owner, detected )
 	end
 
-	self:SetBattery( self:GetBattery() - 7 )
+	self:SetBattery( self:GetBattery() - 8 )
 end
 
-function SWEP:CalcView( ply, pos, ang, fov )
+function SWEP:CalcView( ply, pos, ang, fov, view )
 	if CCTV == nil then return end
 
 	local CAM = self:GetCAM()
@@ -161,6 +163,7 @@ function SWEP:CalcView( ply, pos, ang, fov )
 		pos = CCTV[CAM].pos - Vector( 0, 0, 10 )
 		fov = 90
 		dw = true
+		view.no_dynamic = true
 	end
 
 	return pos, ang, fov, dw
@@ -211,10 +214,10 @@ function SWEP:DrawHUD()
 		end
 
 		--if blinkHUDTime < GetConVar("br_time_blinkdelay"):GetFloat() then
-			surface.SetDrawColor( Color( 255, 255, 255, 255 ) )
+			surface.SetDrawColor( 255, 255, 255 )
 
 			draw.Text( {
-				text = "CAM "..CAM,
+				text = "CAM #"..CAM,
 				font = "SCPHUDBig",
 				pos = { w * 0.5, 50 },
 				xalign = TEXT_ALIGN_CENTER,
@@ -235,27 +238,36 @@ function SWEP:DrawHUD()
 				local c = math.random( 100, 200 )
 				local a = math.random( 0, 10 )
 
-				surface.SetDrawColor( Color( c, c, c, a ) )
+				surface.SetDrawColor( c, c, c, a )
 				surface.DrawRect( 0, ry, w, nh )
 			end
 		--end
 
 		local progress = self:GetOwner():HoldProgress( "cctv_scan", self )
 		if progress then
-			surface.SetDrawColor( Color( 255, 255, 255 ) )
+			surface.SetDrawColor( 255, 255, 255 )
 			surface.DrawRing( w * 0.5, h * 0.5, 40, 5, 360 * progress, 30 )
 
 			draw.Text( {
-				text = LANG.MISC.scanning,
+				text = self.Lang.scanning,
 				font = "SCPHUDBig",
 				color = Color( 255, 255, 255, math.TimedSinWave( 0.8, 1, 255 ) ),
 				pos = { w * 0.5, h * 0.5 + 55 },
 				xalign = TEXT_ALIGN_CENTER,
 				yalign = TEXT_ALIGN_TOP,
 			} )
+		else
+			draw.Text( {
+				text = string.format( self.Lang.scan_info, string.upper( input.LookupBinding( "+reload" ) or "+reload" ) ),
+				font = "SCPHUDBig",
+				color = Color( 255, 255, 255, math.TimedSinWave( 0.5, 127, 255 ) ),
+				pos = { w * 0.5, h - 75 },
+				xalign = TEXT_ALIGN_CENTER,
+				yalign = TEXT_ALIGN_BOTTOM,
+			} )
 		end
 
-		surface.SetDrawColor( Color( 255, 255, 255 ) )
+		surface.SetDrawColor( 255, 255, 255 )
 		surface.DrawOutlinedRect( w * 0.875, h * 0.025, w * 0.09, h * 0.05 )
 		surface.DrawRect( w * 0.87, h * 0.035, w * 0.005, h * 0.03 )
 
@@ -264,12 +276,12 @@ function SWEP:DrawHUD()
 		if battery > 0 then
 			local pct = battery * 0.01
 
-			surface.SetDrawColor( Color( 175 * ( 1 - pct ), 175 * pct, 0, 255 ) )
+			surface.SetDrawColor( 175 * ( 1 - pct ), 175 * pct, 0, 255 )
 			//surface.DrawRect( w * 0.878, h * 0.029, w * 0.084 * pct, h * 0.043 )
 			surface.DrawRect( w * 0.875 + 4, h * 0.025 + 4, (w * 0.09 - 8) * pct, h * 0.05 - 8 )
 
 			if battery < 15 then
-				surface.SetDrawColor( Color( 255, 0, 0, math.TimedSinWave( 0.5, 0, 255 ) ) )
+				surface.SetDrawColor( 255, 0, 0, math.TimedSinWave( 0.5, 0, 255 ) )
 				surface.DrawLine( w * 0.88, h * 0.09, w * 0.96, h * 0.01 )
 			end
 		end

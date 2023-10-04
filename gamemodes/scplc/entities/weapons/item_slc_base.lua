@@ -20,8 +20,8 @@ SWEP.Secondary.DefaultClip	= -1
 SWEP.Secondary.Automatic	= false
 SWEP.Secondary.Ammo			= ""
 
-SWEP.WorldModel 			= ""
-SWEP.ViewModel 				= ""
+SWEP.WorldModel 			= "models/hunter/blocks/cube025x025x025.mdl"
+SWEP.ViewModel 				= "models/hunter/blocks/cube025x025x025.mdl"
 
 SWEP.SCP 					= false
 SWEP.Droppable				= true
@@ -41,6 +41,7 @@ SWEP.HasBattery 			= false
 SWEP.HolsterBatteryUsage 	= false
 SWEP.BatteryUsage 			= 2.5
 SWEP.NBatteryTake 			= 0
+SWEP.Durability				= 0
 
 SWEP.OwnerChangedTime 		= 0
 
@@ -48,6 +49,7 @@ function SWEP:SetupDataTables()
 	if self.Toggleable then self:AddNetworkVar( "Enabled", "Bool" ) end
 	if self.HasBattery then self:AddNetworkVar( "Battery", "Int" ) self:SetBattery( 100 ) end
 	if self.Stacks > 1 then self:AddNetworkVar( "Count", "Int" ) self:SetCount( 1 ) end
+	if self.Durability > 0 then self:AddNetworkVar( "Durability", "Int" ) self:SetDurability( self.Durability ) end
 
 	/*self:AddNetworkVar( "DebugOwner", "Entity" )
 	if CLIENT then
@@ -101,6 +103,8 @@ function SWEP:Deploy()
 
 		self:ResetViewModelBones()
 	end
+
+	return true
 end
 
 function SWEP:Holster( wep )
@@ -153,6 +157,7 @@ function SWEP:BatteryTick()
 
 				if battery <= 0 and self.Toggleable then
 					self:SetEnabled( false )
+					self:BatteryDepleted()
 				end
 			end
 		end
@@ -191,6 +196,10 @@ function SWEP:RemoveStack()
 	end
 end
 
+function SWEP:BatteryDepleted()
+
+end
+
 function SWEP:EquipAmmo( ply )
 	local wep = ply:GetWeapon( self:GetClass() )
 	if IsValid( wep ) and wep.Stack then
@@ -218,6 +227,18 @@ function SWEP:DragAndDrop( wep )
 	return false
 end
 
+function SWEP:Damage( dmg )
+	if self.Durability <= 0 then return end
+	dmg = dmg or 1
+
+	local dur = math.Clamp( self:GetDurability() - dmg, 0, self.Durability )
+	self:SetDurability( dur )
+
+	if dur <= 0 and self.Toggleable then
+		self:SetEnabled( false )
+	end
+end
+
 function SWEP:StoreWeapon( data )
 	if self.Stacks > 1 then
 		data.amount = self:GetCount()
@@ -238,6 +259,8 @@ function SWEP:RestoreWeapon( data )
 	end
 end
 
-function SWEP:PreDrawViewModel( vm )
-	//print( vm, vm:HasBoneManipulations() )
+function SWEP:DrawWorldModel()
+	if !IsValid( self:GetOwner() ) or self.ShouldDrawWorldModel then
+		self:DrawModel()
+	end
 end

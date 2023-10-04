@@ -114,6 +114,31 @@ hook.Add( "SLCFactoryReset", "SLCLanguageReset", function()
 	RunConsoleCommand( "slc_language", "default" )
 end )
 
+hook.Add( "SLCRegisterSettings", "SLCLanguage", function()
+	local tab = {}
+
+	for k, v in pairs( _LANG ) do
+		local name = v.self or k
+
+		if v.self_en then
+			name = name.." ("..v.self_en..")"
+		end
+
+		table.insert( tab, { k, name } )
+	end
+
+	RegisterSettingsEntry( "cvar_slc_language", "dropbox", "!CVAR", {
+		list = tab,
+		parse = function( value )
+			if value == "default" then
+				return LANG.default	or "default"
+			end
+
+			return _LANG_ALIASES[value] or value
+		end
+	} )
+end )
+
 local function PrintTableDiff( tab, ref, stack )
 	local wrong, err = 0, 0
 	stack = stack or "LANG"
@@ -206,7 +231,7 @@ Credits
 timer.Create( "Credits", 300, 0, function()
 	print( "'SCP: Lost Control' by danx91 [ZGFueDkx] version "..VERSION.." ("..DATE..")" )
 
-	if CanShowEQ() then
+	/*if CanShowEQ() then
 		local key = input.LookupBinding( "+menu" )
 
 		if key then
@@ -215,17 +240,22 @@ timer.Create( "Credits", 300, 0, function()
 			key = "+menu"
 		end
 
-		//LocalPlayer():PrintMessage( HUD_PRINTTALK, string.format( LANG.eq_key, key ) )
-	end
+		LocalPlayer():PrintMessage( HUD_PRINTTALK, string.format( LANG.eq_key, key ) )
+	end*/
 end )
 
+--[[-------------------------------------------------------------------------
+Heartbeat
+---------------------------------------------------------------------------]]
 timer.Create( "SLCHeartbeat", 2, 0, function()
-	if !FULLY_LOADED or !LocalPlayer():Alive() then return end
-	if LocalPlayer():SCPTeam() != TEAM_SPEC and LocalPlayer():SCPTeam() != TEAM_SCP then
-		if LocalPlayer():Health() < 25 then
-			LocalPlayer():EmitSound( "SLCPlayer.Heartbeat" )
-		end
-	end
+	local ply = LocalPlayer()
+	if !FULLY_LOADED or !ply:Alive() then return end
+
+	local t = ply:SCPTeam()
+	if t == TEAM_SPEC or t == TEAM_SCP then return end
+	if ply:Health() >= 25 or ply:GetExtraHealth() > 0 or ply:GetStaminaBoost() > CurTime() then return end
+
+	ply:EmitSound( "SLCPlayer.Heartbeat" )
 end)
 
 --[[-------------------------------------------------------------------------
@@ -234,8 +264,9 @@ Screen effects
 local exhaust_mat = GetMaterial( "slc/misc/exhaust.png" )
 
 local stamina_effects = 100
+local boost_effects = 0
 local color_mat = Material( "pp/colour" )
-hook.Add( "RenderScreenspaceEffects", "SCPEffects", function()
+function GM:RenderScreenspaceEffects()
 	local ply = LocalPlayer()
 
 	local clr = {}
@@ -249,12 +280,14 @@ hook.Add( "RenderScreenspaceEffects", "SCPEffects", function()
 	clr.brightness = 0
 	clr.contrast = 1
 	clr.colour = 1
+	clr.inv = 0
 
 	if ply:Alive() then
 		local hp = ply:Health()
+		local extra = ply:GetExtraHealth()
 		local t = ply:SCPTeam()
 		
-		if ply:Alive() and t != TEAM_SPEC and t != TEAM_SCP and hp < 25 then
+		if ply:Alive() and t != TEAM_SPEC and t != TEAM_SCP and hp < 25 and extra <= 0 then
 			local scale = 1 - hp / 25, 0.2
 			clr.colour = clr.colour * ( 1 - scale )
 			clr.add_r = clr.add_r + scale * 0.1
@@ -267,20 +300,36 @@ hook.Add( "RenderScreenspaceEffects", "SCPEffects", function()
 	end
 
 	if ply.GetStamina then
-		stamina_effects = math.Approach( stamina_effects, ply:GetStamina(), RealFrameTime() * 20 )
+		local diff = ply:GetStaminaBoost() - CurTime()
 
-		local staminamul = math.Map( math.min( stamina_effects, 30 ), 0, 30, 0.25, 0 )
-		clr.contrast = clr.contrast - staminamul
-		clr.colour = clr.colour - staminamul * 2
+		boost_effects = math.Approach( boost_effects, diff > 2 and 1 or 0, FrameTime() * ( diff > 2 and 20 or 0.5 ) )
+		if boost_effects > 0 then
+			clr.contrast = clr.contrast + boost_effects
 
-		if stamina_effects <= 30 then
-			surface.SetDrawColor( Color( 255, 255, 255, math.Map( math.min( stamina_effects, 30 ), 0, 30, 511, 0 ) ) ) --REVIEW: why 511?
+			surface.SetDrawColor( 20, 20, 175, 10 * boost_effects )
 			surface.SetMaterial( exhaust_mat )
 			surface.DrawTexturedRect( 0, 0, ScrW(), ScrH() )
 		end
+
+		stamina_effects = math.Approach( stamina_effects, diff > 0 and 100 or ply:GetStamina(), FrameTime() * 20 )
+		if stamina_effects < 100 then
+			local staminamul = math.Map( math.min( stamina_effects, 30 ), 0, 30, 0.3, 0 )
+			clr.contrast = clr.contrast - staminamul * 0.5
+			clr.colour = clr.colour - staminamul
+
+			if stamina_effects <= 30 then
+				surface.SetDrawColor( 0, 0, 0, math.Map( math.min( stamina_effects, 30 ), 10, 40, 255, 0 ) )
+				surface.SetMaterial( exhaust_mat )
+				surface.DrawTexturedRect( 0, 0, ScrW(), ScrH() )
+			end
+		end
 	end
 
+	//if hook.Run( "SLCPreScreenMod" ) then return end
 	hook.Run( "SLCScreenMod", clr )
+	if clr.skip then return end
+
+	if ply.cwFlashbangDuration and CurTime() <= ply.cwFlashbangDuration or ply.CW_SmokeScreenIntensity then return end
 
 	render.UpdateScreenEffectTexture()
 	color_mat:SetTexture( "$fbtexture", render.GetScreenEffectTexture() )
@@ -296,10 +345,11 @@ hook.Add( "RenderScreenspaceEffects", "SCPEffects", function()
 	color_mat:SetFloat( "$pp_colour_brightness", clr.brightness )
 	color_mat:SetFloat( "$pp_colour_contrast", clr.contrast )
 	color_mat:SetFloat( "$pp_colour_colour", clr.colour )
+	color_mat:SetFloat( "$pp_colour_inv", clr.inv )
 	
 	render.SetMaterial( color_mat )
 	render.DrawScreenQuad()
-end )
+end
 
 --[[-------------------------------------------------------------------------
 Blink system
@@ -310,12 +360,18 @@ local nextblink = 0
 
 local fade_flag = bit.bor( SCREENFADE.IN, SCREENFADE.OUT )
 net.Receive( "PlayerBlink", function( len )
+	local ply = LocalPlayer()
 	local duration = net.ReadFloat()
 	local delay = net.ReadUInt( 6 )
 
+	if ply.disable_blink then
+		ply.disable_blink = false
+		return
+	end
+
 	if duration > 0 then
 		if GetSettingsValue( "smooth_blink" ) then
-			LocalPlayer():ScreenFade( fade_flag, Color( 0, 0, 0 ), 0.075, duration )
+			ply:ScreenFade( fade_flag, Color( 0, 0, 0 ), 0.075, duration )
 		else
 			blink = true
 		end
@@ -363,7 +419,7 @@ GM hooks
 gameevent.Listen( "player_spawn" )
 function GM:player_spawn( data )
 	local ply = Player( data.userid )
-	if !IsValid( ply ) then return end
+	if !IsValid( ply ) or ROUND.preparing then return end
 
 	if ply != LocalPlayer() then
 		RemovePlayerID( ply )
@@ -376,9 +432,11 @@ function WaitForSync( func )
 end
 
 local WaitingSync = false
-hook.Add( "Tick", "SyncTick", function()
+function GM:Tick()
+	local ply = LocalPlayer()
+
 	if WaitingSync then
-		if WaitingSync == LocalPlayer():TimeSignature() then
+		if WaitingSync == ply:TimeSignature() then
 			WaitingSync = false
 
 			local tmp = SyncFunctions --move table to tmp to avoid infinity calling on error
@@ -389,12 +447,27 @@ hook.Add( "Tick", "SyncTick", function()
 			end
 		end
 	end
-end )
+
+	if FULLY_LOADED and ply:Alive() then
+		local t = ply:SCPTeam()
+		if t != TEAM_SPEC and t != TEAM_SCP then
+			local ct = CurTime()
+			if ply:GetStaminaBoost() > ct and ( !ply.NextStaminaHeartbeat or ply.NextStaminaHeartbeat < ct ) then
+				ply.NextStaminaHeartbeat = ct + 0.666
+				ply:EmitSound( "SLCPlayer.Heartbeat" )
+			end
+		end
+	end
+end
 
 net.ReceivePing( "SLCPlayerSync", function( data )
 	WaitingSync = tonumber( data )
 end )
 
+local color_white = Color( 255, 255, 255 )
+local color_lime = Color( 100, 200, 100 )
+local color_black = Color( 0, 0, 0 )
+local color_gray = Color( 150, 150, 150 )
 function GM:OnPlayerChat( ply, text, team, dead )
 	if IsValid( ply ) then
 		local t = GetPlayerID( ply )
@@ -404,12 +477,12 @@ function GM:OnPlayerChat( ply, text, team, dead )
 
 		if t and t.team then
 			local n = SCPTeams.GetName( t.team )
-			chat.AddText( SCPTeams.GetColor( t.team ), "["..( LANG.TEAMS[n] or n ).."] ", Color( 100, 200, 100 ), ply:Nick(), Color( 255, 255, 255 ), ": ", text )
+			chat.AddText( SCPTeams.GetColor( t.team ), "["..( LANG.TEAMS[n] or n ).."] ", color_lime, ply:Nick(), color_white, ": ", text )
 		else
-			chat.AddText( Color( 150, 150, 150 ), "[???] ", Color( 100, 200, 100 ), ply:Nick(), Color( 255, 255, 255 ), ": ", text )
+			chat.AddText( color_gray, "[???] ", color_lime, ply:Nick(), color_white, ": ", text )
 		end
 	else
-		chat.AddText( Color( 0, 0, 0 ), "[CONSOLE] ", Color( 255, 255, 255 ), " ", text )
+		chat.AddText( color_black, "[CONSOLE] ", color_white, " ", text )
 	end
 
 	return true
@@ -418,6 +491,10 @@ end
 --[[-------------------------------------------------------------------------
 Copied from Base Gamemode and edited
 ---------------------------------------------------------------------------]]
+hook.Add( "SLCRegisterSettings", "SLCSpeedFOV", function()
+	RegisterSettingsEntry( "dynamic_fov", "switch", false )
+end )
+
 function GM:CalcView( ply, origin, angles, fov, znear, zfar )
 	local view = {}
 	view.origin		= origin
@@ -426,6 +503,7 @@ function GM:CalcView( ply, origin, angles, fov, znear, zfar )
 	view.znear		= znear
 	view.zfar		= zfar
 	view.drawviewer	= false
+	view.no_dynamic = false
 
 	local vehicle	= ply:GetVehicle()
 	if IsValid( vehicle ) then return hook.Run( "CalcVehicleView", vehicle, ply, view ) end
@@ -437,16 +515,62 @@ function GM:CalcView( ply, origin, angles, fov, znear, zfar )
 	local weapon = ply:GetActiveWeapon()
 	if IsValid( weapon )then
 		if weapon.CalcView then
-			local draw_viewer 
-			view.origin, view.angles, view.fov, draw_viewer = weapon:CalcView( ply, origin * 1, angles * 1, fov )
-
-			if draw_viewer then
-				view.drawviewer = true
-			end
+			local norig, nang, nfov, draw_viewer = weapon:CalcView( ply, origin * 1, angles * 1, fov, view )
+			if norig then view.origin = norig end
+			if nang then view.angles = nang end
+			if nfov then view.fov = nfov end
+			if draw_viewer then view.drawviewer = true end
 		end
 	end
 
+	if !view.no_dynamic and GetSettingsValue( "dynamic_fov" ) then
+		local t = ply:SCPTeam()
+		if t != TEAM_SPEC and t != TEAM_SCP then
+			local fov_add = math.Clamp( Lerp( FrameTime() * 10, ply.LastFOV or 0, ply:GetVelocity():Length() / math.max( 225, ply:GetRunSpeed() ) * 10 ), 0, 15 )
+			ply.LastFOV = fov_add
+			view.fov = ( view.fov or fov ) - 5 + fov_add
+		else
+			ply.LastFOV = 0
+		end
+	else
+		ply.LastFOV = 5
+	end
+
+	hook.Run( "SLCCalcView", ply, view )
+
 	return view
+end
+
+function GM:CalcViewModelView( wep, vm, old_pos, old_ang, pos, ang )
+	if !IsValid( wep ) then return end
+
+	local vm_origin, vm_angles = pos, ang
+
+	-- Controls the position of all viewmodels
+	local func = wep.GetViewModelPosition
+	if ( func ) then
+		local new_pos, new_ang = func( wep, pos * 1, ang * 1 )
+		vm_origin = new_pos or vm_origin
+		vm_angles = new_ang or vm_angles
+	end
+
+	-- Controls the position of individual viewmodels
+	func = wep.CalcViewModelView
+	if ( func ) then
+		local new_pos, new_ang = func( wep, vm, old_pos * 1, old_ang * 1, pos * 1, ang * 1 )
+		vm_origin = new_pos or vm_origin
+		vm_angles = new_ang or vm_angles
+	end
+
+	local data = {
+		origin = vm_origin,
+		angles = vm_angles,
+		vm = vm,
+	}
+
+	hook.Run( "SLCCalcView", LocalPlayer(), data )
+
+	return data.origin, data.angles
 end
 
 function  GM:SetupWorldFog()
@@ -454,35 +578,68 @@ function  GM:SetupWorldFog()
 end
 
 function GM:PreRender()
-	local lp = LocalPlayer()
+	/*local lp = LocalPlayer()
 
 	for k, v in pairs( player.GetAll() ) do
 		if v != lp then
-			if hook.Run( "CanPlayerSeePlayer", lp, v ) == false then
-				v:SetNoDraw( true )
-			else
-				v:SetNoDraw( false )
+			local state = hook.Run( "CanPlayerSeePlayer", lp, v ) == false
+
+			v:SetNoDraw( state )
+
+			local cwep = v:GetActiveWeapon()
+			if IsValid( cwep ) then
+				cwep:SetNoDraw( state )
 			end
 		end
+	end*/
+end
+
+function GM:PrePlayerDraw( ply, flags )
+	local lp = LocalPlayer()
+	if ply == lp then return end
+
+	if ply:GetNoDraw() or hook.Run( "CanPlayerSeePlayer", lp, ply ) == false then
+		return true
 	end
 end
 
+function GM:CanPlayerSeePlayer( ply, target )
+	if ply:GetObserverMode() == OBS_MODE_ROAMING then
+		return false
+	end
+end
+
+local halo_color_ok = Color( 125, 100, 200 )
+local halo_color_bad = Color( 200, 100, 100)
 hook.Add( "PreDrawHalos", "PickupWeapon", function()
-	/*debugoverlay.Axis(trace.HitPos, trace.HitNormal:Angle(), 5, 0.1 )
-	debugoverlay.Text(trace.HitPos + Vector( 0, 0, -5 ), tostring(trace.Entity), 0.1 )*/
 	local ply = LocalPlayer()
 	local t = ply:SCPTeam()
 	if t == TEAM_SPEC or ( t == TEAM_SCP and !ply:GetSCPHuman() ) then return end
+
 	local wep = ply:GetEyeTrace().Entity
-	if IsValid( wep ) and wep:IsWeapon() then
-		if ply:GetPos():DistToSqr( wep:GetPos() ) < 4500 or ply:EyePos():DistToSqr( wep:GetPos() ) < 3700 then
-			if !hook.Run( "WeaponPickupHover", wep ) and hook.Run( "PlayerCanPickupWeapon", ply, wep ) != false then
-				halo.Add( { wep }, Color( 125, 100, 200 ), 2, 2, 1, true, true )
-				HUDPickupHint = wep
-			end
-		end
-	end
+	if !IsValid( wep ) or !wep:IsWeapon() then return end
+	if ply:GetPos():DistToSqr( wep:GetPos() ) > 4500 and ply:EyePos():DistToSqr( wep:GetPos() ) > 3700 then return end
+	if hook.Run( "WeaponPickupHover", wep ) == true then return end
+
+	local status, msg = hook.Run( "PlayerCanPickupWeapon", ply, wep )
+	//print( status, msg )
+	if status == false and !msg then return end
+
+	halo.Add( { wep }, status and halo_color_ok or halo_color_bad, 2, 2, 1, true, true )
+	HUDPickupHint = wep
+	HUDPickupHintMsg = msg
 end )
+
+function SLCWindowAlert()
+	if !system.HasFocus() then
+		system.FlashWindow()
+		sound.PlayFile( "sound/common/warning.wav", "", function( igac )
+			if IsValid( igac ) then
+				igac:Play()
+			end
+		end )
+	end
+end
 
 hook.Add( "InitPostEntity", "SLCUpdateStatus", function()
 	local ply = LocalPlayer()
@@ -490,11 +647,9 @@ hook.Add( "InitPostEntity", "SLCUpdateStatus", function()
 	DamageLogger( ply )
 	PlayerData( ply )
 
-	--if FULLY_LOADED then
-		--MakePlayerReady()
-	--else
-		--CheckContent()
-	--end
+	SLCWindowAlert()
+
+	ply.FullyLoaded = true
 end )
 
 timer.Simple( 0, function()
@@ -514,7 +669,6 @@ timer.Simple( 0, function()
 
 			ErrorNoHalt( "ReadyCheck timed out!\n" )
 			_SLCPlayerReady = true
-			//MakePlayerReady()
 		end
 
 		if NetTablesReceived then
@@ -522,10 +676,8 @@ timer.Simple( 0, function()
 			
 			print( "Everything is set up! Updating our status on server...", RealTime() - timeout + 10 )
 			_SLCPlayerReady = true
-			//MakePlayerReady()
 		end
 	end )
-	--MakePlayerReady()
 end )
 
 function MakePlayerReady()
@@ -547,13 +699,24 @@ concommand.Add( "slc_debuginfo_cl", function( ply, cmd, args )
 	local v = LocalPlayer()
 	print( v, v:Nick(), v:SteamID() )
 	print( "General info -> ", v:SCPTeam(), v:SCPClass(), v:Alive(), v:IsAFK(), v:GetModel(), v:GetObserverMode(), v:GetObserverTarget() )
+	print( "Misc ->" )
 	print( "Speed -> ", v:GetWalkSpeed(), v:GetRunSpeed(), v:GetCrouchedWalkSpeed() )
 	print( "Inventory ->" )
 	PrintTable( v:GetWeapons(), 1 )
 	print( "Local Inventory ->" )
 	PrintTable( GetLocalWeapons(), 1 )
-	print( "SCPVars ->" )
+	print( "Weapons debug info ->" )
+	for i, wep in ipairs( v:GetWeapons() ) do
+		if wep.DebugInfo then
+			print( "", wep )
+			wep:DebugInfo( 2 )
+		end
+	end
+	print( "SLCVars ->" )
 	PrintTable( v.scp_var_table, 1 )
-	print( "Misc ->" )
+	print( "\tEffects registry ->" )
+	PrintTable( v.EFFECTS_REG, 2 )
+	print( "\tEffects ->" )
+	PrintTable( v.EFFECTS, 2 )
 	print( "==================" )
 end )

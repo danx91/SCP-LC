@@ -44,7 +44,7 @@ function SWEP:PrimaryAttack()
 	self:GetOwner():LagCompensation( true )
 	local trace = self:GetOwner():GetEyeTrace()
 
-	fxdata = EffectData()
+	local fxdata = EffectData()
 	fxdata:SetEntity( self )
 	fxdata:SetAttachment( 1 )
 	fxdata:SetStart( self.Owner:GetShootPos() )
@@ -53,6 +53,12 @@ function SWEP:PrimaryAttack()
 	
 	if CLIENT and IsFirstTimePredicted() then
 		util.Effect( "effect_zeus_muzzleflash", fxdata )
+	elseif SERVER then
+		timer.Simple( 1, function()
+			if IsValid( self ) then
+				self:Remove()
+			end
+		end )
 	end
 
 	if trace.Hit and self:GetPos():DistToSqr( trace.HitPos ) < 90000 then
@@ -78,11 +84,10 @@ function SWEP:PrimaryAttack()
 			if SERVER then ent:TakeDamageInfo( dmginfo ) end
 		end
 	else
-			fxdata:SetOrigin( self.Owner:GetShootPos() + self.Owner:GetAimVector() * self.Primary.Range )
-			//print(fxdata:GetOrigin())
-			if CLIENT or game.SinglePlayer() and IsFirstTimePredicted() then
-				util.Effect( "tooltracer", fxdata )
-			end
+		fxdata:SetOrigin( self.Owner:GetShootPos() + self.Owner:GetAimVector() * self.Primary.Range )
+		if CLIENT or game.SinglePlayer() and IsFirstTimePredicted() then
+			util.Effect( "tooltracer", fxdata )
+		end
 	end
 
 

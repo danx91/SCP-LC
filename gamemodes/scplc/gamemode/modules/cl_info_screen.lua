@@ -1,4 +1,5 @@
-local INFO_SCREEN = {}
+INFO_SCREEN = {}
+local macro_list = {}
 
 /*
 text_data = {
@@ -84,7 +85,7 @@ local function parse_key( data )
 				return LANG.info_screen.registry_failed..": "..data
 			end
 
-			local macro = LANG.info_screen_macro[key]
+			local macro = macro_list[key]
 			if macro then
 				return macro( args )
 			end
@@ -227,10 +228,14 @@ function InfoScreen( ply, type, duration, data )
 		last_char = 0,
 	}
 
-	START_TIME_U = CurTime()
-	TEXT_U = false
+	//START_TIME_U = CurTime()
+	//TEXT_U = false
 	//print( "Start", CurTime(), 0 )
 	util.TimerCycle()
+end
+
+function InfoScreenMacro( name, func )
+	macro_list[name] = func
 end
 
 local overlay = Material( "slc/misc/info_bg.png" )
@@ -314,10 +319,10 @@ hook.Add( "DrawOverlay", "SLCInfoScreen", function()
 		if f >= 1 then
 			f = 1
 
-			if !TEXT_U then
+			/*if !TEXT_U then
 				TEXT_U = true
 				//print( "TextFinish", CurTime(), util.TimerCycle() / 1000 )
-			end
+			end*/
 		end
 
 		local chars = math.floor( INFO_SCREEN.letters * f )
@@ -350,10 +355,10 @@ hook.Add( "DrawOverlay", "SLCInfoScreen", function()
 
 	local w, h = ScrW(), ScrH()
 
-	surface.SetDrawColor( Color( 0, 0, 0, INFO_SCREEN.blackout * 255 ) )
+	surface.SetDrawColor( 0, 0, 0, INFO_SCREEN.blackout * 255 )
 	surface.DrawRect( 0, 0, w, h )
 
-	surface.SetDrawColor( Color( 255, 255, 255, INFO_SCREEN.alpha * 255 ) )
+	surface.SetDrawColor( 255, 255, 255, INFO_SCREEN.alpha * 255 )
 	surface.SetMaterial( overlay )
 	surface.DrawTexturedRect( 0, 0, w, h )
 
@@ -403,6 +408,19 @@ hook.Add( "DrawOverlay", "SLCInfoScreen", function()
 			//max_width = w * 0.875
 		}
 	end
+end )
+
+InfoScreenMacro( "time", function( args )
+	local t = tonumber( args[1] )
+	return t and string.ToMinutesSeconds( t ) or "--:--"
+end )
+
+InfoScreenMacro( "team", function( args )
+	local t = tonumber( args[1] )
+	if !t then return LANG.TEAMS.unknown end
+
+	local name = SCPTeams.GetName( t )
+	return name and LANG.TEAMS[name] or name
 end )
 
 /*concommand.Add( "tscr", function()

@@ -10,7 +10,7 @@ SWEP.GBlink 		= 0
 SWEP.QuickReturnTime = 0
 
 function SWEP:SetupDataTables()
-	self:NetworkVar( "Float", 0, "NSpecial" )
+	self:AddNetworkVar( "NSpecial", "Float" )
 end
 
 function SWEP:Initialize()
@@ -104,7 +104,7 @@ function SWEP:Think()
 		owner:Freeze( false )
 
 		for k, v in pairs( player.GetAll() ) do
-			if IsValid( v ) and v:Alive() and v:SCPTeam() != TEAM_SPEC and v:SCPTeam() != TEAM_SCP then
+			if IsValid( v ) and v:Alive() and v:SCPTeam() != TEAM_SPEC and v:SCPTeam() != TEAM_SCP and !v:HasGodMode() then
 				local dist = owner:GetPos():DistToSqr( v:GetPos() )
 				if dist <= 1600 then
 					local trace = util.TraceLine( {
@@ -231,7 +231,7 @@ function SWEP:Teleport()
 	local add = self:GetUpgradeMod( "specdist" ) or 0
 	for k, v in pairs( FindInCylinder( ownerpos, 1500 + add, -512, 512, nil, nil, player.GetAll() ) ) do
 		local t = v:SCPTeam()
-		if t != TEAM_SPEC and t != TEAM_SCP then
+		if t != TEAM_SPEC and t != TEAM_SCP and !v:IsInSafeSpot() then
 			table.insert( players, v )
 			near[v] = 0
 			for k, ply in pairs( FindInCylinder( v:GetPos(), 500, -128, 128, nil, nil, player.GetAll() ) ) do
@@ -285,10 +285,16 @@ function SWEP:Teleport()
 
 				if trace.Hit then
 					local pos = trace.HitPos
+					local mins, maxs = self.Owner:GetCollisionBounds()
+					mins.z = 1
+					maxs.z = 1
 
-					if !util.TraceLine( {
+					if !util.TraceHull( {
 						start = pos,
 						endpos = point + Vector( 0, 0, 72 ),
+						mins = mins,
+						maxs, maxs,
+
 					} ).Hit then
 						self.Owner:SetEyeAngles( ( plypos - pos ):Angle() )
 						self.Owner:SetPos( pos )
@@ -308,6 +314,8 @@ function SWEP:Teleport()
 	self:SetNSpecial( self.NextSpecial )
 end
 
+local color_red = Color( 255, 0, 0 )
+local color_green = Color( 0, 255, 0 )
 function SWEP:DrawSCPHUD()
 	//if hud_disabled or HUDDrawInfo or ROUND.preparing then return end
 
@@ -316,10 +324,10 @@ function SWEP:DrawSCPHUD()
 	local txt, color
 	if NextSpecial > CurTime() then
 		txt = string.format( self.Lang.swait, math.ceil( NextSpecial - CurTime() ) )
-		color = Color( 255, 0, 0 )
+		color = color_red
 	else
 		txt = self.Lang.sready
-		color = Color( 0, 255, 0 )
+		color = color_green
 	end
 
 	draw.Text{
@@ -336,17 +344,15 @@ AddSounds( "SCP173.Horror", "scp_lc/scp/173/horror/horror%i.ogg", 0, 1, 100, CHA
 AddSounds( "SCP173.Rattle", "scp_lc/scp/173/rattle%i.ogg", 100, 1, 100, CHAN_STATIC, 1, 3 )
 AddSounds( "SCP173.Snap", "scp_lc/scp/173/neck_snap%i.ogg", 511, 1, 100, CHAN_STATIC, 1, 3 )
 
-SCPHook( "SCP173", "PlayerFootstep", function( ply, pos, foot, sound, vol, filter )
-	if ply:SCPClass() == CLASSES.SCP173 then
-		if SERVER then
-			if !ply.N173Step or ply.N173Step < CurTime() then
-				ply.N173Step = CurTime() + 0.9
-				ply:EmitSound( "SCP173.Rattle" )
-			end
-		end
+SCPHook( "SCP173", "SLCPlayerFootstep", function( ply, foot, snd )
+	if ply:SCPClass() != CLASSES.SCP173 then return end
 
-		return true
+	if !ply.N173Step or ply.N173Step < CurTime() then
+		ply.N173Step = CurTime() + 0.9
+		ply:EmitSound( "SCP173.Rattle" )
 	end
+
+	return true
 end )
 
 SCPHook( "SCP173", "SLCBlink", function( time )
@@ -375,6 +381,14 @@ SCPHook( "SCP173", "EntityTakeDamage", function( ent, dmg )
 	end
 end )
 
+if CLIENT then --remove blood
+	SCPHook( "SCP173", "ScalePlayerDamage", function( ply, group, dmg )
+		if IsValid( ply ) and ply:SCPClass() == CLASSES.SCP173 then
+			return true
+		end
+	end )
+end
+
 DefineUpgradeSystem( "scp173", {
 	grid_x = 4,
 	grid_y = 3,
@@ -391,7 +405,7 @@ DefineUpgradeSystem( "scp173", {
 		{ name = "prot2", cost = 1, req = { "prot1" }, reqany = false,  pos = { 3, 2 }, mod = { dmg = 0.8 }, active = true, group = "prot" },
 		{ name = "prot3", cost = 4, req = { "prot2" }, reqany = false,  pos = { 3, 3 }, mod = { dmg = 0.6 }, active = true, group = "prot" },
 
-		{ name = "nvmod", cost = 1, req = {}, reqany = false,  pos = { 4, 2 }, mod = {}, active = false },
+		{ name = "outside_buff", cost = 1, req = {}, reqany = false,  pos = { 4, 2 }, mod = {}, active = false },
 	},
 	rewards = { -- ~55%-60%
 		{ 1, 2 },
@@ -417,3 +431,9 @@ function SWEP:OnUpgradeBought( name, info, group )
 end
 
 InstallUpgradeSystem( "scp173", SWEP )
+
+if CLIENT then
+	hook.Add( "SLCGamemodeLoaded", "SCP173ThermoFilter", function()
+		SLC_THERMAL_FILTER["models/scp/173.mdl"] = true
+	end )
+end

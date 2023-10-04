@@ -11,6 +11,8 @@ SLCAuth.AddLibrary( "serverguard", "Serverguard", { --TEST testing required
 		return serverguard.player:HasPermission( ply, access )
 	end,
 	RegisterAccess = function( name, help )
+		if CLIENT then return end
+		
 		serverguard.permission:Add( name )
 	end,
 } )

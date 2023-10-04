@@ -1,390 +1,295 @@
-SWEP.PrintName 				= "Flashlight"
-SWEP.Base 					= "item_slc_base"
-SWEP.Language 				= "FLASHLIGHT"
+SWEP.Base 						= "item_slc_base"
+SWEP.Language 					= "FLASHLIGHT"
 
-if CLIENT then
-	SWEP.WepSelectIcon = Material( "slc/items/flashlight.png" )
-	SWEP.SelectColor = Color( 255, 210, 0, 255 )
-end
+SWEP.ViewModel					= "models/slc/flashlight/c_flashlight.mdl"
+SWEP.WorldModel					= "models/slc/flashlight/w_flashlight.mdl"
+SWEP.UseHands					= true
 
-SWEP.DrawCrosshair			= false
+SWEP.HoldType 					= "pistol"
 
-SWEP.ViewModel				= "models/danx91/flashlight/flashlight.mdl"
-SWEP.WorldModel				= "models/danx91/flashlight/flashlight.mdl"
+SWEP.Toggleable 				= true
+SWEP.HasBattery 				= true
+SWEP.BatteryUsage 				= 3
 
 SWEP.WorldModelPositionOffset 	= Vector( 4, -2, -1 )
 SWEP.WorldModelAngleOffset 		= Angle( 0, 0, 0 )
-
 
 SWEP.ViewModelPositionOffset 	= Vector( 10, 6, -5 )
 SWEP.ViewModelAngleOffset 		= Angle( 0, 0, 0 )
 
 SWEP.BoneAttachment 			= "ValveBiped.Bip01_R_Hand"
 
-SWEP.HoldType 					= "pistol"
+SWEP.DrawCrosshair 				= false
 
-SWEP.Toggleable 				= true
-SWEP.HasBattery 				= true
-
-SWEP.LightDistance				= 500
-SWEP.LightFOV 					= 50
-
-SWEP.NPrimary = 0
-SWEP.NBattery = 0
+if CLIENT then
+	SWEP.WepSelectIcon = Material( "slc/items/flashlight.png" )
+	SWEP.SelectColor = Color( 255, 210, 0, 255 )
+end
 
 function SWEP:SetupDataTables()
-	self:CallBaseClass( "SetupDataTables" )
+	self:Super( "SetupDataTables" )
+
+	self:AddNetworkVar( "Light", "Entity" )
 end
 
 function SWEP:Initialize()
-	self:CallBaseClass( "Initialize" )
+	self:Super( "Initialize" )
 
 	if CLIENT then
-		/*self.WModel = ClientsideModel( self.WorldModel, RENDERGROUP_OPAQUE )
-		self.WModel:SetParent( self )
-		self.WModel:SetNoDraw( true )
-		self.WModel:SetPos( self:GetPos() )*/
-
 		self.PixelVis = util.GetPixelVisibleHandle()
 	end
-
-	if SERVER then
-		if !IsValid( SLCFLASHLIGHTLIGHT ) then
-			local light = ents.Create( "env_projectedtexture" )
-			if IsValid( light ) then
-				/*light:SetPos( self:GetPos() )
-				light:SetAngles( self:GetAngles() )
-				--light:SetParent( self.Owner:GetViewModel() )
-
-				light:SetEnableShadows( true )
-				light:SetNearZ( 8 )
-				light:SetFarZ( 500 )
-				light:SetFOV( 50 )
-				light:SetColor( Color( 255, 255, 255 ) )
-				light:SetTexture( "effects/flashlight001" )
-				light:Update()*/
-
-				light:SetKeyValue( "enableshadows", 1 )
-				light:SetKeyValue( "nearz", 8 )
-				light:SetKeyValue( "farz", 500 )
-				light:SetKeyValue( "lightfov", 50 )
-				light:SetKeyValue( "lightcolor", "255 255 255" )
-
-				light:Fire( "SpotlightTexture", "effects/flashlight001" )
-
-				SLCFLASHLIGHTLIGHT = light
-			end
-		end
-
-		game.GetWorld():SetNWEntity( "SLCFlashlightLight", SLCFLASHLIGHTLIGHT )
-	end
-
-	//self:UpdateInfo()
 end
 
 function SWEP:OnRemove()
-	if CLIENT and self.DLight then
-		self.DLight.dietime = CurTime()
+	if CLIENT then return end
+
+	local light = self:GetLight()
+	if IsValid( light ) then
+		light:Remove()
+	end
+end
+
+function SWEP:OnDrop()
+	self:SetEnabled( false )
+
+	if CLIENT then return end
+
+	local light = self:GetLight()
+	if IsValid( light ) then
+		light:Remove()
 	end
 end
 
 function SWEP:Deploy()
-	self:CallBaseClass( "Deploy" )
-	self.NWorldLight = CurTime()
-end
+	self:Super( "Deploy" )
 
-function SWEP:Holster()
-	if CLIENT and self.DLight then
-		self.DLight.dietime = CurTime()
+	if SERVER then
+		local light = self:GetLight()
+		if !IsValid( light ) then
+			self:CreateLight()
+		end
 	end
 
 	return true
 end
 
-function SWEP:OnDrop()
+function SWEP:Holster()
 	self:SetEnabled( false )
-end
-
-/*function SWEP:OwnerChanged()
-	self:SetEnabled( false )
-end*/
-
-function SWEP:Think()
-	self:CallBaseClass( "Think" )
 
 	if SERVER then
-		/*if self.NBlind > CurTime() then return end
-		self.NBlind = CurTime() + 0.25
-
-		local orig = self.WorldLight:GetPos()
-		orig.z = orig.z + 60 --WTF? on server light is placed 60 units below expected positoin...
-		
-		if self.Owner:Crouching() then
-			orig.z = orig.z - 36
+		local light = self:GetLight()
+		if IsValid( light ) then
+			light:Fire( "TurnOff" )
 		end
+	end
 
-		local light_dir = self.WorldLight:GetForward()
-		local max_dist = self.LightDistance * self.LightDistance
-		local max_light_ang = self.LightFOV / 4
-		local max_ply_ang = math.rad( 90 )
+	return true
+end
 
-		for k, v in pairs( player.GetAll() ) do
-			if v:MazeTeam() == TEAM_ALIVE and v != self.Owner then
-				local pos = v:EyePos()
-				local dist = orig:DistToSqr( pos )
-
-				if dist <= max_dist then
-					local best_light_dir = ( pos - orig ):GetNormalized()
-					local light_ang = math.abs( math.deg( math.acos( light_dir:Dot( best_light_dir ) ) ) )
-					
-					if light_ang <= max_light_ang then
-						local tr = util.TraceLine( {
-							start = orig,
-							endpos = pos,
-							filter = { self, self.Owner, v },
-							mask = MASK_OPAQUE
-						} )
-
-						if !tr.Hit then
-							local ply_dir = v:EyeAngles():Forward()
-							local best_ply_dir = ( orig - pos ):GetNormalized()
-							local ply_ang = math.abs( math.acos( ply_dir:Dot( best_ply_dir ) ) )
-
-							--if math.deg( ply_ang ) < 90 then
-							if ply_ang < max_ply_ang then
-								local dist_pct = 1 - dist / max_dist
-								local light_pct = 1 - light_ang / max_light_ang
-								local ply_pct = 1 - ply_ang / max_ply_ang
-
-								local total_power = self.LightPower * dist_pct * light_pct * ply_pct
-								--print( total_power )
-								v:AddBlind( total_power )
-								--self.Owner:AddBlind( total_power )
-							end
-						end
-					end
-				end
-			end
-		end*/
+function SWEP:BatteryDepleted()
+	if SERVER then
+		local light = self:GetLight()
+		if IsValid( light ) then
+			light:Fire( "TurnOff" )
+		end
 	end
 end
 
-function SWEP:PrimaryAttack()
-	if self.NPrimary > CurTime() then return end
-	if self:GetBattery() <= 0 then return end
+SWEP.BatteryFlicker = 0
+function SWEP:Think()
+	self:BatteryTick()
 
-	self.NPrimary = CurTime() + 0.1
+	if CLIENT or !self:GetEnabled() then return end
 
-	self:SetEnabled( !self:GetEnabled() )
-	self.NWorldLight = CurTime()
-end
-
-if CLIENT then
-	light_sprite = Material( "sprites/slc_light_sprite" )
-	light_beam = Material( "sprites/slc_light_beam" )
-end
-
-function SWEP:CalcViewModelView( vm, oldpos, oldang, pos, ang )
 	local owner = self:GetOwner()
-	if !IsValid( owner ) then return pos, ang end
+	if !IsValid( owner ) then return end
 
-	local forward, right, up = self.ViewModelPositionOffset.x, self.ViewModelPositionOffset.y, self.ViewModelPositionOffset.z
+	local light = self:GetLight()
+	if !IsValid( light ) then return end
 
-	local angs = owner:EyeAngles()
-	--ang.pitch = -ang.pitch
+	local aim = owner:GetAimVector()
+	light:SetPos( owner:GetShootPos() + aim * 25 )
+	light:SetAngles( aim:Angle() )
+	
+	local bat = self:GetBattery()
+	if self.BatteryFlicker != bat then
+		self.BatteryFlicker = bat
+		self:UpdateLightStyle()
+	end
+end
 
-	ang:RotateAroundAxis( ang:Forward(), self.ViewModelAngleOffset.pitch )
-	ang:RotateAroundAxis( ang:Right(), self.ViewModelAngleOffset.roll )
-	ang:RotateAroundAxis( ang:Up(), self.ViewModelAngleOffset.yaw )
+local toggle_speed = 2
+function SWEP:PrimaryAttack()
+	if self:GetBattery() <= 0 or !IsFirstTimePredicted() then return end
 
-	return pos + angs:Forward() * forward + angs:Right() * right + angs:Up() * up, ang --Angle( 0, 180, -45 )
+	local vm = self:GetOwner():GetViewModel()
+	local seq, dur = vm:LookupSequence( "toggle" )
+
+	vm:SendViewModelMatchingSequence( seq )
+	vm:SetPlaybackRate( toggle_speed )
+
+	self:SetNextPrimaryFire( CurTime() + dur / toggle_speed )
+
+	local enabled = !self:GetEnabled()
+	self:SetEnabled( enabled )
+	self:EmitSound( enabled and "Player.FlashlightOn" or "Player.FlashlightOff" )
+
+	if CLIENT then return end
+
+	local light = self:GetLight()
+	if !IsValid( light ) then return end
+
+	light:Fire( enabled and "TurnOn" or "TurnOff" )
+	self:UpdateLightStyle()
+end
+
+function SWEP:CreateLight()
+	local old = self:GetLight()
+	if IsValid( old ) then
+		old:Remove()
+	end
+
+	local light = ents.Create( "env_projectedtexture" )
+	if IsValid( light ) then
+		light:SetKeyValue( "nearz", 4 )
+		light:SetKeyValue( "farz", 800 )
+		light:SetKeyValue( "lightfov", 60 )
+		light:SetKeyValue( "lightcolor", "255 255 255" )
+		light:SetKeyValue( "enableshadows", 1 )
+		light:SetKeyValue( "lightworld", 1 )
+
+		light:Fire( "AlwaysUpdateOn" )
+		light:Fire( "SpotlightTexture", "effects/flashlight001" )
+		self:SetLight( light )
+	end
+end
+
+function SWEP:UpdateLightStyle()
+	local light = self:GetLight()
+	if !IsValid( light ) then return end
+
+	local bat = self:GetBattery()
+	local style = 0//"m"
+
+	/*if bat <= 1 then
+		//style = "llelblkclekkelebeeflellfe"
+	else*/if bat <= 3 then
+		//style = "mmnjkmkmmkkjmkmmnjnkmmj"
+		style = 10
+	elseif bat <= 6 then
+		//style = "mmnkmnmmkmmnknmmnnonmmn"
+		style = 6
+	elseif bat <= 12 then
+		//style = "mmlmmnmmnmmlnmmmmnlmmln"
+		style = 1
+	end
+
+	if light.Style != style then
+		light.Style = style
+		//light:Fire( "SetPattern", style )
+		light:Fire( "SetLightStyle", style )
+		//print( "set style", self:GetOwner(), light, style )
+	end
+end
+
+local light_sprite = Material( "sprites/slc_light_sprite" )
+local light_beam = Material( "sprites/slc_light_beam" )
+
+local light_trace = {}
+light_trace.output = light_trace
+light_trace.mins = Vector( -8, -8, -3 )
+light_trace.maxs = Vector( 8, 8, 3 )
+
+function SWEP:CalcViewModelView( vm, old_pos, old_ang, pos, ang )
+	/*local id = vm:LookupAttachment( "light" )
+	if id <= 0 then return end
+
+	local owner = self:GetOwner()
+	local start = owner:EyePos()
+
+	light_trace.start = start
+	light_trace.endpos = start + owner:EyeAngles():Forward() * 50
+	light_trace.mask = MASK_SOLID
+	light_trace.filter = owner
+
+	util.TraceHull( light_trace )
+
+	if light_trace.Hit then
+		local frac = 1 - light_trace.Fraction * 1.2
+
+		if frac < 0 then
+			frac = 0
+		end
+
+		return pos - ang:Forward() * frac * 30, ang
+	end*/
 end
 
 function SWEP:PreDrawViewModel( vm, wep, ply )
-	local light = game.GetWorld():GetNWEntity( "SLCFlashlightLight" )
-	if IsValid( light ) then
-		if self:GetEnabled() then
-			light:SetRenderOrigin( vm:GetPos() )
-			light:SetRenderAngles( vm:GetAngles() )
-		else
-			light:SetRenderOrigin( Vector( 0, 0, -10000 ) )
-		end
+	if !self:GetEnabled() then return end
+
+	local light = self:GetLight()
+	if !IsValid( light ) then return end
+
+	local id = vm:LookupAttachment( "light" )
+	if id > 0 then
+		local att = vm:GetAttachment( id )
+		light:SetRenderOrigin( att.Pos )
+		light:SetRenderAngles( att.Ang )
+	else
+		light:SetRenderOrigin( vm:GetPos() )
+		light:SetRenderAngles( vm:GetAngles() )
 	end
 end
 
 local spriterenderer = {}
 local beamrenderer = {}
 
-SWEP.NWorldLight = 0
 function SWEP:DrawWorldModel()
+	self:DrawModel()
+
+	if !self:GetEnabled() then return end
+	
 	local owner = self:GetOwner()
-	if IsValid( owner ) then
-		//if !IsValid( self.WModel ) then return end
+	if !IsValid( owner ) then return end
 
-		local boneid = owner:LookupBone( self.BoneAttachment )
-		if not boneid then
-			return
-		end
+	local id = self:LookupAttachment( "light" )
+	if id <= 0 then return end
 
-		local matrix = owner:GetBoneMatrix( boneid )
-		if not matrix then
-			return
-		end
+	local att = self:GetAttachment( id )
 
-		local newpos, newang = LocalToWorld( self.WorldModelPositionOffset, self.WorldModelAngleOffset, matrix:GetTranslation(), matrix:GetAngles() )
+	local forward = att.Ang:Forward()
+	local pos = att.Pos
 
-		/*self.WModel:SetPos( newpos )
-		self.WModel:SetAngles( newang )
-		self.WModel:SetupBones()
-		self.WModel:DrawModel()*/
+	self:GetLight():SetRenderAngles( att.Ang )
 
-		self:SetRenderOrigin( newpos )
-		self:SetRenderAngles( newang )
-		self:SetupBones()
-		self:DrawModel()
+	light_trace.start = pos
+	light_trace.endpos = pos + forward * 500
+	light_trace.mask = MASK_BLOCKLOS_AND_NPCS
+	light_trace.filter = { self, owner }
 
-		if !self:GetEnabled() then
-			if self.DLight then
-				self.DLight.dietime = CurTime()
-			end
+	util.TraceLine( light_trace )
 
-			return
-		end
-
-		local forward = ( newang or self:GetAngles() ):Forward()
-		local pos = ( newpos or self:GetPos() ) + forward * 6
-		local endpos = pos + forward * self.LightDistance
-
-		local tr = util.TraceLine( {
-			start = pos - forward * 15,
-			endpos = endpos,
-			filter = { self, owner },
-			mask = MASK_BLOCKLOS_AND_NPCS
-		} )
-
-		if tr.StartSolid or tr.HitPos:DistToSqr( pos ) < 100 then return end
-
-		if self.NWorldLight < CurTime() then
-			self.NWorldLight = CurTime() + 5
-
-			local light = DynamicLight( self:EntIndex() )
-			if light then
-				light.r = 200
-				light.g = 200
-				light.b = 200
-				light.size = 196
-				light.brightness = 0.5
-				light.decay = 0
-				light.dietime = CurTime() + 6
-				light.pos = tr.HitPos
-				light.dir = newang:Forward()
-
-				self.DLight = light
-			end
-		end
-
-		if self.DLight then
-			self.DLight.pos = tr.HitPos - forward * 10 + tr.HitNormal * 15
-		end
-		
-		local dot = ( LocalPlayer():EyePos() - pos ):GetNormalized():Dot( forward )
-
-		local beamalpha = math.Clamp( 0.95 - dot, 0, 1 )
-		if beamalpha > 0 then
-			table.insert( beamrenderer, { pos, tr.HitPos, beamalpha } )
-		end
-
-		if dot < 0 then return end
-
-		local vis = util.PixelVisible( pos, 3, self.PixelVis )
-
-		local alpha = 255 * vis * ( dot - 0.22 )
-		local size = 64 * vis * ( dot + 0.1 )
-
-		alpha = math.Clamp( alpha, 0, 255 )
-		size = math.Clamp( size, 16, 48 )
-
-		//render.SetMaterial( light_sprite )
-		//render.DrawSprite( pos, size, size, Color( 255, 255, 255, alpha ) )
-		table.insert( spriterenderer, { pos, size, alpha } )
-	else
-		self:SetRenderOrigin()
-		self:SetRenderAngles()
-		self:SetupBones()
-
-		self:DrawModel()
-
-		if self.DLight then
-			self.DLight.dietime = CurTime()
-		end
-
-		return
+	if light_trace.StartSolid or light_trace.HitPos:DistToSqr( pos ) < 100 then return end
+	
+	local dot = ( LocalPlayer():EyePos() - pos ):GetNormalized():Dot( forward )
+	
+	local beamalpha = 1
+	if dot > 0.4 then
+		beamalpha = math.Clamp( ( 0.8 - dot ) / 0.4, 0, 1 )
+	end
+	
+	if beamalpha > 0 then
+		beamrenderer[#beamrenderer + 1] = { pos, light_trace.HitPos, beamalpha }
 	end
 
-	-- if !self:GetEnabled() then
-	-- 	if self.DLight then
-	-- 		self.DLight.dietime = CurTime()
-	-- 	end
+	if dot < 0 then return end
 
-	-- 	return
-	-- end
+	local vis = util.PixelVisible( pos, 3, self.PixelVis )
+	local alpha = math.Clamp( 255 * vis * ( dot - 0.4 ) / 0.6, 0, 255 )
+	local size = math.Clamp( 128 * vis * ( dot - 0.6 ) / 0.4, 32, 128 )
 
-	-- local forward = ( newang or self:GetAngles() ):Forward()
-	-- local pos = ( newpos or self:GetPos() ) + forward * 6
-	-- local endpos = pos + forward * self.LightDistance
-
-	-- local tr = util.TraceLine( {
-	-- 	start = pos - forward * 15,
-	-- 	endpos = endpos,
-	-- 	filter = { self, self.Owner },
-	-- 	mask = MASK_BLOCKLOS_AND_NPCS
-	-- } )
-
-	-- if tr.StartSolid or tr.HitPos:DistToSqr( pos ) < 100 then return end
-
-	-- if self.NWorldLight < CurTime() then
-	-- 	self.NWorldLight = CurTime() + 5
-
-	-- 	local light = DynamicLight( self:EntIndex() )
-	-- 	if light then
-	-- 		light.r = 200
-	-- 		light.g = 200
-	-- 		light.b = 200
-	-- 		light.size = 196
-	-- 		light.brightness = 0.5
-	-- 		light.decay = 0
-	-- 		light.dietime = CurTime() + 6
-	-- 		light.pos = tr.HitPos
-	-- 		light.dir = newang:Forward()
-
-	-- 		self.DLight = light
-	-- 	end
-	-- end
-
-	-- if self.DLight then
-	-- 	self.DLight.pos = tr.HitPos - forward * 10 + tr.HitNormal * 15
-	-- end
-	
-	-- local dot = ( LocalPlayer():EyePos() - pos ):GetNormalized():Dot( forward )
-
-	-- local beamalpha = math.Clamp( 0.95 - dot, 0, 1 )
-	-- if beamalpha > 0 then
-	-- 	table.insert( beamrenderer, { pos, tr.HitPos, beamalpha } )
-	-- end
-
-	-- if dot < 0 then return end
-
-	-- local vis = util.PixelVisible( pos, 3, self.PixelVis )
-
-	-- local alpha = 255 * vis * ( dot - 0.22 )
-	-- local size = 64 * vis * ( dot + 0.1 )
-
-	-- alpha = math.Clamp( alpha, 0, 255 )
-	-- size = math.Clamp( size, 16, 48 )
-
-	-- //render.SetMaterial( light_sprite )
-	-- //render.DrawSprite( pos, size, size, Color( 255, 255, 255, alpha ) )
-	-- table.insert( spriterenderer, { pos, size, alpha } )
+	spriterenderer[#spriterenderer + 1] = { pos, size, alpha }
 end
 
 hook.Add( "PostDrawOpaqueRenderables", "FlashLightSprite", function()
@@ -398,16 +303,11 @@ hook.Add( "PostDrawOpaqueRenderables", "FlashLightSprite", function()
 
 	for k, v in pairs( beamrenderer ) do
 		render.StartBeam( 2 )
-			render.AddBeam( v[1], 40, 0, Color( 255, 255, 255, 50 * v[3] ) )
-			render.AddBeam( v[2], 40, 0.97, Color( 255, 255, 255, 220 * v[3] ) )
+			render.AddBeam( v[1], 30, 0, Color( 255, 255, 255, 5 * v[3] ) )
+			render.AddBeam( v[2], 30, 0.97, Color( 255, 255, 255, 15 * v[3] ) )
 		render.EndBeam()
 	end
 
 	beamrenderer = {}
 	spriterenderer = {}
-
-	local light = game.GetWorld():GetNWEntity( "SLCFlashlightLight" )
-	if IsValid( light ) then
-		light:SetRenderOrigin( Vector( 0, 0, -10000 ) )
-	end
 end )

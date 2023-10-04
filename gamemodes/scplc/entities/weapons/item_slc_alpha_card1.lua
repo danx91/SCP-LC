@@ -1,7 +1,7 @@
 SWEP.Base 			= "item_slc_base"
 SWEP.Language 		= "ALPHA_CARD1"
 
-SWEP.WorldModel		= "models/slc/nuclear_card.mdl"
+SWEP.WorldModel		= "models/slc/nuclear_card/nuclear_card.mdl"
 
 SWEP.ShouldDrawViewModel 	= false
 SWEP.ShouldDrawWorldModel 	= false

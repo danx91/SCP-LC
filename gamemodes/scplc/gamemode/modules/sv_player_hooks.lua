@@ -1,10 +1,10 @@
 function GM:PlayerInitialSpawn( ply )
 	ply.playermeta = {}
 
+	ply:DataTables()
 	PlayerInfo( ply )
 	PlayerData( ply )
 	DamageLogger( ply )
-	ply:DataTables()
 
 	ply:CheckPremium()
 	hook.Run( "SLCPlayerMeta", ply, ply.playermeta )
@@ -18,14 +18,13 @@ function GM:PlayerInitialSpawn( ply )
 
 	timer.Simple( 15, function()
 		if !IsValid( ply ) then return end
-
 		ply:ResetDailyBonus()
 	end )
 end
 
 function GM:PlayerSpawn( ply )
-	if !ply.initialSpawn then
-		ply.initialSpawn = true
+	if !ply.InitialSpawn then
+		ply.InitialSpawn = true
 
 		ply:KillSilent()
 		ply:SetupSpectator()
@@ -34,8 +33,7 @@ function GM:PlayerSpawn( ply )
 	end
 
 	ply:SetCanZoom( false )
-	//ply:CrosshairDisable()
-	ply:CrosshairEnable()
+	
 	ply:SetCollisionGroup( COLLISION_GROUP_PASSABLE_DOOR ) //xD ??? Stupid but works!
 
 	if IsValid( ply._RagEntity ) then
@@ -94,8 +92,10 @@ end
 
 function GM:PlayerShouldTakeDamage( ply, attacker )
 	if ROUND.post then return false end
+	if ply:HasEffect( "spawn_protection" ) then return false end
 	if !attacker:IsPlayer() then return true end
 	if ROUND.preparing then return false end
+	
 
 	local t_vic = ply:SCPTeam()
 	local t_att = attacker:SCPTeam()
@@ -124,160 +124,172 @@ function GM:DoPlayerDeath( ply, attacker, dmginfo )
 	ply.StoredProperties = ply.SLCProperties
 
 	ply:DropEQ()
-	ply:CreatePlayerRagdoll()
+
+	if !ply._SkipNextRagdoll then
+		ply:CreatePlayerRagdoll()
+	end
+
+	ply._SkipNextRagdoll = false
+
 	ply:Despawn()
 
+	local txt = "[KILL] Player '"..ply:Nick().."' ["..SCPTeams.GetName( ply:SCPTeam() ).."]["..ply:SCPClass().."] has been killed by "
+
 	if attacker:IsPlayer() then
-		print( "[KILL] Player '"..ply:Nick().."' ["..SCPTeams.GetName( ply:SCPTeam() ).."] has been killed by '"..attacker:Nick().."' ["..SCPTeams.GetName( attacker:SCPTeam() ).."]" )
+		txt = txt.."'"..attacker:Nick().."' ["..SCPTeams.GetName( attacker:SCPTeam() ).."]["..attacker:SCPClass().."]"
 	elseif IsValid( attacker ) then
-		print( "[KILL] Player '"..ply:Nick().."' ["..SCPTeams.GetName( ply:SCPTeam() ).."] has been killed by '"..attacker:GetName().."' ["..attacker:GetClass().."]" )
+		txt = txt.."'"..attacker:GetName().."' ["..attacker:GetClass().."]"
 	else
-		print( "[KILL] Player '"..ply:Nick().."' ["..SCPTeams.GetName( ply:SCPTeam() ).."] has been killed by UNKNOWN" )
+		txt = txt.."UNKNOWN"
 	end
+
+	print( txt )
 
 	ply:AddDeaths( 1 )
 end
 
 function GM:PlayerDeath( victim, inflictor, attacker )
-	--TODO handle scp events
 	local pprop = victim.StoredProperties or {}
 	victim.StoredProperties = nil
 
-	if !ROUND.post then
-		AddRoundStat( "kill" )
+	if ROUND.post then return end
 
-		local killinfo = victim.Logger:GetDeathDetails()
-		if killinfo then
-			local len = #killinfo.assists
+	AddRoundStat( "kill" )
 
-			local preventrdm = false
+	local killinfo = victim.Logger:GetDeathDetails()
+	if killinfo then
+		local len = #killinfo.assists
 
-			if !IsValid( attacker ) or !attacker:IsPlayer() or victim == attacker then
-				if len > 0 then
-					local tmp = table.remove( killinfo.assists, 1 )
+		local preventrdm = false
 
-					attacker = tmp[1]
-					killinfo.killer_pct = tmp[2]
-					preventrdm = true
+		if !IsValid( attacker ) or !attacker:IsPlayer() or victim == attacker then
+			if len > 0 then
+				local tmp = table.remove( killinfo.assists, 1 )
 
-					len = len - 1
-				end
+				attacker = tmp[1]
+				killinfo.killer_pct = tmp[2]
+				preventrdm = true
+
+				len = len - 1
 			end
+		end
 
-			hook.Run( "SLCPlayerDeath", victim, attacker, killinfo.killer_pct )
+		hook.Run( "SLCPlayerDeath", victim, attacker, killinfo.killer_pct )
 
-			for i, v in ipairs( killinfo.assists ) do
-				hook.Run( "SLCKillAssist", victim, attacker, v[1], v[2] )
-			end
+		for i, v in ipairs( killinfo.assists ) do
+			hook.Run( "SLCKillAssist", victim, attacker, v[1], v[2] )
+		end
 
-			if !victim._SkipNextKillRewards then
-				//print( "PRE" )
-				//PrintTable( killinfo )
+		if !victim._SkipNextKillRewards then
+			//print( "PRE" )
+			//PrintTable( killinfo )
 
-				//print( "POST" )
-				//PrintTable( killinfo )
+			//print( "POST" )
+			//PrintTable( killinfo )
 
-				if IsValid( attacker ) and attacker:IsPlayer() and victim != attacker then
-					//local ivp = IsValid( attacker ) and attacker:IsPlayer() and victim != attacker
+			if IsValid( attacker ) and attacker:IsPlayer() and victim != attacker then
+				//local ivp = IsValid( attacker ) and attacker:IsPlayer() and victim != attacker
 
-					local t_vic = victim:SCPTeam()
-					local t_att = attacker:SCPTeam()
+				local t_vic = victim:SCPTeam()
+				local t_att = attacker:SCPTeam()
 
-					local rdm = !preventrdm and SCPTeams.IsAlly( t_vic, t_att )
-					local reward = isnumber( pprop.reward_override ) and pprop.reward_override or SCPTeams.GetReward( t_vic )
-					local tname = SCPTeams.GetName( t_vic )
+				local rdm = !preventrdm and SCPTeams.IsAlly( t_att, t_vic )
+				local reward = isnumber( pprop.reward_override ) and pprop.reward_override or SCPTeams.GetReward( t_vic )
+				local tname = SCPTeams.GetName( t_vic )
 
-					//if len > 0 and !rdm then
-						local pool = reward * 2
-						local init = pool
-						//print( "pool", victim, pool )
+				//if len > 0 and !rdm then
+					local pool = reward * 2
+					local init = pool
+					//print( "pool", victim, pool )
 
-						if len == 0 then
-							reward = pool
-						else
-							local pc = math.floor( init * killinfo.killer_pct )
-							if pc > reward then
-								reward = pc
-							end
+					if len == 0 then
+						reward = pool
+					else
+						local pc = math.floor( init * killinfo.killer_pct )
+						if pc > reward then
+							reward = pc
 						end
+					end
 
-						pool = pool - reward
+					pool = pool - reward
 
-						local rewardtab = {}
+					local rewardtab = {}
 
-						--phase 1: calculating
-						if len > 0 then
-							while pool > 0 do
-								//print( "cycle" )
-								for i = 1, len do
-									local tab = killinfo.assists[i]
-									local points = math.ceil( init * tab[2] )
+					--phase 1: calculating
+					if len > 0 then
+						while pool > 0 do
+							//print( "cycle" )
+							for i = 1, len do
+								local tab = killinfo.assists[i]
+								local points = math.ceil( init * tab[2] )
 
-									if points > pool then
-										points = pool
-									end
-
-									rewardtab[tab[1]] = ( rewardtab[tab[1]] or 0 ) + points
-									pool = pool - points
-
-									if pool <= 0 then
-										break
-									end
+								if points > pool then
+									points = pool
 								end
 
-								if pool > 0 then
-									reward = reward + 1
-									pool = pool - 1
+								rewardtab[tab[1]] = ( rewardtab[tab[1]] or 0 ) + points
+								pool = pool - points
+
+								if pool <= 0 then
+									break
 								end
 							end
-						end
 
-						//print( "kill", attacker, reward, rdm )
-
-						--phase 2: giving
-						if rdm then
-							AddRoundStat( "rdm" )
-
-							local n = math.min( reward, attacker:Frags() )
-							PlayerMessage( string.format( "rdm$%d,%s,%s#200,25,25", reward, "@TEAMS."..tname, EscapeMessage( victim:Nick() ) ), attacker )
-							attacker:AddFrags( -n )
-						else
-							PlayerMessage( string.format( "kill$%d,%s,%s", reward, "@TEAMS."..tname, EscapeMessage( victim:Nick() ) ), attacker )
-							attacker:AddFrags( reward )
-						end
-
-						for k, v in pairs( rewardtab ) do
-							local override, points = hook.Run( "SLCAssistReward", k, victim, v )
-
-							if !override then
-								if points then
-									v = points
-								end
-
-								PlayerMessage( string.format( "assist$%d,%s", v, EscapeMessage( victim:Nick() ) ), k )
-								k:AddFrags( v )
-								//print( "assist", k, v )
-							//else
-								//print( "" )
+							if pool > 0 then
+								reward = reward + 1
+								pool = pool - 1
 							end
 						end
-					//else
-						//if rdm then
-							//AddRoundStat( "rdm" )
+					end
 
-							//local n = math.min( reward, attacker:Frags() )
-							//PlayerMessage( string.format( "rdm$%d,%s,%s#200,25,25", reward, "@TEAMS."..tname, EscapeMessage( victim:Nick() ) ), attacker )
-							//attacker:AddFrags( -n )
+					//print( "kill", attacker, reward, rdm )
+					//print( t_att, t_vic, SCPTeams.IsAlly( t_att, t_vic ), SCPTeams.IsEnemy( t_att, t_vic ), SCPTeams.IsNeutral( t_att, t_vic ) )
+
+					--phase 2: giving
+					if rdm then
+						AddRoundStat( "rdm" )
+
+						local n = math.min( reward, attacker:Frags() )
+						PlayerMessage( string.format( "rdm$%d,%s,%s#200,25,25", reward, "@TEAMS."..tname, EscapeMessage( victim:Nick() ) ), attacker )
+						attacker:AddFrags( -n )
+					elseif SCPTeams.IsEnemy( t_att, t_vic ) then
+						PlayerMessage( string.format( "kill$%d,%s,%s", reward, "@TEAMS."..tname, EscapeMessage( victim:Nick() ) ), attacker )
+						attacker:AddFrags( reward )
+					else
+						PlayerMessage( string.format( "kill_n$%s,%s", "@TEAMS."..tname, EscapeMessage( victim:Nick() ) ), attacker )
+					end
+
+					for k, v in pairs( rewardtab ) do
+						local override, points = hook.Run( "SLCAssistReward", k, victim, v )
+
+						if !override then
+							if points then
+								v = points
+							end
+
+							PlayerMessage( string.format( "assist$%d,%s", v, EscapeMessage( victim:Nick() ) ), k )
+							k:AddFrags( v )
+							//print( "assist", k, v )
 						//else
-							//PlayerMessage( string.format( "kill$%d,%s,%s", reward * 2, "@TEAMS."..tname, EscapeMessage( victim:Nick() ) ), attacker )
-							//attacker:AddFrags( reward * 2 )
-						//end
+							//print( "" )
+						end
+					end
+				//else
+					//if rdm then
+						//AddRoundStat( "rdm" )
+
+						//local n = math.min( reward, attacker:Frags() )
+						//PlayerMessage( string.format( "rdm$%d,%s,%s#200,25,25", reward, "@TEAMS."..tname, EscapeMessage( victim:Nick() ) ), attacker )
+						//attacker:AddFrags( -n )
+					//else
+						//PlayerMessage( string.format( "kill$%d,%s,%s", reward * 2, "@TEAMS."..tname, EscapeMessage( victim:Nick() ) ), attacker )
+						//attacker:AddFrags( reward * 2 )
 					//end
-				end
-			else
-				victim._SkipNextKillRewards = false
-				print( "Skipping rewards", victim )
+				//end
 			end
+		else
+			victim._SkipNextKillRewards = false
+			print( "Skipping rewards", victim )
 		end
 	end
 
@@ -325,7 +337,7 @@ function GM:PlayerDeathThink( ply )
 			InfoScreen( ply, override.type, INFO_SCREEN_DURATION, override.args, ply:GetProperty( "last_team" ), ply:GetProperty( "last_class" ) )
 		else
 			local kill = ply.Logger:GetDeathDetails()
-			local msg = "unknown"
+			local msg = { "unknown" }
 			//local data
 
 			/*local cause = ply:GetProperty( "death_cause_override" )
@@ -338,11 +350,23 @@ function GM:PlayerDeathThink( ply )
 			else*/
 				if IsValid(  kill.killer ) then
 					if kill.killer == ply then
-						msg = "suicide"
+						msg = { "suicide" }
 					elseif kill.killer:IsPlayer() then
-						msg = { "killed_by", "text;"..EscapeMessage( kill.killer:Nick() ) }
+						local kteam = kill.killer:SCPTeam()
+
+						if kteam == TEAM_SPEC then
+							kteam = kill.killer:GetProperty( "last_team" )
+						end
+
+						msg = {
+							{ "killed_by", "text;"..EscapeMessage( kill.killer:Nick() ) },
+						}
+
+						if kteam and kteam != TEAM_SPEC then
+							table.insert( msg, { "killer_t", "team;"..kteam } )
+						end
 					else
-						msg = "hazard"
+						msg = { "hazard" }
 					end
 				end
 			--end
@@ -351,7 +375,7 @@ function GM:PlayerDeathThink( ply )
 				data = { msg }
 			end*/
 
-			InfoScreen( ply, "dead", INFO_SCREEN_DURATION, { msg }, ply:GetProperty( "last_team" ), ply:GetProperty( "last_class" ) )
+			InfoScreen( ply, "dead", INFO_SCREEN_DURATION, msg, ply:GetProperty( "last_team" ), ply:GetProperty( "last_class" ) )
 		end
 	elseif ply.DeathScreen and ply.DeathScreen < CurTime() then
 		ply.DeathScreen = nil
@@ -380,75 +404,6 @@ function GM:PlayerSwitchFlashlight( ply, enabled )
 	return !enabled
 end
 
---[[-------------------------------------------------------------------------
-SCP "chase" effect
----------------------------------------------------------------------------]]
-/*local NTerror = 0
-hook.Add( "Think", "ApplyTerror", function()
-	if NTerror < CurTime() then
-		NTerror = CurTime() + 5
-
-		for k, v in pairs( player.GetAll() ) do
-			v.TerrorPower = 0
-		end
-
-		for k, v in pairs( SCPTeams.GetPlayersByTeam( TEAM_SCP ) ) do
-			if v:GetSCPTerror() then
-				for k, ply in pairs( FindInCylinder( v:GetPos(), 1500, -128, 128, nil, nil, player.GetAll() ) ) do
-					local t = ply:SCPTeam()
-
-					if t != TEAM_SCP and t != TEAM_SPEC then
-						ply.TerrorPower = ply.TerrorPower + 1
-						ply.NDoorLockRem = CurTime() + 10
-					end
-				end
-			end
-		end
-	end
-end )
-
-hook.Add( "Think", "DoorLockThink", function()
-	for k, v in pairs( player.GetAll() ) do
-		if !v.NDoorLockRem then v.NDoorLockRem = 0 end
-
-		if v.NDoorLockRem > 0 and v.NDoorLockRem < CurTime() then
-			v.NDoorLockRem = 0
-			v.DoorHistory = 0
-		end
-	end
-end )
-
-function GM:AcceptInput( ent, input, activator, caller, value )
-	if STORED_DOORS and STORED_DOORS[ent] then
-		if IsValid( activator ) and activator:IsPlayer() then
-
-			local t = activator:SCPTeam()
-			if t != TEAM_SCP and t != TEAM_SPEC then
-				for k, ply in pairs( FindInCylinder( activator:GetPos(), 500, -128, 128, nil, nil, player.GetAll() ) ) do
-					if ply.TerrorPower and ply.TerrorPower > 0 then
-						if !ply.DoorHistory then ply.DoorHistory = 0 end
-
-						local pt = ply:SCPTeam()
-						if pt != TEAM_SCP and pt != TEAM_SPEC then
-							ply.DoorHistory = ply.DoorHistory + 1
-
-							if ply.DoorHistory >= 8 then
-								ply.DoorHistory = 0
-
-								if !ply:GetSCP096Chase() then
-									ply:ApplyEffect( "doorlock" )
-									ply.DoorLock = CurTime() + 10
-									ply.NUse = CurTime() + 2.5
-								end
-							end
-						end
-					end
-				end
-			end
-		end
-	end
-end*/
-
 function GM:PlayerUse( ply, ent )
 	if ply:SCPTeam() == TEAM_SPEC or ply:IsAboutToSpawn() then return false end
 
@@ -462,7 +417,7 @@ function GM:PlayerUse( ply, ent )
 	if !ent.LootingDisabled and ply:IsHuman() and ent:InstanceOf( "Lootable" ) then
 		ent:OpenInventory( ply )
 		ply.NextSLCUse = ct + 1.5
-		return
+		return false
 	end
 
 	--Override hook
@@ -474,6 +429,10 @@ function GM:PlayerUse( ply, ent )
 	end
 
 	if result then
+		if !data then
+			BUTTONS_CACHE[ent] = result
+		end
+
 		data = result
 	end
 
@@ -482,7 +441,21 @@ function GM:PlayerUse( ply, ent )
 		ent.ButtonCacheChecked = true
 
 		local pos = ent:GetPos()
+		local name = ent:GetName()
+		local map_id = ent:MapCreationID()
 		for _, v in pairs( BUTTONS ) do
+			if v.ent_name and v.ent_name == name then
+				data = v
+				RegisterButton( v, ent, true )
+				break
+			end
+
+			if v.ent_id and v.ent_id == map_id then
+				data = v
+				RegisterButton( v, ent, true )
+				break
+			end
+
 			local btn_pos = v.pos
 
 			if istable( btn_pos ) then
@@ -493,7 +466,6 @@ function GM:PlayerUse( ply, ent )
 						data = v
 						RegisterButton( v, ent, true )
 						registered = true
-						//print( "tab reg" )
 						break
 					end
 				end
@@ -528,7 +500,7 @@ function GM:PlayerUse( ply, ent )
 			return false
 		end
 
-		if data.warhead_lockdown and GetRoundStat( "warhead_lockdown" ) then
+		if data.warhead_lockdown and GetRoundProperty( "warhead_lockdown" ) then
 			return false
 		end
 
@@ -550,6 +522,16 @@ function GM:PlayerUse( ply, ent )
 			return true
 		end
 
+		if istable( data.decon_override ) then
+			for i, v in ipairs( data.decon_override ) do
+				if GetGasPower( v ) > 0 then
+					return true
+				end
+			end
+		elseif data.decon_override and GetGasPower( data.decon_override ) > 0 then
+			return true
+		end
+
 		if !data.suppress_check then
 			local handle_result = HandleButtonUse( ply, ent, data )
 
@@ -567,10 +549,23 @@ function GM:PlayerUse( ply, ent )
 end
 
 function GM:AcceptInput( ent, input, activator, caller, data )
-	if string.lower( input ) == "use" then
-		if ent:GetClass() == "func_button" then
-			local btn_data = BUTTONS_CACHE[ent]
-			ent.NextSLCUse = CurTime() + ( btn_data and btn_data.cooldown or ent.UseCooldown or 3.5 )
+	//print( "INPUT", ent, ent:GetName(), input, activator, caller, data )
+
+	local catch = SLC_CATCH_INPUT[ent]
+	if catch and catch( ent, input, activator, caller, data ) == true then
+		return true
+	end
+
+	local btn_data = BUTTONS_CACHE[ent]
+
+	if btn_data and btn_data.accept_input and btn_data.accept_input( ent, input, activator, caller, data ) == true then
+		return true
+	end
+
+	if string.lower( input ) == "use" and ( ent:GetClass() == "func_button" or btn_data and btn_data.cooldown or ent.UseCooldown ) then
+		local new = CurTime() + ( btn_data and btn_data.cooldown or ent.UseCooldown or 2.5 )
+		if !ent.NextSLCUse or new > ent.NextSLCUse then
+			ent.NextSLCUse = new
 		end
 	end
 end
@@ -600,6 +595,8 @@ function GM:PlayerCanHearPlayersVoice( listener, talker )
 	--spec
 	if t_tal == TEAM_SPEC then
 		return t_lis == TEAM_SPEC
+	elseif listener:GetObserverMode() == OBS_MODE_ROAMING then
+		return false
 	end
 
 	--scp
@@ -634,12 +631,3 @@ end
 function GM:PlayerCanPickupItem( ply, item )
 	return false
 end
-
-hook.Add( "SetupPlayerVisibility", "CCTVPVS", function( ply, viewentity )
-	local wep = ply:GetActiveWeapon()
-	if IsValid( wep ) and wep:GetClass() == "item_slc_camera" then
-		if wep:GetEnabled() and IsValid( CCTV[wep:GetCAM()].ent ) then
-			AddOriginToPVS( CCTV[wep:GetCAM()].pos )
-		end
-	end
-end )

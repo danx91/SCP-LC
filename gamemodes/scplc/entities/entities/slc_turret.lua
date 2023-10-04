@@ -4,10 +4,12 @@ ENT.Type = "anim"
 ENT.RenderGroup = RENDERGROUP_BOTH
 
 ENT.Modes = {
-	{ "off" },
-	{ "filter" },
-	{ "all" },
-	{ "supp" },
+	{ "off", "slc/misc/turret/off.png" },		--off
+	{ "filter", "slc/misc/turret/not_staff.png" },	--filter staff
+	{ "target", "slc/misc/turret/staff.png" },	--only staff
+	{ "scp", "slc/misc/turret/scp.png" },		--scp only
+	{ "all", "slc/misc/turret/all.png" },		--all
+	{ "supp", "slc/misc/turret/supp.png" },		--suppressive
 }
 
 local STATUS_IDLE = 0
@@ -106,8 +108,7 @@ function ENT:Think()
 
 	if status != STATUS_IDLE and self:GetStatusTime() < ct then
 		if status == STATUS_STOP then
-			if IsValid( self.PickedBy ) then
-				local ply = self.PickedBy
+			if IsValid( ply ) then
 
 				self.PickedBy = nil
 				ply.PickingTurret = nil
@@ -153,9 +154,7 @@ function ENT:Think()
 
 		if status == STATUS_IDLE and mode != 1 then
 			local searching = false
-
 			local target = self:FindTarget( self.CurrentTarget )
-
 			if target then
 				self.CurrentTarget = target
 
@@ -170,7 +169,7 @@ function ENT:Think()
 				if self.NFireBullets <= ct then
 					if 2 * math.pi * line:Length2D() * math.abs( ang.y - self.PredictedAngle.y ) / 360 < 5 then
 						local attacker = self:GetTurretOwner() //self.LastUser
-						if !IsValid( attacker ) or attacker:SCPClass() != "tech" then
+						if !IsValid( attacker ) or !attacker:CheckSignature( self:GetOwnerSignature() )  then
 							attacker = self
 						end
 
@@ -181,12 +180,12 @@ function ENT:Think()
 							AmmoType = "",
 							Tracer = 1,
 							TracerName = "Tracer",
-							Damage = 6,
+							Damage = 9,
 							Force = 1,
 							Num = 1,
 							//Distance = ,
 							HullSize = 0,
-							Spread = mode == 4 and Vector( 0.07, 0.07, 0 ) or Vector( 0.012, 0.012, 0 ),
+							Spread = mode == 6 and Vector( 0.07, 0.07, 0 ) or Vector( 0.011, 0.011, 0 ),
 							IgnoreEntity = self
 						}
 
@@ -205,7 +204,7 @@ function ENT:Think()
 							util.Effect( "MuzzleEffect", effect, true, true )
 						--end
 
-						self.NFireBullets = ct + ( mode == 4 and 0.1 or 0.28 )
+						self.NFireBullets = ct + ( mode == 6 and 0.075 or 0.25 )
 					end
 				end
 
@@ -278,19 +277,19 @@ function ENT:Think()
 		if self:GetStatus() == STATUS_IDLE and self:GetMode() > 1 then
 			local att = self:GetAttachment( self:LookupAttachment( "laser" ) )
 			if att then
-				local pos = att.Pos + Vector( 0, 0, 1.5 )
+				local a_pos = att.Pos + Vector( 0, 0, 1.5 )
 
 				local ma = self:GetManipulateBoneAngles( 1 )
-				local ang = Angle( ma.r, ma.p, 0 ) + self:GetAngles()
+				local a_ang = Angle( ma.r, ma.p, 0 ) + self:GetAngles()
 
 				local laser_tr = util.TraceLine{
-					start = pos,
-					endpos = pos + ang:Forward() * 5000,
+					start = a_pos,
+					endpos = a_pos + a_ang:Forward() * 5000,
 					filter = self,
 					mask = MASK_BLOCKLOS_AND_NPCS,
 				}
 
-				laser_draw[self] = { pos, laser_tr.HitPos }
+				laser_draw[self] = { a_pos, laser_tr.HitPos }
 			end
 		end
 	end
@@ -311,11 +310,11 @@ function ENT:CSUse( ply )
 			if self:GetStatus() == STATUS_IDLE then
 				if self.LCSUse == 0 then
 					local mode = self:GetMode()
-					local options = { { "", LANG.WEAPONS.TURRET.pickup or "pickup", 0 } }
+					local options = { { "slc/misc/turret/pickup.png", LANG.WEAPONS.TURRET.pickup or "pickup", 0 } }
 
 					for i, v in ipairs( self.Modes ) do
 						if i != mode then
-							table.insert( options, { "", LANG.WEAPONS.TURRET.MODES[v[1]] or v[1], i } )
+							table.insert( options, { v[2], LANG.WEAPONS.TURRET.MODES[v[1]] or v[1], i } )
 						end
 					end
 
@@ -327,7 +326,7 @@ function ENT:CSUse( ply )
 						end
 					end, function()
 						return !IsValid( self ) or self.LCSUse + 1 < ct --!ply:KeyDown( IN_USE )
-					end )
+					end, "slc/misc/turret/exit.png" )
 				end
 
 				self.LCSUse = ct
@@ -349,7 +348,7 @@ function ENT:OnTakeDamage( dmginfo )
 		explosion:Spawn()
 		explosion:Fire( "explode", "", 0 )
 
-		for k, v in pairs( ents.FindInSphere( pos, 200) ) do
+		for i, v in ipairs( ents.FindInSphere( pos, 200) ) do
 			if v:IsPlayer() and v:SCPTeam() != TEAM_SPEC then
 				local dist = v:GetPos():Distance( pos )
 
@@ -420,7 +419,7 @@ if SERVER then
 			pos = pos + offset
 		end*/
 
-		debugoverlay.Axis( pos, Angle( 0, 0, 0), 5, 0.1, true )
+		//debugoverlay.Axis( pos, Angle( 0, 0, 0), 5, 0.1, true )
 
 		local ang = (pos - shoot_pos):Angle() - shoot_ang
 		ang:Normalize()
@@ -441,22 +440,28 @@ if SERVER then
 		return false
 	end
 
+	local function test_target( model, mode, ply )
+		if mode == 2 then return !SLC_TURRET_FILTER_MODELS[model] end
+		if mode == 3 then return SLC_TURRET_FILTER_MODELS[model] end
+		if mode == 4 then return ply:SCPTeam() == TEAM_SCP end
+
+		return true
+	end
+
 	function ENT:FindTarget( ply )
 		local mode = self:GetMode()
 		if mode > 1 then
 			local shoot_pos = self:GetPos()
 			local shoot_ang = self:GetAngles()
 
-			if IsValid( ply ) then
-				if mode != 2 or !SLC_TURRET_FILTER_MODELS[ply:GetModel()] then
-					if turret_test_range_vis( self, ply, shoot_pos, shoot_ang, self.VerticalRange, self.HorizontalRange ) then
-						return ply
-					end
+			if IsValid( ply ) and ply:Alive() and test_target( ply:GetModel(), mode, ply ) then
+				if turret_test_range_vis( self, ply, shoot_pos, shoot_ang, self.VerticalRange, self.HorizontalRange ) then
+					return ply
 				end
 			end
 
-			for k, v in pairs( SCPTeams.GetPlayersByInfo( SCPTeams.INFO_ALIVE, true ) ) do
-				if mode != 2 or !SLC_TURRET_FILTER_MODELS[v:GetModel()] then
+			for i, v in ipairs( SCPTeams.GetPlayersByInfo( SCPTeams.INFO_ALIVE, true ) ) do
+				if test_target( v:GetModel(), mode, v ) then
 					if turret_test_range_vis( self, v, shoot_pos, shoot_ang, self.VerticalRange, self.HorizontalRange ) then
 						return v
 					end
@@ -466,10 +471,11 @@ if SERVER then
 	end
 
 	AddTurretFilterModels( SCI_MODELS )
+	AddTurretFilterModels( SCI_MODELS_2 )
 	AddTurretFilterModels( MTF_MODELS )
 	AddTurretFilterModels( GUARD_MODELS )
-	AddTurretFilterModels( { "models/scp/guard_sci.mdl", "models/scp/soldier_1.mdl", "models/scp/guard_noob.mdl", "models/scp/guard_left.mdl", "models/scp/guard_med.mdl",
-		"models/player/pmc_4/pmc__07.mdl", "models/scp/soldier_3.mdl", "models/scp/captain.mdl", "models/player/kerry/class_securety.mdl" } )
+	AddTurretFilterModels( { "models/scp/guard_med.mdl", "models/alski/mtfsupport/mtf1.mdl", "models/alski/mtfsupport/mtf_medyk.mdl", "models/scp/captain.mdl",
+		"models/alski/mtfsupport/saper_mtf.mdl" } )
 
 	net.ReceivePing( "SLCTurretMode", function( data, ply )
 		local ent = ply:GetEyeTrace().Entity
@@ -482,6 +488,7 @@ if SERVER then
 end
 
 if CLIENT then
+	local color_laser = Color( 255, 0, 0 )
 	local mat_laser = CreateMaterial( "SLCTurretLaser14", "UnlitGeneric", {
 		["$basetexture"] = "sprites/laser",
 		["$additive"] = "1",
@@ -497,14 +504,14 @@ if CLIENT then
 		--if self:GetStatus() == STATUS_IDLE and self:GetMode() > 1 then
 		if laser_draw[self] then
 			render.SetMaterial( mat_laser )
-			render.DrawBeam( laser_draw[self][1], laser_draw[self][2], 5, 0, 1, Color( 255, 0, 0 ) )
+			render.DrawBeam( laser_draw[self][1], laser_draw[self][2], 5, 0, 1, color_laser )
 		end
 	end
 
-	hook.Add( "PostDrawOpaqueRenderables", "SLCTurretLaser", function()
+	hook.Add( "PreDrawEffects", "SLCTurretLaser", function()
 		for k, v in pairs( laser_draw ) do
 			render.SetMaterial( mat_laser )
-			render.DrawBeam( v[1], v[2], 5, 0, 1, Color( 255, 0, 0 ) )
+			render.DrawBeam( v[1], v[2], 5, 0, 1, color_laser )
 
 			laser_draw[k] = nil
 		end
@@ -512,20 +519,20 @@ if CLIENT then
 end
 
 hook.Add( "StartCommand", "SLCTurretENTCMD", function( ply, cmd )
-	if ply.PickingTurret then
-		if IsValid( ply.PickingTurret ) and ply.PickingTurret.PickedBy == ply then
-			if ply:GetPos():DistToSqr( ply.PickingTurret:GetPos() ) <= 5625 then
-				cmd:ClearMovement()
-				cmd:ClearButtons()
-			else
-				//print( "REM - dist (cmd)" )
-				ply.PickingTurret.PickedBy = nil
-				ply.PickingTurret = nil
-			end
+	if !ply.PickingTurret then return end
+
+	if IsValid( ply.PickingTurret ) and ply.PickingTurret.PickedBy == ply then
+		if ply:GetPos():DistToSqr( ply.PickingTurret:GetPos() ) <= 5625 then
+			cmd:ClearMovement()
+			cmd:ClearButtons()
 		else
-			//print( "REM - not valid (cmd)" )
+			//print( "REM - dist (cmd)" )
+			ply.PickingTurret.PickedBy = nil
 			ply.PickingTurret = nil
 		end
+	else
+		//print( "REM - not valid (cmd)" )
+		ply.PickingTurret = nil
 	end
 end )
 

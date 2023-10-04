@@ -1,8 +1,9 @@
 SWEP.Base 					= "item_slc_base"
 SWEP.Language 				= "MEDKIT"
 
-
 SWEP.WorldModel				= "models/mishka/models/firstaidkit.mdl"
+
+SWEP.ShouldDrawWorldModel 	= false
 SWEP.ShouldDrawViewModel 	= false
 
 SWEP.Primary.Automatic 		= true
@@ -12,6 +13,8 @@ if CLIENT then
 	SWEP.WepSelectIcon = Material( "slc/items/medkit.png" )
 	SWEP.SelectColor = Color( 255, 210, 0, 255 )
 end
+
+SWEP.scp914upgrade = "item_slc_medkitplus"
 
 SWEP.HealDmg 	= 40
 SWEP.HealRand 	= 10
@@ -83,7 +86,7 @@ function SWEP:Think()
 
 		local hp = math.min( target:Health() + heal, target:GetMaxHealth() )
 		target:SetHealth( hp )
-		hook.Run( "SLCHealed", target, owner, hp )
+		hook.Run( "SLCHealed", target, owner, heal )
 
 		local charges = self:GetCharges() - 1
 		self:SetCharges( charges )
@@ -170,10 +173,11 @@ function SWEP:IsValidHealTarget( ply )
 end
 
 function SWEP:Heal( ply, key )
-	local owner = self:GetOwner()
-
 	if !self:IsValidHealTarget( ply ) then return end
-	if hook.Run( "SLCCanHeal", owner, ply, "medkit" ) == false then return end
+	
+	local owner = self:GetOwner()
+	if hook.Run( "SLCCanHeal", ply, owner, "medkit" ) == false then return end
+	if hook.Run( "SLCNeedHeal", ply, owner, "medkit" ) != true and ply:GetMaxHealth() - ply:Health() < 10 then return end
 
 	if SERVER then
 		self.LastOwner = owner
@@ -190,12 +194,6 @@ function SWEP:Heal( ply, key )
 	self:SetHealEnd( CurTime() + self.HealTime )
 end
 
-function SWEP:DrawWorldModel()
-	if !IsValid( self:GetOwner() ) then
-		self:DrawModel()
-	end
-end
-
 function SWEP:DrawHUD()
 	if hud_disabled then return end
 
@@ -203,7 +201,7 @@ function SWEP:DrawHUD()
 	local ct = CurTime()
 	if heal_end > ct then
 		draw.NoTexture()
-		surface.SetDrawColor( Color( 255, 255, 255 ) )
+		surface.SetDrawColor( 255, 255, 255 )
 		surface.DrawRing( ScrW() * 0.5, ScrH() * 0.5, 30, 6, 360, 40, 1 - ( heal_end - ct ) / self.HealTime )
 	end
 end

@@ -2,48 +2,46 @@ hook.Add( "PlayerPostThink", "SLCSanity", function( ply )
 	if !ply.NSanity then ply.NSanity = 0 end
 	if !ply.NSanityRegen then ply.NSanityRegen = 0 end
 
-	if SCPTeams.HasInfo( ply:SCPTeam(), SCPTeams.INFO_HUMAN ) then
-		if ply.NSanity < CurTime() then
-			ply.NSanity = CurTime() + 10
+	if !SCPTeams.HasInfo( ply:SCPTeam(), SCPTeams.INFO_HUMAN ) then return end
+	if ply.NSanity < CurTime() then
+		ply.NSanity = CurTime() + 10
 
-			if hook.Run( "SLCCalcSanity", ply ) != true then
-				local sum = 0
-				local num = 0
+		if hook.Run( "SLCCalcSanity", ply ) != true then
+			local sum = 0
+			local num = 0
 
-				for k, v in pairs( FindInCylinder( ply:GetPos(), 500, 0, 128, nil, nil, player.GetAll() ) ) do
-					if v != ply and SCPTeams.HasInfo( v:SCPTeam(), SCPTeams.INFO_HUMAN ) then
-						local f = v:GetSanity() / v:GetMaxSanity()
+			for i, v in ipairs( FindInCylinder( ply:GetPos(), 500, 0, 128, nil, nil, player.GetAll() ) ) do
+				if v == ply or !SCPTeams.HasInfo( v:SCPTeam(), SCPTeams.INFO_HUMAN ) then continue end
+				local f = v:GetSanity() / v:GetMaxSanity()
 
-						if f < 0.2 or f >= 0.9 then
-							num = num + 2
-							sum = sum + 2 * f
-						else
-							num = num + 1
-							sum = sum + f
-						end
-					end
-				end
-
-				local sanity = ply:GetSanity()
-				local maxsanity = ply:GetMaxSanity()
-				local target = math.ceil( maxsanity * ( sum / num ) )
-				local diff = target - sanity
-
-				if math.abs( diff ) > 10 then
-					sanity = math.Clamp( math.floor( sanity + diff * 0.1 ), 0, maxsanity )
-					ply:SetSanity( sanity )
-				end
-
-				if sanity / maxsanity < 0.1 and !ply:HasEffect( "insane" ) then
-					ply:ApplyEffect( "insane" )
+				if f < 0.2 or f >= 0.9 then
+					num = num + 2
+					sum = sum + 2 * f
+				else
+					num = num + 1
+					sum = sum + f
 				end
 			end
 
-			if ply.NSanityRegen < CurTime() then
-				ply.NSanityRegen = CurTime() + 30
+			local sanity = ply:GetSanity()
+			local maxsanity = ply:GetMaxSanity()
+			local target = math.ceil( maxsanity * ( sum / num ) )
+			local diff = target - sanity
 
-				ply:AddSanity( 1 )
+			if math.abs( diff ) > 10 then
+				sanity = math.Clamp( math.floor( sanity + diff * 0.1 ), 0, maxsanity )
+				ply:SetSanity( sanity )
 			end
+
+			if sanity == 0 and !ply:HasEffect( "insane" ) then
+				ply:ApplyEffect( "insane" )
+			end
+		end
+
+		if ply.NSanityRegen < CurTime() then
+			ply.NSanityRegen = CurTime() + 5
+
+			ply:AddSanity( 1 )
 		end
 	end
 end )
@@ -56,9 +54,9 @@ function AddSanityType( name, func )
 	sanity_callback[id] = func
 end
 
-local ply = FindMetaTable( "Player" )
+local PLAYER = FindMetaTable( "Player" )
 
-function ply:TakeSanity( num, sanitytype, data )
+function PLAYER:TakeSanity( num, sanitytype, data )
 	if !SCPTeams.HasInfo( self:SCPTeam(), SCPTeams.INFO_HUMAN ) then return end
 
 	local new = hook.Run( "SLCPlayerSanityChange", self, sanitytype, num, data )
@@ -71,8 +69,10 @@ function ply:TakeSanity( num, sanitytype, data )
 		num = new
 	end
 
-	if SCPTeams.HasInfo( self:SCPTeam(), sanitytype ) then
-		num = num * 2
+	if sanitytype then
+		if SCPTeams.HasInfo( self:SCPTeam(), sanitytype ) then
+			num = num * 2
+		end
 	end
 
 	//print( "taking sanity", self, sanitytype, math.ceil( num ) )
@@ -107,9 +107,11 @@ function SanityEvent( amount, sanitytype, origin, distance, inflictor, victim )
 
 	hook.Run( "SLCOnSanityEvent", tab, sanitytype, inflictor, victim )
 
-	local cb = sanity_callback[sanitytype]
-	if cb then
-		cb( tab, inflictor, victim )
+	if sanitytype then
+		local cb = sanity_callback[sanitytype]
+		if cb then
+			cb( tab, inflictor, victim )
+		end
 	end
 
 	for k, v in pairs( tab ) do
@@ -133,8 +135,7 @@ AddSanityType( "DEATH", function( data, inflictor, victim )
 			v.sanitytype = SANITY_TYPE.ANOMALY
 		elseif v.ply == inflictor and v.sanitytype == SANITY_TYPE.DEATH then
 			local wep = victim:GetActiveWeapon()
-
-			if !IsValid( wep ) or !string.match( wep:GetClass(), "^cw_" ) then
+			if !IsValid( wep ) or !SLC_WEAPONS_REG[wep:GetClass()] then
 				table.insert( data, {
 					ply = v.ply,
 					sanitytype = SANITY_TYPE.KILL,

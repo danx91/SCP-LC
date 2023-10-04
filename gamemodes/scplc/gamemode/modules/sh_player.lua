@@ -25,23 +25,29 @@ function GM:PlayerButtonDown( ply, button )
 			end
 
 			ply.SLCAFKTimer = rt
+			ply.AFKWarned = false
 		end
 	end
 
 	if CLIENT and IsFirstTimePredicted() then
-		if button == GetBindButton( "eq_button" ) then
+		SLCAFKWarning = false
+
+		if button == GetBindButton( "eq_button" ) and hook.Run( "SLCCanUseBind", "eq" ) != false then
+
 			if CanShowEQ() then
 				ShowEQ()
 			end
 
+			HUDDrawInfo = true
+
 			if ply:SCPTeam() == TEAM_SPEC then
 				HUDSpectatorInfo = true
 			end
-		elseif button == GetBindButton( "upgrade_tree_button" ) then
+		elseif button == GetBindButton( "upgrade_tree_button" ) and hook.Run( "SLCCanUseBind", "scp_tree" ) != false then
 			ShowSCPUpgrades()
-		elseif button == GetBindButton( "ppshop_button" ) then
+		elseif button == GetBindButton( "ppshop_button" ) and hook.Run( "SLCCanUseBind", "class_viewer" ) != false then
 			OpenClassViewer()
-		elseif button == GetBindButton( "settings_button" ) then
+		elseif button == GetBindButton( "settings_button" ) and hook.Run( "SLCCanUseBind", "settings" ) != false then
 			OpenSettingsWindow()
 		end
 	end
@@ -55,6 +61,8 @@ function GM:PlayerButtonUp( ply, button )
 			if IsEQVisible() then
 				HideEQ()
 			end
+
+			HUDDrawInfo = false
 
 			if ply:SCPTeam() == TEAM_SPEC then
 				HUDSpectatorInfo = false
@@ -72,7 +80,7 @@ function GM:KeyPress( ply, key )
 				ply:SpectatePlayerNext()
 			elseif key == IN_ATTACK2 then
 				ply:SpectatePlayerPrev()
-			elseif key == IN_JUMP or key == IN_RELOAD then
+			elseif key == IN_RELOAD then
 				ply:ChangeSpectateMode()
 			end
 		end
@@ -106,6 +114,13 @@ if CLIENT then
 end
 
 function GM:StartCommand( ply, cmd )
+	if ply:Alive() and !IsValid( ply:GetActiveWeapon() ) then
+		local holster = ply:GetWeapon( "item_slc_holster" )
+		if IsValid( holster ) then
+			cmd:SelectWeapon( holster )
+		end
+	end
+
 	if ply.GetDisableControls and ply:GetDisableControls() then
 		cmd:ClearMovement()
 
@@ -127,9 +142,11 @@ function GM:StartCommand( ply, cmd )
 		ply.DisableControlsAngle = nil
 	end
 
-	if SERVER and ply:IsAboutToSpawn() then
-		cmd:ClearMovement()
-		cmd:ClearButtons()
+	if SERVER then
+		if ply:IsAboutToSpawn() then
+			cmd:ClearMovement()
+			cmd:ClearButtons()
+		end
 	end
 end
 
@@ -147,14 +164,14 @@ end
 
 function GM:PlayerCanPickupWeapon( ply, wep )
 	local t = ply:SCPTeam()
-
 	if t == TEAM_SPEC then return false end
+
 	if #ply:GetWeapons() >= ply:GetInventorySize() then
-		if wep.Stacks and wep.Stacks <= 1 then return false end
+		if wep.Stacks and wep.Stacks <= 1 then return false, "max_eq" end
 
 		local pwep = ply:GetWeapon( wep:GetClass() )
 		if !IsValid( pwep ) then return false end
-		if pwep.CanStack and !pwep:CanStack() then return false end
+		if pwep.CanStack and !pwep:CanStack() then return false, "cant_stack" end
 	end
 
 	if t == TEAM_SCP then
@@ -171,33 +188,41 @@ function GM:PlayerCanPickupWeapon( ply, wep )
 		return false
 	end
 
-	if hook.Run( "SLCCanPickupWeaponClass", ply, wep:GetClass() ) == false then
-		return false
+	local status, msg = hook.Run( "SLCCanPickupWeaponClass", ply, wep:GetClass() )
+	if status == false then
+		return false, msg
 	end
 
 	local class = wep:GetClass()
-
 	local has = false
+	
 	for k, v in pairs( ply:GetWeapons() ) do
 		if v:GetClass() == class then
 			has = true
 			break
-		elseif v.Group and v.Group == wep.Group then
-			return false
 		end
 	end
 
 	if has then
-		if !wep.Stacks or wep.Stacks <= 1 then return false end
+		if !wep.Stacks or wep.Stacks <= 1 then return false, "has_already" end
 
 		local pwep = ply:GetWeapon( wep:GetClass() )
 		if IsValid( pwep ) then
-			if pwep.CanStack and !pwep:CanStack() then return false end
+			if pwep.CanStack and !pwep:CanStack() then return false, "cant_stack" end
 		end
 	end
 
+	if wep.CanPickUp then
+		local s, m = wep:CanPickUp( ply )
+		if s != nil then
+			return s, m
+		end
+	end
+
+	if CLIENT then return true end
+
 	if !wep.Dropped then
-		return CLIENT or !wep.PickupPriority or !wep.PriorityTime or wep.PickupPriority == ply or wep.PriorityTime < CurTime()
+		return !wep.PickupPriority or !wep.PriorityTime or wep.PickupPriority == ply or wep.PriorityTime < CurTime()
 	elseif wep.Dropped > CurTime() - 1 then
 		return false
 	end
@@ -213,6 +238,20 @@ function GM:PlayerCanPickupWeapon( ply, wep )
 	end
 
 	return false
+end
+
+function GM:SLCCanPickupWeaponClass( ply, class )
+	local tab = weapons.Get( class )
+	if !tab then return end
+
+	local group = SLC_WEAPON_GROUP_OVERRIDE[class] or tab.Group
+	if !group then return end
+
+	for k, v in pairs( ply:GetWeapons() ) do
+		if v:GetGroup() == group then
+			return false, "same_type"
+		end
+	end
 end
 
 --From base gamemode
@@ -241,7 +280,7 @@ function GM:UpdateAnimation( ply, velocity, maxseqgroundspeed )
 	-- if we're under water we want to constantly be swimming..
 	if ( ply:WaterLevel() >= 2 ) then
 		rate = math.max( rate, 0.5 )
-	elseif ( !ply:IsOnGround() && len >= 1000 ) then
+	elseif ( !ply:IsOnGround() and len >= 1000 ) then
 		rate = 0.1
 	end
 
@@ -258,7 +297,7 @@ function GM:UpdateAnimation( ply, velocity, maxseqgroundspeed )
 			local fwd = Vehicle:GetUp()
 			local dp = fwd:Dot( Vector( 0, 0, 1 ) )
 
-			ply:SetPoseParameter( "vertical_velocity", ( dp < 0 && dp || 0 ) + fwd:Dot( Velocity ) * 0.005 )
+			ply:SetPoseParameter( "vertical_velocity", ( dp < 0 and dp or 0 ) + fwd:Dot( Velocity ) * 0.005 )
 
 			-- Pass the vehicles steer param down to the player
 			local steer = Vehicle:GetPoseParameter( "vehicle_steer" )
@@ -272,11 +311,38 @@ function GM:UpdateAnimation( ply, velocity, maxseqgroundspeed )
 	end
 end
 
-local ply = FindMetaTable( "Player" )
+local PLAYER = FindMetaTable( "Player" )
+--[[-------------------------------------------------------------------------
+SLCProperties
+---------------------------------------------------------------------------]]
+function PLAYER:ResetProperties()
+	self.SLCProperties = {}
+	//self.SLCPropertiesSync = {}
+end
+
+function PLAYER:SetProperty( key, value, sync )
+	if !self.SLCProperties then self.SLCProperties = {} end
+
+	if SERVER and sync then
+		net.Start( "SLCPropertyChanged" )
+			net.WriteString( key )
+			net.WriteTable( { value } )
+		net.Send( self )
+	end
+
+	self.SLCProperties[key] = value
+	return value
+end
+
+function PLAYER:GetProperty( key, def )
+	if !self.SLCProperties then self.SLCProperties = {} end
+	return self.SLCProperties[key] or def
+end
+
 --[[-------------------------------------------------------------------------
 Hold manager
 ---------------------------------------------------------------------------]]
-function ply:StartHold( id, key, time, cb, tab )
+function PLAYER:StartHold( id, key, time, cb, tab )
 	if !self:KeyDown( key ) then return end
 
 	if !tab._ButtonHold then
@@ -293,7 +359,7 @@ function ply:StartHold( id, key, time, cb, tab )
 	}
 end
 
-function ply:UpdateHold( id, tab )
+function PLAYER:UpdateHold( id, tab )
 	if !tab._ButtonHold then return end
 
 	id = id..self:SteamID()
@@ -314,7 +380,7 @@ function ply:UpdateHold( id, tab )
 	end
 end
 
-function ply:InterruptHold( id, tab )
+function PLAYER:InterruptHold( id, tab )
 	if !tab._ButtonHold then return end
 
 	id = id..self:SteamID()
@@ -325,7 +391,7 @@ function ply:InterruptHold( id, tab )
 	tab._ButtonHold[id].interrupted = true
 end
 
-function ply:IsHolding( id, tab )
+function PLAYER:IsHolding( id, tab )
 	if !tab._ButtonHold then return false end
 
 	id = id..self:SteamID()
@@ -336,7 +402,7 @@ function ply:IsHolding( id, tab )
 	return self:KeyDown( data.key )
 end
 
-function ply:HoldProgress( id, tab )
+function PLAYER:HoldProgress( id, tab )
 	if !tab._ButtonHold then return end
 
 	id = id..self:SteamID()
@@ -350,8 +416,7 @@ end
 --[[-------------------------------------------------------------------------
 Player functions
 ---------------------------------------------------------------------------]]
-
-function ply:DataTables()
+function PLAYER:DataTables()
 	player_manager.SetPlayerClass( self, "class_slc" )
 	player_manager.RunClass( self, "SetupDataTables" )
 end
@@ -359,7 +424,7 @@ end
 local function accessor( func, var )
 	var = "Get"..( var or "_"..func )
 
-	ply[func] = function( self )
+	PLAYER[func] = function( self )
 		if !self[var] then
 			self:DataTables()
 		end
@@ -376,55 +441,7 @@ accessor( "SCPExp" )
 accessor( "SCPClassPoints" )
 accessor( "DailyBonus" )
 
-/*function ply:IsActive()
-	if !self.Get_SCPActive then
-		self:DataTables()
-	end
-
-	return self:Get_SCPActive()
-end
-
-function ply:IsPremium()
-	if !self.Get_SCPPremium then
-		self:DataTables()
-	end
-
-	return self:Get_SCPPremium()
-end
-
-function ply:IsAFK()
-	if !self.Get_SCPAFK then
-		self:DataTables()
-	end
-
-	return self:Get_SCPAFK()
-end
-
-function ply:SCPLevel()
-	if !self.Get_SCPLevel then
-		self:DataTables()
-	end
-
-	return self:Get_SCPLevel()
-end
-
-function ply:SCPExp()
-	if !self.Get_SCPExp then
-		self:DataTables()
-	end
-
-	return self:Get_SCPExp()
-end
-
-function ply:SCPClassPoints()
-	if !self.Get_SCPClassPoints then
-		self:DataTables()
-	end
-
-	return self:Get_SCPClassPoints()
-end*/
-
-function ply:RequiredXP( lvl )
+function PLAYER:RequiredXP( lvl )
 	if !lvl then
 		lvl = self:SCPLevel()
 	end
@@ -436,7 +453,7 @@ function ply:RequiredXP( lvl )
 	end
 end
 
-function ply:SCPClass()
+function PLAYER:SCPClass()
 	if !self.Get_SCPClass then
 		self:DataTables()
 	end
@@ -444,7 +461,7 @@ function ply:SCPClass()
 	return self:Get_SCPClass()
 end
 
-function ply:SCPPersona()
+function PLAYER:SCPPersona()
 	if !self.Get_SCPPersonaC or !self.Get_SCPPersonaT then
 		self:DataTables()
 	end
@@ -452,11 +469,11 @@ function ply:SCPPersona()
 	return self:Get_SCPPersonaC(), self:Get_SCPPersonaT()
 end
 
-function ply:GetPlayermeta()
+function PLAYER:GetPlayermeta()
 	return self.playermeta
 end
 
-function ply:TimeSignature()
+function PLAYER:TimeSignature()
 	if !self.GetTimeSignature then
 		self:DataTables()
 	end
@@ -464,30 +481,90 @@ function ply:TimeSignature()
 	return self:GetTimeSignature()
 end
 
-function ply:CheckSignature( time )
+function PLAYER:CheckSignature( time )
 	return self:TimeSignature() == time
 end
 
-function ply:IsSpectator()
+function PLAYER:IsSpectator()
 	return !self:Alive() and self:SCPTeam() == TEAM_SPEC
 end
 
-function ply:GetInventorySize()
-	return 8
+function PLAYER:GetInventorySize()
+	return 8 + self:GetBackpack()
 end
 
-function ply:IsHuman()
+function PLAYER:IsHuman()
 	return SCPTeams.HasInfo( self:SCPTeam(), SCPTeams.INFO_HUMAN ) or self:GetSCPHuman()
 end
 
-function ply:IsInSafeSpot()
-	local pos = self:GetPos()
+function PLAYER:IsInEscape()
+	if istable( POS_ESCAPE ) then
+		return self:GetPos():WithinAABox( POS_ESCAPE[1], POS_ESCAPE[2] )
+	else
+		return self:GetPos():DistToSqr( POS_ESCAPE ) <= ( DIST_ESCAPE or 22500 )
+	end
+end
 
-	for k, v in pairs( SAFE_SPOTS ) do
-		if pos:WithinAABox( v.mins, v.maxs ) then
+function PLAYER:IsInSafeSpot()
+	return IsInSafeSpot( self:GetPos() )
+end
+
+function PLAYER:CheckHazardProtection( dmg )
+	return self:CheckHazmat( dmg ) or self:CheckGasmask( dmg )
+end
+
+function PLAYER:CheckGasmask( dmg )
+	/*local mask = self:GetWeapon( "item_slc_gasmask" )
+	if IsValid( mask ) and mask:GetEnabled() then
+		if dmg then
+			mask:Damage( dmg )
+		end
+
+		return true
+	end
+
+	local heavy_mask = self:GetWeapon( "item_slc_heavymask" )
+	if IsValid( heavy_mask ) and heavy_mask:GetEnabled() then
+		if dmg then
+			heavy_mask:Damage( dmg )
+		end
+
+		return true
+	end*/
+
+	for k, v in pairs( self:GetWeapons() ) do
+		if v.Group == "gasmask" and v:GetEnabled() then
+			if dmg then
+				v:Damage( dmg )
+			end
+
 			return true
 		end
 	end
+end
 
-	return false
+function PLAYER:CheckHazmat( dmg )
+	local vest = self:GetVest()
+	local dur = self:GetVestDurability()
+	if vest > 0 and dur > 0 and VEST.GetName( vest ) == "hazmat" then
+		if dmg then
+			dur = dur - dmg
+
+			if dur < 0 then
+				dur = 0
+			end
+
+			self:SetVestDurability( dur )
+		end
+		
+		return true
+	end
+end
+
+function PLAYER:GetMainWeapon()
+	for k, v in pairs( self:GetWeapons() ) do
+		if SLC_WEAPONS_REG[v:GetClass()] then
+			return v
+		end
+	end
 end

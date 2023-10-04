@@ -25,7 +25,7 @@ function ENT:Initialize()
 
 	local ct = CurTime()
 	self.RemoveTime = ct + dur
-	self.ArmTime = ct + 1.5
+	self.ArmTime = ct + 1
 
 	self:SetModel( "models/hunter/plates/plate.mdl" )
 	self:PhysicsInit( SOLID_NONE )
@@ -63,7 +63,7 @@ function ENT:Think()
 			local owner = self:GetOwner()
 			local owner_valid = IsValid( owner )
 			local owner_team = owner_valid and owner:SCPTeam()
-			for k, v in pairs( ents.FindInSphere( self:GetPos(), 64 * self:GetSize() ) ) do
+			for i, v in ipairs( ents.FindInSphere( self:GetPos(), 64 * self:GetSize() ) ) do
 				if IsValid( v ) and v:IsPlayer() then
 					local t = v:SCPTeam()
 					if t != TEAM_SPEC and ( !owner_team or !SCPTeams.IsAlly( owner_team, t ) ) then

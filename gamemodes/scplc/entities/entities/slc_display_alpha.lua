@@ -82,7 +82,7 @@ end
 function ENT:SpawnCard( id )
 	local card = ents.Create( "slc_linear_motion_base" )
 	if IsValid( card ) then
-		card.Model = "models/slc/nuclear_card.mdl"
+		card.Model = "models/slc/nuclear_card/nuclear_card.mdl"
 		card:SetModelScale( 0.5 )
 		card:SetPos( self:LocalToWorld( CARD_POS[id].pos + Vector( 4, 0, 0 ) ) )
 		card:SetAngles( self:LocalToWorldAngles( CARD_POS[id].ang ) )
@@ -92,6 +92,7 @@ function ENT:SpawnCard( id )
 			pos = self:LocalToWorld( CARD_POS[id].pos ),
 			time = 1
 		}
+		
 		card:StartMovement()
 	end
 end

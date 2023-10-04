@@ -86,7 +86,7 @@ function net.ReceiveTable( name, func )
 	net.TableReceivers[name] = func
 end
 
-local MAX_LEN = 65526 --65536B (64KB - max net message size) - 2B (short / gmod net header) - 4B (integer / checksum) - 3B (message ID info) - 1B (byte /  i'm not sure why, but using value higher by 1 will supress WriteData)
+local MAX_LEN = 65526 --65536B (64KB - max net message size) - 2B (short / gmod net header) - 4B (integer / checksum) - 3B (message ID info) - 1B (byte /  i'm not sure why, but using value higher by 1 will suppress WriteData)
 function net.SendTable( name, tab, ply, disablecrc, dnc )
 	local msgid = net.TableChannelsID[name] or isnumber( name ) and name
 	if !msgid then
@@ -337,16 +337,22 @@ end
 --[[-------------------------------------------------------------------------
 Property Changed
 ---------------------------------------------------------------------------]]
-SLCPropertyCallbacks = SLCPropertyCallbacks or {}
+if CLIENT then
+	SLCPropertyCallbacks = SLCPropertyCallbacks or {}
 
-net.Receive( "SLCPropertyChanged", function( len )
-	local name = net.ReadString()
-	local cb = SLCPropertyCallbacks[name]
-	if !cb then return end
+	net.Receive( "SLCPropertyChanged", function( len )
+		local name = net.ReadString()
+		local val = net.ReadTable()[1]
 
-	cb( name, net.ReadTable()[1] )
-end )
+		LocalPlayer():SetProperty( name, val )
 
-function OnPropertyChanged( name, cb )
-	SLCPropertyCallbacks[name] = cb
+		local cb = SLCPropertyCallbacks[name]
+		if !cb then return end
+
+		cb( name, val )
+	end )
+
+	function OnPropertyChanged( name, cb )
+		SLCPropertyCallbacks[name] = cb
+	end
 end

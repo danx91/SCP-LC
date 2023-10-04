@@ -7,10 +7,10 @@ SWEP.ShouldDrawViewModel= true
 
 SWEP.HoldType 			= "knife"
 
-SWEP.PrimarySpeed 		= 1.4
+SWEP.PrimarySpeed 		= 1.6
 SWEP.AttackDelay 		= 0.1
 
-SWEP.SecondarySpeed 	= 0.85
+SWEP.SecondarySpeed 	= 0.9
 SWEP.StrongDelay 		= 0.8
 
 SWEP.SoundMiss 			= "npc/zombie/claw_miss1.wav"
@@ -19,7 +19,7 @@ SWEP.SoundHitPrimary	= "npc/zombie/claw_strike2.wav"
 SWEP.SoundHitSecondary	= "npc/zombie/claw_strike3.wav"
 
 function SWEP:SetupDataTables()
-	self:NetworkVar( "Entity", 0, "SCP049" )
+	self:AddNetworkVar( "SCP049", "Entity" )
 end
 
 function SWEP:Initialize()
@@ -43,109 +43,147 @@ function SWEP:SecondaryAttack()
 end
 
 SWEP.NextIdle = 0
---SWEP.AT = "NA"
 function SWEP:Think()
+	self:SwingThink()
+
 	if self.NextIdle < CurTime() then
 		local vm = self:GetOwner():GetViewModel()
 		local seq, time = vm:LookupSequence( "ACT_VM_IDLE" )
 
 		self.NextIdle = CurTime() + time
 		vm:SendViewModelMatchingSequence( seq )
-		--self.AT = "IDLE"
 	end
 end
+
+local paths = {
+	[2] = {
+		Vector( 0, 8, -7 ),
+		Vector( 0, -8, 5 ),
+		-20,
+		20,
+	},
+	[3] = {
+		Vector( 0, -8, -7 ),
+		Vector( 0, 8, 5 ),
+		20,
+		-20,
+	},
+	[4] = {
+		Vector( 0, 2, 10 ),
+		Vector( 0, -2, -15 ),
+		0,
+		0,
+	},
+}
+
+local mins, maxs = Vector( -1, -1, -1 ), Vector( 1, 1, 1 )
+local mins_str, maxs_str = Vector( -2, -2, -2 ), Vector( 2, 2, 2 )
+
+SWEP.DamageMult = 1
+SWEP.LifeSteal = 0
 
 function SWEP:DoAttack( strong )
 	local owner = self:GetOwner()
 	local vm = owner:GetViewModel()
 
-	local act, speed
+	local seq, speed
 
 	if strong then
-		act = ACT_VM_SECONDARYATTACK
+		seq = vm:SelectWeightedSequence( ACT_VM_SECONDARYATTACK )
 		speed = self.SecondarySpeed
 
 		owner:DoAnimationEvent( ACT_GMOD_GESTURE_RANGE_ZOMBIE )
-		--self.AT = "SECONDARY"
 	else
-		act = ACT_VM_HITCENTER
+		seq = self.LastSeq == 2 and 3 or 2
 		speed = self.PrimarySpeed
 
 		owner:SetAnimation( PLAYER_ATTACK1 )
-		--self.AT = "PRIMARY"
 	end
 
-	local seq = vm:SelectWeightedSequence( act )
 	local dur = vm:SequenceDuration( seq ) / speed
 
+	self.LastSeq = seq
 	self.NAttack = self.NAttack + dur
 	self.NextIdle = CurTime() + dur
 
-	vm:ResetSequenceInfo()
+	//vm:ResetSequenceInfo()
 	vm:SendViewModelMatchingSequence( seq )
 	vm:SetPlaybackRate( speed )
 
-	if SERVER then
-		timer.Simple( dur * 0.25, function()
-			if IsValid( self ) and self:CheckOwner() then
-				self:ApplyDamage( strong )
-			end
-		end )
-	end
-end
+	//if !SERVER then return end
 
-SWEP.DamageMult = 1
-SWEP.LifeSteal = 0
-function SWEP:ApplyDamage( strong )
-	local owner = self:GetOwner()
+	local ent_filter = {}
+	local path = paths[seq]
+	self:SwingAttack( {
+		path_start = path[1],
+		path_end = path[2],
+		fov_start = path[3],
+		fov_end = path[4],
+		delay = strong and 0.6 or 0.3,
+		duration = 0.3,
+		num = 8,
+		dist_start = 70,
+		dist_end = 50,
+		mins = strong and mins_str or mins,
+		maxs = strong and maxs_str or maxs,
+		on_start = function()
+			self:EmitSound( self.SoundMiss )
+		end,
+		callback = function( tr, num )
+			if !self:CheckOwner() then return end
 
-	owner:LagCompensation( true )
+			local ent = tr.Entity
+			if IsValid( ent ) then
+				if ent_filter[ent] then return end
+				if ent:IsPlayer() then
+					ent_filter[ent] = true
 
-	local tr = util.TraceHull{
-		start = owner:GetShootPos(),
-		endpos = owner:GetShootPos() + owner:GetAimVector() * 75,
-		filter = owner,
-		mask = MASK_SHOT,
-		mins = Vector( -10, -10, -10 ),
-		maxs = Vector( 10, 10, 10 )
-	}
+					if strong then
+						self:EmitSound( self.SoundHitSecondary )
+					else
+						self:EmitSound( self.SoundHitPrimary )
+					end
 
-	owner:LagCompensation( false )
+					if CLIENT or !self:CanTargetPlayer( ent ) then return end
+					local dmginfo = DamageInfo()
 
-	local ent = tr.Entity
-	if IsValid( ent ) then
-		if ent:IsPlayer() then
-			if strong then
-				self:EmitSound( self.SoundHitSecondary )
-			else
-				self:EmitSound( self.SoundHitPrimary )
-			end
+					dmginfo:SetAttacker( owner )
+					dmginfo:SetDamageType( DMG_SLASH )
 
-			if ent:SCPTeam() != TEAM_SCP and ent:SCPTeam() != TEAM_SPEC then
-				local dmginfo = DamageInfo()
+					local dmg = ( strong and math.random( 40, 50 ) or math.random( 15, 25 ) ) * self.DamageMult
+					dmginfo:SetDamage( dmg )
 
-				dmginfo:SetAttacker( owner )
-				dmginfo:SetDamageType( DMG_SLASH )
+					SuppressHostEvents( NULL )
+					ent:TakeDamageInfo( dmginfo )
+					SuppressHostEvents( owner )
 
-				local dmg = ( strong and math.random( 50, 80 ) or math.random( 20, 40 ) ) * self.DamageMult
-				dmginfo:SetDamage( dmg )
+					if self.LifeSteal > 0 then
+						owner:AddHealth( math.ceil( dmg * self.LifeSteal ) )
+					end
 
-				ent:TakeDamageInfo( dmginfo )
+					return strong
+				else
+					self:EmitSound( self.SoundHitWall )
+					
+					if SERVER then
+						SuppressHostEvents( NULL )
+						self:SCPDamageEvent( ent, strong and 100 or 50 )
+						SuppressHostEvents( owner )
+					end
 
-				if self.LifeSteal > 0 then
-					owner:AddHealth( math.ceil( dmg * self.LifeSteal ) )
+					return true
 				end
-
+			elseif tr.Hit then
+				self:EmitSound( self.SoundHitWall )
+				//local vm = self:GetOwner():GetViewModel()
+				//vm:ResetSequence( vm:LookupSequence( "idle" ) )
+				return true, num < 4 and {
+					distance = 60,
+					bounds = 1.5,
+				}
 			end
-		else
-			self:EmitSound( self.SoundHitWall )
-			self:SCPDamageEvent( ent, strong and 100 or 50 )
 		end
-	elseif tr.Hit then
-		self:EmitSound( self.SoundHitWall )
-	else
-		self:EmitSound( self.SoundMiss )
-	end
+	} )
 end
 
 if SERVER then
@@ -168,6 +206,12 @@ if SERVER then
 		end
 	end )
 
+	SCPHook( "SCP0492", "SLCButtonOverloaded", function( ply, btn, adv )
+		if ply:SCPClass() == CLASSES.SCP0492 then
+			ply:SetSCPDisableOverload( true )
+		end
+	end )
+
 	/*SCPHook( "SCP0492", "DoPlayerDeath", function( ply, attacker, info )
 		if attacker:IsPlayer() and attacker:SCPClass() == CLASSES.SCP0492 then
 		 	AddRoundStat( "0492" )
@@ -175,6 +219,7 @@ if SERVER then
 	end )*/
 end
 
+local color_red = Color( 255, 0, 0 )
 function SWEP:DrawSCPHUD()
 	//if hud_disabled or HUDDrawInfo or ROUND.preparing then return end
 
@@ -191,7 +236,7 @@ function SWEP:DrawSCPHUD()
 		draw.Text{
 			text = self.Lang.too_far,
 			pos = { ScrW() * 0.5, ScrH() * 0.98 },
-			color = Color( 255, 0, 0, 255 ),
+			color = color_red,
 			font = "SCPHUDMedium",
 			xalign = TEXT_ALIGN_CENTER,
 			yalign = TEXT_ALIGN_CENTER,

@@ -248,9 +248,9 @@ end )
 Player Timers
 ---------------------------------------------------------------------------]]
 if SERVER then
-	local ply = FindMetaTable( "Player" )
+	local PLAYER = FindMetaTable( "Player" )
 
-	function ply:AddTimer( name, time, repeats, callback, endcallback, noactivete, nooverride )
+	function PLAYER:AddTimer( name, time, repeats, callback, endcallback, noactivete, nooverride )
 		//local t = Timer( name..self:SteamID(), time, repeats, callback, endcallback, noactivete, false )
 		local t = Timer( name, time, repeats, callback, endcallback, noactivete, true )
 
@@ -273,7 +273,7 @@ if SERVER then
 		return t
 	end
 
-	function ply:GetTimer( name )
+	function PLAYER:GetTimer( name )
 		local tab = self:GetProperty( "slc_timers" )
 		if !tab then
 			tab = self:SetProperty( "slc_timers", {} )

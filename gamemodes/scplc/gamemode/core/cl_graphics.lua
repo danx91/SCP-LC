@@ -235,11 +235,67 @@ function surface.DrawTriangle( x, y, height, rotation )
 	local verts = {}
 
 	for i = 0, 2 do
-		local ang  = math.rad( i * 120 + rotation )
-		table.insert( verts, { x = x + math.sin( ang ) * height, y = y + math.cos( ang ) * height } )
+		local h = istable( height ) and height[i + 1] or height
+		local ang  = math.rad( i * -120 + rotation )
+		table.insert( verts, { x = x + math.sin( ang ) * h, y = y + math.cos( ang ) * h } )
 	end
 
 	surface.DrawPoly( verts )
+end
+
+
+--[[---------------------------------------------------------------------------
+surface.PolyRoundedRect( x, y, w, h, r, seg )
+
+Description
+
+@param		[number]		x					X position
+@param		[number]		y					Y position
+@param		[number]		w					Width
+@param		[number]		h					Height
+@param		[number]		r					Radius
+
+@return		[nil]			-					-
+---------------------------------------------------------------------------]]--
+function surface.PolyRoundedRect( x, y, w, h, r, output )
+	r = math.min( r, w / 2, h / 2 )
+
+	if r < 0 then
+		r = 0
+	end
+
+	local seg = math.ceil( r / 10 ) + 3
+	local verts = output or {}
+
+	if r == 0 then
+		verts[1] = { x = x + w, y = y }
+		verts[2] = { x = x + w, y = y + h }
+		verts[3] = { x = x, y = y + h }
+		verts[4] = { x = x, y = y }
+	else
+		for i = 0, seg - 1 do
+			local ang = ( i / ( seg - 1 ) ) * math.pi / 2
+			local sin, cos = 1 - math.sin( ang ), 1 - math.cos( ang )
+
+			verts[i + 1] = { x = x + w - sin * r, y = y + cos * r }
+			verts[i + 1 + seg] = { x = x + w - cos * r, y = y + h - sin * r }
+			verts[i + 1 + seg * 2] = { x = x + sin * r, y = y + h - cos * r }
+			verts[i + 1 + seg * 3] = { x = x + cos * r, y = y + sin * r }
+		end
+	end
+
+	if output then return end
+
+	surface.DrawPoly( verts )
+end
+
+function surface.OutlinedRoundedRect( x, y, w, h, r, t )
+	local v1, v2 = {}, {}
+	surface.PolyRoundedRect( x, x, w, h, r, v1 )
+	surface.PolyRoundedRect( x + t, x + t, w - t * 2, h - t * 2, r - t, v2 )
+	
+	draw.NoTexture()
+	surface.DrawDifference( v1, v2 )
 end
 
 /*-------------------------------------------------------------------------
@@ -869,11 +925,17 @@ end
 GLITCH_VERTICAL = 0
 GLITCH_HORIZONTAL = 1
 
-function util.GlitchData( seg, scale )
+function util.GlitchData( seg, scale, color_r, color_g, color_b )
 	local data = {}
 
 	for i = 1, seg do
-		data[i] = ( math.random() * 2 - 1 ) * scale
+		data[i] = {
+			offset = ( math.random() * 2 - 1 ) * scale
+		}
+
+		if color_r then
+			data[i].color = Color( math.random( color_r, 255 ), math.random( color_g or color_r, 255 ), math.random( color_b or color_r, 255 ) )
+		end
 	end
 
 	return data
@@ -886,7 +948,13 @@ function draw.Glitch( x, y, w, h, mode, data )
 		local step_x = math.Round( w / xseg )
 
 		for i = 1, xseg do
-			surface.DrawTexturedRectUV( x + step_x * (i - 1), y + data[i] * h, step_x, h, step_u * (i - 1), 0, step_u * i, 1)
+			local tab = data[i]
+
+			if tab.color then
+				surface.SetDrawColor( tab.color )
+			end
+
+			surface.DrawTexturedRectUV( x + step_x * (i - 1), y + tab.offset * h, step_x, h, step_u * (i - 1), 0, step_u * i, 1)
 		end
 	elseif mode == GLITCH_HORIZONTAL then
 		local yseg = #data
@@ -894,7 +962,13 @@ function draw.Glitch( x, y, w, h, mode, data )
 		local step_y = math.Round( h / yseg )
 
 		for i = 1, yseg do
-			surface.DrawTexturedRectUV( x + data[i] * w, y + step_y * (i - 1), w, step_y, 0, step_v * (i - 1), 1, step_v * i )
+			local tab = data[i]
+
+			if tab.color then
+				surface.SetDrawColor( tab.color )
+			end
+
+			surface.DrawTexturedRectUV( x + tab.offset * w, y + step_y * (i - 1), w, step_y, 0, step_v * (i - 1), 1, step_v * i )
 		end
 	end
 end
@@ -919,6 +993,7 @@ function draw.GlitchToTexture( texture, target, mode, data, clear, r, g, b, a )
 	render.PopRenderTarget()
 end
 
+local color_white = Color( 255, 255, 255, 255 )
 function draw.WepSelectIcon( ico, cx, cy, size, color )
 	local ico_w, ico_h 
 
@@ -944,7 +1019,7 @@ function draw.WepSelectIcon( ico, cx, cy, size, color )
 
 	PushFilters( TEXFILTER.LINEAR )
 
-	surface.SetDrawColor( color or Color( 255, 255, 255, 255 ) )
+	surface.SetDrawColor( color or color_white )
 	surface.DrawTexturedRect( cx + size * 0.5 - ico_w * 0.5, cy + size * 0.5 - ico_h * 0.5, ico_w, ico_h )
 
 	PopFilters()

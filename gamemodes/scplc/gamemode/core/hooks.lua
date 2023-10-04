@@ -13,16 +13,7 @@ end
 
 function EnableSCPHook( scp )
 	if SLCHooks.__ActiveSCPs[scp] then return end
-
-	local tab = SLCHooks[scp]
-	if !tab then return end
-
 	SLCHooks.__ActiveSCPs[scp] = true
-
-	for k, v in pairs( tab ) do
-		hook.Add( k, scp, v )
-		//print( "hook enabled", k, scp )
-	end
 
 	if SERVER and !SLCHooks.__PreventUpdate then
 		net.Start( "SLCHooks" )
@@ -30,13 +21,21 @@ function EnableSCPHook( scp )
 			net.WriteString( scp )
 		net.Broadcast()
 	end
-end
 
-function DisableSCPHook( scp )
 	local tab = SLCHooks[scp]
 	if !tab then return end
 
+	for k, v in pairs( tab ) do
+		hook.Add( k, scp, v )
+		//print( "hook enabled", k, scp )
+	end
+end
+
+function DisableSCPHook( scp )
 	SLCHooks.__ActiveSCPs[scp] = nil
+
+	local tab = SLCHooks[scp]
+	if !tab then return end
 
 	for k, v in pairs( tab ) do
 		hook.Remove( k, scp )
@@ -46,6 +45,8 @@ end
 
 function ClearSCPHooks()
 	for scp, _ in pairs( SLCHooks.__ActiveSCPs ) do
+		if !SLCHooks[scp] then continue end
+
 		for k, _ in pairs( SLCHooks[scp] ) do
 			hook.Remove( k, scp )
 			//print( "[clear] hook removed", k, scp )

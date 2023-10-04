@@ -1,10 +1,10 @@
-local ent = FindMetaTable( "Entity" )
+local ENTITY = FindMetaTable( "Entity" )
 
 --[[-------------------------------------------------------------------------
 CallBaseClass
 ---------------------------------------------------------------------------]]
 local disablecall = false
-function ent:CallBaseClass( func, bc, ... )
+function ENTITY:CallBaseClass( func, bc, ... )
 	if disablecall then return end
 
 	if !bc then
@@ -29,12 +29,33 @@ function ent:CallBaseClass( func, bc, ... )
 	end
 end
 
+--Java-like super that just binds to CallBaseClass
+function ENTITY:Super( ... )
+	self:CallBaseClass( ... )
+end
+
+--[[-------------------------------------------------------------------------
+IsDerived
+---------------------------------------------------------------------------]]
+function ENTITY:IsDerived( class )
+	local base = self
+	
+	repeat
+		if base.ClassName == class then return true end
+		if base == base.BaseClass then return false end
+		
+		base = base.BaseClass
+	until !base
+
+	return false
+end
+
 --[[-------------------------------------------------------------------------
 ResetBones
 ---------------------------------------------------------------------------]]
 local zero_angle = Angle( 0, 0, 0 )
 local zero_vector = Vector( 0, 0, 0 )
-function ent:ResetBones()
+function ENTITY:ResetBones()
 	if IsValid( self ) then
 		for i = 0, self:GetBoneCount() do
 			self:ManipulateBoneAngles( i, zero_angle )
@@ -46,9 +67,9 @@ end
 --[[-------------------------------------------------------------------------
 TakeDamageInfo
 ---------------------------------------------------------------------------]]
-if SERVER then
-_EntityTakeDamageInfo = _EntityTakeDamageInfo or ent.TakeDamageInfo
-	function ent:TakeDamageInfo( info )
+/*if SERVER then
+_EntityTakeDamageInfo = _EntityTakeDamageInfo or ENTITY.TakeDamageInfo
+	function ENTITY:TakeDamageInfo( info )
 		local dmgtype = info:GetDamageType()
 		local prevent_forces = bit.band( dmgtype, DMG_PREVENT_PHYSICS_FORCE ) == DMG_PREVENT_PHYSICS_FORCE
 		local velocity
@@ -70,12 +91,12 @@ _EntityTakeDamageInfo = _EntityTakeDamageInfo or ent.TakeDamageInfo
 			end
 		end
 	end
-end
+end*/
 
 --[[-------------------------------------------------------------------------
 SetPhysVelocity
 ---------------------------------------------------------------------------]]
-function ent:SetPhysVelocity( velocity )
+function ENTITY:SetPhysVelocity( velocity )
 	local phys = self:GetPhysicsObject()
 	if IsValid( phys ) then
 		phys:SetVelocity( velocity )
@@ -87,7 +108,7 @@ end
 --[[-------------------------------------------------------------------------
 AddNetworkVar
 ---------------------------------------------------------------------------]]
-function ent:AddNetworkVar( name, type )
+function ENTITY:AddNetworkVar( name, type )
 	if !self._NVTable then
 		self._NVTable = {
 			Int = { 0, 32 },
@@ -111,7 +132,7 @@ end
 --[[-------------------------------------------------------------------------
 TestVisibility
 ---------------------------------------------------------------------------]]
-function ent:TestVisibility( ply, mask, headonly )
+function ENTITY:TestVisibility( ply, mask, headonly )
 	if !IsValid( ply ) then return end
 	if !ply:TestPVS( self ) then return false end
 
@@ -181,7 +202,7 @@ function ent:TestVisibility( ply, mask, headonly )
 	return false
 end
 
-function ent:GetNameEx( pname_limit, blacklist, rep )
+function ENTITY:GetNameEx( pname_limit, blacklist, rep )
 	if !IsValid( self ) then return end
 	local name = self.GetName and self:GetName() or self:GetClass()
 
@@ -198,8 +219,8 @@ function ent:GetNameEx( pname_limit, blacklist, rep )
 	return name
 end
 
-ent.OldInstallDataTable = ent.OldInstallDataTable or ent.InstallDataTable
-function ent:InstallDataTable()
+ENTITY.OldInstallDataTable = ENTITY.OldInstallDataTable or ENTITY.InstallDataTable
+function ENTITY:InstallDataTable()
 	self:OldInstallDataTable()
 
 	self.OldNetworkVar = self.NetworkVar

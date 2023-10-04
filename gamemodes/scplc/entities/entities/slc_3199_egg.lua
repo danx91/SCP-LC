@@ -106,42 +106,41 @@ if CLIENT then
 	local color_green = Color( 30, 130, 30, 120 )
 	local color_red = Color( 130, 30, 30, 120 )
 
-	hook.Add( "PostDrawOpaqueRenderables", "SCP3199DrawEggs", function()
+	SCPHook( "SCP3199", "PostDrawOpaqueRenderables", function()
 		local ply = LocalPlayer()
-		if ply:SCPClass() == CLASSES.SCP3199 then
-			render.ClearStencil()
+		if ply:SCPClass() != CLASSES.SCP3199 then return end
 
-			render.SetStencilWriteMask( 0xFF )
-			render.SetStencilTestMask( 0xFF )
+		render.ClearStencil()
 
-			render.SetStencilCompareFunction( STENCIL_NEVER )
-			render.SetStencilPassOperation( STENCIL_KEEP )
-			render.SetStencilFailOperation( STENCIL_REPLACE )
-			render.SetStencilZFailOperation( STENCIL_KEEP )
+		render.SetStencilWriteMask( 0xFF )
+		render.SetStencilTestMask( 0xFF )
 
-			render.SetStencilEnable( true )
+		render.SetStencilCompareFunction( STENCIL_NEVER )
+		render.SetStencilPassOperation( STENCIL_KEEP )
+		render.SetStencilFailOperation( STENCIL_REPLACE )
+		render.SetStencilZFailOperation( STENCIL_KEEP )
 
-			for k, v in pairs( ents.FindByClass( "slc_3199_egg" ) ) do
-				render.SetStencilReferenceValue( v:GetActive() and 2 or 1 )
+		render.SetStencilEnable( true )
 
-				v:DrawModel()
-			end
-
-			render.SetStencilFailOperation( STENCIL_KEEP )
-			render.SetStencilCompareFunction( STENCIL_EQUAL )
-
-			cam.Start2D()
-				render.SetStencilReferenceValue( 1 )
-				surface.SetDrawColor( color_red )
-				surface.DrawRect( 0, 0, ScrW(), ScrH() )
-
-				render.SetStencilReferenceValue( 2 )
-				surface.SetDrawColor( color_green )
-				surface.DrawRect( 0, 0, ScrW(), ScrH() )
-			cam.End2D()
-
-			render.SetStencilEnable( false )
+		for k, v in pairs( ents.FindByClass( "slc_3199_egg" ) ) do
+			render.SetStencilReferenceValue( v:GetActive() and 2 or 1 )
+			v:DrawModel()
 		end
+
+		render.SetStencilFailOperation( STENCIL_KEEP )
+		render.SetStencilCompareFunction( STENCIL_EQUAL )
+
+		cam.Start2D()
+			render.SetStencilReferenceValue( 1 )
+			surface.SetDrawColor( color_red )
+			surface.DrawRect( 0, 0, ScrW(), ScrH() )
+
+			render.SetStencilReferenceValue( 2 )
+			surface.SetDrawColor( color_green )
+			surface.DrawRect( 0, 0, ScrW(), ScrH() )
+		cam.End2D()
+
+		render.SetStencilEnable( false )
 	end )
 end
 

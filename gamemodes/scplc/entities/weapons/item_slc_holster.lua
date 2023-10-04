@@ -6,3 +6,5 @@ SWEP.ShouldDrawViewModel 	= false
 SWEP.ShouldDrawWorldModel 	= false
 
 SWEP.SelectFont = "SCPHUDMedium"
+
+SWEP.DrawCrosshair = true

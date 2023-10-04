@@ -3,12 +3,17 @@ SWEP.Language  		= "NVG"
 
 SWEP.WorldModel		= "models/mishka/models/nvg.mdl"
 
+SWEP.ShouldDrawWorldModel 	= false
 SWEP.ShouldDrawViewModel = false
 
 SWEP.SelectFont = "SCPHUDMedium"
 
 SWEP.HasBattery 	= true
 SWEP.BatteryUsage 	= 0.6
+
+SWEP.DrawCrosshair = false
+
+SWEP.Group = "nvg"
 
 SWEP.scp914upgrade = "item_slc_nvgplus"
 
@@ -19,18 +24,6 @@ end
 
 function SWEP:Think()
 	self:CallBaseClass( "Think" )
-
-	/*local wep = self.Owner:GetWeapon( "item_slc_nvgplus" ) --REMOVE
-
-	if IsValid( wep ) and wep:GetEnabled() and self:GetBattery() > 0 then
-		wep:SetEnabled( false )
-	end*/
-end
-
-function SWEP:DrawWorldModel()
-	if !IsValid( self.Owner ) then
-		self:DrawModel()
-	end
 end
 
 if CLIENT then

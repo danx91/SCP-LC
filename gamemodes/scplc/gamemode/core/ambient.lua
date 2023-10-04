@@ -8,9 +8,10 @@ SLC_AMBIENTS = SLC_AMBIENTS or {
 --[[-------------------------------------------------------------------------
 Global functions
 ---------------------------------------------------------------------------]]
-function AddAmbient( name, path, check, group, volume, duration )
+function AddAmbient( name, path, check, group, volume, duration, fade )
 	if SLC_AMBIENTS.Registry[name] then
 		print( "Ambient '"..name.."' is already registered!" )
+		SLC_AMBIENTS.Registry[name] = { name = name, id = SLC_AMBIENTS.Registry[name].id, path = path, callback = check, duration = duration, volume = volume or 1, fade = fade }
 		return false
 	end
 
@@ -20,7 +21,7 @@ function AddAmbient( name, path, check, group, volume, duration )
 	end
 
 	local id = table.insert( SLC_AMBIENTS.List, name )
-	SLC_AMBIENTS.Registry[name] = { name = name, id = id, path = path, callback = check, duration = duration, volume = volume or 1 }
+	SLC_AMBIENTS.Registry[name] = { name = name, id = id, path = path, callback = check, duration = duration, volume = volume or 1, fade = fade }
 
 	if group then
 		if !SLC_AMBIENTS.Groups[group] then
@@ -52,8 +53,8 @@ function PLAYER:PlayAmbient( name, loop, force, co )
 	PlayAmbient( name, loop, self, force, co )
 end
 
-function PLAYER:StopAmbient( name, all )
-	StopAmbient( self, name, all )
+function PLAYER:StopAmbient( name )
+	StopAmbient( self, name )
 end
 
 --[[-------------------------------------------------------------------------
@@ -62,82 +63,74 @@ Serverside functions
 if SERVER then
 	function PlayAmbient( name, loop, ply, force, co )
 		if !IsValid( ply ) then return end
+		if !ply.SLCAmbient then ply.SLCAmbient = {} end
+		if ply.SLCAmbient[name] and !force then return end
 
-		if ply.PlayingAmbient != name and !force then
-			local obj = SLC_AMBIENTS.Registry[name]
-			if obj then
-				if loop then
-					ply.AmbientFinish = 0
-				elseif obj.duration then
-					ply.AmbientFinish = CurTime() + obj.duration
-				else
-					return
-				end
+		local obj = SLC_AMBIENTS.Registry[name]
+		if !obj then return end
 
-				ply.AmbientOverride = co
-				ply.PlayingAmbient = name
+		local data = {
+			finish = 0,
+			override = co,
+		}
+		
+		ply.SLCAmbient[name] = data
 
-				net.Start( "SLCAmbient" )
-					net.WriteBool( true )
-					net.WriteBool( loop )
-					net.WriteUInt( obj.id, 8 )
-
-				if ply then
-					net.Send( ply )
-				else
-					//net.Broadcast()
-				end
-			end
+		if !loop and obj.duration then
+			data[0] = CurTime() + obj.duration
 		end
+
+		if !loop and !obj.duration then return end
+
+		net.Start( "SLCAmbient" )
+			net.WriteBool( true )
+			net.WriteBool( loop )
+			net.WriteUInt( obj.id, 8 )
+		net.Send( ply )
 	end
 
-	function StopAmbient( ply, name, all )
+	function StopAmbient( ply, name )
 		if !IsValid( ply ) then return end
-		//print( "Stopping...", ply, name, all, ply.PlayingAmbient )
 
-		if name and ply.PlayingAmbient != name then
-			return
-		end
+		if name and !ply.SLCAmbient[name] then return end
 
-		if ply.PlayingAmbient or all then
-			//print( "Sending stop ambient" )
-			net.Start( "SLCAmbient" )
-				net.WriteBool( false )
-				net.WriteBool( all or false )
+		local obj = name and SLC_AMBIENTS.Registry[name]
+		if !obj and !name then return end
 
-			if ply then
-				net.Send( ply )
-			else
-				//net.Broadcast()
+		ply.SLCAmbient[name] = nil
+
+		net.Start( "SLCAmbient" )
+			net.WriteBool( false )
+			net.WriteBool( !name )
+
+			if name then
+				net.WriteUInt( name and obj.id, 8 )
 			end
-
-			ply.PlayingAmbient = false
-		end
+		net.Send( ply )
 	end
 
 	hook.Add( "PlayerPostThink", "SLCAmbientThink", function( ply )
-		local id = ply.PlayingAmbient
-		if id then
-			local obj = SLC_AMBIENTS.Registry[id]
-			if obj then
-				if isfunction( ply.AmbientOverride ) then
-					if ply.AmbientOverride( ply ) then
-						StopAmbient( ply, obj.name )
-						return
-					end
-				else
-					local cb = obj.callback
-					if cb and cb( ply ) then
-						StopAmbient( ply, obj.name )
-						return
-					end
-				end
+		if !ply.SLCAmbient then return end
 
-				if ply.AmbientFinish then
-					if ply.AmbientFinish != 0 and ply.AmbientFinish < CurTime() then
-						ply.PlayingAmbient = false
-					end
-				end
+		local ct = CurTime()
+
+		for name, data in pairs( ply.SLCAmbient ) do
+			local obj = SLC_AMBIENTS.Registry[name]
+			if !obj then continue end
+
+			if data.override and data.override( ply, name ) == true then
+				StopAmbient( ply, name )
+				continue
+			end
+
+			if obj.callback and obj.callback( ply, name ) == true then
+				StopAmbient( ply, name )
+				continue
+			end
+
+			local finish = data.finish
+			if finish and finish != 0 and finish <= ct then
+				ply.SLCAmbient[name] = nil
 			end
 		end
 	end )
@@ -147,10 +140,12 @@ end
 Clientside functions
 ---------------------------------------------------------------------------]]
 if CLIENT then
-	local current_ambient
-	function GetIGModAudio( name, nc, flags, cb )
-		local c_igac = SLC_AMBIENTS.CACHE[name]
+	function GetIGModAudio( name, flags, dontcreate, cb )
 		local obj = SLC_AMBIENTS.Registry[name]
+		if !obj then return end
+		
+		local c_igac = SLC_AMBIENTS.CACHE[name]
+		if c_igac == true then return true end
 
 		if IsValid( c_igac ) then
 			if cb then
@@ -160,43 +155,30 @@ if CLIENT then
 			return c_igac
 		end
 
-		if c_igac == true then
-			return true
-		end
-
-		if nc then
-			return false
-		end
+		if dontcreate then return false end
 
 		SLC_AMBIENTS.CACHE[name] = true
 
-		if !flags then
-			flags = ""
-		end
+		sound.PlayFile( obj.path, flags or "", function( igac, errID, err )
+			if !IsValid( igac ) then
+				SLC_AMBIENTS.CACHE[name] = nil
+				print( "IGAC Error!", name, obj.path, flags, errID, err )
+				return
+			end
 
-		if obj then
-			StopAmbient()
+			SLC_AMBIENTS.CACHE[name] = igac
+			igac:SetVolume( obj.volume )
 
-			sound.PlayFile( obj.path, flags, function( igac, errID, err )
-				if IsValid( igac ) then
-					current_ambient = name
-					SLC_AMBIENTS.CACHE[name] = igac
-
-					igac:SetVolume( obj.volume )
-
-					if cb then
-						cb( igac, obj, true )
-					end
-				else
-					print( "IGAC Error!", name, flags, errID, err )
-					SLC_AMBIENTS.CACHE[name] = nil
-				end
-			end )
-		end
+			if cb then
+				cb( igac, obj, true )
+			end
+		end )
 	end
 
 	function PlayAmbient( name, loop )
-		if GetIGModAudio( name, false, "noblock", function( igac, obj, c )
+		//print( "Starting ambient...", name, loop )
+		if GetIGModAudio( name, "noblock", false, function( igac, obj, c )
+			//print( "IGAC OK" )
 			if loop then
 				igac:EnableLooping( true )
 			end
@@ -208,9 +190,9 @@ if CLIENT then
 		end
 	end
 
-	function StopAmbient( all )
-		print( "Stopping ambient..." )
-		if all then
+	function StopAmbient( name )
+		//print( "Stopping ambient...", fade, name, all )
+		if !name then
 			for k, v in pairs( SLC_AMBIENTS.CACHE ) do
 				SLC_AMBIENTS.CACHE[k] = nil
 
@@ -219,11 +201,18 @@ if CLIENT then
 					v:Stop()
 				end
 			end
-		elseif current_ambient then
-			local igac = SLC_AMBIENTS.CACHE[current_ambient]
-			SLC_AMBIENTS.CACHE[current_ambient] = nil
+		elseif name then
+			local obj = SLC_AMBIENTS.Registry[name]
+			if !obj then return end
 
-			if igac != true and IsValid( igac ) then
+			local igac = SLC_AMBIENTS.CACHE[name]
+			SLC_AMBIENTS.CACHE[name] = nil
+
+			if igac == true or !IsValid( igac ) then return end
+
+			if obj.fade then
+				igac:FadeStop( obj.fade )
+			else
 				print( "Dropping IGAC:", igac )
 				igac:Stop()
 			end
@@ -235,16 +224,48 @@ if CLIENT then
 		local arg = net.ReadBool()
 
 		if status then
-			local id = net.ReadUInt( 8 )
-			local name = SLC_AMBIENTS.List[id]
+			local name = SLC_AMBIENTS.List[net.ReadUInt( 8 )]
+			if !name then return end
 
-			if name then
-				PlayAmbient( name, arg )
-			end
+			PlayAmbient( name, arg )
 		else
-			StopAmbient( arg )
+			if arg then
+				StopAmbient()
+			else
+				local name = SLC_AMBIENTS.List[net.ReadUInt( 8 )]
+				if !name then return end
+
+				StopAmbient( name )
+			end
 		end
 	end )
+end
+
+--[[-------------------------------------------------------------------------
+IGAC functions
+---------------------------------------------------------------------------]]
+if CLIENT then
+	local IGAC = FindMetaTable( "IGModAudioChannel" )
+	function IGAC:FadeStop( time )
+		local vol = self:GetVolume()
+		local num = math.ceil( 10 * time )
+
+		//print( "FADE STOP", time )
+		Timer( "igac_fadeout"..tostring( self ), 0.1, num - 1, function( this, n )
+			if !IsValid( self ) then
+				this:Destroy()
+				return
+			end
+
+			//print( "Setting volume", 1 - n / num )
+			self:SetVolume( vol * ( 1 - n / num ) )
+		end, function( this )
+			if !IsValid( self ) then return end
+			//print( "FADE STOP STOP" )
+			print( "Dropping IGAC:", self )
+			self:Stop()
+		end )
+	end
 end
 
 /*concommand.Add( "ambient", function( ply, cmd, args )
@@ -259,6 +280,6 @@ end
 			ply:PlayAmbient( args[1], args[2] == "loop" )
 		end
 	end
-end )
+end )*/
 
-AddAmbient( "023", "sound/scp_lc/scp/023/ambient.ogg", nil, nil, 0.2 )*/
+AddAmbient( "scp_chase", "sound/scp_lc/chase.ogg", nil, nil, 1, 22, 5 )

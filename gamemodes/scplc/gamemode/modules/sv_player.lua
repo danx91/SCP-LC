@@ -1,9 +1,9 @@
-local ply = FindMetaTable( "Player" )
+local PLAYER = FindMetaTable( "Player" )
 
 --[[-------------------------------------------------------------------------
 General Functions
 ---------------------------------------------------------------------------]]
-function ply:SetSCPClass( class )
+function PLAYER:SetSCPClass( class )
 	if !self.Set_SCPClass then
 		self:DataTables()
 	end
@@ -12,31 +12,40 @@ function ply:SetSCPClass( class )
 	self:Set_SCPPersonaC( class )
 end
 
-function ply:Cleanup( norem )
+function PLAYER:Cleanup( norem )
 	hook.Run( "SLCPlayerCleanup", self )
 
 	self:RemoveEffect()
-	//self:RemoveEFlags( EFL_NO_DAMAGE_FORCES )
-	self:AddEFlags( EFL_NO_DAMAGE_FORCES )
+	self:RemoveEFlags( EFL_NO_DAMAGE_FORCES )
+	//self:AddEFlags( EFL_NO_DAMAGE_FORCES )
 
 	self.SetupAsSpectator = nil //TODO move to properties
 	self.DeathScreen = nil //TODO move to properties
 	self.ClassData = nil
 
 	self:ResetProperties()
-	self.SLCProperties = {}
 	self:ClearSpeedStack()
 	self.PlayerData:Reset()
 	self.Logger:Reset()
 
+	self:SetExtraHealth( 0 )
+	self:SetMaxExtraHealth( 0 )
+
+	self:SetSanity( 100 )
+	self:SetMaxSanity( 100 )
+
+	self:SetExhausted( false )
 	self:SetStamina( 100 )
 	self:SetMaxStamina( 100 )
 	self:SetStaminaLimit( 100 )
-	self:SetDisableControlsFlag( 0 )
+	self:SetStaminaBoost( 0 )
+	self:SetStaminaBoostDuration( 0 )
+
 	self:SetDisableControls( false )
+	self:SetDisableControlsFlag( 0 )
 
 	self:SetRenderMode( RENDERMODE_NORMAL )
-	self:SetColor( Color( 255, 255, 255 ) )
+	self:SetColor( Color( 255, 255, 255, 255 ) )
 	self:SetSubMaterial()
 	self:SetMaterial( "" )
 
@@ -45,16 +54,18 @@ function ply:Cleanup( norem )
 		self:SetBodygroup( i, 0 )
 	end
 
-	self:SetDSP( 1 )
+	self:SetDSP( 0 )
 	self:SetModelScale( 1 )
 	self:Freeze( false )
 	self:SetNoDraw( false )
 	self:SetCustomCollisionCheck( false )
 	self:StopBurn()
+	self:GodDisable()
 
 	self:StopAmbient()
 
 	if !norem then
+		self:SetBackpack( 0 )
 		self:SetVest( 0 )
 		self:RemoveAllItems()
 	end
@@ -69,28 +80,60 @@ function ply:Cleanup( norem )
 	net.Broadcast()
 end
 
-function ply:Despawn()
+function PLAYER:Despawn()
+	for k, v in pairs( self:GetWeapons() ) do
+		if v.DespawnDrop then
+			self:PlayerDropWeapon( v:GetClass(), true, true )
+		end
+	end
+
 	self:Cleanup()
 	self:InvalidatePlayerForSpectate()
 end
 
-/*function ply:PrepareForSpawn()
+/*function PLAYER:PrepareForSpawn()
 	self:UnSpectate()
 	//self:InvalidatePlayerForSpectate()
 
 end*/
 
-function ply:DropEQ()
+function PLAYER:DropEQ()
 	self:DropVest( true )
 
 	local wep = self:GetActiveWeapon()
 	if IsValid( wep ) then
 		self:PlayerDropWeapon( wep:GetClass(), true, true )
 	end
+end
 
-	/*for k, wep in pairs( self:GetWeapons() ) do
-		self:PlayerDropWeapon( wep:GetClass(), true, true )
-	end*/
+local function give_player_weapon( ply, class, ammo )
+	local loadout = string.match( class, "^loadout:(.+)$" )
+	if loadout then
+		local l_wep, l_ammo = GetLoadoutWeapon( loadout )
+		if !l_wep then return end
+	
+		class = l_wep
+		ammo = ammo or l_ammo
+	end
+
+	local wep = ply:Give( class )
+	if IsValid( wep ) then
+		if !ammo then return wep end
+		ammo = wep.Primary.ClipSize * ammo
+
+		local clip = math.min( ammo, wep:GetMaxClip1() )
+		local reserve = ammo - clip
+
+		wep:SetClip1( clip )
+
+		if reserve > 0 then
+			ply:GiveAmmo( reserve, wep:GetPrimaryAmmoType() )
+		end
+	else
+		print( "Failed to create weapon: "..class )
+	end
+
+	return wep
 end
 
 local function setup_player_internal( self, class, spawn )
@@ -115,6 +158,10 @@ local function setup_player_internal( self, class, spawn )
 		self:Set_SCPPersonaT( class.persona.team )
 	end
 
+	if class.backpack and class.backpack > 0 then
+		self:SetBackpack( class.backpack )
+	end
+
 	self:Give( "item_slc_holster" )
 	self:Give( "item_slc_id" )
 
@@ -122,41 +169,29 @@ local function setup_player_internal( self, class, spawn )
 	if class.omnitool then
 		local omnitool = self:Give( "item_slc_omnitool" )
 		if IsValid( omnitool ) and chip then
-			omnitool:SetChipData( chip, GenerateOverride( chip ) )
+			omnitool:SetChipData( chip, GenerateAccessOverride( chip ) )
 		end
 	elseif chip then
-		/*local keycard = self:Give( "item_slc_keycard" )
-		if IsValid( keycard ) then
-			keycard:SetKeycardType( class.chip )
-		end*/
 		local wep = self:Give( "item_slc_access_chip" )
 		if IsValid( wep ) then
 			wep:SetChipData( chip )
 		end
 	end
 
-	for i, v in ipairs( class.weapons ) do
+	if class.loadout then
+		give_player_weapon( self, "loadout:"..class.loadout )
+	end
+
+	for _, v in ipairs( class.weapons ) do
 		if istable( v ) then
-			v = table.Random( v )
-		end
+			local tab = table.Copy( v )
 
-		local wep = self:Give( v )
-
-		if IsValid( wep ) then
-			local ammo = class.ammo[v]
-
-			if ammo then
-				local clip = math.min( ammo, wep:GetMaxClip1() )
-				local reserve = ammo - clip
-
-				wep:SetClip1( clip )
-
-				if reserve > 0 then
-					self:GiveAmmo( reserve, wep:GetPrimaryAmmoType() )
-				end
+			for i = 1, v.amount or 1 do
+				local wep_c = table.remove( tab, math.random( #tab ) )
+				give_player_weapon( self,  wep_c, class.ammo[wep_c] )
 			end
 		else
-			print( "Failed to create weapon: "..v )
+			give_player_weapon( self, v, class.ammo[v] )
 		end
 	end
 
@@ -186,27 +221,49 @@ local function setup_player_internal( self, class, spawn )
 				k = self:FindBodygroupByName( k )
 			end
 
-			if k > -1 then
-				self:SetBodygroup( k, v )
+			if k < 0 then continue end
+
+			if v == "?" then
+				v = math.random( self:GetBodygroupCount( k ) )
+			elseif isstring( v ) then
+				local r1, r2 = string.match( v, "^(%d+):(%d+)$" )
+
+				r1 = tonumber( r1 )
+				r2 = tonumber( r2 )
+
+				if r1 and r2 then
+					v = math.random( r1, r2 )
+				else
+					v = tonumber( v )
+				end
 			end
+
+			if !isnumber( v ) then continue end
+
+			self:SetBodygroup( k, v )
 		end
 	end
 
 	self:SetupHands()
 
-	self.ClassData = class
+	if class.spawn_protection then
+		self:ApplyEffect( "spawn_protection" )
+	end
 
-	hook.Run( "SLCPlayerSetup", self )
+	self.ClassData = class
 
 	if class.vest then
 		self:EquipVest( class.vest, true )
 	end
-
-	/*net.Start( "PlayerSetup" )
-	net.Send( self )*/
+	
+	if class.callback then
+		class.callback( self, class )
+	end
+	
+	hook.Run( "SLCPlayerSetup", self )
 end
 
-function ply:SetupPlayer( class, spawn, instant )
+function PLAYER:SetupPlayer( class, spawn, instant )
 	if instant then
 		setup_player_internal( self, class, spawn )
 	else
@@ -224,19 +281,18 @@ function ply:SetupPlayer( class, spawn, instant )
 	end
 end
 
-hook.Add( "Tick", "SLCSpawnTick", function()
+hook.Add( "Tick", "SLCSetupPlayer", function()
 	local ct = CurTime()
-
-	for k, v in pairs( player.GetAll() ) do
-		local data = v:GetProperty( "spawning" )
-		if data and data.time < ct then
+	for i, v in ipairs( player.GetAll() ) do
+		local spawn_data = v:GetProperty( "spawning" )
+		if spawn_data and spawn_data.time < ct then
 			v:SetProperty( "spawning", nil )
-			setup_player_internal( v, data.class, data.spawn )
+			setup_player_internal( v, spawn_data.class, spawn_data.spawn )
 		end
 	end
 end )
 
-function ply:EquipVest( vest, silent )
+function PLAYER:EquipVest( vest, silent, dur )
 	if self:GetVest() > 0 then return end
 
 	local t = self:SCPTeam()
@@ -251,9 +307,8 @@ function ply:EquipVest( vest, silent )
 	if data then
 		if !hook.Run( "SLCArmorPickedUp", self ) then
 			self:SetVest( vest )
-			//self.OldModel = self:GetModel()
-
-			//local custom = {}
+			self:SetVestDurability( dur or data.durability or -1 )
+			
 			local use_model
 			local callback = VEST.GetCallback( vest )
 			if callback then
@@ -265,7 +320,7 @@ function ply:EquipVest( vest, silent )
 				bodygroups[i] = self:GetBodygroup( i )
 			end
 
-			self:SetProperty( "old_model", { self:GetModel(), self:GetSkin(), bodygroups } )
+			self:SetProperty( "vest_old_model", { self:GetModel(), self:GetSkin(), bodygroups } )
 			self:SetModel( use_model or istable( data.model ) and table.Random( data.model ) or data.model )
 
 			if data.skin then
@@ -277,17 +332,29 @@ function ply:EquipVest( vest, silent )
 					if isstring( k ) then
 						k = self:FindBodygroupByName( k )
 					end
-
-					if k > -1 then
-						self:SetBodygroup( k, v )
+		
+					if k < 0 then continue end
+		
+					if v == "?" then
+						v = math.random( self:GetBodygroupCount( k ) )
+					elseif isstring( v ) then
+						local r1, r2 = string.match( v, "^(%d+):(%d+)$" )
+		
+						r1 = tonumber( r1 )
+						r2 = tonumber( r2 )
+		
+						if r1 and r2 then
+							v = math.random( r1, r2 )
+						else
+							v = tonumber( v )
+						end
 					end
+		
+					if !isnumber( v ) then continue end
+		
+					self:SetBodygroup( k, v )
 				end
 			end
-
-			/*local callback = VEST.GetCallback( vest )
-			if callback then
-				callback( self, vest, data, true, custom )
-			end*/
 
 			self:PushSpeed( data.mobility, data.mobility, -1, "SLC_Vest" )
 
@@ -301,11 +368,11 @@ function ply:EquipVest( vest, silent )
 	end
 end
 
-function ply:DropVest( silent )
+function PLAYER:DropVest( silent )
 	local vest = self:GetVest()
 	if vest == 0 then return end
 
-	local info = self:GetProperty( "old_model" )
+	local info = self:GetProperty( "vest_old_model" )
 	if !info then
 		print( "ERROR! Failed to retrieve player model!" )
 		if !self.ClassData then
@@ -319,7 +386,10 @@ function ply:DropVest( silent )
 	self:SetVest( 0 )
 
 	local pos = self:GetPos():DropToFloor()
-	VEST.Create( vest, pos )
+	local ent = VEST.Create( vest, pos )
+
+	ent:SetDurability( self:GetVestDurability() )
+	self:SetVestDurability( -1 )
 
 	self:SetModel( info[1] )
 
@@ -339,15 +409,7 @@ function ply:DropVest( silent )
 		end
 	end
 
-	self:SetProperty( "old_model" )
-	//self.OldModel = nil
-
-	/*if !self.VestSpeed then
-		print( "ERROR! Failed to restore player speed! It can cause speed errors!" )
-	else
-		self:PopSpeed( self.VestSpeed )
-		self.VestSpeed = nil
-	end*/
+	self:SetProperty( "vest_old_model" )
 	self:PopSpeed( "SLC_Vest" )
 
 	if !silent then
@@ -358,21 +420,7 @@ function ply:DropVest( silent )
 	hook.Run( "SLCArmorDropped", self )
 end
 
-/*local function applyDifference( base, tab, new )
-	if !istable( base ) then return end
-
-	for k, v in pairs( base ) do
-		if istable( v ) and istable( tab[k] ) then
-			applyDifference( v, tab[k], new[k] )
-		else
-			if tab[k] != v then
-				new[k] = tab[k]
-			end
-		end
-	end
-end*/
-
-function ply:CreatePlayerRagdoll( disable_loot )
+function PLAYER:CreatePlayerRagdoll( disable_loot )
 	if self:GetSCPNoRagdoll() then return end
 	if self:GetNoDraw() then return end
 
@@ -420,8 +468,9 @@ function ply:CreatePlayerRagdoll( disable_loot )
 		end
 	end
 
-	rag:SetNWInt( "time", CurTime() )
+	rag:SetNWString( "nick", string.sub( self:Nick(), 1, 32 ) )
 	rag:SetNWInt( "team", self:SCPTeam() )
+	rag:SetNWFloat( "time", CurTime() )
 
 	rag.Data = {
 		time = CurTime(),
@@ -434,25 +483,50 @@ function ply:CreatePlayerRagdoll( disable_loot )
 		local loot = {}
 
 		for i, v in pairs( self:GetWeapons() ) do
-			if IsValid( v ) and v.Droppable != false and !v.SCP then
-				local stored = self:StoreWeapon( v:GetClass(), true )
+			if !IsValid( v ) or v.Droppable == false or v.SCP then continue end
 
+			local stored = self:StoreWeapon( v:GetClass(), true )
+
+			table.insert( loot, {
+				info = {
+					class = stored.class,
+					data = stored,
+				},
+				func = function( p, w_class, data )
+					return nil, nil, p:RestoreWeapon( data )
+				end
+			} )
+		end
+
+		local wep = self:GetMainWeapon()
+		if IsValid( wep ) then
+			local ammo = math.floor( self:GetAmmoCount( wep:GetPrimaryAmmoType() ) * ( math.random() * 0.2 + 0.1 ) )
+			if ammo > 0 then
 				table.insert( loot, {
 					info = {
-						class = stored.class,
-						data = stored,
+						class = "__slc_ammo",
+						data  = { amount = ammo },
 					},
-					func = function( p, w_class, data )
-						local wep = p:RestoreWeapon( data )
-
-						return false, false, wep
-					end
+					func = SLCLootFunctions.ammo
 				} )
 			end
 		end
 
+		local num = #loot
+		local w, h = 3, 2
+		
+		if num > 12 then
+			w, h = 5, math.ceil( num / w )
+		elseif num > 10 then
+			w, h = 4, 3
+		elseif num > 8 then
+			w, h = 5, 2
+		elseif num > 6 then
+			w, h = 4, 2
+		end
+
 		rag:InstallTable( "Lootable" )
-		rag:SetLootData( 3, 2, loot )
+		rag:SetLootData( w, h, loot )
 
 		rag:CallOnRemove( "looting", function( ent )
 			ent:DropAllListeners()
@@ -474,7 +548,7 @@ function ply:CreatePlayerRagdoll( disable_loot )
 	return rag
 end
 
-function ply:Blink( dur, nextblink )
+function PLAYER:Blink( dur, nextblink )
 	if !self:GetBlink() then
 		self:SetBlink( true )
 
@@ -496,8 +570,8 @@ end
 --[[-------------------------------------------------------------------------
 Premium
 ---------------------------------------------------------------------------]]
-_OldSetUserGroup = _OldSetUserGroup or ply.SetUserGroup
-function ply:SetUserGroup( ... )
+_OldSetUserGroup = _OldSetUserGroup or PLAYER.SetUserGroup
+function PLAYER:SetUserGroup( ... )
 	_OldSetUserGroup( self, ... )
 	self:CheckPremium()
 end
@@ -508,7 +582,7 @@ cvars.AddChangeCallback( CVAR.slc_premium_groups:GetName(), function( cvar, old,
 	end
 end, "PremiumGroups" )
 
-function ply:CheckPremium()
+function PLAYER:CheckPremium()
 	if !self.PlayerData then return end
 
 	local groups = {}
@@ -535,7 +609,7 @@ end
 --[[-------------------------------------------------------------------------
 SPEED SYSTEM
 ---------------------------------------------------------------------------]]
-function ply:PushSpeed( walk, run, crouch, id, maxstack )
+function PLAYER:PushSpeed( walk, run, crouch, id, maxstack )
 	if walk <= 0 and walk != -1 then
 		print( "Inavlid value for walk speed!" )
 		return false
@@ -651,7 +725,7 @@ local function getSpeedValue( p, id )
 	end
 end
 
-function ply:PopSpeed( id, all )
+function PLAYER:PopSpeed( id, all )
 	if !self.SpeedStack then return end
 	if id == 0 then return end
 
@@ -680,7 +754,7 @@ function ply:PopSpeed( id, all )
 	end
 end
 
-function ply:SetBaseSpeed( walk, run, crouch )
+function PLAYER:SetBaseSpeed( walk, run, crouch )
 	if !self.SpeedStack then
 		self.SpeedStack = {}
 	end
@@ -700,7 +774,7 @@ function ply:SetBaseSpeed( walk, run, crouch )
 	end
 end
 
-function ply:ClearSpeedStack()
+function PLAYER:ClearSpeedStack()
 	if !self.SpeedStack then return end
 
 	self:SetWalkSpeed( self.SpeedStack[1].walk )
@@ -717,60 +791,60 @@ print( "run", Entity( 1 ):GetRunSpeed() )*/
 --[[-------------------------------------------------------------------------
 Weapons
 ---------------------------------------------------------------------------]]
-function ply:PlayerDropWeapon( class, all, force )
+function PLAYER:PlayerDropWeapon( class, all, force )
 	local wep = self:GetWeapon( class )
+	if !IsValid( wep ) then return end
 
-	if IsValid( wep ) then
-		if wep.Droppable == false then return end
-		if !force and ( wep.PreventDropping == true or wep.CanDrop and wep:CanDrop() == false ) then return end
+	if wep.Droppable == false then return end
+	if !force and ( wep.PreventDropping == true or wep.CanDrop and wep:CanDrop() == false or hook.Run( "SLCPlayerCanDropWeapon", self, class, all ) == false ) then return end
 
-		if wep.Stacks and wep.Stacks > 1 then
-			local count = wep:GetCount()
+	if wep.Stacks and wep.Stacks > 1 then
+		local count = wep:GetCount()
 
-			if count > 1 then
-				local forward = self:EyeAngles():Forward()
+		if count > 1 then
+			local forward = self:EyeAngles():Forward()
 
-				for i = 1, all and count or 1 do
-					local new = ents.Create( class )
+			for i = 1, all and count or 1 do
+				local new = ents.Create( class )
 
-					if IsValid( new ) then
-						new:SetPos( self:GetShootPos() + forward * 10 )
-						new:SetAngles( self:GetAngles() )
-						new:Spawn()
+				if IsValid( new ) then
+					new:SetPos( self:GetShootPos() + forward * 10 )
+					new:SetAngles( self:GetAngles() )
+					new:Spawn()
 
-						new.Dropped = CurTime()
+					new.Dropped = CurTime()
 
-						local phys = new:GetPhysicsObject()
-						if IsValid( phys ) then
-							phys:SetVelocity( forward * 300 + VectorRand() * 10 )
-						end
+					local phys = new:GetPhysicsObject()
+					if IsValid( phys ) then
+						phys:SetVelocity( forward * 300 + VectorRand() * 10 )
 					end
-
-					wep:RemoveStack()
 				end
 
-				return
+				wep:RemoveStack()
 			end
-		end
 
-		//print( wep:Clip1(), self:GetAmmoCount( wep:GetPrimaryAmmoType() ) )
-		if wep.SLCPreDrop then
-			wep:SLCPreDrop()
+			return
 		end
-
-		self:DropWeapon( wep )
-		wep.Dropped = CurTime()
-		/*if wep.OnDrop then
-			wep:OnDrop()
-		end*/
 	end
+
+	//print( wep:Clip1(), self:GetAmmoCount( wep:GetPrimaryAmmoType() ) )
+	if wep.SLCPreDrop then
+		wep:SLCPreDrop()
+	end
+
+	self:DropWeapon( wep )
+	wep.Dropped = CurTime()
+	/*if wep.OnDrop then
+		wep:OnDrop()
+	end*/
 end
 
-function ply:StoreWeapon( class, norem )
+function PLAYER:StoreWeapon( class, norem )
 	local wep = self:GetWeapon( class )
 
 	if IsValid( wep ) then
 		local data = {
+			_stored = true,
 			class = wep:GetClass(),
 			clip1 = wep:Clip1(),
 			clip2 = wep:Clip2(),
@@ -788,7 +862,7 @@ function ply:StoreWeapon( class, norem )
 	end
 end
 
-function ply:StoreWeapons()
+function PLAYER:StoreWeapons()
 	local data = {}
 
 	for k, v in pairs( self:GetWeapons() ) do
@@ -799,10 +873,12 @@ function ply:StoreWeapons()
 	return data
 end
 
-function ply:RestoreWeapon( data, wep )
+function PLAYER:RestoreWeapon( data, wep )
+	if !data._stored then return end
+
 	local class = data.class
 
-	if !IsValid( wep ) and table.Count( self:GetWeapons() ) < 8 and hook.Run( "SLCCanPickupWeaponClass", self, class ) != false then
+	if !IsValid( wep ) and table.Count( self:GetWeapons() ) < self:GetInventorySize() and hook.Run( "SLCCanPickupWeaponClass", self, class ) != false then
 		wep = self:Give( class )
 	end
 
@@ -818,7 +894,7 @@ function ply:RestoreWeapon( data, wep )
 	end
 end
 
-function ply:RestoreWeapons( tab )
+function PLAYER:RestoreWeapons( tab )
 	for k, v in pairs( tab ) do
 		self:RestoreWeapon( v )
 	end
@@ -828,7 +904,7 @@ end
 Statis
 ---------------------------------------------------------------------------]]
 --REVIEW: Is ammo stored by default?
-function ply:SetStasis( time )
+function PLAYER:SetStasis( time )
 	local data = {}
 
 	//hook.Run( "SLCCreateStasisData", self, data )
@@ -869,7 +945,7 @@ function ply:SetStasis( time )
 	end
 end
 
-function ply:DisableStasis()
+function PLAYER:DisableStasis()
 	local data = self:GetProperty( "stasis_data" )
 	self:SetProperty( "stasis_data", nil )
 
@@ -893,9 +969,9 @@ end
 --[[-------------------------------------------------------------------------
 AFK
 ---------------------------------------------------------------------------]]
-function ply:MakeAFK()
+function PLAYER:MakeAFK()
 	if !self:IsAFK() then
-		self.SLCAFKTimer = RealTime() + 1
+		self.SLCAFKTimer = RealTime() + 10
 		self:Set_SCPAFK( true )
 		PlayerMessage( "afk", self )
 	end
@@ -905,6 +981,7 @@ end
 Timer( "SLCAFKCheck", 10, 0, function( self, n )
 	local rt = RealTime()
 	local afk_time = CVAR.slc_afk_time:GetInt() or 60
+	local afk_autoslay = CVAR.slc_afk_autoslay:GetInt() or 60
 	local afk_mode = CVAR.slc_afk_mode:GetInt() or 1
 
 	local players = player.GetAll()
@@ -914,7 +991,21 @@ Timer( "SLCAFKCheck", 10, 0, function( self, n )
 		if !v:IsBot() then
 			if !v:IsAFK() then
 				--print( "check", v, v.SLCAFKTimer, rt )
-				if v.SLCAFKTimer and v.SLCAFKTimer + afk_time < rt then
+				if v:Alive() and afk_autoslay > 0 and v.SLCAFKTimer and v.SLCAFKTimer + afk_autoslay < rt then
+					if v.AFKWarned then return end
+
+					v.AFKWarned = true
+					net.Ping( "AFKSlayWarning", "", v )
+
+					AddTimer( "SLCAFKSlay"..v:SteamID(), 15, 1, function()
+						print( "fn", !v:Alive(), afk_autoslay <= 0, !v.SLCAFKTimer, v.SLCAFKTimer + afk_autoslay >= rt )
+						if !v:Alive() or afk_autoslay <= 0 or !v.SLCAFKTimer or v.SLCAFKTimer + afk_autoslay >= rt then return end
+						
+						v:SkipNextKillRewards()
+						v:Kill()
+						v:MakeAFK()
+					end )
+				elseif afk_time > 0 and v.SLCAFKTimer and v.SLCAFKTimer + afk_time < rt then
 					v:MakeAFK()
 				end
 			elseif !SLCAuth.HasAccess( v, "slc afkdontkick" ) then
@@ -935,38 +1026,9 @@ Timer( "SLCAFKCheck", 10, 0, function( self, n )
 end )
 
 --[[-------------------------------------------------------------------------
-SLCProperties
----------------------------------------------------------------------------]]
-function ply:ResetProperties()
-	self.SLCProperties = {}
-	//self.SLCPropertiesSync = {}
-end
-
-function ply:SetProperty( key, value, sync )
-	if !self.SLCProperties then self.SLCProperties = {} end
-	//if !self.SLCPropertiesSync then self.SLCPropertiesSync = {} end
-
-	if sync then
-		net.Start( "SLCPropertyChanged" )
-			net.WriteString( key )
-			net.WriteTable( { value } )
-		net.Send( self )
-	end
-
-	self.SLCProperties[key] = value
-	return value
-end
-
-function ply:GetProperty( key )
-	if !self.SLCProperties then self.SLCProperties = {} end
-
-	return self.SLCProperties[key]
-end
-
---[[-------------------------------------------------------------------------
 SLCTask
 ---------------------------------------------------------------------------]]
-function ply:IsDoingSLCTask( name )
+function PLAYER:IsDoingSLCTask( name )
 	local task = self:GetProperty( "slc_task" )
 
 	if name then
@@ -976,7 +1038,7 @@ function ply:IsDoingSLCTask( name )
 	end
 end
 
-function ply:StartSLCTask( name, time, check, show_bar, block_movement, args )
+function PLAYER:StartSLCTask( name, time, check, show_bar, block_movement, args )
 	local promise = SLCPromise( function( resolve, reject )
 		if self:IsDoingSLCTask() then
 			self:StopSLCTask( 2 )
@@ -1020,7 +1082,7 @@ function ply:StartSLCTask( name, time, check, show_bar, block_movement, args )
 	return promise
 end
 
-function ply:StopSLCTask( data )
+function PLAYER:StopSLCTask( data )
 	local task = self:GetProperty( "slc_task" )
 	if task.show_bar then
 		self:EnableProgressBar( false )
@@ -1033,7 +1095,7 @@ function ply:StopSLCTask( data )
 			self:SetDisableControls( false )
 			self:SetDisableControlsFlag( 0 )
 		else
-			self:SetDisableControlsFlag( task.blocked_flag )
+			self:SetDisableControlsFlag( task.blocked_flag ) --WARN: old flags might got already removed
 		end
 	end
 
@@ -1046,35 +1108,325 @@ end
 
 hook.Add( "Tick", "SLCTaskTick", function()
 	local ct = CurTime()
-
-	for k, v in pairs( player.GetAll() ) do
-		local data = v:GetProperty( "slc_task" )
-		if data then
-			if data.end_time <= ct then
-				data.resolve( data.args )
-				v:StopSLCTask()
-			elseif data.check then
-				if !data.check() then
-					v:StopSLCTask( 1 )
-				end
+	for i, v in ipairs( player.GetAll() ) do
+		local task_data = v:GetProperty( "slc_task" )
+		if task_data and task_data.end_time <= ct then
+			task_data.resolve( task_data.args )
+			v:StopSLCTask()
+		elseif task_data and task_data.check then
+			if !task_data.check() then
+				v:StopSLCTask( 1 )
 			end
 		end
 	end
 end )
+--[[-------------------------------------------------------------------------
+Footsteps
+---------------------------------------------------------------------------]]
+local setp_off = Vector( 0, 0, 8 )
+local step_trace = {}
+step_trace.mins = Vector( -16, -16, -4 )
+step_trace.maxs = Vector( 16, 16, 4 )
+step_trace.mask = MASK_PLAYERSOLID
+step_trace.output = step_trace
 
+function PLAYER:PlayStepSound( no_update )
+	if !self:Alive() then return end
+
+	local mv = self:GetMoveType()
+	if mv != MOVETYPE_WALK and mv != MOVETYPE_STEP and mv != MOVETYPE_LADDER then return end
+	
+	local foot = self.slc_foot == 0 and 1 or 0
+	local snd = foot == 0 and "Default.StepLeft" or "Default.StepRight"
+	
+	self.slc_foot = foot
+	
+	if mv == MOVETYPE_LADDER then
+		snd = foot == 0 and "Ladder.StepLeft" or "Ladder.StepRight"
+	else
+		local pos = self:GetPos()
+
+		step_trace.start = pos
+		step_trace.endpos = pos - setp_off
+		step_trace.filter = self
+
+		util.TraceLine( step_trace )
+
+		if !step_trace.Hit then
+			util.TraceHull( step_trace )
+		end
+
+		if !step_trace.Hit then return end
+
+		local surf = util.GetSurfaceData( step_trace.SurfaceProps )
+		if surf then
+			snd = self.slc_foot == 0 and surf.stepLeftSound or surf.stepRightSound
+		end
+	end
+	
+	if self:Crouching() then
+		snd = snd.."Crouch"
+	elseif self:GetRunSpeed() == self:GetWalkSpeed() or !self:KeyDown( IN_SPEED ) then
+		snd = snd.."Walk"
+	end
+
+	if hook.Run( "SLCPlayerFootstep", self, self.slc_foot, snd ) == true then return end
+
+	self:EmitSound( snd )
+
+	if !no_update then
+		self:UpdateStepTime()
+	end
+end
+
+function PLAYER:UpdateStepTime()
+	local st = STEPTYPE_NORMAL
+
+	if self:WaterLevel() > 0 then
+		st = STEPTYPE_WATER
+	elseif self:GetMoveType() == MOVETYPE_LADDER then
+		st = STEPTYPE_LADDER
+	end
+
+	self.slc_next_footstep = hook.Run( "SLCFootstepParams", self, st, self:GetVelocity(), self:Crouching() )
+end
+
+--[[-------------------------------------------------------------------------
+Chase system
+---------------------------------------------------------------------------]]
+--Area
+local ChaseArea = {}
+
+function ChaseArea:New( cont )
+	local tab = {}
+	
+	tab.Controller = cont
+	tab.UID = cont.AreaUIDs
+	cont.AreaUIDs = cont.AreaUIDs + 1
+	
+	return setmetatable( tab, { __index = ChaseArea } )
+end
+
+function ChaseArea:Think()
+	local ct = CurTime()
+	if self.DieTime <= ct then return true end
+
+	//debugoverlay.Sphere( self.Position, self.Radius, 0.3, Color( 255, 255, 255, 0 ), true )
+
+	local tab = self.Controller.ChasedBy
+	for i, v in ipairs( player.FindInSphere( self.Position, self.Radius ) ) do
+		if v:SCPTeam() != TEAM_SCP or !v:GetSCPChase() then continue end
+
+		if !tab[v] then
+			tab[v] = {
+				start_time = ct,
+				start_area_id = self.UID,
+				is_active = false,
+			}
+		end
+
+		local last_id = tab[v].last_area_id
+		if !last_id or self.UID > last_id then
+			tab[v].prev_area_id = last_id
+			tab[v].last_area_id = self.UID
+			tab[v].last_area_dietime = self.DieTime
+		end
+	end
+end
+
+function ChaseArea:SetRadius( rad )
+	self.Radius = rad
+end
+
+function ChaseArea:SetPos( pos )
+	self.Position = pos
+end
+
+function ChaseArea:SetDieTime( dt )
+	self.DieTime = dt
+end
+
+setmetatable( ChaseArea, { __call = ChaseArea.New } )
+
+--controller
+local ChaseController = {}
+
+function ChaseController:New( ply )
+	local tab = {}
+	
+	tab.Player = ply
+	tab.Areas = {}
+	tab.ChasedBy = {}
+	tab.NextThink = 0
+	tab.AreaUIDs = 0
+	
+	return setmetatable( tab, { __index = ChaseController } )
+end
+
+function ChaseController:Think()
+	local ct = CurTime()
+	if self.NextThink > ct then return end
+	self.NextThink = ct + 0.25
+
+	local ply = self.Player
+	local pos = ply:GetPos()
+
+	if !self.LastArea or self.LastArea:DistToSqr( pos ) > self.LastAreaRadiusSqr and !ply:KeyDown( IN_DUCK ) then
+		local area = ChaseArea( self )
+		table.insert( self.Areas, 1, area )
+
+		if #self.Areas == 9 then
+			self.Areas[9] = nil
+		end
+
+		local sprint = ply:KeyDown( IN_SPEED )
+		local radius = sprint and 300 or 150
+		local time = sprint and 8 or 6
+
+		area:SetPos( pos )
+		area:SetRadius( radius )
+		area:SetDieTime( ct + time )
+
+		self.LastArea = pos
+		self.LastAreaRadiusSqr = radius * radius
+	end
+
+	for i = #self.Areas, 1, -1 do
+		if self.Areas[i]:Think() then
+			table.remove( self.Areas, i )
+		end
+	end
+
+	for chase_ply, chase_data in pairs( self.ChasedBy ) do
+		if !IsValid( chase_ply ) or chase_data.last_area_dietime <= ct then
+			self.ChasedBy[chase_ply] = nil
+			continue
+		end
+
+		if !chase_data.is_active then
+			chase_data.is_active = chase_data.last_area_id > chase_data.start_area_id
+		end
+	end
+end
+
+setmetatable( ChaseController, { __call = ChaseController.New } )
+
+function PLAYER:ChaseThink()
+	if !self:Alive() then return end
+
+	local t = self:SCPTeam()
+	if t == TEAM_SPEC then return end
+
+	if t != TEAM_SCP then
+		local cont = self:GetProperty( "slc_chase_controller" )
+		if !cont then
+			cont = ChaseController( self )
+			self:SetProperty( "slc_chase_controller", cont )
+		end
+
+		cont:Think()
+	end
+end
+
+function PLAYER:IsChasedBy( other )
+	local cont = self:GetProperty( "slc_chase_controller" )
+	if !cont then return false end
+
+	local data = cont.ChasedBy[other]
+	if !data then return false end
+
+	return data.is_active
+end
+
+function PLAYER:IsChasing( other )
+	return other:IsChasedBy( self )
+end
+
+function PLAYER:GetChasedPlayers()
+	local res = {}
+	local ind = 0
+
+	for _, ply in ipairs( player.GetAll() ) do
+		if ply:IsChasedBy( self ) then
+			ind = ind + 1
+			res[ind] = ply
+		end
+	end
+
+	return res, ind
+end
+
+local next_chase_tick = 0
+hook.Add( "Tick", "SLCChaseTick", function()
+	local ct = CurTime()
+
+	if next_chase_tick > ct then return end
+	next_chase_tick = ct + 0.5
+
+	local ply_tab = {}
+
+	for _, ply in ipairs( player.GetAll() ) do
+		local cont = ply:GetProperty( "slc_chase_controller" )
+		if !cont then continue end
+
+		for chase_ply, chase_data in pairs( cont.ChasedBy ) do
+			if !chase_data.is_active then continue end
+
+			ply_tab[ply] = true
+			ply_tab[chase_ply] = true
+		end
+	end
+
+	for _, ply in ipairs( player.GetAll() ) do
+		local data = ply:GetProperty( "slc_chase_data" )
+		if !data and !ply_tab[ply] then continue end
+
+		local isscp = ply:SCPTeam() == TEAM_SCP
+
+		if ply_tab[ply] then
+			if !data then
+				data = {
+					increase = 0,
+					level = 0,
+					scp = isscp
+				}
+
+				ply:SetProperty( "slc_chase_data", data )
+				ply:PlayAmbient( "scp_chase", true, true, function( pl )
+					return !pl:GetProperty( "slc_chase_data" )
+				end )
+			end
+
+			data.finish = ct + 5
+
+			if data.increase < ct then
+				data.increase = ct + 20
+				data.level = data.level + 1
+
+				ply:ApplyEffect( isscp and "scp_chase" or "human_chase" )
+				ply:SetChaseLevel( data.level )
+			end
+		elseif data.finish < ct then
+			ply:SetProperty( "slc_chase_data", nil )
+			ply:RemoveEffect( isscp and "scp_chase" or "human_chase" )
+			ply:SetChaseLevel( 0 )
+			ply:StopAmbient( "scp_chase" )
+		end
+	end
+end )
 --[[-------------------------------------------------------------------------
 Progress Bar Binding
 ---------------------------------------------------------------------------]]
-function ply:EnableProgressBar( enable, endtime, text, col1, col2 )
+function PLAYER:EnableProgressBar( enable, endtime, text, col1, col2 )
 	ProgressBar( self, enable, endtime, text, col1, col2 )
 end
 
 --[[-------------------------------------------------------------------------
 Helper functions
 ---------------------------------------------------------------------------]]
-Player_AddFrags = Player_AddFrags or ply.AddFrags
+Player_AddFrags = Player_AddFrags or PLAYER.AddFrags
 
-function ply:AddFrags( f )
+function PLAYER:AddFrags( f )
 	if f > 0 then
 		local team = self:SCPTeam()
 		if team != TEAM_SPEC then
@@ -1085,21 +1437,21 @@ function ply:AddFrags( f )
 	Player_AddFrags( self, f )
 end
 
-function ply:SetClassPoints( cp )
+function PLAYER:SetClassPoints( cp )
 	self:Set_SCPClassPoints( cp )
 	self:SetSCPData( "class_points", cp )
 end
 
-function ply:AddClassPoints( cp )
+function PLAYER:AddClassPoints( cp )
 	self:SetClassPoints( self:Get_SCPClassPoints() + cp )
 end
 
-function ply:SetSCPLevel( lvl )
+function PLAYER:SetSCPLevel( lvl )
 	self:Set_SCPLevel( lvl )
 	self:SetSCPData( "level", lvl )
 end
 
-function ply:AddLevel( lvl )
+function PLAYER:AddLevel( lvl )
 	if lvl >= 0 then
 		local level = self:Get_SCPLevel() + lvl
 
@@ -1109,7 +1461,7 @@ function ply:AddLevel( lvl )
 end
 
 local xp_scale_mfn = function( tab, mul, cat )
-	cat = cat or "general"
+	cat = cat or tab.main_category
 
 	if !tab.categories[cat] then
 		tab.categories[cat] = 0
@@ -1119,9 +1471,9 @@ local xp_scale_mfn = function( tab, mul, cat )
 	tab.categories[cat] = tab.categories[cat] + mul
 end
 
-function ply:AddXP( xp, category )
+function PLAYER:AddXP( xp, category )
 	if !isnumber( xp ) then return end
-	category = category or self.main_category
+	category = category or "general"
 
 	if !self._SLCXPCategories then
 		self._SLCXPCategories = {}
@@ -1186,14 +1538,14 @@ function ply:AddXP( xp, category )
 	return xp
 end
 
-function ply:ExperienceSummary()
+function PLAYER:ExperienceSummary()
 	local tmp = self._SLCXPCategories
 	self._SLCXPCategories = {}
 
 	return tmp or {}
 end
 
-function ply:ResetDailyBonus()
+function PLAYER:ResetDailyBonus()
 	local rs = tonumber( self:GetSCPData( "daily_bonus_reset", 0 ) ) or 0
 	if rs < SLC_UNIX_DAY then
 		print( "Resetting daily XP bonus", self )
@@ -1206,14 +1558,14 @@ function ply:ResetDailyBonus()
 	end
 end
 
-function ply:AddSanity( s )
+function PLAYER:AddSanity( s )
 	local sanity = self:GetSanity()
 	local maxsanity = self:GetMaxSanity()
 
 	self:SetSanity( math.Clamp( sanity + s, 0, maxsanity ) )
 end
 
-function ply:AddHealth( num )
+function PLAYER:AddHealth( num )
 	local max = self:GetMaxHealth()
 	local hp = self:Health() + num
 
@@ -1226,18 +1578,22 @@ function ply:AddHealth( num )
 	return hp
 end
 
-function ply:SkipNextKillRewards()
+function PLAYER:SkipNextKillRewards()
 	self._SkipNextKillRewards = true
 end
 
-function ply:IsAboutToSpawn()
+function PLAYER:SkipNextRagdoll()
+	self._SkipNextRagdoll = true
+end
+
+function PLAYER:IsAboutToSpawn()
 	return !!self:GetProperty( "spawning" ) or !!self:GetProperty( "spawning_scp" )
 end
 
-function ply:IsValidSpectator()
+function PLAYER:IsValidSpectator()
 	return !self:Alive() and self:IsActive() and !self:IsAFK() and self:SCPTeam() == TEAM_SPEC and !self:IsAboutToSpawn()
 end
 
-function ply:SCPCanInteract()
+function PLAYER:SCPCanInteract()
 	return self:GetSCPCanInteract() or self:GetSCPHuman()
 end

@@ -1,13 +1,13 @@
 util.AddNetworkString( "PlayerBlink" )
 util.AddNetworkString( "DropWeapon" )
-util.AddNetworkString( "UpdateSCPVars" )
+util.AddNetworkString( "UpdateSLCVars" )
 util.AddNetworkString( "WeaponDnD" )
 util.AddNetworkString( "SCPList" )
 util.AddNetworkString( "PlayerReady" )
 util.AddNetworkString( "RoundInfo" )
 util.AddNetworkString( "PlaySound" )
 util.AddNetworkString( "PlayerMessage" )
-util.AddNetworkString( "PlayerSetup" )
+util.AddNetworkString( "InitialIDs" )
 util.AddNetworkString( "PlayerCleanup" )
 util.AddNetworkString( "DropVest" )
 util.AddNetworkString( "CameraDetect" )
@@ -25,6 +25,9 @@ util.AddNetworkString( "SLCProgressBar" )
 util.AddNetworkString( "SLCLooting" )
 util.AddNetworkString( "SLCHooks" )
 util.AddNetworkString( "SLCXPSummary" )
+util.AddNetworkString( "SLCGasZones" )
+util.AddNetworkString( "SLCHitMarker" )
+util.AddNetworkString( "SLCDamageIndicator" )
 
 net.AddTableChannel( "SLCPlayerMeta" )
 net.AddTableChannel( "SLCGameruleData" )
@@ -33,57 +36,60 @@ net.AddTableChannel( "SLCInfoScreen" )
 Receivers
 ---------------------------------------------------------------------------]]
 net.Receive( "PlayerReady", function( len, ply )
+	if ply.FullyLoaded and !DEVELOPER_MODE then return end
+	ply.FullyLoaded = true
+
 	SendSCPList( ply )
 
 	if ROUND.active then
 		if ROUND.post then
-			net.Start( "RoundInfo" )
-				net.WriteTable{
-					status = "post",
-					time = CurTime() + GetTimer( "SLCPostround" ):GetRemainingTime(),
-					name = ROUND.roundtype.name,
-				}
-			net.Send( ply )
+			local t = GetTimer( "SLCPostround" )
+			if IsValid( t ) then
+				net.Start( "RoundInfo" )
+					net.WriteTable{
+						status = "post",
+						time = CurTime() + t:GetRemainingTime(),
+						duration = t:GetTime(),
+						name = ROUND.roundtype.name,
+					}
+				net.Send( ply )
+			end
 		elseif ROUND.infoscreen then
 			local t = GetTimer( "SLCSetup" )
-			if t then
+			if IsValid( t ) then
 				net.Start( "RoundInfo" )
 					net.WriteTable{
 						status = "inf",
 						time = CurTime() + t:GetRemainingTime(),
+						duration = t:GetTime(),
 						name = ROUND.roundtype.name,
 					}
 				net.Send( ply )
 			end
 		elseif ROUND.preparing then
 			local t = GetTimer( "SLCPreround" )
-
-			/*local time
-			if t then
-				time = t:GetRemainingTime()
-			else
-				time = GetTimer( "SLCSetup" ):GetRemainingTime() + CVAR.slc_time_preparing:GetInt()
-			end*/
-
-			if t then
+			if IsValid( t ) then
 				net.Start( "RoundInfo" )
 					net.WriteTable{
 						status = "pre",
 						time = CurTime() + t:GetRemainingTime(),
+						duration = t:GetTime(),
 						name = ROUND.roundtype.name,
 					}
 				net.Send( ply )
 			end
 		else
 			local t = GetTimer( "SLCRound" )
-
-			net.Start( "RoundInfo" )
-				net.WriteTable{
-					status = "live",
-					time = CurTime() + ( t and t:GetRemainingTime() or 0 ),
-					name = ROUND.roundtype.name,
-				}
-			net.Send( ply )
+			if IsValid( t ) then
+				net.Start( "RoundInfo" )
+					net.WriteTable{
+						status = "live",
+						time = CurTime() + t:GetRemainingTime(),
+						duration = t:GetTime(),
+						name = ROUND.roundtype.name,
+					}
+				net.Send( ply )
+			end
 		end
 	end
 
@@ -94,10 +100,7 @@ net.Receive( "PlayerReady", function( len, ply )
 	TransmitSCPHooks( ply )
 	net.SendTable( "SLCPlayerMeta", ply.playermeta or {}, ply )
 
-	if !ply.FullyLoaded then
-		ply.FullyLoaded = true
-		hook.Run( "PlayerReady", ply )
-	end
+	hook.Run( "PlayerReady", ply )
 end )
 
 net.Receive( "DropWeapon", function( len, ply )
@@ -139,7 +142,7 @@ net.Receive( "PlayerCommand", function( len, ply )
 	local name = net.ReadString()
 	local args = net.ReadTable()
 
-	cmd.ExecCallback( ply, name, args )
+	slc_cmd.ExecCallback( ply, name, args )
 end )
 
 net.Receive( "ClassUnlock", function( len, ply )
@@ -155,7 +158,7 @@ SCP VARS
 ---------------------------------------------------------------]]
 local PLAYER = FindMetaTable( "Player" )
 
-function PLAYER:SetupSCPVarTable()
+function PLAYER:SetupSLCVarTable()
 	self.scp_var_table = {
 		BOOL = {},
 		INT = {},
@@ -173,7 +176,7 @@ function PLAYER:SetupSCPVarTable()
 	}
 end
 
-function PLAYER:SCPVarUpdated( id, var_type, newVal )
+function PLAYER:SLCVarUpdated( id, var_type, newVal )
 	if newVal != nil then
 		local cb = self.scp_var_callbacks[var_type][id]
 		if cb then
@@ -190,22 +193,22 @@ function PLAYER:SCPVarUpdated( id, var_type, newVal )
 	table.insert( self.scp_update_var, { id, var_type } )
 end
 
-function PLAYER:SetSCPVarCallback( id, var_type, cb )
-	assert( type( cb ) == "function", "Bad argument #1 to function SetSCPVarCallback. Function expected got "..type( cb ) )
+function PLAYER:SetSLCVarCallback( id, var_type, cb )
+	assert( type( cb ) == "function", "Bad argument #1 to function SetSLCVarCallback. Function expected got "..type( cb ) )
 
 	self.scp_var_callbacks[var_type][id] = cb
 end
 
-function PLAYER:AddSCPVar( name, id, var_type )
+function PLAYER:AddSLCVar( name, id, var_type )
 	if !name or !id or !var_type then return end
 
 	if !self.scp_var_table then
-		self:SetupSCPVarTable()
+		self:SetupSLCVarTable()
 	end
 
 	assert( self.scp_var_table[var_type], "Invalid var_type '"..var_type.."'!" )
-	assert( id < 16, "Too big ID in AddSCPVar function. IDs cannot be greater than 15!" )
-	assert( id >= 0, "ID in AddSCPVar cannot be negative!" )
+	assert( id < 16, "Too big ID in AddSLCVar function. IDs cannot be greater than 15!" )
+	assert( id >= 0, "ID in AddSLCVar cannot be negative!" )
 
 	if var_type == "BOOL" then
 		self.scp_var_table.BOOL[id] = false
@@ -213,14 +216,14 @@ function PLAYER:AddSCPVar( name, id, var_type )
 			assert( type( b ) == "boolean", "Bad argument #1 to function Set"..name..". Boolean expected, got "..type( b ) )
 			if this.scp_var_table.BOOL[id] != b then
 				this.scp_var_table.BOOL[id] = b
-				this:SCPVarUpdated( id, "BOOL", b )
+				this:SLCVarUpdated( id, "BOOL", b )
 			end
 		end
 		self["Get"..name] = function( this )
 			return this.scp_var_table.BOOL[id]
 		end
 
-		self:SCPVarUpdated( id, "BOOL" )
+		self:SLCVarUpdated( id, "BOOL" )
 	elseif var_type == "INT" then
 		self.scp_var_table.INT[id] = 0
 		self["Set"..name] = function( this, int )
@@ -228,50 +231,50 @@ function PLAYER:AddSCPVar( name, id, var_type )
 			int = math.floor( int )
 			if this.scp_var_table.INT[id] != int then
 				this.scp_var_table.INT[id] = int
-				this:SCPVarUpdated( id, "INT", int )
+				this:SLCVarUpdated( id, "INT", int )
 			end
 		end
 		self["Get"..name] = function( this )
 			return this.scp_var_table.INT[id]
 		end
 
-		self:SCPVarUpdated( id, "INT" )
+		self:SLCVarUpdated( id, "INT" )
 	elseif var_type == "FLOAT" then
 		self.scp_var_table.FLOAT[id] = 0
 		self["Set"..name] = function( this, f )
 			assert( type( f ) == "number", "Bad argument #1 to function Set"..name..". Number expected, got "..type( f ) )
 			if this.scp_var_table.FLOAT[id] != f then
 				this.scp_var_table.FLOAT[id] = f
-				this:SCPVarUpdated( id, "FLOAT", f )
+				this:SLCVarUpdated( id, "FLOAT", f )
 			end
 		end
 		self["Get"..name] = function( this )
 			return this.scp_var_table.FLOAT[id]
 		end
 
-		self:SCPVarUpdated( id, "FLOAT" )
+		self:SLCVarUpdated( id, "FLOAT" )
 	elseif var_type == "STRING" then
 		self.scp_var_table.STRING[id] = ""
 		self["Set"..name] = function( this, str )
 			assert( type( str ) == "string", "Bad argument #1 to function Set"..name..". String expected, got "..type( str ) )
 			if this.scp_var_table.STRING[id] != str then
 				this.scp_var_table.STRING[id] = str
-				this:SCPVarUpdated( id, "STRING", str )
+				this:SLCVarUpdated( id, "STRING", str )
 			end
 		end
 		self["Get"..name] = function( this )
 			return this.scp_var_table.STRING[id]
 		end
 
-		self:SCPVarUpdated( id, "STRING" )
+		self:SLCVarUpdated( id, "STRING" )
 	end
 end
 
-function UpdateSCPVars( ply )
+function UpdateSLCVars( ply )
 	if ply.scp_update_var then
 		local num = #ply.scp_update_var
 		if num > 0 then
-			net.Start( "UpdateSCPVars" )
+			net.Start( "UpdateSLCVars" )
 			net.WriteUInt( num, 6 ) --max 64 values, 16 of each var_type
 
 			for _, var in pairs( ply.scp_update_var ) do
@@ -305,22 +308,22 @@ function UpdateSCPVars( ply )
 	end
 end
 
-hook.Add( "Tick", "UpdateSCPVars", function()
-	for _, v in pairs( player.GetAll() ) do
-		UpdateSCPVars( v )
+hook.Add( "Tick", "UpdateSLCVars", function()
+	for _, v in ipairs( player.GetAll() ) do
+		UpdateSLCVars( v )
 	end
 end )
 
-net.Receive( "UpdateSCPVars", function( len, ply )
+net.Receive( "UpdateSLCVars", function( len, ply )
 	if !ply.scp_var_table then return end
 
 	for k, v in pairs( ply.scp_var_table ) do
 		for id, val in pairs( v ) do
 			//if isnumber( id ) then
-				ply:SCPVarUpdated( id, k )
+				ply:SLCVarUpdated( id, k )
 			//end
 		end
 	end
 
-	UpdateSCPVars( ply )
+	UpdateSLCVars( ply )
 end )

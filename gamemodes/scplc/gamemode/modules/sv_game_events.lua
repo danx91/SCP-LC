@@ -2,22 +2,13 @@
 SCP 914
 ---------------------------------------------------------------------------]]
 function Use914( ent, ply )
-	if GetRoundStat( "914use" ) then return false end
-	SetRoundStat( "914use", true )
+	if GetRoundProperty( "914use" ) then return false end
+	SetRoundProperty( "914use", true )
 
-	if SCP_914_BUTTON and ent:GetPos() != SCP_914_BUTTON then
-		for k, v in pairs( ents.FindByClass( "func_door" ) ) do
-			if v:GetPos() == SCP_914_DOORS[1] or v:GetPos() == SCP_914_DOORS[2] then
-				v:Fire( "Close" )
-				AddTimer( "914DoorOpen"..v:EntIndex(), 15, 1, function()
-					v:Fire( "Open" )
-				end )
-			end
-		end
-	end
+	local button = CacheEntity( SCP_914_STATUS )
+	if !button then return end
 
-	local button = ents.FindByName( SCP_914_STATUS )[1]
-	local angle = button:GetAngles().roll
+	local angle = math.Round( button:GetAngles().roll )
 
 	local nummode = 0
 	local mode = UPGRADE_MODE.ROUGH
@@ -37,7 +28,7 @@ function Use914( ent, ply )
 	end
 
 	AddTimer( "SCP914UpgradeEnd", 16, 1, function()
-		SetRoundStat( "914use", false )
+		SetRoundProperty( "914use", false )
 	end )
 
 	if CVAR.slc_scp914_kill:GetBool() == true then
@@ -62,8 +53,7 @@ function Use914( ent, ply )
 end
 
 function InternalUpgrade914( mode, nummode, ply )
-	local items = ents.FindInBox( SCP_914_INTAKE_MINS, SCP_914_INTAKE_MAXS )
-	for k, v in pairs( items ) do
+	for i, v in ipairs( ents.FindInBox( SCP_914_INTAKE_MINS, SCP_914_INTAKE_MAXS ) ) do
 		if IsValid( v ) then
 			if v.HandleUpgrade then
 				v:HandleUpgrade( mode, nummode, SCP_914_OUTPUT, ply )
@@ -90,9 +80,7 @@ end
 Gate A Explosion
 ---------------------------------------------------------------------------]]
 local function IsGateAOpen()
-	local doors = ents.FindInSphere( POS_MIDDLE_GATE_A, 125 )
-
-	for k, v in pairs( doors ) do
+	for i, v in ipairs( ents.FindInSphere( POS_MIDDLE_GATE_A, 125 ) ) do
 		if v:GetClass() == "prop_dynamic" then 
 			if table.HasValue( POS_GATE_A_DOORS, v:GetPos() ) then
 				return false
@@ -104,8 +92,7 @@ local function IsGateAOpen()
 end
 
 local function DestroyGateA()
-	local ent = ents.FindInSphere( POS_MIDDLE_GATE_A, 125 )
-	for k, v in pairs( ent ) do
+	for i, v in ipairs( ents.FindInSphere( POS_MIDDLE_GATE_A, 125 ) ) do
 		local class = v:GetClass()
 		if class == "prop_dynamic" or class == "func_door" then
 			v:Remove()
@@ -114,39 +101,28 @@ local function DestroyGateA()
 end
 
 local function TakeDamageA( ent, ply )
-	/*for k, v in pairs( ents.FindInSphere( POS_MIDDLE_GATE_A, 1000 ) ) do
-		if v:IsPlayer() and v:Alive() then
-			if v:SCPTeam() != TEAM_SPEC then
-				local dmg = ( 1001 - v:GetPos():Distance( POS_MIDDLE_GATE_A ) ) * 10
-				if dmg > 0 then
-					v:TakeDamage( dmg, ply or v, ent )
-				end
-			end
-		end
-	end*/
-
 	for k, v in pairs( player.GetAll() ) do
-		if v:Alive() and v:SCPTeam() != TEAM_SPEC then
-			local pos = v:GetPos()
-			for _, tab in pairs( EXPLOSION_AREAS_A ) do
-				if pos:WithinAABox( tab[1], tab[2] ) then
-					local dmg = math.Clamp( 1 - pos:Distance( POS_MIDDLE_GATE_A ) / GATE_A_EXPLOSION_RADIUS, 0, 1 ) * 10000
-					if dmg > 0 then
-						v:TakeDamage( dmg, ply or v, ent )
-					end
+		if !v:Alive() or v:SCPTeam() == TEAM_SPEC then continue end
 
-					break
+		local pos = v:GetPos()
+		for _, tab in pairs( EXPLOSION_AREAS_A ) do
+			if pos:WithinAABox( tab[1], tab[2] ) then
+				local dmg = math.Clamp( 1 - pos:Distance( POS_MIDDLE_GATE_A ) / GATE_A_EXPLOSION_RADIUS, 0, 1 ) * 10000
+				if dmg > 0 then
+					v:TakeDamage( dmg, v, ent )
 				end
+
+				break
 			end
 		end
 	end
 end
 
 function ExplodeGateA( ply )
-	if GetRoundStat( "gatea" ) then return end
+	if GetRoundProperty( "gatea" ) then return end
 	if IsGateAOpen() then return end
 
-	SetRoundStat( "gatea", true )
+	SetRoundProperty( "gatea", true )
 	
 	local snd = ServerSound( "ambient/alarms/alarm_citizen_loop1.wav" )
 	snd:SetSoundLevel( 0 )
@@ -164,7 +140,7 @@ function ExplodeGateA( ply )
 			snd:Stop()
 
 			PlayerMessage( "explodeterminated" )
-			SetRoundStat( "gatea", false )
+			SetRoundProperty( "gatea", false )
 
 			return
 		end
@@ -184,7 +160,6 @@ function ExplodeGateA( ply )
 			DestroyGateA()
 
 			if IsValid( ply ) then
-				ply:AddFrags( 5 )
 				TakeDamageA( explosion, ply )
 			else
 				TakeDamageA( explosion )
@@ -217,7 +192,7 @@ function Recontain106( ply )
 
 	//local fplys = ents.FindInBox( CAGE_BOUNDS.MINS, CAGE_BOUNDS.MAXS )
 	local plys = {}
-	for k, v in pairs( player.GetAll() ) do
+	for i, v in ipairs( player.GetAll() ) do
 		if IsValid( v ) and v:IsPlayer() and v:SCPTeam() != TEAM_SPEC and v:SCPTeam() != TEAM_SCP then
 			if v:GetPos():WithinAABox( CAGE_BOUNDS.MINS, CAGE_BOUNDS.MAXS ) then
 				table.insert( plys, v )
@@ -247,7 +222,7 @@ function Recontain106( ply )
 
 	SetRoundStat( "106recontain", true )
 
-	AddTimer( "106Recontain", 6, 1, function()
+	AddTimer( "106Recontain", 8, 1, function()
 		if ROUND.post or !GetRoundStat( "106recontain" ) then return end
 		for k, v in pairs( plys ) do
 			if IsValid( v ) then
@@ -265,7 +240,7 @@ function Recontain106( ply )
 			end
 		end
 
-		AddTimer( "106Recontain", 11, 1, function()
+		AddTimer( "106Recontain", 12, 1, function()
 			if ROUND.post or !GetRoundStat( "106recontain" ) then return end
 
 			hook.Run( "SLCSCP106Recontained", ply )
@@ -276,6 +251,14 @@ function Recontain106( ply )
 				ply:AddFrags( points )
 			end
 
+			local points = math.ceil( SCPTeams.GetReward( TEAM_SCP ) * 0.5 * scpnum / #plys )
+			for k, v in pairs( plys ) do
+				if IsValid( v ) then
+					PlayerMessage( "r106success$"..points, v, true )
+					v:AddFrags( points )
+				end
+			end
+
 			for k, v in pairs( scps ) do
 				if IsValid( v ) then
 					v:SkipNextKillRewards()
@@ -283,7 +266,7 @@ function Recontain106( ply )
 				end
 			end
 
-			local eloiid = ents.FindByName( ELO_IID_NAME )[1]
+			local eloiid = CacheEntity( ELO_IID or ELO_IID_NAME )
 			if eloiid then
 				eloiid:Use( game.GetWorld(), game.GetWorld(), USE_TOGGLE, 1 )
 			end
@@ -301,6 +284,37 @@ end
 Omega Warhead
 ---------------------------------------------------------------------------]]
 OMEGA_DESTROY = OMEGA_DESTROY or {}
+
+local function omega_shelter()
+	local xp = CVAR.slc_xp_omega_shelter:GetInt()
+	for k, v in pairs( SCPTeams.GetPlayersByInfo( SCPTeams.INFO_HUMAN ) ) do
+		if v:GetPos():WithinAABox( OMEGA_SHELTER[1], OMEGA_SHELTER[2] ) then
+			//CenterMessage( string.format( "offset:75;escaped#255,0,0,SCPHUDVBig;shelter_escape;escapexp$%d", xp ), v )
+			InfoScreen( v, "escaped", INFO_SCREEN_DURATION, {
+				"escape3",
+				{ "escape_xp", "text;"..xp }
+			} )
+
+			v:AddXP( xp, "escape" )
+
+			local team = v:SCPTeam()
+			SCPTeams.AddScore( team, SCPTeams.GetReward( team ) * 2 )
+
+			v:Despawn()
+
+			v:KillSilent()
+			v:SetSCPTeam( TEAM_SPEC )
+			v:SetSCPClass( "spectator" )
+			v.DeathScreen = CurTime() + INFO_SCREEN_DURATION
+			//v:SetupSpectator()
+
+			//QueueInsert( v )
+
+			AddRoundStat( "escapes" )
+			//print( "SHELTER ESCAPE", v )
+		end
+	end
+end
 
 hook.Add( "SLCPreround", "SLCOmegaWarhead", function()
 	local listener = SynchronousEventListener( "OmegaWarhead", 2, 2, function( lis, info )
@@ -375,7 +389,7 @@ function OMEGAWarhead( ply1, ply2 )
 		local a_doors = { [OMEGA_GATE_A_DOOR_L] = true, [OMEGA_GATE_A_DOOR_R] = true }
 		local s_doors = { [OMEGA_SHELTER_DOOR_L] = true, [OMEGA_SHELTER_DOOR_R] = true }
 
-		for k, v in pairs( ents.GetAll() ) do
+		for k, v in ipairs( ents.GetAll() ) do
 			if v:GetClass() == "func_door" and ( a_doors[v:GetName()] or s_doors[v:GetName()] ) then
 				v:Fire( "Unlock" )
 				v:Fire( "Open" )
@@ -385,9 +399,9 @@ function OMEGAWarhead( ply1, ply2 )
 		AddTimer( "OmegaCountdown", time - 10, 1, function()
 			//print( "closig shelter, lockdown" )
 
-			SetRoundStat( "warhead_lockdown", true )
+			SetRoundProperty( "warhead_lockdown", true )
 
-			for k, v in pairs( ents.GetAll() ) do
+			for k, v in ipairs( ents.GetAll() ) do
 				if v:GetClass() == "func_door" and ( s_doors[v:GetName()] ) then
 					v:Fire( "Close" )
 				end
@@ -399,34 +413,7 @@ function OMEGAWarhead( ply1, ply2 )
 				//print( "HOLDING ROUND!" )
 				HoldRound()
 
-				local xp = CVAR.slc_xp_omega_shelter:GetInt()
-				for k, v in pairs( SCPTeams.GetPlayersByInfo( SCPTeams.INFO_HUMAN ) ) do
-					if v:GetPos():WithinAABox( OMEGA_SHELTER[1], OMEGA_SHELTER[2] ) then
-						//CenterMessage( string.format( "offset:75;escaped#255,0,0,SCPHUDVBig;shelter_escape;escapexp$%d", xp ), v )
-						InfoScreen( v, "escaped", INFO_SCREEN_DURATION, {
-							"escape3",
-							{ "escape_xp", "text;"..xp }
-						} )
-
-						v:AddXP( xp, "escape" )
-
-						local team = v:SCPTeam()
-						SCPTeams.AddScore( team, SCPTeams.GetReward( team ) * 2 )
-
-						v:Despawn()
-
-						v:KillSilent()
-						v:SetSCPTeam( TEAM_SPEC )
-						v:SetSCPClass( "spectator" )
-						v.DeathScreen = CurTime() + INFO_SCREEN_DURATION
-						//v:SetupSpectator()
-
-						//QueueInsert( v )
-
-						AddRoundStat( "escapes" )
-						//print( "SHELTER ESCAPE", v )
-					end
-				end
+				omega_shelter()
 			end )
 
 			AddTimer( "OmegaExplosion", 10, 1, function()
@@ -435,7 +422,7 @@ function OMEGAWarhead( ply1, ply2 )
 
 				local clr = Color( 255, 255, 255, 255 )
 				for k, v in pairs( player.GetAll() ) do
-					if WARHEAD_IS_ON_SURFACE( v ) then
+					if v:IsInZone( ZONE_SURFACE ) then
 						table.insert( surface, v )
 
 						v:SendLua( "util.ScreenShake(Vector(0),10,5,5,0)" )
@@ -477,9 +464,6 @@ function OMEGAWarhead( ply1, ply2 )
 
 				//print( "RELEASING ROUND" )
 				ReleaseRound()
-
-				//SetRoundStat( "omega_warhead", false )
-				//SetRoundStat( "warhead_lockdown", false )
 			end )
 		end )
 	end )
@@ -557,7 +541,7 @@ function ALPHAWarhead( ply )
 
 		AddTimer( "AlphaCountdown", time - 10, 1, function()
 			//print( "Lockdown" )
-			SetRoundStat( "warhead_lockdown", true )
+			SetRoundProperty( "warhead_lockdown", true )
 
 			local escape_timer = GetTimer( "EscapeTimer" )
 			if IsValid( escape_timer ) then
@@ -578,7 +562,7 @@ function ALPHAWarhead( ply )
 
 				local clr = Color( 255, 255, 255, 255 )
 				for k, v in pairs( player.GetAll() ) do
-					if WARHEAD_IS_ON_SURFACE( v ) then
+					if v:IsInZone( ZONE_SURFACE ) then
 						table.insert( surface, v )
 
 						v:ScreenFade( SCREENFADE.IN, clr, 2, 3 )
@@ -619,9 +603,96 @@ function ALPHAWarhead( ply )
 					ALPHA_WARHED_SCREEN:SetState( 4 )
 					ALPHA_WARHED_SCREEN:SetUsable( false )
 				end
+			end )
+		end )
+	end )
 
-				//SetRoundStat( "alpha_warhead", false )
-				//SetRoundStat( "warhead_lockdown", false )
+	return true
+end
+
+function ALLWarheads( time )
+	print( "ALL WARHEADS Activated" )
+	
+	if GetRoundStat( "goc_warhead" ) then return end
+	SetRoundStat( "omega_warhead", true )
+	SetRoundStat( "alpha_warhead", true )
+	SetRoundStat( "goc_warhead", true )
+
+	if IsValid( ALPHA_WARHED_SCREEN ) then
+		ALPHA_WARHED_SCREEN:SetState( 4 )
+		ALPHA_WARHED_SCREEN:SetUsable( false )
+	end
+
+	local sel_omega = GetSELObject( "OmegaWarhead" )
+	if sel_omega then
+		sel_omega:Broadcast( NULL, false, 2 )
+	end
+
+	TransmitSound( "scp_lc/warhead/alarm.ogg", true, 1 )
+	AddTimer( "GOCSiren", 3, 1, function()
+
+		//print( "Opening doors..." )
+
+		PlayerMessage( "goc_detonation$"..time )
+		TransmitSound( "scp_lc/warhead/siren.wav", true, 1 )
+
+		local a_doors = { [OMEGA_GATE_A_DOOR_L] = true, [OMEGA_GATE_A_DOOR_R] = true }
+		local s_doors = { [OMEGA_SHELTER_DOOR_L] = true, [OMEGA_SHELTER_DOOR_R] = true }
+
+		for k, v in ipairs( ents.GetAll() ) do
+			if v:GetClass() == "func_door" and ( a_doors[v:GetName()] or s_doors[v:GetName()] ) then
+				v:Fire( "Unlock" )
+				v:Fire( "Open" )
+			end
+		end
+
+		AddTimer( "GOCCountdown", time - 10, 1, function()
+			//print( "closig shelter, lockdown" )
+
+			SetRoundProperty( "warhead_lockdown", true )
+
+			for k, v in ipairs( ents.GetAll() ) do
+				if v:GetClass() == "func_door" and ( s_doors[v:GetName()] ) then
+					v:Fire( "Close" )
+				end
+			end
+
+			local escape_timer = GetTimer( "EscapeTimer" )
+			if IsValid( escape_timer ) then
+				escape_timer:Destroy()
+			end
+
+			AddTimer( "GOCShelter", 5, 1, function()
+				TransmitSound( "scp_lc/warhead/siren.wav", false, 1 )
+
+				HoldRound()
+				omega_shelter()
+			end )
+
+			AddTimer( "GOCExplosion", 10, 1, function()
+				local clr = Color( 255, 255, 255, 255 )
+				for k, v in pairs( player.GetAll() ) do
+					v:ScreenFade( SCREENFADE.IN, clr, 2, 3 )
+
+					if v:Alive() then
+						v:SetProperty( "death_info_override", {
+							type = "mia",
+							args = {
+								"omega_mia"
+							}
+						} )
+						v:SkipNextKillRewards()
+						v:Kill()
+					end
+				end
+
+				TransmitSound( "scp_lc/warhead/explosion.ogg", true, player.GetAll(), 1 )
+
+				//print( "RELEASING ROUND" )
+				SetRoundStat( "omega_warhead", false )
+				SetRoundStat( "alpha_warhead", false )
+
+				ReleaseRound()
 			end )
 		end )
 	end )
@@ -650,29 +721,73 @@ end )
 --[[-------------------------------------------------------------------------
 Lockdown
 ---------------------------------------------------------------------------]]
-function InitiateLockdown( ply, ent )
+function InitiateLockdown( ply, ent, cb )
 	local dur = CVAR.slc_lockdown_duration:GetInt()
-	if dur > 0 then
-		local status = GetRoundStat( "facility_lockdown" )
-		if status > 0 then
-			if status == 2 then
-				PlayerMessage( "lockdown_once", ply, true )
-			end
+	if dur <= 0 then return false end
+	if ROUND.preparing or ROUND.post then return false end
 
-			return false
+	local status = GetRoundProperty( "facility_lockdown", 0 )
+	if status > 0 then
+		if status == 2 then
+			PlayerMessage( "lockdown_once", ply, true )
 		end
 
-		SetRoundStat( "facility_lockdown", 1 )
-
-		AddTimer( "DisableLockdown", dur, 1, function( self, n )
-			if IsValid( ent ) then
-				ent:Fire( "Use" )
-				SetRoundStat( "facility_lockdown", 2 )
-			end
-		end )
-	elseif dur == -1 then
 		return false
 	end
 
+	SetRoundProperty( "facility_lockdown", 1 )
+
+	AddTimer( "DisableLockdown", dur, 1, function()
+		SetRoundProperty( "facility_lockdown", 2 )
+
+		if cb and cb() == true then return end
+
+		if IsValid( ent ) then
+			ent:Fire( "Use" )
+		end
+	end )
+
 	return true
+end
+
+--[[-------------------------------------------------------------------------
+Auto destroy gate a
+---------------------------------------------------------------------------]]
+hook.Add( "SLCRound", "SLCAutoDestroyGateA", function( time )
+	local auto = CVAR.slc_auto_destroy_gatea:GetInt()
+	if auto > 0 then
+		AddTimer( "auto_destroy_gatea", time - auto - 5, 1, function()
+			local btn = GetButton( "Gate A" )
+			if !btn then return end
+
+			if istable( btn ) then
+				for k, v in pairs( btn ) do
+					v:Fire( "lock" )
+				end
+			else
+				btn:Fire( "lock" )
+			end
+
+			local remote = GetButton( "remote" )
+			if remote then
+				remote:Fire( "lock" )
+			end
+
+			AddTimer( "auto_destroy_gatea2", 5, 1, function()
+				ExplodeGateA()
+			end )
+		end )
+	end
+end )
+
+--[[-------------------------------------------------------------------------
+Pocket Dimension
+---------------------------------------------------------------------------]]
+function SendToPocketDimension( ply )
+	ply:SetPos( istable( POS_POCKETD ) and POS_POCKETD[math.random( #POS_POCKETD )] or POS_POCKETD )
+	ply:SetAngles( Angle( 0, math.random( -180, 180 ), 0 ) )
+	//ply:ScreenFade( bit.bor( SCREENFADE.IN, SCREENFADE.OUT ), Color( 0, 0, 0 ), 0.05, 0.3 )
+	ply:ApplyEffect( "decay" )
+
+	TransmitSound( "#scp_lc/scp/106/decay.ogg", true, ply, 1 )
 end

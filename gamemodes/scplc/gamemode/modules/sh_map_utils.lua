@@ -69,8 +69,19 @@ function ButtonController( name, data )
 	data.name = name
 	data.access_granted = handle_button_use
 	data.input_override = handle_input
+	data.controller = true
 
 	SLC_BUTTON_CONTROLLERS[name] = data
+
+	if !istable( data.buttons_set ) then return end
+
+	local btn_set = {}
+	for id, set in pairs( data.buttons_set ) do
+		if !istable( set ) then continue end
+		for _, pos in pairs( set ) do
+			table.insert( btn_set, pos )
+		end
+	end
 end
 
 hook.Add( "SLCUseOverride", "SLCButtonController", function( ply, ent, data )
@@ -78,14 +89,12 @@ hook.Add( "SLCUseOverride", "SLCButtonController", function( ply, ent, data )
 		ent.ControllersSearched = true
 
 		for name, cdata in pairs( SLC_BUTTON_CONTROLLERS ) do
-			if istable( cdata.buttons_set ) then
-				for id, set in pairs( cdata.buttons_set ) do
-					if istable( set ) then
-						for _, pos in pairs( set ) do
-							if ent:GetPos() == pos then
-								SLC_CONTROLLERS_CACHE[ent] = { name, id }
-							end
-						end
+			if !istable( cdata.buttons_set ) then continue end
+			for id, set in pairs( cdata.buttons_set ) do
+				if !istable( set ) then continue end
+				for _, pos in pairs( set ) do
+					if ent:GetPos() == pos then
+						SLC_CONTROLLERS_CACHE[ent] = { name, id }
 					end
 				end
 			end
@@ -112,38 +121,6 @@ end )
 	end
 end )*/
 
-hook.Add( "SLCRoundCleanup", "SLCButtonController", function()
-	SLC_CONTROLLERS_CACHE = {}
-	SLC_CONTROLLERS_USE_TIME = {}
-	SLC_CONTROLLERS_LAST_SETID = {}
-
-	for k, v in pairs( SLC_BUTTON_CONTROLLERS ) do
-		if v.initial_state then
-			SLC_CONTROLLERS_LAST_SETID[v.name] = v.initial_state
-		end
-	end
-
-	--not very optimised way, but the easiest one
-	/*for _, ent in pairs( ents.GetAll() ) do
-		for name, data in pairs( SLC_BUTTON_CONTROLLERS ) do
-			if istable( data.buttons_set ) then
-				for id, set in pairs( data.buttons_set ) do
-					if istable( set ) then
-						for _, pos in pairs( set ) do
-							if ent:GetPos() == pos then
-								SLC_CONTROLLERS_CACHE[ent] = { name, id }
-							end
-						end
-					end
-				end
-			end
-		end
-	end*/
-
-	//print( "Controllers set up" )
-	//PrintTable( SLC_CONTROLLERS_CACHE )
-end )
-
 --[[-------------------------------------------------------------------------
 SynchronousEventListener
 ---------------------------------------------------------------------------]]
@@ -154,8 +131,6 @@ SEL_FULL_TRIGGER = 2
 
 local selobj = {
 	Trigger = function( self, ply, ent, id )
-		//print( self, id, ply, ent )
-
 		if ROUND.post then return end
 
 		local ct = CurTime()
@@ -231,13 +206,71 @@ function GetSELObject( name )
 	return SEL_REGISTRY[name]
 end
 
-hook.Add( "SLCRoundCleanup", "SLCSynchronousEventListener", function()
-	SEL_REGISTRY = {}
-end )
-
 --[[-------------------------------------------------------------------------
 Blocker
 ---------------------------------------------------------------------------]]
+local ps = {
+	{ 1, 0, 0, 1 },
+	{ -1, 0, 0, 1 },
+	{ 0, 1, 1, 0 },
+	{ 0, -1, 1, 0 },
+}
+
+function GenCubeBlockerData( name, pos, x, y, z, thickness, ex, filter, dest )
+	dest = dest or BLOCKERS
+
+	for i = 1, 4 do
+		local dim = ps[i]
+		if !ex or ex != i then
+			table.insert( dest, {
+				name = name.."_"..i,
+				pos = pos + Vector( ( x / 2 - thickness / 2 ) * dim[1], ( y / 2 - thickness / 2 ) * dim[2], 0 ),
+				bounds = {
+					Vector( dim[3] == 1 and ( -x / 2 + thickness ) or ( -thickness / 2 ), dim[4] == 1 and ( -y / 2 ) or ( -thickness / 2 ), -z / 2 ),
+					Vector( dim[3] == 1 and ( x / 2 - thickness ) or ( thickness / 2 ), dim[4] == 1 and ( y / 2 ) or ( thickness / 2 ), z / 2 ),
+				},
+				filter = filter,
+			} )
+		end
+	end
+
+	/*table.insert( dest, {
+		name = name.."_xp",
+		pos = pos + Vector( x / 2 - thickness / 2, 0, 0 ),
+		bounds = {
+			Vector( -thickness / 2, -y / 2, -z / 2 ),
+			Vector(  thickness / 2,  y / 2,  z / 2 ),
+		}
+	} )
+
+	table.insert( dest, {
+		name = name.."_xn",
+		pos = pos - Vector( x / 2 - thickness / 2, 0, 0 ),
+		bounds = {
+			Vector( -thickness / 2, -y / 2, -z / 2 ),
+			Vector(  thickness / 2,  y / 2,  z / 2 ),
+		}
+	} )
+
+	table.insert( dest, {
+		name = name.."_yp",
+		pos = pos + Vector( 0, y / 2 - thickness / 2, 0 ),
+		bounds = {
+			Vector( -x / 2 + thickness, -thickness / 2, -z / 2 ),
+			Vector(  x / 2 - thickness,  thickness / 2,  z / 2 ),
+		}
+	} )
+
+	table.insert( dest, {
+		name = name.."_yn",
+		pos = pos - Vector( 0, y / 2 - thickness / 2, 0 ),
+		bounds = {
+			Vector( -x / 2 + thickness, -thickness / 2, -z / 2 ),
+			Vector(  x / 2 - thickness,  thickness / 2,  z / 2 ),
+		}
+	} )*/
+end
+
 SLC_FILTER_GROUPS = {}
 
 local FilterGroup = {}
@@ -318,17 +351,121 @@ EntityCache
 ---------------------------------------------------------------------------]]
 SLC_ENTITY_CACHE = {}
 
-function CacheEntity( name )
-	if SLC_ENTITY_CACHE[name] then
-		return SLC_ENTITY_CACHE[name]
+function CacheEntity( arg )
+	if SLC_ENTITY_CACHE[arg] == true then return end
+
+	if SLC_ENTITY_CACHE[arg] then
+		return SLC_ENTITY_CACHE[arg]
 	end
 
-	local tmp = ents.FindByName( name )[1]
-	SLC_ENTITY_CACHE[name] = tmp
+	local isn = isnumber( arg )
+	local iss = isstring( arg )
+	local isv = isvector( arg )
 
-	return tmp
+	for i, v in ipairs( ents.GetAll() ) do
+		if isn and v:MapCreationID() != arg then continue end
+		if iss and v:GetName() != arg then continue end
+		if isv and v:GetPos() != arg then continue end
+
+		SLC_ENTITY_CACHE[arg] = v
+		return v
+	end
+
+	SLC_ENTITY_CACHE[arg] = true
 end
 
-hook.Add( "SLCRoundCleanup", "EntityCache", function()
+--[[-------------------------------------------------------------------------
+Fuse Boxes
+---------------------------------------------------------------------------]]
+SLC_FUSE_BOXES = SLC_FUSE_BOXES or {}
+
+hook.Add( "SLCPreround", "SLCFuseBox", function()
+	if CVAR.slc_disable_fuseboxes:GetInt() != 0 then return end
+
+	for i, v in ipairs( FUSE_BOXES ) do
+		local box = ents.Create( "slc_fuse_box" )
+		if IsValid( box ) then
+			box:SetPos( v.pos )
+			box:SetAngles( v.ang )
+
+			if v.rating then
+				box.Rating = v.rating
+			end
+
+			if isnumber( v.fuse ) and v.fuse > 0 then
+				if v.fuse < 1 then
+					if math.random() < v.fuse then
+						box:SetFuse( box.Rating )
+					end
+				else
+					box:SetFuse( v.fuse )
+				end
+			elseif istable( v.fuse ) then
+				box:SetFuse( math.random( v.fuse[1], v.fuse[2] ) )
+			end
+
+			box:Spawn()
+
+			SLC_FUSE_BOXES[v.name] = box
+
+			RegisterButton( {
+				name = v.name,
+				cooldown = 0.75,
+				msg_access = "",
+				disable_overload = true,
+				scp_disallow = true,
+			}, box )
+		end
+	end
+end )
+
+hook.Add( "SLCButtonUse", "SLCFuseBox", function( ply, ent, data, omni )
+	if !data.fuse_box or CVAR.slc_disable_fuseboxes:GetInt() != 0 then return end
+	
+	local tab = istable( data.fuse_box ) and data.fuse_box or { data.fuse_box }
+	for _, v in ipairs( tab ) do
+		local box = SLC_FUSE_BOXES[v]
+		if !IsValid( box ) then continue end
+
+		local rok = box:GetFuse() >= box.Rating
+		if !rok and tab.all then
+			break
+		elseif rok and !tab.all then
+			return
+		end
+	end
+
+	return false, data.access and ( omni and "nopower_omni" or "acc_omnitool" ) or "nopower", 1
+end )
+
+--[[-------------------------------------------------------------------------
+Catch Input
+---------------------------------------------------------------------------]]
+SLC_CATCH_INPUT = SLC_CATCH_INPUT or {}
+
+function CatchInput( name, func )
+	local ent = CacheEntity( name )
+	if !ent then return end
+
+	SLC_CATCH_INPUT[ent] = func
+end
+
+--[[-------------------------------------------------------------------------
+Utils Cleanup
+---------------------------------------------------------------------------]]
+hook.Add( "SLCRoundCleanup", "SLCMapUtilsCleanup", function()
 	SLC_ENTITY_CACHE = {}
+	SLC_CATCH_INPUT = {}
+	SLC_FUSE_BOXES = {}
+	SEL_REGISTRY = {}
+
+	SLC_CONTROLLERS_CACHE = {}
+	SLC_CONTROLLERS_USE_TIME = {}
+	SLC_CONTROLLERS_LAST_SETID = {}
+
+	for k, v in pairs( SLC_BUTTON_CONTROLLERS ) do
+		if v.initial_state then
+			SLC_CONTROLLERS_LAST_SETID[v.name] = v.initial_state
+		end
+	end
 end )

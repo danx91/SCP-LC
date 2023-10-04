@@ -99,15 +99,16 @@ function SWEP:ResetState()
 
 	self.Enraged = false
 	self:SetEnraged( false )
-
+	
 	self.Lunge = 0
 	self:SetLunge( 0 )
-
+	
 	self.Scream = 0
 	self:StopSound( "SCP096.Scream" )
 	self:StopSound( "SCP096.Attack1" )
-
+	
 	local owner = self:GetOwner()
+	owner:SetSCPChase( false )
 	owner:PopSpeed( "SLC_SCP096_Lunge" )
 	owner:PopSpeed( "SLC_SCP096" )
 end
@@ -146,231 +147,232 @@ function SWEP:Think()
 		self.RegenCharges = self.RegenCharges + 1
 	end
 
-	if SERVER and !self.Regen then
-		if self.NRageThink < ct and self.Cooldown < ct then
-			self.NRageThink = ct + 1
+	if !SERVER or self.Regen then return end
 
-			for k, v in pairs( player.GetAll() ) do
-				if IsValid( v ) and v:Alive() and v:SCPTeam() != TEAM_SPEC and v:SCPTeam() != TEAM_SCP then
-					if owner:TestVisibility( v, nil, true ) then
-						if self.Preys[v] == nil then
-							self.Preys[v] = true
-							--print( "1st tick", v )
-						elseif self.Preys[v] == true then
-							--print( "2nd tick", v )
+	if self.NRageThink < ct and self.Cooldown < ct then
+		self.NRageThink = ct + 1
 
-							local pos = v:GetPos()
-
-							if !self.Enraged then
-								--print( "Enraged, prep start" )
-								self.Enraged = true
-								self:SetEnraged( true )
-
-								self.Preparing = ct + 4
-								self:SetPreparing( self.Preparing )
-
-								TransmitSound( self.TriggeredSound, true, v )
-
-								owner:Freeze( true )
-							end
-
-							local chasedist = self:GetUpgradeMod( "distance" ) or 3000
-							local dist = pos:Distance( owner:GetPos() )
-							if dist < chasedist then
-								dist = chasedist
-							end
-
-							dist = dist + 250
-							self.Preys[v] = { pos, dist * dist, 0 }
-							v:SetSCP096Chase( true )
-						end
+		for k, v in pairs( player.GetAll() ) do
+			if IsValid( v ) and v:Alive() and self:CanTargetPlayer( v ) then
+				if owner:TestVisibility( v, nil, true ) then
+					if self.Preys[v] == nil then
+						self.Preys[v] = true
+						--print( "1st tick", v )
 					elseif self.Preys[v] == true then
-						--print( "canceled", v )
-						self.Preys[v] = nil
+						--print( "2nd tick", v )
+
+						local pos = v:GetPos()
+
+						if !self.Enraged then
+							--print( "Enraged, prep start" )
+							self.Enraged = true
+							self:SetEnraged( true )
+
+							self.Preparing = ct + 4
+							self:SetPreparing( self.Preparing )
+
+							TransmitSound( self.TriggeredSound, true, v )
+
+							owner:Freeze( true )
+						end
+
+						local chasedist = self:GetUpgradeMod( "distance" ) or 3000
+						local dist = pos:Distance( owner:GetPos() )
+						if dist < chasedist then
+							dist = chasedist
+						end
+
+						dist = dist + 250
+						self.Preys[v] = { pos, dist * dist, 0 }
+						v:SetSCP096Chase( true )
 					end
+				elseif self.Preys[v] == true then
+					--print( "canceled", v )
+					self.Preys[v] = nil
 				end
 			end
+		end
 
-			if self.Enraged and self.Preparing < ct then
-				if self.Preparing != 0 then
-					self.Preparing = 0
+		if self.Enraged and self.Preparing < ct then
+			if self.Preparing != 0 then
+				self.Preparing = 0
 
-					self.Scream = ct + 10
-					owner:EmitSound( "SCP096.Scream" )
+				self.Scream = ct + 10
+				owner:EmitSound( "SCP096.Scream" )
 
-					owner:Freeze( false )
-					owner:PushSpeed( 285, 285, -1, "SLC_SCP096", 1 )
-					--print( "prep end, fully enraged" )
-				else
-					local count = 0
-					local postab = {}
-					for k, v in pairs( self.Preys ) do
-						if istable( v ) then
-							if !IsValid( k ) or !k:Alive() then
-								--print( "removeing player due invalid or dead player", k )
+				owner:SetSCPChase( true )
+				owner:Freeze( false )
+				owner:PushSpeed( 285, 285, -1, "SLC_SCP096", 1 )
+				--print( "prep end, fully enraged" )
+			else
+				local count = 0
+				local postab = {}
+				for k, v in pairs( self.Preys ) do
+					if istable( v ) then
+						if !IsValid( k ) or !k:Alive() then
+							--print( "removeing player due invalid or dead player", k )
+							self.Preys[k] = nil
+
+							if IsValid( k ) then
+								k:SetSCP096Chase( false )
+								TransmitSound( self.ChaseSound, false, k )
+							end
+						else
+							local t = k:SCPTeam()
+							if t == TEAM_SPEC or t == TEAM_SCP then
+								--print( "removeing player due invalid team", k )
 								self.Preys[k] = nil
-
-								if IsValid( k ) then
-									k:SetSCP096Chase( false )
-									TransmitSound( self.ChaseSound, false, k )
-								end
+								k:SetSCP096Chase( false )
+								TransmitSound( self.ChaseSound, false, k )
 							else
-								local t = k:SCPTeam()
-								if t == TEAM_SPEC or t == TEAM_SCP then
-									--print( "removeing player due invalid team", k )
+								local maxdist = self:GetUpgradeMod( "distsqr" ) or 9000000
+								if v[1]:DistToSqr( k:GetPos() ) > maxdist or v[1]:DistToSqr( owner:GetPos() ) > v[2] then
+									--print( "removeing player due to distance", k, v[1]:DistToSqr( k:GetPos() ) > maxdist, v[1]:DistToSqr( owner:GetPos() ) > v[2] )
 									self.Preys[k] = nil
 									k:SetSCP096Chase( false )
 									TransmitSound( self.ChaseSound, false, k )
 								else
-									local maxdist = self:GetUpgradeMod( "distsqr" ) or 9000000
-									if v[1]:DistToSqr( k:GetPos() ) > maxdist or v[1]:DistToSqr( owner:GetPos() ) > v[2] then
-										--print( "removeing player due to distance", k, v[1]:DistToSqr( k:GetPos() ) > maxdist, v[1]:DistToSqr( owner:GetPos() ) > v[2] )
-										self.Preys[k] = nil
-										k:SetSCP096Chase( false )
-										TransmitSound( self.ChaseSound, false, k )
-									else
-										count = count + 1
-										postab[k] = k:GetPos() + k:OBBCenter()
+									count = count + 1
+									postab[k] = k:GetPos() + k:OBBCenter()
 
-										if v[3] < ct then
-											v[3] = ct + 12
-											TransmitSound( self.ChaseSound, true, k )
-										end
+									if v[3] < ct then
+										v[3] = ct + 12
+										TransmitSound( self.ChaseSound, true, k )
 									end
 								end
 							end
 						end
 					end
-
-					if count == 0 and self.Lunge == 0 then
-						--print( "no players! rage end" )
-						self.Cooldown = ct + 10
-						self:ResetState()
-					else
-						net.Start( "SLCSCP096Pos" )
-						net.WriteTable( postab )
-						net.Send( owner )
-					end
 				end
-			end
-		end
 
-		if self.Lunge != 0 then
-			if self.NLungeThink < ct then
-				self.NLungeThink = ct + 0.1
-
-			 	if self.Lunge < ct then
-			 		--print( "lunge end, exhausted" )
-
-			 		self:ResetState()
-					self.Exhaust = ct + 10
-					self.Cooldown = ct + 15
-					self:SetAttackFinish( ct + 5 )
-					self:SetAttackState( true )
-
-					owner:PushSpeed( 0.25, 0.25, -1, "SLC_SCP096_Exhaust", 1 )
+				if count == 0 and self.Lunge == 0 then
+					--print( "no players! rage end" )
+					self.Cooldown = ct + 5
+					self:ResetState()
 				else
-					local start = owner:GetShootPos()
-					local forward = owner:EyeAngles():Forward()
+					net.Start( "SLCSCP096Pos" )
+					net.WriteTable( postab )
+					net.Send( owner )
+				end
+			end
+		end
+	end
 
-					local filter = {}
-					for k, v in pairs( player.GetAll() ) do
-						if !self.Preys[v] then
-							table.insert( filter, v )
-						end
+	if self.Lunge != 0 then
+		if self.NLungeThink < ct then
+			self.NLungeThink = ct + 0.05
+
+			if self.Lunge < ct then
+				--print( "lunge end, exhausted" )
+
+				self:ResetState()
+				self.Exhaust = ct + 5
+				self.Cooldown = ct + 10
+				self:SetAttackFinish( ct + 5 )
+				self:SetAttackState( true )
+
+				owner:PushSpeed( 0.25, 0.25, -1, "SLC_SCP096_Exhaust", 1 )
+			else
+				local start = owner:GetShootPos()
+				local forward = owner:EyeAngles():Forward()
+
+				local filter = {}
+				for k, v in pairs( player.GetAll() ) do
+					if !self.Preys[v] then
+						table.insert( filter, v )
 					end
+				end
 
-					owner:LagCompensation( true )
+				owner:LagCompensation( true )
 
-					local trace = util.TraceHull{
-						start = start - forward * 15,
-						endpos = start + forward * 75,
-						mask = MASK_SHOT,
-						filter = filter,
-						mins = Vector( -4, -4, -4 ),
-						maxs = Vector( 4, 4, 4 ),
-					}
+				local trace = util.TraceHull{
+					start = start - forward * 10,
+					endpos = start + forward * 60,
+					mask = MASK_SHOT,
+					filter = filter,
+					mins = Vector( -3, -3, -3 ),
+					maxs = Vector( 3, 3, 3 ),
+				}
 
-					owner:LagCompensation( false )
+				owner:LagCompensation( false )
 
-					local ent = trace.Entity
-					if trace.Hit and IsValid( ent ) and ent:IsPlayer() then
-						local t = ent:SCPTeam()
-						if t != TEAM_SPEC and t != TEAM_SCP then
-							SanityEvent( 30, SANITY_TYPE.ANOMALY, ent:GetPos(), 2000, owner, ent )
+				local ent = trace.Entity
+				if trace.Hit and IsValid( ent ) and ent:IsPlayer() then
+					local t = ent:SCPTeam()
+					if t != TEAM_SPEC and t != TEAM_SCP then
+						SanityEvent( 30, SANITY_TYPE.ANOMALY, ent:GetPos(), 2000, owner, ent )
 
-							local dmg = DamageInfo()
-							dmg:SetDamage( ent:Health() )
-							dmg:SetDamageType( DMG_DIRECT )
-							dmg:SetAttacker( owner )
+						local dmg = DamageInfo()
+						dmg:SetDamage( ent:Health() )
+						dmg:SetDamageType( DMG_DIRECT )
+						dmg:SetAttacker( owner )
 
-							SuppressNextSanityEvent()
-							ent:TakeDamageInfo( dmg )
-							UnsuppressSanityEvent()
+						SuppressNextSanityEvent()
+						ent:TakeDamageInfo( dmg )
+						UnsuppressSanityEvent()
 
-							AddRoundStat( "096" )
-							self:AddScore( 1 )
+						AddRoundStat( "096" )
+						self:AddScore( 1 )
 
-							self:ResetState()
+						self:ResetState()
 
-							local time = 5
-							local seq = owner:SelectWeightedSequence( ACT_GESTURE_FLINCH_HEAD )
-							if seq then
-								time = owner:SequenceDuration( seq )
-							end
-
-							self.Cooldown = ct + time + 10
-							self.PostAttack = ct + time
-							self:SetAttackFinish( self.PostAttack )
-
-							--print( time )
-							owner:DoAnimationEvent( ACT_GESTURE_FLINCH_HEAD )
-							//owner:SendLua( "LocalPlayer():DoAnimationEvent( ACT_GESTURE_FLINCH_HEAD )" )
-
-							owner:EmitSound( "SCP096.Attack1" )
-							self.AttackSound = ct + 4
-
-							local regenmod = self:GetUpgradeMod( "regenmod" ) or 0
-							owner:AddHealth( 150 + regenmod )
-							AddTimer( "SCP096_Regen_"..owner:SteamID64(), 2, 2, function( this, n )
-								if IsValid( self ) and self:CheckOwner() then
-									owner:AddHealth( 75 + regenmod )
-								end
-							end, function( this )
-								if IsValid( ent ) and IsValid( ent._RagEntity ) then
-									ent._RagEntity:Remove()
-								end
-								/*if IsValid( ent ) then
-									local rag = ent:GetRagdollEntity()
-									if IsValid( rag ) then
-										rag:Remove()
-									end
-								end*/
-							end )
+						local time = 5
+						local seq = owner:SelectWeightedSequence( ACT_GESTURE_FLINCH_HEAD )
+						if seq then
+							time = owner:SequenceDuration( seq )
 						end
+
+						self.Cooldown = ct + time + 3
+						self.PostAttack = ct + time
+						self:SetAttackFinish( self.PostAttack )
+
+						--print( time )
+						owner:DoAnimationEvent( ACT_GESTURE_FLINCH_HEAD )
+						//owner:SendLua( "LocalPlayer():DoAnimationEvent( ACT_GESTURE_FLINCH_HEAD )" )
+
+						owner:EmitSound( "SCP096.Attack1" )
+						self.AttackSound = ct + 4
+
+						local regenmod = self:GetUpgradeMod( "regenmod" ) or 0
+						owner:AddHealth( 75 + regenmod )
+						AddTimer( "SCP096_Regen_"..owner:SteamID64(), 2, 2, function( this, n )
+							if IsValid( self ) and self:CheckOwner() then
+								owner:AddHealth( 50 + regenmod )
+							end
+						end, function( this )
+							if IsValid( ent ) and IsValid( ent._RagEntity ) then
+								ent._RagEntity:Remove()
+							end
+							/*if IsValid( ent ) then
+								local rag = ent:GetRagdollEntity()
+								if IsValid( rag ) then
+									rag:Remove()
+								end
+							end*/
+						end )
 					end
 				end
 			end
 		end
+	end
 
-		if self.Exhaust != 0 and self.Exhaust < ct then
-			--print( "exhaust end" )
-			self.Exhaust = 0
-			self:SetAttackState( false )
+	if self.Exhaust != 0 and self.Exhaust < ct then
+		--print( "exhaust end" )
+		self.Exhaust = 0
+		self:SetAttackState( false )
 
-			owner:PopSpeed( "SLC_SCP096_Exhaust" )
-		end
+		owner:PopSpeed( "SLC_SCP096_Exhaust" )
+	end
 
-		if self.Scream != 0 and self.Scream <= ct then
-			self.Scream = ct + 10
+	if self.Scream != 0 and self.Scream <= ct then
+		self.Scream = ct + 10
 
-			owner:EmitSound( "SCP096.Scream" )
-		end
+		owner:EmitSound( "SCP096.Scream" )
+	end
 
-		if self.AttackSound != 0 and self.AttackSound < ct then
-			self.AttackSound = 0
-			owner:EmitSound( "SCP096.Attack2" )
-		end
+	if self.AttackSound != 0 and self.AttackSound < ct then
+		self.AttackSound = 0
+		owner:EmitSound( "SCP096.Attack2" )
 	end
 end
 
@@ -395,12 +397,13 @@ function SWEP:SecondaryAttack()
 	self.PrimaryCD = CurTime() + 0.5
 
 	if SERVER then
-		local spos = self.Owner:GetShootPos()
+		local owner = self:GetOwner()
+		local spos = owner:GetShootPos()
 
 		local trace = util.TraceLine{
 			start = spos,
-			endpos = spos + self.Owner:GetAimVector() * 70,
-			filter = self.Owner,
+			endpos = spos + owner:GetAimVector() * 70,
+			filter = owner,
 			mask = MASK_SHOT,
 		}
 
@@ -495,19 +498,20 @@ function SWEP:CalcView( ply, pos, ang, fov )
 end
 
 SWEP.TableDieTime = 0
+local color_green = Color( 0, 255, 0 )
 function SWEP:DrawSCPHUD()
 	draw.Text( {
 		text = string.format( self.Regen and self.Lang.regen or self.Lang.charges, self.RegenCharges ),
 		pos = { ScrW() * 0.5, ScrH() * 0.97 },
 		font = "SCPHUDSmall",
-		color = Color( 0, 255, 0 ),
+		color = color_green,
 		xalign = TEXT_ALIGN_CENTER,
 		yalign = TEXT_ALIGN_CENTER,
 	})
 
 	if self.TableDieTime > CurTime() then
 		local pos = LocalPlayer():GetPos()
-		surface.SetDrawColor( Color( 255, 0, 0 ) )
+		surface.SetDrawColor( 255, 0, 0 )
 		draw.NoTexture()
 		for k, v in pairs( self.Preys ) do
 			local dist = pos:DistToSqr( v )
@@ -536,7 +540,7 @@ SCPHook( "SCP096", "EntityTakeDamage", function( ent, dmg )
 			end
 
 			if wep.PostAttack > CurTime() then
-				dmg:ScaleDamage( 0.4 )
+				dmg:ScaleDamage( 0.2 )
 			end
 		end
 	end
@@ -630,6 +634,45 @@ end )
 
 if SERVER then
 	util.AddNetworkString( "SLCSCP096Pos" )
+
+	SCPHook( "SCP096", "SLCOverloadOverride", function( ply, ent, data )
+		if data.advanced_overload or ent.IsOverloaded then return end
+		if ply:SCPClass() != CLASSES.SCP096 then return end
+
+		local wep = ply:GetProperty( "scp_weapon" )
+		if !IsValid( wep ) then return end
+
+		if !wep:GetEnraged() then return end
+
+		local allow = false
+		for i, v in ipairs( ply:GetChasedPlayers() ) do
+			if v:GetSCP096Chase() then
+				allow = true
+				break
+			end
+		end
+
+		if !allow then return end
+
+		ent.IsOverloaded = true
+		ent:Fire( "Use" )
+		ent:EmitSound( "SLCMisc.Overload" )
+
+		hook.Run( "SLCButtonOverloaded", ply, ent, false )
+
+		local delay = data.overload_delay or CVAR.slc_overload_delay:GetFloat()
+		if delay > 0 then
+			ent:Fire( "Lock" )
+			
+			AddThenableTimer( "SLCButtonOverload"..ply:SteamID(), delay, 1 ):Then( function()
+				ent.IsOverloaded = false
+				ent:Fire( "Unlock" )
+				ent:Fire( "Use" )
+			end )
+		end
+
+		return false
+	end )
 end
 
 if CLIENT then
@@ -644,13 +687,14 @@ if CLIENT then
 		end
 	end )
 
+	local color_red = Color( 255, 0, 0 )
 	SCPHook( "SCP096", "PreDrawHalos", function()
 		local ply = LocalPlayer()
 		if ply:SCPClass() == CLASSES.SCP096 then
 			local wep = ply:GetActiveWeapon()
 			if IsValid(wep) then
 				if #wep.HaloTable > 0 then
-					halo.Add( wep.HaloTable, Color( 255, 0, 0 ), 3, 3, 1, true, true )
+					halo.Add( wep.HaloTable, color_red, 3, 3, 1, true, true )
 					wep.HaloTable = {}
 				end
 			end
@@ -666,7 +710,7 @@ if CLIENT then
 
 			if IsValid( wep ) and wep:GetEnraged() then
 				surface.SetMaterial( overlay )
-				surface.SetDrawColor( Color( 255, 0, 0, 150 ) )
+				surface.SetDrawColor( 255, 0, 0, 150 )
 				surface.DrawTexturedRect( 0, 0, ScrW(), ScrH() )
 
 				clr.colour = clr.colour
@@ -725,7 +769,7 @@ DefineUpgradeSystem( "scp096", {
 		{ name = "hp", cost = 3, req = {}, reqany = false,  pos = { 4, 1 }, mod = {}, active = 1000 },
 		{ name = "def", cost = 5, req = { "hp" }, reqany = false,  pos = { 4, 2 }, mod = { def = 0.7 }, active = false },
 
-		{ name = "nvmod", cost = 1, req = {}, reqany = false,  pos = { 4, 3 }, mod = {}, active = false },
+		{ name = "outside_buff", cost = 1, req = {}, reqany = false,  pos = { 4, 3 }, mod = {}, active = false },
 	},
 	rewards = { --16 + 1
 		{ 1, 1 },

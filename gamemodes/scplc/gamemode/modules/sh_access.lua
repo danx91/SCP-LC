@@ -137,7 +137,7 @@ function GetChipNameByID( id )
 	end
 end
 
-function GenerateOverride( chip )
+function GenerateAccessOverride( chip )
 	local tab = chip.advanced.random
 	if tab and #tab.access > 0 then
 		--print( "has random access" )
@@ -214,7 +214,7 @@ function SelectUpgrade( name, mode )
 				local override
 
 				if result and result != true then
-					override = GenerateOverride( GetChip( result ) )
+					override = GenerateAccessOverride( GetChip( result ) )
 				end
 
 				return result, override
@@ -232,7 +232,7 @@ function SelectUpgrade( name, mode )
 					local override
 
 					if result and result != true then
-						override = GenerateOverride( GetChip( result ) )
+						override = GenerateAccessOverride( GetChip( result ) )
 					end
 
 					return result, override
@@ -251,7 +251,7 @@ function CreateChip( name )
 	if chip then
 		local ent = ents.Create( "item_slc_access_chip" )
 		if IsValid( ent ) then
-			ent:SetChipData( chip, GenerateOverride( chip ) )
+			ent:SetChipData( chip, GenerateAccessOverride( chip ) )
 			return ent
 		end
 	end
@@ -307,7 +307,7 @@ if SERVER then
 		access_granted = <function(ply, name) return <boolean>>, --optional, called when access is granted, return true to suppress use
 		input_override = <function( ply ) return <boolean>>
 		no_sound = <boolean>, --optional, if true, don't play sounds
-		msg_target = <number>, --optional, 0 - auto (default); 1 - always disaply message in omnitool; 2 - always display on screen //doesn't work as expected
+		msg_target = <number>, --optional, nil - auto (default); 1 - force (override suppress_texts option); 2 - force (override suppress_texts option and omnitools)
 		msg_access = <string>, --optional, custom message when access is granted
 		msg_deny = <string>, --optional, custom message when access is denied
 		msg_omnitool = <string>, --optional, custom message when omnitool is required, but player doesn't have one
@@ -319,6 +319,7 @@ if SERVER then
 		alpha_disable = <boolean>, --optional, can't be used when alpha is active
 		omega_override = <boolean>, --optional, overrides access when omega is active
 		alpha_override = <boolean>, --optional, overrides access when alpha is active
+		decon_override = <string>/<table>, --optional, overrides access when given zone/zones is being decontaminated
 		disable_overload = <boolean>, --optional, if true, SCPs won't be able to overload this button
 		advanced_overload = <boolean>, --optional, if true, overloading will take longer
 		overload_delay = <boolean>, --optional, overrides close delay
@@ -326,17 +327,20 @@ if SERVER then
 	}
 	*/
 	BUTTONS_CACHE = BUTTONS_CACHE or {}
+	BUTTONS_NAME_CACHE = BUTTONS_NAME_CACHE or {}
 
 	function HandleButtonUse( ply, ent, data )
-		local access, msg, target, omnitool
+		local omnitool
 		local omnitoolused = false
-
+		
 		local wep = ply:GetActiveWeapon()
 		if IsValid( wep ) and wep:GetClass() == "item_slc_omnitool" then
 			omnitool = wep
 		end
 
-		if isfunction( data.override ) then
+		local access, msg, target = hook.Run( "SLCButtonUse", ply, ent, data, omnitool )
+
+		if access == nil and isfunction( data.override ) then
 			access, msg, target = data.override( ply, ent, data )
 		end
 
@@ -352,11 +356,8 @@ if SERVER then
 			access = false
 
 			--SCP Overload
-			if !data.disable_overload then
-				local overload = SCPButtonOverload( ply, ent, data )
-				if overload then
-					return false
-				end
+			if !data.disable_overload and SCPButtonOverload( ply, ent, data ) then
+				return false
 			end
 
 			//if access == nil then
@@ -366,7 +367,7 @@ if SERVER then
 				else
 					--no omnitool
 					//if data.msg_omnitool != "" then
-					if !data.suppress_texts then
+					if !data.suppress_texts and msg != true then
 						PlayerMessage( msg or data.msg_omnitool or "acc_omnitool", ply, true )
 					end
 					//end
@@ -392,7 +393,7 @@ if SERVER then
 				end
 			end
 
-			if !data.suppress_texts then
+			if ( !data.suppress_texts or target and target >= 1 ) and msg != true then
 				PlayerMessage( msg or data.msg_access or "acc_granted", ply, true )
 			end
 
@@ -412,7 +413,7 @@ if SERVER then
 
 			--denied
 			//if data.msg_deny != "" then
-			if !data.suppress_texts then
+			if ( !data.suppress_texts or target and target >= 1 ) and msg != true then
 				if omnitoolused then
 					PlayerMessage( msg or data.msg_wrong or "acc_wrong", ply, true )
 				else
@@ -453,92 +454,85 @@ if SERVER then
 	end
 
 	function SCPButtonOverload( ply, ent, data )
-		if ply:SCPTeam() == TEAM_SCP and !ply:GetSCPHuman() and !ply:GetSCPDisableOverload() then
-			if ROUND.post or ROUND.preparing then
-				return true
-			end
+		if ply:SCPTeam() != TEAM_SCP or ply:GetSCPHuman() or ply:GetSCPDisableOverload() then return false end
+		if ROUND.post or ROUND.preparing then return true end
 
-			if !ply:IsDoingSLCTask() then
-				local ct = CurTime()
-				local cd = ply:GetProperty( "overload_cd" )
-				if !cd or cd < ct then
-					ply:SetProperty( "overload_cd", ct + 3, true )
-					
-					if !ent.OverloadCooldown or ent.OverloadCooldown < ct then
-						local adv = data.advanced_overload
-
-						ply:StartSLCTask( "button_overload", CVAR.slc_overload_time:GetFloat() * ( adv and 2 or 1 ), function()
-							return ply:KeyDown( IN_USE )
-						end, true, IN_USE ):Then( function()
-							local in_ct = CurTime()
-
-							if !IsValid( ent ) or ent.OverloadCooldown and ent.OverloadCooldown >= in_ct then
-								return true
-							end
-
-							ply:SetProperty( "overload_cd", in_ct + CVAR.slc_overload_cooldown:GetInt(), true )
-
-							local door_cd = CVAR.slc_overload_door_cooldown:GetInt()
-
-							if adv and !ent.AdvancedOverload then
-								local mul = 1
-
-								if isnumber( adv ) then
-									if adv <= 10 then
-										mul = adv
-									else
-										door_cd = adv
-									end
-								end
-
-								local final_cd = door_cd * mul
-								ent.OverloadCooldown = in_ct + final_cd
-								ent.AdvancedOverload = true
-								
-								ent:EmitSound( "SLCMisc.Overload" )
-								overload_effect( ply )
-
-								PlayerMessage( string.format( "advanced_overload$%i", final_cd ), ply, true )
-
-								return true
-							end
-
-							ent.OverloadCooldown = in_ct + door_cd
-							ent:Fire( "Use" )
-							ent:EmitSound( "SLCMisc.Overload" )
-							overload_effect( ply )
-
-							local delay = data.overload_delay or CVAR.slc_overload_delay:GetFloat()
-							if delay > 0 then
-								ent:Fire( "Lock" )
-								return AddThenableTimer( "SLCButtonOverload"..ply:SteamID(), delay, 1 )
-							end
-
-							return true
-						end ):Then( function( result )
-							if !result then
-								ent:Fire( "Unlock" )
-								ent:Fire( "Use" )
-							end
-						end )/*:Catch( function( err )
-							print( "Interrupted", err )
-						end )*/
-					else
-						PlayerMessage( string.format( "overload_cooldown$%i", ent.OverloadCooldown - ct ), ply, true )
-					end
-				end
-
-				return true
-			end
-
-			if ply:IsDoingSLCTask( "button_overload" ) then
-				return true
-			end
+		if ply:IsDoingSLCTask() then
+			return ply:IsDoingSLCTask( "button_overload" )
 		end
+
+		local ct = CurTime()
+		local cd = ply:GetProperty( "overload_cd" )
+		local override = hook.Run( "SLCOverloadOverride", ply, ent, data )
+		if override == false or cd and cd >= ct and override != true then return true end
+		
+		ply:SetProperty( "overload_cd", ct + 3, true )
+		
+		if ent.OverloadCooldown and ent.OverloadCooldown >= ct and override != true then
+			PlayerMessage( string.format( "overload_cooldown$%i", ent.OverloadCooldown - ct ), ply, true )
+			return true
+		end
+
+		local adv = data.advanced_overload
+		ply:StartSLCTask( "button_overload", CVAR.slc_overload_time:GetFloat() * ( adv and 2 or 1 ), function()
+			return ply:KeyDown( IN_USE )
+		end, true, IN_USE ):Then( function()
+			local in_ct = CurTime()
+
+			if !IsValid( ent ) or ent.OverloadCooldown and ent.OverloadCooldown >= in_ct then
+				return true
+			end
+
+			ply:SetProperty( "overload_cd", in_ct + CVAR.slc_overload_cooldown:GetInt(), true )
+
+			local door_cd = CVAR.slc_overload_door_cooldown:GetInt()
+
+			if adv and !ent.AdvancedOverload then
+				local adv_cd = CVAR.slc_overload_advanced_cooldown:GetInt()
+				ent.OverloadCooldown = in_ct + adv_cd
+				ent.AdvancedOverload = true
+				
+				ent:EmitSound( "SLCMisc.Overload" )
+				overload_effect( ply )
+
+				PlayerMessage( string.format( "advanced_overload$%i", adv_cd ), ply, true )
+
+				hook.Run( "SLCButtonOverloaded", ply, ent, true )
+
+				return true
+			end
+
+			ent.OverloadCooldown = in_ct + door_cd
+			ent.IsOverloaded = true
+			ent:Fire( "Use" )
+			ent:EmitSound( "SLCMisc.Overload" )
+			overload_effect( ply )
+
+			hook.Run( "SLCButtonOverloaded", ply, ent, false )
+
+			local delay = data.overload_delay or CVAR.slc_overload_delay:GetFloat()
+			if delay > 0 then
+				ent:Fire( "Lock" )
+				return AddThenableTimer( "SLCButtonOverload"..ply:SteamID(), delay, 1 )
+			end
+
+			return true
+		end ):Then( function( result )
+			ent.IsOverloaded = false
+
+			if !result then
+				ent:Fire( "Unlock" )
+				ent:Fire( "Use" )
+			end
+		end )/*:Catch( function( err )
+			print( "Interrupted", err )
+		end )*/
+
+		return true
 	end
 
 	hook.Add( "EntityTakeDamage", "SLCButtonOverload", function( ply, info )
-		if IsValid( ply ) and ply:IsPlayer() and ply:IsDoingSLCTask( "button_overload" ) then
+		if IsValid( ply ) and ply:IsPlayer() and ply:IsDoingSLCTask( "button_overload" ) and !info:IsDamageType( DMG_POISON ) then
 			ply:StopSLCTask( 3 )
 			ply:SetProperty( "overload_cd", CurTime() + 3, true )
 		end
@@ -555,8 +549,51 @@ if SERVER then
 		end
 	end
 	
+	function GetButton( name )
+		local cache = BUTTONS_NAME_CACHE[name]
+
+		if cache == false then
+			return
+		elseif cache then
+			return cache
+		end
+
+		for k, v in pairs( BUTTONS ) do
+			if v.name != name then continue end
+
+			local btn_pos = v.pos
+			if istable( btn_pos ) then
+				local ret = {}
+
+				for _, tab_pos in pairs( btn_pos ) do
+					for _, ent in ipairs( ents.GetAll() ) do
+						if ent:GetPos() == tab_pos then
+							table.insert( ret, ent )
+							break
+						end
+					end
+				end
+
+				BUTTONS_NAME_CACHE[name] = ret
+				return ret
+			else
+				for _, ent in ipairs( ents.GetAll() ) do
+					local pos = ent:GetPos()
+					if pos == v.pos or v.tolerance and pos:IsInTolerance( v.pos, v.tolerance ) then
+						BUTTONS_NAME_CACHE[name] = ent
+						return ent
+					end
+				end
+			end
+
+			BUTTONS_NAME_CACHE[name] = false
+			return
+		end
+	end
+
 	hook.Add( "SLCRoundCleanup", "SLCClearDoorCache", function()
 		BUTTONS_CACHE = {}
+		BUTTONS_NAME_CACHE = {}
 	end )
 end
 
@@ -625,6 +662,7 @@ hook.Add( "SLCRegisterAccess", "SCLBaseAccess", function()
 	RegisterAccess( "ARMORY" )
 	RegisterAccess( "GATE_A" )
 	RegisterAccess( "GATE_B" )
+	//RegisterAccess( "GATE_C" )
 	RegisterAccess( "FEMUR" )
 	RegisterAccess( "ALPHA" )
 	RegisterAccess( "OMEGA" )
@@ -687,7 +725,7 @@ hook.Add( "SLCRegisterChips", "SCLBaseChips", function()
 	:AddUpgrade( UPGRADE_MODE.VERY_FINE, 5, false )
 	:AddUpgrade( UPGRADE_MODE.VERY_FINE, 5, true )
 
-	RegisterChip( "mtf", 3, { ACCESS_SAFE, ACCESS_EUCLID, ACCESS_KETER, ACCESS_EC, ACCESS_CHECKPOINT_LCZ, ACCESS_CHECKPOINT_EZ, ACCESS_GATE_A, ACCESS_GATE_B }, 11 )
+	RegisterChip( "mtf", 3, { ACCESS_SAFE, ACCESS_EUCLID, ACCESS_KETER, ACCESS_EC, ACCESS_MEDBAY, ACCESS_CHECKPOINT_LCZ, ACCESS_CHECKPOINT_EZ, ACCESS_GATE_A, ACCESS_GATE_B }, 11 )
 	:AddUpgrade( UPGRADE_MODE.ONE_ONE, 0, "chief" )
 	:AddUpgrade( UPGRADE_MODE.FINE, 15, "com" )
 	:AddUpgrade( UPGRADE_MODE.FINE, 5, false )
@@ -712,7 +750,7 @@ hook.Add( "SLCRegisterChips", "SCLBaseChips", function()
 	RegisterChip( "hacked3", 3, {
 		access = { ACCESS_SAFE, ACCESS_EUCLID },
 		randomtable = { ACCESS_OFFICE, ACCESS_GENERAL, ACCESS_KETER, ACCESS_MEDBAY, ACCESS_CHECKPOINT_LCZ, ACCESS_CHECKPOINT_EZ, ACCESS_WARHEAD_ELEVATOR, ACCESS_EC,
-						ACCESS_GATE_A, ACCESS_GATE_B },
+						ACCESS_GATE_A },
 		randomnum = 5
 	}, 15 )
 	:AddUpgrade( UPGRADE_MODE.ONE_ONE, 5, "sci3" )
@@ -768,107 +806,11 @@ hook.Add( "SLCRegisterChips", "SCLBaseChips", function()
 	:AddUpgrade( UPGRADE_MODE.VERY_FINE, 5, "jan" )
 	:AddUpgrade( UPGRADE_MODE.VERY_FINE, 20, false )
 
-	/*RegisterChip( "general", 0, { ACCESS_GENERAL }, 0 )
-	:AddUpgrade( UPGRADE_MODE.ONE_ONE, 0, "jan1" )
-	:AddUpgrade( { UPGRADE_MODE.FINE, UPGRADE_MODE.VERY_FINE }, 15, "sci1" ) --75%
-	:AddUpgrade( { UPGRADE_MODE.FINE, UPGRADE_MODE.VERY_FINE }, 5, false ) --25%
-	
-	RegisterChip( "jan1", 0, { ACCESS_GENERAL, ACCESS_OFFICE }, 3 )
-	:AddUpgrade( UPGRADE_MODE.ONE_ONE, 0, "general" ) --100%
-	:AddUpgrade( { UPGRADE_MODE.FINE, UPGRADE_MODE.VERY_FINE }, 0, "jan2" ) --100%
-
-	RegisterChip( "jan2", 1, { ACCESS_SAFE, ACCESS_GENERAL }, 4 )
-	:AddUpgrade( { UPGRADE_MODE.FINE, UPGRADE_MODE.VERY_FINE }, 20, "log" ) --66%
-	:AddUpgrade( { UPGRADE_MODE.FINE, UPGRADE_MODE.VERY_FINE }, 10, "acc" ) --33%
-
-	RegisterChip( "acc", 0, { ACCESS_OFFICE }, 1 )
-	:AddUpgrade( { UPGRADE_MODE.FINE, UPGRADE_MODE.VERY_FINE }, 0, "log" ) --100%
-
-	RegisterChip( "log", 1, { ACCESS_SAFE, ACCESS_OFFICE }, 2 )
-	:AddUpgrade( { UPGRADE_MODE.FINE, UPGRADE_MODE.VERY_FINE }, 15, "spec" ) --60%
-	:AddUpgrade( { UPGRADE_MODE.FINE, UPGRADE_MODE.VERY_FINE }, 10, "guard" ) --40%
-
-	RegisterChip( "sci1", 1, { ACCESS_SAFE, ACCESS_OFFICE, ACCESS_GENERAL }, 5 )
-	:AddUpgrade( { UPGRADE_MODE.FINE, UPGRADE_MODE.VERY_FINE }, 15, "sci2" ) --75%
-	:AddUpgrade( { UPGRADE_MODE.FINE, UPGRADE_MODE.VERY_FINE }, 5, false ) --25%
-
-	RegisterChip( "sci2", 2, { ACCESS_SAFE, ACCESS_EUCLID, ACCESS_OFFICE, ACCESS_GENERAL, ACCESS_MEDBAY }, 6 )
-	:AddUpgrade( UPGRADE_MODE.ONE_ONE, 10, "spec" ) --50%
-	:AddUpgrade( UPGRADE_MODE.ONE_ONE, 10, "guard" ) --50%
-	:AddUpgrade( { UPGRADE_MODE.FINE, UPGRADE_MODE.VERY_FINE }, 10, "sci3" ) --66%
-	:AddUpgrade( { UPGRADE_MODE.FINE, UPGRADE_MODE.VERY_FINE }, 5, false ) --33%
-
-	RegisterChip( "sci3", 3, { ACCESS_SAFE, ACCESS_EUCLID, ACCESS_KETER, ACCESS_OFFICE, ACCESS_GENERAL, ACCESS_MEDBAY }, 7 )
-	:AddUpgrade( UPGRADE_MODE.FINE, 15, "chief" ) --37.5%
-	:AddUpgrade( UPGRADE_MODE.FINE, 10, "hacked3" ) --25%
-	:AddUpgrade( UPGRADE_MODE.FINE, 5, "spec" ) --12.5%
-	:AddUpgrade( UPGRADE_MODE.FINE, 5, false ) --12.5%
-	:AddUpgrade( UPGRADE_MODE.VERY_FINE, 20, "chief" ) --40%
-	:AddUpgrade( UPGRADE_MODE.VERY_FINE, 20, "hacked3" ) --40%
-	:AddUpgrade( UPGRADE_MODE.VERY_FINE, 5, "spec" ) --10%
-	:AddUpgrade( UPGRADE_MODE.VERY_FINE, 5, true ) --10%
-
-	RegisterChip( "spec", 2, { ACCESS_SAFE, ACCESS_EUCLID, ACCESS_WARHEAD_ELEVATOR, ACCESS_EC, ACCESS_CHECKPOINT_LCZ }, 8 )
-	:AddUpgrade( UPGRADE_MODE.ONE_ONE, 10, "sci2" ) --50%
-	:AddUpgrade( UPGRADE_MODE.ONE_ONE, 10, "guard" ) --50%
-	:AddUpgrade( { UPGRADE_MODE.FINE, UPGRADE_MODE.VERY_FINE }, 15, "sci3" ) --75%
-	:AddUpgrade( { UPGRADE_MODE.FINE, UPGRADE_MODE.VERY_FINE }, 5, false ) --25%
-
-	RegisterChip( "guard", 2, { ACCESS_SAFE, ACCESS_EC, ACCESS_OFFICE, ACCESS_CHECKPOINT_LCZ, ACCESS_CHECKPOINT_EZ }, 9 )
-	:AddUpgrade( UPGRADE_MODE.ONE_ONE, 10, "sci2" ) --50%
-	:AddUpgrade( UPGRADE_MODE.ONE_ONE, 10, "spec" ) --50%
-	:AddUpgrade( UPGRADE_MODE.FINE, 25, "chief" ) --62.5%
-	:AddUpgrade( UPGRADE_MODE.FINE, 15, "hacked3" ) --37.5
-	:AddUpgrade( UPGRADE_MODE.VERY_FINE, 20, "chief" ) --40%
-	:AddUpgrade( UPGRADE_MODE.VERY_FINE, 20, "hacked3" ) --40%
-	:AddUpgrade( UPGRADE_MODE.VERY_FINE, 10, true ) --20%
-
-	RegisterChip( "chief", 3, { ACCESS_SAFE, ACCESS_EUCLID, ACCESS_EC, ACCESS_OFFICE, ACCESS_GENERAL, ACCESS_CHECKPOINT_LCZ, ACCESS_CHECKPOINT_EZ }, 10 )
-	:AddUpgrade( UPGRADE_MODE.ONE_ONE, 0, "mtf" ) --100%
-
-	RegisterChip( "mtf", 3, { ACCESS_SAFE, ACCESS_EUCLID, ACCESS_KETER, ACCESS_EC, ACCESS_CHECKPOINT_LCZ, ACCESS_CHECKPOINT_EZ, ACCESS_GATE_A, ACCESS_GATE_B }, 11 )
-	:AddUpgrade( UPGRADE_MODE.ONE_ONE, 0, "chief" ) --100%
-	:AddUpgrade( UPGRADE_MODE.FINE, 10, "com" ) --50%
-	:AddUpgrade( UPGRADE_MODE.FINE, 10, false ) --50%
-	:AddUpgrade( UPGRADE_MODE.VERY_FINE, 20, "com" ) --80%
-	:AddUpgrade( UPGRADE_MODE.VERY_FINE, 5, true ) --20%
-
-	RegisterChip( "com", 4, { ACCESS_SAFE, ACCESS_EUCLID, ACCESS_KETER, ACCESS_EC, ACCESS_ARMORY, ACCESS_MEDBAY, ACCESS_WARHEAD_ELEVATOR, ACCESS_CHECKPOINT_LCZ,
-	ACCESS_CHECKPOINT_EZ, ACCESS_GATE_A, ACCESS_GATE_B }, 12 )
-	:AddUpgrade( UPGRADE_MODE.ONE_ONE, 15, "hacked4" ) --60%
-	:AddUpgrade( UPGRADE_MODE.ONE_ONE, 10, "director" ) --40%
-
-	RegisterChip( "hacked3", 3, { ACCESS_SAFE, ACCESS_EUCLID, ACCESS_EC, ACCESS_GENERAL, ACCESS_CHECKPOINT_EZ, ACCESS_GATE_A }, 15 )
-	:AddUpgrade( UPGRADE_MODE.FINE, 20, "hacked4" ) --80%
-	:AddUpgrade( UPGRADE_MODE.FINE, 5, "com" ) --20%
-	:AddUpgrade( UPGRADE_MODE.VERY_FINE, 15, "com" ) --30%
-	:AddUpgrade( UPGRADE_MODE.VERY_FINE, 10, "hacked4" ) --20%
-	:AddUpgrade( UPGRADE_MODE.VERY_FINE, 20, false ) --40%
-	:AddUpgrade( UPGRADE_MODE.VERY_FINE, 5, true ) --10%
-
-	RegisterChip( "hacked4", 4, { ACCESS_SAFE, ACCESS_EUCLID, ACCESS_KETER, ACCESS_OFFICE, ACCESS_MEDBAY, ACCESS_CHECKPOINT_LCZ, ACCESS_CHECKPOINT_EZ,
-	ACCESS_WARHEAD_ELEVATOR, ACCESS_FEMUR, ACCESS_GATE_A, ACCESS_GATE_B, ACCESS_PARTICLE }, 16 )
-	:AddUpgrade( UPGRADE_MODE.ONE_ONE, 15, "com" ) --60%
-	:AddUpgrade( UPGRADE_MODE.ONE_ONE, 10, "director" ) --40%
-	:AddUpgrade( { UPGRADE_MODE.FINE, UPGRADE_MODE.VERY_FINE }, 10, "hacked5" ) --50%
-	:AddUpgrade( { UPGRADE_MODE.FINE, UPGRADE_MODE.VERY_FINE }, 10, false ) --50%
-
-	RegisterChip( "hacked5", 5, { ACCESS_WARHEAD_ELEVATOR, ACCESS_EC, ACCESS_ARMORY, ACCESS_GATE_A, ACCESS_GATE_B, ACCESS_FEMUR, ACCESS_ALPHA, ACCESS_PARTICLE }, 17 )
-	:AddUpgrade( UPGRADE_MODE.ONE_ONE, 5, "o5" ) --25%
-	:AddUpgrade( UPGRADE_MODE.ONE_ONE, 15, false ) --75%
-
-	RegisterChip( "director", 4, { ACCESS_SAFE, ACCESS_GENERAL, ACCESS_OFFICE, ACCESS_MEDBAY, ACCESS_EC, ACCESS_CHECKPOINT_LCZ, ACCESS_CHECKPOINT_EZ,
-	ACCESS_WARHEAD_ELEVATOR, ACCESS_FEMUR, ACCESS_ARMORY, ACCESS_OMEGA, ACCESS_GATE_A, ACCESS_GATE_B, ACCESS_PARTICLE }, 13 )
-	:AddUpgrade( UPGRADE_MODE.ONE_ONE, 10, "com" ) --50%
-	:AddUpgrade( UPGRADE_MODE.ONE_ONE, 10, "hacked4" ) --50%
-	:AddUpgrade( UPGRADE_MODE.FINE, 10, "o5" ) --40%
-	:AddUpgrade( UPGRADE_MODE.FINE, 15, false ) --60%
-	:AddUpgrade( UPGRADE_MODE.VERY_FINE, 35, "o5" ) --70%
-	:AddUpgrade( UPGRADE_MODE.VERY_FINE, 10, false ) --20%
-	:AddUpgrade( UPGRADE_MODE.VERY_FINE, 5, true ) --10%
-
-	RegisterChip( "o5", 5, { ACCESS_SAFE, ACCESS_EUCLID, ACCESS_KETER, ACCESS_OFFICE, ACCESS_MEDBAY, ACCESS_GENERAL, ACCESS_CHECKPOINT_LCZ, ACCESS_CHECKPOINT_EZ,
-	ACCESS_WARHEAD_ELEVATOR, ACCESS_EC, ACCESS_ARMORY, ACCESS_GATE_A, ACCESS_GATE_B, ACCESS_FEMUR, ACCESS_ALPHA, ACCESS_OMEGA, ACCESS_PARTICLE }, 14 )
-	:AddUpgrade( UPGRADE_MODE.ONE_ONE, 10, "hacked5" ) --50%
-	:AddUpgrade( UPGRADE_MODE.ONE_ONE, 10, false ) --50%*/
+	RegisterChip( "goc", 3, { ACCESS_CHECKPOINT_LCZ, ACCESS_CHECKPOINT_EZ, ACCESS_WARHEAD_ELEVATOR, ACCESS_GATE_A, ACCESS_GATE_B }, 16 )
+	:AddUpgrade( UPGRADE_MODE.FINE, 10, "hacked3" )
+	:AddUpgrade( UPGRADE_MODE.FINE, 5, "hacked4" )
+	:AddUpgrade( UPGRADE_MODE.FINE, 10, false )
+	:AddUpgrade( UPGRADE_MODE.VERY_FINE, 10, "hacked4" )
+	:AddUpgrade( UPGRADE_MODE.VERY_FINE, 5, "mtf" )
+	:AddUpgrade( UPGRADE_MODE.VERY_FINE, 5, true )
 end )

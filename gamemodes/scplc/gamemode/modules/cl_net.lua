@@ -6,8 +6,8 @@ net.ReceiveTable( "SLCPlayerMeta", function( data )
 end )
 
 net.ReceiveTable( "SLCInfoScreen", function( data )
-	if data.type == "spawn" and !system.HasFocus() then
-		system.FlashWindow()
+	if data.type == "spawn" then
+		SLCWindowAlert()
 	end
 
 	InfoScreen( { team = data.team, class = data.class }, data.type, data.time, data.data )
@@ -18,32 +18,47 @@ net.Receive( "PlayerReady", function( len )
 end )
 
 net.Receive( "SCPList", function( len )
-	//SCPS = net.ReadTable()
 	local data = net.ReadTable()
-	local transmited = net.ReadTable()
 
 	SCPS = {}
 	ShowSCPs = {}
 
+	local lang = _LANG.english.CLASSES
+	local numbers = {}
+
 	for i, v in ipairs( data ) do
-		table.insert( SCPS, v.name )
+		local name = v.name
+		CLASSES[name] = name
 		table.insert( ShowSCPs, v )
+		
+		local nice_name = lang[name]
+		if !nice_name then
+			numbers[name] = { 0, 0 }
+		else
+			local n1, n2 = string.match( nice_name, "SCP%s*(%d+)-?(%d*)" )
+			numbers[name] = { tonumber( n1 ) or 0, tonumber( n2 ) or 0 }
+		end
+
+		if !v.no_select then
+			table.insert( SCPS, name )
+		end
 	end
 
-	for i, v in ipairs( SCPS ) do
-		CLASSES[v] = v
-	end
+	table.sort( ShowSCPs, function( a, b )
+		if numbers[a.name][1] == numbers[b.name][1] then
+			return numbers[a.name][2] < numbers[b.name][2]
+		end
 
-	for i, v in ipairs( transmited ) do
-		CLASSES[v] = v
-	end
+		return numbers[a.name][1] < numbers[b.name][1]
+	end )
 
-	if SetupForceSCP then SetupForceSCP() end
+	//if SetupForceSCP then SetupForceSCP() end
+	hook.Run( "SetupForceSCP" )
 end )
 
 net.Receive( "SLCEscape", function( len )
-	EscapeStatus = net.ReadUInt( 2 )
-	EscapeTimer = net.ReadFloat()
+	ESCAPE_STATUS = net.ReadUInt( 2 )
+	ESCAPE_TIMER = net.ReadFloat()
 end )
 
 net.Receive( "PlayerMessage", function( len )
@@ -85,16 +100,18 @@ net.Receive( "CameraDetect", function( len )
 	end
 end )
 
-/*net.Receive( "PlayerSetup", function( len )
-	HUDDrawSpawnInfo = CurTime() + 20
-end )*/
+net.Receive( "InitialIDs", function( len )
+	//HUDDrawSpawnInfo = CurTime() + 20
+	SetupInitialIDs( net.ReadTable() )
+end )
 
 net.Receive( "PlayerCleanup", function( len )
 	local ply = net.ReadEntity()
-
 	if IsValid( ply ) then
 		hook.Run( "SLCPlayerCleanup", ply )
 
+		ply:ResetProperties()
+		
 		if ply == LocalPlayer() then
 			ClearPlayerIDs()
 		end
@@ -117,9 +134,11 @@ net.Receive( "RoundInfo", function( len )
 		ROUND.post = false
 		ROUND.name = ""
 		ROUND.time = 0
+		ROUND.duration = 0
 	elseif status == "live" then
 		ROUND.active = true
 		ROUND.time = data.time
+		ROUND.duration = data.duration
 		ROUND.preparing = false
 		ROUND.infoscreen = false
 		ROUND.post = false
@@ -127,6 +146,7 @@ net.Receive( "RoundInfo", function( len )
 		CENTERMESSAGES = {}
 		ROUND.active = true
 		ROUND.time = data.time
+		ROUND.duration = data.duration
 		ROUND.preparing = true
 		ROUND.infoscreen = true
 		ROUND.post = false
@@ -134,15 +154,19 @@ net.Receive( "RoundInfo", function( len )
 		//CENTERMESSAGES = {}
 		ROUND.active = true
 		ROUND.time = data.time
+		ROUND.duration = data.duration
 		ROUND.preparing = true
 		ROUND.infoscreen = false
 		ROUND.post = false
 	elseif status == "post" then
 		ROUND.active = true
 		ROUND.time = data.time
+		ROUND.duration = data.duration
 		ROUND.preparing = false
 		ROUND.infoscreen = false
 		ROUND.post = true
+
+		SLCWindowAlert()
 	end
 end )
 
@@ -193,12 +217,29 @@ net.Receive( "SLCXPSummary", function( len )
 	HUDXPSummary = tab
 end )
 
+net.Receive( "SLCGasZones", function( len )
+	SLC_GAS = net.ReadTable()
+	SLC_GAS.GasPower = 0
+end )
+
+net.Receive( "SLCHitMarker", function( len )
+	ShowHitMarker()
+end )
+
+net.Receive( "SLCDamageIndicator", function( len )
+	ShowDamageIndicator( net.ReadUInt( 10 ), net.ReadFloat(), net.ReadFloat() )
+end )
+
+net.ReceivePing( "AFKSlayWarning", function( data )
+	SLCAFKWarning = true
+end )
+
 --[[-------------------------------------------------------------
 SCP VARS
 ---------------------------------------------------------------]]
-local ply = FindMetaTable( "Player" )
+local PLAYER = FindMetaTable( "Player" )
 
-function ply:SetupSCPVarTable()
+function PLAYER:SetupSLCVarTable()
 	self.scp_var_table = {
 		BOOL = {},
 		INT = {},
@@ -214,7 +255,7 @@ function ply:SetupSCPVarTable()
 	}
 end
 
-function ply:SCPVarUpdated( id, data_type, new_val )
+function PLAYER:SLCVarUpdated( id, data_type, new_val )
 	if new_val != nil then
 		local cb = self.scp_var_callbacks[data_type][id]
 		if cb then
@@ -223,46 +264,27 @@ function ply:SCPVarUpdated( id, data_type, new_val )
 	end
 end
 
-function ply:SetSCPVarCallback( id, data_type, cb )
-	assert( type( cb ) == "function", "Bad argument #1 to function SetSCPVarCallback. Function expected got "..type( cb ) )
+function PLAYER:SetSLCVarCallback( id, data_type, cb )
+	assert( type( cb ) == "function", "Bad argument #1 to function SetSLCVarCallback. Function expected got "..type( cb ) )
 
 	self.scp_var_callbacks[data_type][id] = cb
 end
 
-function ply:AddSCPVar( name, id, data_type )
+function PLAYER:AddSLCVar( name, id, data_type )
 	if !name or !id or !data_type then return end
 
 	if !self.scp_var_table then
-		self:SetupSCPVarTable()
+		self:SetupSLCVarTable()
 	end
 
-	/*assert( self.scp_var_table[data_type], "Invalid data_type '"..data_type.."'!" )
-
-	if !id then
-		id = self.scp_var_lookup[data_type][name]
-		print( "ID after lookup", data_type, name, id )
-
-		if !id then
-			for i = 0, 15 do
-				if self.scp_var_table[data_type][i] == nil then
-					id = i
-					print( "Assigning id", data_type, name, id )
-					break
-				end
-			end
-		end
-	end
-
-	assert( id, "Failed to assign ID for SCPVar '"..name.."'! " )
-	assert( id < 16, "You can only create maximum of 16 SCPVars of each data_type!" )*/
-	assert( id < 16, "Too big ID in AddSCPVar function. IDs cannot be greater than 15!" )
-	assert( id >= 0, "ID in AddSCPVar cannot be negative!" )
+	assert( id < 16, "Too big ID in AddSLCVar function. IDs cannot be greater than 15!" )
+	assert( id >= 0, "ID in AddSLCVar cannot be negative!" )
 
 	if data_type == "BOOL" then
 		self.scp_var_table.BOOL[id] = self.scp_var_table.BOOL[id] or false
 		self["Set"..name] = function( this, b )
 			assert( type( b ) == "boolean", "Bad argument #1 to function Set"..name..". Boolean expected, got "..type( b ) )
-				this.scp_var_table.BOOL[id] = !!b
+			this.scp_var_table.BOOL[id] = !!b
 		end
 		self["Get"..name] = function( this )
 			return this.scp_var_table.BOOL[id]
@@ -271,7 +293,7 @@ function ply:AddSCPVar( name, id, data_type )
 		self.scp_var_table.INT[id] = self.scp_var_table.INT[id] or 0
 		self["Set"..name] = function( this, int )
 			assert( type( int ) == "number", "Bad argument #1 to function Set"..name..". Number expected, got "..type( int ) )
-				this.scp_var_table.INT[id] = math.floor( int )
+			this.scp_var_table.INT[id] = math.floor( int )
 		end
 		self["Get"..name] = function( this )
 			return this.scp_var_table.INT[id]
@@ -297,18 +319,18 @@ function ply:AddSCPVar( name, id, data_type )
 	end
 end
 
-function ply:RequestSCPVars()
-	net.Start( "UpdateSCPVars" )
+function PLAYER:RequestSLCVars()
+	net.Start( "UpdateSLCVars" )
 	net.SendToServer()
 end
 
-net.Receive( "UpdateSCPVars", function()
+net.Receive( "UpdateSLCVars", function()
 	local lp = LocalPlayer()
 
 	if !lp.scp_var_table then
-		if !lp.SetupSCPVarTable then return end
+		if !lp.SetupSLCVarTable then return end
 
-		lp:SetupSCPVarTable()
+		lp:SetupSLCVarTable()
 	end
 
 	local len = net.ReadUInt( 6 )
@@ -322,19 +344,19 @@ net.Receive( "UpdateSCPVars", function()
 		if t == 0 then --BOOL
 			local val = net.ReadBool()
 			lp.scp_var_table.BOOL[id] = val
-			lp:SCPVarUpdated( id, "BOOL", val )
+			lp:SLCVarUpdated( id, "BOOL", val )
 		elseif t == 16 then --INT
 			local val = net.ReadInt( 32 )
 			lp.scp_var_table.INT[id] = val
-			lp:SCPVarUpdated( id, "INT", val )
+			lp:SLCVarUpdated( id, "INT", val )
 		elseif t == -32 then --FLOAT
 			local val = net.ReadFloat()
 			lp.scp_var_table.FLOAT[id] = val
-			lp:SCPVarUpdated( id, "FLOAT", val )
+			lp:SLCVarUpdated( id, "FLOAT", val )
 		elseif t == -16 then --STRING
 			local val = net.ReadString()
 			lp.scp_var_table.STRING[id] = val
-			lp:SCPVarUpdated( id, "STRING", val )
+			lp:SLCVarUpdated( id, "STRING", val )
 		end
 	end
 end )

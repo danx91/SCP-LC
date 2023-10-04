@@ -3,9 +3,13 @@ Language: Polish
 Date: 12.08.2021
 Translated by: Slusher, alski
 Updated by: Zaptyp (https://steamcommunity.com/id/Zaptyp/)
+Edited again by: Slusher (https://steamcommunity.com/id/Slusheer/)
 ---------------------------------------------------------------------------]]
 
 local lang = {}
+
+lang.self = "Polski"
+lang.self_en = "Polish"
 
 --[[-------------------------------------------------------------------------
 NRegistry
@@ -15,6 +19,7 @@ lang.NRegistry = {
 	scpwait = "Musisz poczekać %i rund aby zagrać jako SCP",
 	abouttostart = "Gra rozpocznie się za %i sekund!",
 	kill = "Otrzymujesz %d punktów za zabójstwo %s: %s!",
+	kill_n = "Zabiłeś %s: %s!",
 	assist = "Otrzymujesz %d punktów za asystę w zabójstwie gracza: %s!",
 	rdm = "Tracisz %d punktów za zabójstwo %s: %s!",
 	acc_denied = "Brak dostępu",
@@ -55,7 +60,17 @@ lang.NRegistry = {
 	overload_cooldown = "Poczekaj %i sekund aby przeciążyć te drzwi!",
 	advanced_overload = "Te drzwi wydają się być za mocne! Spróbuj ponownie za %i sekund",
 	lockdown_once = "Blokada placówki może być aktywowana tylko raz na runde",
-	dailybonus = "Pozostały dzienny bonus: %i XP\nNastępny reset za: %s"
+	dailybonus = "Pozostały dzienny bonus: %i XP\nNastępny reset za: %s",
+	xp_goc_device = "Otrzymujesz %i doświadczenia za pomyślne uruchomienie urządzenia GOC",
+	goc_device_destroyed = "Otrzymujesz %i punktów za zniszczenie urządzenia GOC!",
+	goc_detonation = "Detonacja głowic ALPHA i OMEGA za %i sekund. Natychmiast udaj się do punktu ewakuacji albo schronu!",
+	fuserating = "Potrzebujesz mocniejszego bezpiecznika!",
+	nofuse = "Aby móc korzystać z tego urządzenia, potrzebny jest bezpiecznik",
+	nopower = "Nacisnąłeś przycisk, ale nic się nie stało...",
+	nopower_omni = "Przyłożyłeś omnitool do czytnika, ale nic się nie stało...",
+	docs = "Otrzymałeś %i punktów za ucieczkę z %i dokumentami",
+	docs_pick = "Zdobyłeś cenne dokumenty Fundacji SCP - ucieknij z nimi, aby otrzymać nagrodę!",
+	gaswarn = "Dekontaminacja %s za 60 sekund",
 }
 
 lang.NFailed = "Nie udało się uzyskać dostępu do NRegistry z kluczem: %s"
@@ -87,22 +102,24 @@ lang.NCRegistry = {
 	stat_escorts = "Graczy odeskortowano: %i",
 	stat_023 = "Nagłe zgony spowodowane przez SCP 023: %i",
 	stat_049 = "Gracze \"wyleczeni\" przez SCP 049: %i",
-	stat_066 = "Gracze zabici przez głośną muzykę SCP 066: %i",
+	stat_066 = "Gracze zabici przez głośną muzykę: %i",
 	stat_096 = "Gracze zabici przez SCP 096: %i",
 	stat_106 = "Gracze przeteleportowani do wymiaru łuzowego: %i",
 	stat_173 = "Złamane karki przez SCP 173: %i",
-	stat_457 = "Podpaleni gracze: %i",
+	stat_457 = "Spaleni gracze: %i",
 	stat_682 = "Gracze zabici przez SCP 682: %i",
 	stat_8602 = "Gracze przybici do ściany przez SCP 860-2: %i",
-	stat_939 = "Dusze SCP 939: %i",
-	stat_966 = "Gracze przecięci przez SCP 966: %i",
+	stat_939 = "Ofiary SCP 939: %i",
+	stat_966 = "Gracze rozszarpani przez SCP 966: %i",
 	stat_3199 = "Zabójstwa dokonane przez SCP 3199: %i",
 	stat_24273 = "Osoby osądzone przez SCP 2427-3: %i",
 	stat_omega_warhead = "Głowica OMEGA została zdetonowana",
 	stat_alpha_warhead = "Głowica ALPHA została zdetonowana",
+	stat_goc_warhead = "Urządzenie GOC zostało aktywowane",
 }
 
 lang.NCFailed = "Nie udało się uzyskać dostępu do NCRegistry z kluczem: %s"
+
 
 --[[-------------------------------------------------------------------------
 Main menu
@@ -124,6 +141,7 @@ main_menu.yes = "Tak"
 main_menu.no = "Nie"
 main_menu.all = "Załaduj modele"
 main_menu.cancel = "Anuluj"
+
 
 main_menu.credits_text = [[Tryb stworzony przez ZGFueDkx (aka danx91)
 Tryb jest oparty na SCP i wydany na licencji CC BY-SA 3.0
@@ -166,8 +184,10 @@ hud.hp = "HP"
 hud.stamina = "ENERGIA"
 hud.sanity = "PSYCHIKA"
 hud.xp = "PD"
+hud.extra_hp = "Dodatkowe HP"
 
 hud.escaping = "Uciekanie..."
+hud.escape_blocked = "Ucieczka zablokowana!"
 
 --[[-------------------------------------------------------------------------
 EQ
@@ -178,17 +198,29 @@ lang.eq_hold = "Przytrzymaj LPM - Przenieś"
 lang.eq_vest = "Pancerz"
 lang.eq_key = "Naciśnij '%s' aby otworzyć EQ"
 lang.eq_unknown = "Nieznany przedmiot"
+lang.eq_backpack = "Plecak"
+lang.eq_swapping = "Zamiana przedmiotów"
 
 lang.info = "Informacje"
 lang.author = "Autor"
 lang.mobility = "Mobilność"
 lang.weight = "Waga"
-lang.protection = "Ochrona"
+lang.vest_multiplier = "Mnożnik obrażeń"
+lang.durability = "Wytrzymałość"
 
 lang.weight_unit = "kg"
 lang.eq_buttons = {
 	escort = "Eskortuj",
 	gatea = "Detonuj Gate A"
+}
+
+lang.pickup_msg = {
+	max_eq = "Twój ekwipunek jest pełny!",
+	cant_stack = "Nie możesz nieść większej ilości tego przedmiotu!",
+	has_already = "Już posiadasz ten przedmiot!",
+	same_type = "Już posiadasz przedmiot tego samego typu!",
+	one_weapon = "Możesz nosić tylko jedną broń palną na raz!",
+	goc_only = "Tylko jednostki GOC mogą to podnieść!"
 }
 
 --[[-------------------------------------------------------------------------
@@ -219,8 +251,18 @@ effects.insane = "Szaleństwo"
 effects.gas_choke = "Duszenie"
 effects.radiation = "Radiacja"
 effects.deep_wounds = "Głębokie rany"
+effects.poison = "Trucizna"
 effects.heavy_bleeding = "Silne krwawienie"
 effects.weak_bleeding = "Słabe krwawienie"
+effects.spawn_protection = "Ochrona początkowa"
+effects.fracture = "Złamanie"
+effects.decay = "Rozkład"
+effects.scp_chase = "Pościg"
+effects.human_chase = "Ucieczka"
+effects.expd_rubber_bones = "Eksperymentalny Efekt"
+effects.expd_stamina_tweaks = "Eksperymentalny Efekt"
+effects.expd_revive = "Eksperymentalny Efekt"
+effects.expd_recovery = "Regeneracja"
 
 --[[-------------------------------------------------------------------------
 Class viewer
@@ -232,6 +274,7 @@ lang.buy = "Kup"
 lang.refound = "Zwróć"
 lang.none = "Brak"
 lang.refounded = "Wszystkie usunięte klasy zostały zwrócone. Otrzymałeś %d punktów prestiżu."
+lang.tierlocked = "Musisz kupić każdą klasę z poprzedniego tieru, aby odblokować klasy z tego tieru (również klasy z innych kategorii)"
 
 lang.details = {
 	details = "Szczegóły",
@@ -242,12 +285,15 @@ lang.details = {
 	run_speed = "Szybkość biegania",
 	chip = "Chip dostępu",
 	persona = "Fałszywa tożsamość",
-	weapons = "Bronie",
+	loadout = "Broń główna",
+	weapons = "Przedmioty",
 	class = "Klasa",
 	hp = "Życie",
 	speed = "Szybkość",
 	health = "Życie",
-	sanity = "Psychika"
+	sanity = "Psychika",
+	slots = "Sloty wsparcia",
+	no_select = "Nie pojawia się na początku rundy",
 }
 
 lang.headers = {
@@ -263,7 +309,35 @@ lang.view_cat = {
 	mtf_ntf = "MTF Epsilon-11",
 	mtf_alpha = "MTF Alfa-1",
 	ci = "Chaos Insurgency",
+	goc = "GOC",
 }
+
+local l_weps = {
+	pistol = "Pistolet",
+	smg = "SMG",
+	rifle = "Karabin",
+	shotgun = "Strzelba",
+}
+
+local l_tiers = {
+	low = "niskiego poziomu",
+	mid = "średniego poziomu",
+	high = "wysokiego poziomu",
+}
+
+lang.loadouts = {
+	grenade = "Losowy granat",
+	pistol_all = "Losowy pistolet",
+	smg_all = "Losowe SMG",
+	rifle_all = "Losowy karabin",
+	shotgun_all = "Losowa strzelba",
+}
+
+for k_wep, wep in pairs( l_weps ) do
+	for k_tier, tier in pairs( l_tiers ) do
+		lang.loadouts[k_wep.."_"..k_tier] = wep.." "..tier
+	end
+end
 
 --[[-------------------------------------------------------------------------
 Settings
@@ -285,7 +359,8 @@ lang.settings = {
 
 	panels = {
 		binds = "Klawiatura",
-		config = "Konfiguracja",
+		general_config = "Ogólne ustawienia",
+		scp_config = "Ustawienia SCP",
 		skins = "Skórki GUI",
 		reset = "Reset trybu gry",
 		cvars = "Edytor ConVarów",
@@ -305,6 +380,24 @@ lang.settings = {
 		smooth_blink = "Płynne mruganie",
 		scp_hud_overload_cd = "Pokaż czas odnowienia przeciążenia",
 		any_button_close_search = "Zamknij menu przeszukania dowolnym klawiszem",
+		hud_hitmarker = "Hitmarkery",
+		hud_damage_indicator = "Wskaźniki obrażeń",
+		scp_hud_dmg_mod = "Pokaż modyfikator obrażeń SCP",
+		scp_nvmod = "Zwiększ jasność ekranu podczas grania jako SCP",
+		dynamic_fov = "Dynamiczny FOV",
+		hud_draw_crosshair = "Pokaż celownik",
+		hud_hl2_crosshair = "Celownik z HL2",
+
+		cvar_slc_language = "Język",
+		cvar_slc_hud_scale = "Skala HUD",
+		cvar_slc_hud_scale_options = {
+			normal = "Normalna",
+			big = "Duża",
+			vbig = "Bardzo duża",
+			small = "Mała",
+			vsmall = "Bardzo mała",
+			imretard = "Minimalna",
+		},
 	},
 }
 
@@ -321,6 +414,8 @@ lang.gamemode_config = {
 		time = "Czas",
 		premium = "Premium",
 		scp = "SCP",
+		gas = "Gaz",
+		feature = "Dodatki"
 	}
 }
 
@@ -339,11 +434,15 @@ lang.scoreboard = {
 }
 
 lang.ranks = {
+	superadmin = "Superadmin",
+	admin = "Admin",
 	author = "Autor",
 	vip = "VIP",
-	tester = "Tester",
 	contributor = "Contributor",
 	translator = "Tłumacz",
+	tester = "Tester",
+	patron = "Patron",
+	hunter = "Łowca błędów"
 }
 
 --[[-------------------------------------------------------------------------
@@ -367,6 +466,7 @@ lang.SCPHUD = {
 	skill_cant_use = "Umiejętność nie może być teraz użyta!",
 	overload_cd = "Następne przeciążenie: ",
 	overload_ready = "Przeciążenie gotowe!",
+	damage_scale = "Otrzymane obrażenia"
 }
 
 --[[-------------------------------------------------------------------------
@@ -395,6 +495,7 @@ lang.info_screen_registry = {
 	hazard = "Zostałeś zabity przez zagrożenie",
 	alpha_mia = "Ostatnia znana lokalizacja: Powierzchnia",
 	omega_mia = "Ostatnia znana lokalizacja: Placówka",
+	killer_t = "Drużyna twojego zabójcy: %s"
 }
 
 lang.info_screen_type = {
@@ -405,18 +506,12 @@ lang.info_screen_type = {
 	unknown = "Nieznany",
 }
 
-lang.info_screen_macro = {
-	time = function( args )
-		local t = tonumber( args[1] )
-		return t and string.ToMinutesSeconds( t ) or "--:--"
-	end
-}
-
 --[[-------------------------------------------------------------------------
 Generic
 ---------------------------------------------------------------------------]]
 lang.nothing = "Nic"
 lang.exit = "Wyjdź"
+lang.default = "Domyślny"
 
 --[[-------------------------------------------------------------------------
 Misc
@@ -426,16 +521,23 @@ lang.MISC = misc
 
 misc.content_checker = {
 	title = "Zawartość trybu",
-	msg = [[Wygląda na to, że brakuje ci addonów. Może to powodować błędy, takie jak brak tekstur, modeli, dźwięków i może zepsuć ci radość z gry.
-Nie masz %i addonów z %i. Czy chciałbyś je pobrać?? (Możesz pobrać je przez gre lub zrobić to samemu poprzez stronę na workshopie.)]],
-	no = "Nie",
-	download = "Pobierz teraz",
-	workshop = "Pokaż stronę na workshopie",
-	downloading = "Pobieranie",
-	mounting = "Montowanie",
-	idle = "Czekam na pobieranie...",
-	processing = "Przetwarzany addon: %s\nStatus: %s",
-	cancel = "Anuluj"
+	status = "Status",
+	auto_check = "Uruchamiaj automatycznie",
+	slist = {
+		"Wyłączony",
+		"Sprawdzanie",
+		"Montowanie",
+		"Pobieranie",
+		"Gotowe",
+	},
+	btn_workshop = "Warsztat Steam",
+	btn_download = "Pobierz",
+	btn_check = "Sprawdź & Pobierz",
+	allok = "Wszystkie dodatki są zainstalowane!",
+	nsub_warn = "Nie posiadasz niektórych dodatków! Tryb pobrał i zamontował je dla Ciebie. Jednak, mimo wszystko prosimy o zasubskrybowanie ręcznie wymaganych dodatków. Ich lista znajduje się w konsoli.",
+	disabled_warn = "Niektóre z twoich dodatków są wyłączone. Tryb zamontował je tym razem, ale dalej mogą pojawiać się brakujące elementy. Włącz wymagane dodatki w menu głównym (lista w konsoli)",
+	missing = "Brakujące dodatki",
+	disabled = "Wyłączone dodatki",
 }
 
 misc.omega_warhead = {
@@ -453,6 +555,12 @@ misc.alpha_warhead = {
 	active = "Głowica ALPHA aktywowana\n\nNatychmiastowo przystąp do ewakuacji!\nDetonacja za %.2fs",
 }
 
+misc.zones = {
+	lcz = "LCZ",
+	hcz = "HCZ",
+	ez = "EZ",
+}
+
 misc.buttons = {
 	MOUSE1 = "LPM",
 	MOUSE2 = "PPM",
@@ -462,10 +570,34 @@ misc.buttons = {
 misc.inventory = {
 	unsearched = "Nieprzeszukane",
 	search = "Naciśnij [%s] aby przeszukać",
+	unknown_chip = "Nieznany chip",
+	name = "Nazwa",
+	team = "Drużyna",
+	death_time = "Czas zgonu",
+	time = {
+		[0] = "Przed chwilą",
+		"Około minuty temu",
+		"Około dwie minuty temu",
+		"Około trzy minuty temu",
+		"Około cztery minut temu",
+		"Około pięć minut temu",
+		"Około sześć minut temu",
+		"Około siedem minut temu",
+		"Około osiem minut temu",
+		"Około dziewięć minut temu",
+		"Około dziesięć minut temu",
+		long = "Ponad dziesięć minut temu",
+	},
 }
 
-misc.placing_turret = "Stawianie wieżyczki"
-misc.scanning = "SKANOWANIE"
+misc.font = {
+	name = "Czcionki",
+	content = [[Nie udało się załadować niestandardowej czcionki trybu gry! Powrót do czcionki systemowej...
+To problem z gmodem i nie mogę go naprawić. Aby to naprawić, musisz ręcznie usunąć niektóre pliki.
+Przejdź do 'steamapps/common/GarrysMod/garrysmod/cache/workshop/resource/fonts' i usuń następujące pliki: 'impacted.ttf', 'ds-digital.ttf' and 'unispace.ttf']],
+	ok = "OK"
+}
+
 --[[-------------------------------------------------------------------------
 Vests
 ---------------------------------------------------------------------------]]
@@ -481,8 +613,14 @@ vest.mtf_medic = "Pancerz medyka MTF NTF"
 vest.ntfcom = "Pancerz dowódcy MTF NTF"
 vest.alpha1 = "Pancerz MTF Alfa-1"
 vest.ci = "Pancerz Chaos Insurgency"
+vest.cicom = "Pancerz dowódcy CI"
+vest.cimedic = "Pancerz medyka CI"
+vest.goc = "Pancerz GOC"
+vest.gocmedic = "Pancerz medyka GOC"
+vest.goccom = "Pancerz dowódcy GOC"
 vest.fire = "Kamizelka ognioodporna"
 vest.electro = "Kamizelka przeciwporażeniowa"
+vest.hazmat = "Hazmat"
 
 local dmg = {}
 lang.DMG = dmg
@@ -491,6 +629,7 @@ dmg.BURN = "Obrażenia od ognia"
 dmg.SHOCK = "Obrażenia elektryczne"
 dmg.BULLET = "Obrażenia od pocisków"
 dmg.FALL = "Obrażenia od upadku"
+dmg.POISON = "Obrażenia od trucizny"
 
 --[[-------------------------------------------------------------------------
 Teams
@@ -498,16 +637,27 @@ Teams
 local teams = {}
 lang.TEAMS = teams
 
+teams.unknown = "Nieznana"
+
 teams.SPEC = "Obserwatorzy"
 teams.CLASSD = "Klasa D"
 teams.SCI = "Naukowcy"
+teams.GUARD = "Ochrona"
 teams.MTF = "MTF"
 teams.CI = "CI"
+teams.GOC = "GOC"
 teams.SCP = "SCP"
 
 --[[-------------------------------------------------------------------------
 Classes
 ---------------------------------------------------------------------------]]
+lang.UNK_CLASSES = { 
+	CLASSD = "Nieznana Klasa D",
+	SCI = "Nieznany Naukowiec",
+	GUARD = "Nieznany Ochroniarz",
+}
+
+
 local classes = {}
 lang.CLASSES = classes
 
@@ -532,12 +682,15 @@ classes.SCP24273 = "SCP 2427-3"
 classes.classd = "Klasa D"
 classes.veterand = "Weteran Klasy D"
 classes.kleptod = "Kleptoman Klasy D"
+classes.contrad = "Klasa D z kontrabandą"
 classes.ciagent = "Agent CI"
+classes.expd = "Eksperymentalna Klasa D"
 
 classes.sciassistant = "Asystent naukowca"
 classes.sci = "Naukowiec"
 classes.seniorsci = "Starszy naukowiec"
 classes.headsci = "Główny naukowiec"
+classes.contspec = "Specjalista zabezpieczeń"
 
 classes.guard = "Ochroniarz"
 classes.chief = "Szef ochrony"
@@ -556,8 +709,16 @@ classes.ntfsniper = "Snajper MTF NTF"
 classes.ntfmedic = "Medyk MTF NTF"
 classes.alpha1 = "MTF Alfa-1"
 classes.alpha1sniper = "Strzelec Wyborowy MTF Alfa-1"
+classes.alpha1medic = "Medyk MTF Alpha-1"
+classes.alpha1com = "Dowódca MTF Alpha-1"
 classes.ci = "Chaos Insurgency"
 classes.cicom = "Dowódca Chaos Insurgency"
+classes.cimedic = "Medyk Chaos Insurgency"
+classes.cispec = "Specjalista Chaos Insurgency"
+classes.ciheavy = "Ciężka jednostka Chaos Insurgency"
+classes.goc = "Żołnierz GOC"
+classes.gocmedic = "Medyk GOC"
+classes.goccom = "Dowódca GOC"
 
 local classes_id = {}
 lang.CLASSES_ID = classes_id
@@ -602,9 +763,15 @@ lang.CLASS_OBJECTIVES = {
 
 	kleptod = generic_classd,
 
+	contrad = generic_classd,
+
 	ciagent = [[- Eskortuj Personel Klasy D
 - Unikaj personelu i obiektów SCP
 - Współpracuj z innymi]],
+
+	expd = [[- Ucieknij z placówki
+- Unikaj personelu i obiektów SCP
+- Przeszedłeś dziwne eksperymenty]],
 
 	sciassistant = generic_sci,
 
@@ -613,6 +780,8 @@ lang.CLASS_OBJECTIVES = {
 	seniorsci = generic_sci,
 
 	headsci = generic_sci,
+
+	contspec = generic_sci,
 
 	guard = generic_guard,
 
@@ -646,7 +815,7 @@ lang.CLASS_OBJECTIVES = {
 
 	ntfmedic = [[- Pomóż personelowi wewnątrz placówki
 - Nie pozwól uciec obiektom Klasy D i SCP
-- Wspieraj innych MTFów swoją apteczką]],
+- Wspieraj swoją jednostkę leczeniem]],
 
 	ntfcom = [[- Pomóż personelowi wewnątrz placówki
 - Nie pozwól uciec obiektom Klasy D i SCP
@@ -660,6 +829,14 @@ lang.CLASS_OBJECTIVES = {
 - Zatrzymaj obiekty Klasy D i SCP
 - Jesteś upoważniony do ]].."[ZMIENIONO]",
 
+	alpha1medic = [[- Chroń placówkę za wszelką cenę
+- Wspieraj swoją jednostkę leczeniem
+- Jesteś upoważniony do ]].."[REDACTED]",
+
+	alpha1com = [[- Chroń placówkę za wszelką cenę
+- Wydawaj rozkazy innym sojusznikom
+- Jesteś upoważniony do ]].."[REDACTED]",
+
 	alpha1sniper = [[- Chroń placówkę za wszelką cenę
 - Zatrzymaj obiekty Klasy D i SCP
 - Jesteś upoważniony do ]].."[ZMIENIONO]",
@@ -671,6 +848,30 @@ lang.CLASS_OBJECTIVES = {
 	cicom = [[- Pomóż Personelowi Klasy D
 - Wyeliminuj personel placówki
 - Wydawaj rozkazy innym sojusznikom]],
+
+	cimedic = [[- Pomóż Personelowi Klasy D
+- Wspieraj swoją jednostkę leczeniem
+- Słuchaj swojego przełożonego]],
+
+	cispec = [[- Pomóż Personelowi Klasy D
+- Wspieraj CI swoim działkiem
+- Słuchaj swojego przełożonego]],
+
+ciheavy = [[- Pomóż Personelowi Klasy D
+- Zapewniaj ogień osłaniający
+- Słuchaj swojego przełożonego]],
+
+	goc = [[- Zniszcz podmioty SCP
+- Zlokalizuj i aktywuj urzadzenie GOC
+- Słuchaj swojego przełożonego]],
+
+	gocmedic = [[- Zniszcz podmioty SCP
+- Wspieraj swoją jednostkę leczeniem
+- Słuchaj swojego przełożonego]],
+
+	goccom = [[- Zniszcz podmioty SCP
+- Zlokalizuj i aktywuj urzadzenie GOC
+- Wydawaj rozkazy żołnierzom GOC]],
 
 	SCP023 = generic_scp,
 
@@ -721,7 +922,7 @@ Klasa podstawowa. Współpracuj z innymi, aby stawić czoła SCP i personelowi p
 	veterand = [[Poziom trudności: Łatwy
 Wytrzymałość: Wysoka
 Zwinność: Wysoka
-Potencjał bojowy: Średni
+Potencjał bojowy: Niski
 Czy może uciec: Tak
 Czy może eskortować: Nie
 Eskortowany przez: CI
@@ -737,8 +938,21 @@ Potencjał bojowy: Niski
 Czy może uciec: Tak
 Czy może eskortować: Nie
 Eskortowany przez: CI
+
 Przegląd:
 Bardzo użyteczna klasa. Rozpoczynasz z jednym losowym przedmiotem. Współpracuj z innymi, aby stawić czoła SCP i personelowi placówki. Możesz być eskortowany przez żołnierzy CI.
+]],
+
+contrad = [[Poziom trudności: Średni
+Wytrzymałość: Zwykła
+Zwinność: Zwykła
+Potencjał bojowy: Średni
+Czy może uciec: Tak
+Czy może eskortować: Nie
+Eskortowany przez: CI
+
+Przegląd:
+Klasa z przemyconą bronią. Wykorzystają tą broń mądrze, nie wytrzyma ona zbyt wiele.
 ]],
 
 	ciagent = [[Poziom trudności: Średni
@@ -753,9 +967,21 @@ Przegląd:
 Uzbrojony w paralizator. Jako agent CI udziel pomocy klasie D i współpracuj z nimi. Możesz eskortować członków klasy D.
 ]],
 
+	expd = [[Poziom trudności: ?
+Wytrzymałość: ?
+Zwinność: ?
+Potencjał bojowy: ?
+Czy może uciec: Nie
+Czy może eskortować: Tylko klase D
+Eskortowany przez: Nikogo
+
+Przegląd:
+Klasa, która przeszła kilka dziwnych eksperymentów wewnątrz placówki. Kto wie, co było przedmiotem ty badań...
+]],
+
 	sciassistant = [[Poziom trudności: Średni
-Wytrzymałość: Zwykła
-Zwinność: Zwykła
+Wytrzymałość: Niska
+Zwinność: Niska
 Potencjał bojowy: Niski
 Czy może uciec: Tak
 Czy może eskortować: Nie
@@ -786,19 +1012,31 @@ Czy może eskortować: Nie
 Eskortowany przez: Ochronę, Wsparcie MTF
 
 Przegląd:
-Jeden z naukowców. Masz wyższy poziom dostępu. Współpracuj z personelem placówki i trzymaj się z dala od obiektów SCP. Możesz być eskortowany przez oddział MTF.
+Jeden z naukowców. Masz wyższy poziom dostępu. Znalazłeś również prymitywną broń. Współpracuj z personelem placówki i trzymaj się z dala od obiektów SCP. Możesz być eskortowany przez oddział MTF.
 ]],
 
 	headsci = [[Poziom trudności: Łatwy
-Wytrzymałość: Wysoka
-Zwinność: Wysoka
-Potencjał bojowy: Średni
+Wytrzymałość: Bardzo wysoka
+Zwinność: Bardzo wysoka
+Potencjał bojowy: Niski
 Czy może uciec: Tak
 Czy może eskortować: Nie
 Eskortowany przez: Ochronę, Wsparcie MTF
 
 Przegląd:
 Najlepszy z naukowców. Masz wyższą użyteczność oraz wysokie HP. Współpracuj z personelem placówki i trzymaj się z dala od obiektów SCP. Możesz być eskortowany przez oddział MTF.
+]],
+
+	contspec = [[Poziom trudności: Średni
+Wytrzymałość: Bardzo wysoka
+Zwinność: Bardzo wysoka
+Potencjał bojowy: Niski
+Czy może uciec: Tak
+Czy może eskortować: Nie
+Eskortowany przez: Ochronę, Wsparcie MTF
+
+Przegląd:
+Jeden z naukowców o wysokiej użyteczności i wysokim HP, ma również najwyższy poziom dostępu. Współpracuj z personelem placówki i trzymaj się z dala od obiektów SCP. Możesz być eskortowany przez oddział MTF.
 ]],
 
 	guard = [[Poziom trudności: Łatwy
@@ -990,7 +1228,31 @@ Czy może eskortować: Tylko naukowców
 Eskortowany przez: Nikogo
 
 Przegląd:
-Jednostka MFO Alpha-1. Mocno opancerzona, bardzo użyteczna jednostka, uzbrojona w karabin wyborowy. Wejdź do placówki i zabezpiecz ją. Pomóż personelowi w środku i zneutralizuj SCP i klasę D.
+Jednostka MTF Alpha-1. Mocno opancerzona, bardzo użyteczna jednostka, uzbrojona w karabin wyborowy. Wejdź do placówki i zabezpiecz ją. Pomóż personelowi w środku i zneutralizuj SCP i klasę D.
+]],
+
+alpha1medic = [[Poziom trudności: Trudny
+Wytrzymałość: Bardzo wysoka
+Zwinność: Bardzo Wysoka
+Potencjał bojowy: Bardzo Wysoki
+Czy może uciec: Nie
+Czy może eskortować: Tylko naukowców
+Eskortowany przez: Nikogo
+
+Przegląd:
+Jednostka MTF Alpha-1.  Mocno opancerzona, bardzo użyteczna jednostka, zapewnia leczenie. Wejdź do placówki i zabezpiecz ją. Pomóż personelowi w środku i zneutralizuj SCP i klasę D.
+]],
+
+	alpha1com = [[Poziom trudności: Trudny
+Wytrzymałość: Bardzo wysoka
+Zwinność: Bardzo Wysoka
+Potencjał bojowy: Bardzo Wysoki
+Czy może uciec: Nie
+Czy może eskortować: Tylko naukowców
+Eskortowany przez: Nikogo
+
+Przegląd:
+Jednostka MTF Alpha-1. Mocno opancerzona, bardzo użyteczna jednostka, wydaje rozkazy. Wejdź do placówki i zabezpiecz ją. Pomóż personelowi w środku i zneutralizuj SCP i klasę D.
 ]],
 
 	ci = [[Poziom trudności: Średni
@@ -1013,10 +1275,82 @@ Czy może uciec: Nie
 Czy może eskortować: Tylko klase D
 Eskortowany przez: Nikogo
 
-Overview:
+Przegląd:
 Jednostka Rebelii Chaosu. Wyższy potencjał bojowy. Wejdź do placówki, pomóż klasie D i zabij personel placówki.
 ]],
 	
+	cimedic = [[Poziom trudności: Średni
+Wytrzymałość: Wysoka
+Zwinność: Wysoka
+Potencjał bojowy: Normalny
+Czy może uciec: Nie
+Czy może eskortować: Tylko klase D
+Eskortowany przez: Nikogo
+
+Przegląd:
+Jednostka Rebelii Chaosu. Wejdź do placówki, pomóż klasie D i zabij personel placówki. Zaczynasz z apteczką.
+]],
+
+	cispec = [[Poziom trudności: Średni
+Wytrzymałość: Średnio-wysoka
+Zwinność: Średnio-wysoka
+Potencjał bojowy: Wysoki
+Czy może uciec: Nie
+Czy może eskortować: Tylko klase D
+Eskortowany przez: Nikogo
+
+Przegląd:
+Jednostka Rebelii Chaosu. Wejdź do placówki, pomóż klasie D i zabij personel placówki. Możesz rozstawić działko.
+]],
+
+ciheavy = [[Poziom trudności: Średni
+Wytrzymałość: Średnio-wysoka
+Zwinność: Średnio-wysoka
+Potencjał bojowy: Bardzo wysoki
+Czy może uciec: Nie
+Czy może eskortować: Tylko klase D
+Eskortowany przez: Nikogo
+
+Przegląd:
+Jednostka Rebelii Chaosu. Wejdź do placówki, pomóż klasie D i zabij personel placówki. Jesteś w posiadaniu ciężkiego karabinu maszynowego.
+]],
+
+	goc = [[Poziom trudności: Średni
+Wytrzymałość: Wysoka
+Zwinność: Wysoka
+Potencjał bojowy: Wysoki
+Czy może uciec: Nie
+Czy może eskortować: Nie
+Eskortowany przez: Nikogo
+
+Przegląd:
+Podstawowy żołnierz GOC. Użyj swojego tableta, aby znaleźć urządzenie GOC a następnie dostarcz je i aktywuj. Po pomyślnym aktywowaniu ucieknij do schronu.
+]],
+
+	gocmedic = [[Poziom trudności: Średni
+Wytrzymałość: Wysoka
+Zwinność: Wysoka
+Potencjał bojowy: Wysoki
+Czy może uciec: Nie
+Czy może eskortować: Nie
+Eskortowany przez: Nikogo
+
+Przegląd:
+Podstawowy żołnierz GOC. Użyj swojego tableta, aby znaleźć urządzenie GOC a następnie dostarcz je i aktywuj. Po pomyślnym aktywowaniu ucieknij do schronu. Posiadasz apteczkę.
+]],
+
+	goccom = [[Poziom trudności: Średni
+Wytrzymałość: Wysoka
+Zwinność: Wysoka
+Potencjał bojowy: Bardzo Wysoki
+Czy może uciec: Nie
+Czy może eskortować: Nie
+Eskortowany przez: Nikogo
+
+Przegląd:
+Podstawowy żołnierz GOC. Użyj swojego tableta, aby znaleźć urządzenie GOC a następnie dostarcz je i aktywuj. Po pomyślnym aktywowaniu ucieknij do schronu. Posiadasz granaty dymne.
+]],
+
 	SCP023 = [[Poziom trudności: Trudny
 Wytrzymałość: Niska
 Zwinność: Wysoka
@@ -1035,7 +1369,24 @@ Przegląd:
 Zaatakuj gracza 3 razy, aby go zabić. Możesz tworzyć zombie z ciał (klawisz przeładowania).
 ]],
 
-	SCP0492 = [[]],
+SCP0492 = [[Ogólne:
+Zombie stworzony przez SCP-049. Występuje jako jeden z poniższych rodzajów:
+
+Normalny zombie:
+Poziom trudności: Niski   |  Wytrzymałość: Średnia
+Zwinność: Średnia         |  Obrażenia: Średnie / Wysokie
+Standardowy zombie ze zrównoważonymi statystykami
+
+Lekki zombie:
+Poziom trudności: Średni  |  Wytrzymałość: Niska
+Zwinność: Wysoka          |  Obrażenia: Średnie / Wysokie
+Szybsza wersja zombie, posiada mniej HP i obrażeń
+
+Ciężki zombie:
+Poziom trudności: Średni  |  Wytrzymałość: Wysoka
+Zwinność: Niska           |  Obrażenia: Średnie / Wysokie
+Powolny zombie, który wytrzymuje więcej obrażeń i wykonuje potężniejsze ataki
+]],
 
 	SCP066 = [[Poziom trudności: Średni
 Wytrzymałość: Wysoka
@@ -1051,9 +1402,10 @@ Wytrzymałość: Zwykła
 Zwinność: Zwykła
 Obrażenia: Średnie
 
-Overview:
+Przegląd:
 SCP z elastycznym stylem gry. Może atakować wręcz i strzelać. Posiada różne ulepszenia, które mogą dodać truciznę do ataków, zmodyfikować atak strzału lub odblokować zdolność eksplozji.
 ]],
+
 	SCP096 = [[Poziom trudności: Trudny
 Wytrzymałość: Wysoka
 Zwinność: Bardzo Niska / Ekstremalna kiedy jest rozwścieczony
@@ -1149,9 +1501,9 @@ Atakowanie gracza wywołuje szał i zadaje głębokie rany. W szale poruszasz si
 Weapons
 ---------------------------------------------------------------------------]]
 lang.GenericUpgrades = {
-	nvmod = {
-		name = "Polepszona wizja",
-		info = "Jasność twojej wizji jest zwiększona\nCiemne obszary już cię nie powstrzymają"
+	outside_buff = {
+		name = "Wzmocnienie na powierzchni",
+		info = "Otrzymujesz regenerację zdrowia na powierzchni (skaluje się z pozostałym czasem rundy) i uzyskujesz potężną ochronę przed obrażeniami na niezablokowanej ucieczce lub podczas dogrywki"
 	}
 }
 
@@ -1265,59 +1617,19 @@ wep.SCP0492 = {
 	too_far = "Stajesz się słabszy!"
 }
 
-wep.SCP066 = {
-	wait = "Następny atak za: %is",
-	ready = "Atak gotowy!",
-	chargecd = "Czas odnowienia doskoku: %is",
-	upgrades = {
-		range1 = {
-			name = "Rezonans I",
-			info = "Zasięg obrażeń zostaje zwiększony o 75",
-		},
-		range2 = {
-			name = "Rezonans II",
-			info = "Zasięg obrażeń zostaje zwiększony o 75\n\t• Całkowity wzrost: 150",
-		},
-		range3 = {
-			name = "Rezonans III",
-			info = "Zasięg obrażeń zostaje zwiększony o 75\n\t• Całkowity wzrost: 225",
-		},
-		damage1 = {
-			name = "Bass I",
-			info = "Obrażenia zwiększone do 112,5%, ale zasięg zmniejszony do 90%",
-		},
-		damage2 = {
-			name = "Bass II",
-			info = "Obrażenia zwiększone do 135%, ale zasięg zmniejszony do 75%",
-		},
-		damage3 = {
-			name = "Bass III",
-			info = "Obrażenia zwiększone do 200%, ale zasięg zmniejszony do 50%",
-		},
-		def1 = {
-			name = "Fala negacji I",
-			info = "Podczas puszczania muzyki negujesz 10% nadchodzących obrażeń",
-		},
-		def2 = {
-			name = "Fala negacji II",
-			info = "Podczas puszczania muzyki negujesz 25% nadchodzących obrażeń",
-		},
-		charge = {
-			name = "Doskok",
-			info = "Odblokowuje możliwość doskoku do przodu, naciskając klawisz przeładowania\n\t• Czas odnowienia umiejętności: 20 s",
-		},
-		sticky = {
-			name = "Lepki",
-			info = "Po wskoczeniu w człowieka trzymasz się go przez następne 10 sekund",
-		}
-	}
-}
-
 wep.SCP058 = {
 	skills = {
 		primary_attack = {
 			name = "Atak podstawowy",
-			dsc = "TODO",
+			dsc = "Atakuj żądłem bezpośrednio przed siebie. Nakłada truciznę, jeśli kupione zostanie odpowiednie ulepszenie.",
+		},
+		shot = {
+			name = "Strzał",
+			dsc = "Wystrzeliwuje opadający pocisk w kierunku w którym patrzysz. Ulepszenia wpływają na czas odnowienia, prędkość, rozmiar i efekty tej umiejętności.",
+		},
+		shot_stacks = {
+			name = "Ładunki strzałów",
+			dsc = "Pokazuje aktualną ilość pocisków. Różne ulepszenia związane z pociskami wpływają na maksymalną ilość i czas odnowienia.",
 		},
 	},
 
@@ -1372,6 +1684,54 @@ wep.SCP058 = {
 			name = "Toksyczny wybuch",
 			info = "Ulepsza twoją zdolność do eksplozji\n\t• Nakłada 2 ładunki trucizny\n\t• Mnożnik zasięgu: [explosion_radius]"
 		},
+	}
+}
+
+wep.SCP066 = {
+	wait = "Następny atak za: %is",
+	ready = "Atak gotowy!",
+	chargecd = "Czas odnowienia doskoku: %is",
+	upgrades = {
+		range1 = {
+			name = "Rezonans I",
+			info = "Zasięg obrażeń zostaje zwiększony o 100",
+		},
+		range2 = {
+			name = "Rezonans II",
+			info = "Zasięg obrażeń zostaje zwiększony o 100\n\t• Całkowity wzrost: 200",
+		},
+		range3 = {
+			name = "Rezonans III",
+			info = "Zasięg obrażeń zostaje zwiększony o 100\n\t• Całkowity wzrost: 300",
+		},
+		damage1 = {
+			name = "Bass I",
+			info = "Obrażenia zwiększone do 115%, ale zasięg zmniejszony do 90%",
+		},
+		damage2 = {
+			name = "Bass II",
+			info = "Obrażenia zwiększone do 150%, ale zasięg zmniejszony do 75%",
+		},
+		damage3 = {
+			name = "Bass III",
+			info = "Obrażenia zwiększone do 200%, ale zasięg zmniejszony do 50%",
+		},
+		def1 = {
+			name = "Fala negacji I",
+			info = "Podczas puszczania muzyki negujesz 10% nadchodzących obrażeń",
+		},
+		def2 = {
+			name = "Fala negacji II",
+			info = "Podczas puszczania muzyki negujesz 25% nadchodzących obrażeń",
+		},
+		charge = {
+			name = "Doskok",
+			info = "Odblokowuje możliwość doskoku do przodu, naciskając klawisz przeładowania\n\t• Czas odnowienia umiejętności: 20 s",
+		},
+		sticky = {
+			name = "Lepki",
+			info = "Po wskoczeniu w człowieka trzymasz się go przez następne 10 sekund",
+		}
 	}
 }
 
@@ -1495,7 +1855,7 @@ wep.SCP173 = {
 		},
 		prot3 = {
 			name = "Betonowa skóra III",
-			info = "Natychmiast leczy 1000 HP i zapewnia 20% ochrony przed pociskami\n\t• Total protection: 40%"
+			info = "Natychmiast leczy 1000 HP i zapewnia 20% ochrony przed pociskami\n\t• Całkowita ochrona: 40%"
 		},
 	},
 	back = "Możesz przytrzymać R, aby wrócić do poprzedniej pozycji",
@@ -1630,7 +1990,7 @@ wep.SCP939 = {
 			info = "Twoje ataki leczą cię o co najmniej 37,5 HP (do 50)"
 		},
 		heal3 = {
-			name = "BloodŻądza krwilust III",
+			name = "Żądza krwi III",
 			info = "Twoje ataki leczą cię o co najmniej 52,5 HP (do 70)"
 		},
 		amn1 = {
@@ -1830,6 +2190,8 @@ wep.CAMERA = {
 	name = "Monitoring",
 	showname = "Kamery",
 	info = "Kamery pozwalają zobaczyć, co dzieje się w placówce.\nZapewniają również możliwość skanowania obiektów SCP i przesyłania tych informacji na aktualny kanał radiowy",
+	scanning = "Skanowanie...",
+	scan_info = "Przytrzymaj [%s] aby skanować SCP",
 }
 
 wep.RADIO = {
@@ -1845,6 +2207,11 @@ wep.NVGPLUS = {
 	name = "Ulepszone NVG",
 	showname = "NVG+",
 	info = "Ulepszona wersja NVG, pozwala na używanie ich podczas trzymania w rękach innych przedmiotów.\nNiestety bateria starcza tylko na 10 sekund"
+}
+
+wep.THERMAL = {
+	showname = "THERMO",
+	name = "Termowizja"
 }
 
 wep.ACCESS_CHIP = {
@@ -1873,7 +2240,30 @@ wep.ACCESS_CHIP = {
 		hacked4 = "Zhakowana 4",
 		hacked5 = "Zhakowana 5",
 		director = "Dyrektor Placówki",
-		o5 = "O5"
+		o5 = "O5",
+		goc = "Zhakowana GOC",
+	},
+	SHORT = {
+		general = "Ogólny",
+		jan1 = "Woźny",
+		jan = "Woźny",
+		jan2 = "Starszy woźny",
+		acc = "Księgowy",
+		log = "Logistyk",
+		sci1 = "Nauk. poz. 1",
+		sci2 = "Nauk. poz. 2",
+		sci3 = "Nauk. poz. 3",
+		spec = "Spec. Zabez.",
+		guard = "Ochrona",
+		chief = "Szef Ochr.",
+		mtf = "MTF",
+		com = "Dow. MTF",
+		hacked3 = "Zhakowana 3",
+		hacked4 = "Zhakowana 4",
+		hacked5 = "Zhakowana 5",
+		director = "Dyrektor",
+		o5 = "O5",
+		goc = "GOC",
 	},
 	ACCESS = {
 		GENERAL = "Ogólny",
@@ -1889,6 +2279,7 @@ wep.ACCESS_CHIP = {
 		ARMORY = "Zbrojownia",
 		GATE_A = "Brama A",
 		GATE_B = "Brama B",
+		GATE_C = "Brama C",
 		FEMUR = "Femur Breaker",
 		ALPHA = "Głowica Alfa",
 		OMEGA = "Głowica Omega",
@@ -1943,14 +2334,26 @@ wep.GASMASK = {
 	name = "Maska gazowa"
 }
 
+wep.HEAVYMASK = {
+	name = "Ciężka maska gazowa"
+}
+
+wep.FUSE = {
+	name = "Bezpiecznik",
+	name_f = "Bezpiecznik %iA",
+}
+
 wep.TURRET = {
 	name = "Wieżyczka",
+	placing_turret = "Rozkładanie działka",
 	pickup = "Podnieś",
 	MODES = {
 		off = "Wyłącz",
 		filter = "Filtruj personel",
+		target = "Atakuj personel",
 		all = "Celuj we wszystko",
-		supp = "Ogień zaporowy"
+		supp = "Ogień zaporowy",
+		scp = "Celuj w SCP"
 	}
 }
 
@@ -1961,6 +2364,84 @@ wep.ALPHA_CARD1 = {
 wep.ALPHA_CARD2 = {
 	name = "Kod nuklearny głowicy ALPHA nr 2"
 }
+
+wep.COM_TAB = {
+	name = "Tablet",
+	loading = "Ładowanie",
+	eta = "ETA: ",
+	detected = "Wykryte obiekty:",
+	tesla_deactivated = "Tesle nieaktywne: ",
+	change = "PPM - zmień",
+	confirm = "LPM - zatwierdź",
+	options = {
+		scan = "Skan placówki",
+		tesla = "Wyłącz tesle"
+	},
+	actions = {
+		scan = "Skanowanie placówki...",
+		tesla = "Wyłączanie tesli...",
+	}
+}
+
+wep.GOC_TAB = {
+	name = "Tablet GOC",
+	info = "Osobisty tablet GOC. Zawiera mały ładunek wybuchowy, który niszczy tablet w przypadku śmierci użytkownika",
+	loading = "Ładowanie",
+	status = "Status:",
+	dist = "Odległość od celu",
+	objectives = {
+		failed = "Urządzenie zniszczone",
+		nothing = "Nieznany",
+		find = "Znajdź urządzenie",
+		deliver = "Dostarcz urządzenie",
+		escort = "Eskortuj urządzenie",
+		protect = "Chroń urządzenie",
+		escape = "Ucieknij"
+	}
+}
+
+wep.GOCDEVICE = {
+	name = "Urządzenie GOC",
+	placing = "Rozkładania urządzenia GOC..."
+}
+
+wep.DOCUMENT = {
+	name = "Dokumenty",
+	info = "Pakiet kilku dokumentów, które mogą zawierać cenne informacje na temat obiektów SCP, placówki i personelu",
+	types = {
+
+	}
+}
+
+wep.ADRENALINE = {
+	name = "Adrenalina",
+	info = "Na krótki okres czasu zapewnia chwilowe zwiększenie wytrzymałości",
+}
+
+wep.ADRENALINE_BIG = {
+	name = "Duża adrenalina",
+	info = "Na znaczny okres czasu zapewnia chwilowe zwiększenie wytrzymałości",
+}
+
+wep.MORPHINE = {
+	name = "Morfina",
+	info = "Zapewnia tymczasowe zdrowie, które z czasem zanika",
+}
+
+wep.MORPHINE_BIG = {
+	name = "Duża morfina",
+	info = "Zapewnia dużo tymczasowego zdrowia, które z czasem zanika",
+}
+
+wep.PIPE = {
+	name = "Metalowa rura"
+}
+
+wep.GLASS_KNIFE = {
+	name = "Szklany nóż"
+}
+
+wep.__slc_ammo = "Amunicja"
 
 wep.weapon_stunstick = "Pałka"
 wep.weapon_crowbar = "Łom"

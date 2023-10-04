@@ -112,7 +112,7 @@ DefineUpgradeSystem( "scp8602", {
 
 		{ name = "charge31", cost = 5, req = { "charge12" }, reqany = false,  pos = { 3, 3 }, mod = {}, active = false },
 
-		{ name = "nvmod", cost = 1, req = {}, reqany = false,  pos = { 3, 2 }, mod = {}, active = false },
+		{ name = "outside_buff", cost = 1, req = {}, reqany = false,  pos = { 3, 2 }, mod = {}, active = false },
 	},
 	rewards = {
 		{ 1, 1 },

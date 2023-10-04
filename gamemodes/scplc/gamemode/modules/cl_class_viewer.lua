@@ -32,10 +32,13 @@ local showdetails = {
 	"walk_speed",
 	"run_speed",
 	"chip",
+	"slots",
 	"persona",
+	"loadout",
 	"weapons",
 	"hp",
 	"speed",
+	"no_select"
 }
 
 local headers = {
@@ -141,7 +144,7 @@ local function addClass( tab, p, h )
 	if tab.override then
 		local result = tab.override( ply )
 
-		if result then
+		if result == true then
 			override = true
 		elseif result == false then
 			override = false
@@ -153,6 +156,15 @@ local function addClass( tab, p, h )
 	button:DockMargin( 5, 5, 5, 0 )
 	button:SetTall( h )
 	button:SetText( "" )
+
+	
+	if !ply:CanUnlockClassTier( tab.tier ) then
+		button:SetTooltipPanelOverride( "SLCTooltip" )
+		button:SetTooltip( LANG.tierlocked )
+		button.TooltipFont = "SCPHUDVSmall"
+		button.Tooltip = true
+	end
+
 	button.Paint = function( self, pw, ph )
 		surface.SetDrawColor( COLOR.outline )
 		surface.DrawOutlinedRect( pw * 0.1, 0, pw * 0.8, ph )
@@ -254,10 +266,27 @@ local function addClass( tab, p, h )
 				if isstring( k ) then
 					k = ent:FindBodygroupByName( k )
 				end
-
-				if k > -1 then
-					ent:SetBodygroup( k, v )
+	
+				if k < 0 then continue end
+	
+				if v == "?" then
+					v = math.random( ent:GetBodygroupCount( k ) )
+				elseif isstring( v ) then
+					local r1, r2 = string.match( v, "^(%d+):(%d+)$" )
+	
+					r1 = tonumber( r1 )
+					r2 = tonumber( r2 )
+	
+					if r1 and r2 then
+						v = math.random( r1, r2 )
+					else
+						v = tonumber( v )
+					end
 				end
+	
+				if !isnumber( v ) then continue end
+	
+				ent:SetBodygroup( k, v )
 			end
 		end
 
@@ -586,7 +615,15 @@ local function openViewer()
 		if tab then
 			for i, v in ipairs( showdetails ) do
 				local val = tab[v]
-				if isstring( val ) or isnumber( val ) then
+
+				if v == "loadout" then
+					if !GetLoadout( val ) then continue end
+					val = { val }
+				end
+
+				if val == true then
+					totalh = totalh + basicText( "\t"..(LANG.details[v] or v), 5, totalh ) + 5
+				elseif isstring( val ) or isnumber( val ) then
 					if v == "name" then
 						val = LANG.CLASSES[val] or val
 					elseif v == "team" then
@@ -608,11 +645,42 @@ local function openViewer()
 					for key, data in pairs( val ) do
 						local txt = "\t\t"
 
+						if v == "loadout" then
+							v = "weapons"
+							data = "loadout:"..data
+						end
+
 						if v == "weapons" then
+							if isstring( data ) then
+								local loadout = string.match( data, "^loadout:(.+)$" )
+								if loadout then
+									local loadout_tab = GetLoadout( loadout )
+
+									if LANG.loadouts[loadout] then
+										data = LANG.loadouts[loadout]
+									elseif loadout_tab and #loadout_tab == 1 then
+										data = loadout_tab[1].class
+									elseif loadout_tab then
+										data = {}
+
+										for _, l_wep in ipairs( loadout_tab ) do
+											table.insert( data, l_wep.class )
+										end
+									end
+								end
+							end
+
 							if istable( data ) then
-								txt = txt..LANG.random..":"
+								txt = txt..LANG.random
+								
+								if data.amount and data.amount > 1 then
+									txt = txt.." ("..data.amount..")"
+								end
+
+								txt = txt..":"
+
 								totalh = totalh + basicText( txt, 5, totalh ) - 3
-								for _, wep_class in pairs( data ) do
+								for _, wep_class in ipairs( data ) do
 									txt = "\t\t\t\t"
 
 									local wep = weapons.GetStored( wep_class )
@@ -708,6 +776,10 @@ local function openViewer()
 
 				local height = draw.MultilineText( sx, sy - self.scroll, desc, "SCPHUDSmall", COLOR.white, pw - 20, 10 )
 				self.maxScroll = math.max( height - ph + sy + 10, 0 )
+
+				if self.scroll > self.maxScroll then
+					self.scroll = self.maxScroll
+				end
 
 				render.SetScissorRect( 0, 0, 0, 0, false )
 			end

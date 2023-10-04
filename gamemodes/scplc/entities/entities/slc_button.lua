@@ -5,8 +5,6 @@ ENT.Type = "anim"
 ENT.State = false
 ENT.NTime = 0
 
-ENT.UseTime = 0
-
 function ENT:Initialize()
 	self:DrawShadow( false )
 	self:SetModel( "models/hunter/plates/plate05x05.mdl" )
@@ -36,10 +34,19 @@ function ENT:Think()
 		end
 
 		if self.AnimType == 0 then
-			self.TiedEntity:SetPos( LerpVector( f, self.AnimPos, self.State == false and self.StartValue or self.EndValue ) )
+			if f < 0.5 then
+				self.TiedEntity:SetPos( LerpVector( f * 2, self.AnimPos, self.MidValue ) )
+			else
+				self.TiedEntity:SetPos( LerpVector( ( f - 0.5 ) * 2, self.MidValue, self.State == false and self.StartValue or self.EndValue ) )
+			end
 		elseif self.AnimType == 1 then
-			//print( "Setting angles" )
-			self.TiedEntity:SetAngles( LerpAngle( f, self.AnimPos, self.State == false and self.StartValue or self.EndValue ) )
+			if f < 0.5 then
+				self.TiedEntity:SetAngles( LerpAngle( f * 2, self.AnimPos, self.MidValue ) )
+			else
+				self.TiedEntity:SetAngles( LerpAngle( ( f - 0.5 ) * 2, self.MidValue, self.State == false and self.StartValue or self.EndValue ) )
+			end
+
+			//self.TiedEntity:SetAngles( LerpAngle( f, self.AnimPos, self.State == false and self.StartValue or self.EndValue ) )
 		end
 	end
 
@@ -64,7 +71,7 @@ function ENT:Use()
 	end
 end
 
-function ENT:Tie( ent, time, t, startval, endval, initial )
+function ENT:Tie( ent, time, t, startval, endval, initial, mid )
 	if IsValid( ent ) then
 		self:SetPos( ent:GetPos() )
 
@@ -74,6 +81,7 @@ function ENT:Tie( ent, time, t, startval, endval, initial )
 		self.AnimType = t
 		self.StartValue = startval
 		self.EndValue = endval
+		self.MidValue = mid or ( startval + endval ) / 2
 
 		self.Initial = initial
 	end

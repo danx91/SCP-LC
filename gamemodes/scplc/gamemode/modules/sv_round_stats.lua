@@ -114,9 +114,9 @@ function GetRoundSummary( stats )
 
 			local best
 
-			for k, v in pairs( player.GetAll() ) do
-				if v.PlayerData then
-					local stat = v.PlayerData:GetRoundStat( v.player_entry )
+			for _, ply in pairs( player.GetAll() ) do
+				if ply.PlayerData then
+					local stat = ply.PlayerData:GetRoundStat( v.player_entry )
 
 					if !best or lower and stat < best or !lower and stat > best then
 						best = stat
@@ -192,13 +192,7 @@ RegisterRoundStat( "966", { init = 0, ref = 40, importance = 30 } )
 RegisterRoundStat( "3199", { init = 0, ref = 6, importance = 30 } )
 RegisterRoundStat( "24273", { init = 0, ref = 8, importance = 30 } )
 
---Stats can be used as info about round because they will be reset on round restart, just don't transmit them
-RegisterRoundStat( "gatea", { init = false } )
 RegisterRoundStat( "106recontain", { init = false, ref = true, importance = 25 } )
-RegisterRoundStat( "914use", { init = false } )
-RegisterRoundStat( "mtfalphaspawned", { init = false } )
-
 RegisterRoundStat( "omega_warhead", { init = false, ref = true, importance = 10 } )
 RegisterRoundStat( "alpha_warhead", { init = false, ref = true, importance = 10 } )
-RegisterRoundStat( "warhead_lockdown", { init = false } )
-RegisterRoundStat( "facility_lockdown", { init = 0 } )
+RegisterRoundStat( "goc_warhead", { init = false, ref = true, importance = 15 } )

@@ -263,7 +263,46 @@ end )
 --[[-------------------------------------------------------------------------
 SCP HUD Object
 ---------------------------------------------------------------------------]]
-local SCPHUDObject = {}
+SCPHUDObject = {}
+
+function SCPHUDObject:New( name, swep )
+	if self != SCPHUDObject then return end
+
+	local tab = setmetatable( {
+		name = "invalid_hud_obj",
+		translated_name = "Invalid SCP HUD Object",
+		swep = swep,
+		skills = {},
+		skill_id = {},
+		notify_end = 0,
+		notify_text = "",
+		max_pos = 0,
+	}, { __index = SCPHUDObject } )
+
+	local data = SLC_SCP_HUD[name]
+	if data then
+		local obj_name = data.name or name
+		tab.name = obj_name
+		tab.max_pos = 0
+
+		local lang = LANG.WEAPONS[data.language or obj_name]
+		tab.translated_name = lang and lang.HUD and lang.HUD.name or obj_name
+
+		for i, v in ipairs( data.skills ) do
+			tab.skill_id[v.name] = i
+
+			local skill = CreateSCPSkillObject( v )
+			skill.hud_object = tab
+			tab.skills[i] = skill
+
+			if v.pos > tab.max_pos then
+				tab.max_pos = v.pos
+			end
+		end
+	end
+
+	return tab
+end
 
 function SCPHUDObject:GetName()
 	return self.name
@@ -412,44 +451,7 @@ function SCPHUDObject:Render()
 	end
 end
 
-function CreateSCPHUDObject( name, swep )
-	local tab = setmetatable( {
-		name = "invalid_hud_obj",
-		translated_name = "Invalid SCP HUD Object",
-		swep = swep,
-		skills = {},
-		skill_id = {},
-		notify_end = 0,
-		notify_text = "",
-		max_pos = 0,
-	}, { __index = SCPHUDObject } )
-
-	local data = SLC_SCP_HUD[name]
-	if data then
-		local obj_name = data.name or name
-		tab.name = obj_name
-		tab.max_pos = 0
-
-		local lang = LANG.WEAPONS[data.language or obj_name]
-		if lang and lang.HUD then
-			tab.translated_name = lang.HUD.name or obj_name
-		end
-
-		for i, v in ipairs( data.skills ) do
-			tab.skill_id[v.name] = i
-
-			local skill = CreateSCPSkillObject( v )
-			skill.hud_object = tab
-			tab.skills[i] = skill
-
-			if v.pos > tab.max_pos then
-				tab.max_pos = v.pos
-			end
-		end
-	end
-
-	return tab
-end
+setmetatable( SCPHUDObject, { __call = SCPHUDObject.New } )
 
 --[[-------------------------------------------------------------------------
 General
@@ -459,9 +461,13 @@ function DefineSCPHUD( scp, data )
 end
 
 hook.Add( "SLCRegisterSettings", "SLCSCPHUDSettings", function()
+	AddConfigPanel( "scp_config", 8000 )
+
 	RegisterSettingsEntry( "scp_special", "bind", "key:G" )
-	RegisterSettingsEntry( "scp_hud_skill_time", "switch", true )
-	RegisterSettingsEntry( "scp_hud_overload_cd", "switch", true )
+	RegisterSettingsEntry( "scp_hud_skill_time", "switch", true, nil, "scp_config" )
+	RegisterSettingsEntry( "scp_hud_overload_cd", "switch", true, nil, "scp_config" )
+	RegisterSettingsEntry( "scp_hud_dmg_mod", "switch", true, nil, "scp_config" )
+	RegisterSettingsEntry( "scp_nvmod", "switch", true, nil, "scp_config" )
 end )
 
 OnPropertyChanged( "overload_cd", function( name, value )
@@ -470,19 +476,43 @@ OnPropertyChanged( "overload_cd", function( name, value )
 	_SCPOverloadCooldown = value
 end )
 
-hook.Add( "PostDrawHUD", "TempSCPOverloadCD", function()
-	if LocalPlayer():SCPTeam() == TEAM_SCP and LocalPlayer():SCPClass() != CLASSES.SCP0492 and GetSettingsValue( "scp_hud_overload_cd" ) then
+local color_white = Color( 255, 255, 255 )
+local color_red = Color( 200, 25, 45 )
+local color_green = Color( 25, 200, 45 )
+hook.Add( "SLCPostDrawHUD", "TempSCPOverloadCD", function()
+	local lp = LocalPlayer()
+	if lp:SCPTeam() != TEAM_SCP then return end
+
+	local dy = 16
+
+	if !lp:GetSCPHuman() and GetSettingsValue( "scp_hud_dmg_mod" ) then
+		local _, th = draw.SimpleText( string.format( "%s: %.1f%%", LANG.SCPHUD.damage_scale, GetSCPDamageScale( lp ) * 100 ), "SCPHUDMedium", ScrW() / 2, dy, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP )
+		dy = dy + th
+	end
+
+	if !lp:GetSCPHuman() and !lp:GetSCPDisableOverload() and GetSettingsValue( "scp_hud_overload_cd" ) then
 		local text, color
 
 		local ct = CurTime()
 		if !_SCPOverloadCooldown or _SCPOverloadCooldown < ct then
 			text = LANG.SCPHUD.overload_ready
-			color = Color( 25, 200, 45 )
+			color = color_green
 		else
 			text = LANG.SCPHUD.overload_cd..math.ceil( _SCPOverloadCooldown - CurTime() )
-			color = Color( 200, 25, 45 )
+			color = color_red
 		end
 		
-		draw.SimpleText( text, "SCPHUDMedium", ScrW() / 2, 16, color, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP )
+		local _, th = draw.SimpleText( text, "SCPHUDMedium", ScrW() / 2, dy, color, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP )
+		dy = dy + th
 	end
+end )
+
+hook.Add( "SLCScreenMod", "SCPVisionMod", function( clr )
+	if !GetSettingsValue( "scp_nvmod" ) then return end
+
+	local ply = LocalPlayer()
+	if ply:SCPTeam() != TEAM_SCP or ply:IsInZone( ZONE_SURFACE ) then return end
+
+	clr.contrast = clr.contrast + 0.75
+	clr.brightness = clr.brightness + 0.01
 end )

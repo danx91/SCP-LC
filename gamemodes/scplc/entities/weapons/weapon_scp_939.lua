@@ -99,9 +99,9 @@ if CLIENT then
 	SCPHook( "SCP939", "SLCScreenMod", function( clr )
 		if LocalPlayer():HasEffect( "amnc227" ) then
 			DrawMotionBlur( 0.1, 1, 0.01 )
-			clr.colour = 0
+			clr.colour = 0.5
 			clr.contrast = clr.contrast + 0.5
-			clr.brightness = clr.brightness - 0.07
+			clr.brightness = clr.brightness - 0.01
 		end
 	end )
 end
@@ -118,7 +118,7 @@ DefineUpgradeSystem( "scp939", {
 		{ name = "amn2", cost = 3, req = { "amn1" }, reqany = false,  pos = { 2, 2 }, mod = { damage = 1.5 }, active = false },
 		{ name = "amn3", cost = 5, req = { "amn2" }, reqany = false,  pos = { 2, 3 }, mod = { radius = 50, damage = 3 }, active = false },
 
-		{ name = "nvmod", cost = 1, req = {}, reqany = false,  pos = { 4, 2 }, mod = {}, active = false },
+		{ name = "outside_buff", cost = 1, req = {}, reqany = false,  pos = { 4, 2 }, mod = {}, active = false },
 	},
 	rewards = {
 		{ 1, 1 },
@@ -148,4 +148,15 @@ sound.Add( {
 		col = 0
 
 	sobel = 0.01
+
+	lub
+
+	cmod
+		con = 0.1
+		bright = 0.5
+		col = 0
+
+	sharp
+		dist = 5
+		con = 20
 ]]

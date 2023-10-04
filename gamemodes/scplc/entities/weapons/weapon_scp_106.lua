@@ -45,8 +45,7 @@ function SWEP:Think()
 			end
 		end
 
-		local e = ents.FindInSphere( pos, 750 )
-		for k, v in pairs( e ) do
+		for i, v in ipairs( ents.FindInSphere( pos, 750 ) ) do
 			if IsValid( v ) and v:IsPlayer() then
 				if  v:SCPTeam() != TEAM_SPEC and v:SCPTeam() != TEAM_SCP then
 					if !self.SoundPlayers[v] then
@@ -98,7 +97,7 @@ function SWEP:PrimaryAttack()
 			if ent:IsPlayer() then
 				if ent:SCPTeam() == TEAM_SCP or ent:SCPTeam() == TEAM_SPEC then return end
 
-				if ent:GetPos():WithinAABox( POCKETD_MINS, POCKETD_MAXS ) then
+				if ent:IsInZone( ZONE_PD ) then
 					self:AddScore( 1 )
 					
 					local dmg = DamageInfo()
@@ -109,30 +108,17 @@ function SWEP:PrimaryAttack()
 
 					ent:TakeDamageInfo( dmg )
 				else
-					local pos
+					SendToPocketDimension( ent )
 
-					if istable( POS_POCKETD ) then
-						pos = table.Random( POS_POCKETD )
-					else
-						pos = POS_POCKETD
+					local dmg = math.random( 15, 25 )
+					if self.DMGBoost > CurTime() then
+						dmg = dmg + ( self:GetUpgradeMod( "dmg" ) or 0 )
 					end
 
-					if pos then
-						local dmg = math.random( 30, 50 )
-						if self.DMGBoost > CurTime() then
-							dmg = dmg + ( self:GetUpgradeMod( "dmg" ) or 0 )
-						end
+					ent:TakeDamage( dmg, self.Owner, self.Owner )
 
-						ent:TakeDamage( dmg, self.Owner, self.Owner )
-						ent:SetPos( pos )
-
-						local ang = ent:GetAngles()
-						ang.yaw = math.random( -180, 180 )
-						ent:SetAngles( ang )
-
-						self:AddScore( 1 )
-						AddRoundStat( "106" )
-					end
+					self:AddScore( 1 )
+					AddRoundStat( "106" )
 				end
 			else
 				self:SCPDamageEvent( ent, 50 )
@@ -250,16 +236,18 @@ function SWEP:TeleportSequence( point )
 	end )
 end
 
+local color_red = Color( 255, 0, 0 )
+local color_green = Color( 0, 255, 0 )
 function SWEP:DrawSCPHUD()
 	//if hud_disabled or HUDDrawInfo or ROUND.preparing then return end
 
 	local txt, color
 	if self.NextTP > CurTime() then
 		txt = string.format( self.Lang.swait, math.ceil( self.NextTP - CurTime() ) )
-		color = Color( 255, 0, 0 )
+		color = color_red
 	else
 		txt = self.Lang.sready
-		color = Color( 0, 255, 0 )
+		color = color_green
 	end
 
 	draw.Text{
@@ -327,7 +315,7 @@ DefineUpgradeSystem( "scp106", {
 		{ name = "tank1", cost = 3, req = {}, reqany = false,  pos = { 3, 1 }, mod = { prot = 0.8 }, active = true },
 		{ name = "tank2", cost = 5, req = { "tank1" }, reqany = false,  pos = { 3, 2 }, mod = { prot = 0.6 }, active = true },
 
-		{ name = "nvmod", cost = 1, req = {}, reqany = false,  pos = { 4, 2 }, mod = {}, active = false },
+		{ name = "outside_buff", cost = 1, req = {}, reqany = false,  pos = { 4, 2 }, mod = {}, active = false },
 	},
 	rewards = {
 		{ 1, 1 },

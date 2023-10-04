@@ -11,7 +11,7 @@ SWEP.AttackCD = 1
 SWEP.LockOnEnd = 0
 
 function SWEP:SetupDataTables()
-	self:NetworkVar( "Entity", 0, "Target" )
+	self:AddNetworkVar( "Target", "Entity" )
 end
 
 function SWEP:Initialize()
@@ -114,10 +114,10 @@ function SWEP:DrawSCPHUD()
 		draw.NoTexture()
 
 		local crl = math.Clamp( target:GetPos():Distance( self.Owner:GetPos() ) / ( 110 + ( self:GetUpgradeMod( "dist" ) or 0 ) ) * 225, 0, 225 )
-		surface.SetDrawColor( Color( 15 + crl, 240 - crl, 0 ) )
+		surface.SetDrawColor( 15 + crl, 240 - crl, 0 )
 		surface.DrawRing( x, y, 16, 4, 360, 16 )
 
-		surface.SetDrawColor( Color( 220, 220, 220 ) )
+		surface.SetDrawColor( 220, 220, 220 )
 		surface.DrawRing( x, y, 20, 4, ( self.LockOnEnd - CurTime() ) / 3 * 360, 16 )
 	end
 end
@@ -142,6 +142,11 @@ SCPHook( "SCP966", "CanPlayerSeePlayer", function( ply, target )
 			return
 		end
 
+		local thermal = ply:GetWeapon( "item_slc_thermal" )
+		if IsValid( thermal ) and thermal:GetEnabled() then
+			return
+		end
+
 		return false
 	end
 end )
@@ -163,17 +168,17 @@ DefineUpgradeSystem( "scp966", {
 		{ name = "bleed1", cost = 3, req = { "dmg1" }, reqany = false,  pos = { 4, 2 }, mod = { bleed = 25 }, active = false },
 		{ name = "bleed2", cost = 5, req = { "bleed1" }, reqany = false,  pos = { 4, 3 }, mod = { bleed = 50 }, active = false },
 
-		{ name = "nvmod", cost = 1, req = {}, reqany = false,  pos = { 4, 1 }, mod = {}, active = false },
+		{ name = "outside_buff", cost = 1, req = {}, reqany = false,  pos = { 4, 1 }, mod = {}, active = false },
 	},
 	rewards = { --16+1
-		{ 100, 1 },
-		{ 200, 1 },
-		{ 300, 1 },
-		{ 500, 2 },
-		{ 700, 2 },
-		{ 900, 3 },
-		{ 1000, 3 },
-		{ 1200, 3 }
+		{ 80, 1 },
+		{ 160, 1 },
+		{ 240, 1 },
+		{ 300, 2 },
+		{ 400, 2 },
+		{ 600, 3 },
+		{ 800, 3 },
+		{ 1000, 3 }
 	}
 } )
 

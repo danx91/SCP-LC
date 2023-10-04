@@ -1,7 +1,8 @@
 SLC_SCP_UPGRADES = SLC_SCP_UPGRADES or {}
 
 local generic_skill_icons = {
-	nvmod = "slc/hud/upgrades/nvmod.png",
+	//nvmod = "slc/hud/upgrades/nvmod.png",
+	outside_buff = "slc/hud/upgrades/outside_buff.png",
 }
 
 --[[
@@ -40,6 +41,12 @@ function DefineUpgradeSystem( name, data )
 		end
 	end
 
+	local total = 1
+	for i, v in ipairs( data.rewards ) do
+		total = total + v[2]
+	end
+
+	data.total_reward = total
 	data.upgradeid = ids
 	SLC_SCP_UPGRADES[name] = data
 end
@@ -53,24 +60,38 @@ function InstallUpgradeSystem( name, swep )
 		upgrades = {},
 		mod = {},
 		points = 1,
+		total = 1,
 		score = 0,
 		lastreward = 0,
 	}
 
 	swep.GetUpgradePoints = function( self )
-		return self.UpgradeSystemRegistry.points
+		return self.UpgradeSystemRegistry.points, self.UpgradeSystemRegistry.total
 	end
 
-	swep.SetUpgradePoints = function( self, i )
-		self.UpgradeSystemRegistry.points = i
-	end
+	swep.SetUpgradePoints = function( self, num, total )
+		self.UpgradeSystemRegistry.points = num
 
-	swep.AddUpgradePoints = function( self, i )
-		self.UpgradeSystemRegistry.points = self.UpgradeSystemRegistry.points + ( i or 1 )
+		if total then
+			self.UpgradeSystemRegistry.total = total
+		end
 
 		if SERVER then
 			net.Start( "SCPUpgrade" )
 				net.WriteUInt( self.UpgradeSystemRegistry.points, 8 )
+				net.WriteUInt( self.UpgradeSystemRegistry.total, 8 )
+			net.Send( self:GetOwner() )
+		end
+	end
+
+	swep.AddUpgradePoints = function( self, i )
+		self.UpgradeSystemRegistry.points = self.UpgradeSystemRegistry.points + ( i or 1 )
+		self.UpgradeSystemRegistry.total = self.UpgradeSystemRegistry.total + ( i or 1 )
+
+		if SERVER then
+			net.Start( "SCPUpgrade" )
+				net.WriteUInt( self.UpgradeSystemRegistry.points, 8 )
+				net.WriteUInt( self.UpgradeSystemRegistry.total, 8 )
 			net.Send( self:GetOwner() )
 		end
 	end
@@ -91,6 +112,7 @@ function InstallUpgradeSystem( name, swep )
 
 				if reward[1] <= self.UpgradeSystemRegistry.score then
 					self.UpgradeSystemRegistry.points = self.UpgradeSystemRegistry.points + reward[2]
+					self.UpgradeSystemRegistry.total = self.UpgradeSystemRegistry.total + reward[2]
 					self.UpgradeSystemRegistry.lastreward = i
 					changed = true
 				else
@@ -101,6 +123,7 @@ function InstallUpgradeSystem( name, swep )
 			if SERVER and changed then
 				net.Start( "SCPUpgrade" )
 					net.WriteUInt( self.UpgradeSystemRegistry.points, 8 )
+					net.WriteUInt( self.UpgradeSystemRegistry.total, 8 )
 				net.Send( self:GetOwner() )
 			end
 		end
@@ -161,7 +184,6 @@ function InstallUpgradeSystem( name, swep )
 
 	swep.BuyUpgrade = function( self, id )
 		local upgrade = upg.upgrades[id]
-
 		if upgrade then
 			if self:CanBuyUpgrade( upgrade.name ) then
 				self.UpgradeSystemRegistry.points = self.UpgradeSystemRegistry.points - upgrade.cost
@@ -170,6 +192,7 @@ function InstallUpgradeSystem( name, swep )
 				if SERVER then
 					net.Start( "SCPUpgrade" )
 						net.WriteUInt( self.UpgradeSystemRegistry.points, 8 )
+						net.WriteUInt( self.UpgradeSystemRegistry.total, 8 )
 					net.Send( self:GetOwner() )
 				end
 
@@ -180,6 +203,8 @@ function InstallUpgradeSystem( name, swep )
 				if upgrade.active and self.OnUpgradeBought then
 					self:OnUpgradeBought( upgrade.name, upgrade.active, upgrade.group )
 				end
+				
+				hook.Run( "SCPUpgradeBought", self:GetOwner(), self, upgrade )
 			end
 		end
 	end
@@ -235,8 +260,7 @@ if SERVER then
 
 	net.Receive( "SCPUpgrade", function( len, ply )
 		local id = net.ReadUInt( 8 )
-
-		local wep = ply:GetActiveWeapon()
+		local wep = ply:GetProperty( "scp_weapon" )
 		if !IsValid( wep ) or !wep.UpgradeSystemMounted then return end
 
 		wep:BuyUpgrade( id )
@@ -271,14 +295,16 @@ if CLIENT then
 
 	net.Receive( "SCPUpgrade", function( len )
 		local num = net.ReadUInt( 8 )
+		local total = net.ReadUInt( 8 )
 
-		local wep = LocalPlayer():GetActiveWeapon()
+		local wep = LocalPlayer():GetProperty( "scp_weapon" )
 		if !IsValid( wep ) or !wep.UpgradeSystemMounted then return end
 
 		local cur = wep:GetUpgradePoints()
+		wep:SetUpgradePoints( num, total )
 
 		if num > cur then
-			local bind = input.LookupBinding( "+zoom" )
+			local _, bind = GetBindButton( "upgrade_tree_button" )
 
 			if bind then
 				bind = string.upper( bind )
@@ -288,8 +314,6 @@ if CLIENT then
 
 			PlayerMessage( "upgradepoints$"..EscapeMessage( bind ) )
 		end
-
-		wep:SetUpgradePoints( num )
 	end )
 
 	local button_next = false
@@ -334,6 +358,11 @@ if CLIENT then
 	local recomputed = false
 
 	local color_white = Color( 255, 255, 255, 255 )
+	local color_white100 = Color( 255, 255, 255, 100 )
+	local color_white200 = Color( 255, 255, 255, 100 )
+	local color_red200 = Color( 225, 50, 50, 200 )
+	local color_blocked = Color( 255, 55, 55, 255 )
+	local color_notowned = Color( 225, 55, 55, 255 )
 
 	local function drawUpgrades()
 		if !HUDSCPUpgradesOpen then return end
@@ -389,17 +418,19 @@ if CLIENT then
 		draw.Text{
 			text = string.format( LANG.upgrades.tree, wep:GetPrintName() ),
 			pos = {  w * 0.25, h * 0.075 },
-			color = Color( 255, 255, 255, 100 ),
+			color = color_white100,
 			font = "SCPHUDBig",
 			xalign = TEXT_ALIGN_LEFT,
 			yalign = TEXT_ALIGN_CENTER,
 		}
 
+		local points_current, points_total = wep:GetUpgradePoints()
+
 		draw.Text{
-			text = LANG.upgrades.points..": "..wep:GetUpgradePoints(),
+			text = string.format( "%s: %i  (%i/%i)", LANG.upgrades.points, points_current, points_total, upg.total_reward ),
 			pos = {  w * 0.75, h * 0.075 },
-			color = Color( 255, 255, 255, 100 ),
-			font = "SCPHUDBig",
+			color = color_white100,
+			font = "SCPHUDMedium",
 			xalign = TEXT_ALIGN_RIGHT,
 			yalign = TEXT_ALIGN_CENTER,
 		}
@@ -465,7 +496,7 @@ if CLIENT then
 				draw.Text{
 					text = v.cost,
 					pos = {  sx + halfico * 1.625, sy + halfico * 1.625 },
-					color = wep:GetUpgradePoints() >= v.cost and Color( 255, 255, 255, 200 ) or Color( 225, 50, 50, 200 ),
+					color = points_current >= v.cost and color_white200 or color_red200,
 					font = "SCPHUDSmall",
 					xalign = TEXT_ALIGN_CENTER,
 					yalign = TEXT_ALIGN_CENTER,
@@ -617,7 +648,7 @@ if CLIENT then
 						text = "\t"..( lang[v] and lang[v].name or v )..( v_owned and " ✓" or " ✗" ),
 						pos = { cx + w * 0.01, cur_y - h * 0.02 },
 						font = "SCPHUDSmall",
-						color = v_owned and color_white or Color( 225, 55, 55, 255 ),
+						color = v_owned and color_white or color_notowned,
 						xalign = TEXT_ALIGN_LEFT,
 						yalign = TEXT_ALIGN_CENTER,
 						max_width = w * 0.28
@@ -648,7 +679,7 @@ if CLIENT then
 						text = "\t"..( lang[v] and lang[v].name or v ),
 						pos = { cx + w * 0.01, cur_y - h * 0.02 },
 						font = "SCPHUDSmall",
-						color = blocked and Color( 255, 55, 55, 255 ) or color_white,
+						color = blocked and color_blocked or color_white,
 						xalign = TEXT_ALIGN_LEFT,
 						yalign = TEXT_ALIGN_CENTER,
 						max_width = w * 0.28

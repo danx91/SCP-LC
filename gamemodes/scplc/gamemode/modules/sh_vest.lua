@@ -57,6 +57,7 @@ function VEST.Register( name, data, randomvest, callback )
 
 	if !data.weight then data.weight = 2 end
 	if !data.mobility then data.mobility = 0.9 end
+	if !data.durability then data.durability = -1 end
 
 	data.weight = math.Clamp( data.weight, 0, 10 )
 	data.mobility = math.Clamp( data.mobility, 0.2, 1.9 )
@@ -89,11 +90,16 @@ function VEST.Create( id, pos )
 
 	assert( VEST.vid[id], "Tried to create invalid vest: "..id )
 
+	local data = VEST.GetData( id )
 	local vest = ents.Create( "slc_vest" )
-	vest:Spawn()
 
 	vest:SetVest( id )
-	vest:SetPos( pos )
+	vest:SetDurability( data and data.durability or -1 )
+
+	if pos then
+		vest:SetPos( pos )
+		vest:Spawn()
+	end
 
 	return vest
 end
@@ -130,7 +136,10 @@ function VEST.GetRandomVest()
 	return table.Random( VEST.rand )
 end
 
-local GUARD_MODELS_LOOKUP
+--[[-------------------------------------------------------------------------
+Base vests
+---------------------------------------------------------------------------]]
+local GUARD_MODELS_LOOKUP = {}
 
 timer.Simple( 0, function()
 	GUARD_MODELS_LOOKUP = CreateLookupTable( GUARD_MODELS )
@@ -138,25 +147,49 @@ end )
 
 local function guard_callback( ply, vest, data )
 	local mdl = ply:GetModel()
-	if GUARD_MODELS_LOOKUP and GUARD_MODELS_LOOKUP[mdl] then
+	if GUARD_MODELS_LOOKUP[mdl] then
 		return mdl
 	end
 end
 
-VEST.Register( "guard", { model = GUARD_MODELS, damage = { [DMG_BULLET] = 0.7, [DMG_FALL] = 1.3 }, mobility = 0.95, weight = 1, bodygroups = { vest = 1 } }, true, guard_callback )
-VEST.Register( "specguard", { model = GUARD_MODELS, damage = { [DMG_BULLET] = 0.63, [DMG_FALL] = 1.4 }, mobility = 0.93, weight = 2, bodygroups = { vest = 1 } }, true, guard_callback )
-VEST.Register( "heavyguard", { model = GUARD_MODELS, damage = { [DMG_BULLET] = 0.6, [DMG_FALL] = 1.45 }, mobility = 0.92, weight = 2.5, bodygroups = { vest = 1, helmet = 1, armour = 1, nvg = 0 } }, true, guard_callback )
-VEST.Register( "guard_medic", { model = "models/scp/guard_med.mdl", damage = { [DMG_BULLET] = 0.6, [DMG_FALL] = 1.4 }, mobility = 0.93, weight = 2 } )
+local goc_com = {}
+for i = 1, 16 do
+	goc_com[i] = 0
+end
 
-VEST.Register( "ntf", { model = "models/alski/mtfsupport/mtf1.mdl", damage = { [DMG_BULLET] = 0.5, [DMG_FALL] = 1.5 }, mobility = 0.88, weight = 3 } )
-VEST.Register( "mtf_medic", { model = "models/alski/mtfsupport/mtf_medyk.mdl", damage = { [DMG_BULLET] = 0.55, [DMG_FALL] = 1.4 }, mobility = 0.9, weight = 2 } )
-VEST.Register( "ntfcom", { model = "models/scp/captain.mdl", damage = { [DMG_BULLET] = 0.55, [DMG_FALL] = 1.45 }, mobility = 0.9, weight = 2.5 } )
+local goc = table.Copy( goc_com )
+goc[3] = 1
+goc[6] = 1
+goc[7] = 1
 
-VEST.Register( "alpha1", { model = "models/alski/mtfsupport/saper_mtf.mdl", damage = { [DMG_BULLET] = 0.4, [DMG_FALL] = 1.6 }, mobility = 0.84, weight = 4 } )
+local goc_medic = table.Copy( goc_com )
+goc_medic[3] = 1
 
-VEST.Register( "ci", { model = "models/friskiukas/bf4/us_01.mdl", damage = { [DMG_BULLET] = 0.45, [DMG_FALL] = 1.6 }, mobility = 0.83, weight = 4 } )
+CI_VEST_MODELS = {
+	""
+}
 
-VEST.Register( "fire", { model = "models/player/kerry/class_securety.mdl", damage = { [DMG_BURN] = 0.2, [DMG_FALL] = 1.7 }, mobility = 0.81, weight = 5 }, true )
-VEST.Register( "electro", { model = "models/player/kerry/class_securety.mdl", damage = { [DMG_SHOCK] = 0.02, [DMG_ENERGYBEAM] = 0.02, [DMG_FALL] = 1.9 }, mobility = 0.88, weight = 4, HIDE = { [DMG_ENERGYBEAM] = true } }, true )
+VEST.Register( "guard", { model = GUARD_MODELS, damage = { [DMG_BULLET] = 0.7, [DMG_FALL] = 1.3 }, durability = 75, mobility = 0.95, weight = 1, bodygroups = { vest = 1 } }, true, guard_callback )
+VEST.Register( "specguard", { model = GUARD_MODELS, damage = { [DMG_BULLET] = 0.65, [DMG_FALL] = 1.35 }, durability = 75, mobility = 0.93, weight = 1.5, bodygroups = { vest = 1 } }, true, guard_callback )
+VEST.Register( "heavyguard", { model = GUARD_MODELS, damage = { [DMG_BULLET] = 0.6, [DMG_FALL] = 1.4 }, durability = 100, mobility = 0.91, weight = 2, bodygroups = { vest = 1, helmet = 1, armour = 1, nvg = 0 } }, true, guard_callback )
+VEST.Register( "guard_medic", { model = "models/scp/guard_med.mdl", damage = { [DMG_BULLET] = 0.63, [DMG_FALL] = 1.37 }, durability = 75, mobility = 0.92, weight = 1.5 } )
+
+VEST.Register( "ntf", { model = "models/alski/mtfsupport/mtf1.mdl", damage = { [DMG_BULLET] = 0.55, [DMG_FALL] = 1.45 }, durability = 100, mobility = 0.87, weight = 3 } )
+VEST.Register( "mtf_medic", { model = "models/alski/mtfsupport/mtf_medyk.mdl", damage = { [DMG_BULLET] = 0.55, [DMG_FALL] = 1.45 }, durability = 100, mobility = 0.89, weight = 2 } )
+VEST.Register( "ntfcom", { model = "models/scp/captain.mdl", damage = { [DMG_BULLET] = 0.5, [DMG_FALL] = 1.5 }, durability = 100, mobility = 0.85, weight = 3.5 } )
+
+VEST.Register( "alpha1", { model = "models/alski/mtfsupport/saper_mtf.mdl", damage = { [DMG_BULLET] = 0.35, [DMG_FALL] = 1.65 }, durability = 150, mobility = 0.8, weight = 5 } )
+
+VEST.Register( "ci", { model = "models/player/alski/ci/ci_soldier.mdl", damage = { [DMG_BULLET] = 0.5, [DMG_FALL] = 1.5 }, durability = 110, mobility = 0.84, weight = 3.5, bodygroups = { helmet = 0, head = "?" } } )
+VEST.Register( "cimedic", { model = "models/player/alski/ci/ci_medyk.mdl", damage = { [DMG_BULLET] = 0.5, [DMG_FALL] = 1.5 }, durability = 100, mobility = 0.85, weight = 3.5, bodygroups = { head = "?", binoculars = "?" } } )
+VEST.Register( "cicom", { model = "models/player/alski/ci/ci_soldier.mdl", damage = { [DMG_BULLET] = 0.45, [DMG_FALL] = 1.55 }, durability = 110, mobility = 0.81, weight = 4.5, bodygroups = { helmet = 2, head = "?" } } )
+
+VEST.Register( "goc", { model = "models/player/cheddar/goc/goc_soldier2.mdl", damage = { [DMG_BULLET] = 0.4, [DMG_FALL] = 1.4 }, durability = 90, mobility = 0.85, weight = 3.5, bodygroups = goc } )
+VEST.Register( "gocmedic", { model = "models/player/cheddar/goc/goc_soldier2.mdl", damage = { [DMG_BULLET] = 0.4, [DMG_FALL] = 1.4 }, durability = 75, mobility = 0.87, weight = 3, bodygroups = goc_medic } )
+VEST.Register( "goccom", { model = "models/player/cheddar/goc/goc_soldier2.mdl", damage = { [DMG_BULLET] = 0.38, [DMG_FALL] = 1.4 }, durability = 90, mobility = 0.83, weight = 4, bodygroups = goc_com } )
+
+VEST.Register( "fire", { model = "models/player/kerry/class_securety.mdl", damage = { [DMG_BURN] = 0.1, [DMG_FALL] = 1.5 }, durability = 275, mobility = 0.87, weight = 3 }, true )
+VEST.Register( "electro", { model = "models/player/kerry/class_securety.mdl", damage = { [DMG_SHOCK] = 0.01, [DMG_ENERGYBEAM] = 0.01, [DMG_FALL] = 1.6 }, durability = 1250, mobility = 0.94, weight = 1.5, HIDE = { [DMG_ENERGYBEAM] = true } }, true )
+VEST.Register( "hazmat", { model = "models/dxn/cod_ghosts/hazmat_pm.mdl", damage = { [DMG_POISON] = 0.2, [DMG_FALL] = 1.4 }, durability = 325, mobility = 0.9, weight = 2.5, prop_model = "models/mishka/models/hazmat.mdl" }, true )
 
 //Entity(1):SetModel( "models/scp/guard_med.mdl" )

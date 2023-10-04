@@ -5,31 +5,27 @@ SWEP.PrintName			= "SCP-049"
 SWEP.HoldType 			= "normal"
 
 local zombies = {
-	{ name = "normal", speed = 1, health = 1, damage = 1, material = "" }, --standard zombie
-	{ name = "light", speed = 1.3, health = 0.7, damage = 0.6, material = "" }, --fast zombie
-	{ name = "heavy", speed = 0.8, health = 1.4, damage = 1.3, material = "" }, --heavy zombie
+	{ name = "normal", speed = 1, health = 1, damage = 1, material = nil }, --standard zombie
+	{ name = "light", speed = 1.3, health = 0.75, damage = 0.6, material = nil }, --fast zombie
+	{ name = "heavy", speed = 0.8, health = 1.4, damage = 1.2, material = nil }, --heavy zombie
 }
 
 local function translate_zombie_model( ply, rag )
 	local team = ply:GetProperty( "last_team" )
 	local class = ply:GetProperty( "last_class" )
-	
+
 	if team == TEAM_CLASSD or class == CLASSES.CIAGENT then
 		return "models/player/alski/scp049-2.mdl", math.random( 0, 4 )
 	elseif team == TEAM_MTF then
-		if string.find( rag:GetModel(), "models/player/alski/security" ) then
-			return "models/player/alski/049-2_security.mdl", math.random( 0, 4 ) * 5 + rag:GetSkin()
+		if math.random( 1, 2 ) == 1 then
+			return "models/player/alski/scp049-2mtf.mdl", math.random( 0, 4 )
 		else
-			if math.random( 1, 2 ) == 1 then
-				return "models/player/alski/scp049-2mtf.mdl", math.random( 0, 4 )
-			else
-				return "models/player/alski/scp049-2mtf2.mdl", math.random( 0, 4 )
-			end
+			return "models/player/alski/scp049-2mtf2.mdl", math.random( 0, 4 )
 		end
 	elseif team == TEAM_SCI then
 		return "models/player/alski/scp049-2_scientist.mdl", math.random( 0, 4 )
-	elseif team == TEAM_GUARD then
-
+	elseif team == TEAM_GUARD or class == CLASSES.CISPY then
+		return "models/player/alski/049-2_security.mdl", math.random( 0, 4 ) * 5 + rag:GetSkin()
 	end
 end
 
@@ -50,8 +46,10 @@ function SWEP:Think()
 	self:PlayerFreeze()
 
 	if CLIENT then
-		if self.HoldingReload and self.HoldingReload < CurTime() then
+		if self.HoldingReload == true then
 			self.HoldingReload = false
+		elseif self.HoldingReload == false then
+			self.HoldingReload = nil
 
 			CloseWheelMenu()
 		end
@@ -115,19 +113,12 @@ function SWEP:PrimaryAttack()
 				self.Targets[ent] = { 0, ent:TimeSignature(), 0 }
 			end
 
-			/*local has714 = false
+			if ent:CheckHazmat( 100 ) then
+				self:EmitSound( "SCP049.Remove714" )
+			elseif SERVER and ent:GetSCP714() or CLIENT and ent:CL_GetSCP714() then
+				self:EmitSound( "SCP049.Remove714" )
 
-			if SERVER and ent:GetSCP714() then
-				has714 = true
-			end
-
-			if CLIENT and ent:CL_GetSCP714() then
-				has714 = true
-			end*/
-
-			if SERVER and ent:GetSCP714() or CLIENT and ent:CL_GetSCP714() then
 				if SERVER then
-					owner:EmitSound( "SCP049.Remove714" )
 					ent:PlayerDropWeapon( "item_scp_714" )
 				end
 			else
@@ -175,7 +166,7 @@ function SWEP:Reload()
 	if CLIENT then
 		if self.PerformingSurgery then return end
 
-		if !self.HoldingReload then
+		if self.HoldingReload == nil then
 			local owner = self:GetOwner()
 			local pos = owner:GetShootPos()
 
@@ -203,11 +194,13 @@ function SWEP:Reload()
 					end, function()
 						return !IsValid( owner ) or owner:SCPClass() != "SCP049"
 					end )
+
+					self.HoldingReload = true
 				end
 			end
+		elseif self.HoldingReload == false then
+			self.HoldingReload = true
 		end
-
-		self.HoldingReload = CurTime() + 0.1
 	end
 end
 
@@ -262,6 +255,7 @@ function SWEP:FinishSurgery( t, ent )
 			local stats = zombies[t] or {}
 			local scp = GetSCP( "SCP0492" )
 			local model, skin = translate_zombie_model( ply, ent )
+			
 			scp:SetupPlayer( ply, true, spawnent:GetPos() + Vector( 0, 0, 8 ), owner, (stats.health or 1) + hpbonus, stats.speed or 1, stats.damage or 1, self:GetUpgradeMod( "steal" ) or 0,
 								model, skin )
 
@@ -310,6 +304,7 @@ function SWEP:FinishSurgery( t, ent )
 	end
 end
 
+local text_color = Color( 150, 150, 150, 255 )
 function SWEP:DrawSCPHUD()
 	//if hud_disabled or HUDDrawInfo or ROUND.preparing then return end
 
@@ -333,7 +328,7 @@ function SWEP:DrawSCPHUD()
 					local w, h = ScrW(), ScrH()
 
 					draw.NoTexture()
-					surface.SetDrawColor( Color( 100, 100, 100 ) )
+					surface.SetDrawColor( 100, 100, 100 )
 					surface.DrawRing( w * 0.5, h * 0.5, 40, 10, 160, 30, tab[1] == 1 and progress or 1, 10 )
 
 					if tab[1] > 1 then
@@ -348,7 +343,7 @@ function SWEP:DrawSCPHUD()
 		draw.Text{
 			text = self.Lang.surgery,
 			pos = { ScrW() * 0.5, ScrH() * 0.6 },
-			color = Color( 150, 150, 150, 255 ),
+			color = text_color,
 			font = "SCPHUDMedium",
 			xalign = TEXT_ALIGN_CENTER,
 			yalign = TEXT_ALIGN_CENTER,
@@ -357,7 +352,7 @@ function SWEP:DrawSCPHUD()
 		draw.Text{
 			text = math.ceil( self.SurgeryEnd - CurTime() ),
 			pos = { ScrW() * 0.5, ScrH() * 0.63 },
-			color = Color( 150, 150, 150, 255 ),
+			color = text_color,
 			font = "SCPHUDMedium",
 			xalign = TEXT_ALIGN_CENTER,
 			yalign = TEXT_ALIGN_CENTER,
@@ -469,7 +464,7 @@ DefineUpgradeSystem( "scp049", {
 		{ name = "doc1", cost = 1, req = {}, reqany = false, pos = { 4, 1 }, mod = { surgery_time = 5 }, active = false },
 		{ name = "doc2", cost = 4, req = { "doc1" }, reqany = false, pos = { 4, 2 }, mod = { surgery_time = 10 }, active = false },
 
-		{ name = "nvmod", cost = 1, req = {}, reqany = false,  pos = { 4, 3 }, mod = {}, active = false },
+		{ name = "outside_buff", cost = 1, req = {}, reqany = false,  pos = { 4, 3 }, mod = {}, active = false },
 	},
 	rewards = { --21
 		{ 1, 1 },
@@ -490,7 +485,7 @@ DefineUpgradeSystem( "scp049", {
 
 function SWEP:OnUpgradeBought( name, info, group )
 	if SERVER and name == "merci" then
-		//self:GetOwner():SetSCPTerror( false )
+		self:GetOwner():SetSCPChase( true )
 	end
 end
 

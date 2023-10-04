@@ -3,6 +3,7 @@ SWEP.Language  		= "SCP500"
 
 SWEP.WorldModel		= "models/scp500model/scp500model.mdl"
 
+SWEP.ShouldDrawWorldModel 	= false
 SWEP.ShouldDrawViewModel = false
 
 SWEP.SelectFont = "SCPHUDMedium"
@@ -41,14 +42,23 @@ function SWEP:OnSelect()
 			if IsValid( owner ) then
 				local hp = owner:Health()
 				local max_hp = owner:GetMaxHealth()
+				local heal = 0
 				if hp < max_hp then
+					heal = max_hp - hp
 					hp = max_hp
 				end
 
 				owner:SetHealth( hp )
+				hook.Run( "SLCHealed", owner, owner, heal )
 
 				hook.Run( "SLCSCP500Used", owner )
-				owner:RemoveEffect()
+
+				for k, v in pairs( owner.EFFECTS_REG ) do
+					local obj = EFFECTS.effects[k]
+					if !obj or obj.ignore500 then continue end
+
+					owner:RemoveEffect( k, true )
+				end
 
 				owner:SetProperty( "scp500_used", CurTime() + 10 )
 				PlayerMessage( "@WEAPONS.SCP500.text_used", owner, true )
@@ -58,20 +68,17 @@ function SWEP:OnSelect()
 end
 
 if SERVER then
-	hook.Add( "SLCApplyEffect", "SLCSCP500", function( ply )
+	hook.Add( "SLCApplyEffect", "SLCSCP500", function( ply, name )
 		local prop = ply:GetProperty( "scp500_used" )
-		if prop then
-			if prop >= CurTime() then
+		if !prop then return end
+
+		if prop >= CurTime() then
+			local effect = EFFECTS.effects[name]
+			if effect and !effect.ignore500 then
 				return true
-			else
-				ply:SetProperty( "scp500_used", nil )
 			end
+		else
+			ply:SetProperty( "scp500_used", nil )
 		end
 	end )
-end
-
-function SWEP:DrawWorldModel()
-	if !IsValid( self:GetOwner() ) then
-		self:DrawModel()
-	end
 end

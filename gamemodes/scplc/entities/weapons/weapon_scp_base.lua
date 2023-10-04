@@ -1,8 +1,6 @@
 SWEP.PrintName				= "BASE SCP"
 SWEP.DeepBase 				= "weapon_scp_base"
 
-SWEP.DrawCrosshair			= true
-
 SWEP.AutoSwitchTo			= false
 SWEP.AutoSwitchFrom			= false
 
@@ -28,11 +26,13 @@ SWEP.ViewModel 				= ""
 SWEP.ShouldDrawViewModel 	= false
 SWEP.ShouldDrawWorldModel 	= false
 
-SWEP.FreezePlayer = false
-SWEP.ShouldFreezePlayer = false
+SWEP.FreezePlayer 			= false
+SWEP.ShouldFreezePlayer 	= false
 
-SWEP.ScoreOnDamage = false
-SWEP.ScoreOnKill = false
+SWEP.ScoreOnDamage 			= false
+SWEP.ScoreOnKill 			= false
+
+SWEP.SelectFont 			= "SCPHUDMedium"
 
 function SWEP:InitializeLanguage( name )
 	if CLIENT then
@@ -42,15 +42,11 @@ end
 
 function SWEP:InitializeHUD( name )
 	if CLIENT then
-		self.HUDObject = CreateSCPHUDObject( name, self )
+		self.HUDObject = SCPHUDObject( name, self )
 	end
 end
 
 function SWEP:StoreWeapon( data )
-	/*if self.UpgradeSystemMounted then
-		self:StoreUpgradeSystem( data )
-	end*/
-
 	StoreUpgradeSystem( self, data )
 end
 
@@ -96,15 +92,12 @@ function SWEP:PlayerFreeze()
 		local owner = self:GetOwner()
 		owner:PopSpeed( "SLC_SCPFreeze" )
 		owner:SetJumpPower( self.OldJumpPower )
-		/*self.Owner:SetCrouchedWalkSpeed( self.OldStats.crouch )
-		self.Owner:SetJumpPower( self.OldStats.jump )
-		self.Owner:SetWalkSpeed( self.OldStats.walk )
-		self.Owner:SetRunSpeed( self.OldStats.run )*/
 	end
 end
 
 function SWEP:Think()
 	self:PlayerFreeze()
+	self:SwingThink()
 end
 
 function SWEP:SCPDamageEvent( ent, dmg )
@@ -120,6 +113,7 @@ function SWEP:CheckOwner()
 
 	if !self.OwnerSignature then
 		self.OwnerSignature = owner:TimeSignature()
+		return true
 	end
 
 	return owner:CheckSignature( self.OwnerSignature )
@@ -187,49 +181,34 @@ hook.Add( "PlayerButtonUp", "SLCSCPSpecialAbility", function( ply, btn )
 	GetBindButton( "upgrade_tree_button" )
 end )*/
 
-if CLIENT then
-	hook.Add( "SLCScreenMod", "SCPVisionMod", function( clr )
-		local ply = LocalPlayer()
-		local wep = ply:GetActiveWeapon()
-		if IsValid( wep ) and ply:SCPTeam() == TEAM_SCP then
-			if wep.UpgradeSystemMounted then
-				if wep:HasUpgrade( "nvmod" ) then
-					clr.contrast = clr.contrast + 0.75
-					clr.brightness = clr.brightness + 0.01
-				end
-			end
-		end
-	end )
-end
-
 if SERVER then
 	hook.Add( "PostEntityTakeDamage", "SLCGenericSCPDamage", function( target, dmg, took )
-		if IsValid( target ) and target:IsPlayer() then
-			local att = dmg:GetAttacker()
-			if IsValid( att ) and att:IsPlayer() and att != target and att:SCPTeam() == TEAM_SCP then
-				local wep = att:GetProperty( "scp_weapon" )
-				if IsValid( wep ) and wep.UpgradeSystemMounted and wep.ScoreOnDamage then
-					wep:AddScore( dmg:GetDamage() )
-				end
-			end
-		end
+		if !IsValid( target ) or !target:IsPlayer() then return end
+
+		local att = dmg:GetAttacker()
+		if !IsValid( att ) or !att:IsPlayer() or att == target or att:SCPTeam() != TEAM_SCP then return end
+
+		local wep = att:GetProperty( "scp_weapon" )
+		if !IsValid( wep ) or !wep.UpgradeSystemMounted or !wep.ScoreOnDamage then return end
+
+		local score = math.max( dmg:GetDamage(), dmg:GetDamageCustom() )
+		if score == 0 then return end
+
+		wep:AddScore( score )
 	end )
 
-	hook.Add( "DoPlayerDeath", "SLCGenericSCPKill", function( ply, att, dmg )
-		if IsValid( ply ) and ply:IsPlayer() then
-			if IsValid( att ) and att:IsPlayer() and att != ply and att:SCPTeam() == TEAM_SCP then
-				local wep = att:GetProperty( "scp_weapon" )
+	hook.Add( "SLCPlayerDeath", "SLCGenericSCPKill", function( ply, att )
+		if !IsValid( ply ) or !ply:IsPlayer() or !IsValid( att ) or !att:IsPlayer() or att == ply or att:SCPTeam() != TEAM_SCP then return end
 
-				if IsValid( wep ) then
-					if wep.UpgradeSystemMounted and wep.ScoreOnKill then
-						wep:AddScore( 1 )
-					end
+		local wep = att:GetProperty( "scp_weapon" )
+		if !IsValid( wep ) then return end
 
-					if wep.OnPlayerKilled then
-						wep:OnPlayerKilled( att, dmg )
-					end
-				end
-			end
+		if wep.UpgradeSystemMounted and wep.ScoreOnKill then
+			wep:AddScore( 1 )
+		end
+
+		if wep.OnPlayerKilled then
+			wep:OnPlayerKilled( att )
 		end
 	end )
 end

@@ -3,7 +3,10 @@ SWEP.Language  		= "SCP1025"
 
 SWEP.WorldModel		= "models/mishka/models/scp1025.mdl"
 
+SWEP.ShouldDrawWorldModel 	= false
 SWEP.ShouldDrawViewModel = false
+
+SWEP.DrawCrosshair = false
 
 SWEP.SelectFont = "SCPHUDMedium"
 
@@ -57,12 +60,7 @@ function SWEP:Deploy()
 end
 
 function SWEP:PrimaryAttack()
-end
 
-function SWEP:DrawWorldModel()
-	if !IsValid( self:GetOwner() ) then
-		self:DrawModel()
-	end
 end
 
 if CLIENT then
@@ -190,10 +188,6 @@ local can_target = function( ply )
 
 	if team == TEAM_SPEC or team == TEAM_SCP then
 		return false
-	end
-
-	if CLIENT then
-		return true
 	end
 
 	if ply:GetSCP714() then
@@ -432,7 +426,12 @@ hook.Add( "SLCSCP500Used", "SLCSCP1025SCP500", function( ply )
 	ply:SetProperty( "slc_1025_disease", nil )
 end )
 
-hook.Add( "SLCHealed", "SLCSCP1035Healed", function( action, target, healer )
+hook.Add( "SLCHealed", "SLCSCP1025Healed", function( target, healer )
 	target:RemoveEffect( "heavy_bleeding", true )
 	target:RemoveEffect( "light_bleeding", true )
+end )
+
+hook.Add( "SLCNeedHeal", "SLCSCP1025NeedHeal", function( target, healer, heal_type )
+	if target:HasEffect( "heavy_bleeding" ) then return true end
+	if target:HasEffect( "light_bleeding" ) then return true end
 end )

@@ -1,5 +1,5 @@
 --[[-------------------------------------------------------------------------
-Generic inventory, don't confuse with cl_eq!
+Generic inventory used for looting, don't confuse with cl_eq!
 ---------------------------------------------------------------------------]]
 
 /*data = {
@@ -9,11 +9,15 @@ Generic inventory, don't confuse with cl_eq!
 	items = {},
 }*/
 
+local default_icon = surface.GetTextureID( "weapons/swep" )
+local color_white = Color( 255, 255, 255 )
+local select_color = Color( 255, 210, 0 )
+
 local inv_config = {
 	margin = 0.005, --s
 	slot = 0.07, --s
-	max_w = 0.9, --w
-	max_h = 0.9, --h
+	max_w = 0.75, --w
+	max_h = 0.8, --h
 }
 
 local blur = Material( "pp/blurscreen" )
@@ -27,7 +31,7 @@ end
 
 SLCInventory = {}
 
-function SLCInventory:New( name, size_x, size_y )
+function SLCInventory:New( name, size_x, size_y, ent )
 	local tab = setmetatable( {}, { __index = SLCInventory } )
 
 	tab.Name = name
@@ -64,20 +68,32 @@ function SLCInventory:New( name, size_x, size_y )
 	if slot < s * 0.055 then
 		tab.FontOverride = "SCPHUDESmall"
 	end
-
+	
 	tab.SlotDim = slot
 	tab.Margin = margin
+	
+	tab.IsRagdoll = IsValid( ent ) and ent:GetClass() == "prop_ragdoll"
+	tab.InfoW = w * 0.2
 
 	tab.DimX = cw
 	tab.DimY = ch
-
+	
 	tab.SizeX = size_x
 	tab.SizeY = size_y
+	
+	local total_w = cw
 
-	tab.PosX = (w - cw) / 2
+	if tab.IsRagdoll then
+		total_w = total_w - margin - tab.InfoW
+	end
+
+	tab.PosX = (w - total_w) / 2
 	tab.PosY = (h - ch) / 2
-
+	
+	
 	tab.Items = {}
+	tab.Entity = ent
+
 	tab.WasMouseDown = false
 
 	local old = _SLCInventoryCache[name]
@@ -115,6 +131,12 @@ Drawing has 3 passes:
 function SLCInventory:Draw()
 	if !self.Valid then return end
 	self.Drawn = true
+
+	if IsEQVisible() then return end
+
+	if !vgui.CursorVisible() then
+		gui.EnableScreenClicker( true )
+	end
 
 	local mouse_down = input.IsMouseDown( MOUSE_LEFT )
 	if mouse_down and self.WasMouseDown then
@@ -163,10 +185,32 @@ function SLCInventory:Draw()
 		end
 	end
 
+	local x, y = self.PosX, self.PosY
+	local w, h = self.DimX, self.DimY
 	local mx, my = input.GetCursorPos()
-	if self.MouseDown and ( mx < self.PosX or mx > self.PosX + self.DimX or my < self.PosY or my > self.PosY + self.DimY ) then
+
+	if self.MouseDown and ( mx < x or mx > x + w or my < y or my > y + h ) then
 		self:OnClick( -1, -1, -1 )
 	end
+
+	if self.IsRagdoll then
+		self:DrawInfo()
+	end
+
+/*
+unknown_chip = "Unknown chip",
+name = "Name",
+team = "Team",
+death_time = "Death time",
+time = {
+	just = "Just now",
+	one = "About one minute ago",
+	three = "About three minutes ago",
+	five = "About five minutes ago",
+	long = "More than five minutes ago",
+	very_long = "More than ten minutes ago",
+},
+*/
 
 	/*if self.MouseDown or input.IsButtonDown( KEY_ESCAPE ) or input.IsButtonDown( GetBindButton( "eq_button" ) ) then
 		local mx, my = input.GetCursorPos()
@@ -181,18 +225,27 @@ function SLCInventory:DrawBackground( s, pass )
 
 	local x, y = self.PosX, self.PosY
 	local w, h = self.DimX, self.DimY
+	local marg = self.Margin
+	local info_w = self.InfoW
+	local isp = self.IsRagdoll
 
 	if pass == 1 then
 		surface.SetDrawColor( 175, 175, 175, 255 )
 		surface.DrawRect( x - 1, y - 1, w + 2, h + 2 )
+
+		if isp then
+			surface.DrawRect( x - info_w - marg - 1 , y - 1, info_w + 2, h + 2 )
+		end
 	else
 		surface.SetDrawColor( 0, 0, 0, 150 )
 		surface.DrawRect( x, y, w, h )
+
+		if isp then
+			surface.DrawRect( x - info_w - marg , y, info_w, h )
+		end
 	end
 end
 
-local default_icon = surface.GetTextureID( "weapons/swep" )
-local icon_color = Color( 255, 255, 255, 255 )
 function SLCInventory:DrawSlot( i, j, s )
 	if !self.Valid then return end
 
@@ -220,13 +273,21 @@ function SLCInventory:DrawSlot( i, j, s )
 		
 		local name_h = slot * 0.2
 		if item.icon and item.icon != default_icon or !item.select_font then
-			draw.WepSelectIcon( item.icon or default_icon, x + 2, y + 2, slot - 4, item.color or icon_color )
+			draw.WepSelectIcon( item.icon or default_icon, x + 2, y + 2, slot - 4, item.color or color_white )
 		elseif item.select_font then
+			local font = item.select_font
+			local fy = y + slot * 0.5
+
+			if font == "SCPCSSIcons" then
+				font = "SCPCSSIconsSmall"
+				fy = fy + slot * 0.25
+			end
+	
 			draw.Text{
 				text = item.select_text,
-				pos = { x + slot * 0.5, y + slot * 0.5 },
-				font = item.select_font,
-				color = item.color or Color( 255, 210, 0, 255 ),
+				pos = { x + slot * 0.5, fy },
+				font = font,
+				color = item.color or select_color,
 				xalign = TEXT_ALIGN_CENTER,
 				yalign = TEXT_ALIGN_CENTER,
 			}
@@ -243,7 +304,25 @@ function SLCInventory:DrawSlot( i, j, s )
 				text = item.name,
 				pos = { x + slot * 0.5 - 2, y + name_h * 0.5 - 1 },
 				font = self.FontOverride or "SCPHUDVSmall",
-				color = Color( 255, 255, 255, 255 ),
+				color = color_white,
+				xalign = TEXT_ALIGN_CENTER,
+				yalign = TEXT_ALIGN_CENTER,
+				max_width = slot
+			}
+		end
+
+		if in_slot and item.alt then
+			surface.SetDrawColor( 0, 0, 0, 225 )
+			surface.DrawRect( x, y + slot - name_h + 2, slot, name_h - 2 )
+
+			surface.SetDrawColor( 175, 175, 175, 255 )
+			surface.DrawLine( x - 1, y + slot - name_h + 1, x + slot - 1, y + slot - name_h + 1 )
+
+			draw.LimitedText{
+				text = item.alt,
+				pos = { x + slot * 0.5 - 2, y + slot - name_h * 0.5 - 1 },
+				font = self.FontOverride or "SCPHUDVSmall",
+				color = color_white,
 				xalign = TEXT_ALIGN_CENTER,
 				yalign = TEXT_ALIGN_CENTER,
 				max_width = slot
@@ -255,7 +334,7 @@ function SLCInventory:DrawSlot( i, j, s )
 				text = item.amount,
 				pos = { x + slot - 8, y + slot - 4 },
 				font = "SCPHUDSmall",
-				color = Color( 255, 255, 255, 255 ),
+				color = color_white,
 				xalign = TEXT_ALIGN_RIGHT,
 				yalign = TEXT_ALIGN_BOTTOM,
 				max_width = slot
@@ -268,6 +347,31 @@ function SLCInventory:DrawSlot( i, j, s )
 	end
 
 	if self.PostSlotDraw then self:PostSlotDraw( num, x, y, slot, s ) end
+end
+
+local function draw_info_chunk( x, y, marg, t1, t2 )
+	local _, th1 = draw.SimpleText( t1, "SCPHUDSmall", x, y, color_white, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
+	local _, th2 = draw.SimpleText( t2, "SCPHUDSmall", x + marg * 2, y + th1, color_white, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
+
+	return th1 + th2 + marg * 1.5
+end
+
+function SLCInventory:DrawInfo()
+	local ent = self.Entity
+	local x, y = self.PosX, self.PosY
+	local marg = self.Margin
+	local info_w = self.InfoW
+
+	local dx = x - info_w
+	local dy = y
+	local lang = LANG.MISC.inventory
+
+	local t = SCPTeams.GetName( ent:GetNWInt( "team", 1 ) )
+	local time = math.Round( ( CurTime() - ent:GetNWFloat( "time", 0 ) ) / 60 )
+
+	dy = dy + draw_info_chunk( dx, dy, marg, lang.name..":", ent:GetNWString( "nick", "???" ) )
+	dy = dy + draw_info_chunk( dx, dy, marg, lang.team..":", LANG.TEAMS[t] or t )
+	dy = dy + draw_info_chunk( dx, dy, marg, lang.death_time..":", time > 10 and lang.time.long or lang.time[time] )
 end
 
 function SLCInventory:OnClick( x, y, num )
@@ -304,6 +408,16 @@ end
 
 setmetatable( SLCInventory, { __call = SLCInventory.New } )
 
+function IsAnyInventoryVisible()
+	for k, v in pairs( _SLCInventoryCache ) do
+		if IsValid( v ) and v:IsVisible() then
+			return true
+		end
+	end
+
+	return false
+end
+
 hook.Add( "DrawOverlay", "SLCInventory", function()
 	if !recomputed then
 		recomputed = true
@@ -320,7 +434,7 @@ hook.Add( "DrawOverlay", "SLCInventory", function()
 end )
 
 hook.Add( "PlayerButtonDown", "SLCInventory", function( ply, btn )
-	if btn >= KEY_FIRST and btn <= KEY_LAST and GetSettingsValue( "any_button_close_search" ) then
+	if btn >= KEY_FIRST and btn <= KEY_LAST and btn != GetBindButton( "eq_button" ) and GetSettingsValue( "any_button_close_search" ) then
 		for k, v in pairs( _SLCInventoryCache ) do
 			if IsValid( v ) and v:IsVisible() and v.Drawn then
 				v:OnClick( -1, -1, -1 )

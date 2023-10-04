@@ -20,11 +20,12 @@ function SWEP:Initialize()
 	self:InitializeLanguage( "SCP058" )
 	self:InitializeHUD( "scp058" )
 
-	self:SetShotStacks( 3 )
+	self:SetShotStacks( 4 )
 end
 
 function SWEP:Think()
 	self:PlayerFreeze()
+	self:SwingThink()
 
 	local ct = CurTime()
 	local owner = self:GetOwner()
@@ -35,13 +36,13 @@ function SWEP:Think()
 			owner:PopSpeed( "SCP058AttackSlow", true )
 		end
 
-		local max_stacks = self:GetUpgradeMod( "stacks" ) or 3
+		local max_stacks = self:GetUpgradeMod( "stacks" ) or 4
 		local stacks = self:GetShotStacks()
 		if stacks < max_stacks then
 			local ns = self:GetNextStack()
 
 			if ns == 0 then
-				self:SetNextStack( ct + 20 / ( self:GetUpgradeMod( "regen_rate" ) or 1 ) )
+				self:SetNextStack( ct + 15 / ( self:GetUpgradeMod( "regen_rate" ) or 1 ) )
 			elseif ns <= ct then
 				self:SetNextStack( 0 )
 				self:SetShotStacks( stacks + 1 )
@@ -51,6 +52,11 @@ function SWEP:Think()
 		end
 	end
 end
+
+local path_start = Vector( 0, 0, 10 )
+local path_end = Vector( 10, 0, -2 )
+local mins = Vector( -2, -5, -2 )
+local maxs = Vector( 2, 5, 2 )
 
 function SWEP:PrimaryAttack()
 	if ROUND.preparing or ROUND.post then return end
@@ -65,66 +71,60 @@ function SWEP:PrimaryAttack()
 	local vm = owner:GetViewModel()
 	if IsValid( vm ) then
 		local speed = 1.2
-		local seq = vm:SelectWeightedSequence( ACT_VM_PRIMARYATTACK )
-		//local dur = vm:SequenceDuration( seq ) / speed
-
-		//self.NextIdle = CurTime() + dur
+		local seq = vm:LookupSequence( "attack1" )
 
 		vm:ResetSequenceInfo()
 		vm:SendViewModelMatchingSequence( seq )
 		vm:SetPlaybackRate( speed )
 	end
 
-	timer.Simple( 0.3, function()
-		if IsValid( self ) and IsValid( owner ) then
-			local pos = owner:GetShootPos()
+	self:EmitSound( "npc/zombie/claw_miss1.wav" )
+	
+	self:SwingAttack( {
+		path_start = path_start,
+		path_end = path_end,
+		duration = 0.6,
+		num = 6,
+		dist_start = 20,
+		dist_end = 60,
+		mins = mins,
+		maxs = maxs,
+		callback = function( trace )
+			local ent = trace.Entity
+			if !trace.Hit or !IsValid( ent ) then return end
+			if SERVER and ent:IsPlayer() and self:CanTargetPlayer( ent ) then
+				owner:PushSpeed( 0.75, 0.75, -1, "SCP058AttackSlow", 1 )
+				self.AttackSlow = ct + 1.5
 
-			local trace = util.TraceHull{
-				start = pos,
-				endpos = pos + owner:GetAimVector() * 75,
-				mask = MASK_SHOT,
-				filter = owner,
-				mins = Vector( -4, -4, -4 ),
-				maxs = Vector( 4, 4, 4 ),
-			}
+				local dmg = DamageInfo()
 
-			if trace.Hit and IsValid( trace.Entity ) then
-				local ent = trace.Entity
-				if ent:IsPlayer() then
-					if self:CanTargetPlayer( ent ) then
-						if SERVER then
-							owner:PushSpeed( 0.75, 0.75, -1, "SCP058AttackSlow", 1 )
-							self.AttackSlow = ct + 1.5
+				dmg:SetAttacker( owner )
+				dmg:SetDamageType( DMG_GENERIC )
+				dmg:SetDamage( 20 + ( self:GetUpgradeMod( "prim_dmg" ) or 0 ) )
 
-							local dmg = DamageInfo()
+				SuppressHostEvents( NULL )
+				ent:TakeDamageInfo( dmg )
+				SuppressHostEvents( owner )
 
-							dmg:SetAttacker( owner )
-							dmg:SetDamageType( DMG_GENERIC )
-							dmg:SetDamage( 20 + ( self:GetUpgradeMod( "prim_dmg" ) or 0 ) )
+				if self:GetUpgradeMod( "primary_poison" ) == true then
+					local pdmg = self:GetUpgradeMod( "pp_dmg" ) or 0
 
-							ent:TakeDamageInfo( dmg )
-
-							if self:GetUpgradeMod( "primary_poison" ) == true then
-								local pdmg = self:GetUpgradeMod( "pp_dmg" ) or 0
-
-								if self:GetUpgradeMod( "pp_inta2" ) == true and !ent:HasEffect( "poison" ) then
-									ent:ApplyEffect( "poison", 2, owner, pdmg )
-								else
-									ent:ApplyEffect( "poison", owner, pdmg )
-								end
-							end
-						end
-
-						self:EmitSound( "npc/zombie/claw_strike3.wav" )
+					if self:GetUpgradeMod( "pp_inta2" ) == true and !ent:HasEffect( "poison" ) then
+						ent:ApplyEffect( "poison", 2, owner, pdmg )
+					else
+						ent:ApplyEffect( "poison", owner, pdmg )
 					end
-				else
-					self:SCPDamageEvent( ent, 50 )
 				end
-			else
-				self:EmitSound( "npc/zombie/claw_miss1.wav" )
+			elseif SERVER then
+				SuppressHostEvents( NULL )
+				self:SCPDamageEvent( ent, 50 )
+				SuppressHostEvents( owner )
 			end
+
+			self:EmitSound( "npc/zombie/claw_strike3.wav" )
+			return true
 		end
-	end )
+	} )
 end
 
 function SWEP:SecondaryAttack()
@@ -155,7 +155,7 @@ function SWEP:SecondaryAttack()
 		ent:SetAngles( owner:GetAimVector():Angle() )
 		ent:SetOwner( owner )
 
-		ent:SetSpeed( 11 * ( self:GetUpgradeMod( "shot_speed" ) or 1 ) )
+		ent:SetSpeed( 16 * ( self:GetUpgradeMod( "shot_speed" ) or 1 ) )
 		ent:SetSize( self:GetUpgradeMod( "shot_size" ) or 1 )
 
 		local poison = self:GetUpgradeMod( "shot_poison" )
@@ -171,7 +171,7 @@ function SWEP:SecondaryAttack()
 		ent.OnHit = function( proj, trace )
 			if IsValid( self ) and IsValid( owner ) then
 				if !mode then
-					local damage = 30 * ( self:GetUpgradeMod( "shot_damage" ) or 1 )
+					local damage = 40 * ( self:GetUpgradeMod( "shot_damage" ) or 1 )
 
 					if trace.HitPos:DistToSqr( pos ) < 40000 then --200 ^ 2
 						damage = damage * 0.5
@@ -193,7 +193,7 @@ function SWEP:SecondaryAttack()
 						end
 					end
 
-					for k, v in pairs( ents.FindInSphere( trace.HitPos + trace.HitNormal * 10, 96 * proj:GetSize() ) ) do
+					for i, v in ipairs( ents.FindInSphere( trace.HitPos + trace.HitNormal * 10, 96 * proj:GetSize() ) ) do
 						if v:IsPlayer() and self:CanTargetPlayer( v ) then
 							local tr = util.TraceLine{
 								start = trace.HitPos,
@@ -246,7 +246,7 @@ function SWEP:MakeExplosion()
 	local owner = self:GetOwner()
 	local pos = owner:GetPos()
 	local radius_mul = self:GetUpgradeMod( "explosion_radius" ) or 1
-	local radius = 384 * radius_mul
+	local radius = 600 * radius_mul
 	local use_poison = self:GetUpgradeMod( "explosion_poison" )
 	local damage = 250
 
@@ -360,36 +360,40 @@ DefineUpgradeSystem( "scp058", {
 	grid_x = 5,
 	grid_y = 3,
 	upgrades = {
-		{ name = "attack1", icon = icons.attack, cost = 2, req = {}, reqany = false,  pos = { 1, 1 }, mod = { primary_poison = true }, active = false },
-		{ name = "attack2", icon = icons.attack, cost = 3, req = { "attack1" }, reqany = false,  pos = { 1, 2 }, mod = { prim_dmg = 10, pp_dmg = 0.25, prim_cd = 0.5 }, active = false },
-		{ name = "attack3", icon = icons.attack, cost = 4, req = { "attack2" }, reqany = false,  pos = { 1, 3 }, mod = { pp_dmg = 0.5, prim_cd = 1, pp_inta2 = true }, active = false },
+		{ name = "attack1", icon = icons.attack, cost = 1, req = {}, reqany = false,  pos = { 1, 1 }, mod = { primary_poison = true }, active = false },
+		{ name = "attack2", icon = icons.attack, cost = 2, req = { "attack1" }, reqany = false,  pos = { 1, 2 }, mod = { prim_dmg = 10, pp_dmg = 0.25, prim_cd = 0.5 }, active = false },
+		{ name = "attack3", icon = icons.attack, cost = 4, req = { "attack2" }, reqany = false,  pos = { 1, 3 }, mod = { prim_dmg = 20, pp_dmg = 0.5, prim_cd = 1, pp_inta2 = true }, active = false },
 
 		{ name = "shot", icon = icons.poison_shot, cost = 3, req = {}, reqany = false,  pos = { 3, 1 }, mod = { shot_poison = true }, active = false },
 
 		{ name = "shot11", icon = icons.shot, cost = 3, req = { "shot" }, reqany = false, block = { "shot21", "shot31" },  pos = { 2, 2 }, mod = { shot_damage = 1.4, shot_speed = 0.9, shot_size = 1.3, shot_cd = 1 }, active = false },
 		{ name = "shot12", icon = icons.shot, cost = 4, req = { "shot11" }, reqany = false,  pos = { 2, 3 }, mod = { shot_damage = 2, shot_speed = 0.75, shot_size = 1.75, shot_cd = 2, shot_poison = false }, active = false },
 
-		{ name = "shot21", icon = icons.cloud, cost = 3, req = { "shot" }, reqany = false, block = { "shot11", "shot31" },  pos = { 3, 2 }, mod = { shot_mode = 1, cloud_damage = 5, sp_dmg = 0.5, shot_speed = 0.8, shot_size = 1.2, stacks = 2, shot_cd = 5, regen_rate = 0.9 }, active = false },
-		{ name = "shot22", icon = icons.cloud, cost = 4, req = { "shot21" }, reqany = false,  pos = { 3, 3 }, mod = { cloud_damage = 10, cloud_dur = 1.5, sp_dmg = 1, shot_speed = 0.6, shot_size = 1.4, regen_rate = 0.75 }, active = false },
+		{ name = "shot21", icon = icons.cloud, cost = 3, req = { "shot" }, reqany = false, block = { "shot11", "shot31" },  pos = { 3, 2 }, mod = { shot_mode = 1, cloud_damage = 5, sp_dmg = 0.75, shot_speed = 0.9, shot_size = 1.1, stacks = 3, shot_cd = 5, regen_rate = 0.9 }, active = false },
+		{ name = "shot22", icon = icons.cloud, cost = 4, req = { "shot21" }, reqany = false,  pos = { 3, 3 }, mod = { cloud_damage = 10, cloud_dur = 1.5, sp_dmg = 1.5, shot_speed = 0.75, shot_size = 1.3, regen_rate = 0.75 }, active = false },
 
-		{ name = "shot31", icon = icons.multishot, cost = 3, req = { "shot" }, reqany = false, block = { "shot11", "shot21" },  pos = { 4, 2 }, mod = { shot_mode = 2, shot_speed = 1.1, shot_size = 0.85, stacks = 4, regen_rate = 1.5 }, active = true },
-		{ name = "shot32", icon = icons.multishot, cost = 4, req = { "shot31" }, reqany = false,  pos = { 4, 3 }, mod = { shot_speed = 1.25, shot_size = 0.6, stacks = 6, regen_rate = 2.2 }, active = false },
+		{ name = "shot31", icon = icons.multishot, cost = 3, req = { "shot" }, reqany = false, block = { "shot11", "shot21" },  pos = { 4, 2 }, mod = { shot_mode = 2, shot_speed = 1.1, shot_size = 0.85, stacks = 6, regen_rate = 1.5 }, active = true },
+		{ name = "shot32", icon = icons.multishot, cost = 4, req = { "shot31" }, reqany = false,  pos = { 4, 3 }, mod = { shot_speed = 1.25, shot_size = 0.6, stacks = 8, regen_rate = 2.2 }, active = false },
 
-		{ name = "exp1", icon = icons.explosion1, cost = 3, req = {}, reqany = false,  pos = { 5, 1 }, mod = {}, active = true },
-		{ name = "exp2", icon = icons.explosion2, cost = 3, req = { "exp1" }, reqany = false,  pos = { 5, 2 }, mod = { explosion_poison = true, explosion_radius = 1.5 }, active = false },
+		{ name = "exp1", icon = icons.explosion1, cost = 2, req = {}, reqany = false,  pos = { 5, 1 }, mod = {}, active = true },
+		{ name = "exp2", icon = icons.explosion2, cost = 2, req = { "exp1" }, reqany = false,  pos = { 5, 2 }, mod = { explosion_poison = true, explosion_radius = 1.5 }, active = false },
 
-		{ name = "nvmod", cost = 1, req = {}, reqany = false,  pos = { 5, 3 }, mod = {}, active = false },
+		{ name = "outside_buff", cost = 1, req = {}, reqany = false,  pos = { 5, 3 }, mod = {}, active = false },
 	},
-	rewards = { --17+1
+	rewards = { --13+1
 		{ 100, 1 },
 		{ 200, 1 },
 		{ 300, 1 },
-		{ 450, 2 },
-		{ 600, 2 },
-		{ 750, 2 },
-		{ 900, 2 },
-		{ 1100, 3 },
-		{ 1300, 3 }
+		{ 400, 1 },
+		{ 500, 1 },
+		{ 600, 1 },
+		{ 700, 1 },
+		{ 800, 1 },
+		{ 900, 1 },
+		{ 1000, 1 },
+		{ 1100, 1 },
+		{ 1200, 1 },
+		{ 1300, 1 },
 	}
 } )
 

@@ -43,7 +43,6 @@ local function DrawEffectsHUD()
 	local w, h = ScrW(), ScrH()
 
 	local ply = LocalPlayer()
-	if !ply.EFFECTS then LocalPlayer().EFFECTS = {} end
 	if !ply.EFFECTS then return end
 
 	local effects = {}
@@ -86,9 +85,12 @@ local function DrawEffectsHUD()
 				showtext = {}
 
 				for j = 5, ec do
-					local name = LANG.EFFECTS[effect.name] or effect.name
-					local tier = eff.tiers > 1 and ( roman_tab[effect.tier] or effect.tier ) or ""
-					local time = effect.endtime == -1 and LANG.EFFECTS.permanent or math.floor( effect.endtime - CurTime() )
+					local n_effect = effects[j]
+					local n_eff = EFFECTS.effects[n_effect.name]
+
+					local name = LANG.EFFECTS[n_effect.name] or n_effect.name
+					local tier = n_eff.tiers > 1 and ( roman_tab[n_effect.tier] or n_effect.tier ) or ""
+					local time = n_effect.endtime == -1 and LANG.EFFECTS.permanent or math.floor( n_effect.endtime - CurTime() )
 
 					table.insert( showtext, name.." "..tier.." ("..time..")" )
 				end
@@ -149,6 +151,10 @@ local function DrawEffectsHUD()
 			if tw > maxw then
 				maxw = tw
 			end
+		end
+
+		if my + fh + 10 > h then
+			my = h - fh - 10
 		end
 
 		surface.SetDrawColor( color_white )

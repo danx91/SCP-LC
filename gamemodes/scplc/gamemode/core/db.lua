@@ -126,21 +126,21 @@ end
 --[[-------------------------------------------------------------------------
 Player Bindings
 ---------------------------------------------------------------------------]]
-local ply = FindMetaTable( "Player" )
+local PLAYER = FindMetaTable( "Player" )
 
-function ply:SetSCPData( name, value )
+function PLAYER:SetSCPData( name, value )
 	SetSCPData( self:SteamID64(), name, value, self )
 end
 
-function ply:GetSCPData( name, def, sync, update )
+function PLAYER:GetSCPData( name, def, sync, update )
 	return GetSCPData( self:SteamID64(), name, def, nil, self, nil, update, sync )
 end
 
-function ply:RemoveSCPData( name )
+function PLAYER:RemoveSCPData( name )
 	RemoveSCPData( self:SteamID64(), name, self )
 end
 
-function ply:SetDataFromDB( name, def, func, pdk )
+function PLAYER:SetDataFromDB( name, def, func, pdk )
 	return GetSCPData( self:SteamID64(), name, def, func, self, pdk, true, false )
 end
 

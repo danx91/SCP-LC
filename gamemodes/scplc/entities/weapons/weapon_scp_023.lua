@@ -61,63 +61,73 @@ function SWEP:Think()
 			self:CheckPreys()
 
 			local len = #self.Preys
+			if len < 1 then return end
+
 			local tab = table.remove( self.Preys, math.random( len ) )
+			if !tab then return end
 
-			if tab then
-				local target = tab[1]
-				self.PreysLookup[target] = nil
+			local target = tab[1]
+			if IsValid( target ) and ( target:GetSCP714() or target:IsInSafeSpot() ) then
+				table.insert( self.Preys, tab )
 
-				len = len - 1
+				self.NextAttack = CurTime() + ( #self.Preys == 1 and 1 or 30 )
+				self:SetNextAttack( self.NextAttack )
+				
+				return
+			end
 
-				//print( "kill and tp", target )
-				if IsValid( target ) and target:CheckSignature( tab[2] ) then
-					self.NextAttack = CurTime() + 120 - ( self:GetUpgradeMod( "acd" ) or 0 ) - ( self:GetUpgradeMod( "acd2" ) or 0 )
-					self:SetNextAttack( self.NextAttack )
-					self:AddScore( 1 )
+			self.PreysLookup[target] = nil
 
-					AddRoundStat( "023" )
+			len = len - 1
 
-					target:StopAmbient( "023" )
+			//print( "kill and tp", target )
+			if IsValid( target ) and target:CheckSignature( tab[2] ) then
+				self.NextAttack = CurTime() + 120 - ( self:GetUpgradeMod( "acd" ) or 0 ) - ( self:GetUpgradeMod( "acd2" ) or 0 )
+				self:SetNextAttack( self.NextAttack )
+				self:AddScore( 1 )
 
-					owner:SetPos( target:GetPos() )
-					target:Burn( -1, 0, owner, 20, true, true, true )
-					--target:EmitSound( "NPC_FastZombie.Scream" )
+				AddRoundStat( "023" )
 
-					local torem = math.ceil( len / 2 )
-					//local n = 1
+				target:StopAmbient( "023" )
 
-					/*print( "Pre", torem )
-					PrintTable( self.Preys )
-					PrintTable( self.PreysLookup )*/
-					for i = 1, torem do
-						local old = self.Preys[i][1] --player that is removed from list
-						local ply_obj = self.Preys[i + torem] --player that is placed in the place of old player
+				owner:SetPos( target:GetPos() )
+				target:Burn( -1, 0, owner, 20, true, true, true )
+				--target:EmitSound( "NPC_FastZombie.Scream" )
 
-						self.PreysLookup[old] = nil --remove old player from lookup
+				local torem = math.ceil( len / 2 )
+				//local n = 1
 
-						self.Preys[i + torem] = nil --ply_obj overrides old player (old player is ultimately removed from list)
-						self.Preys[i] = ply_obj
-						//print( "Removing", old )
-						//self.PreysLookup[self.Preys[i][1]] = nil
+				/*print( "Pre", torem )
+				PrintTable( self.Preys )
+				PrintTable( self.PreysLookup )*/
+				for i = 1, torem do
+					local old = self.Preys[i][1] --player that is removed from list
+					local ply_obj = self.Preys[i + torem] --player that is placed in the place of old player
+
+					self.PreysLookup[old] = nil --remove old player from lookup
+
+					self.Preys[i + torem] = nil --ply_obj overrides old player (old player is ultimately removed from list)
+					self.Preys[i] = ply_obj
+					//print( "Removing", old )
+					//self.PreysLookup[self.Preys[i][1]] = nil
 
 
-						//print( "SWAP", (i + torem).." -> "..i, ply_obj and ply_obj[1], old )
+					//print( "SWAP", (i + torem).." -> "..i, ply_obj and ply_obj[1], old )
 
-						/*if ply_obj and IsValid( ply_obj[1] ) then --?? local old?
-							//print( "Removing ambient for", ply_obj[1] )
-							ply_obj[1]:StopAmbient( "023" )
-						end*/
-						if IsValid( old ) then --stop ambient for removed player
-							old:StopAmbient( "023" )
-							//print( "stopping ambient for", old )
-						end
+					/*if ply_obj and IsValid( ply_obj[1] ) then --?? local old?
+						//print( "Removing ambient for", ply_obj[1] )
+						ply_obj[1]:StopAmbient( "023" )
+					end*/
+					if IsValid( old ) then --stop ambient for removed player
+						old:StopAmbient( "023" )
+						//print( "stopping ambient for", old )
 					end
-					/*print("Post")
-					PrintTable( self.Preys )
-					PrintTable( self.PreysLookup )*/
-
-					self:CheckPreys()
 				end
+				/*print("Post")
+				PrintTable( self.Preys )
+				PrintTable( self.PreysLookup )*/
+
+				self:CheckPreys()
 			end
 		end
 	end
@@ -222,7 +232,7 @@ end
 
 //SWEP.NSecondary = 0
 function SWEP:SecondaryAttack()
-	if ROUND.preparing then return end
+	if ROUND.preparing or !IsFirstTimePredicted() then return end
 	if self:GetUpgradeMod( "tdisable" ) then return end
 
 	//if self.NSecondary < CurTime() then
@@ -426,12 +436,15 @@ function SWEP:CheckPreys()
 	self:SetPreys( #self.Preys )
 end
 
+local color_green = Color( 0, 255, 0 )
+local color_red = Color( 255, 0, 0 )
+
 function SWEP:DrawSCPHUD()
 	if self.IndicatorEnabled then
 		draw.Text{
 			text = self.Lang.editMode1,
 			pos = { ScrW() * 0.5, ScrH() * 0.97 },
-			color = Color( 0, 255, 0 ),
+			color = color_green,
 			font = "SCPHUDSmall",
 			xalign = TEXT_ALIGN_CENTER,
 			yalign = TEXT_ALIGN_CENTER,
@@ -439,7 +452,7 @@ function SWEP:DrawSCPHUD()
 		draw.Text{
 			text = self.Lang.editMode2,
 			pos = { ScrW() * 0.5, ScrH() * 0.95 },
-			color = Color( 0, 255, 0 ),
+			color = color_green,
 			font = "SCPHUDSmall",
 			xalign = TEXT_ALIGN_CENTER,
 			yalign = TEXT_ALIGN_CENTER,
@@ -456,7 +469,7 @@ function SWEP:DrawSCPHUD()
 		draw.Text{
 			text = string.format( self.Lang.preys, self:GetPreys() )..", "..string.format( self.Lang.attack, time ),
 			pos = { ScrW() * 0.5, ScrH() * 0.97 },
-			color = Color( 0, 255, 0 ),
+			color = color_green,
 			font = "SCPHUDSmall",
 			xalign = TEXT_ALIGN_CENTER,
 			yalign = TEXT_ALIGN_CENTER,
@@ -466,10 +479,10 @@ function SWEP:DrawSCPHUD()
 		local trap = self:GetTrap()
 		if IsValid( trap ) and trap:GetIdle() then
 			txt = self.Lang.trapActive
-			clr = Color( 0, 255, 0 )
+			clr = color_green
 		else
 			txt = self.Lang.trapInactive
-			clr = Color( 255, 0, 0 )
+			clr = color_red
 		end
 
 		draw.Text{
@@ -549,7 +562,7 @@ DefineUpgradeSystem( "scp023", {
 		{ name = "speed", cost = 3, req = { "hp" }, reqany = false,  pos = { 3, 2 }, mod = { tadd = 60, def = 0.75 }, active = 1.1 },
 		{ name = "alt", cost = 5, req = { "speed" }, reqany = false,  pos = { 3, 3 }, mod = { tdisable = true, def = 0.6, acd2 = 30 }, active = true },
 
-		{ name = "nvmod", cost = 1, req = {}, reqany = false,  pos = { 4, 2 }, mod = {}, active = false },
+		{ name = "outside_buff", cost = 1, req = {}, reqany = false,  pos = { 4, 2 }, mod = {}, active = false },
 	},
 	rewards = { --16 + 1
 		{ 1, 1 },

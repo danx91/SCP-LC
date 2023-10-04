@@ -75,23 +75,26 @@ function SWEP:SecondaryAttack()
 	end )
 end
 
-function SWEP:OnPlayerKilled( ply, dmg )
+function SWEP:OnPlayerKilled( ply )
 	AddRoundStat( "682" )
 end
 
+local color_red = Color( 255, 0, 0 )
+local color_green = Color( 0, 255, 0 )
+local color_blue = Color( 0, 0, 255 )
 function SWEP:DrawSCPHUD()
 	//if hud_disabled or HUDDrawInfo or ROUND.preparing then return end
 	
 	local txt, color
 	if self.Immortal then
 		txt = string.format( self.Lang.s_on, math.ceil( self.NextSpecial - self.SpecialDelay - CurTime() ) )
-		color = Color( 0, 0, 255 )
+		color = color_blue
 	elseif self.NextSpecial > CurTime() then
 		txt = string.format( self.Lang.swait, math.ceil( self.NextSpecial - CurTime() ) )
-		color = Color( 255, 0, 0 )
+		color = color_red
 	else
 		txt = self.Lang.sready
-		color = Color( 0, 255, 0 )
+		color = color_green
 	end
 
 	draw.Text{
@@ -168,7 +171,7 @@ DefineUpgradeSystem( "scp682", {
 
 		{ name = "ult", cost = 6, req = { "speed2" }, reqany = false,  pos = { 2, 4 }, mod = {}, active = false },
 
-		{ name = "nvmod", cost = 1, req = {}, reqany = false,  pos = { 4, 2 }, mod = {}, active = false },
+		{ name = "outside_buff", cost = 1, req = {}, reqany = false,  pos = { 4, 2 }, mod = {}, active = false },
 	},
 	rewards = {
 		{ 1, 1 },

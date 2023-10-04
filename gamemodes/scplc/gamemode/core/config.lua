@@ -1,7 +1,8 @@
-DEVELOPER_MODE = false
+DEVELOPER_MODE = false --REMOVE!
 
 INFO_SCREEN_DURATION = 10
-PRE_BREACH_DURATION = 5
+PRE_BREACH_DURATION = 5 --Not used!
+EQ_SWAP_TIME = 2.5
 
 XPSUMMARY_ORDER = {
 	"cmd",
@@ -15,11 +16,11 @@ XPSUMMARY_ORDER = {
 }
 
 XPSUMMARY_COLORS = {
-	base = Color( 134, 115, 60),
+	base = Color( 134, 115, 60 ),
 	general = Color( 175, 152, 0, 255 ),
-	score = Color( 39, 92, 170, 255),
-	vip = Color( 89, 29, 104),
-	daily = Color( 38, 116, 30),
+	score = Color( 39, 92, 170, 255 ),
+	vip = Color( 89, 29, 104 ),
+	daily = Color( 38, 116, 30 ),
 	cmd = Color( 0, 0, 0, 255 ),
 }
 

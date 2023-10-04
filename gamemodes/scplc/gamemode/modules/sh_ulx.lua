@@ -23,6 +23,8 @@ SLCAuth.AddLibrary( "ulx", "ULX", {
 		return ULib.ucl.query( ply, access )
 	end,
 	RegisterAccess = function( name, help )
+		if CLIENT then return end
+
 		ULib.ucl.registerAccess( name, ULib.ACCESS_ADMIN, help, ULX_CAT )
 	end,
 } )
@@ -246,6 +248,16 @@ function InitializeSCPULX()
 	spawnchip:defaultAccess( ULib.ACCESS_SUPERADMIN )
 	spawnchip:help( "Spawns chip" )
 
+	function ulx.setafk( ply, target )
+		target:MakeAFK()
+		ulx.fancyLogAdmin( ply, "#A marked #T as AFK", target )
+	end
+
+	local setafk = ulx.command( ULX_CAT, "ulx set_afk", ulx.setafk, "!setafk" )
+	setafk:addParam{ type = ULib.cmds.PlayerArg, hint = "Target" }
+	setafk:defaultAccess( ULib.ACCESS_OPERATOR )
+	setafk:help( "Marks player as AFK" )
+
 	local function rem_info( ply, target, type, silent )
 		if silent then
 			ulx.fancyLogAdmin( ply, true, "#A removed #T data: "..type, target )
@@ -298,7 +310,7 @@ function InitializeSCPULX()
 	removedata:help( "Removes player data" )
 end
 
-function SetupForceSCP()
+hook.Add( "SetupForceSCP", "ULXForceSCP", function()
 	function ulx.forcescp( plyc, plyt, scp, silent )
 		if !scp or !ROUND.active then return end
 
@@ -328,11 +340,11 @@ function SetupForceSCP()
 	forcescp:setOpposite( "ulx silent force_scp", { nil, nil, nil, true }, "!sforcescp" )
 	forcescp:defaultAccess( ULib.ACCESS_SUPERADMIN )
 	forcescp:help( "Sets player to specific SCP and spawns him" )
-end
+end )
 
 timer.Simple( 0, function()
 	InitializeSCPULX()
-	SetupForceSCP()
+	hook.Run( "SetupForceSCP" )
 
 	hook.Run( "UCLChanged" )
 end )

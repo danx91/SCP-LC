@@ -4,21 +4,25 @@ ENT.Type = "anim"
 ENT.Used = false
 
 function ENT:SetupDataTables()
-	self:NetworkVar( "Int", 0, "Vest" )
+	self:AddNetworkVar( "Vest", "Int" )
+	self:AddNetworkVar( "Durability", "Float" )
 end
 
 function ENT:Initialize()
-	self:SetModel( "models/items/vest.mdl" )
-
-	self:SetMoveType( MOVETYPE_NONE )
-
 	if SERVER then
-		self:PhysicsInit( SOLID_VPHYSICS )
-		self:SetUseType( SIMPLE_USE )
+		local data = VEST.GetData( self:GetVest() )
+		self:SetModel( data and data.prop_model or "models/items/vest.mdl" )
 	end
 
-	self:SetSolid( SOLID_BBOX )
+	if SERVER then
+		self:SetUseType( SIMPLE_USE )
+		self:PhysicsInit( SOLID_BBOX )
+	end
+
+	self:SetMoveType( MOVETYPE_NONE )
 	self:SetCollisionGroup( COLLISION_GROUP_DEBRIS )
+
+	self:EnableCustomCollisions( true )
 end
 
 function ENT:Use( activator, caller, type, value )
@@ -27,7 +31,7 @@ function ENT:Use( activator, caller, type, value )
 	if activator:IsPlayer() then
 		local vest = activator:GetVest()
 		if vest == 0 then
-			if activator:EquipVest( self:GetVest() ) then
+			if activator:EquipVest( self:GetVest(), false, self:GetDurability() ) then
 				self.Used = true
 				self:Remove()
 			end
@@ -37,11 +41,22 @@ function ENT:Use( activator, caller, type, value )
 	end
 end
 
+local color_white = Color( 255, 255, 255 )
 function ENT:Draw()
 	self:DrawModel()
 
-	local pos = self:GetPos() + Vector( 0, 0, 15 )
-	if pos:DistToSqr( LocalPlayer():GetPos() ) < 22500 then
+	local ply = LocalPlayer()
+	local pos = self:GetPos() + Vector( 0, 0, 20 )
+	if pos:DistToSqr( ply:GetPos() ) < 22500 then
+		local tr = util.TraceLine{
+			start = ply:EyePos(),
+			endpos = pos,
+			mask = MASK_SOLID_BRUSHONLY,
+			filter = ply,
+		}
+
+		if tr.Hit then return end
+
 		local scr = pos:ToScreen()
 		if scr.visible then
 			local id = self:GetVest()
@@ -55,15 +70,31 @@ function ENT:Draw()
 			end
 
 			cam.Start2D()
-				draw.Text{
+				local _, th = draw.Text{
 					text = name,
 					pos = { scr.x, scr.y },
 					font = "SCPHUDMedium",
-					color = Color( 255, 255, 255, 255 ),
+					color = color_white,
 					xalign = TEXT_ALIGN_CENTER,
 					yalign = TEXT_ALIGN_CENTER,
 				}
+
+				local data = VEST.GetData( self:GetVest() )
+				if data and data.durability and data.durability > 0 then
+					draw.Text{
+						text = LANG.durability..": "..math.ceil( self:GetDurability() / data.durability * 100 ).."%",
+						pos = { scr.x, scr.y + th },
+						font = "SCPHUDMedium",
+						color = color_white,
+						xalign = TEXT_ALIGN_CENTER,
+						yalign = TEXT_ALIGN_CENTER,
+					}
+				end
 			cam.End2D()
 		end
 	end
+end
+
+function ENT:TestCollision( start, delta, isbox, bounds, mask )
+	return mask == MASK_USE
 end

@@ -4,7 +4,7 @@ SLC_ENTITY_TABLES = {}
 InstallTable
 
 {
-	Setup = function( target ) end, --called right before table is installed, return true to supress
+	Setup = function( target ) end, --called right before table is installed, return true to suppress
 	Finish = function( target ) end, --called right after table is installed
 	Table = <table> --actual table to install
 }
@@ -78,8 +78,15 @@ RegisterEntityTable( "ActionQueue", {
 						return this:Get_State()
 					end
 				end
+
+				self.SetActionStart = function( this, num ) this.ActionStart = num end
+				self.GetActionStart = function( this ) return this.ActionStart end
+				self.SetActionFinish = function( this, num ) this.ActionFinish = num end
+				self.GetActionFinish = function( this ) return this.ActionFinish end
 			else
 				self:AddNetworkVar( "State", "Int" )
+				self:AddNetworkVar( "ActionStart", "Float" )
+				self:AddNetworkVar( "ActionFinish", "Float" )
 			end
 		end,
 		ActionQueueInit = function( self )
@@ -87,36 +94,45 @@ RegisterEntityTable( "ActionQueue", {
 		end,
 		ActionQueueThink = function( self )
 			local ct = CurTime()
-			if self.ActionFinish != 0 and self.ActionFinish < ct then
+			local a_finish = self:GetActionFinish()
+			
+			if a_finish != 0 and a_finish < ct then
+				//print( "FINISH ACTION", self:GetState() )
 				if #self.ActionQueue > 0 then
 					local new = table.remove( self.ActionQueue, 1 )
-
+					local prev = self:GetState()
+					
 					self:SetState( new.state or 0 )
-					self.ActionFinish = ct + ( new.duration or 0 )
+					self:SetActionStart( ct )
+					self:SetActionFinish( ct + ( new.duration or 0 ) )
+					//print( "NEW ACTION", prev, new.state, new.duration or 0 )
+
 
 					if new.cb then
-						new.cb( self.ActionFinish, new.duration )
+						new.cb( a_finish, new.duration, prev, new.state )
 					end
 				else
 					self:SetState( 0 )
-					self.ActionFinish = 0
+					self:SetActionFinish( 0 )
 				end
-			elseif self.ActionFinish == 0 and self:GetState() != 0 then
+			elseif self:GetActionFinish() == 0 and self:GetState() != 0 then
 				self:SetState( 0 )
 			end
 		end,
 		QueueAction = function( self, state, duration, cb )
+			//print( "INSERTING ACTION", state, duration )
 			table.insert( self.ActionQueue, { state = state, duration = duration, cb = cb } )
 
-			if self.ActionFinish == 0 then
-				self.ActionFinish = 1
+			if self:GetActionFinish() == 0 then
+				self:SetActionFinish( 1 )
 			end
 		end,
 		ResetAction = function( self, state, duration )
+			//print( "RESET ACTION", state, duration )
 			self.ActionQueue = {}
 
 			self:SetState( state )
-			self.ActionFinish = CurTime() + duration
+			self:SetActionFinish( CurTime() + duration )
 		end,
 	}
 } )
@@ -140,10 +156,11 @@ RegisterEntityTable( "Lootable", {
 		
 				self.Listeners[ply] = true
 				ply.ActiveLootable = self
-		
+
 				local tab = {
 					w = self.LootX,
 					h = self.LootY,
+					ent = self,
 					loot = {}
 				}
 		
@@ -152,11 +169,11 @@ RegisterEntityTable( "Lootable", {
 					cache = {}
 					self.PlayersCache[ply] = cache
 				end
-		
+
 				for i, v in pairs( self.LootItems ) do
 					tab.loot[i] = cache[i] and v.info or true
 				end
-		
+
 				net.Start( "SLCLooting" )
 					net.WriteUInt( 1, 2 )
 					net.WriteTable( tab )
@@ -168,13 +185,13 @@ RegisterEntityTable( "Lootable", {
 			for k, v in pairs( self.Listeners ) do
 				if !self:CanLoot( k ) then
 					self.Listeners[k] = nil
-	
+
 					if IsValid( k ) then
 						table.insert( to_update, k )
 					end
 				end
 			end
-	
+
 			if #to_update > 0 then
 				net.Start( "SLCLooting" )
 					net.WriteUInt( 0, 2 )
@@ -182,7 +199,8 @@ RegisterEntityTable( "Lootable", {
 			end
 		end,
 		CanLoot = function( self, ply )
-			return IsValid( ply ) and SCPTeams.HasInfo( ply:SCPTeam(), SCPTeams.INFO_HUMAN ) and self:GetPos():DistToSqr( ply:GetPos() ) <= 6400
+			return IsValid( ply ) and ply:IsHuman() and self:GetPos():DistToSqr( ply:GetPos() ) <= 6400
+					and hook.Run( "SLCPlayerCanLoot", ply, self ) != false
 		end,
 		DropAllListeners = function( self )
 			local listeners = {}
@@ -207,6 +225,7 @@ RegisterEntityTable( "Lootable", {
 			self.PlayersCache = {}
 
 			self:DropAllListeners()
+			self:ProcessItems()
 		end,
 		CopyLootData = function( self, from, dnc )
 			if InstanceOf( "Lootable", from ) then
@@ -223,7 +242,16 @@ RegisterEntityTable( "Lootable", {
 			self.PlayersCache = {}
 
 			self:DropAllListeners()
-			//PrintTable( self.LootItems )
+			self:ProcessItems()
 		end,
+		ProcessItems = function( self )
+			//PrintTable( self.LootItems )
+			for k, v in pairs( self.LootItems ) do
+				local proc = SLCLootProcessors[v.info.class]
+				if proc then
+					proc( v )
+				end
+			end
+		end
 	}
 } )

@@ -10,7 +10,7 @@ function EFFECT:Init( data )
     local ang = math.pi * 2 / self.Arcs
     local normal = self.Normal
 
-    debugoverlay.Axis( self.Origin, normal:Angle(), 5, 0, false )
+    //debugoverlay.Axis( self.Origin, normal:Angle(), 5, 0, false )
 
     for i = 1, self.Arcs do
         local vec_ang = normal:Angle()
@@ -59,7 +59,7 @@ local arc = Material( "slc/misc/pc_laser" )
 local arc_color = Color(107, 133, 153)
 
 function EFFECT:RenderArc( data, endpos )
-    debugoverlay.Line( self.Origin, endpos, 0, Color( 255, 0, 0 ), false )
+    //debugoverlay.Line( self.Origin, endpos, 0, Color( 255, 0, 0 ), false )
 
     local len = #data
 

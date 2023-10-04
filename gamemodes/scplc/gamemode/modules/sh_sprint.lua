@@ -3,57 +3,59 @@ hook.Add( "StartCommand", "SLCSprint", function( ply, cmd )
 
 	if ply:IsBot() then return end
 	if ply:SCPTeam() == TEAM_SPEC then return end
-	if ply:SCPTeam() == TEAM_SCP then return end
+	//if ply:SCPTeam() == TEAM_SCP then return end
 	if SERVER and ply:IsAboutToSpawn() then return end
+	if ply:GetStaminaBoost() > CurTime() then return end
 	if !ply.GetStamina then return end
-
-	if cmd:KeyDown( IN_JUMP ) then
-		if ply:OnGround() and !ply:InVehicle() then
-			if ply.Exhausted then
-				cmd:RemoveKey( IN_JUMP )
-			elseif !ply.Jumping then
-				ply.Jumping = true
-				ply.StaminaRegen = CurTime() + 1.5
-
-				local stamina = ply:GetStamina()
-				local mask = ply:GetWeapon( "item_slc_gasmask" )
-				if !IsValid( mask ) or !mask:GetEnabled() or !mask:GetUpgraded() or stamina - 10 > 30 then
-					stamina = stamina - 10
-
-					if stamina < 0 then
-						stamina = 0
-					end
-
-					ply:SetStamina( stamina )
-				end
-			end
-		end
-	else
-		ply.Jumping = false
-	end
+	if ply:GetMoveType() != MOVETYPE_WALK then return end
 
 	if ply:GetWalkSpeed() == ply:GetRunSpeed() then return end
+	local exhausted = ply:GetExhausted()
+
+	if exhausted then
+		cmd:RemoveKey( IN_JUMP )
+	elseif cmd:KeyDown( IN_JUMP ) and IsFirstTimePredicted() then
+		if !ply.WasJumpDown and ply:OnGround() and !ply:InVehicle() then
+			local stamina = ply:GetStamina()
+			local mask = ply:GetWeapon( "item_slc_gasmask" )
+			if !IsValid( mask ) or !mask:GetEnabled() or !mask:GetUpgraded() or stamina - 10 > 30 then
+				ply.StaminaRegen = CurTime() + 1.5
+				stamina = stamina - 10
+				
+				if stamina < 0 then
+					stamina = 0
+				end
+				
+				ply:SetStamina( stamina )
+			end
+		else
+			cmd:RemoveKey( IN_JUMP )
+		end
+
+		ply.WasJumpDown = true
+	elseif ply:OnGround() then
+		ply.WasJumpDown = false
+	end
 
 	if ( ply:OnGround() or ply:WaterLevel() != 0 ) and !ply:InVehicle() then
 		if cmd:KeyDown( IN_SPEED ) and ( cmd:KeyDown( IN_FORWARD ) or cmd:KeyDown( IN_BACK ) or cmd:KeyDown( IN_MOVELEFT ) or cmd:KeyDown( IN_MOVERIGHT ) ) and ply:GetMoveType() == MOVETYPE_WALK then
-			if ply.Exhausted then
+			if exhausted then
 				cmd:RemoveKey( IN_SPEED )
-			else
+			elseif ply:GetVelocity():Length2DSqr() > 225 then
 				ply.Running = true
 			end
 		end
 	end
 
-	if ply.Exhausted then
+	if exhausted then
 		local ang = ply:EyeAngles()
 
 		if !ply.ExhaustCam then
 			ply.ExhaustCam = ang.p
 		end
 
-		ply.ExhaustCam = math.Approach( ply.ExhaustCam, 30 + math.TimedSinWave( 0.5, 0, 5 ), 0.1 )
+		ply.ExhaustCam = math.Approach( ply.ExhaustCam, 30 + math.TimedSinWave( 0.5, 0, 5 ), FrameTime() * 20 )
 		ang.p = ply.ExhaustCam
-
 
 		cmd:SetViewAngles( ang )
 	elseif ply.ExhaustCam then
@@ -66,10 +68,10 @@ hook.Add( "OnPlayerHitGround", "SLCBHop", function( ply, water, floater, speed )
 end )
 
 hook.Add( "Move", "SLCBHop", function( ply, mv )
-	if ply.JumpPenalty and ply.JumpPenalty >= CurTime() then
+	if ply.JumpPenalty and ply.JumpPenalty >= CurTime() and !ply:GetProperty( "allow_bhop" ) then
 		local vel = mv:GetVelocity()
 
-		local new = vel * 0.985
+		local new = vel * 0.98
 		new.z = vel.z
 
 		mv:SetVelocity( new )
@@ -79,7 +81,6 @@ end )
 local function CalcStamina( ply )
 	if !ply.Stamina then
 		ply.Stamina = true
-		ply.Exhausted = false
 		ply.StaminaRegen = 0
 		ply.RunCheck = 0
 	end
@@ -88,7 +89,7 @@ local function CalcStamina( ply )
 
 	if ply:SCPTeam() == TEAM_SPEC or ROUND.post then
 		ply:SetStamina( 100 )
-		ply.Exhausted = false
+		ply:SetExhausted( false )
 
 		if SERVER and ply.Breathing then
 			ply.Breathing = false
@@ -98,9 +99,29 @@ local function CalcStamina( ply )
 		return
 	end
 
+	local exhausted = ply:GetExhausted()
 	local stamina = ply:GetStamina()
 	local max_stamina = ply:GetMaxStamina()
 	local stamina_limit = ply:GetStaminaLimit()
+	local boost = ply:GetStaminaBoost()
+
+	if boost > CurTime() then
+		if exhausted then
+			ply:SetExhausted( false )
+
+			if SERVER then
+				ply:PopSpeed( "SLC_Exhaust" )
+				ply.StaminaSpeed = 0
+			end
+		end
+
+		if ply.Breathing then
+			ply.Breathing = false
+			ply:StopSound( "SLCPlayer.Breathing" )
+		end
+
+		return
+	end
 	//print( ply, max_stamina )
 
 	local data = {
@@ -125,7 +146,7 @@ local function CalcStamina( ply )
 	if ply.StaminaRegen < CurTime() then
 		ply.StaminaRegen = CurTime() + data.regen_delay
 
-		if ply.Exhausted then
+		if exhausted then
 			stamina = stamina + data.regen_rate_exhausted
 		else
 			stamina = stamina + data.regen_rate
@@ -155,14 +176,14 @@ local function CalcStamina( ply )
 		end
 	end
 
-	if stamina <= 0 and !ply.Exhausted then
-		ply.Exhausted = true
+	if stamina <= 0 and !exhausted then
+		ply:SetExhausted( true )
 
 		if SERVER then
 			ply:PushSpeed( 0.2, -1, -1, "SLC_Exhaust" )
 		end
-	elseif stamina >= 30 and ply.Exhausted then
-		ply.Exhausted = false
+	elseif stamina >= 30 and exhausted then
+		ply:SetExhausted( false )
 
 		if SERVER then
 			ply:PopSpeed( "SLC_Exhaust" )

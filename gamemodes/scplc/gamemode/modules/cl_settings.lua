@@ -10,13 +10,15 @@ local MATS = {
 }
 
 local COLOR = {
-	white = Color( 255, 255, 255, 255 ),
-	black = Color( 0, 0, 0, 255 ),
-	inactive = Color( 125, 125, 125, 255 ),
-	border = Color( 175, 175, 175, 255 ),
+	white = Color( 255, 255, 255 ),
+	black = Color( 0, 0, 0 ),
+	inactive = Color( 125, 125, 125 ),
+	border = Color( 175, 175, 175 ),
 	hover = Color( 75, 75, 75, 200 ),
 	selected = Color( 115, 115, 115, 25 ),
-	conflict = Color( 225, 50, 50, 255 ),
+	conflict = Color( 225, 50, 50 ),
+	vbar = Color( 75, 75, 75 ),
+ 	vbar_grip = Color( 125, 125, 125 ),
 }
 
 --[[-------------------------------------------------------------------------
@@ -68,6 +70,10 @@ end
 local function processSettingsEntry( k )
 	local v = SLC_SETTINGS[k]
 	if v then
+		if v.cvar then
+			v.value = v.cvar:GetString()
+		end
+
 		if v.stype == "bind" then
 			v.key_conflict = false
 
@@ -83,6 +89,8 @@ local function processSettingsEntry( k )
 			v.bind = bind
 		elseif v.stype == "switch" then
 			v.value = tobool( v.value )
+		elseif v.stype == "dropbox" and v.data.parse then
+			v.value = v.data.parse( v.value )
 		end
 	end
 end
@@ -125,12 +133,26 @@ end
 
 local settingsID = 1
 function RegisterSettingsEntry( name, stype, default, data, panel )
+	local cvar
+
+	if default == "!CVAR" then
+		cvar = GetConVar( name )
+		if !cvar then
+			ErrorNoHalt( "ConVar not found! ", name )
+			return
+		end
+
+		default = cvar:GetDefault()
+	end
+
 	SLC_SETTINGS[name] = {
 		id = settingsID,
+		name = name,
 		stype = stype,
 		default = default,
 		data = data,
 		panel = panel,
+		cvar = cvar,
 		//value = nil,
 	}
 
@@ -182,7 +204,7 @@ function OpenSettingsWindow()
 		surface.SetMaterial( MATS.blur )
 		surface.DrawTexturedRect( -w * 0.125, -h * 0.1, w, h )
 
-		surface.SetDrawColor( Color( 0, 0, 0, 175 ) )
+		surface.SetDrawColor( 0, 0, 0, 175 )
 		surface.DrawRect( 0, 0, pw, ph )
 	end
 
@@ -212,7 +234,7 @@ function OpenSettingsWindow()
 	close_btn:SetText( "" )
 
 	close_btn.Paint = function( self, pw, ph )
-		draw.RoundedBox( 6, 0, 0, pw, ph, Color( 255, 0, 0, 150 ))
+		draw.RoundedBox( 6, 0, 0, pw, ph, Color( 255, 0, 0, 150 ) )
 
 		surface.SetDrawColor( COLOR.white )
 		surface.SetMaterial( MATS.exit )
@@ -229,7 +251,17 @@ function OpenSettingsWindow()
 	side_menu:DockMargin( w * 0.01, w * 0.01, 0, w * 0.01 )
 	side_menu:GetCanvas():DockPadding( 0, w * 0.005, w * 0.005, w * 0.005 )
 
-	side_menu:GetVBar():SetWide( 0 )
+	//side_menu:GetVBar():SetWide( 0 )
+	side_menu.VBar:SetHideButtons( true )
+	side_menu.VBar:SetWide( 8 )
+
+	side_menu.VBar.Paint = function( this, pw, ph )
+		draw.RoundedBox( 15, 0, 0, pw, ph, COLOR.vbar )
+	end
+
+	side_menu.VBar.btnGrip.Paint = function( this, pw, ph )
+		draw.RoundedBox( 15, 1, 1, pw - 2, ph - 2, COLOR.vbar_grip )
+	end
 
 	side_menu.Paint = function( self, pw, ph )
 		surface.SetDrawColor( COLOR.border )
@@ -242,7 +274,17 @@ function OpenSettingsWindow()
 	main_panel:DockMargin( w * 0.01, w * 0.01, w * 0.01, w * 0.01 )
 	main_panel:GetCanvas():DockPadding( 0, w * 0.005, w * 0.005, w * 0.005 )
 
-	main_panel:GetVBar():SetWide( 0 )
+	//main_panel:GetVBar():SetWide( 0 )
+	main_panel.VBar:SetHideButtons( true )
+	main_panel.VBar:SetWide( 8 )
+
+	main_panel.VBar.Paint = function( this, pw, ph )
+		draw.RoundedBox( 15, 0, 0, pw, ph, COLOR.vbar )
+	end
+
+	main_panel.VBar.btnGrip.Paint = function( this, pw, ph )
+		draw.RoundedBox( 15, 1, 1, pw - 2, ph - 2, COLOR.vbar_grip )
+	end
 
 	main_panel.Paint = function( self, pw, ph )
 	end
@@ -252,7 +294,7 @@ function OpenSettingsWindow()
 	end )
 
 	for i, v in ipairs( WINDOW_PANELS ) do
-		if !v.show or v.show() then
+		if v.show == nil or v.show ==true or isfunction( v.show ) and v.show() then
 			local btn = vgui.Create( "DButton", side_menu )
 			btn:SetTall( h * 0.05 )
 			btn:Dock( TOP )
@@ -323,6 +365,7 @@ hook.Add( "SLCGamemodeLoaded", "SLCSettings", function()
 	hook.Run( "SLCRegisterSettings" )
 
 	for k, v in pairs( SLC_SETTINGS ) do
+		if v.cvar then continue end
 		DEFAULT_SETTINGS[k] = v.default
 	end
 
@@ -363,6 +406,7 @@ end )
 
 hook.Add( "SLCFactoryReset", "SLCSettingsReset", function()
 	for k, v in pairs( SLC_SETTINGS ) do
+		if v.cvar then continue end
 		v.value = v.default
 	end
 
@@ -387,7 +431,7 @@ AddSettingsPanel( "binds", function( parent )
 	local w, h = ScrW(), ScrH()
 	for i, v in ipairs( binds ) do
 		local pnl = vgui.Create( "DPanel", parent )
-		pnl:SetTall( h * 0.08 )
+		pnl:SetTall( h * 0.07 )
 		pnl:Dock( TOP )
 		pnl:DockMargin( 0, h * 0.01, 0, 0 )
 
@@ -396,7 +440,7 @@ AddSettingsPanel( "binds", function( parent )
 			surface.DrawLine( 0, ph - 1, pw, ph - 1 )
 		end
 
-		local options_margin = w * 0.008
+		local options_margin = w * 0.006
 		local options = vgui.Create( "DPanel", pnl )
 		options:SetWide( h * 0.16 )
 		options:Dock( RIGHT )
@@ -404,7 +448,7 @@ AddSettingsPanel( "binds", function( parent )
 
 		options.Paint = function( self, pw, ph ) end
 
-		local btn_width = h * 0.08 - options_margin * 1.5
+		local btn_width = h * 0.07 - options_margin * 1.5
 
 		local clear_btn
 		local reset_btn = vgui.Create( "DButton", options )
@@ -577,9 +621,9 @@ end, nil, 10000 )
 --[[-------------------------------------------------------------------------
 General config
 ---------------------------------------------------------------------------]]
-local function add_control( parent, data, marg )
-	local w = ScrW()
-
+local color_white = Color( 255, 255, 255 )
+local color_gray = Color( 155, 155, 155 )
+function AddConfigControl( parent, data, marg )
 	if data.stype == "switch" then
 		marg = marg * 1.5
 
@@ -588,12 +632,12 @@ local function add_control( parent, data, marg )
 		switch:SetText( "" )
 		switch:Dock( RIGHT )
 		switch:DockMargin( marg, marg, marg, marg )
-		switch:SetWide( w * 0.066 )
+		switch:SetWide( ScrW() * 0.066 )
 
 		switch.color = data.value and Color( 0, 175, 0 ) or Color( 175, 0, 0 )
 
 		switch.Paint = function( this, pw, ph )
-			draw.RoundedBox( 8, 0, 0, pw, ph, Color( 255, 255, 255 ) )
+			draw.RoundedBox( 8, 0, 0, pw, ph, color_white )
 			draw.RoundedBox( 8, 1, 1, pw - 2, ph - 2, this.color )
 		end
 
@@ -634,7 +678,7 @@ local function add_control( parent, data, marg )
 		end
 
 		inner.Paint = function( this, pw, ph )
-			draw.RoundedBox( 8, 1, 1, pw - 2, ph - 2, Color( 155, 155, 155 ) )
+			draw.RoundedBox( 8, 1, 1, pw - 2, ph - 2, color_gray )
 		end
 
 		switch.PerformLayout = function( this, pw, ph )
@@ -645,62 +689,98 @@ local function add_control( parent, data, marg )
 				inner:SetPos( ph, 0 )
 			end
 		end
+	elseif data.stype == "dropbox" then
+		local w = ScrW()
+
+		local options = {}
+
+		for i, v in ipairs( data.data.list or {} ) do
+			if istable( v ) then
+				options[i] = v
+			else
+				local tab = LANG.settings.config[data.name.."_options"]
+				options[i] = { v, tab and tab[v] or v }
+			end
+		end
+
+		local dropbox = vgui.Create( "SLCDropbox", parent )
+		dropbox:Dock( RIGHT )
+		dropbox:DockMargin( marg, marg, marg, marg )
+		dropbox:SetWide( w * 0.15 )
+		dropbox:SetOptions( options )
+		dropbox:SetActive( data.value )
+
+		dropbox.OnSelect = function( this, id, value )
+			data.value = value
+
+			if data.data.callback then
+				if data.data.callback( value ) == true then return end
+			end
+
+			if data.cvar then
+				data.cvar:SetString( value )
+			end
+		end
 	end
 end
 
 local order = {
-	switch = 1,
-	dropbox = 3,
+	dropbox = 1,
+	switch = 3,
 }
 
-AddSettingsPanel( "config", function( parent )
-	local tab = {}
+function AddConfigPanel( panel_name, sort, def )
+	AddSettingsPanel( panel_name, function( parent )
+		local tab = {}
 
-	for k, v in pairs( SLC_SETTINGS ) do
-		if order[v.stype] and ( !v.panel or v.panel == "config" ) then
-			table.insert( tab, { name = k, data = v, sorting = order[v.stype] } )
-		end
-	end
-
-	table.sort( tab, function( a, b )
-		if a.sorting == b.sorting then
-			return a.sorting < b.sorting
+		for k, v in pairs( SLC_SETTINGS ) do
+			if order[v.stype] and ( def and !v.panel or v.panel == panel_name ) then
+				table.insert( tab, { name = k, data = v, sorting = order[v.stype] } )
+			end
 		end
 
-		return a.data.id < b.data.id
-	end )
+		table.sort( tab, function( a, b )
+			if a.sorting != b.sorting then
+				return a.sorting < b.sorting
+			end
 
-	local w, h = ScrW(), ScrH()
-	local options_margin = w * 0.008
+			return a.data.id < b.data.id
+		end )
 
-	for i, v in ipairs( tab ) do
-		local pnl = vgui.Create( "DPanel", parent )
-		pnl:SetTall( h * 0.08 )
-		pnl:Dock( TOP )
-		pnl:DockMargin( 0, h * 0.01, 0, 0 )
+		local w, h = ScrW(), ScrH()
+		local options_margin = w * 0.006
 
-		pnl.Paint = function( this, pw, ph )
-			surface.SetDrawColor( COLOR.border )
-			surface.DrawLine( 0, ph - 1, pw, ph - 1 )
+		for i, v in ipairs( tab ) do
+			local pnl = vgui.Create( "DPanel", parent )
+			pnl:SetTall( h * 0.06 )
+			pnl:Dock( TOP )
+			pnl:DockMargin( 0, h * 0.01, 0, 0 )
+
+			pnl.Paint = function( this, pw, ph )
+				surface.SetDrawColor( COLOR.border )
+				surface.DrawLine( 0, ph - 1, pw, ph - 1 )
+			end
+
+			AddConfigControl( pnl, v.data, options_margin )
+
+			local name = vgui.Create( "DPanel", pnl )
+			name:Dock( FILL )
+			name:DockMargin( options_margin, options_margin, options_margin, options_margin )
+			name.Paint = function( this, pw, ph )
+				draw.Text{
+					text = LANG.settings.config[v.name] or v.name,
+					pos = { 0, ph * 0.5 },
+					font = "SCPHUDSmall",
+					color = COLOR.white,
+					xalign = TEXT_ALIGN_LEFT,
+					yalign = TEXT_ALIGN_CENTER,
+				}
+			end
 		end
+	end, nil, sort )
+end
 
-		add_control( pnl, v.data, options_margin )
-
-		local name = vgui.Create( "DPanel", pnl )
-		name:Dock( FILL )
-		name:DockMargin( options_margin, options_margin, options_margin, options_margin )
-		name.Paint = function( this, pw, ph )
-			draw.Text{
-				text = LANG.settings.config[v.name] or v.name,
-				pos = { 0, ph * 0.5 },
-				font = "SCPHUDMedium",
-				color = COLOR.white,
-				xalign = TEXT_ALIGN_LEFT,
-				yalign = TEXT_ALIGN_CENTER,
-			}
-		end
-	end
-end, nil, 9000 )
+AddConfigPanel( "general_config", 9000, true )
 
 --[[-------------------------------------------------------------------------
 Reset panel

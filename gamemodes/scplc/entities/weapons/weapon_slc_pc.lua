@@ -16,7 +16,7 @@ SWEP.Primary.Automatic 		= true
 
 SWEP.HoldType 				= "ar2"
 
-SWEP.Charges = 300
+SWEP.Charges = 400
 SWEP.ChargesUsage = 75
 SWEP.DamagePerCharge = 15
 SWEP.DMGType = bit.bor( DMG_RADIATION, DMG_PREVENT_PHYSICS_FORCE )
@@ -90,11 +90,11 @@ function SWEP:Think()
 					local start = owner:GetShootPos()
 					local tr = util.TraceHull( {
 						start = start,
-						endpos = start + owner:GetAimVector() * 1000,
+						endpos = start + owner:GetAimVector() * 5000,
 						mask = MASK_SHOT,
 						filter = { self, owner },
-						mins = Vector( -5, -5, -5 ),
-						maxs = Vector( 5, 5, 5 )
+						mins = Vector( -3, -3, -3 ),
+						maxs = Vector( 3, 3, 3 )
 					} )
 
 					local vic = tr.Entity
@@ -153,7 +153,7 @@ function SWEP:Deploy()
 	if SERVER then
 		local owner = self:GetOwner()
 		if IsValid( owner )  then
-			owner:PushSpeed( 0.3, 0.3, -1, "particle_cannon", 1 )
+			owner:PushSpeed( 0.75, 0.75, -1, "particle_cannon", 1 )
 		end
 	end
 end
@@ -213,7 +213,7 @@ function SWEP:StartSequence()
 	if !IsFirstTimePredicted() then return end
 	self.Enabled = true
 
-	self:QueueAction( STATE.WIND_UP1, 3, function( time, dur )
+	self:QueueAction( STATE.WIND_UP1, 0.75, function( time, dur )
 		self.WheelAcc = CurTime() + dur
 		self:EmitSound( "particle_cannon.windup1" )
 	end )
@@ -230,7 +230,7 @@ end
 
 function SWEP:StopSequence()
 	self.Enabled = false
-	self.Cooldown = CurTime() + 5
+	self.Cooldown = CurTime() + 2
 
 	self:StopSound( "particle_cannon.windup1" )
 	self:StopSound( "particle_cannon.shot" )
@@ -239,9 +239,8 @@ function SWEP:StopSequence()
 		self:EmitSound( "particle_cannon.winddown" )
 	end
 
-	local dur = 2
-	self:ResetAction( STATE.WIND_DOWN, dur )
-	self.WheelAcc = CurTime() + dur
+	self:ResetAction( STATE.WIND_DOWN, 2 )
+	self.WheelAcc = CurTime() + 2
 end
 
 function SWEP:PopSpeed()
@@ -252,8 +251,7 @@ function SWEP:PopSpeed()
 end
 
 function SWEP:AdjustMouseSensitivity()
-	local state = wep:GetState()
-	if state != STATE.IDLE then
+	if self:GetState() != STATE.IDLE then
 		return 0.2
 	end
 end
@@ -322,6 +320,8 @@ if CLIENT then
 	} )*/
 	local laser = GetMaterial( "slc/misc/pc_laser" )
 	local laser_color = Color( 190, 225, 255, 255 )
+	local color_white255 = Color( 255, 255, 255 )
+	local color_white0 = Color( 255, 255, 255, 0 )
 
 	function SWEP:DrawBeams( ent )
 		if self:GetState() == STATE.SHOOTING then
@@ -338,11 +338,11 @@ if CLIENT then
 
 					local trace = util.TraceHull( {
 						start = tr_start,
-						endpos = tr_start + vec * 1000,
+						endpos = tr_start + vec * 5000,
 						mask = MASK_SHOT,
 						filter = { self, owner },
-						mins = Vector( -5, -5, -5 ),
-						maxs = Vector( 5, 5, 5 )
+						mins = Vector( -3, -3, -3 ),
+						maxs = Vector( 3, 3, 3 )
 					} )
 
 					local beam_end = trace.HitPos
@@ -387,7 +387,7 @@ if CLIENT then
 						beam_start,
 						15,
 						tx,
-						Color( 255, 255, 255, 255 )
+						color_white255
 					)
 
 					for i = 1, count - 2 do
@@ -407,7 +407,7 @@ if CLIENT then
 						beam_end,
 						15,
 						tx - 1,
-						Color( 255, 255, 255, 0 )
+						color_white0
 					)
 
 					render.EndBeam()
