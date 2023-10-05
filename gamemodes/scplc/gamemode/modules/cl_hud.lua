@@ -606,6 +606,7 @@ function GM:DrawOverlay()
 	---------------------------------------------------------------------------]]
 	local is_afk = ply:IsAFK()
 	if is_afk or SLCAFKWarning then
+		local lang = LANG.AFK
 		local ww, wh = w * 0.4, h * 0.2
 		local wx, wy = ( w - ww ) * 0.5, h * 0.3
 
@@ -621,18 +622,18 @@ function GM:DrawOverlay()
 		surface.DrawOutlinedRect( wx, wy, ww, wh )
 
 		local dy = wy + wh * 0.05
-		local _, th = draw.SimpleText( is_afk and "Jesteś AFK!" or "Ostrzeżenie AFK", "SCPHUDBig", wx + ww * 0.5, dy, clr, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP )
+		local _, th = draw.SimpleText( is_afk and lang.afk or lang.afk_warn, "SCPHUDBig", wx + ww * 0.5, dy, clr, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP )
 		dy = dy + th + wh * 0.05
 
 		if !is_afk then
-			_, th = draw.SimpleText( "Niedługo zostaniesz zabity i oznaczony jako AFK!", "SCPHUDSmall", wx + ww * 0.5, dy, clr, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP )
+			_, th = draw.SimpleText( lang.slay_warn, "SCPHUDSmall", wx + ww * 0.5, dy, clr, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP )
 			dy = dy + th
 		else
-			_, th = draw.SimpleText( "Nie będziesz się odradzać jako wsparcie oraz na początku rundy!", "SCPHUDSmall", wx + ww * 0.5, dy, clr, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP )
+			_, th = draw.SimpleText( lang.afk_msg, "SCPHUDSmall", wx + ww * 0.5, dy, clr, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP )
 			dy = dy + th
 		end
 
-		_, th = draw.SimpleText( "-- Nacisnij dowolny klawisz aby stać się aktywnym --", "SCPHUDSmall", wx + ww * 0.5, wy + wh - wh * 0.05, clr, TEXT_ALIGN_CENTER, TEXT_ALIGN_BOTTOM )
+		_, th = draw.SimpleText( lang.afk_action, "SCPHUDSmall", wx + ww * 0.5, wy + wh - wh * 0.05, clr, TEXT_ALIGN_CENTER, TEXT_ALIGN_BOTTOM )
 	end
 end
 

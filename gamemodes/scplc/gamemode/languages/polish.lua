@@ -238,6 +238,17 @@ lang.XP_BAR = {
 }
 
 --[[-------------------------------------------------------------------------
+AFK Warning
+---------------------------------------------------------------------------]]
+lang.AFK = {
+	afk = "Jesteś AFK!",
+	afk_warn = "Ostrzeżenie AFK",
+	slay_warn = "Niedługo zostaniesz zabity i oznaczony jako AFK!",
+	afk_msg = "Nie będziesz się odradzać jako wsparcie oraz na początku rundy!",
+	afk_action = "-- Nacisnij dowolny klawisz aby stać się aktywnym --",
+}
+
+--[[-------------------------------------------------------------------------
 Effects
 ---------------------------------------------------------------------------]]
 local effects = {}

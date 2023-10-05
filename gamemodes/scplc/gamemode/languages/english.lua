@@ -236,6 +236,17 @@ lang.XP_BAR = {
 }
 
 --[[-------------------------------------------------------------------------
+AFK Warning
+---------------------------------------------------------------------------]]
+lang.AFK = {
+	afk = "You are AFK!",
+	afk_warn = "AFK Warning",
+	slay_warn = "You are about to be slayed and marked as AFK!",
+	afk_msg = "You won't spawn or receive XP over time!",
+	afk_action = "-- Press any button to become active --",
+}
+
+--[[-------------------------------------------------------------------------
 Effects
 ---------------------------------------------------------------------------]]
 local effects = {}

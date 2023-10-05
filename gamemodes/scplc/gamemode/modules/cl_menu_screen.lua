@@ -398,7 +398,7 @@ html, body {
 	end
 
 	btn_ws.DoClick = function( this )
-		gui.OpenURL( "https://steamcommunity.com/sharedfiles/filedetails/?id=2037536745" )
+		gui.OpenURL( "https://steamcommunity.com/sharedfiles/filedetails/?id=1805981251" )
 	end
 
 	local cb = vgui.Create( "SLCCheckbox", content )
