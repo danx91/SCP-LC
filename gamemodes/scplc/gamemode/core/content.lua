@@ -253,7 +253,7 @@ AddGamemodeContent( "2509724092" ) -- SCP058
 AddGamemodeContent( "931700563" ) -- SCP-066 Playermodel
 AddGamemodeContent( "367531149" ) -- SCP 096 - Nextbot
 AddGamemodeContent( "1267850660" ) -- SCP: Containment Breach - Unity: SCP-106 PM & NPC
-AddGamemodeContent( "1350884815" ) -- SCP: Containment Breach - Unity: SCP-173 PM
+AddGamemodeContent( "2556178016" ) -- SCP-173 [P.M]
 AddGamemodeContent( "905114757" ) -- SCP-682 PM
 AddGamemodeContent( "1272811493" ) -- SCP: Containment Breach - Unity: SCP-939 PM
 AddGamemodeContent( "910206946" ) -- SCP-966 Playermodel & Ragdoll
