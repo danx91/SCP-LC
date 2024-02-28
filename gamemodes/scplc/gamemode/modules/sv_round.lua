@@ -172,7 +172,7 @@ function RestartRound()
 	ResetRoundStats()
 	print( string.format( "Round data reset - %i ms!", util.TimerCycle() ) )
 
-	game.CleanUpMap()
+	game.CleanUpMap( false, {}, function() end )
 	print( string.format( "Map cleaned - %i ms!", util.TimerCycle() ) )
 
 	hook.Run( "SLCRoundCleanup" )
