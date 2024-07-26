@@ -639,7 +639,7 @@ if SERVER then
 		if data.advanced_overload or ent.IsOverloaded then return end
 		if ply:SCPClass() != CLASSES.SCP096 then return end
 
-		local wep = ply:GetProperty( "scp_weapon" )
+		local wep = ply:GetActiveWeapon()
 		if !IsValid( wep ) then return end
 
 		if !wep:GetEnraged() then return end

@@ -188,7 +188,7 @@ if SERVER then
 		local att = dmg:GetAttacker()
 		if !IsValid( att ) or !att:IsPlayer() or att == target or att:SCPTeam() != TEAM_SCP then return end
 
-		local wep = att:GetProperty( "scp_weapon" )
+		local wep = att:GetActiveWeapon()
 		if !IsValid( wep ) or !wep.UpgradeSystemMounted or !wep.ScoreOnDamage then return end
 
 		local score = math.max( dmg:GetDamage(), dmg:GetDamageCustom() )
@@ -200,7 +200,7 @@ if SERVER then
 	hook.Add( "SLCPlayerDeath", "SLCGenericSCPKill", function( ply, att )
 		if !IsValid( ply ) or !ply:IsPlayer() or !IsValid( att ) or !att:IsPlayer() or att == ply or att:SCPTeam() != TEAM_SCP then return end
 
-		local wep = att:GetProperty( "scp_weapon" )
+		local wep = att:GetActiveWeapon()
 		if !IsValid( wep ) then return end
 
 		if wep.UpgradeSystemMounted and wep.ScoreOnKill then

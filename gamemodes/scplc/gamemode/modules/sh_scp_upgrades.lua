@@ -260,7 +260,7 @@ if SERVER then
 
 	net.Receive( "SCPUpgrade", function( len, ply )
 		local id = net.ReadUInt( 8 )
-		local wep = ply:GetProperty( "scp_weapon" )
+		local wep = ply:GetActiveWeapon()
 		if !IsValid( wep ) or !wep.UpgradeSystemMounted then return end
 
 		wep:BuyUpgrade( id )
@@ -297,7 +297,7 @@ if CLIENT then
 		local num = net.ReadUInt( 8 )
 		local total = net.ReadUInt( 8 )
 
-		local wep = LocalPlayer():GetProperty( "scp_weapon" )
+		local wep = LocalPlayer():GetActiveWeapon()
 		if !IsValid( wep ) or !wep.UpgradeSystemMounted then return end
 
 		local cur = wep:GetUpgradePoints()
