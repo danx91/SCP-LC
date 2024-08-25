@@ -24,3 +24,26 @@ function SWEP:UsedOn( target, owner )
 	target:SetMaxExtraHealth( extra )
 	target:SetProperty( "extra_hp_think", CurTime() + 1 )
 end
+
+function SWEP:HandleUpgrade( mode, num_mode, exit, ply )
+	local new_ent
+
+	if num_mode < 2 then
+		self:Remove()
+	elseif num_mode == 2 then
+		new_ent = "item_slc_adrenaline"
+	elseif num_mode == 3 then
+		new_ent = "item_slc_morphine_big"
+	else
+		new_ent = math.random( 2 ) == 1 and "item_slc_morphine_big" or "item_slc_adrenaline_big"
+	end
+
+	if !new_ent then return end
+
+	local new = ents.Create( new_ent )
+	if IsValid( new ) then
+		self:Remove()
+		new:SetPos( exit )
+		new:Spawn()
+	end
+end

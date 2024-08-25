@@ -1,4 +1,7 @@
-function Setup106Collision( ent )
+--[[-------------------------------------------------------------------------
+SCP 106 functions
+---------------------------------------------------------------------------]]
+local function setup_collision_106( ent )
 	if !IsValid( ent ) then return end
 
 	local class = ent:GetClass()
@@ -30,6 +33,14 @@ function Setup106Collision( ent )
 	end
 	
 	ent.ignorecollide106 = true
+end
+
+if CLIENT then
+	hook.Add( "OnEntityCreated", "SCP106Collision", function( ent )
+		timer.Simple( 0, function()
+			setup_collision_106( ent )
+		end )
+	end )
 end
 
 local scp106_bounds = Vector( 32, 15, 55 )
@@ -115,7 +126,10 @@ local function scp106_tp_func( self, ent )
 	end
 
 	if status then
-		local tab = GetGasPower( ZONE_HCZ ) == 0 and pos_106tp_hcz or GetGasPower( ZONE_EZ ) == 0 and pos_106tp_ez or pos_106tp_surf
+		local tab = !GetRoundStat( "omega_warhead" ) and (
+				GetGasPower( ZONE_HCZ ) == 0 and pos_106tp_hcz or ( GetRoundStat( "alpha_warhead" ) or GetGasPower( ZONE_EZ ) == 0 ) and pos_106tp_ez
+			) or pos_106tp_surf
+		
 		ent:SetPos( tab[math.random( #tab )] )
 	else
 		ent:SetPos( pos_106tp_pd[math.random( #pos_106tp_pd )] )
@@ -123,13 +137,189 @@ local function scp106_tp_func( self, ent )
 	end
 end
 
+--[[-------------------------------------------------------------------------
+Door destroying
+
+Must implement:
+	- CanDestroyDoor( ent )
+	- GetDoorEnts( ent )
+	- GetDoorAreaportal( ent )
+	- TranslateDoorModel( ent )
+---------------------------------------------------------------------------]]
+
+MAP_DOOR_PAIRS = MAP_DOOR_PAIRS or {}
+MAP_DOOR_PROPS = MAP_DOOR_PROPS or {}
+MAP_DOOR_AREAPORTALS = MAP_DOOR_AREAPORTALS or {}
+door_allowed_zones = {
+	lcz = true,
+	hcz = true,
+	ez = true,
+}
+
+function CanDestroyDoor( ent )
+	return IsValid( MAP_DOOR_PAIRS[ent] ) and ent:GetVelocity():LengthSqr() < 1
+end
+
+function GetDoorEnts( ent )
+	local other = MAP_DOOR_PAIRS[ent]
+
+	if !other then
+		return {
+			ent,
+			MAP_DOOR_PROPS[ent]
+		}
+	end
+
+	return {
+		ent,
+		other,
+		MAP_DOOR_PROPS[ent],
+		MAP_DOOR_PROPS[other],
+	}
+end
+
+function GetDoorAreaportal( ent )
+	local other = MAP_DOOR_PAIRS[ent]
+	return MAP_DOOR_AREAPORTALS[ent:GetName()] or IsValid( other ) and MAP_DOOR_AREAPORTALS[other:GetName()]
+end
+
+local door_data = {
+	lcz = {
+		model = "models/slc/destroyed_doors/lcz_door.mdl",
+		offset = Vector( 0, 0, -54 ),
+		right = 3,
+		forward = 3,
+		scale = 1.05,
+		yaw = 90,
+	},
+	hcz = {
+		model = "models/slc/destroyed_doors/hcz_door.mdl",
+		offset = Vector( 0, 0, -53 ),
+		right = 2,
+		forward = 1,
+		scale = 1.03,
+		yaw = 90,
+	},
+}
+
+local hcz_fix = {
+	["models/foundation/doors/hcz_door_01.mdl"] = Vector( 0, -12, 0 ),
+	["models/foundation/doors/hcz_door_02.mdl"] = Vector( 0, 8, 0 ),
+}
+
+door_data.ez = door_data.lcz
+
+function TranslateDoorModel( ent, breach_ang )
+	local zone = string.match( ent:GetName(), "^(%w+)_door_" )
+	if !zone then return end
+
+	local prop = MAP_DOOR_PROPS[ent]
+	if !prop then return end
+
+	local data = door_data[zone]
+	if !data then return end
+
+	local ang = prop:GetAngles()
+	ang.y = ang.y + data.yaw
+
+	local right = data.right
+	local forward = data.forward
+
+	if math.abs( math.AngleDifference( breach_ang.y, ang.y ) ) > 90 then
+		ang.y = ang.y + 180
+	end
+
+	local pos = prop:GetPos()
+
+	local other = MAP_DOOR_PAIRS[ent]
+	if IsValid( other ) then --calculate center based on model bounds of both parts of door
+		local other_pos = other:GetPos()
+		local mins, maxs = prop:GetModelBounds()
+		local other_mins, other_maxs = other:GetModelBounds()
+
+		//debugoverlay.Box( pos, mins, maxs, 15, Color( 255, 0, 0, 20 ) )
+		//debugoverlay.Box( other_pos, other_mins, other_maxs, 15, Color( 0, 255, 0, 20 ) )
+
+		mins = pos + mins
+		maxs = pos + maxs
+
+		other_mins = other_pos + other_mins
+		other_maxs = other_pos + other_maxs
+
+		OrderVectors( mins, other_mins )
+		OrderVectors( other_maxs, maxs )
+
+		
+		pos = ( mins + maxs ) / 2
+		//debugoverlay.Box( pos, mins - pos, maxs - pos, 15, Color( 0, 0, 255, 20 ) )
+	end
+
+	pos = pos + data.offset + ang:Right() * right + ang:Forward() * forward
+
+	if zone == "hcz" and math.abs( math.abs( prop:GetAngles().y ) - 90 ) < 1 then
+		pos = pos + hcz_fix[prop:GetModel()]
+	end
+
+	//debugoverlay.Axis( pos, Angle( 0 ), 15, 15, true )
+
+	return data.model, pos, ang, data.scale
+end
+
+--[[-------------------------------------------------------------------------
+It turns out that author of site19 missed some things during map creation like fcking door being wrongly named and now I have to fix it in code
+because, yes you guessed correctly, he will not give vmf file to fix it and, yes you are also correct, he isn't going to fix it either...
+Also, idk how the hell this "very skilled" mapper managed to make half of the fcking doors to have wrongly oriented fcking bounding boxes...
+---------------------------------------------------------------------------]]
+FRENCH_MAP_FIXED = FRENCH_MAP_FIXED or false
+FRENCH_DOOR_SWAP = FRENCH_DOOR_SWAP or {}
+
+local function fix_french_map()
+	FRENCH_MAP_FIXED = true
+
+	print( "French Map Fixer™" )
+
+	local mismatch = {}
+	for k, v in pairs( MAP_DOOR_PAIRS ) do
+		if k:GetPos():DistToSqr( v:GetPos() ) > 2500 then
+			mismatch[k] = true
+		end
+	end
+
+	for door, _ in pairs( mismatch ) do
+		local fix = false
+		local near = ents.FindInSphere( door:GetPos(), 50 )
+		for _, ent in ipairs( near ) do
+			if ent == door or ent:GetClass() != "func_door" then continue end
+
+			FRENCH_DOOR_SWAP[door:GetName()] = ent:GetName()
+			fix = true
+
+			break
+		end
+
+		if !fix then
+			FRENCH_DOOR_SWAP[door:GetName()] = false
+		end
+	end
+end
+
+--[[-------------------------------------------------------------------------
+Map related hooks
+---------------------------------------------------------------------------]]
 hook.Add( "SLCPreround", "Site19Preround", function()
+	local door_lookup = {}
+	local MAP_DOOR_PAIRS_TMP = {}
+
+	MAP_DOOR_AREAPORTALS = {}
+	MAP_DOOR_PAIRS = {}
+	MAP_DOOR_PROPS = {}
+
 	for i, v in ipairs( ents.GetAll() ) do
 		local name = v:GetName()
 		local class = v:GetClass()
 		local mapid = v:MapCreationID()
 
-		Setup106Collision( v )
+		setup_collision_106( v )
 
 		if name == "049_hall_button" then
 			v:Fire( "Unlock" )
@@ -137,16 +327,36 @@ hook.Add( "SLCPreround", "Site19Preround", function()
 			v:SetKeyValue( "forceclosed", "1" )
 		elseif name == "049_door" then
 			v:SetKeyValue( "forceclosed", "1" )
-		elseif name == "4016" then
+		elseif name == "4016" then --Remove melon
 			v:Remove()
-		elseif mapid == 3097 or mapid == 3096 then
+		elseif mapid == 3097 or mapid == 3096 then --Remove ?
 			v:Remove()
-		elseif mapid == 3240 then
+		elseif mapid == 3240 then --Unlock Gate B
 			v:Fire( "Unlock" )
 		end
 		
-		if class == "func_door" and string.match( name, "^elve_" ) then
+		if class == "func_door" and string.match( name, "^elev_" ) then
 			v:SetKeyValue( "dmg", 0 )
+		end
+
+		if class == "func_areaportal" then
+			MAP_DOOR_AREAPORTALS[v:GetKeyValues().target] = v
+		end
+
+		local door_zone, door_id = string.match( name, "^(%w-)_door_[12]_(%d+)$" )
+		if door_zone and door_id and door_allowed_zones[door_zone] then
+			door_lookup[name] = v
+
+			if !MAP_DOOR_PAIRS_TMP[door_zone] then
+				MAP_DOOR_PAIRS_TMP[door_zone] = {}
+			end
+
+			if !MAP_DOOR_PAIRS_TMP[door_zone][door_id] then
+				MAP_DOOR_PAIRS_TMP[door_zone][door_id] = {}
+			end
+
+			table.insert( MAP_DOOR_PAIRS_TMP[door_zone][door_id], v )
+			MAP_DOOR_PROPS[v] = v:GetChildren()[1]
 		end
 
 		local pos = v:GetPos()
@@ -196,6 +406,33 @@ hook.Add( "SLCPreround", "Site19Preround", function()
 	CatchInput( "gate_b_enter", function( ent, input, activator, caller, data )
 		if input == "Lock" then return true end
 	end )
+
+	for _, zone in pairs( MAP_DOOR_PAIRS_TMP ) do
+		for _, doors in pairs( zone ) do
+			if #doors != 2 then continue end
+
+			MAP_DOOR_PAIRS[doors[1]] = doors[2]
+			MAP_DOOR_PAIRS[doors[2]] = doors[1]
+		end
+	end
+
+	if !FRENCH_MAP_FIXED then
+		fix_french_map()
+	end
+
+	for k, v in pairs( FRENCH_DOOR_SWAP ) do
+		local k_lookup = door_lookup[k]
+		if !k_lookup then continue end
+
+		if v == false then
+			MAP_DOOR_PAIRS[k_lookup] = nil
+		else
+			local v_lookup = door_lookup[v]
+			if !v_lookup then continue end
+
+			MAP_DOOR_PAIRS[k_lookup] = v_lookup
+		end
+	end
 end )
 
 hook.Add( "EntityKeyValue", "Site19EntityKeyValue", function( ent, key, value )
@@ -221,11 +458,3 @@ hook.Add( "EntityKeyValue", "Site19EntityKeyValue", function( ent, key, value )
 		end
 	end
 end )
-
-if CLIENT then
-	hook.Add( "OnEntityCreated", "SCP106Collision", function( ent )
-		timer.Simple( 0, function()
-			Setup106Collision( ent )
-		end )
-	end )
-end

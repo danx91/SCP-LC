@@ -16,13 +16,21 @@ ROUND = ROUND or {
 Global functions
 ---------------------------------------------------------------------------]]
 function SetupSupportTimer()
-	local time, max = string.match( string.gsub( CVAR.slc_support_spawnrate:GetString(), "%s", "" ), "(%d+),*(%d*)" )
+	local time
 
-	time = tonumber( time )
-	max = tonumber( max )
+	local override = GetRoundProperty( "SupportTimerOverride" )
+	if override then
+		SetRoundProperty( "SupportTimerOverride", nil )
+		time = override
+	else
+		time, max = string.match( string.gsub( CVAR.slc_support_spawnrate:GetString(), "%s", "" ), "(%d+),*(%d*)" )
 
-	if max then
-		time = math.random( time, max )
+		time = tonumber( time )
+		max = tonumber( max )
+
+		if max then
+			time = math.random( time, max )
+		end
 	end
 
 	AddTimer( "SupportTimer", time, 1, function( self, n )
@@ -60,7 +68,11 @@ end
 function GetRoundProperty( key, def )
 	if !ROUND.active then return end
 
-	return ROUND.properties[key] or def
+	if !ROUND.properties[key] and def then
+		ROUND.properties[key] = def
+	end
+
+	return ROUND.properties[key]
 end
 
 --[[-------------------------------------------------------------------------
@@ -78,7 +90,9 @@ local function DestroyTimers()
 end
 
 local function CleanupPlayers()
-	for k, v in pairs( player.GetAll() ) do
+	for i, v in ipairs( player.GetAll() ) do
+		if v:GetAdminMode() then continue end
+
 		v._SLCXPCategories = {}
 
 		v.PlayerData:RoundReset()
@@ -106,7 +120,6 @@ local function ResetEvents()
 	ROUND.properties = {}
 	ROUND.winners = {}
 
-	//ROUND.queue = {}
 	ClearQueue()
 	ClearSCPHooks()
 
@@ -172,95 +185,96 @@ function RestartRound()
 	ResetRoundStats()
 	print( string.format( "Round data reset - %i ms!", util.TimerCycle() ) )
 
-	game.CleanUpMap()
-	print( string.format( "Map cleaned - %i ms!", util.TimerCycle() ) )
+	game.CleanUpMap( false, {}, function()
+		print( string.format( "Map cleaned - %i ms!", util.TimerCycle() ) )
 
-	hook.Run( "SLCRoundCleanup" )
-	print( string.format( "Everything is ready -  total time: %.5f ms!", ( SysTime() - t_start ) * 1000 ) )
+		hook.Run( "SLCRoundCleanup" )
+		print( string.format( "Everything is ready -  total time: %.5f ms!", ( SysTime() - t_start ) * 1000 ) )
 
-	if #GetActivePlayers() < CVAR.slc_min_players:GetInt() then
-		MsgC( Color( 255, 50, 50 ), "Not enough players to start round! Round restart canceled!\n" )
-		ROUND.active = false
+		if #GetActivePlayers() < CVAR.slc_min_players:GetInt() then
+			MsgC( Color( 255, 50, 50 ), "Not enough players to start round! Round restart canceled!\n" )
+			ROUND.active = false
 
-		for k, v in pairs( player.GetAll() ) do
-			v:KillSilent()
-			v:InvalidatePlayerForSpectate()
-			v:SetupSpectator()
-		end
-
-		net.Start( "RoundInfo" )
-			net.WriteTable{
-				status = "off",
-			}
-		net.Broadcast()
-
-		return
-	end
-
-	UpdateRoundType()
-
-	print( "Initializing round..." )
-
-	SLCHooks.__PreventUpdate = true
-	ROUND.roundtype:init()
-	SLCHooks.__PreventUpdate = false
-
-	TransmitSCPHooks()
-
-	ROUND.preparing = true
-	ROUND.infoscreen = true
-
-	local prep = CVAR.slc_time_preparing:GetInt()
-
-	net.Start( "RoundInfo" )
-		net.WriteTable{
-			status = "inf",
-			time = CurTime() + INFO_SCREEN_DURATION,
-			duration = INFO_SCREEN_DURATION,
-			name = ROUND.roundtype.name,
-		}
-	net.Broadcast()
-	//print( string.format( "Took %i ms!", util.TimerCycle() ) )
-
-	AddTimer( "SLCSetup", INFO_SCREEN_DURATION, 1, function()
-		CheckSpectatorMode( true )
-
-		ROUND.infoscreen = false
-		hook.Run( "SLCPreround", prep )
-
-		net.Start( "RoundInfo" )
-			net.WriteTable{
-				status = "pre",
-				time = CurTime() + prep,
-				duration = prep,
-				name = ROUND.roundtype.name,
-			}
-		net.Broadcast()
-
-		AddTimer( "SLCPreround", prep, 1, function()
-			print( "Preparing end, starting round..." )
-			ROUND.preparing = false
-			ROUND.roundtype:roundstart()
-
-			local endcheck = AddTimer( "SLCRoundEndCheck", 10, 0, CheckRoundEnd )
-			local round = CVAR.slc_time_round:GetInt()
-
-			hook.Run( "SLCRound", round )
+			for i, v in ipairs( player.GetAll() ) do
+				v:KillSilent()
+				v:InvalidatePlayerForSpectate()
+				v:SetupSpectator()
+			end
 
 			net.Start( "RoundInfo" )
 				net.WriteTable{
-					status = "live",
-					time = CurTime() + round,
-					duration = round
+					status = "off",
 				}
 			net.Broadcast()
 
-			AddTimer( "SLCRound", round, 1, function( _, _, winner )
-				if winner != nil or ESCAPE_STATUS == 0 then
-					FinishRoundInternal( winner, endcheck )
-				else
-					StartAftermatch( endcheck )
-				end
+			return
+		end
+
+		UpdateRoundType()
+
+		print( "Initializing round..." )
+
+		SCPHooks.__PreventUpdate = true
+		ROUND.roundtype:init()
+		SCPHooks.__PreventUpdate = false
+
+		TransmitSCPHooks()
+
+		ROUND.preparing = true
+		ROUND.infoscreen = true
+
+		local prep = CVAR.slc_time_preparing:GetInt()
+
+		net.Start( "RoundInfo" )
+			net.WriteTable{
+				status = "inf",
+				time = CurTime() + INFO_SCREEN_DURATION,
+				duration = INFO_SCREEN_DURATION,
+				name = ROUND.roundtype.name,
+			}
+		net.Broadcast()
+		//print( string.format( "Took %i ms!", util.TimerCycle() ) )
+
+		AddTimer( "SLCSetup", INFO_SCREEN_DURATION, 1, function()
+			CheckSpectatorMode( true )
+
+			ROUND.infoscreen = false
+			hook.Run( "SLCPreround", prep )
+
+			net.Start( "RoundInfo" )
+				net.WriteTable{
+					status = "pre",
+					time = CurTime() + prep,
+					duration = prep,
+					name = ROUND.roundtype.name,
+				}
+			net.Broadcast()
+
+			AddTimer( "SLCPreround", prep, 1, function()
+				print( "Preparing end, starting round..." )
+				ROUND.preparing = false
+				ROUND.roundtype:roundstart()
+
+				local endcheck = AddTimer( "SLCRoundEndCheck", 10, 0, CheckRoundEnd )
+				local round = CVAR.slc_time_round:GetInt()
+
+				hook.Run( "SLCRound", round )
+
+				net.Start( "RoundInfo" )
+					net.WriteTable{
+						status = "live",
+						time = CurTime() + round,
+						duration = round
+					}
+				net.Broadcast()
+
+				AddTimer( "SLCRound", round, 1, function( _, _, winner )
+					if winner != nil or ESCAPE_STATUS == 0 then
+						FinishRoundInternal( winner, endcheck )
+					else
+						StartAftermatch( endcheck )
+					end
+				end )
 			end )
 		end )
 	end )
@@ -440,7 +454,7 @@ function GM:SLCPostround( winner )
 	alivexp = tonumber( alivexp )
 	winxp = tonumber( winxp )
 
-	for k, v in pairs( player.GetAll() ) do
+	for i, v in ipairs( player.GetAll() ) do
 		local frags = v:Frags()
 		v:SetFrags( 0 )
 
@@ -461,7 +475,7 @@ function GM:SLCPostround( winner )
 	end
 
 	--Send xp summary
-	for k, v in pairs( player.GetAll() ) do
+	for i, v in ipairs( player.GetAll() ) do
 		net.Start( "SLCXPSummary" )
 			net.WriteTable( v:ExperienceSummary() )
 		net.Send( v )

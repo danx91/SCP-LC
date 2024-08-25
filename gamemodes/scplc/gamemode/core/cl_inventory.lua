@@ -87,8 +87,8 @@ function SLCInventory:New( name, size_x, size_y, ent )
 		total_w = total_w - margin - tab.InfoW
 	end
 
-	tab.PosX = (w - total_w) / 2
-	tab.PosY = (h - ch) / 2
+	tab.PosX = ( w - total_w ) / 2
+	tab.PosY = ( h - ch ) / 2
 	
 	
 	tab.Items = {}
@@ -132,7 +132,7 @@ function SLCInventory:Draw()
 	if !self.Valid then return end
 	self.Drawn = true
 
-	if IsEQVisible() then return end
+	if RunGUISkinFunction( "eq", "is_visible" ) then return end
 
 	if !vgui.CursorVisible() then
 		gui.EnableScreenClicker( true )
@@ -261,7 +261,7 @@ function SLCInventory:DrawSlot( i, j, s )
 	surface.SetDrawColor( 0, 0, 0, 150 )
 	surface.DrawRect( x, y, slot, slot )
 
-	local num = (j - 1) * self.SizeX + i
+	local num = ( j - 1 ) * self.SizeX + i
 	local item = self.Items[num]
 	if item then
 		local in_slot = mx >= x and mx <= x + slot and my >= y and my <= y + slot
@@ -358,6 +358,8 @@ end
 
 function SLCInventory:DrawInfo()
 	local ent = self.Entity
+	if !IsValid( ent ) then return end
+
 	local x, y = self.PosX, self.PosY
 	local marg = self.Margin
 	local info_w = self.InfoW

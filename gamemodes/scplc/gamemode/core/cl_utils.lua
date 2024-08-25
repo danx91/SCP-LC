@@ -1,4 +1,5 @@
 local color_white = Color( 255, 255, 255 )
+local color_grey = Color( 155, 155, 155 )
 --[[-------------------------------------------------------------------------
 Player message
 ---------------------------------------------------------------------------]]
@@ -438,9 +439,10 @@ Wheel menu. Used by SCP 049
 {
 	@param		[table]			
 	{
-		@param		[string]		1					Path to material
-		@param		[string]		2					Display name of option
-		@param		[any]			3					Any value that is passed to callback
+		@param		[string]		mat					Path to material
+		@param		[string]		name				Display name of option
+		@param		[string]		desc				Description
+		@param		[any]			data				Any value that is passed to callback
 	}
 	...
 }
@@ -452,9 +454,17 @@ Wheel menu. Used by SCP 049
 function OpenWheelMenu( options, cb, sc, exmat )
 	if wheel_visible then return end
 
-	wheel_options = { { exmat, LANG.exit } }
-	for i, v in ipairs( options ) do
-		table.insert( wheel_options, { v[1], v[2], v[3] } )
+	wheel_options = table.Copy( options )
+	table.insert( wheel_options, 1, {
+		mat = exmat,
+		name = LANG.exit
+	} )
+
+	local max_w = ScrW() * 0.25
+	for i, v in ipairs( wheel_options ) do
+		if !v.desc then continue end
+
+		v.desc = markup.Parse( "<font=SCPHUDSmall>"..v.desc.."</font>", max_w )
 	end
 
 	wheel_cb = cb
@@ -462,7 +472,6 @@ function OpenWheelMenu( options, cb, sc, exmat )
 	wheel_visible = true
 	gui.EnableScreenClicker( true )
 end
-
 
 --[[-------------------------------------------------------------------------
 CloseWheelMenu()
@@ -493,7 +502,7 @@ function CloseWheelMenu()
 	end
 
 	if wheel_cb then
-		wheel_cb( wheel_options[selected][3] )
+		wheel_cb( wheel_options[selected].data )
 	end
 
 	wheel_visible = false
@@ -539,6 +548,8 @@ hook.Add( "HUDPaint", "SLCWheelMenu", function()
 	local cx, cy = w * 0.5, h * 0.5
 
 	for i = 1, seg do
+		local tab = wheel_options[i]
+
 		if i == selected then
 			surface.SetDrawColor( 100, 100, 100 )
 		else
@@ -546,42 +557,51 @@ hook.Add( "HUDPaint", "SLCWheelMenu", function()
 		end
 		
 		draw.NoTexture()
-		surface.DrawRing( cx, cy, inner, thickness, ang, 40, 2, ang * (i - 1) )
+		surface.DrawRing( cx, cy, inner, thickness, ang, 40, 2, ang * ( i - 1 ) )
 
-		local la = math.rad( ang * (i - 1) )
+		local la = math.rad( ang * ( i - 1 ) )
 		local dlx, dly = math.sin( la ), -math.cos( la )
 
 		surface.SetDrawColor( 200, 200, 200 )
 		surface.DrawLine( cx + dlx * inner, cy + dly * inner, cx + dlx * outer, cy + dly * outer )
 		
-		if wheel_options[i][1] then
+		if tab.mat then
 			surface.SetDrawColor( 255, 255, 255 )
-			surface.SetMaterial( GetMaterial( wheel_options[i][1], "smooth" ) )
+			surface.SetMaterial( GetMaterial( tab.mat, "smooth" ) )
 
 			local dist = inner + thickness * 0.5
-			local a = math.rad( ang * 0.5 + ang * (i - 1) )
+			local a = math.rad( ang * 0.5 + ang * ( i - 1 ) )
 			local drx, dry = math.sin( a ) * dist, -math.cos( a ) * dist
 
 			local size = w * 0.035
 			surface.DrawTexturedRect( cx + drx - size * 0.5, cy + dry - size * 0.5, size, size )
 		end
 
-		if i == selected then
-			local marg_w, marg_h = w * 0.01, h * 0.005
-			local tw, th = draw.TextSize( wheel_options[i][2], "SCPHUDSmall" )
+		if i != selected then continue end
 
-			surface.SetDrawColor( 0, 0, 0, 150 )
-			surface.DrawRect( cx - tw * 0.5 - marg_w, h * 0.45 - th * 0.5 - marg_h, tw + marg_w * 2, th + marg_h * 2 )
+		local marg_w, marg_h = w * 0.01, h * 0.005
+		local tw, th = draw.TextSize( tab.name, "SCPHUDSmall" )
 
-			draw.LimitedText{
-				text = wheel_options[i][2],
-				pos = { cx, h * 0.45 },
-				color = Color( 255, 255, 255, 255 ),
-				font = "SCPHUDSmall",
-				xalign = TEXT_ALIGN_CENTER,
-				yalign = TEXT_ALIGN_CENTER,
-			}
-		end
+		surface.SetDrawColor( 0, 0, 0, 150 )
+		surface.DrawRect( cx - tw * 0.5 - marg_w, h * 0.45 - th * 0.5 - marg_h, tw + marg_w * 2, th + marg_h * 2 )
+
+		draw.Text{
+			text = tab.name,
+			pos = { cx, h * 0.45 },
+			color = Color( 255, 255, 255, 255 ),
+			font = "SCPHUDSmall",
+			xalign = TEXT_ALIGN_CENTER,
+			yalign = TEXT_ALIGN_CENTER,
+		}
+
+		if !tab.desc then continue end
+
+		local dsc_w, dsc_h = tab.desc:Size()
+
+		surface.SetDrawColor( 0, 0, 0, 150 )
+		surface.DrawRect( cx + outer + marg_w, h * 0.5 - dsc_h * 0.5 - marg_h, dsc_w + marg_w * 2, dsc_h + marg_h * 2 )
+
+		tab.desc:Draw( cx + outer + marg_w * 2, h * 0.5 - dsc_h * 0.5 )
 	end
 end )
 
@@ -683,7 +703,7 @@ function SetProgressBarColor( border, fill, blend )
 		if blend and type( fill ) != "function" then
 			COLOR_PROGRESS_FILL = function( f, i, seg )
 				if i == seg then
-					return Color( fill.r, fill.g, fill.b, ( 1 - i + f / 0.05) * 255 )
+					return Color( fill.r, fill.g, fill.b, ( 1 - i + f / 0.05 ) * 255 )
 				else
 					return fill
 				end
@@ -759,7 +779,7 @@ hook.Add( "DrawOverlay", "SLCProgressBar", function()
 	if PROGRESS_ENABLED then
 		local w, h = ScrW(), ScrH()
 
-		local ratio = (w * 0.075) / (h * 0.24)
+		local ratio = ( w * 0.075 ) / ( h * 0.24 )
 
 		local bar_w = w * 0.27
 		local bar_h = h * 0.04
@@ -913,6 +933,8 @@ function ClientsideSound( file, ent )
 		ent = game.GetWorld()
 	end
 
+	if ent == NULL then return end
+
 	local sound
 	if !PrecachedSounds[file] then
 		sound = CreateSound( ent, file, nil )
@@ -934,6 +956,8 @@ net.Receive( "PlaySound", function( len )
 
 	if com then
 		local snd = ClientsideSound( f )
+		if !snd then return end
+
 		snd:SetSoundLevel( 0 )
 		snd:Play()
 		snd:ChangeVolume( vol )
@@ -1065,7 +1089,18 @@ function SLCPopup( name, text, keep, callback, ... )
 	end
 
 	for i = 1, #options do
-		local width = draw.TextSize( options[i], "SCPHUDMedium" ) + w * 0.01
+		local option = options[i]
+		local b_text = "?"
+		local b_critical = false
+
+		if istable( option ) then
+			b_text = option[1]
+			b_critical = option[2]
+		else
+			b_text = option
+		end
+
+		local width = draw.TextSize( b_text, "SCPHUDMedium" ) + w * 0.01
 
 		if width < w * 0.08 then
 			width = w * 0.08
@@ -1078,20 +1113,30 @@ function SLCPopup( name, text, keep, callback, ... )
 		btn:DockMargin( 5, 5, 5, 5 )
 		btn:SetWide( width )
 		btn:SetText( "" )
+
+		if b_critical then
+			btn.critical = RealTime() + 5
+		end
+
 		btn.Paint = function( self, pw, ph )
-			surface.SetDrawColor( 255, 255, 255, 255 )
+			local lock = self.critical and self.critical > RealTime()
+
+			surface.SetDrawColor( lock and color_grey or color_white )
 			surface.DrawOutlinedRect( 0, 0, pw, ph )
 
 			draw.Text{
-				text = options[i],
+				text = lock and math.ceil( self.critical - RealTime() ) or b_text,
 				pos = { pw * 0.5, ph * 0.5 },
 				font = "SCPHUDSmall",
-				color = color_white,
+				color = lock and color_grey or color_white,
 				xalign = TEXT_ALIGN_CENTER,
 				yalign = TEXT_ALIGN_CENTER,
 			}
 		end
+
 		btn.DoClick = function( self )
+			if self.critical and self.critical > RealTime() then return end
+
 			popup:Close()
 
 			if isfunction( callback ) then
@@ -1113,3 +1158,53 @@ hook.Add( "Think", "SLCPopupThink", function()
 		end
 	end
 end )
+
+--[[-------------------------------------------------------------------------
+Tooltip
+---------------------------------------------------------------------------]]
+local tooltip
+
+hook.Add( "DrawOverlay", "SLCToolTip", function()
+	if !tooltip then
+		local hovered = vgui.GetHoveredPanel()
+		if IsValid( hovered ) and hovered.SLCToolTip then
+			tooltip = hovered.SLCToolTip
+		end
+	end
+
+	if tooltip then
+		local tmp = tooltip
+		tooltip = nil
+
+		local sw, sh = ScrW(), ScrH()
+
+		if GetSettingsValue( "hud_windowed_mode" ) then
+			sh = sh * 0.97
+		end
+
+		local w, h = tmp:GetWidth() + 16, tmp:GetHeight() + 16
+		local x, y = input.GetCursorPos()
+
+		x = x + 16
+
+		if x + w > sw then
+			x = sw - w
+		end
+
+		if y + h > sh then
+			y = sh - h
+		end
+
+		surface.SetDrawColor( 16, 16, 16, 235 )
+		surface.DrawRect( x, y, w, h )
+
+		surface.SetDrawColor( 128, 128, 128 )
+		surface.DrawOutlinedRect( x, y, w, h )
+
+		tmp:Draw( x + 8, y + 8, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP, 255, TEXT_ALIGN_LEFT )
+	end
+end )
+
+function SLCToolTip( obj )
+	tooltip = obj
+end

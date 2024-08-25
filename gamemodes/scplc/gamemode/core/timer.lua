@@ -185,7 +185,7 @@ hook.Add( "Tick", "TimersTick", function()
 	end
 
 	if SERVER then
-		for k, v in pairs( player.GetAll() ) do
+		for i, v in ipairs( player.GetAll() ) do
 			local tab = v:GetProperty( "slc_timers" )
 			if tab then
 				for _, t in pairs( tab ) do
@@ -251,13 +251,9 @@ if SERVER then
 	local PLAYER = FindMetaTable( "Player" )
 
 	function PLAYER:AddTimer( name, time, repeats, callback, endcallback, noactivete, nooverride )
-		//local t = Timer( name..self:SteamID(), time, repeats, callback, endcallback, noactivete, false )
 		local t = Timer( name, time, repeats, callback, endcallback, noactivete, true )
 
-		local tab = self:GetProperty( "slc_timers" )
-		if !tab then
-			tab = self:SetProperty( "slc_timers", {} )
-		end
+		local tab = self:GetProperty( "slc_timers", {} )
 
 		local old = tab[name]
 		if IsValid( old ) then
@@ -274,22 +270,16 @@ if SERVER then
 	end
 
 	function PLAYER:GetTimer( name )
-		local tab = self:GetProperty( "slc_timers" )
-		if !tab then
-			tab = self:SetProperty( "slc_timers", {} )
-		end
+		local tab = self:GetProperty( "slc_timers", {} )
 
 		//return tab[name..self:SteamID()]
 		return tab[name]
 	end
 
-	hook.Add( "SLCPlayerCleanup", "SLCPlayerTimers", function( p )
-		local tab = p:GetProperty( "slc_timers" )
-		if tab then
-			for k, v in pairs( tab ) do
-				if IsValid( v ) then
-					v:Destroy()
-				end
+	hook.Add( "SLCPlayerCleanup", "SLCPlayerTimers", function( ply )
+		for k, v in pairs( ply:GetProperty( "slc_timers", {} ) ) do
+			if IsValid( v ) then
+				v:Destroy()
 			end
 		end
 	end )

@@ -1,11 +1,13 @@
 --[[-------------------------------------------------------------------------
 Language: Chinese
 Date: 12.08.2021
-Translated by: xiaobai
-Updated in day 12.08.2021 by: Zaptyp (https://steamcommunity.com/id/Zaptyp/)
+Translated by: Luke (aka xiaobai)
 ---------------------------------------------------------------------------]]
 
 local lang = {}
+
+lang.self = "Chinese" --Language name (not translated)
+lang.self_en = "Chinese" --Language name (in english)
 
 --[[-------------------------------------------------------------------------
 NRegistry
@@ -13,55 +15,69 @@ NRegistry
 lang.NRegistry = {
 	scpready = "你可能在下一轮被选为SCP",
 	scpwait = "你必须等待 %i 回合才能以 SCP 的身份进行游戏",
-	abouttostart = "游戏将在 %i 秒后开始！",
+	abouttostart = "游戏将在 %i 秒后开始!",
 	kill = "你获得了 %d 分 敌方团队 %s 敌方名字 %s！",
-	assist = "你获得了 %d 分，因为你协助玩家杀死了 %s ",
-	rdm = "你失去了 %d 分，因为你杀死了 %s ",
-	acc_denied = "拒绝访问",
+	kill_n = "你击杀了 %s: %s!",
+	assist = "你获得了 %d 分，因为你协助玩家杀死了 %s",
+	rdm = "你失去了 %d 分 因为你杀死了 %s: %s!",
+	acc_denied = "访问被拒绝",
 	acc_granted = "允许访问",
 	acc_omnitool = "需要读卡器才能开启这扇门",
 	device_noomni = "操作此设备需要读卡器",
 	elevator_noomni = "启动此电梯需要读卡器",
-	acc_wrong = "执行此操作需要级别更高的权限芯片",
+	acc_wrong = "执行此操作需要更高等级的权限芯片",
 	rxpspec = "你在服务器上游玩获得 %i 点经验！",
 	rxpplay = "因为你还活着因此你获得了 %i 点经验！",
 	rxpplus = "因为你超强的生存能力因此你获得了 %i 点经验！",
 	roundxp = "你的积分换的了 %i 点经验",
 	gateexplode = "A门爆破时间：%i",
-	explodeterminated = "A门爆破已停止 ",
+	explodeterminated = "A门爆破已中止",
 	r106used = "SCP 106 重新收容程序每回合只能启动一次",
 	r106eloiid = "停止运行 ELO-IID 电磁场来启动 SCP 106 重新收容程序",
-	r106sound = "打开设施广播来吸引 SCP 106 回到收容间",
-	r106human = "需要玩家进入收容间才能启动 SCP 106 重新收容程序",
+	r106sound = "打开设施广播来吸引 SCP 106 返回到收容室",
+	r106human = "需要有人进入收容间才能启动 SCP 106 重新收容程序",
 	r106already = "SCP 106 已被重新收容",
 	r106success = "你因成功重新收容 SCP 106 而获得了 %i 点经验",
 	vestpickup = "你穿上了护甲",
 	vestdrop = "你脱掉了护甲",
-	hasvest = "你穿上了一个护甲！你可以打开你的物品栏脱掉它",
-	escortpoints = "你因护送你的目标而获得 %i 点数",
+	hasvest = "你已经拥有一个护甲！你可以打开你的物品栏脱掉它",
+	escortpoints = "你因护送你的目标而获得 %i 分",
 	femur_act = "大腿粉碎机启动...",
-	levelup = "你升级了！ 你当前的等级是：%i",
-	healplayer = "你因治疗其他玩家而获得 %i 点数",
+	levelup = "你升级了! 你当前的等级是：%i",
+	healplayer = "你因治疗其他人而获得 %i 分",
 	detectscp = "你因使用监控探头发现 SCP 而获得了 %i 分",
-	winxp = "你获得 %i 经验，因为你的初始团队赢得了比赛",
-	winalivexp = "你获得 %i 经验，因为你的团队赢得了比赛",
+	winxp = "你获得 %i 经验，因为你的阵营赢了这回合",
+	winalivexp = "你获得 %i 经验，因为你的阵营赢了这回合",
 	upgradepoints = "你获得了新的技能提升点！ 按“%s”打开 SCP 技能升级面板",
-	prestigeup = "玩家 %s 获得了更高的声望！ 他目前的声望等级是：%i",
 	omega_detonation = "欧米伽核弹将在 %i 秒内爆炸。 立即到地面或前往核爆避难所避难！",
 	alpha_detonation = "阿尔法核弹将在 %i 秒内爆炸。 立即进入设施内部或立即离开设施！",
 	alpha_card = "你已插入阿尔法核弹钥匙卡",
 	destory_scp = "你因消灭 SCP 项目而获得 %i 分！",
 	afk = "你现在正在挂机。 随着时间的流逝，你将不会再获得经验！",
 	afk_end = "你已不在挂机",
+	overload_cooldown = "等待 %i 后可以破门",
+	advanced_overload = "这个门非常坚固请 %i 后重新尝试",
+	lockdown_once = "设施封锁每回合只能激活一次！",
+	dailybonus = "剩余每日奖励: %i 经验\n下一次重置时间: %s",
+	xp_goc_device = "成功部署GOC装备，您获得了%i 经验!",
+	goc_device_destroyed = "你因破坏GOC装备而获得%i分!",
+	goc_detonation = "欧米伽和阿尔法弹头在 %i 秒内爆炸。立即进行撤离设施或进入避难所",
+	fuserating = "你需要一个额定值更高的保险丝！",
+	nofuse = "你需要保险丝来使用这个设备",
+	nopower = "你按下了按钮，但什么也没发生。。。",
+	nopower_omni = "你插入了读卡器，但什么都没发生。。。",
+	docs = "你获得了 %i 分因为带走了 %i 基金会重要情报",
+	docs_pick = "您获得了SCP基金会的机密文件-带着逃跑以获得奖励",
+	gaswarn = "即将消毒区域: %s",
 }
 
-lang.NFailed = "无法使用密钥访问 NRegistry：%s"
+lang.NFailed = "无法使用密钥访问 NRegistry %s"
 
 --[[-------------------------------------------------------------------------
 NCRegistry
 ---------------------------------------------------------------------------]]
 lang.NCRegistry = {
-	escaped = "你逃离了设施！",
+	escaped = "你逃离了设施",
 	escapeinfo = "干得好！ 你在 %s 逃离了设施",
 	escapexp = "你获得了 %i 经验",
 	escort = "你被护送离开了！",
@@ -97,10 +113,61 @@ lang.NCRegistry = {
 	stat_24273 = "被 SCP 2427-3 干掉的人：%i",
 	stat_omega_warhead = "欧米伽核弹已被引爆",
 	stat_alpha_warhead = "阿尔法核弹已被引爆",
+	stat_goc_warhead = "GOC设备已激活",
 }
 
-lang.NCFailed = "无法使用密钥访问 NCRegistry：%s"
+lang.NCFailed = "无法使用密钥访问 NCRegistry: %s"
 
+
+--[[-------------------------------------------------------------------------
+Main menu
+---------------------------------------------------------------------------]]
+local main_menu = {}
+lang.MenuScreen = main_menu
+
+main_menu.start = "开始"
+main_menu.settings = "设置"
+main_menu.precache = "预制模型"
+main_menu.credits = "说明"
+main_menu.quit = "退出"
+
+main_menu.quit_server = "真的要退出服务器"
+main_menu.quit_server_confirmation = "你确定吗?"
+main_menu.model_precache = "预制模型"
+main_menu.model_precache_text = "当需要时，模型会自动预缓存，但这种情况发生在游戏过程中，因此可能会导致滞后峰值。为了避免这种情况，您现在可以手动预切它们。\n在这个过程中，你的游戏可能会冻结！"
+main_menu.yes = "是"
+main_menu.no = "不"
+main_menu.all = "预制模型"
+main_menu.cancel = "取消"
+
+
+main_menu.credits_text = [[游戏模式创建者 ZGFueDkx (aka danx91)
+游戏模式基于SCP并在CC BY-SA 3.0协议
+
+创建菜单动画 Madow
+
+模型:
+	Alski - guards, omnitool, turret and more
+	
+贴图:
+	Foer - Workshop logo and few other graphics
+	SCP Containment Breach
+
+声音:
+	SCP Containment Breach
+
+主要翻译人员:
+	Chinese - Luke
+	German - Justinnn
+	Korean - joon00
+	Polish - Slusher, Alski
+	Russian - Deiryn, berry
+	Turkish - Akane
+
+特别感谢:
+	1000 Shells for help with models
+	PolishLizard for hosting test server
+]]
 --[[-------------------------------------------------------------------------
 HUD
 ---------------------------------------------------------------------------]]
@@ -115,26 +182,68 @@ hud.hp = "生命值"
 hud.stamina = "体力值"
 hud.sanity = "理智值"
 hud.xp = "经验值"
+hud.extra_hp = "额外生命值"
+
+hud.escaping = "逃脱..."
+hud.escape_blocked = "逃脱被中止!"
 
 --[[-------------------------------------------------------------------------
 EQ
 ---------------------------------------------------------------------------]]
-lang.eq_lmb = "鼠标左键 - 选择"
-lang.eq_rmb = "鼠标右键 - 丢弃"
-lang.eq_hold = "摁住鼠标左键 - 移动物品"
+lang.eq_lmb = "左键 - 选择"
+lang.eq_rmb = "右键 - 丢弃"
+lang.eq_hold = "摁住左键 - 移动物品"
 lang.eq_vest = "护甲"
 lang.eq_key = "按 '%s' 打开物品栏"
+lang.eq_unknown = "未知物品"
+lang.eq_backpack = "背包"
+lang.eq_swapping = "交换物品"
 
 lang.info = "信息"
 lang.author = "作者"
 lang.mobility = "机动性"
 lang.weight = "重量"
-lang.protection = "防御性"
+lang.vest_multiplier = "伤害抗性"
+lang.durability = "耐久度"
 
 lang.weight_unit = "kg"
 lang.eq_buttons = {
 	escort = "护送",
 	gatea = "爆破A门"
+}
+
+lang.pickup_msg = {
+	max_eq = "你的背包满了",
+	cant_stack = "这个东西你不能再带了!",
+	has_already = "您已经拥有此物品",
+	same_type = "您已经有相同类型的物品",
+	one_weapon = "你只能携带一把枪",
+	goc_only = "只有GOC才能携带"
+}
+
+--[[-------------------------------------------------------------------------
+XP Bar
+---------------------------------------------------------------------------]]
+lang.XP_BAR = {
+	general = "经验",
+	round = "游玩服务器",
+	escape = "逃离设施",
+	score = "回合中获得的分",
+	win = "赢得本轮比赛",
+	vip = "VIP 额外奖励",
+	daily = "每日奖励",
+	cmd = "未知力量",
+}
+
+--[[-------------------------------------------------------------------------
+AFK Warning
+---------------------------------------------------------------------------]]
+lang.AFK = {
+	afk = "你目前在 挂机!",
+	afk_warn = "挂机 警告",
+	slay_warn = "你即将被处死并被标记为挂机！",
+	afk_msg = "随着时间的推移，你不会复活和获得经验值",
+	afk_action = "-- 按下任意键来返回游戏 --",
 }
 
 --[[-------------------------------------------------------------------------
@@ -150,7 +259,19 @@ effects.amnc227 = "AMN-C227"
 effects.insane = "精神失常"
 effects.gas_choke = "窒息"
 effects.radiation = "辐射"
-effects.deep_wounds = "裂口"
+effects.deep_wounds = "伤口"
+effects.poison = "毒素"
+effects.heavy_bleeding = "大出血"
+effects.weak_bleeding = "小出血"
+effects.spawn_protection = "出生保护"
+effects.fracture = "骨折"
+effects.decay = "衰弱"
+effects.scp_chase = "追逐"
+effects.human_chase = "追逐"
+effects.expd_rubber_bones = "实验影响"
+effects.expd_stamina_tweaks = "实验影响"
+effects.expd_revive = "实验效应"
+effects.expd_recovery = "恢复"
 
 --[[-------------------------------------------------------------------------
 Class viewer
@@ -158,42 +279,153 @@ Class viewer
 lang.classviewer = "职业查看栏"
 lang.preview = "预览"
 lang.random = "随机"
-lang.price = "价格"
 lang.buy = "购买"
-lang.refound = "退款"
+lang.refund = "退款"
 lang.none = "没有"
-lang.refounded = "所有被取消的等级的点数已退回。你获得%d个点数。"
+lang.refunded = "已退还所有点数已删除的角色. 你收到了 %d 点数"
+lang.tierlocked = "你必须购买前一层的每个角色才能解锁该层角色（也包括其他阵营的角色）"
 
 lang.details = {
 	details = "详情",
 	name = "姓名",
+	tier = "转生点",
 	team = "团队",
-	price = "点数价格",
-    walk_speed = "走路速度",
+	walk_speed = "走路速度",
     run_speed = "跑步速度",
     chip = "权限卡等级",
     persona = "伪装ID",
-    weapons = "武器",
+	loadout = "主要武器",
+    weapons = "物品",
     class = "级别",
     hp = "血量",
     speed = "速度",
 	health = "健康值",
-	sanity = "理智值"
+	sanity = "理智值",
+	slots = "支援",
+	no_select = "无法在游戏里面生成",
 }
 
 lang.headers = {
 	support = "支援部队",
 	classes = "设施人员",
-	scp = "异常们"
+	scp = "SCPs"
 }
 
 lang.view_cat = {
 	classd = "D级人员",
 	sci = "科研人员",
-	mtf = "机动特遣队",
-	mtf_ntf = "九尾狐",
+	guard = "安全部队",
+	mtf_ntf = "机动特遣队-九尾狐",
 	mtf_alpha = "MTF 阿尔法-1",
 	ci = "混沌分裂者",
+	goc = "全球超自然联盟",
+}
+
+local l_weps = {
+	pistol = "手枪",
+	smg = "冲锋枪",
+	rifle = "步枪",
+	shotgun = "散弹枪",
+}
+
+local l_tiers = {
+	low = "低层",
+	mid = "中层",
+	high = "高层",
+}
+
+lang.loadouts = {
+	grenade = "随机手榴弹",
+	pistol_all = "随机手枪",
+	smg_all = "随机 冲锋枪",
+	rifle_all = "随机 步枪",
+	shotgun_all = "随机 散弹枪",
+}
+
+for k_wep, wep in pairs( l_weps ) do
+	for k_tier, tier in pairs( l_tiers ) do
+		lang.loadouts[k_wep.."_"..k_tier] = tier.." "..wep
+	end
+end
+
+--[[-------------------------------------------------------------------------
+Settings
+---------------------------------------------------------------------------]]
+lang.settings = {
+	settings = "游戏 设置",
+
+	none = "无",
+	press_key = "> 按下任意键 <",
+	client_reset = "将客户端设置重置为默认值",
+	server_reset = "将服务器设置重置为默认值",
+
+	client_reset_desc = "您即将在此游戏模式中重置所有设置.\n此操作无法撤消",
+	server_reset_desc = "由于安全原因，您无法在此处重置服务器设置.\n要将服务器重置为默认设置，请输入 'slc_factory_reset' 在服务器控制台中，并按照说明操作.\n小心，此操作无法撤消，将重置所有内容！",
+
+	popup_ok = "OK",
+	popup_cancel = "取消",
+	popup_continue = "继续",
+
+	panels = {
+		binds = "绑定设置",
+		general_config = "常规配置",
+		scp_config = "SCP 配置",
+		skins = "GUI皮肤",
+		reset = "重置游戏模式",
+		cvars = "ConVars编辑器",
+	},
+
+	binds = {
+		eq_button = "背包设置",
+		upgrade_tree_button = "SCP技能树",
+		ppshop_button = "角色查看器",
+		settings_button = "游戏设置",
+		scp_special = "SCP特殊能力"
+	},
+
+	config = {
+		search_indicator = "显示搜索进度",
+		scp_hud_skill_time = "显示SCP技能冷却时间",
+		smooth_blink = "启用平滑鼠标",
+		scp_hud_overload_cd = "显示过载冷却",
+		any_button_close_search = "按任意按钮关闭搜索菜单",
+		hud_hitmarker = "显示命中标记",
+		hud_damage_indicator = "显示伤害提示",
+		scp_hud_dmg_mod = "显示SCP收到的伤害",
+		scp_nvmod = "SCP时提高屏幕亮度",
+		dynamic_fov = "动态FOV",
+		hud_draw_crosshair = "绘制十字线",
+		hud_hl2_crosshair = "传统HL2十字线",
+
+		cvar_slc_language = "语言",
+		cvar_slc_hud_scale = "HUD比例",
+		cvar_slc_hud_scale_options = {
+			normal = "正常",
+			big = "大",
+			vbig = "非常大",
+			small = "小",
+			vsmall = "非常小",
+			imretard = "微小",
+		},
+	},
+}
+
+lang.gamemode_config = {
+	loading = "加载...",
+
+	categories = {
+		general = "普通",
+		round = "回合",
+		xp = "XP",
+		support = "支援刷新",
+		warheads = "弹头",
+		afk = "AFK",
+		time = "时间",
+		premium = "转生点",
+		scp = "SCP",
+		gas = "消毒",
+		feature = "特性"
+	}
 }
 
 --[[-------------------------------------------------------------------------
@@ -205,18 +437,21 @@ lang.scoreboard = {
 	name = "记分板",
 	playername = "名字",
 	ping = "延迟",
-	prestige = "声望",
 	level = "等级",
 	score = "分数",
 	ranks = "权限",
 }
 
 lang.ranks = {
+	superadmin = "超级管理员",
+	admin = "管理",
 	author = "作者",
 	vip = "VIP",
-	tester = "测试员",
-	contributor = "合作者",
+	contributor = "贡献者",
 	translator = "翻译",
+	tester = "测试人员",
+	patron = "赞助者",
+	hunter = "Bug 猎人"
 }
 
 --[[-------------------------------------------------------------------------
@@ -230,6 +465,17 @@ lang.upgrades = {
     requiresall = "需要",
     requiresany = "需要任何",
 	blocked = "无法执行"
+}
+
+--[[-------------------------------------------------------------------------
+SCP HUD
+---------------------------------------------------------------------------]]
+lang.SCPHUD = {
+	skill_not_ready = "技能尚未准备好!",
+	skill_cant_use = "技能现在无法使用!",
+	overload_cd = "下一次过载: ",
+	overload_ready = "过载准备就绪",
+	damage_scale = "承受伤害"
 }
 
 --[[-------------------------------------------------------------------------
@@ -258,28 +504,23 @@ lang.info_screen_registry = {
 	hazard = "你被异常杀死了",
 	alpha_mia = "最后已知位置：地面",
 	omega_mia = "最后已知位置：设施",
+	killer_t = "击杀你的玩家阵营：%s"
 }
 
 lang.info_screen_type = {
-	alive = "幸存",
+	alive = "存活",
 	escaped = "逃脱",
 	dead = "死亡",
 	mia = "在行动中失踪",
 	unknown = "未知",
 }
 
-lang.info_screen_macro = {
-	time = function( args )
-		local t = tonumber( args[1] )
-		return t and string.ToMinutesSeconds( t ) or "--:--"
-	end
-}
-
 --[[-------------------------------------------------------------------------
 Generic
 ---------------------------------------------------------------------------]]
-lang.nothing = "无"
-lang.exit = "出口"
+lang.nothing = "没什么"
+lang.exit = "退出"
+lang.default = "默认"
 
 --[[-------------------------------------------------------------------------
 Misc
@@ -289,15 +530,23 @@ lang.MISC = misc
 
 misc.content_checker = {
 	title = "游戏模式内容",
-	msg = [[It looks like you don't have some addons. It may cause errors like missing content (textures/models/sounds) and may break your gameplay experience.
-You don't have %i addons out of %i. Would you like to download it now? (you can either download it through game or do it manually on workshop page)]],
-	no = "不",
-	download = "正在下载",
-	workshop = "显示创意工坊",
-	downloading = "下载中",
-	mounting = "安装中",
-	processing = "处理插件中: %s\n状态: %s",
-	cancel = "取消"
+	status = "状态",
+	auto_check = "自动运行",
+	slist = {
+		"有问题",
+		"检查",
+		"安装",
+		"下载",
+		"检查完毕",
+	},
+	btn_workshop = "创意工坊合集",
+	btn_download = "下载",
+	btn_check = "检查并下载",
+	allok = "所有插件都已安装！",
+	nsub_warn = "你没有一些需要的插件！请使用创意工坊下载它们。检查控制台以查看缺少哪些插件。",
+	disabled_warn = "某些必需的插件已禁用！游戏为您安装了它，但有些内容可能仍然丢失。请前往菜单并启用禁用的插件（控制台中的列表）。",
+	missing = "缺少插件",
+	disabled = "禁用的插件",
 }
 
 misc.omega_warhead = {
@@ -315,6 +564,48 @@ misc.alpha_warhead = {
 	active = "阿尔法核弹已启动成功\n\n请立即撤离！\n在爆炸 %.2fs",
 }
 
+misc.zones = {
+	lcz = "轻收容",
+	hcz = "重收容",
+	ez = "办公区",
+}
+
+misc.buttons = {
+	MOUSE1 = "左键",
+	MOUSE2 = "右键",
+	MOUSE3 = "中键",
+}
+
+misc.inventory = {
+	unsearched = "未搜寻",
+	search = "按 [%s] 搜索",
+	unknown_chip = "未知芯片",
+	name = "名称",
+	team = "团队",
+	death_time = "死亡时间",
+	time = {
+		[0] = "刚才",
+		"大约一分钟前",
+		"大约两分钟前",
+		"大约三分钟前",
+		"大约四分钟前",
+		"大约五分钟前",
+		"大约六分钟前",
+		"大约七分钟前",
+		"大约八分钟前",
+		"大约九分钟前",
+		"大约十分钟前",
+		long = "十多分钟前",
+	},
+}
+
+misc.font = {
+	name = "字体",
+	content = [[游戏模式字体加载失败！回退到系统字体...
+这是gmod问题，我无法修复。要修复它，你必须手动删除一些文件.
+前往 'steamapps/common/GarrysMod/garrysmod/cache/workshop/resource/fonts' 并删除以下文件: 'impacted.ttf', 'ds-digital.ttf' 和 'unispace.ttf']],
+	ok = "好"
+}
 --[[-------------------------------------------------------------------------
 Vests
 ---------------------------------------------------------------------------]]
@@ -324,14 +615,20 @@ lang.VEST = vest
 vest.guard = "保安背心"
 vest.heavyguard = "重型防护护甲"
 vest.specguard = "安保主管护甲"
-vest.guard_medic = "医疗护甲"
-vest.ntf = "九尾狐小队队员护甲"
-vest.mtf_medic = "九尾狐小队队医护甲"
-vest.ntfcom = "九尾狐小队指挥官护甲"
-vest.alpha1 = "MTF 阿尔法 护甲"
-vest.ci = "混沌分裂者护甲"
+vest.guard_medic = "医疗安保护甲"
+vest.ntf = "九尾狐士兵护甲"
+vest.mtf_medic = "九尾狐医疗兵护甲"
+vest.ntfcom = "九尾狐指挥官护甲"
+vest.alpha1 = "MTF 阿尔法-1 护甲"
+vest.ci = "混沌分裂者士兵护甲"
+vest.cicom = "混沌分裂者指挥官护甲"
+vest.cimedic = "混沌分裂者医疗兵护甲"
+vest.goc = "GOC士兵护甲"
+vest.gocmedic = "GOC医疗兵护甲"
+vest.goccom = "GOC指挥官护甲"
 vest.fire = "防火服"
 vest.electro = "特斯拉服"
+vest.hazmat = "防护服"
 
 local dmg = {}
 lang.DMG = dmg
@@ -340,6 +637,7 @@ dmg.BURN = "火焰抗性"
 dmg.SHOCK = "电击抗性"
 dmg.BULLET = "子弹抗性"
 dmg.FALL = "摔伤抗性"
+dmg.POISON = "毒抗性"
 
 --[[-------------------------------------------------------------------------
 Teams
@@ -347,24 +645,35 @@ Teams
 local teams = {}
 lang.TEAMS = teams
 
+teams.unknown = "未知"
+
 teams.SPEC = "观众"
 teams.CLASSD = "D级人员"
 teams.SCI = "科研人员"
+teams.GUARD = "安全部队"
 teams.MTF = "机动特遣队"
 teams.CI = "混沌分裂者"
-teams.SCP = "异常"
+teams.GOC = "全球超自然联盟"
+teams.SCP = "SCP"
 
 --[[-------------------------------------------------------------------------
 Classes
 ---------------------------------------------------------------------------]]
+lang.UNK_CLASSES = { 
+	CLASSD = "未知D级人员",
+	SCI = "未知研究员",
+	GUARD = "未知安保",
+}
+
 local classes = {}
 lang.CLASSES = classes
 
-classes.unknown = "Unknown"
+classes.unknown = "未知"
 
 classes.SCP023 = "SCP 023"
 classes.SCP049 = "SCP 049"
 classes.SCP0492 = "SCP 049-2"
+classes.SCP058 = "SCP 058"
 classes.SCP066 = "SCP 066"
 classes.SCP096 = "SCP 096"
 classes.SCP106 = "SCP 106"
@@ -380,12 +689,15 @@ classes.SCP24273 = "SCP 2427-3"
 classes.classd = "普通D级"
 classes.veterand = "D级老手"
 classes.kleptod = "D级小偷"
+classes.contrad = "D级走私者"
 classes.ciagent = "CI特工"
+classes.expd = "实验D级"
 
 classes.sciassistant = "科学家助理"
 classes.sci = "科学家"
 classes.seniorsci = "资深科学家"
 classes.headsci = "首席科学家"
+classes.contspec = "病毒专家"
 
 classes.guard = "警卫"
 classes.chief = "安全主管"
@@ -396,16 +708,24 @@ classes.guardmedic = "安保医护人员"
 classes.tech = "保安技术员"
 classes.cispy = "CI间谍"
 
-classes.ntf_1 = "MTF NTF - 侦察步兵"
-classes.ntf_2 = "MTF NTF - 镇暴步兵"
-classes.ntf_3 = "MTF NTF - 步枪兵"
-classes.ntfcom = "MTF NTF指挥官"
-classes.ntfsniper = "MTF NTF狙击手"
-classes.ntfmedic = "MTF NTF 队医"
+classes.ntf_1 = "MTF 九尾狐 - 侦察步兵"
+classes.ntf_2 = "MTF 九尾狐 - 镇暴步兵"
+classes.ntf_3 = "MTF 九尾狐 - 步枪兵"
+classes.ntfcom = "MTF 九尾狐指挥官"
+classes.ntfsniper = "MTF 九尾狐狙击手"
+classes.ntfmedic = "MTF 九尾狐队医"
 classes.alpha1 = "MTF 阿尔法-1"
 classes.alpha1sniper = "MTF 阿尔法-1 狙击手"
+classes.alpha1medic = "MTF 阿尔法-1 医疗兵"
+classes.alpha1com = "MTF 阿尔法-1 指挥官"
 classes.ci = "混沌分裂者"
 classes.cicom = "混沌分裂指挥官"
+classes.cimedic = "混沌分裂医疗兵"
+classes.cispec = "混沌分裂专家t"
+classes.ciheavy = "混沌分裂重装"
+classes.goc = "全球超自然联盟士兵"
+classes.gocmedic = "全球超自然联盟医疗兵"
+classes.goccom = "全球超自然联盟指挥官"
 
 local classes_id = {}
 lang.CLASSES_ID = classes_id
@@ -429,7 +749,7 @@ local generic_sci = [[- 逃离设施
 
 local generic_guard = [[- 救援科学家
 - 处决所有 D 级和 SCP
-- 听你的主管]]
+- 听你的主管的命令]]
 
 local generic_ntf = [[- 到达设施
 - 帮助里面剩下的员工
@@ -450,9 +770,15 @@ lang.CLASS_OBJECTIVES = {
 
 	kleptod = generic_classd,
 
+	contrad = generic_classd,
+
 	ciagent = [[- 护送 D 级成员
 - 避开工作人员和SCP
 - 与他人合作]],
+
+	expd = [[- 逃离设施
+- 避开设施人员和SCP对象
+- 你经历了一些奇怪的实验]],
 
 	sciassistant = generic_sci,
 
@@ -461,6 +787,8 @@ lang.CLASS_OBJECTIVES = {
 	seniorsci = generic_sci,
 
 	headsci = generic_sci,
+
+	contspec = generic_sci,
 
 	guard = generic_guard,
 
@@ -512,13 +840,45 @@ lang.CLASS_OBJECTIVES = {
 - 消灭 SCP 和 D 级
 -  给其他九尾狐发号施令]].."[数据删除]",
 
+	alpha1medic = [[- 不惜一切代价保护设施
+- 为你的部队提供治疗支持
+- 您有权理 ]].."[数据删除]",
+
+	alpha1com = [[- 不惜一切代价保护设施
+- 向你的部队下达命令
+- 您有权理 ]].."[数据删除]",
+
 	ci = [[- 帮助 D 级人员
 - 干掉所有保安和九尾狐
-- 听你的老大的话]],
+- 听指挥官指令行事]],
 
 	cicom = [[- 帮助 D 级人员
 - 干掉所有保安和九尾狐
 - 给其他 CI 发号施令]],
+
+	cimedic = [[- 帮助 D 级人员
+- 使用您的药包帮助其他CI
+- 听指挥官指令行事]],
+
+	cispec = [[- 帮助 D 级人员
+- 使用您的炮塔支援你的队友
+- 听指挥官指令行事]],
+
+	ciheavy = [[- 帮助 D 级人员
+- 提供火力掩护
+- 听指挥官指令行事]],
+
+	goc = [[- 销毁所有SCP
+- 定位并部署GOC设备
+- 听指挥官指令行事]],
+
+	gocmedic = [[- 销毁所有SCP
+- 使用您的医疗包帮助GOC士兵
+- 听指挥官指令行事]],
+
+	goccom = [[- 销毁所有SCP
+- 定位并部署GOC设备
+- 给其他 GOC 发号施令]],
 
 	SCP023 = generic_scp,
 
@@ -529,6 +889,8 @@ lang.CLASS_OBJECTIVES = {
 	SCP0492 = [[]],
 
 	SCP066 = generic_scp_friendly,
+
+	SCP058 = generic_scp,
 
 	SCP096 = generic_scp,
 
@@ -550,195 +912,6 @@ lang.CLASS_OBJECTIVES = {
 
 	SCP3199 = generic_scp,
 }
-
---[[-------------------------------------------------------------------------
-DON'T EDIT - UNUSED
----------------------------------------------------------------------------]]
-/*lang.CLASS_INFO = {
-	classd = [[你是D级人员
-你的目标是逃离设施
-与其他DD合作，寻找钥匙卡
-小心这里的保安和 SCP]],
-
-	veterand = [[你是D级老兵
-你的目标是逃离设施
-与其他DD合作,帮助新来的DD
-提防设施工作人员和 SCP]],
-
-	kleptod = [[你是D级盗窃狂
-你的目标是逃离设施
-你偷了保安人员的东西
-提防保安和 SCP]],
-
-	ciagent = [[你是 CI 卧底
-你的目标是保护 D 级人员
-护送他们到出口
-提防设施保安和 SCP]],
-
-	sciassistant = [[你是科学家助理
-你的目标是逃离设施
-与其他科学家和安全人员合作
-当心混沌分裂者和SCP]],
-
-	sci = [[你是科学家
-你的目标是逃离设施
-与其他科学家和安全人员合作
-当心混沌分裂者和SCP]],
-
-	seniorsci = [[你是高级科学家
-你的目标是逃离设施
-与其他科学家和安全人员合作
-当心混沌分裂者和SCP]],
-
-	headsci = [[你是首席科学家
-你的目标是逃离设施
-与其他科学家和安全人员合作
-当心混沌分裂者和SCP]],
-
-	guard = [[你是保安
-你的目标是拯救所有科学家
-杀死所有 D 级人员和 SCP]],
-
-	lightguard = [[你是保安
-你的目标是拯救所有科学家
-杀死所有 D 级人员和 SCP]],
-
-	heavyguard = [[你是保安
-你的目标是拯救所有科学家
-杀死所有 D 级人员和 SCP]],
-
-	specguard = [[你是保安专家
-你的目标是拯救所有科学家
-杀死所有 D 级人员和 SCP]],
-
-	chief = [[你是安全主管
-你的目标是拯救所有科学家
-杀死所有 D 级人员和 SCP]],
-
-	guardmedic = [[你是保安医生
-你的目标是拯救所有科学家
-使用您的医疗箱来帮助您的队友
-杀死所有 D 级人员和 SCP]],
-
-	tech = [[你是安全技术员
-你的目标是拯救所有科学家
-您可以放置​​便携式炮塔
-杀死所有 D 级人员和 SCP]],
-
-	cispy = [[你是CI间谍
-你的目标是帮助 D 级人员
-冒充保安]],
-
-	ntf_1 = [[你是保安专家
-你的目标是拯救所有科学家
-杀死所有 D 级人员和 SCP]],
-
-	ntf_2 = [[你是MTF NTF
-帮助设施内的员工
-不要让 D 级人员和 SCP 逃脱]],
-
-	ntf_3 = [[你是MTF NTF
-帮助设施内的员工
-不要让 D 级人员和 SCP 逃脱]],
-
-	ntfmedic = [[你是 MTF NTF 医疗兵
-帮助设施内的员工
-使用您的医疗箱来帮助其他 MTF]],
-
-	ntfcom = [[你是 MTF NTF 指挥官
-帮助设施内的员工
-不要让 D 级人员和 SCP 逃脱]],
-
-	ntfsniper = [[你是 MTF NTF 狙击手
-远距离保护您的团队
-不要让 D 级人员和 SCP 逃脱]],
-
-	alpha1 = [[你是 MTF Alpha 1
-你直接为 O5 议会工作
-不惜一切代价保护基础
-你的任务是[数据删除] ]],
-
-	alpha1sniper = [[是 MTF Alpha 1 射手
-你直接为 O5 议会工作
-不惜一切代价保护基础
-你的任务是[数据删除] ]]
-
-	ci = [[你是混沌分裂者士兵
-帮助 D 级人员
-杀死 MTF 和其他设施工作人员]],
-
-	cicom = [[你是混沌分裂者指挥官
-帮助 D 级人员
-杀死 MTF 和其他设施工作人员]],
-	
-	SCP023 = [[你是SCP 023
-你的目标是逃离设施
-你会杀死每一个见过你的人
-点击RMB放置陷阱]],
-
-	SCP049 = [[你是SCP 049
-你的目标是逃离设施
-你的触摸对人类是致命的
-你可以通过手术来“治愈”病人]],
-
-	SCP0492 = [[你是SCP 049-2
-你的目标是逃离设施
-听从SCP 049的命令并保护他]],
-
-	SCP066 = [[你是SCP 066
-你的目标是逃离设施
-您可以播放非常响亮的音乐]],
-
-	SCP096 = [[你是SCP 096
-你的目标是逃离设施
-当有人看着你时，你会变得愤怒
-您可以通过按 R 来恢复 HP]],
-
-	SCP106 = [[是SCP 106
-你的目标是逃离设施
-您可以穿过门并传送到选定的位置
-
-LMB：将人类传送到口袋维度
-RMB：标记传送目的地
-R: 传送]],
-
-	SCP173 = [[你是SCP 173
-你的目标是逃离设施
-当有人看着你时你不能移动
-你的特殊能力将你传送到附近的人类]],
-
-	SCP457 = [[[你是SCP 457
-你的目标是逃离设施
-你在燃烧，你会点燃一切
-在你旁边
-你最多可以放置 5 个火焰陷阱]],
-
-	SCP682 = [[你是SCP 682
-你的目标是逃离设施
-你的生命值很高
-你的特殊能力使你对任何伤害免疫]],
-
-	SCP8602 = [[你是SCP 860-2
-你的目标是逃离设施
-如果你攻击靠近墙壁的人，你会
-将他钉在墙上并造成巨大伤害]],
-
-	SCP939 = [[你是SCP 939
-你的目标是逃离设施
-你可以和人交谈]],
-
-	SCP966 = [[你是SCP 966
-你的目标是逃离设施
-你是隐形的]],
-
-	SCP3199 = [[你是SCP 3199
-你的目标是逃离设施
-你是敏捷而致命的猎人
-你可以感觉到附近人类的心跳]],
-}*/
---[[-------------------------------------------------------------------------
-END OF UNUSED PART
----------------------------------------------------------------------------]]
 
 lang.CLASS_DESCRIPTION = {
 	classd = [[操作难度：简单
@@ -777,6 +950,18 @@ Overview:
 小偷D级。 从一件随机物品开始。 与他人合作以面对 SCP 和设施工作人员。 您可以由混沌分裂者成员护送离开。
 ]],
 
+	contrad = [[操作难度: 中等
+健壮程度: 普通
+灵活性: 普通
+作战能力: 普通
+能否逃脱: 能
+可护送人员: 无
+能被谁护送: 混沌分裂者
+
+Overview:
+使用违禁武器。明智地使用它，因为这种武器不耐用。
+]],
+
 	ciagent = [[操作难度: 中等
 健壮程度: 超级强壮
 灵活性: 灵活
@@ -787,6 +972,18 @@ Overview:
 
 Overview:
 配备泰瑟枪。 向D级人员提供帮助并与他们合作。 你可以护送D级人员。
+]],
+
+	expd = [[操作难度: ?
+健壮程度: ?
+灵活性: ?
+作战能力: ?
+能否逃脱: 不能
+可护送人员: D级
+能被谁护送: 无
+
+Overview:
+在设施内进行了一些奇怪实验的D。谁知道实验发生了什么。。。
 ]],
 
 	sciassistant = [[操作难度: 中等
@@ -835,6 +1032,18 @@ Overview:
 
 Overview:
 最高级的科学家。 你有更好的能力和血量。 与设施工作人员合作并远离 SCP。 您可以由机动特遣队成员护送。
+]],
+
+	contspec = [[操作难度: 中等
+健壮程度: 强壮
+灵活性: 灵活
+作战能力: 差
+能否逃脱: 能
+可护送人员: 无
+能被谁护送: 安保人员，机动特遣队
+
+Overview:
+其中一位拥有高实用性和HP的科学家，也拥有最高的访问级别。与设施工作人员合作远离SCP您可以由机动特遣队成员护送。
 ]],
 
 	guard = [[操作难度：简单
@@ -969,6 +1178,7 @@ Overview:
 MTF NTF 单位。 手持步枪。 进入设施并保护它。 帮助里面的工作人员杀死SCP和D级。
 ]],
 
+
 	ntfmedic = [[操作难度: 难
 健壮程度: 强壮
 灵活性: 灵活
@@ -1014,7 +1224,7 @@ MTF NTF 单位。 装备狙击步枪。 进入设施并保护它。 帮助里面
 能被谁护送: 无
 
 Overview:
-MTF Alpha-1 单位。 重装甲、高实用性单位，配备步枪。 进入设施并保护它。 帮助里面的工作人员杀死SCP和D级。
+MTF Alpha-1佩戴重型装甲,配备步枪,进入设施并保护设施。帮助里面的设施武装人员杀死SCP和D级。
 ]],
 
 	alpha1sniper = [[操作难度: 难
@@ -1022,11 +1232,35 @@ MTF Alpha-1 单位。 重装甲、高实用性单位，配备步枪。 进入设
 灵活性: 敏捷
 作战能力: 特种兵级别
 能否逃脱: 否
-能否护送: 科研人员
+可护送人员: 科研人员
 能被谁护送: 无
 
 Overview:
-MTF Alpha-1 单位。 重装甲，高实用性单位，装备神射手步枪。 进入设施并保护它。 帮助里面的工作人员杀死SCP和D级。
+MTF Alpha-1佩戴重型装甲,装备神射手步枪,进入设施并保护设施。帮助里面的设施武装人员杀死SCP和D级。
+]],
+
+	alpha1medic = [[操作难度: 难
+健壮程度: 超级强壮
+灵活性: 敏捷
+作战能力: 特种兵级别
+能否逃脱: 否
+可护送人员: 科研人员
+能被谁护送: 无
+
+Overview:
+MTF Alpha-1佩戴重型装甲,可以给其他人提供治疗,进入设施并保护设施。帮助里面的设施武装人员杀死SCP和D级。
+]],
+
+	alpha1com = [[操作难度: 难
+健壮程度: 超级强壮
+灵活性: 敏捷
+作战能力: 特种兵级别
+能否逃脱: 否
+可护送人员: 科研人员
+能被谁护送: 无
+
+Overview:
+MTF Alpha-1佩戴重型装甲,给设施武装单位下达命令,进入设施并保护设施。帮助里面的设施武装人员杀死SCP和D级.
 ]],
 
 	ci = [[操作难度: 中等
@@ -1052,698 +1286,135 @@ Overview:
 Overview:
 混沌分裂者单位。 更高的战斗力。 进入设施，帮助 D 级人员并杀死设施工作人员。
 ]],
-	
-	SCP023 = [[操作难度: 难
-健壮程度: 差
-灵活性: 灵活
-伤害类型: 秒杀
 
-Overview:
-你可以穿过墙壁。 如果有人看到你，他们就会被列入你的名单。 偶尔你会传送到名单上的一名玩家并将他们烧死。 您可以放置您的克隆。
-]],
-
-	SCP049 = [[操作难度: 难
-健壮程度: 差
-灵活性: 灵活
-伤害类型: 三次攻击后死亡
-
-Overview:
-攻击玩家 3 次以杀死他们。 你可以用身体创建僵尸。
-]],
-
-	SCP0492 = [[]],
-
-	SCP066 = [[操作难度: 中等
-健壮程度: 强壮
-灵活性: 普通
-伤害类型: 群体伤害（弱）
-
-Overview:
-您播放非常响亮的音乐，会是你周围玩家的耳朵遭受打击。
-]],
-
-	SCP096 = [[操作难度: 难
-健壮程度: 强壮
-灵活性: 超级迟钝（看脸前），闪电侠（看脸后）
-伤害类型: 秒杀
-
-Overview:
-如果有人看到你，你会变得愤怒。 愤怒时，你跑得非常快，你可以杀死你的目标。
-]],
-
-	SCP106 = [[操作难度: 中等
-健壮程度: 普通
-灵活性: 迟钝
-伤害类型: 拉进口袋里造成普通伤害
-
-Overview:
-你可以穿过墙壁。 攻击某人将他们传送到口袋维度。 在口袋维度时，您会立即杀死目标。
-]],
-
-	SCP173 = [[操作难度: 简单
+	cimedic = [[操作难度: 中等
 健壮程度: 超级强壮
-灵活性: 闪电侠+
-伤害类型: 秒杀
-
-Overview:
-你速度极快，但如果有人看到你，你就无法移动。 你会自动杀死附近的玩家。 您可以使用特殊攻击传送到范围内的一名玩家。 
-]],
-
-	SCP457 = [[操作难度: 简单
-健壮程度: 普通
-灵活性: 普通
-伤害类型: 烧伤他人并使其传火
-
-Overview:
-你在燃烧，你可以燃烧附近的玩家。 您还可以放置陷阱，当有人踩到它们时会激活它们。
-]],
-
-	SCP682 = [[操作难度: 难
-健壮程度: 几乎不死
-灵活性: 普通
-伤害类型: 致残
-
-Overview:
-极其艰难和致命。 使用特殊能力在短时间内获得伤害免疫。
-]],
-
-	SCP8602 = [[操作难度: 中等
-健壮程度: 强壮
 灵活性: 灵活
-伤害类型: 短距离射“钉”
+作战能力: 强
+能否逃脱: 否
+可护送人员: D级人员
+能被谁护送: 无
 
 Overview:
-如果有人靠近墙壁，你可以将他们钉在这堵墙上，对他们造成巨大伤害。 你也会失去一些健康。
+混沌分裂者单位,更高的战斗力,进入设施.使用您的药包帮助其他CI 帮助 D 级人员并杀死设施工作人员。
 ]],
 
-	SCP939 = [[操作难度: 中等
-健壮程度: 普通
+	cispec = [[操作难度: 中等
+健壮程度: 超级强壮
 灵活性: 灵活
-伤害类型: 咬伤
+作战能力: 强
+能否逃脱: 否
+可护送人员: D级人员
+能被谁护送: 无
 
 Overview:
-你留下一团无形的毒云。 闻到的玩家不能使用LMB和RMB。
+混沌分裂者单位,更高的战斗力,进入设施.帮助 D 级人员并杀死设施工作人员
 ]],
 
-	SCP966 = [[操作难度: 中等
-健壮程度: 差
+	ciheavy = [[操作难度: 中等
+健壮程度: 超级强壮
 灵活性: 灵活
-伤害类型: 抓伤
+作战能力: 强
+能否逃脱: 否
+可护送人员: D级人员
+能被谁护送: 无
 
 Overview:
-你是隐形的。 你的攻击总是会造成流血。
+混沌分裂者单位,更高的战斗力,进入设施.提供火力压制 帮助 D 级人员并杀死设施工作人员
 ]],
 
-	SCP24273 = [[操作难度: 难
-健壮程度: 普通
-灵活性: 普通
-伤害类型: 精神控制时靠近本体秒死
+	goc = [[操作难度: 中等
+健壮程度: 超级强壮
+灵活性: 灵活
+作战能力: 高
+能否逃脱: 无
+可护送人员: 无
+能被谁护送: 无
 
 Overview:
-您可以向前冲刺对第一个击中的玩家造成伤害。 特殊能力可让您在短时间内控制其他玩家。 将受控制的玩家带到您身边，您将可以立即杀死他。 在控制玩家的同时自杀会导致健康损失。 
+全球超自然联盟的士兵。销毁所有SCP，使用您的个人平板电脑定位之前传送到设施的GOC设备，然后部署并保护它。成功部署设备后逃脱。
 ]],
 
-	SCP3199 = [[操作难度: 非常困难
-健壮程度: 差
-灵活性: 敏捷
-伤害类型: 抓伤+
+	gocmedic = [[操作难度: 中等
+健壮程度: 超级强壮
+灵活性: 灵活
+作战能力: 高
+能否逃脱: 无
+可护送人员: 无
+能被谁护送: 无
 
 Overview:
-攻击玩家会让你狂暴并造成很深的伤口。 在狂暴状态下，您的移动速度会稍快一些，并且可以看到附近玩家的位置。 错过一次攻击或攻击已经有很深伤口的玩家，停止狂暴并施加惩罚。 拥有至少 5 个狂暴标记可以让您使用特殊攻击。 经过短暂的准备，特殊攻击会杀死玩家。
+全球超自然联盟的医疗兵。销毁所有SCP，使用你的医疗包帮助队友,使用您的个人平板电脑定位之前传送到设施的GOC设备，然后部署并保护它。成功部署设备后逃脱
 ]],
+
+	goccom = [[操作难度: 中等
+健壮程度: 超级强壮
+灵活性: 灵活
+作战能力: 高
+能否逃脱: 无
+可护送人员: 无
+能被谁护送: 无
+
+Overview:
+全球超自然联盟的指挥官。带领你的队伍,销毁所有SCP，使用您的个人平板电脑定位之前传送到设施的GOC设备，然后部署并保护它。成功部署设备后逃脱
+]],
+
+--TODO: New SCP translations
 }
 
 --[[-------------------------------------------------------------------------
 Weapons
 ---------------------------------------------------------------------------]]
 lang.GenericUpgrades = {
-	nvmod = {
-		name = "夜视仪",
-		info = "你的视野亮度增加\n黑暗区域将不再阻止你"
+	outside_buff = {
+		name = "buff",
+		info = "在地面上时获得被动治疗（与剩余回合时间成比例），在非阻挡逃生或赛后获得极端伤害保护"
 	}
 }
 
 local wep = {}
 lang.WEAPONS = wep
 
-wep.SCP023 = {
-	editMode1 = "按 LMB 放置陷阱",
-	editMode2 = "RMB - 取消，R - 旋转",
-	preys = "可用猎物：%i",
-	attack = "下一次攻击：%s",
-	trapActive = "陷阱已激活！",
-	trapInactive = "按RMB放置陷阱",
-	upgrades = {
-		attack1 = {
-			name = "快速冷却一",
-			info = "你的攻击冷却时间减少 20 秒",
-		},
-		attack2 = {
-			name = "快速冷却二",
-			info = "你的攻击冷却时间减少 20 秒\n\t• 总冷却时间：40 秒",
-		},
-		attack3 = {
-			name = "快速冷却三",
-			info = "你的攻击冷却时间减少 20 秒\n\t• 总冷却时间：60 秒",
-		},
-		trap1 = {
-			name = "幽灵陷阱一",
-			info = "你的陷阱冷却时间减少到 40 秒",
-		},
-		trap2 = {
-			name = "幽灵陷阱二",
-			info = "你的陷阱冷却时间减少到 20 秒\n幽灵移动距离增加 25 ",
-		},
-		trap3 = {
-			name = "幽灵陷阱三",
-			info = "幽灵移动距离增加 25 个单位\n\t• 总增加：50 ",
-		},
-		hp = {
-			name = "肉体强化一",
-			info = "你获得 1000 HP（也是最大 HP）和 10% 的子弹保护，但陷阱冷却时间增加 30 秒",
-		},
-		speed = {
-			name = "肉体强化二",
-			info = "你获得 10% 移动速度和额外 15% 子弹防护，但陷阱冷却时间增加 30 秒\n\t• 总防护：25%，总冷却时间增加：60 秒",
-		},
-		alt = {
-			name = "肉体强化三",
-			info = "你的攻击冷却时间减少 30 秒，你获得 15% 的子弹防护，但你不能再使用你的陷阱\n\t• 总防护：40%",
-		},
-	}
-}
+--TODO: New SCP translations
 
-wep.SCP049 = {
-	surgery = "进行手术",
-	surgery_failed = "手术失败!",
-	zombies = {
-		normal = "标准丧尸",
-		light = "疾速丧尸",
-		heavy = "肉甲丧尸"
-	},
-	upgrades = {
-		cure1 = {
-			name = "血肉保护一",
-			info = "获得 40% 的子弹保护",
-		},
-		cure2 = {
-			name = "血肉保护二",
-			info = "每 180 秒回复 300HP",
-		},
-		merci = {
-			name = "对敌人的怜悯",
-			info = "主要攻击冷却时间减少 2.5 秒\n你不再对附近的人类施加“门锁”效果",
-		},
-		symbiosis1 = {
-			name = "同甘一",
-			info = "进行手术后，您将恢复最大生命值的 10%",
-		},
-		symbiosis2 = {
-			name = "同甘二",
-			info = "进行手术后，你会被治愈 15% 的最大生命值\n附近的 SCP 049-2 个体被治愈其最大生命值的 10%",
-		},
-		symbiosis3 = {
-			name = "同甘三",
-			info = "手术后，你的生命值将恢复其最大生命值的 20%\n附近的 SCP 049-2 个体生命值将被恢复其最大生命值的 20%",
-		},
-		hidden = {
-			name = "双赢",
-			info = "每次手术成功获得 1 个标记\n每个标记使僵尸的生命值提高 5%\n\t• 此能力仅影响新创建的僵尸",
-		},
-		trans = {
-			name = "慷慨",
-			info = "你的僵尸生命值增加 15%\n你的僵尸获得 20% 的生命偷取\n\t• 此能力只影响新创建的僵尸",
-		},
-		rm = {
-			name = "一分为二",
-			info = "只要有可能，你就用 1 个尸体制造 2 个僵尸\n\t• 如果只有 1 个旁观者可用，则只创建 1 个僵尸\n\t• 两个僵尸的类型相同\n\t• 第二个僵尸的生命值降低 降低 50%\n\t• 第二个僵尸的伤害降低了 25%",
-		},
-		doc1 = {
-			name = "高明的医术一",
-			info = "手术时间缩短5s",
-		},
-		doc2 = {
-			name = "高明的医术二",
-			info = "手术时间缩短 5s\n\t• 手术总时间减少：10s",
-		},
-	}
-}
-
-wep.SCP0492 = {
-	too_far = "你开始变得虚弱！"
-}
-
-wep.SCP066 = {
-	wait = "下一次攻击：%is",
-	ready = "攻击准备好了！",
-	chargecd = "冷却时间：%is",
-	upgrades = {
-		range1 = {
-			name = "死亡半径 I",
-			info = "伤害半径增加 75",
-		},
-		range2 = {
-			name = "死亡半径 II",
-			info = "伤害半径增加 75\n\t• 总增加：150",
-		},
-		range3 = {
-			name = "死亡半径 III",
-			info = "伤害半径增加 75\n\t• 总增加：225",
-		},
-		damage1 = {
-			name = "低音炮 I",
-			info = "伤害增加到 112.5%，但半径减少到 90%",
-		},
-		damage2 = {
-			name = "低音炮 II",
-			info = "伤害增加到 135%，但半径减少到 75%",
-		},
-		damage3 = {
-			name = "低音炮 III",
-			info = "伤害增加到 200%，但半径减少到 50%",
-		},
-		def1 = {
-			name = "音乐就是力量 I",
-			info = "播放音乐时，你可以抵消 10% 的伤害",
-		},
-		def2 = {
-			name = "音乐就是力量 II",
-			info = "播放音乐时，你可以抵消 25% 的伤害",
-		},
-		charge = {
-			name = "小短腿",
-			info = "通过按下重新加载键解锁向前冲刺的能力\n\t• 技能冷却时间：20 秒",
-		},
-		sticky = {
-			name = "火车王",
-			info = "冲入人群后，你在接下来的10秒内非常NB",
-		}
-	}
-}
-
-wep.SCP096 = {
-	charges = "再生费用：%i",
-	regen = "再生 HP - 费用：%i",
-	upgrades = {
-		sregen1 = {
-			name = "平静的精神 I",
-			info = "你每 4 秒获得一次再生费用，而不是 5 秒"
-		},
-		sregen2 = {
-			name = "平静的精神 II",
-			info = "你的再生费用为你治疗 6 HP 而不是 5 HP"
-		},
-		sregen3 = {
-			name = "平静的精神 III",
-			info = "你的再生速度快了 66%"
-		},
-		kregen1 = {
-			name = "茹毛饮血一",
-			info = "成功击杀可额外再生 90 HP"
-		},
-		kregen2 = {
-			name = "茹毛饮血二",
-			info = "你为成功击杀而额外恢复 90 HP\n\t• 总治疗量增加：180HP"
-		},
-		hunt1 = {
-			name = "狩猎开始了 I",
-			info = "狩猎面积增加到4250个"
-		},
-		hunt2 = {
-			name = "狩猎开始了 II",
-			info = "狩猎面积增加到5500个"
-		},
-		hp = {
-			name = "强化",
-			info = "你的最大生命值增加到 4000 HP\n\t• 你当前的生命值没有增加"
-		},
-		def = {
-			name = "坚硬之肤",
-			info = "你获得 30% 的子弹保护"
-		}
-	}
-}
-
-wep.SCP106 = {
-	swait = "特殊能力冷却时间：%is",
-	sready = "特殊能力准备就绪！",
-	upgrades = {
-		cd1 = {
-			name = "虚空漫步 I",
-			info = "特殊能力冷却时间减少 15 秒"
-		},
-		cd2 = {
-			name = "虚空漫步 II",
-			info = "特殊技能冷却时间减少 15 秒\n\t• 总冷却时间：30 秒"
-		},
-		cd3 = {
-			name = "虚空漫步 III",
-			info = "特殊技能冷却时间减少 15 秒\n\t• 总冷却时间：45 秒"
-		},
-		tpdmg1 = {
-			name = "衰败之触 I",
-			info = "传送后获得 15 额外伤害，持续 10 秒"
-		},
-		tpdmg2 = {
-			name = "衰败之触 II",
-			info = "传送后获得 20 额外伤害，持续 20 秒"
-		},
-		tpdmg3 = {
-			name = "衰败之触 III",
-			info = "传送后获得 25 额外伤害，持续 30 秒"
-		},
-		tank1 = {
-			name = "伤害腐蚀一",
-			info = "获得 20% 的子弹伤害保护，但你会慢 10%"
-		},
-		tank2 = {
-			name = "伤害腐蚀二",
-			info = "获得 20% 的子弹伤害保护，但你会慢 10%\n\t• 总保护：40%\n\t• 总慢：20%"
-		},
-	}
-}
-
-wep.SCP173 = {
-	swait = "特殊能力冷却时间：%is",
-	sready = "特殊能力准备就绪！",
-	upgrades = {
-		specdist1 = {
-			name = "幽灵 I",
-			info = "你的特殊能力距离增加 500"
-		},
-		specdist2 = {
-			name = "幽灵 II",
-			info = "你的特殊能力距离增加 700\n\t• 总增加：1200"
-		},
-		specdist3 = {
-			name = "幽灵 III",
-			info = "你的特殊能力距离增加 800\n\t• 总增加：2000"
-		},
-		boost1 = {
-			name = "嗜血者 I",
-			info = "每次击杀人类会获得 150 点生命值，并且你的特殊技能冷却时间会减少 10%"
-		},
-		boost2 = {
-			name = "嗜血者 II",
-			info = "每次击杀人类获得300HP，特殊技能冷却时间减少25%"
-		},
-		boost3 = {
-			name = "嗜血者 III",
-			info = "每次击杀人类获得 500 生命值，特殊技能冷却时间减少 50%"
-		},
-		prot1 = {
-			name = "混凝土重构一",
-			info = "立即恢复 1000 HP 并获得 10% 的子弹伤害保护"
-		},
-		prot2 = {
-			name = "混凝土重构二",
-			info = "立即恢复 1000 HP 并获得 10% 的子弹伤害保护\n\t• 总保护：20%"
-		},
-		prot3 = {
-			name = "混凝土重构三",
-			info = "立即恢复 1000 HP 并获得 20% 的子弹伤害保护\n\t• 总保护：40%"
-		},
-	},
-	back = "你可以按住 R 回到之前的位置",
-}
-
-wep.SCP457 = {
-	swait = "特殊能力冷却时间：%is",
-	sready = "特殊能力准备就绪！",
-	placed = "陷阱：%i/%i",
-	nohp = "HP不够！",
-	upgrades = {
-		fire1 = {
-			name = "火炬 I",
-			info = "你的燃烧半径增加 25"
-		},
-		fire2 = {
-			name = "火炬 II",
-			info = "你的燃烧伤害提高 0.5"
-		},
-		fire3 = {
-			name = "火炬 III",
-			info = "你的燃烧半径增加 50，燃烧伤害增加 0.5\n\t• 总半径增加：75\n\t• 总伤害增加：1"
-		},
-		trap1 = {
-			name = "小惊喜 I",
-			info = "陷阱寿命增加到 4 分钟，燃烧时间延长 1 秒"
-		},
-		trap2 = {
-			name = "小惊喜 II",
-			info = "陷阱寿命增加到 5 分钟，燃烧时间延长 1 秒，伤害增加 0.5\n\t• 总燃烧时间增加：2 秒"
-		},
-		trap3 = {
-			name = "小惊喜 III",
-			info = "陷阱燃烧时间延长 1 秒，伤害增加 0.5\n\t• 总燃烧时间增加：3 秒\n\t• 总伤害增加：1"
-		},
-		heal1 = {
-			name = "燃料夺取一",
-			info = "燃烧的人会治愈你额外 1 点生命值"
-		},
-		heal2 = {
-			name = "燃料夺取二",
-			info = "燃烧的人会为你额外治疗 1 点生命值\n\t• 总治疗量增加：2"
-		},
-		speed = {
-			name = "火车",
-			info = "你的速度提高了 10%"
-		}
-	}
-}
-
-wep.SCP682 = {
-	swait = "特殊能力冷却时间：%is",
-	sready = "特殊能力准备就绪！",
-	s_on = "你免疫任何伤害！%is",
-	upgrades = {
-		time1 = {
-			name = "不间断 I",
-			info = "你的特殊能力持续时间增加 2.5s\n\t• 总持续时间：12.5s"
-		},
-		time2 = {
-			name = "不间断 II",
-			info = "你的特殊能力持续时间增加 2.5s\n\t• 总持续时间：15s"
-		},
-		time3 = {
-			name = "不间断 III",
-			info = "你的特殊能力持续时间增加 2.5 秒\n\t• 总持续时间：17.5 秒"
-		},
-		prot1 = {
-			name = "适应 I",
-			info = "你受到的子弹伤害减少 10%"
-		},
-		prot2 = {
-			name = "适应 II",
-			info = "你受到的子弹伤害减少 15%\n\t• 总伤害减免：25%"
-		},
-		prot3 = {
-			name = "适应 III",
-			info = "你受到的子弹伤害减少 15%\n\t• 总伤害减免：40%"
-		},
-		speed1 = {
-			name = "狂暴冲刺 I",
-			info = "使用特殊能力后，获得10%移动速度直到受到伤害"
-		},
-		speed2 = {
-			name = "狂暴冲刺 II",
-			info = "使用特殊能力后，获得20%移动速度直到受到伤害"
-		},
-		ult = {
-			name = "再生",
-			info = "受到伤害后 5 秒，恢复已损失生命值的 5%"
-		},
-	}
-}
-
-wep.SCP8602 = {
-	upgrades = {
-		charge11 = {
-			name = "残酷 I",
-			info = "强力攻击伤害增加5"
-		},
-		charge12 = {
-			name = "残酷 II",
-			info = "强力攻击伤害增加10\n\t• 总伤害增加：15"
-		},
-		charge13 = {
-			name = "残酷 III",
-			info = "强力攻击伤害增加10\n\t• 总伤害增加：25"
-		},
-		charge21 = {
-			name = "加强 I",
-			info = "强力攻击范围增加15"
-		},
-		charge22 = {
-			name = "加强 II",
-			info = "强力攻击范围增加15\n\t• 总范围增加：30"
-		},
-		charge31 = {
-			name = "共同的痛苦",
-			info = "当你进行强力攻击时，附近每个撞击点都会受到原始伤害的20%"
-		},
-	}
-}
-
-wep.SCP939 = {
-	upgrades = {
-		heal1 = {
-			name = "嗜血 I",
-			info = "你的攻击治疗你至少 22.5 HP（最多 30）"
-		},
-		heal2 = {
-			name = "嗜血 II",
-			info = "你的攻击治疗你至少 37.5 HP（最多 50）"
-		},
-		heal3 = {
-			name = "嗜血 III",
-			info = "你的攻击治疗你至少 52.5 HP（最多 70）"
-		},
-		amn1 = {
-			name = "致命呼吸 I",
-			info = "你的毒药半径增加到 100"
-		},
-		amn2 = {
-			name = "致命呼吸 II",
-			info = "你的毒药现在造成伤害：1.5 dmg/s"
-		},
-		amn3 = {
-			name = "致命呼吸 III",
-			info = "你的毒药半径增加到 125，你的毒药伤害增加到 3 dmg/s"
-		},
-	}
-}
-
-wep.SCP966 = {
-	upgrades = {
-		lockon1 = {
-			name = "狂乱 I",
-			info = "攻击所需时间减少到2.5s"
-		},
-		lockon2 = {
-			name = "狂乱 II",
-			info = "攻击所需时间减少到2s"
-		},
-		dist1 = {
-			name = "猎人的召唤 I",
-			info = "攻击范围增加15"
-		},
-		dist2 = {
-			name = "猎人的召唤 II",
-			info = "攻击范围增加 15\n\t• 总范围增加：30"
-		},
-		dist3 = {
-			name = "猎人的召唤 III",
-			info = "攻击范围增加 15\n\t• 总范围增加：45"
-		},
-		dmg1 = {
-			name = "锋利的爪子 I",
-			info = "攻击力增加5"
-		},
-		dmg2 = {
-			name = "锋利的爪子 II",
-			info = "攻击伤害增加 5\n\t• 总伤害增加：10"
-		},
-		bleed1 = {
-			name = "深深的伤口 I",
-			info = "你的攻击有 25% 的几率造成更高等级的流血"
-		},
-		bleed2 = {
-			name = "深深的伤口 II",
-			info = "你的攻击有 50% 的几率造成更高等级的流血"
-		},
-	}
-}
-
-wep.SCP24273 = {
-	mind_control = "精神控制准备就绪！ 按RMB",
-	mind_control_cd = "精神控制进入冷却！ 等待%is",
-	dash = "攻击准备好了！",
-	dash_cd = "攻击进入冷却！ 等待：%is",
-	upgrades = {
-		dash1 = {
-			name = "无情冲锋 I",
-			info = "你的攻击冷却时间减少1秒，威力增加15%"
-		},
-		dash2 = {
-			name = "无情冲锋 II",
-			info = "攻击后惩罚时间减少0.5秒，速度惩罚从50%降低到35%"
-		},
-		dash3 = {
-			name = "无情冲锋 III",
-			info = "你的攻击伤害增加 50"
-		},
-		mc11 = {
-			name = "持久猎手 I",
-			info = "你的精神控制持续时间增加 10 秒，但冷却时间增加 20 秒"
-		},
-		mc12 = {
-			name = "持久猎手 II",
-			info = "你的精神控制持续时间增加 10 秒，但冷却时间增加 25 秒\n\t• 总持续时间增加：20 秒\n\t• 总冷却时间增加：45 秒"
-		},
-		mc21 = {
-			name = "不耐烦的猎人 I",
-			info = "你的精神控制持续时间减少 5 秒，冷却时间减少 10 秒"
-		},
-		mc22 = {
-			name = "不耐烦的猎人 II",
-			info = "你的精神控制持续时间减少 10 秒，冷却时间减少 15 秒"
-		},
-		mc3 = {
-			name = "不间断的猎人",
-			info = "在精神控制期间，所有类型的伤害降低 50%"
-		},
-		mc13 = {
-			name = "严格的法官",
-			info = "在精神控制期间杀死你的猎物，冷却时间减少 40%。 精神控制范围增加 1000 米"
-		},
-		mc23 = {
-			name = "绯红审判官",
-			info = "在精神控制期间杀死你的猎物，你会恢复 400 HP。 精神控制范围增加 500 米"
-		},
-	}
-}
-
-wep.SCP3199 = {
-	special = "特殊技能准备完毕! 按 RMB",
-	upgrades = {
-		regen1 = {
-			name = "血之滋味 I",
-			info = "处于狂暴状态时每秒回复 2 HP"
-		},
-		regen2 = {
-			name = "血之滋味 II",
-			info = "每个狂暴标记增加 10% 生命恢复率"
-		},
-		frenzy1 = {
-			name = "猎人的游戏 I",
-			info = "你的最大狂暴标记增加 1\n你的狂暴持续时间增加 20%"
-		},
-		frenzy2 = {
-			name = "猎人的游戏 II",
-			info = "你的最大狂怒标记增加 1\n你的狂暴持续时间增加 30%\n你的特殊攻击被禁用\n\t• 狂暴标记总数增加：2\n\t• 总持续时间增加：50%"
-		},
-		ch = {
-			name = "盲怒",
-			info = "你的速度提高了 25%\n你不能再检测附近人类的心跳"
-		},
-		egg1 = {
-			name = "另一个",
-			info = "购买此升级后，您会创建 1 个新的非活动蛋\n\t• 如果地图中没有蛋的空位，则不会创建蛋"
-		},
-		egg2 = {
-			name = "遗产",
-			info = "购买此升级后将激活一个非活动蛋\n\t• 这不会有影响，因为地图上没有非活动蛋"
-		},
-		egg3 = {
-			name = "重生",
-			info = "你的重生时间减少到 20 秒"
-		},
-	}
+wep.SCP500 = {
+	name = "SCP 500",
+	death_info = "你被SCP500噎死了",
+	text_used = "你一吞下这片药丸就感觉好多了",
 }
 
 wep.SCP714 = {
 	name = "SCP 714"
+}
+
+wep.SCP1025 = {
+	name = "SCP 1025",
+	diseases = {
+		arrest = "心脏骤停",
+		mental = "精神疾病",
+		asthma = "哮喘",
+		blindness = "失明",
+		hemo = "血友病",
+		oste = "骨质疏松症",
+
+		adhd = "多动症",
+		throm = "血小板增多症",
+		urbach = "罕见的遗传性疾病",
+
+		gas = "臌胀",
+	},
+	descriptions = {
+		arrest = "心脏骤停是由于心脏不能有效地泵送而导致的突然血流量损失。症状包括意识丧失和呼吸异常或缺失。有些人可能会在心脏骤停前立即出现胸痛、呼吸急促或恶心。单臂辐射性疼痛是一种常见症状，长期不适和全身虚弱也是如此。如果在几分钟内不治疗，通常会导致死亡。",
+		asthma = "哮喘是一种肺部呼吸道的长期炎症性疾病。其特征是症状多变且反复出现，可逆性气流阻塞，以及容易引发支气管痉挛。症状包括喘息、咳嗽、胸闷和呼吸急促。这些情况可能每天发生几次，也可能每周发生几次。",
+		blindness = "失明.也称为视力障碍或视力丧失，是指视力下降到无法通过眼镜等常规手段解决的程度。有些人还包括那些因为没有眼镜或隐形眼镜而视力下降的人。失明一词是指完全或几乎完全的视力丧失。",
+		hemo = "血友病（也称为出血性疾病）是一种主要遗传的遗传性疾病，会损害身体形成血栓的能力，而血栓是止血所需的过程。这会导致人们受伤后出血时间更长，容易出现瘀伤，关节或大脑出血的风险增加。特征性症状随严重程度的不同而不同。一般症状为内部或外部出血。",
+		oste = "骨质疏松症是一种全身性骨骼疾病，其特征是骨量低，骨组织微观结构恶化导致骨脆性，从而增加骨折风险。这是老年人骨折的最常见原因。通常骨折的骨头包括脊椎的椎骨、前臂的骨头和臀部。在骨折发生之前，通常没有任何症状。",
+		
+		adhd = "注意力缺陷/多动障碍（ADHD）是一种神经发育障碍，其特征是注意力不集中、精力过多、注意力过度集中和冲动，否则不适合一个人的年龄。一些患有多动症的人也表现出难以调节情绪或执行功能问题。此外，它还与其他精神障碍有关。",
+		throm = "血小板增多症是血液中血小板（血小板）计数高的一种情况。血小板计数高并不一定意味着有任何临床问题，可以通过常规全血计数来检测。然而，重要的是要引出完整的病史，以确保血小板计数的增加不是由二次过程引起的。",
+		urbach = "Urbach-Wie病是一种非常罕见的隐性遗传病。这种疾病的症状因人而异。Urbach-Wieth病显示双侧颞叶内侧对称钙化。这些钙化经常影响杏仁核。杏仁核被认为参与处理与生物学相关的刺激和情绪长期记忆，尤其是与恐惧相关的刺激。",
+	},
+	death_info_arrest = "你死于心脏骤停"
 }
 
 wep.HOLSTER = {
@@ -1752,14 +1423,16 @@ wep.HOLSTER = {
 
 wep.ID = {
 	name = "ID",
-	pname = "名称:",
+	pname = "名字:",
 	server = "服务器:",
 }
 
 wep.CAMERA = {
 	name = "监控系统",
 	showname = "摄像头",
-	info = "你可以通过监控系统观看设施情况\n你可以扫描检测SCP并传输至对讲机频道",
+	info = "摄像头可以让你看到设施里发生的事情\n它还为您提供了扫描SCP并将此信息传输到\n当前无线电信道的能力",
+	scanning = "扫描...",
+	scan_info = "按 [%s] 扫描SCP",
 }
 
 wep.RADIO = {
@@ -1767,14 +1440,19 @@ wep.RADIO = {
 }
 
 wep.NVG = {
-	name = "夜视仪",
-	info = "使暗区更亮并使亮区更亮的设备。有时你可以通过它们看到异常的东西"
+	name = "NVG",
+	info = "夜视仪-使黑暗区域更亮.\n有时你可以透过它们看到异常的东西"
 }
 
 wep.NVGPLUS = {
-	name = "加强版夜视仪",
-	showname = "夜视仪+",
-	info = "夜视仪的增强版,让您可以在手持其他物品的同时使用它。\n可惜电池只能持续 10 秒”"
+	name = "增强型NVG",
+	showname = "NVG+",
+	info = "NVG的增强版，允许您在手持其他物品时使用.\n不幸的是，电池只能使用10秒"
+}
+
+wep.THERMAL = {
+	showname = "热成像夜视仪",
+	name = "热成像夜视仪"
 }
 
 wep.ACCESS_CHIP = {
@@ -1789,8 +1467,8 @@ wep.ACCESS_CHIP = {
 		jan1 = "门卫",
 		jan = "门卫",
 		jan2 = "高级 门卫",
-		acc = "Accountant",
-		log = "Logistician",
+		acc = "会计师",
+		log = "后勤人员",
 		sci1 = "研究一级",
 		sci2 = "研究二级",
 		sci3 = "研究三级",
@@ -1803,7 +1481,30 @@ wep.ACCESS_CHIP = {
 		hacked4 = "骇入装置等级四",
 		hacked5 = "骇入装置等级五",
 		director = "站点主管",
-		o5 = "O5"
+		o5 = "O5",
+		goc = "GOC骇入装置",
+	},
+	SHORT = {
+		general = "一般",
+		jan1 = "门卫",
+		jan = "门卫",
+		jan2 = "高级 门卫",
+		acc = "会计师",
+		log = "后勤人员",
+		sci1 = "研究一级",
+		sci2 = "研究二级",
+		sci3 = "研究三级",
+		spec = "收容专家",
+		guard = "安全",
+		chief = "安全主管",
+		mtf = "MTF",
+		com = "MTF 指挥官",
+		hacked3 = "骇入装置等级三",
+		hacked4 = "骇入装置等级四",
+		hacked5 = "骇入装置等级五",
+		director = "站点主管",
+		o5 = "O5",
+		goc = "GOC 骇入装置",
 	},
 	ACCESS = {
 		GENERAL = "一般",
@@ -1816,9 +1517,10 @@ wep.ACCESS_CHIP = {
 		CHECKPOINT_EZ = "检查点 EZ-HCZ",
 		WARHEAD_ELEVATOR = "弹头电梯",
 		EC = "电闸中心",
-		ARMORY = "军械库",
+		ARMORY = "Armory",
 		GATE_A = "A大门",
 		GATE_B = "B大门",
+		GATE_C = "C大门",
 		FEMUR = "大腿粉碎机",
 		ALPHA = "阿尔法弹头",
 		OMEGA = "欧米茄弹头",
@@ -1845,39 +1547,6 @@ wep.OMNITOOL = {
 	},
 }
 
-wep.KEYCARD = {
-	author = "danx91",
-	instructions = "Access:",
-	ACC = {
-		"SAFE",
-		"EUCLID",
-		"KETER",
-		"检查点",
-		"OMNI核弹",
-		"一般访问",
-		"A大门",
-		"B大门",
-		"军械库",
-		"大腿骨粉碎机",
-		"EC",
-	},
-	STATUS = {
-		"ACCESS",
-		"NO ACCESS",
-	},
-	NAMES = {
-		"钥匙卡级别 1",
-		"钥匙卡等级 2",
-		"钥匙卡等级 3",
-		"研究员钥匙卡",
-		"MTF 守卫钥匙卡",
-		"MTF指挥官钥匙卡",
-		"钥匙卡级别 OMNI",
-		"检查站安全钥匙卡",
-		"混沌分裂者的破译钥匙卡",
-	},
-}
-
 wep.MEDKIT = {
 	name = "医疗包（剩余：%d）",
 	showname = "医疗包",
@@ -1888,10 +1557,6 @@ wep.MEDKITPLUS = {
 	name = "大医疗包 (剩余: %d)",
 	showname = "医疗包+",
 	pickupname = "医疗包+",
-}
-
-wep.TASER = {
-	name = "电击枪"
 }
 
 wep.FLASHLIGHT = {
@@ -1906,25 +1571,120 @@ wep.GASMASK = {
 	name = "防毒面具"
 }
 
+wep.HEAVYMASK = {
+	name = "重型防毒面具"
+}
+
+wep.FUSE = {
+	name = "保险丝",
+	name_f = "保险丝 %iA",
+}
+
 wep.TURRET = {
 	name = "炮塔",
+	placing_turret = "放置炮塔",
 	pickup = "捡起",
 	MODES = {
-		off = "禁用 ",
+		off = "禁用",
 		filter = "区分己方",
+		target = "敌方目标",
 		all = "瞄准一切",
-		supp = "熄火"
+		supp = "火力压制",
+		scp = "攻击SCP"
 	}
 }
 
 wep.ALPHA_CARD1 = {
-	name = "阿尔法核弹代码 #1"
+	name = "ALPHA 阿尔法代码 #1"
 }
 
 wep.ALPHA_CARD2 = {
-	name = "阿尔法核弹代码 #2"
+	name = "ALPHA 阿尔法代码 #2"
 }
 
-wep.weapon_stunstick = "棒棒"
+wep.COM_TAB = {
+	name = "NTF 平板",
+	loading = "加载",
+	eta = "进度条: ",
+	detected = "检测到的人员:",
+	tesla_deactivated = "特斯拉已停用: ",
+	change = "左键 - 取消",
+	confirm = "右键 - 确认",
+	options = {
+		scan = "设施扫描",
+		tesla = "重置特斯拉"
+	},
+	actions = {
+		scan = "扫描设施...",
+		tesla = "禁用特斯拉...",
+	}
+}
 
-registerLanguage( lang, "chinese", "cn", "zh-CN" )
+wep.GOC_TAB = {
+	name = "GOC 平板",
+	info = "GOC平板电脑,包含一个小爆炸物在用户死亡的\n情况下自动摧毁平板电脑",
+	loading = "加载",
+	status = "状态:",
+	dist = "到目标的距离",
+	objectives = {
+		failed = "入侵装置被破坏",
+		nothing = "未知",
+		find = "寻找入侵设备",
+		deliver = "将设备放到指定位置",
+		escort = "护送入侵装置",
+		protect = "保护入侵装置",
+		escape = "撤离阶段"
+	}
+}
+
+wep.GOCDEVICE = {
+	name = "GOC入侵装置",
+	placing = "正在放置GOC入侵设备。。。"
+}
+
+wep.DOCUMENT = {
+	name = "机密文件",
+	info = "可能包含关于SCP、设施和员工的有价值信息的多份文件包",
+	types = {
+
+	}
+}
+
+wep.ADRENALINE = {
+	name = "肾上腺素",
+	info = "短暂提升耐力",
+}
+
+wep.ADRENALINE_BIG = {
+	name = "加强肾上腺素",
+	info = "在相当长的一段时间内提供短暂的耐力提升",
+}
+
+wep.MORPHINE = {
+	name = "吗啡",
+	info = "提供一些随时间减少的临时健康生命值",
+}
+
+wep.MORPHINE_BIG = {
+	name = "加强吗啡",
+	info = "供大量随时间减少的临时生命值",
+}
+
+wep.TASER = {
+	name = "电击枪"
+}
+
+wep.PIPE = {
+	name = "金属管"
+}
+
+wep.GLASS_KNIFE = {
+	name = "玻璃刀"
+}
+
+wep.__slc_ammo = "子弹"
+
+wep.weapon_stunstick = "电棒"
+wep.weapon_crowbar = "撬棍"
+
+RegisterLanguage( lang, "chinese", "cn", "zh-CN" )

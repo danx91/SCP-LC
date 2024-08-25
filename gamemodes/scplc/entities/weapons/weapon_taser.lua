@@ -76,7 +76,6 @@ function SWEP:PrimaryAttack()
 			local dmginfo = DamageInfo()
 			dmginfo:SetAttacker( self:GetOwner() )
 			dmginfo:SetDamage( self.Primary.Damage )
-			//dmginfo:SetDamageType(DMG_BULLET)
 			dmginfo:SetDamageType( DMG_SHOCK )
 			dmginfo:SetDamageForce( self:GetOwner():EyeAngles():Forward() * 1 )
 			dmginfo:SetInflictor( self )
@@ -108,7 +107,7 @@ function SWEP:MakeImpactEffect( fxdata )
 		shock:SetKeyValue( "lifetime_max", .25 )
 		shock:SetKeyValue( "lifetime_min", .25 )
 		shock:SetKeyValue( "m_Color", 200, 200, 255 )
-		shock:SetKeyValue( "m_flRadius", 20)
+		shock:SetKeyValue( "m_flRadius", 20 )
 		shock:SetKeyValue( "m_SoundName", "DoSpark" )
 		shock:SetKeyValue( "texture", "sprites/physcannon/bluelight1b.vmt" )
 		shock:SetKeyValue( "thick_max", 5 )
@@ -116,9 +115,6 @@ function SWEP:MakeImpactEffect( fxdata )
 		shock:Spawn()
 		shock:Fire( "DoSpark", "", 0 )
 		SafeRemoveEntityDelayed( shock, 1 )
-		SafeRemoveEntityDelayed( target, 1 )
-
-		//util.Effect("TeslaZap", fxdata)
 	end
 end
 
@@ -161,3 +157,5 @@ function SWEP:DrawWorldModel()
 
     self:DrawModel()
 end
+
+MarkAsWeapon( "weapon_taser" )

@@ -104,7 +104,7 @@ function LoadINI( f, target )
 
 	if !version or version != INI_LOADER_VERSION then
 		//print( version, INI_LOADER_VERSION )
-		MsgC( Color( 255, 50, 50 ), "Versions of file and parser are different!", "\tFile: "..f, "\tVersion of parser: "..INI_LOADER_VERSION, "\tVersion of file: "..(version or "Undefined").."\n" )
+		MsgC( Color( 255, 50, 50 ), "Versions of file and parser are different!", "\tFile: "..f, "\tVersion of parser: "..INI_LOADER_VERSION, "\tVersion of file: "..( version or "Undefined" ).."\n" )
 	end
 
 	local result = target or {}

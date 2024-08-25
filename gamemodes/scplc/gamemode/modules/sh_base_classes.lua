@@ -86,7 +86,9 @@ hook.Add( "SLCRegisterClassGroups", "BaseGroups", function()
 
 	AddSupportGroup( "mtf_ntf", 60, SPAWN_SUPPORT_MTF, -1, function()
 		SetRoundProperty( "mtfs_spawned", true )
-		TransmitSound( string.format( "scp_lc/announcements/ntf_entered%i.ogg", math.random( 3 ) ), true, 1 )
+
+		local num = math.random( 3 )
+		PlayPA( string.format( "scp_lc/announcements/ntf_entered%i.ogg", num ), num == 1 and 25 or 12 )
 	end )
 
 	//AddSupportGroup( "mtf_fire", 25, SPAWN_SUPPORT_MTF )
@@ -94,17 +96,20 @@ hook.Add( "SLCRegisterClassGroups", "BaseGroups", function()
 	AddSupportGroup( "mtf_alpha", 20, SPAWN_SUPPORT_MTF, function( max )
 		return CVAR.slc_alpha1_amount:GetInt()
 	end, function()
-		SetRoundProperty( "mtf_alpha_spawned", true )
 		SetRoundProperty( "mtfs_spawned", true )
-		TransmitSound( "scp_lc/announcements/alpha1_entered.ogg", true, 1 )
+		SetRoundProperty( "mtf_alpha_spawned", true )
+
+		if GetRoundProperty( "goc_spawned" ) and !GetRoundProperty( "mtf_alpha_goc" ) then
+			SetRoundProperty( "mtf_alpha_goc", true )
+		end
+
+		PlayPA( "scp_lc/announcements/alpha1_entered.ogg", 24 )
 	end, function()
+		if GetRoundProperty( "goc_spawned" ) and !GetRoundProperty( "mtf_alpha_goc" ) then return true, true end
 		if GetRoundProperty( "mtf_alpha_spawned" ) then return false end
-		if GetRoundProperty( "goc_spawned" ) then return true, true end
 
 		local round = GetTimer( "SLCRound" )
-		if !IsValid( round ) or round:GetRemainingTime() <= round:GetTime() / 2 then return true end
-
-		return false
+		return !IsValid( round ) or round:GetRemainingTime() <= round:GetTime() / 2
 	end )
 
 	AddSupportGroup( "ci", 30, SPAWN_SUPPORT_CI )
@@ -122,8 +127,10 @@ hook.Add( "SLCRegisterClassGroups", "BaseGroups", function()
 				SetRoundProperty( "goc_device", true )
 			end
 		end
+
+		SetRoundProperty( "SupportTimerOverride", CVAR.slc_alpha1_time_goc:GetInt() )
 	end, function()
-		return GetRoundProperty( "mtfs_spawned" ) and !GetRoundProperty( "goc_spawned" )
+		return GetRoundProperty( "mtfs_spawned" ) and !GetRoundProperty( "goc_spawned" ) and !GetRoundStat( "omega_warhead" )
 	end )
 end )
 
@@ -243,6 +250,23 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		end
 	} )
 
+	RegisterClass( "classd_prestige", "classd", CLASSD_MODELS, {
+		team = TEAM_CLASSD,
+		weapons = {},
+		ammo = {},
+		chip = "",
+		omnitool = true,
+		health = 100,
+		walk_speed = 100,
+		run_speed = 225,
+		sanity = 75,
+		vest = nil,
+		max = 3,
+		tier = -1,
+		weight = 4,
+		holster_override = "item_slc_clothes_changer"
+	} )
+
 	--[[-------------------------------------------------------------------------
 	SCI
 	---------------------------------------------------------------------------]]
@@ -322,6 +346,23 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		max = 1,
 		tier = 3,
 		bodygroups = { glasses = "?" },
+	} )
+
+	RegisterClass( "sci_prestige", "sci", SCI_MODELS, {
+		team = TEAM_CLASSD,
+		weapons = {},
+		ammo = {},
+		chip = "sci2",
+		omnitool = true,
+		health = 100,
+		walk_speed = 100,
+		run_speed = 225,
+		sanity = 75,
+		vest = nil,
+		max = 1,
+		tier = -1,
+		weight = 4,
+		persona = { team = TEAM_SCI, class = "sci" },
 	} )
 
 	--[[-------------------------------------------------------------------------
@@ -456,11 +497,82 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		vest = "guard",
 		max = 2,
 		tier = 1,
+		select_group = "cispy",
 		persona = { team = TEAM_GUARD, class = "guard" },
 		skin = 4,
 		select_override = function( cur, total )
 			return cur < math.floor( total / 2 )
 		end,
+	} )
+
+	RegisterClass( "lightcispy", "guard", GUARD_MODELS, {
+		team = TEAM_CI,
+		loadout = "pistol_low",
+		weapons = { "weapon_stunstick", "item_slc_radio", "item_slc_flashlight", "item_slc_battery" },
+		ammo = {},
+		chip = "guard",
+		omnitool = true,
+		health = 100,
+		walk_speed = 105,
+		run_speed = 240,
+		sanity = 100,
+		vest = nil,
+		max = 2,
+		tier = 2,
+		weight = 1,
+		select_group = "cispy",
+		persona = { team = TEAM_GUARD, class = "lightguard" },
+		skin = 4,
+		select_override = function( cur, total )
+			return cur < math.floor( total / 2 )
+		end,
+	} )
+
+	RegisterClass( "heavycispy", "guard", GUARD_MODELS, {
+		team = TEAM_CI,
+		loadout = "heavyguard",
+		weapons = { "weapon_stunstick", "item_slc_radio", "item_slc_camera" },
+		ammo = {},
+		chip = "guard",
+		omnitool = true,
+		health = 125,
+		walk_speed = 100,
+		run_speed = 225,
+		sanity = 100,
+		vest = "heavyguard",
+		max = 2,
+		tier = 2,
+		weight = 1,
+		select_group = "cispy",
+		persona = { team = TEAM_GUARD, class = "heavyguard" },
+		skin = 4,
+		select_override = function( cur, total )
+			return cur < math.floor( total / 2 )
+		end,
+	} )
+
+	RegisterClass( "guard_prestige", "guard", GUARD_MODELS, {
+		team = TEAM_GUARD,
+		loadout = "tech",
+		weapons = { "weapon_stunstick", "item_slc_radio", "item_slc_fuse", "item_slc_door_blocker" },
+		ammo = {},
+		chip = "guard",
+		omnitool = true,
+		health = 100,
+		walk_speed = 100,
+		run_speed = 230,
+		sanity = 100,
+		vest = "guard",
+		max = 1,
+		tier = -1,
+		skin = 3,
+		weight = 4,
+		callback = function( ply, this )
+			local fuse = ply:GetWeapon( "item_slc_fuse" )
+			if !IsValid( fuse ) then return end
+
+			fuse:SetRating( math.random( 3, 15 ) )
+		end
 	} )
 
 	--[[-------------------------------------------------------------------------
@@ -481,7 +593,7 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		vest = "ntf",
 		max = 0,
 		tier = 0,
-		backpack = 2,
+		backpack = "small",
 		spawn_protection = true,
 	} )
 
@@ -499,7 +611,7 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		vest = "ntf",
 		max = 0,
 		tier = 0,
-		backpack = 2,
+		backpack = "small",
 		spawn_protection = true,
 	} )
 
@@ -516,7 +628,8 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		vest = "ntf",
 		max = 0,
 		tier = 1,
-		backpack = 2,
+		weight = 1,
+		backpack = "small",
 		spawn_protection = true,
 	} )
 
@@ -533,7 +646,7 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		vest = "mtf_medic",
 		max = 1,
 		tier = 2,
-		backpack = 2,
+		backpack = "medium",
 		spawn_protection = true,
 	} )
 
@@ -550,7 +663,7 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		vest = "ntfcom",
 		max = 1,
 		tier = 3,
-		backpack = 2,
+		backpack = "large",
 		spawn_protection = true,
 	} )
 
@@ -567,7 +680,7 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		vest = "ntf",
 		max = 1,
 		tier = 2,
-		backpack = 2,
+		backpack = "small",
 		spawn_protection = true,
 	} )
 
@@ -585,7 +698,7 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		vest = "alpha1",
 		max = 0,
 		tier = 2,
-		backpack = 4,
+		backpack = "medium",
 		spawn_protection = true,
 	} )
 
@@ -602,7 +715,8 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		vest = "alpha1",
 		max = 1,
 		tier = 3,
-		backpack = 4,
+		weight = 3,
+		backpack = "medium",
 		spawn_protection = true,
 	} )
 
@@ -620,7 +734,7 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		vest = "alpha1",
 		max = 1,
 		tier = 3,
-		backpack = 4,
+		backpack = "medium",
 		spawn_protection = true,
 	} )
 
@@ -637,14 +751,15 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		vest = "alpha1",
 		max = 1,
 		tier = 4,
-		backpack = 4,
+		weight = 4,
+		backpack = "large",
 		spawn_protection = true,
 	} )
 
 	--CI
 	RegisterSupportClass( "ci", "ci", CI_MODELS, {
 		team = TEAM_CI,
-		weapons = { "item_slc_radio", "item_slc_gasmask", "cw_flash_grenade" },
+		weapons = { "item_slc_radio", "item_slc_gasmask", "item_slc_nvg", "cw_flash_grenade",  },
 		ammo = {},
 		chip = "hacked4",
 		omnitool = true,
@@ -655,13 +770,30 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		vest = "ci",
 		max = 0,
 		tier = 1,
-		backpack = 2,
+		backpack = "small",
+		spawn_protection = true,
+	} )
+
+	RegisterSupportClass( "cisniper", "ci", CI_MODELS, {
+		team = TEAM_CI,
+		weapons = { "item_slc_radio", "item_slc_gasmask", "item_slc_nvg" },
+		ammo = {},
+		chip = "hacked4",
+		omnitool = true,
+		health = 100,
+		walk_speed = 110,
+		run_speed = 240,
+		sanity = 115,
+		vest = "ci",
+		max = 1,
+		tier = 2,
+		backpack = "small",
 		spawn_protection = true,
 	} )
 
 	RegisterSupportClass( "cicom", "ci", "models/player/1000shells/captan_ci.mdl", {
 		team = TEAM_CI,
-		weapons = { "item_slc_radio", "item_slc_gasmask", "cw_frag_grenade" },
+		weapons = { "item_slc_radio", "item_slc_gasmask", "item_slc_nvg", "cw_frag_grenade" },
 		ammo = {},
 		chip = "hacked5",
 		omnitool = true,
@@ -672,7 +804,7 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		vest = "cicom",
 		max = 1,
 		tier = 2,
-		backpack = 2,
+		backpack = "medium",
 		spawn_protection = true,
 	} )
 
@@ -689,7 +821,7 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		vest = "cimedic",
 		max = 1,
 		tier = 2,
-		backpack = 2,
+		backpack = "small",
 		spawn_protection = true,
 	} )
 
@@ -706,13 +838,14 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		vest = "ci",
 		max = 1,
 		tier = 3,
-		backpack = 2,
+		weight = 3,
+		backpack = "small",
 		spawn_protection = true,
 	} )
 
 	RegisterSupportClass( "ciheavy", "ci", CI_MODELS, {
 		team = TEAM_CI,
-		weapons = { "item_slc_radio", "item_slc_heavymask", "item_slc_thermal" },
+		weapons = { "item_slc_radio", "item_slc_heavymask", "item_slc_nvg" },
 		ammo = {},
 		chip = "hacked4",
 		omnitool = true,
@@ -723,8 +856,9 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		vest = "ci",
 		max = 1,
 		tier = 4,
+		weight = 3,
 		slots = 2,
-		backpack = 2,
+		backpack = "small",
 		spawn_protection = true,
 	} )
 
@@ -751,7 +885,7 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		max = 0,
 		tier = 2,
 		bodygroups = goc_bgs,
-		backpack = 3,
+		backpack = "large",
 		spawn_protection = true,
 	} )
 
@@ -769,7 +903,7 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		max = 1,
 		tier = 2,
 		bodygroups = goc_bgs,
-		backpack = 3,
+		backpack = "large",
 		spawn_protection = true,
 	} )
 
@@ -786,8 +920,9 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		vest = "goccom",
 		max = 1,
 		tier = 3,
+		weight = 3,
 		bodygroups = goc_bgs,
-		backpack = 3,
+		backpack = "large",
 		spawn_protection = true,
 	} )
 end )

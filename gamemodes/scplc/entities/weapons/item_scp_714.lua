@@ -50,14 +50,12 @@ function SWEP:OnSelect()
 end
 
 function SWEP:StateChanged( ply, enabled )
-	if SERVER then
-		ply:SetSCP714( enabled )
+	if CLIENT then return end
 
-		if enabled then
-			ply:SetStaminaLimit( 51 )
-		else
-			ply:SetStaminaLimit( 100 )
-		end
+	if enabled then
+		ply:SetStaminaLimit( 51 )
+	else
+		ply:SetStaminaLimit( ply.ClassData.stamina or 100 )
 	end
 end
 
@@ -76,15 +74,16 @@ if SERVER then
 	hook.Add( "SLCPlayerSanityChange", "SLCSCP714Sanity", func )
 end
 
-if CLIENT then
-	local PLAYER = FindMetaTable( "Player" )
+--[[-------------------------------------------------------------------------
+Player binding
+---------------------------------------------------------------------------]]
+local PLAYER = FindMetaTable( "Player" )
 
-	function PLAYER:CL_GetSCP714() --for clientside usage purpose
-		local scp = self:GetWeapon( "item_scp_714" )
-		if IsValid( scp ) then
-			return scp:GetEnabled()
-		end
-
-		return false
+function PLAYER:GetSCP714()
+	local scp = self:GetWeapon( "item_scp_714" )
+	if IsValid( scp ) then
+		return scp:GetEnabled()
 	end
+
+	return false
 end

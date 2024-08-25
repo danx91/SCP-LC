@@ -35,7 +35,7 @@ function SWEP:Think()
 	local owner = self:GetOwner()
 	if !IsValid( owner ) then return end
 
-	local status = owner:UpdateHold( "turret_place", self )
+	local status = owner:UpdateHold( self, "turret_place" )
 
 	if status == true then
 		if SERVER then
@@ -48,11 +48,7 @@ function SWEP:Think()
 				turret:SetOwnerSignature( owner:TimeSignature() )
 			end
 
-			local holster = owner:GetWeapon( "item_slc_holster" )
-			if IsValid( holster ) then
-				owner:SetActiveWeapon( holster )
-			end
-			
+			owner:ForceHolster()
 			self:Remove()
 		end
 	elseif status == false then
@@ -64,9 +60,9 @@ function SWEP:Think()
 	else
 		local valid, pos, ang = self:TestIndicator()
 
-		if owner:IsHolding( "turret_place", self ) then
+		if owner:IsHolding( self, "turret_place" ) then
 			if !valid then
-				owner:InterruptHold( "turret_place", self )
+				owner:InterruptHold( self, "turret_place" )
 			end
 		else
 			self.LastPos = pos
@@ -115,12 +111,13 @@ end
 
 function SWEP:PrimaryAttack()
 	local owner = self:GetOwner()
-	if owner:IsHolding( "turret_place", self ) then return end
+	if owner:IsHolding( self, "turret_place" ) then return end
+	if owner:IsInZone( ZONE_FLAG_ANOMALY ) then return end
 	
 	local valid, _, _ = self:TestIndicator()
 	if !valid then return end
 
-	owner:StartHold( "turret_place", IN_ATTACK, self.PlaceTime, nil, self )
+	owner:StartHold( self, "turret_place", IN_ATTACK, self.PlaceTime )
 
 	if SERVER then
 		owner:EnableProgressBar( true, CurTime() + self.PlaceTime, "lang:WEAPONS.TURRET.placing_turret", Color( 200, 200, 200, 255 ), Color( 50, 225, 25, 255 ) )
@@ -322,7 +319,7 @@ end
 hook.Add( "StartCommand", "SLCTurretSWEPCMD", function( ply, cmd )
 	local wep = ply:GetWeapon( "item_slc_turret" )
 	if IsValid( wep ) then
-		if ply:IsHolding( "turret_place", wep ) then
+		if ply:IsHolding( wep, "turret_place" ) then
 			cmd:ClearMovement()
 
 			if !wep.ViewAngles then wep.ViewAngles = cmd:GetViewAngles() end

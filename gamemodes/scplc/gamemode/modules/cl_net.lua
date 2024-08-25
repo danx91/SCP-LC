@@ -11,6 +11,8 @@ net.ReceiveTable( "SLCInfoScreen", function( data )
 	end
 
 	InfoScreen( { team = data.team, class = data.class }, data.type, data.time, data.data )
+
+	hook.Run( "SLCCloseMinigames" )
 end )
 
 net.Receive( "PlayerReady", function( len )
@@ -29,13 +31,16 @@ net.Receive( "SCPList", function( len )
 	for i, v in ipairs( data ) do
 		local name = v.name
 		CLASSES[name] = name
-		table.insert( ShowSCPs, v )
+
+		if !v.hide then
+			table.insert( ShowSCPs, v )
+		end
 		
 		local nice_name = lang[name]
 		if !nice_name then
 			numbers[name] = { 0, 0 }
 		else
-			local n1, n2 = string.match( nice_name, "SCP%s*(%d+)-?(%d*)" )
+			local n1, n2 = string.match( nice_name, "SCP[%s%-](%d+)-?(%d*)" )
 			numbers[name] = { tonumber( n1 ) or 0, tonumber( n2 ) or 0 }
 		end
 
@@ -70,6 +75,10 @@ end )
 
 net.Receive( "CenterMessage", function( len )
 	CenterMessage( net.ReadString() )
+end )
+
+net.Receive( "SLCChatPrint", function( len )
+	chat.AddText( unpack( net.ReadTable() ) )
 end )
 
 net.Receive( "SLCProgressBar", function( len )
@@ -128,6 +137,9 @@ net.Receive( "RoundInfo", function( len )
 	local status = data.status
 
 	if status == "off" then
+		CENTERMESSAGES = {}
+		hook.Run( "SLCRoundCleanup" )
+
 		ROUND.active = false
 		ROUND.preparing = false
 		ROUND.infoscreen = false
@@ -144,6 +156,8 @@ net.Receive( "RoundInfo", function( len )
 		ROUND.post = false
 	elseif status == "inf" then
 		CENTERMESSAGES = {}
+		hook.Run( "SLCRoundCleanup" )
+		
 		ROUND.active = true
 		ROUND.time = data.time
 		ROUND.duration = data.duration
@@ -151,7 +165,6 @@ net.Receive( "RoundInfo", function( len )
 		ROUND.infoscreen = true
 		ROUND.post = false
 	elseif status == "pre" then
-		//CENTERMESSAGES = {}
 		ROUND.active = true
 		ROUND.time = data.time
 		ROUND.duration = data.duration
@@ -170,7 +183,7 @@ net.Receive( "RoundInfo", function( len )
 	end
 end )
 
-net.Receive( "SLCHooks", function( len )
+net.Receive( "SCPHooks", function( len )
 	local mode = net.ReadBool()
 
 	if mode then
@@ -218,8 +231,17 @@ net.Receive( "SLCXPSummary", function( len )
 end )
 
 net.Receive( "SLCGasZones", function( len )
+	local reset = net.ReadBool()
+	local old_power = SLC_GAS.GasPower
+
 	SLC_GAS = net.ReadTable()
-	SLC_GAS.GasPower = 0
+	SLC_GAS_VENT = net.ReadTable()
+
+	if reset then
+		SLC_GAS.GasPower = 0
+	else
+		SLC_GAS.GasPower = old_power or 0
+	end
 end )
 
 net.Receive( "SLCHitMarker", function( len )

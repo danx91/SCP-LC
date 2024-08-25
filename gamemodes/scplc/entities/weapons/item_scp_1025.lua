@@ -26,45 +26,41 @@ function SWEP:Initialize()
 end
 
 function SWEP:Equip()
-	if SERVER then
-		local owner = self:GetOwner()
-		local sig = owner:TimeSignature()
-
-		if !self.PlayerCache[sig] then
-			local rand = math.random( #diseases )
-
-			self:SetDisease( rand )
-			self.PlayerCache[sig] = rand
-		else
-			self:SetDisease( self.PlayerCache[sig] or 0 )
-		end
-	end
+	self:Disease()
 end
 
 function SWEP:Deploy()
-	if SERVER then
-		local owner = self:GetOwner()
-		local sig = owner:TimeSignature()
+	if CLIENT then return end
 
-		if !self.PlayerCache[sig] then
-			self:Equip()
-		end
+	local owner = self:GetOwner()
+	if owner:GetProperty( "slc_1025_disease" ) or owner:GetSCP714() then return end
+	
+	self:Disease()
 
-		if !owner:GetProperty( "slc_1025_disease" ) and !owner:GetSCP714() then
-			local cb = callbacks[self.PlayerCache[sig]]
-			if cb then
-				cb( owner )
-			end
-		end
+	local cb = callbacks[self:GetDisease()]
+	if !cb then return end
+
+	cb( owner )
+end
+
+function SWEP:Disease()
+	if CLIENT then return end
+
+	local owner = self:GetOwner()
+	local sig = owner:TimeSignature()
+
+	if !self.PlayerCache[owner] or self.PlayerCache[owner][1] != sig then
+		local rand = math.random( #diseases )
+
+		self:SetDisease( rand )
+		self.PlayerCache[owner] = { sig, rand }
+	else
+		self:SetDisease( self.PlayerCache[owner][2] or 0 )
 	end
 end
 
-function SWEP:PrimaryAttack()
-
-end
-
 if CLIENT then
-	local page = Material( "slc/misc/page.png" )
+	local page = Material( "slc/misc/page.png", "smooth" )
 	local pw = page:Width()
 	local ph = page:Height()
 	local ratio = pw / ph
@@ -88,30 +84,29 @@ if CLIENT then
 		local id = self:GetDisease()
 		local name = diseases[id]
 
-		if name then
-			draw.Text{
-				text = pages[id] or "00",
-				pos = { x + dw - 16, y + dh - 16 },
-				font = "SCP1025Font",
-				color = text_color,
-				xalign = TEXT_ALIGN_RIGHT,
-				yalign = TEXT_ALIGN_BOTTOM,
-			}
+		if !name then return end
+		draw.Text{
+			text = pages[id] or "00",
+			pos = { x + dw - 16, y + dh - 16 },
+			font = "SCP1025Font",
+			color = text_color,
+			xalign = TEXT_ALIGN_RIGHT,
+			yalign = TEXT_ALIGN_BOTTOM,
+		}
 
-			local _, th = draw.Text{
-				text = self.Lang.diseases[name] or name,
-				pos = { w * 0.5, y + w * 0.03 },
-				font = "SCPHUDMedium",
-				color = text_color,
-				xalign = TEXT_ALIGN_CENTER,
-				yalign = TEXT_ALIGN_CENTER,
-			}
+		local _, th = draw.Text{
+			text = self.Lang.diseases[name] or name,
+			pos = { w * 0.5, y + w * 0.03 },
+			font = "SCPHUDMedium",
+			color = text_color,
+			xalign = TEXT_ALIGN_CENTER,
+			yalign = TEXT_ALIGN_CENTER,
+		}
 
-			local desc = self.Lang.descriptions[name]
-			if desc then
-				draw.MultilineText( x, y + w * 0.03 + th * 0.5, desc, "SCP1025Font", text_color, dw, w * 0.0175, 4, "justify" )
-			end
-		end
+		local desc = self.Lang.descriptions[name]
+		if !desc then return end
+		
+		draw.MultilineText( x, y + w * 0.03 + th * 0.5, desc, "SCP1025Font", text_color, dw, w * 0.0175, 4, "justify" )
 	end
 
 	hook.Add( "RebuildFonts", "SCP1025Font", function()
@@ -144,6 +139,7 @@ AddSCP1025Disease( "arrest", 17, function( ply )
 				}
 			} )
 
+			ply:SkipNextSuicide()
 			ply:Kill()
 		end
 	end, nil, false, true )
@@ -238,61 +234,6 @@ EFFECTS.RegisterEffect( "hemo", {
 	hide = true,
 } )
 
-EFFECTS.RegisterEffect( "heavy_bleeding", {
-	duration = 300,
-	stacks = 0,
-	tiers = {
-		{ icon = Material( "slc/hud/effects/bleeding3.png" ) },
-	},
-	cantarget = function( ply )
-		local team = ply:SCPTeam()
-		return team != TEAM_SPEC and team != TEAM_SCP
-	end,
-	begin = function( self, ply, tier, args, refresh )
-		if refresh then
-			self.args[2] = 1
-
-			if IsValid( args[1] ) then
-				self.args[1] = args[1]
-			end
-		end
-	end,
-	finish = function( self, ply, tier, args, interrupt, all )
-		if SERVER and interrupt and !all then
-			ply:AddTimer( "reopen_wound", math.random( 30, 120 ), 1, function()
-				if IsValid( ply ) and !ply:HasEffect( "heavy_bleeding" ) then
-					if math.random( 1, 100 ) <= 50 / args[2] then
-						ply:ApplyEffect( "heavy_bleeding", args[1], args[2] + 1 )
-					end
-				end
-			end )
-		end
-	end,
-	think = function( self, ply, tier, args )
-		if SERVER then
-			if ply:SCPTeam() == TEAM_SPEC or ply:SCPTeam() == TEAM_SCP then return end
-
-			local att = args[1]
-			local dmg = DamageInfo()
-
-			dmg:SetDamage( 2 )
-			dmg:SetDamageType( DMG_DIRECT )
-
-			if IsValid( att ) then
-				dmg:SetAttacker( att )
-			end
-
-			ply:TakeDamageInfo( dmg )
-			AddRoundStat( "bleed", 2 )
-		else
-			if self.nsound and self.nsound > CurTime() then return end
-			self.nsound = CurTime() + 5
-
-			ply:EmitSound( "SLCEffects.Bleeding" )
-		end
-	end,
-	wait = 3,
-} )
 EFFECTS.RegisterEffect( "oste", {
 	duration = -1,
 	stacks = 0,
@@ -342,6 +283,7 @@ EFFECTS.RegisterEffect( "light_bleeding", {
 
 			if IsValid( args[1] ) then
 				self.args[1] = args[1]
+				self.args[3] = args[1]:TimeSignature()
 			end
 		end
 	end,
@@ -355,7 +297,7 @@ EFFECTS.RegisterEffect( "light_bleeding", {
 			dmg:SetDamage( args[2] )
 			dmg:SetDamageType( DMG_DIRECT )
 
-			if IsValid( att ) then
+			if IsValid( att ) and att:CheckSignature( args[3] ) then
 				dmg:SetAttacker( att )
 			end
 			
@@ -427,11 +369,9 @@ hook.Add( "SLCSCP500Used", "SLCSCP1025SCP500", function( ply )
 end )
 
 hook.Add( "SLCHealed", "SLCSCP1025Healed", function( target, healer )
-	target:RemoveEffect( "heavy_bleeding", true )
 	target:RemoveEffect( "light_bleeding", true )
 end )
 
 hook.Add( "SLCNeedHeal", "SLCSCP1025NeedHeal", function( target, healer, heal_type )
-	if target:HasEffect( "heavy_bleeding" ) then return true end
 	if target:HasEffect( "light_bleeding" ) then return true end
 end )

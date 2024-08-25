@@ -62,6 +62,11 @@ local function CheckTable( tab, ref )
 end
 
 function ChangeLang( lang, force )
+	if lang == true then
+		lang = cur_lang
+		force = true
+	end
+
 	if !isstring( lang ) then return end
 	if !force and cur_lang == lang then return end
 
@@ -107,15 +112,45 @@ function ChangeLang( lang, force )
 		CheckTable( tmp, _LANG[_LANG_ALIASES.default] )
 	end
 
+	for k, v in pairs( tmp.__binds ) do --TEST
+		local to = string.Explode( k, "." )
+		local from = string.Explode( v, "." )
+
+		local val = tmp
+		local to_val = tmp
+		local to_len = #to
+
+		for _, key in ipairs( from ) do
+			if !val[key] then break end
+			val = val[key]
+		end
+
+		if val == tmp then continue end
+
+		for i = 1, to_len do
+			if i == to_len then
+				to_val[to[i]] = val
+			else
+				to_val = to_val[to[i]]
+				if to_val == nil then break end
+			end
+		end
+	end
+
 	LANG = tmp
+	hook.Run( "SLCLanguageChanged" )
 end
+
+ChangeLang( cur_lang, true )
 
 hook.Add( "SLCFactoryReset", "SLCLanguageReset", function()
 	RunConsoleCommand( "slc_language", "default" )
 end )
 
 hook.Add( "SLCRegisterSettings", "SLCLanguage", function()
-	local tab = {}
+	local tab = {
+		"default"
+	}
 
 	for k, v in pairs( _LANG ) do
 		local name = v.self or k
@@ -130,10 +165,7 @@ hook.Add( "SLCRegisterSettings", "SLCLanguage", function()
 	RegisterSettingsEntry( "cvar_slc_language", "dropbox", "!CVAR", {
 		list = tab,
 		parse = function( value )
-			if value == "default" then
-				return LANG.default	or "default"
-			end
-
+			if value == "default" then return end
 			return _LANG_ALIASES[value] or value
 		end
 	} )
@@ -144,6 +176,8 @@ local function PrintTableDiff( tab, ref, stack )
 	stack = stack or "LANG"
 
 	for k, v in pairs( ref ) do
+		if k == "__binds" then continue end
+
 		if istable( v ) then
 			if !istable( tab[k] ) then
 				print( "Missing table: "..stack.." > "..k )
@@ -178,7 +212,7 @@ local function PrintRevDiff( tab, ref, stack )
 		if istable( v ) and istable( ref[k] ) then
 				num = num + PrintRevDiff( v, ref[k], stack.." > "..k )
 		elseif ref[k] == nil then
-			print( "Redundant value: "..stack.." > "..k )
+			print( "Unused value: "..stack.." > "..k )
 			num = num + 1
 		end
 	end
@@ -201,7 +235,7 @@ concommand.Add( "slc_diff_language", function( ply, cmd, args )
 		print( "Language diff: "..lang_name )
 		print( "Total missing values or tables: "..wrong )
 		print( "Total errors: "..err )
-		print( "Total redundant values: "..num )
+		print( "Total unused values: "..num )
 		print()
 		print( "Check logs above for details" )
 		print( "#####################################################################" )
@@ -223,25 +257,90 @@ end, function( cmd, args )
 	end
 
 	return tab
-end, "" )
+end )
+
+function GenTabHash( lang )
+	local hash_tab = {}
+
+	for k, v in pairs( lang ) do
+		if istable( v ) then
+			hash_tab[k] = GenTabHash( v )
+		else
+			hash_tab[k] = util.SHA256( tostring( v ) )
+		end
+	end
+
+	return hash_tab
+end
+
+function PrintHashDiff( lang, src, stack )
+	stack = stack or "LANG"
+
+	for k, v in pairs( lang ) do
+		if istable( v ) then
+			if istable( src[k] ) then
+				PrintHashDiff( v, src[k], stack.." > "..k )
+			end
+		elseif isstring( src[k] ) and util.SHA256( tostring( v ) ) != src[k] then
+			 print( "Hash mismatch: "..stack.." > "..k )
+		end
+	end
+end
+
+concommand.Add( "slc_hash_lang", function( ply, cmd, args )
+	local lang_name = args[1]
+	if !isstring( lang_name ) then return end
+
+	local lang = _LANG[lang_name]
+
+	if !lang then
+		print( "Unknown language!" )
+		return
+	end
+
+	file.Write( "slc_hash_"..lang_name..".json", util.TableToJSON( GenTabHash( lang ) ) )
+end )
+
+concommand.Add( "slc_hash_lang_check", function( ply, cmd, args )
+	local lang_name = args[1]
+	if !isstring( lang_name ) then return end
+
+	local lang = _LANG[lang_name]
+
+	if !lang then
+		print( "Unknown language!" )
+		return
+	end
+
+	local hash_file = file.Read( "slc_hash_"..lang_name..".json" )
+	if !hash_file then
+		print( "data/slc_hash"..lang_name..".json file not found!" )
+		return
+	end
+
+	hash_file = util.JSONToTable( hash_file, true, true )
+	if !hash_file then
+		print( "data/slc_hash"..lang_name..".json file is corrupted!" )
+		return
+	end
+
+	PrintHashDiff( lang, hash_file )
+end )
+
+--[[-------------------------------------------------------------------------
+Support opt-out
+---------------------------------------------------------------------------]]
+CreateClientConVar( "cvar_slc_support_optout", 0, true, true )
+
+hook.Add( "SLCRegisterSettings", "SLCSupportOptOut", function()
+	RegisterSettingsEntry( "cvar_slc_support_optout", "switch", "!CVAR" )
+end )
 
 --[[-------------------------------------------------------------------------
 Credits
 ---------------------------------------------------------------------------]]
 timer.Create( "Credits", 300, 0, function()
 	print( "'SCP: Lost Control' by danx91 [ZGFueDkx] version "..VERSION.." ("..DATE..")" )
-
-	/*if CanShowEQ() then
-		local key = input.LookupBinding( "+menu" )
-
-		if key then
-			key = string.upper( key )
-		else
-			key = "+menu"
-		end
-
-		LocalPlayer():PrintMessage( HUD_PRINTTALK, string.format( LANG.eq_key, key ) )
-	end*/
 end )
 
 --[[-------------------------------------------------------------------------
@@ -261,7 +360,7 @@ end)
 --[[-------------------------------------------------------------------------
 Screen effects
 ---------------------------------------------------------------------------]]
-local exhaust_mat = GetMaterial( "slc/misc/exhaust.png" )
+local exhaust_mat = GetMaterial( "slc/misc/exhaust.png", "smooth" )
 
 local stamina_effects = 100
 local boost_effects = 0
@@ -349,6 +448,8 @@ function GM:RenderScreenspaceEffects()
 	
 	render.SetMaterial( color_mat )
 	render.DrawScreenQuad()
+
+	hook.Run( "SLCPostScreenMod" )
 end
 
 --[[-------------------------------------------------------------------------
@@ -362,7 +463,7 @@ local fade_flag = bit.bor( SCREENFADE.IN, SCREENFADE.OUT )
 net.Receive( "PlayerBlink", function( len )
 	local ply = LocalPlayer()
 	local duration = net.ReadFloat()
-	local delay = net.ReadUInt( 6 )
+	local delay = net.ReadFloat()
 
 	if ply.disable_blink then
 		ply.disable_blink = false
@@ -383,7 +484,7 @@ net.Receive( "PlayerBlink", function( len )
 	HUDNextBlink = nextblink 
 	HUDBlink = delay - duration
 
-	hook.Run( "SLCBlink", duration, delay )
+	hook.Run( "SLCBlink", ply, duration, delay )
 end )
 
 hook.Add( "Tick", "BlinkTick", function()
@@ -491,6 +592,30 @@ end
 --[[-------------------------------------------------------------------------
 Copied from Base Gamemode and edited
 ---------------------------------------------------------------------------]]
+local trace_3rdperson = {}
+trace_3rdperson.mask = MASK_SOLID_BRUSHONLY
+trace_3rdperson.mins = Vector( -4, -4, -4 )
+trace_3rdperson.maxs = Vector( 4, 4, 4 )
+trace_3rdperson.output = trace_3rdperson
+
+function CalcThirdPersonView( ply, view, dist, ang )
+	if ang then
+		view.angles = ang
+	end
+
+	trace_3rdperson.start = view.origin
+	trace_3rdperson.endpos = view.origin - view.angles:Forward() * ( dist or 100 )
+
+	util.TraceHull( trace_3rdperson )
+
+	view.origin = trace_3rdperson.HitPos
+	view.drawviewer = true
+end
+
+function GM:CreateMove( cmd )
+	
+end
+
 hook.Add( "SLCRegisterSettings", "SLCSpeedFOV", function()
 	RegisterSettingsEntry( "dynamic_fov", "switch", false )
 end )
@@ -505,22 +630,20 @@ function GM:CalcView( ply, origin, angles, fov, znear, zfar )
 	view.drawviewer	= false
 	view.no_dynamic = false
 
-	local vehicle	= ply:GetVehicle()
+	local vehicle = ply:GetVehicle()
 	if IsValid( vehicle ) then return hook.Run( "CalcVehicleView", vehicle, ply, view ) end
-
-	if drive.CalcView( ply, view ) then return view end
 
 	player_manager.RunClass( ply, "CalcView", view )
 
+	if controller.CalcView( ply, view ) then return view end
+
 	local weapon = ply:GetActiveWeapon()
-	if IsValid( weapon )then
-		if weapon.CalcView then
-			local norig, nang, nfov, draw_viewer = weapon:CalcView( ply, origin * 1, angles * 1, fov, view )
-			if norig then view.origin = norig end
-			if nang then view.angles = nang end
-			if nfov then view.fov = nfov end
-			if draw_viewer then view.drawviewer = true end
-		end
+	if IsValid( weapon ) and weapon.CalcView then
+		local norig, nang, nfov, draw_viewer = weapon:CalcView( ply, origin * 1, angles * 1, fov, view )
+		if norig then view.origin = norig end
+		if nang then view.angles = nang end
+		if nfov then view.fov = nfov end
+		if draw_viewer then view.drawviewer = true end
 	end
 
 	if !view.no_dynamic and GetSettingsValue( "dynamic_fov" ) then
@@ -580,7 +703,7 @@ end
 function GM:PreRender()
 	/*local lp = LocalPlayer()
 
-	for k, v in pairs( player.GetAll() ) do
+	for i, v in ipairs( player.GetAll() ) do
 		if v != lp then
 			local state = hook.Run( "CanPlayerSeePlayer", lp, v ) == false
 
@@ -610,11 +733,11 @@ function GM:CanPlayerSeePlayer( ply, target )
 end
 
 local halo_color_ok = Color( 125, 100, 200 )
-local halo_color_bad = Color( 200, 100, 100)
+local halo_color_bad = Color( 200, 100, 100 )
 hook.Add( "PreDrawHalos", "PickupWeapon", function()
 	local ply = LocalPlayer()
 	local t = ply:SCPTeam()
-	if t == TEAM_SPEC or ( t == TEAM_SCP and !ply:GetSCPHuman() ) then return end
+	if t == TEAM_SPEC or t == TEAM_SCP and !ply:GetSCPHuman() then return end
 
 	local wep = ply:GetEyeTrace().Entity
 	if !IsValid( wep ) or !wep:IsWeapon() then return end
@@ -644,8 +767,8 @@ end
 hook.Add( "InitPostEntity", "SLCUpdateStatus", function()
 	local ply = LocalPlayer()
 
-	DamageLogger( ply )
 	PlayerData( ply )
+	DamageLogger( ply )
 
 	SLCWindowAlert()
 
@@ -653,17 +776,12 @@ hook.Add( "InitPostEntity", "SLCUpdateStatus", function()
 end )
 
 timer.Simple( 0, function()
-	ChangeLang( cur_lang, true )
 	OpenMenuScreen()
 
 	print( "Almost ready! Waiting for additional info..." )
 
-	local timeout
+	local timeout = RealTime() + 10
 	hook.Add( "Tick", "SLCPlayerReady", function()
-		if !timeout then
-			timeout = RealTime() + 10
-		end
-
 		if timeout <= RealTime() then
 			hook.Remove( "Tick", "SLCPlayerReady" )
 
@@ -673,7 +791,7 @@ timer.Simple( 0, function()
 
 		if NetTablesReceived then
 			hook.Remove( "Tick", "SLCPlayerReady" )
-			
+
 			print( "Everything is set up! Updating our status on server...", RealTime() - timeout + 10 )
 			_SLCPlayerReady = true
 		end
@@ -704,7 +822,7 @@ concommand.Add( "slc_debuginfo_cl", function( ply, cmd, args )
 	print( "Inventory ->" )
 	PrintTable( v:GetWeapons(), 1 )
 	print( "Local Inventory ->" )
-	PrintTable( GetLocalWeapons(), 1 )
+	PrintTable( GetLocalInventory(), 1 )
 	print( "Weapons debug info ->" )
 	for i, wep in ipairs( v:GetWeapons() ) do
 		if wep.DebugInfo then

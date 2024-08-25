@@ -55,7 +55,8 @@ function ent:InstanceOf( name )
 	return InstanceOf( name, self )
 end
 --[[-------------------------------------------------------------------------
-Base EntityTables
+Action Queue
+Shitty system imo, I don't recommend using it
 ---------------------------------------------------------------------------]]
 RegisterEntityTable( "ActionQueue", {
 	Table = {
@@ -137,6 +138,9 @@ RegisterEntityTable( "ActionQueue", {
 	}
 } )
 
+--[[-------------------------------------------------------------------------
+Lootable
+---------------------------------------------------------------------------]]
 RegisterEntityTable( "Lootable", {
 	Setup = function( target )
 		target.PlayersCache = {}

@@ -67,7 +67,7 @@ function ENT:AccessOverride( ply, data )
 end
 
 function ENT:OnUse( ply )
-	if MAP_CHECKERS.ALPHA_REMOTE() then
+	if MAP_CHECKERS.ALPHA_REMOTE() and !GetRoundStat( "goc_countdown" ) and !IsGOCDeviceValid() then
 		if ALPHAWarhead( ply ) then
 			self:SetState( STATE_COUNTDOWN )
 			self:SetTime( CurTime() + CVAR.slc_time_alpha:GetInt() + 3 )

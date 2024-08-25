@@ -66,7 +66,7 @@ AddRoundType( "normal", {
 		else
 			for t1, _ in pairs( teams ) do
 				for t2, _ in pairs( teams ) do
-					if !SCPTeams.IsAlly( t1, t2 ) then
+					if SCPTeams.IsEnemy( t1, t2 ) then
 						return false
 					end
 				end

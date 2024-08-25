@@ -1,7 +1,7 @@
 if SERVER then
 	util.AddNetworkString( "SLCPing" )
 	util.AddNetworkString( "SLCSendTable" )
-	util.AddNetworkString( "SLCSharedHook" )
+	util.AddNetworkString( "SLCNetRequest" )
 	util.AddNetworkString( "SLCPropertyChanged" )
 end
 
@@ -74,7 +74,7 @@ function net.AddTableChannel( name )
 	net.TableChannelsID[name] = id
 
 	if SERVER and name != "_TableChannel" then
-		for k, v in pairs( player.GetAll() ) do
+		for i, v in ipairs( player.GetAll() ) do
 			v.TableChannelsUpdated = false
 		end
 	end
@@ -224,7 +224,7 @@ hook.Add( "Think", "SLCNetTables", function()
 
 	if SERVER then
 		local plys = {}
-		for k, v in pairs( player.GetAll() ) do
+		for i, v in ipairs( player.GetAll() ) do
 			if !v.TableChannelsUpdated then
 				v.TableChannelsUpdated = true
 				table.insert( plys, v )
@@ -259,9 +259,11 @@ end
 --[[-------------------------------------------------------------------------
 Utils
 ---------------------------------------------------------------------------]]
-local function prepareType( var )
+local function prepare_type( var )
 	if isentity( var ) then
 		return { ENTITY = "Entity$"..var:EntIndex() }
+	elseif isvector( var ) then
+		return { VECTOR = { var.x, var.y, var.z } }
 	end
 end
 
@@ -270,7 +272,7 @@ function net.PrepareTable( tab )
 		if istable( v ) then
 			net.PrepareTable( v )
 		else
-			local p = prepareType( v )
+			local p = prepare_type( v )
 			if p then
 				tab[k] = p
 			end
@@ -278,7 +280,7 @@ function net.PrepareTable( tab )
 	end
 end
 
-local function restoreType( var )
+local function restore_type( var )
 	if var.ENTITY then
 		local id = string.match( var.ENTITY, "Entity$(%d+)" )
 		if id then
@@ -287,50 +289,101 @@ local function restoreType( var )
 				return ent
 			//end
 		end
+	elseif var.VECTOR then
+		return Vector( var.VECTOR[1], var.VECTOR[2], var.VECTOR[3] )
 	end
 end
 
 function net.RestoreTable( tab )
 	for k, v in pairs( tab ) do
 		if istable( v ) then
-			local r = restoreType( v )
+			local r = restore_type( v )
 			if r then
 				tab[k] = r
 			else
 				net.RestoreTable( v )
 			end
-		else
-			--nothing
 		end
 	end
 end
 
 --[[-------------------------------------------------------------------------
-Shared hooks
+Requests
 ---------------------------------------------------------------------------]]
-function hook.RunClient( ply, ... )
-	if SERVER then
-		net.Start( "SLCSharedHook" )
-			net.WriteTable( {...} )
-		net.Send( ply )
-	end
-
-	return hook.Run( ... )
-end
-
-function hook.RunShared( ... )
-	if SERVER then
-		net.Start( "SLCSharedHook" )
-			net.WriteTable( {...} )
-		net.Broadcast()
-	end
-
-	return hook.Run( ... )
-end
+net.RequestsRegistry = {
+	_RequestID = 0
+}
+net.RequestsReceivers = {}
 
 if CLIENT then
-	net.Receive( "SLCSharedHook", function( len )
-		hook.Run( unpack( net.ReadTable() ) )
+	function net.SendRequest( name, data, timeout )
+		if !istable( data ) then
+			data = { data }
+		end
+
+		local id = net.RequestsRegistry._RequestID
+		net.RequestsRegistry._RequestID = id + 1
+
+		net.Start( "SLCNetRequest" )
+			net.WriteUInt( id, 32 )
+			net.WriteString( name )
+			net.WriteTable( data )
+		net.SendToServer()
+
+		local promise = SLCPromise()
+
+		net.RequestsRegistry[id] = {
+			id = id,
+			name = name,
+			promise = promise
+		}
+
+		timer.Simple( timeout or 3, function()
+			local req = net.RequestsRegistry[id]
+			if !req then return end
+
+			net.RequestsRegistry[id] = nil
+
+			MsgC( Color( 200, 0, 0 ), "Request "..req.name.." ["..req.id.."] timed out!\n" )
+			req.promise:Reject( "timeout" )
+		end )
+	end
+
+	net.Receive( "SLCNetRequest", function( len, ply )
+		local id = net.ReadUInt( 32 )
+		local req = net.RequestsRegistry[id]
+
+		if !req then
+			MsgC( Color( 200, 0, 0 ), "Unknown request with id: "..req.id.."!\n" )
+			return
+		end
+
+		req.promise:Resolve( net.ReadTable() )
+	end )
+end
+
+if SERVER then
+	function net.ReceiveRequest( name, fn )
+		net.RequestsReceivers[name] = fn
+	end
+
+	net.Receive( "SLCNetRequest", function( len, ply )
+		local id = net.ReadUInt( 32 )
+		local name = net.ReadString()
+		local data = net.ReadTable()
+
+		local receiver = net.RequestsReceivers[name]
+		if !receiver then
+			error( "Unhandled request: "..name.."!" )
+			return
+		end
+
+		SLCToPromise( receiver( ply, name, data ) ):Then( function( result )
+			net.Start( "SLCNetRequest" )
+				net.WriteUInt( id, 32 )
+				net.WriteTable( result )
+			net.Send( ply )
+		end )
 	end )
 end
 

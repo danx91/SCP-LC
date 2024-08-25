@@ -1,5 +1,3 @@
-local roman_tab = { "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X" }
-
 local button_next = false
 local next_frame = false
 local function button( x, y, w, h )
@@ -64,6 +62,7 @@ local function DrawEffectsHUD()
 	local size = w * 0.025
 	local margin = w * 0.01
 
+	local use_roman = !GetSettingsValue( "hud_avoid_roman" )
 	for i = 1, math.min( ec, 5 ) do
 		local effect = effects[i]
 		local reg = EFFECTS.registry[effect.name.."_"..effect.tier]
@@ -71,7 +70,7 @@ local function DrawEffectsHUD()
 
 		if hide and i == 5 then
 			draw.Text{
-				text = (ec - 4).."+",
+				text = ( ec - 4 ).."+",
 				pos = { w * 0.9824, start_y + ( size + margin ) * ( i - 1 ) + w * 0.0125 },
 				font = "SCPHUDMedium",
 				color = color_white,
@@ -89,7 +88,7 @@ local function DrawEffectsHUD()
 					local n_eff = EFFECTS.effects[n_effect.name]
 
 					local name = LANG.EFFECTS[n_effect.name] or n_effect.name
-					local tier = n_eff.tiers > 1 and ( roman_tab[n_effect.tier] or n_effect.tier ) or ""
+					local tier = n_eff.tiers > 1 and ( use_roman and ToRoman( n_effect.tier ) or n_effect.tier ) or ""
 					local time = n_effect.endtime == -1 and LANG.EFFECTS.permanent or math.floor( n_effect.endtime - CurTime() )
 
 					table.insert( showtext, name.." "..tier.." ("..time..")" )
@@ -110,7 +109,7 @@ local function DrawEffectsHUD()
 			end
 
 			if effect.endtime != -1 then
-				local timepct = ( effect.endtime - CurTime() ) / eff.duration
+				local timepct = ( effect.endtime - CurTime() ) / ( effect.duration or eff.duration )
 
 				surface.SetDrawColor( color_black235 )
 				draw.NoTexture()
@@ -121,7 +120,7 @@ local function DrawEffectsHUD()
 
 			if btn > 0 then
 				local name = LANG.EFFECTS[effect.name] or effect.name
-				local tier = eff.tiers > 1 and ( roman_tab[effect.tier] or effect.tier ) or ""
+				local tier = eff.tiers > 1 and ( use_roman and ToRoman( effect.tier ) or effect.tier ) or ""
 				local time = effect.endtime == -1 and LANG.EFFECTS.permanent or math.floor( effect.endtime - CurTime() )
 
 				showtext = name.." "..tier.." ("..time..")"
@@ -180,3 +179,7 @@ local function DrawEffectsHUD()
 end
 
 hook.Add( "DrawOverlay", "SCPEffectHUD", DrawEffectsHUD )
+
+hook.Add( "SLCRegisterSettings", "SLCEffectsHUD", function()
+	RegisterSettingsEntry( "hud_avoid_roman", "switch", false, nil, "hud_config" )
+end )

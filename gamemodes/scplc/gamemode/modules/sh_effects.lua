@@ -19,14 +19,17 @@ data = {
 */
 
 function EFFECTS.RegisterEffect( name, data )
-	local tiers = #data.tiers
+	local num_tiers = data.max_tier or #data.tiers
+	local tiers = data.tiers
 
-	for i = 1, tiers do
-		data.tiers[i].tier = i
-		EFFECTS.registry[name.."_"..i] = data.tiers[i]
+	for i = 1, num_tiers do
+		local tier = table.Copy( tiers[i] or tiers.all or {} )
+
+		tier.tier = i
+		EFFECTS.registry[name.."_"..i] = tier
 	end
 
-	data.tiers = tiers
+	data.tiers = num_tiers
 	EFFECTS.effects[name] = data
 end
 
@@ -37,16 +40,23 @@ hook.Add( "PlayerPostThink", "SLCEffectsThink", function( ply )
 
 	for i, v in rpairs( ply.EFFECTS ) do
 		local eff = EFFECTS.effects[v.name]
+		
+		if v.endtime != -1 and v.endtime <= ct then
+			local decrease = v.decrease or 1
+			local keep = eff.finish_type == 1 and v.tier > decrease
 
-		if v.endtime != -1 and v.endtime < ct then
-			local keep = eff.finish_type == 1 and v.tier > 1
+			v.decrease = nil
 
 			if keep then
 				v.endtime = ct + eff.duration
-				v.tier = v.tier - 1
+				v.tier = v.tier - decrease
 
 				if eff.begin then
 					eff.begin( v, ply, v.tier, v.args, true, true )
+				end
+
+				if v.duration then
+					v.endtime = ct + v.duration
 				end
 			else
 				if eff.finish then
@@ -88,26 +98,44 @@ end )
 
 if CLIENT then
 	net.Receive( "PlayerEffect", function( len )
+		local ply = LocalPlayer()
+		if !IsValid( ply ) then return end
+
 		local rem = net.ReadBool()
 		local name = net.ReadString()
 
 		if rem then
-			LocalPlayer():RemoveEffect( name, net.ReadBool() )
+			ply:RemoveEffect( name, net.ReadBool() )
 		else
-			LocalPlayer():ApplyEffect( name, unpack( net.ReadTable() ) )
+			ply:ApplyEffect( name, unpack( net.ReadTable() ) )
+		end
+	end )
+
+	net.Receive( "RefreshPlayerEffect", function( len )
+		local ply = LocalPlayer()
+		if !IsValid( ply ) then return end
+
+		local decrease = net.ReadBool()
+		local name = net.ReadString()
+		local all = net.ReadBool()
+
+		if decrease then
+			ply:DecreaseEffect( name, net.ReadUInt( 16 ), all )
+		else
+			ply:RefreshEffect( name, all )
 		end
 	end )
 end
 
 local PLAYER = FindMetaTable( "Player" )
 function PLAYER:ApplyEffect( name, ... )
-	if CLIENT and self != LocalPlayer() then return end
+	if CLIENT and self != LocalPlayer() then return false end
 	
  	local args = {...}
 	local effect = EFFECTS.effects[name]
 
-	if !effect then return end
-	if effect.cantarget and effect.cantarget( self ) == false then return end
+	if !effect then return false end
+	if effect.cantarget and effect.cantarget( self ) == false then return false end
 
 	local tier = 1
 
@@ -125,7 +153,7 @@ function PLAYER:ApplyEffect( name, ... )
 	if !self.EFFECTS_REG then self.EFFECTS_REG = {} end
 
 	if hook.Run( "SLCApplyEffect", self, name, args ) == true then
-		return
+		return false
 	end
 
 	if !effect.stacks or effect.stacks == 0 or effect.stacks == 2 then
@@ -151,6 +179,10 @@ function PLAYER:ApplyEffect( name, ... )
 						effect.begin( v, self, v.tier, args, true, false )
 					end
 
+					if v.duration then
+						v.endtime = CurTime() + v.duration
+					end
+
 					if SERVER then
 						net.Start( "PlayerEffect" )
 							net.WriteBool( false )
@@ -159,7 +191,7 @@ function PLAYER:ApplyEffect( name, ... )
 						net.Send( self )
 					end
 
-					return
+					return true
 				end
 			end
 		end
@@ -181,6 +213,10 @@ function PLAYER:ApplyEffect( name, ... )
 		effect.begin( tab, self, tier, args, false, false )
 	end
 
+	if tab.duration then
+		tab.endtime = CurTime() + tab.duration
+	end
+
 	if SERVER then
 		net.Start( "PlayerEffect" )
 			net.WriteBool( false )
@@ -188,6 +224,8 @@ function PLAYER:ApplyEffect( name, ... )
 			net.WriteTable( {...} )
 		net.Send( self )
 	end
+
+	return true
 end
 
 --if name == nil -> remove all effects
@@ -254,6 +292,10 @@ function PLAYER:RemoveEffect( name, all )
 					if effect.begin then
 						effect.begin( v, self, v.tier, v.args, true, true )
 					end
+
+					if v.duration then
+						v.endtime = CurTime() + v.duration
+					end
 				end
 
 				if effect.stacks == 0 or effect.stacks == 2 or !all then
@@ -277,6 +319,13 @@ function PLAYER:RefreshEffect( name, all )
 	local effect = EFFECTS.effects[name]
 	if !effect then return end
 
+	if SERVER then
+		net.Start( "RefreshPlayerEffect" )
+			net.WriteBool( false )
+			net.WriteString( name )
+			net.WriteBool( all )
+		net.Send( self )
+	end
 
 	for i, v in rpairs( self.EFFECTS ) do
 		if v.name != name then continue end
@@ -287,14 +336,40 @@ function PLAYER:RefreshEffect( name, all )
 			effect.begin( v, self, v.tier, v.args, true, false )
 		end
 
+		if v.duration then
+			v.endtime = CurTime() + v.duration
+		end
+
+		if !all then return end
+	end
+end
+
+function PLAYER:DecreaseEffect( name, num, all )
+	if !self.EFFECTS_REG[name] then return end
+	local effect = EFFECTS.effects[name]
+	if !effect then return end
+
+	if SERVER then
+		net.Start( "RefreshPlayerEffect" )
+			net.WriteBool( true )
+			net.WriteString( name )
+			net.WriteBool( all )
+			net.WriteUInt( num or 1, 16 )
+		net.Send( self )
+	end
+
+	for i, v in rpairs( self.EFFECTS ) do
+		if v.name != name then continue end
+
+		v.endtime = CurTime()
+		v.decrease = num or 1
+
 		if !all then return end
 	end
 end
 
 function PLAYER:HasEffect( name )
-	if self.EFFECTS_REG then
-		return self.EFFECTS_REG[name] == true
-	end
+	return self.EFFECTS_REG and self.EFFECTS_REG[name] == true or false
 end
 
 function PLAYER:GetEffect( name )
@@ -307,6 +382,11 @@ function PLAYER:GetEffect( name )
 	end
 end
 
+function PLAYER:GetEffectTier( name )
+	local data = self:GetEffect( name )
+	return data and data.tier or 0
+end
+
 --[[-------------------------------------------------------------------------
 Default checks
 ---------------------------------------------------------------------------]]
@@ -317,10 +397,7 @@ end
 
 function scp_spec_hazard_filter( dmg )
 	return function( ply )
-		local team = ply:SCPTeam()
-		if team == TEAM_SPEC or team == TEAM_SCP then
-			return false
-		end
+		if !scp_spec_filter( ply ) then return false end
 
 		if ply:GetSCP714() then
 			return false
@@ -337,7 +414,7 @@ local decal_up = Vector( 0, 0, 10 )
 local decal_down = Vector( 0, 0, -30 )
 
 EFFECTS.RegisterEffect( "bleeding", {
-	duration = 15,
+	duration = 16,
 	stacks = 2,
 	tiers = {
 		{ icon = Material( "slc/hud/effects/bleeding1.png" ) },
@@ -346,40 +423,94 @@ EFFECTS.RegisterEffect( "bleeding", {
 	},
 	cantarget = scp_spec_filter,
 	begin = function( self, ply, tier, args, refresh )
-		if refresh and IsValid( args[1] ) then
+		if IsValid( args[1] ) and args[1]:IsPlayer() then
 			self.args[1] = args[1]
+			self.args[2] = args[1]:TimeSignature()
 		end
 	end,
 	think = function( self, ply, tier, args )
-		if SERVER then
-			if ply:SCPTeam() == TEAM_SPEC or ply:SCPTeam() == TEAM_SCP then return end
+		if CLIENT then return end
 
-			local att = args[1]
-			local dmg = DamageInfo()
+		local att = args[1]
+		local dmg = DamageInfo()
 
-			dmg:SetDamage( tier )
-			dmg:SetDamageType( DMG_DIRECT )
+		dmg:SetDamage( tier )
+		dmg:SetDamageType( DMG_DIRECT )
 
-			if IsValid( att ) then
-				dmg:SetAttacker( att )
-			end
+		if IsValid( att ) and att:IsPlayer() and att:CheckSignature( args[2] ) then
+			dmg:SetAttacker( att )
+		end
 
-			ply:TakeDamageInfo( dmg )
-			AddRoundStat( "bleed", tier )
-		else
-			if self.ndecal and self.ndecal > CurTime() then return end
-			self.ndecal = CurTime() + ( 4 - tier ) * 0.75
+		ply:TakeDamageInfo( dmg )
+		AddRoundStat( "bleed", tier )
 
-			//ply:EmitSound( "SLCEffects.Bleeding" )
+		if self.next_decal and self.next_decal > CurTime() then return end
+		self.next_decal = CurTime() + ( 4 - tier ) * 0.75
 
-			local pos = ply:GetPos()
-			if self.last_decal and pos:DistToSqr( self.last_decal ) < 500 then return end
-			self.last_decal = pos
+		local pos = ply:GetPos()
+		if self.last_decal and pos:DistToSqr( self.last_decal ) < 2500 then return end
+		self.last_decal = pos
 
-			util.Decal( "Blood", pos + decal_up, pos + decal_down )
+		util.Decal( "Blood", pos + decal_up, pos + decal_down, ply )
+	end,
+	wait = 2,
+} )
+
+EFFECTS.RegisterEffect( "heavy_bleeding", {
+	duration = 300,
+	stacks = 0,
+	tiers = {
+		{ icon = Material( "slc/hud/effects/bleeding3.png" ) },
+	},
+	cantarget = function( ply )
+		local team = ply:SCPTeam()
+		return team != TEAM_SPEC and team != TEAM_SCP
+	end,
+	begin = function( self, ply, tier, args, refresh )
+		if refresh then
+			self.args[2] = 1
+		end
+
+		if IsValid( args[1] ) then
+			self.args[1] = args[1]
+			self.args[3] = args[1]:TimeSignature()
 		end
 	end,
-	wait = 1,
+	finish = function( self, ply, tier, args, interrupt, all )
+		if CLIENT or !interrupt or all then return end
+		
+		ply:AddTimer( "reopen_wound", math.random( 30, 120 ), 1, function()
+			if !ply:HasEffect( "heavy_bleeding" ) and math.random( 1, 100 ) <= 50 / args[2] then
+				ply:ApplyEffect( "heavy_bleeding", args[1], args[2] + 1 )
+			end
+		end )
+	end,
+	think = function( self, ply, tier, args )
+		if CLIENT then return end
+
+		local att = args[1]
+		local dmg = DamageInfo()
+
+		dmg:SetDamage( 2 )
+		dmg:SetDamageType( DMG_DIRECT )
+
+		if IsValid( att ) and att:CheckSignature( args[3] ) then
+			dmg:SetAttacker( att )
+		end
+
+		ply:TakeDamageInfo( dmg )
+		AddRoundStat( "bleed", 2 )
+
+		if self.next_decal and self.next_decal > CurTime() then return end
+		self.next_decal = CurTime() + 1
+
+		local pos = ply:GetPos()
+		if self.last_decal and pos:DistToSqr( self.last_decal ) < 2500 then return end
+		self.last_decal = pos
+
+		util.Decal( "Blood", pos + decal_up, pos + decal_down, ply )
+	end,
+	wait = 3,
 } )
 
 sound.Add( {
@@ -390,43 +521,6 @@ sound.Add( {
 	sound = "physics/flesh/flesh_squishy_impact_hard1.wav",
 	channel = CHAN_STATIC,
 } )
-
---[[-------------------------------------------------------------------------
-AMN-C227
----------------------------------------------------------------------------]]
-EFFECTS.RegisterEffect( "amnc227", {
-	duration = 2.5,
-	stacks = 0,
-	tiers = {
-		{ icon = Material( "slc/hud/effects/amn-c227.png" ) }
-	},
-	cantarget = scp_spec_hazard_filter( 3 ),
-	think = function( self, ply, tier, args )
-		if SERVER then
-			if ply:SCPTeam() == TEAM_SPEC or ply:SCPTeam() == TEAM_SCP or !args[2] then return end
-
-			local att = args[1]
-			local dmg = DamageInfo()
-
-			dmg:SetDamage( args[2] )
-			dmg:SetDamageType( DMG_POISON )
-
-			if IsValid( att ) then
-				dmg:SetAttacker( att )
-			end
-
-			ply:TakeDamageInfo( dmg )
-		end
-	end,
-	wait = 2,
-} )
-
-hook.Add( "StartCommand", "SLCAMNCEffect", function( ply, cmd )
-	if ply:HasEffect( "amnc227" ) then
-		cmd:RemoveKey( IN_ATTACK )
-		cmd:RemoveKey( IN_ATTACK2 )
-	end
-end )
 
 --[[-------------------------------------------------------------------------
 Insane
@@ -440,7 +534,7 @@ EFFECTS.RegisterEffect( "insane", {
 	cantarget = scp_spec_filter,
 	think = function( self, ply, tier, args )
 		if SERVER then
-			if ply:GetSanity() >= 20 or ply:SCPTeam() == TEAM_SPEC or ply:SCPTeam() == TEAM_SCP then
+			if ply:GetSanity() >= 20 or !SCPTeams.HasInfo( ply:SCPTeam(), SCPTeams.INFO_HUMAN ) then
 				ply:RemoveEffect( "insane" )
 			end
 		else
@@ -468,6 +562,7 @@ EFFECTS.RegisterEffect( "gas_choke", {
 	begin = function( self, ply, tier, args, refresh )
 		if SERVER and !refresh then
 			ply:PushSpeed( 0.65, 0.65, -1, "SLC_Choke" )
+			ply:SetNextBlink( 0 )
 		end
 	end,
 	finish = function( self, ply, tier, args, interrupt )
@@ -482,6 +577,12 @@ EFFECTS.RegisterEffect( "gas_choke", {
 	end,
 	wait = 2.75
 } )
+
+hook.Add( "SLCBlinkParams", "ChokeEffect", function( ply )
+	if ply:HasEffect( "gas_choke" ) then
+		return CVAR.slc_blink_delay:GetFloat() * 0.25
+	end
+end )
 
 if CLIENT then
 	local choke_mat = GetMaterial( "slc/misc/exhaust.png" )
@@ -510,12 +611,6 @@ EFFECTS.RegisterEffect( "radiation", {
 		{ icon = Material( "slc/hud/effects/radiation.png" ) }
 	},
 	cantarget = scp_spec_hazard_filter( 1 ),
-	begin = function( self, ply, tier, args, refresh )
-		
-	end,
-	finish = function( self, ply, tier, args, interrupt )
-		
-	end,
 	think = function( self, ply, tier, args )
 		if CLIENT then
 			ply:EmitSound( "SLCEffects.Radiation" )
@@ -549,7 +644,6 @@ EFFECTS.RegisterEffect( "deep_wounds", {
 	cantarget = scp_spec_filter,
 	begin = function( self, ply, tier, args, refresh )
 		if SERVER then
-			ply:ApplyEffect( "bleeding", args[1] )
 			ply:PushSpeed( 0.9, 0.9, -1, "SLC_DeepWounds", 1 )
 		end
 	end,
@@ -610,6 +704,7 @@ EFFECTS.RegisterEffect( "poison", {
 	cantarget = scp_spec_filter,
 	begin = function( self, ply, tier, args, refresh, decrease )
 		self.args[1] = args[1] --attacker
+		self.args[3] = args[1]:TimeSignature()
 
 		if args[2] > self.args[2] then
 			self.args[2] = args[2] --dmg
@@ -649,7 +744,7 @@ EFFECTS.RegisterEffect( "poison", {
 			dmg:SetDamage( args[2] )
 			dmg:SetDamageType( DMG_POISON )
 
-			if IsValid( att ) then
+			if IsValid( att ) and att:CheckSignature( args[3] ) then
 				dmg:SetAttacker( att )
 			end
 
@@ -894,6 +989,7 @@ EFFECTS.RegisterEffect( "human_chase", {
 		return 4 - tier
 	end,
 	wait = 3,
+	ignore500 = true,
 } )
 
 hook.Add( "AcceptInput", "SLCDoorlock", function( ent, input, activator, caller, value )
@@ -922,6 +1018,101 @@ hook.Add( "AcceptInput", "SLCDoorlock", function( ent, input, activator, caller,
 end )
 
 --[[-------------------------------------------------------------------------
+SCP-009
+---------------------------------------------------------------------------]]
+EFFECTS.RegisterEffect( "scp009", {
+	duration = 10,
+	stacks = 0,
+	tiers = {
+		{ icon = Material( "slc/hud/effects/scp009.png" ) }
+	},
+	cantarget = function( ply )
+		if !scp_spec_filter( ply ) then return false end
+		if ply:GetSCP714() then return false end
+
+		return !ply:CheckHazmat( 175, true )
+	end,
+	begin = function( self, ply, tier, args, refresh, decrease )
+		if IsValid( args[1] ) then
+			self.attacker = args[1]
+			self.signature = args[1]:TimeSignature()
+		end
+
+		if SERVER then
+			ParticleEffectAttach( "SLC_SCP009_Smoke", PATTACH_ABSORIGIN_FOLLOW, ply, 0 )
+		end
+	end,
+	finish = function( self, ply, tier, args, interrupt )
+		ply:StopParticles()
+
+		if CLIENT or interrupt or ROUND.post then return end
+
+		local rag = ply:CreatePlayerRagdoll( "force_backpack" )
+		rag:SetMaterial( "slc/scp/scp009/red_icefloor_01_new" )
+
+		for i = 0, rag:GetPhysicsObjectCount() do
+			local physobj = rag:GetPhysicsObjectNum( i )
+			if IsValid( physobj ) then
+				physobj:EnableMotion( false )
+			end
+		end
+
+		local dmg = DamageInfo()
+		dmg:SetDamage( ply:Health() )
+		dmg:SetDamageType( DMG_DIRECT )
+
+		if IsValid( self.attacker ) and self.attacker:CheckSignature( self.signature ) then
+			dmg:SetAttacker( self.attacker )
+		else
+			ply:SkipNextSuicide()
+		end
+
+		ply:SkipNextRagdoll()
+		ply:TakeDamageInfo( dmg )
+		ply._RagEntity = nil
+	end,
+	think = function( self, ply, tier, args )
+		if CLIENT then return end
+
+		local pos = ply:GetPos()
+		local radius = 50 ^ 2
+
+		for i, v in ipairs( player.GetAll() ) do
+			if math.random( 4 ) < 4 and !v:HasEffect( "scp009" ) and v:GetPos():DistToSqr( pos ) <= radius then
+				v:ApplyEffect( "scp009", args[1] )
+			end
+		end
+	end,
+	wait = 0.5
+} )
+
+--[[-------------------------------------------------------------------------
+Electrical shock
+---------------------------------------------------------------------------]]
+EFFECTS.RegisterEffect( "electrical_shock", {
+	duration = 5,
+	stacks = 0,
+	tiers = {
+		{ icon = Material( "slc/hud/effects/electrical_shock.png" ) },
+	},
+	cantarget = function( ply )
+		if !scp_spec_filter( ply ) or ply:HasEffect( "electrical_shock" ) then return false end
+	end,
+	begin = function( self, ply, tier, args, refresh )
+		if SERVER then
+			ply:PushSpeed( 0.2, 0.2, -1, "SLC_ElectricalShock", 1 )
+			ply:SelectWeaponByBase( "item_slc_holster" )
+		end
+
+	end,
+	finish = function( self, ply, tier, args, interrupt )
+		if SERVER then
+			ply:PopSpeed( "SLC_ElectricalShock" )
+		end
+	end,
+} )
+
+--[[-------------------------------------------------------------------------
 Experimental D
 ---------------------------------------------------------------------------]]
 EFFECTS.RegisterEffect( "expd_rubber_bones", {
@@ -937,7 +1128,9 @@ EFFECTS.RegisterEffect( "expd_rubber_bones", {
 		pl:SetProperty( "allow_bhop", true )
 		pl:SetProperty( "expd_rubber_bones_special", CurTime() + 30 )
 
-		hook.Add( "OnPlayerHitGround", "expd_effect", function( ply, water, floater, speed )
+		local id = pl:SteamID64()
+
+		AddRoundHook( "OnPlayerHitGround", "expd_effect"..id, function( ply, water, floater, speed )
 			if ply:SCPClass() != CLASSES.EXPD then return end
 			if CLIENT then return true end
 
@@ -964,8 +1157,9 @@ EFFECTS.RegisterEffect( "expd_rubber_bones", {
 			return true
 		end )
 	end,
-	finish = function()
-		hook.Remove( "OnPlayerHitGround", "expd_effect" )
+	finish = function( self, pl )
+		local id = pl:SteamID64()
+		RemoveRoundHook( "OnPlayerHitGround", "expd_effect"..id )
 	end,
 	ignore500 = true,
 } )
@@ -986,12 +1180,18 @@ EFFECTS.RegisterEffect( "expd_stamina_tweaks", {
 		pl:SetMaxStamina( 200 )
 		pl:SetStaminaLimit( 200 )
 
-		hook.Add( "FinishMove", "expd_effect", function( ply, mv )
+		if SERVER then
+			pl.ClassData.stamina = 200
+		end
+
+		local id = pl:SteamID64()
+
+		AddRoundHook( "FinishMove", "expd_effect"..id, function( ply, mv )
 			if ply:SCPClass() != CLASSES.EXPD then return end
 			ply:SetHealth( ply:GetStamina() / ply:GetMaxStamina() * ply:GetMaxHealth() )
 		end )
 
-		hook.Add( "SLCPostScaleDamage", "expd_effect", function( ply, dmg )
+		AddRoundHook( "SLCPostScaleDamage", "expd_effect"..id, function( ply, dmg )
 			if !IsValid( ply ) or !ply:IsPlayer() or ply:SCPClass() != CLASSES.EXPD then return end
 
 			local new = ply:GetStamina() - dmg:GetDamage()
@@ -1005,7 +1205,7 @@ EFFECTS.RegisterEffect( "expd_stamina_tweaks", {
 			return SERVER
 		end )
 
-		hook.Add( "SLCHealed", "expd_effect", function( target, healer, heal )
+		AddRoundHook( "SLCHealed", "expd_effect"..id, function( target, healer, heal )
 			local max = target:GetMaxStamina()
 			local new = target:GetStamina() + heal / target:GetMaxHealth() * max
 
@@ -1016,10 +1216,11 @@ EFFECTS.RegisterEffect( "expd_stamina_tweaks", {
 			target:SetStamina( new )
 		end )
 	end,
-	finish = function()
-		hook.Remove( "FinishMove", "expd_effect" )
-		hook.Remove( "SLCPostScaleDamage", "expd_effect" )
-		hook.Remove( "SLCHealed", "expd_effect" )
+	finish = function( self, pl )
+		local id = pl:SteamID64()
+		RemoveRoundHook( "FinishMove", "expd_effect"..id )
+		RemoveRoundHook( "SLCPostScaleDamage", "expd_effect"..id )
+		RemoveRoundHook( "SLCHealed", "expd_effect"..id )
 	end,
 	ignore500 = true,
 } )
@@ -1034,7 +1235,9 @@ EFFECTS.RegisterEffect( "expd_revive", {
 		return ply:SCPClass() == CLASSES.EXPD
 	end,
 	begin = function( self, pl )
-		hook.Add( "SLCPostScaleDamage", "expd_effect", function( ply, dmg )
+		local id = pl:SteamID64()
+
+		AddRoundHook( "SLCPostScaleDamage", "expd_effect"..id, function( ply, dmg )
 			if CLIENT or !ply:IsPlayer() or ply:SCPClass() != CLASSES.EXPD or dmg:IsDamageType( DMG_DIRECT ) then return end
 
 			if dmg:GetDamage() >= ply:Health() then
@@ -1051,8 +1254,9 @@ EFFECTS.RegisterEffect( "expd_revive", {
 			end
 		end )
 	end,
-	finish = function()
-		hook.Remove( "SLCPostScaleDamage", "expd_effect" )
+	finish = function( self, pl )
+		local id = pl:SteamID64()
+		RemoveRoundHook( "SLCPostScaleDamage", "expd_effect"..id )
 	end,
 	ignore500 = true,
 } )
@@ -1068,7 +1272,7 @@ EFFECTS.RegisterEffect( "expd_recovery", {
 	end,
 	begin = function( self, pl )
 		if SERVER then
-			pl:SelectWeapon( "item_slc_holster" )
+			pl:SelectWeaponByBase( "item_slc_holster" )
 			pl:GodEnable()
 			pl:SetNoDraw( true )
 
@@ -1084,19 +1288,21 @@ EFFECTS.RegisterEffect( "expd_recovery", {
 		pl:SetStaminaBoost( CurTime() + 10 )
 		pl:SetStaminaBoostDuration( 10 )
 
-		hook.Add( "EntityTakeDamage", "expd_effect", function( ply, dmg )
+		local id = pl:SteamID64()
+
+		AddRoundHook( "EntityTakeDamage", "expd_effect"..id, function( ply, dmg )
 			if ply == pl then return true end
 		end )
 
-		hook.Add( "PlayerSwitchWeapon", "expd_effect", function( ply )
+		AddRoundHook( "PlayerSwitchWeapon", "expd_effect"..id, function( ply )
 			if ply == pl then return true end
 		end )
 
-		hook.Add( "SLCPlayerFootstep", "expd_effect", function( ply )
+		AddRoundHook( "SLCPlayerFootstep", "expd_effect"..id, function( ply )
 			if ply == pl then return true end
 		end )
 
-		/*hook.Add( "CanPlayerSeePlayer", "expd_effect", function( lp, ply )
+		/*AddRoundHook( "CanPlayerSeePlayer", "expd_effect"..id, function( lp, ply )
 			if ply == 
 		end )*/
 	end,
@@ -1106,10 +1312,11 @@ EFFECTS.RegisterEffect( "expd_recovery", {
 			pl:SetNoDraw( false )
 		end
 
-		hook.Remove( "EntityTakeDamage", "expd_effect" )
-		hook.Remove( "PlayerSwitchWeapon", "expd_effect" )
-		hook.Remove( "SLCPlayerFootstep", "expd_effect" )
-		hook.Remove( "CanPlayerSeePlayer", "expd_effect" )
+		local id = pl:SteamID64()
+		RemoveRoundHook( "EntityTakeDamage", "expd_effect"..id )
+		RemoveRoundHook( "PlayerSwitchWeapon", "expd_effect"..id )
+		RemoveRoundHook( "SLCPlayerFootstep", "expd_effect"..id )
+		//RemoveRoundHook( "CanPlayerSeePlayer", "expd_effect"..id )
 	end,
 	think = function( self, ply )
 		if CLIENT then return end
@@ -1130,8 +1337,9 @@ hook.Add( "SLCCanHeal", "SLCEffectsCanHeal", function( target, healer, heal_type
 end )
 
 hook.Add( "SLCNeedHeal", "SLCEffectsNeedHeal", function( target, healer, heal_type )
-	if target:HasEffect( "deep_wounds" ) then return true end
 	if target:HasEffect( "bleeding" ) then return true end
+	if target:HasEffect( "heavy_bleeding" ) then return true end
+	if target:HasEffect( "deep_wounds" ) then return true end
 	if target:HasEffect( "fracture" ) then return true end
 end )
 
@@ -1147,6 +1355,7 @@ end )
 
 hook.Add( "SLCHealed", "SLCEffectsHealed", function( target, healer )
 	target:RemoveEffect( "bleeding", true )
+	target:RemoveEffect( "heavy_bleeding", true )
 	target:RemoveEffect( "deep_wounds", true )
 	target:RemoveEffect( "fracture" )
 end )

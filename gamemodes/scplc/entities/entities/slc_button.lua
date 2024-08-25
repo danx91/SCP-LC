@@ -22,7 +22,7 @@ end
 
 function ENT:Think()
 	if self.PlayingAnim then
-		local f = 1 - (self.NTime - CurTime()) / self.UseTime
+		local f = 1 - ( self.NTime - CurTime() ) / self.UseTime
 
 		if f < 0 then
 			f = 0

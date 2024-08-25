@@ -14,9 +14,10 @@ end
 SWEP.Toggleable = true
 SWEP.Selectable = false
 
-SWEP.Durability = 150
+SWEP.Durability = 200
 
 SWEP.Group 		= "gasmask"
+SWEP.UseGroup	= "vision"
 
 function SWEP:SetupDataTables()
 	self:CallBaseClass( "SetupDataTables" )
@@ -28,9 +29,10 @@ function SWEP:HandleUpgrade( mode, num_mode, pos )
 	self:SetPos( pos )
 	
 	if mode == UPGRADE_MODE.VERY_FINE then
+		self:Refill()
+
 		if math.random( 100 ) <= 33 then
 			self:SetUpgraded( true )
-			self:SetDurability( self.Durability )
 		end
 	end
 end
@@ -49,8 +51,12 @@ end
 end*/
 
 function SWEP:OnSelect()
-	if self:GetDurability() <= 0 then return end
+	if self:GetDurability() <= 0 or !self:CanEnable() then return end
 	self:SetEnabled( !self:GetEnabled() )
+end
+
+function SWEP:Refill()
+	self:SetDurability( self.Durability )
 end
 
 function SWEP:Damage( dmg )
@@ -64,14 +70,7 @@ if CLIENT then
 	local overlay = GetMaterial( "slc/misc/gasmask.png" )
 	hook.Add( "SLCScreenMod", "GasMask", function( clr )
 		local ply = LocalPlayer()
-		local wep
-
-		for k, v in pairs( ply:GetWeapons() ) do
-			if v:IsDerived( "item_slc_gasmask" ) then
-				wep = v
-				break
-			end
-		end
+		local wep = ply:GetWeaponByGroup( "gasmask" )
 
 		if IsValid( wep ) and wep:GetEnabled() then
 			render.SetMaterial( overlay )

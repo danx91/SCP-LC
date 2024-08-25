@@ -167,11 +167,23 @@ function GenerateAccessOverride( chip )
 	end
 end
 
-function SelectChip( level )
+function SelectChip( level, blacklist )
 	local tab = ACC_REGISTRY.LEVELS[level]
 	if !tab then return end
 
-	return tab[math.random( #tab )]
+	if !blacklist then
+		return tab[math.random( #tab )]
+	end
+
+	local copy = table.Copy( tab )
+	blacklist = CreateLookupTable( blacklist )
+
+	for i = #copy, 1, -1 do
+		local selected = table.remove( copy, math.random( i ) )
+		if !blacklist[selected] then
+			return selected
+		end
+	end
 end
 
 local function translate_upgrademode( mode )
@@ -313,7 +325,7 @@ if SERVER then
 		msg_omnitool = <string>, --optional, custom message when omnitool is required, but player doesn't have one
 		scp_disallow = <boolean>, --optional, true = scps can't use but ones with can_interact
 		suppress_check = <boolean>, --optional, skipps access check
-		disable = <boolean>, --optional, blocks usage of button
+		disabled = <boolean>, --optional, blocks usage of button
 		suppress_texts = <boolean>, --optional, suppress all texts
 		omega_disable = <boolean>, --optional, can't be used when omega is active
 		alpha_disable = <boolean>, --optional, can't be used when alpha is active

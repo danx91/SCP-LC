@@ -127,6 +127,7 @@ local function add_cw_weapon( class, stats, ... )
 	local wep_tab = weapons.GetStored( class )
 	if !wep_tab then return end
 
+	wep_tab.NoFreeAim = true
 	wep_tab.CanRicochet = false
 	wep_tab.CanPenetrate = false
 
@@ -218,14 +219,20 @@ hook.Add( "SLCGamemodeLoaded", "SLCCWStuff", function()
 	end
 
 	--[[-------------------------------------------------------------------------
+	Disable some features
+	---------------------------------------------------------------------------]]
+	CustomizableWeaponry.quickGrenade.enabled = false
+	concommand.Remove( "cw_dropweapon" )
+
+	--[[-------------------------------------------------------------------------
 	Fix khr attachments
 	---------------------------------------------------------------------------]]
 	CustomizableWeaponry.originalValue:add( "DamageFallOff", true )
 	CustomizableWeaponry.originalValue:add( "EffectiveRange", true )
 	CustomizableWeaponry.originalValue:add( "ClumpSpread", true )
 
-	CustomizableWeaponry:registerRecognizedStat("DamageFallOffMult", "Decreases damage falloff", "Increases damage falloff", CustomizableWeaponry.textColors.POSITIVE, CustomizableWeaponry.textColors.NEGATIVE )
-	CustomizableWeaponry:registerRecognizedStat("EffectiveRangeMult", "Decreases effective range", "Increases effective range", CustomizableWeaponry.textColors.NEGATIVE, CustomizableWeaponry.textColors.POSITIVE )
+	CustomizableWeaponry:registerRecognizedStat( "DamageFallOffMult", "Decreases damage falloff", "Increases damage falloff", CustomizableWeaponry.textColors.POSITIVE, CustomizableWeaponry.textColors.NEGATIVE )
+	CustomizableWeaponry:registerRecognizedStat( "EffectiveRangeMult", "Decreases effective range", "Increases effective range", CustomizableWeaponry.textColors.NEGATIVE, CustomizableWeaponry.textColors.POSITIVE )
 
 	--[[-------------------------------------------------------------------------
 	Attachment modifications
@@ -302,7 +309,7 @@ hook.Add( "SLCGamemodeLoaded", "SLCCWStuff", function()
 	---------------------------------------------------------------------------]]
 	local tab = weapons.GetStored( "cw_grenade_base" )
 	tab.PrimaryAttack = function( self )
-		if self:GetOwner():GetAmmoCount(self.Primary.Ammo) == 0 and self:Clip1() == 0 then
+		if self:GetOwner():GetAmmoCount( self.Primary.Ammo ) == 0 and self:Clip1() == 0 then
 			return
 		end
 	
@@ -316,6 +323,7 @@ hook.Add( "SLCGamemodeLoaded", "SLCCWStuff", function()
 			end
 		end
 		
+		self.OriginalHolster = self.OriginalHolster or self.Holster
 		self.Holster = function() return false end
 		self.OnDrop = function( this ) if SERVER then this:Remove() end end
 
@@ -366,6 +374,10 @@ hook.Add( "SLCGamemodeLoaded", "SLCCWStuff", function()
 									if SERVER then owner:StripWeapon( self.ClassName ) end
 								else
 									self:sendWeaponAnim("draw")
+									
+									self.PreventDropping = false
+									self.OnDrop = nil
+									self.Holster = self.OriginalHolster
 								end
 							end
 						end)
@@ -471,7 +483,7 @@ hook.Add( "SLCGamemodeLoaded", "SLCCWStuff", function()
 
 	--Snipers
 	add_cw_weapon( "cw_l115", { Damage = 100 }, 8, "sniper" )
-	add_cw_weapon( "cw_svd_official", { Damage = 50, FireDelay = 0.5 }, 8, "sniper", "ntfsniper", "alpha1sniper" )
+	add_cw_weapon( "cw_svd_official", { Damage = 50, FireDelay = 0.5 }, 8, "sniper", "ntfsniper", "alpha1sniper", "cisniper" )
 
 	--Heavy
 	add_cw_weapon( "cw_m249_official", { Damage = 13 }, 8, "heavy", "ciheavy" )

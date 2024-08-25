@@ -1,6 +1,3 @@
-//CLASS_VIEWER = CLASS_VIEWER
-local roman_tab = { "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X" }
-
 local MATS = {
 	blur = Material( "pp/blurscreen" ),
 	exit = Material( "slc/hud/exit.png", "smooth" ),
@@ -13,6 +10,7 @@ local COLOR = {
 	locked = Color( 150, 120, 120, 75 ),
 	tier_locked = Color( 120, 120, 120, 75 ),
 	white = Color( 255, 255, 255, 255 ),
+	xp = Color( 200, 175, 25, 175 ),
 }
 
 local cache = {}
@@ -46,6 +44,8 @@ local headers = {
 	"support",
 	"scp"
 }
+
+local suppress_viewer = false
 
 ShowSCPs = {}
 CLASS_VIEWER_OVERRIDE = {}
@@ -151,13 +151,16 @@ local function addClass( tab, p, h )
 		end
 	end
 
+	if override != true and !ply:IsClassUnlocked( tab.name ) and tab.hide then
+		return
+	end
+
 	local button = vgui.Create( "DButton", p )
 	button:Dock( TOP )
 	button:DockMargin( 5, 5, 5, 0 )
 	button:SetTall( h )
 	button:SetText( "" )
 
-	
 	if !ply:CanUnlockClassTier( tab.tier ) then
 		button:SetTooltipPanelOverride( "SLCTooltip" )
 		button:SetTooltip( LANG.tierlocked )
@@ -165,6 +168,7 @@ local function addClass( tab, p, h )
 		button.Tooltip = true
 	end
 
+	local use_roman = !GetSettingsValue( "hud_avoid_roman" )
 	button.Paint = function( self, pw, ph )
 		surface.SetDrawColor( COLOR.outline )
 		surface.DrawOutlinedRect( pw * 0.1, 0, pw * 0.8, ph )
@@ -198,9 +202,9 @@ local function addClass( tab, p, h )
 			{ x = pw * 0.9 - ph * 0.1, y = ph * 0.5 },
 		}
 
-		if tab.tier and tab.tier > 0 then
+		if tab.tier and ( tab.tier > 0 or tab.tier == -1 ) then
 			draw.Text{
-				text = roman_tab[tab.tier] or ( "T"..tab.tier  ),
+				text = tab.tier == -1 and "★" or use_roman and ToRoman( tab.tier ) or ( "T"..tab.tier ),
 				pos = { pw * 0.05, ph * 0.5 },
 				font = "SCPInfoScreenSmall",
 				color = COLOR.white,
@@ -295,12 +299,13 @@ local function addClass( tab, p, h )
 			ent:SetSequence( seq )
 		end
 
-		showinfo.mvp:Update( tab.name )
+		showinfo.mvp:Update( tab.name, tab.tier == -1 )
 	end
 
 	button.DoDoubleClick = function( self )
 		if !ply:IsClassUnlocked( tab.name ) and ply:UnlockClass( tab.name ) then
 			showinfo.mvp.buy:SetVisible( false )
+			CLASS_VIEWER.PrestigeButton:SetVisible( ply:CanPrestige() )
 		end
 	end
 end
@@ -357,7 +362,7 @@ local function addSCP( tab, p, h )
 			ent:SetSequence( seq )
 		end
 
-		showinfo.mvp:Update( tab.name )
+		showinfo.mvp:Update( tab.name, false )
 	end
 end
 
@@ -366,7 +371,7 @@ function rebuildView()
 	if !LANG.headers then return end
 
 	local h = ScrH()
-	local groups = GetGroups()
+	local groups = GetClassGroups()
 
 	local panel = showinfo.panel
 
@@ -398,7 +403,7 @@ function rebuildView()
 								table.insert( class_tab, val )
 							end
 
-							table.sort( class_tab, function( a, b ) return ( a.tier or 0 ) < ( b.tier or 0 ) end )
+							table.sort( class_tab, function( a, b ) return ( a.sort or a.tier == -1 and 999 or a.tier or 0 ) < ( b.sort or b.tier == -1 and 999 or b.tier or 0 ) end )
 
 							for _, class in pairs( class_tab ) do
 								addClass( class, panel, h * 0.05 )
@@ -466,9 +471,18 @@ local function openViewer()
 			yalign = TEXT_ALIGN_CENTER,
 		}
 
-		draw.Text{
+		local tw = draw.Text{
 			text = LANG.HUD.class_points..": "..ply:SCPClassPoints(),
-			pos = { pw * 0.48, ph * 0.02 },
+			pos = { pw * 0.25, ph * 0.02 },
+			font = "SCPHUDSmall",
+			color = COLOR.white,
+			xalign = TEXT_ALIGN_LEFT,
+			yalign = TEXT_ALIGN_CENTER,
+		}
+
+		draw.Text{
+			text = LANG.HUD.prestige_points..": "..ply:GetPrestigePoints(),
+			pos = { pw * 0.3 + tw, ph * 0.02 },
 			font = "SCPHUDSmall",
 			color = COLOR.white,
 			xalign = TEXT_ALIGN_LEFT,
@@ -476,17 +490,17 @@ local function openViewer()
 		}
 	end
 
-	local refound_b = vgui.Create( "DButton", window )
-	refound_b:SetSize( w * 0.1, h * 0.03 )
-	refound_b:AlignRight( w * 0.125 - 14 )
-	refound_b:AlignTop( h * 0.0025 )
-	refound_b:SetText( "" )
-	refound_b.Paint = function( self, pw, ph )
+	local refund_b = vgui.Create( "DButton", window )
+	refund_b:SetSize( w * 0.1, h * 0.03 )
+	refund_b:AlignRight( w * 0.075 - 14 )
+	refund_b:AlignTop( h * 0.0025 )
+	refund_b:SetText( "" )
+	refund_b.Paint = function( self, pw, ph )
 		surface.SetDrawColor( COLOR.outline )
 		surface.DrawOutlinedRect( 0, 0, pw, ph )
 
 		draw.Text{
-			text = LANG.refound,
+			text = LANG.refund,
 			pos = { pw * 0.5, ph * 0.5 },
 			font = "SCPHUDSmall",
 			color = COLOR.white,
@@ -495,12 +509,54 @@ local function openViewer()
 		}
 	end
 
-	refound_b.DoClick = function( self )
-		self:SetVisible( false )
-		net.Ping( "SLCRefoundClasses" )
-		ply.playermeta.refound = false
+	window.OnKeyCodePressed = function( this, code )
+		if code == GetBindButton( "ppshop_button" ) then
+			suppress_viewer = true
+			this:Close()
+		end
 	end
-	refound_b:SetVisible( ply.playermeta.refound or false )
+
+	refund_b.DoClick = function( self )
+		self:SetVisible( false )
+		net.Ping( "SLCrefundClasses" )
+		ply.playermeta.refund = false
+	end
+	refund_b:SetVisible( ply.playermeta.refund or false )
+
+	local prestige_b = vgui.Create( "DButton", window )
+	window.PrestigeButton = prestige_b
+
+	prestige_b:SetSize( w * 0.1, h * 0.03 )
+	prestige_b:AlignRight( w * 0.2 - 14 )
+	prestige_b:AlignTop( h * 0.0025 )
+	prestige_b:SetText( "" )
+
+	prestige_b.Paint = function( self, pw, ph )
+		surface.SetDrawColor( COLOR.outline )
+		surface.DrawOutlinedRect( 0, 0, pw, ph )
+
+		draw.Text{
+			text = LANG.prestige,
+			pos = { pw * 0.5, ph * 0.5 },
+			font = "SCPHUDSmall",
+			color = COLOR.white,
+			xalign = TEXT_ALIGN_CENTER,
+			yalign = TEXT_ALIGN_CENTER,
+		}
+	end
+
+	prestige_b.DoClick = function( self )
+		SLCPopup( LANG.prestige, LANG.prestige_warn, false, function( i )
+			if i == 1 then
+				ply:PerformPrestige()
+
+				if IsValid( window ) then
+					window:Close()
+				end
+			end
+		end, { LANG.yes, true }, LANG.no )
+	end
+	prestige_b:SetVisible( ply:CanPrestige() )
 
 	local exit_b = vgui.Create( "DButton", window )
 	exit_b:SetSize( w * 0.02, h * 0.02 )
@@ -519,9 +575,25 @@ local function openViewer()
 		window:Close()
 	end
 
+	local xp_bar = vgui.Create( "DPanel", window )
+	xp_bar:Dock( TOP )
+	xp_bar:DockMargin( 2, 14, 2, 2 )
+	xp_bar:SetTall( h * 0.02 )
+
+	xp_bar.Paint = function( this, pw, ph )
+		local xp = ply:SCPExp()
+		local req_xp = ply:RequiredXP()
+
+		draw.RoundedBox( ph * 0.4, 0, 0, pw, ph, COLOR.outline )
+		draw.RoundedBox( ph * 0.4, 0, 0, pw * math.Clamp( xp / req_xp, 0, 1 ), ph, COLOR.xp )
+
+		draw.SimpleText( string.format( "%s: %i", LANG.level, ply:SCPLevel() ), "SCPHUDVSmall", pw * 0.01, ph * 0.5, COLOR.white, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER )
+		draw.SimpleText( string.format( "%s: %i / %i", LANG.xp, xp, req_xp ), "SCPHUDVSmall", pw * 0.5, ph * 0.5, COLOR.white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+	end
+
 	local classselect = vgui.Create( "DScrollPanel", window )
 	classselect:Dock( LEFT )
-	classselect:DockMargin( 2, 14, 2, 2 )
+	classselect:DockMargin( 2, 2, 2, 2 )
 	classselect:SetWide( w * 0.35 )
 	classselect.Paint = function( self, pw, ph )
 		surface.SetDrawColor( COLOR.outline )
@@ -534,7 +606,7 @@ local function openViewer()
 
 	local c = vgui.Create( "DPanel", window )
 	c:Dock( TOP )
-	c:DockMargin( 2, 14, 2, 2 )
+	c:DockMargin( 2, 2, 2, 2 )
 	c:SetTall( h * 0.4 )
 	c.Paint = function() end
 
@@ -563,8 +635,9 @@ local function openViewer()
 		}
 	end
 
-	mv.Update = function( self, name )
+	mv.Update = function( self, name, prestige )
 		self.buy.cur = name
+		self.buy.prestige = prestige
 		self.buy:SetVisible( !ply:IsClassUnlocked( name ) )
 	end
 
@@ -580,7 +653,7 @@ local function openViewer()
 
 		if self.cur then
 			draw.Text{
-				text = LANG.buy,
+				text = self.prestige and LANG.buy_prestige or LANG.buy,
 				pos = { pw * 0.5, ph * 0.5 },
 				font = "SCPHUDSmall",
 				color = ply:CanUnlockClass( self.cur ) and COLOR.white or Color( 200, 50, 50, 225 ),
@@ -593,6 +666,7 @@ local function openViewer()
 	buy.DoClick = function( self )
 		if ply:UnlockClass( self.cur ) then
 			self:SetVisible( false )
+			CLASS_VIEWER.PrestigeButton:SetVisible( ply:CanPrestige() )
 		end
 	end
 
@@ -600,6 +674,8 @@ local function openViewer()
 
 	mv.buy = buy
 	showinfo.mvp = mv
+
+	local use_roman = !GetSettingsValue( "hud_avoid_roman" )
 
 	local details = vgui.Create( "DPanel", c )
 	details:Dock( FILL )
@@ -630,7 +706,11 @@ local function openViewer()
 						local t = SCPTeams.GetName( val )
 						val = LANG.TEAMS[t] or val
 					elseif v == "tier" then
-						val = val and val <= 0 and 0 or val <= 10 and roman_tab[val] or ( "T"..val )
+						if val == -1 then
+							val = LANG.details.prestige
+						else
+							val = val and val <= 0 and 0 or use_roman and ToRoman( val ) or ( "T"..val )
+						end
 					elseif v == "chip" then
 						if !val or val == "" then
 							val = LANG.none
@@ -640,7 +720,7 @@ local function openViewer()
 					end
 
 					totalh = totalh + basicText( "\t"..(LANG.details[v] or v)..":   "..val, 5, totalh ) + 5
-				elseif istable( val ) and table.Count( val ) > 0 then
+				elseif istable( val ) and next( val ) then
 					totalh = totalh + basicText( "\t"..(LANG.details[v] or v)..":   ", 5, totalh ) - 3
 					for key, data in pairs( val ) do
 						local txt = "\t\t"
@@ -767,7 +847,29 @@ local function openViewer()
 		}
 
 		if showinfo.details then
-			local desc = LANG.CLASS_DESCRIPTION[showinfo.details.name]
+			local class_name = showinfo.details.name
+			local desc = LANG.CLASS_DESCRIPTION[class_name]
+			local wep = LANG.WEAPONS[class_name]
+
+			if wep and wep.skills and wep.skills._overview then
+				if desc then
+					desc = desc.."\n\n"
+				else
+					desc = ""
+				end
+
+				for i, v in ipairs( wep.skills._overview ) do
+					local tb = wep.skills[v]
+					if !tb then continue end
+
+					if i > 1 then
+						desc = desc.."\n"
+					end
+
+					desc = desc..tb.name..": "..tb.dsc
+				end
+			end
+
 			if desc then
 				local px, py = self:LocalToScreen()
 				local sx, sy = 10, th + 5
@@ -793,6 +895,11 @@ local function openViewer()
 end
 
 function OpenClassViewer()
+	if suppress_viewer then
+		suppress_viewer = false
+		return
+	end
+
 	if IsValid( CLASS_VIEWER ) then CLASS_VIEWER:Close() end
 
 	showinfo.major = 0
@@ -803,10 +910,13 @@ function OpenClassViewer()
 	openViewer()
 end
 
-net.ReceivePing( "SLCRefoundClasses", function( data )
-	data = tonumber( data )
-	if data and data > 0 then
-		SLCPopup( LANG.classviewer, string.format( LANG.refounded, data ) )
+net.ReceivePing( "SLCrefundClasses", function( data )
+	local points = string.Split( data, "," )
+	local sp = tonumber( points[1] or 0 )
+	local pp = tonumber( points[2] or 0 )
+
+	if sp > 0 or pp > 0 then
+		SLCPopup( LANG.classviewer, string.format( LANG.refunded, sp, pp ) )
 	end
 end )
 

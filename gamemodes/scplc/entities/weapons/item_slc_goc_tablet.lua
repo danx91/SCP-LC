@@ -192,10 +192,10 @@ if CLIENT then
 		end
 	end
 
-	local logo = Material( "slc/misc/goc_logo_256.png" )
-	local dot = Material( "slc/misc/dot.png" )
-	local arr_up = Material( "slc/hud/arrow_up.png" )
-	local arr_down = Material( "slc/hud/arrow_down.png" )
+	local logo = Material( "slc/misc/goc_logo_256.png", "smooth" )
+	local dot = Material( "slc/misc/dot.png", "smooth" )
+	local arr_up = Material( "slc/hud/arrow_up.png", "smooth" )
+	local arr_down = Material( "slc/hud/arrow_down.png", "smooth" )
 	local alpha = 0
 
 	local color_white = Color( 255, 255, 255 )

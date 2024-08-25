@@ -4,7 +4,6 @@ function PLAYER:SetupSpectator( roam )
 	self:SetSCPTeam( TEAM_SPEC )
 	self:SetSCPClass( "spectator" )
 
-	//local plys = SCPTeams.GetPlayersByInfo( SCPTeams.INFO_HUMAN )
 	local plys = self:GetValidSpectateTargets()
 
 	if roam or #plys < 1 then
@@ -12,16 +11,14 @@ function PLAYER:SetupSpectator( roam )
 		self:Spectate( OBS_MODE_ROAMING )
 	else
 		self:Spectate( OBS_MODE_CHASE )
-		--print( self, "Setup spectate", plys[1] )
 		self:SpectateEntity( plys[1] )
 	end
 end
 
 function PLAYER:SpectatePlayerNext()
-	if self:SCPTeam() != TEAM_SPEC then return end
+	if self:SCPTeam() != TEAM_SPEC or self:GetAdminMode() then return end
 	if self.DeathScreen or self.SetupAsSpectator then return end
 
-	//local plys = SCPTeams.GetPlayersByInfo( SCPTeams.INFO_HUMAN )
 	local plys = self:GetValidSpectateTargets()
 	if self:GetObserverMode() == OBS_MODE_ROAMING then
 		if #plys > 0 then
@@ -67,7 +64,7 @@ function PLAYER:SpectatePlayerNext()
 end
 
 function PLAYER:SpectatePlayerPrev()
-	if self:SCPTeam() != TEAM_SPEC then return end
+	if self:SCPTeam() != TEAM_SPEC or self:GetAdminMode() then return end
 	if self.DeathScreen or self.SetupAsSpectator then return end
 
 	//local plys = SCPTeams.GetPlayersByInfo( SCPTeams.INFO_HUMAN )
@@ -117,7 +114,7 @@ function PLAYER:SpectatePlayerPrev()
 end
 
 function PLAYER:ChangeSpectateMode()
-	if self:SCPTeam() != TEAM_SPEC then return end
+	if self:SCPTeam() != TEAM_SPEC or self:GetAdminMode() then return end
 	if self.DeathScreen or self.SetupAsSpectator then return end
 
 	local cur_mode = self:GetObserverMode()
@@ -156,7 +153,7 @@ function PLAYER:GetValidSpectateTargets( all )
 	local plys = {}
 	local tab = SCPTeams.GetPlayersByInfo( info )
 
-	for k, v in pairs( tab ) do
+	for i, v in ipairs( tab ) do
 		if all or !v:IsAboutToSpawn() then
 			table.insert( plys, v )
 		end
@@ -197,10 +194,9 @@ end
 --[[-------------------------------------------------------------------------
 Globals
 ---------------------------------------------------------------------------]]
-
 function CheckSpectatorMode( all )
-	for k, v in pairs( player.GetAll() ) do
-		if v:SCPTeam() == TEAM_SPEC then
+	for i, v in ipairs( player.GetAll() ) do
+		if v:SCPTeam() == TEAM_SPEC and !v:GetAdminMode() then
 			v:CheckSpectatorMode( all )
 		end
 	end

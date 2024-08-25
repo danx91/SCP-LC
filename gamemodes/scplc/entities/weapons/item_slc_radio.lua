@@ -67,7 +67,7 @@ function SWEP:SecondaryAttack()
 end
 
 local color_black = Color( 0, 0, 0, 255 )
-local radio = Material( "slc/misc/radioHUD.png" )
+local radio = Material( "slc/misc/radioHUD.png", "smooth" )
 function SWEP:DrawHUD()
 	if hud_disabled then return end
 

@@ -1,16 +1,427 @@
-SWEP.Base 				= "weapon_scp_base"
-SWEP.DeepBase 			= "weapon_scp_base"
-SWEP.PrintName			= "SCP-049"
+SWEP.Base 			= "weapon_scp_base"
+SWEP.PrintName		= "SCP-049"
 
-SWEP.HoldType 			= "normal"
+SWEP.HoldType		= "normal"
 
-local zombies = {
-	{ name = "normal", speed = 1, health = 1, damage = 1, material = nil }, --standard zombie
-	{ name = "light", speed = 1.3, health = 0.75, damage = 0.6, material = nil }, --fast zombie
-	{ name = "heavy", speed = 0.8, health = 1.4, damage = 1.2, material = nil }, --heavy zombie
+SWEP.DisableDamageEvent = true
+
+SWEP.PassiveRadius = 2000 ^ 2
+
+SWEP.SurgeryTime = 15
+
+SWEP.ChokeCooldown = 20
+SWEP.ChokeProtectedCooldown = 5
+SWEP.ChokeRate = 12.5
+SWEP.ChokeStopDamage = 75
+SWEP.ChokeSlow = 0.6
+SWEP.ChokeSlowTime = 3
+
+SWEP.BoostCooldown = 90
+SWEP.BoostDuration = 10
+SWEP.BoostSpeed = 1.2
+SWEP.BoostRadius = 600
+
+SCP049_ZOMBIE_TYPES = {
+	{ name = "normal", speed = 1, health = 1, damage = 1, primary = "light", secondary = "heavy", material = nil },
+	{ name = "assassin", speed = 1.19, health = 0.7, damage = 0.5, primary = "light", secondary = "rapid", material = nil },
+	{ name = "boomer", speed = 0.87, health = 1.3, damage = 1.25, primary = "heavy", secondary = "explode", material = nil },
+	{ name = "heavy", speed = 0.82, health = 1.5, damage = 1.15, primary = "heavy", secondary = "shot", material = nil },
 }
 
-local function translate_zombie_model( ply, rag )
+function SWEP:SetupDataTables()
+	self:CallBaseClass( "SetupDataTables" )
+
+	self:AddNetworkVar( "Surgeries", "Int" )
+	self:AddNetworkVar( "Nearby", "Int" )
+	self:AddNetworkVar( "Surgery", "Float" )
+	self:AddNetworkVar( "Choke", "Float" )
+	self:AddNetworkVar( "Boost", "Float" )
+end
+
+function SWEP:Initialize()
+	self:SetHoldType( self.HoldType )
+	self:InitializeLanguage( "SCP049" )
+	self:InitializeHUD()
+
+	self:SetChoke( -1 )
+	self.Zombies = {}
+	self.ChokeProgress = {}
+end
+
+SWEP.NextProtectionTick = 0
+function SWEP:Think()
+	if CLIENT or ROUND.preparing then return end
+
+	if ROUND.post then
+		if self.ChokeTarget then
+			self:StopChoke()
+		end	
+
+		return
+	end
+
+	if self.ChokeTarget and ( !IsValid( self.ChokeTarget ) or !self.ChokeTarget:CheckSignature( self.ChokeTargetSignature ) ) then
+		self:StopChoke()
+	end
+	
+	local owner = self:GetOwner()
+
+	local target = self.ChokeTarget
+	if target then
+		owner:SetPos( self.ChokeOwnerPosition )
+		target:SetPos( self.ChokeHoldPosition )
+		target:SetEyeAngles( self.ChokeHoldAngle )
+
+		local choke = self:GetChoke() + self.ChokeRate * self:GetUpgradeMod( "choke_rate", 1 ) * FrameTime()
+		self:SetChoke( choke )
+		self.ChokeProgress[target][1] = choke
+
+		if choke > 100 then
+			self:StopChoke()
+
+			local dmg = DamageInfo()
+			dmg:SetDamage( target:Health() )
+			dmg:SetDamageType( DMG_DIRECT )
+			dmg:SetAttacker( owner )
+
+			target:TakeDamageInfo( dmg )
+		end
+	end
+
+	local ct = CurTime()
+	if self.NextProtectionTick <= ct then
+		self.NextProtectionTick = self.NextProtectionTick + 0.5
+
+		if self.NextProtectionTick < ct then
+			self.NextProtectionTick = ct + 0.5
+		end
+
+		local nearby = 0
+		local pos = owner:GetPos()
+
+		for i, v in ipairs( player.GetAll() ) do
+			if v:SCPClass() != CLASSES.SCP0492 or v:GetPos():DistToSqr( pos ) > self.PassiveRadius then continue end
+	
+			local wep = v:GetSCPWeapon()
+			if !IsValid( wep ) or wep:GetSCP049() != owner then continue end
+	
+			wep:EnableProtection()
+			nearby = nearby + 1
+		end
+
+		self:SetNearby( nearby )
+	end
+
+	local surgery = self:GetSurgery()
+	if surgery > 0 then
+		if surgery < ct then
+			self:FinishSurgery()
+		elseif !IsValid( self.SurgeryTarget ) then
+			self:StopSurgery()
+		end
+	end
+end
+
+function SWEP:OnRemove()
+	if CLIENT then return end
+	self:StopChoke()
+end
+
+local attack_trace = {}
+attack_trace.mins = Vector( -4, -4, -4 )
+attack_trace.maxs = Vector( 4, 4, 4 )
+attack_trace.mask = MASK_SHOT
+attack_trace.output = attack_trace
+
+function SWEP:PrimaryAttack()
+	if CLIENT or ROUND.preparing or ROUND.post then return end
+
+	local ct = CurTime()
+	if self:GetSurgery() > ct or self:GetChoke() >= 0 then return end
+
+	local owner = self:GetOwner()
+	if !owner:IsOnGround() then return end
+
+	local pos = owner:GetShootPos()
+
+	attack_trace.start = pos
+	attack_trace.endpos = pos + owner:GetAimVector() * 65
+	attack_trace.filter = owner
+
+	owner:LagCompensation( true )
+	local tr = util.TraceLine( attack_trace )
+	owner:LagCompensation( false )
+
+	local ent = tr.Entity
+	if !IsValid( ent ) then return end
+	
+	if !ent:IsPlayer() then
+		self:SCPDamageEvent( ent, 50 )
+		self:SetNextPrimaryFire( ct + 1 )
+		return
+	end
+
+	if !self:CanTargetPlayer( ent ) then return end
+
+	if ent:CheckHazmat( 150 ) then
+		self:SetNextPrimaryFire( ct + self.ChokeProtectedCooldown )
+		owner:EmitSound( "SCP049.RemoveProtection" )
+		return
+	elseif ent:GetSCP714() then
+		self:SetNextPrimaryFire( ct + self.ChokeProtectedCooldown )
+		owner:EmitSound( "SCP049.RemoveProtection" )
+		ent:PlayerDropWeapon( "item_scp_714" )
+		return
+	end
+
+	local progress = self.ChokeProgress[ent]
+	if !progress or !ent:CheckSignature( progress[2] ) then
+		progress = { 0, ent:TimeSignature() }
+		self.ChokeProgress[ent] = progress
+	end
+
+	self:SetChoke( progress[1] )
+	self.ChokeTarget = ent
+	self.ChokeTargetSignature = ent:TimeSignature()
+	self.ChokeTargetPosition = ent:GetPos()
+	self.ChokeOwnerPosition = owner:GetPos()
+	self.ChokeDamage = 0
+	
+	owner:EmitSound( "SCP049.Attack" )
+	owner:DisableControls( "scp049_attack" )
+
+	ent:DisableControls( "scp049_attack" )
+	ent:SetMoveType( MOVETYPE_NONE )
+
+	local ang = owner:EyeAngles()
+	ang.p = -30
+	ang.r = 0
+
+	self.ChokeHoldPosition = owner:GetPos() + ang:Forward() * 33 - Vector( 0, 0, 8 )
+	owner:SetEyeAngles( ang )
+	ent:SetPos( self.ChokeHoldPosition )
+
+	ang.p = 0
+	ang.y = ang.y + 180
+
+	self.ChokeHoldAngle = ang
+	ent:SetEyeAngles( ang )
+	SuppressHostEvents( NULL )
+	ent:DoCustomAnimEvent( PLAYERANIMEVENT_CUSTOM_SEQUENCE, 9049001 )
+	SuppressHostEvents( owner )
+
+	ent:TakeDamage( 1, owner, owner )
+end
+
+function SWEP:Reload()
+	if SERVER or ROUND.preparing or ROUND.post then return end
+	if self:GetSurgery() >= CurTime() or self:GetChoke() >= 0 then return end
+
+	local owner = self:GetOwner()
+	if owner:IsHolding( self, "scp049_surgery" ) then return end
+
+	local pos = owner:GetShootPos()
+	local ent = util.TraceLine( {
+		start = pos,
+		endpos = pos + owner:GetAimVector() * 75,
+		filter = owner,
+		mask = MASK_SHOT
+	} ).Entity
+
+	if !IsValid( ent ) or ent:GetClass() != "prop_ragdoll" or ent:GetNWInt( "team", TEAM_SCP ) == TEAM_SCP then return end
+
+	owner:StartHold( self, "scp049_surgery", IN_RELOAD, 0, function()
+		CloseWheelMenu()
+	end, true )
+
+	local options = {}
+
+	for i, v in ipairs( SCP049_ZOMBIE_TYPES ) do
+		table.insert( options, {
+			mat = v.material,
+			name = self.Lang.zombies[v.name] or v.name,
+			desc = self.Lang.zombies_desc[v.name],
+			data = i
+		} )
+	end
+
+	OpenWheelMenu( options, function( selected )
+		if !selected then return end
+		net.Ping( "SCP049Surgery", selected )
+	end, function()
+		return !IsValid( self ) or owner:UpdateHold( self, "scp049_surgery" ) != nil
+	end )
+end
+
+function SWEP:SpecialAttack()
+	if CLIENT or ROUND.preparing or ROUND.post then return end
+
+	local ct = CurTime()
+	if self:GetSurgery() >= ct or self:GetChoke() >= 0 then return end
+
+	local owner = self:GetOwner()
+	self:SetNextSpecialAttack( ct + self.BoostCooldown * self:GetUpgradeMod( "buff_cd", 1 ) )
+
+	local duration = self.BoostDuration * self:GetUpgradeMod( "buff_dur", 1 )
+	local power = self.BoostSpeed * self:GetUpgradeMod( "buff_power", 1 )
+
+	self:SetBoost( ct + duration )
+	owner:PushSpeed( power, power, -1, "SLC_SCP049Boost", 1 )
+
+	local pos = owner:GetPos()
+	local radius = ( self.BoostRadius * self:GetUpgradeMod( "buff_radius", 1 ) ) ^ 2
+
+	for i, v in ipairs( player.GetAll() ) do
+		if v:SCPClass() != CLASSES.SCP0492 or v:GetPos():DistToSqr( pos ) > radius then continue end
+
+		local wep = v:GetSCPWeapon()
+		if !IsValid( wep ) or wep:GetSCP049() != owner then continue end
+
+		wep:EnableBoost( duration, power )
+	end
+
+	owner:AddTimer( "SCP049Boost", duration, 1, function()
+		owner:PopSpeed( "SLC_SCP049Boost" )
+	end )
+end
+
+function SWEP:TranslateActivity( act )
+	if self:GetChoke() >= 0 then
+		return ACT_HL2MP_IDLE_PISTOL
+	end
+
+	if self.ActivityTranslate[act] != nil then
+		return self.ActivityTranslate[act]
+	end
+
+	return -1
+end
+
+function SWEP:StopChoke()
+	local owner = self:GetOwner()
+	
+	owner:StopDisableControls( "scp049_attack" )
+
+	if IsValid( self.ChokeTarget ) then
+		self.ChokeTarget:StopDisableControls( "scp049_attack" )
+		self.ChokeTarget:SetPos( self.ChokeTargetPosition )
+		self.ChokeTarget:SetMoveType( MOVETYPE_WALK )
+
+		SuppressHostEvents( NULL )
+		self.ChokeTarget:DoCustomAnimEvent( PLAYERANIMEVENT_CUSTOM_SEQUENCE, 9049002 )
+		SuppressHostEvents( owner )
+	end
+
+	self:SetNextPrimaryFire( CurTime() + self.ChokeCooldown * self:GetUpgradeMod( "choke_cd", 1 ) )
+	self:SetChoke( -1 )
+	self.ChokeTarget = nil
+	self.ChokeTargetSignature = nil
+	self.ChokeTargetPosition = nil
+	self.ChokeOwnerPosition = nil
+	self.ChokeHoldPosition = nil
+	self.ChokeHoldAngle = nil
+
+	local slow = self.ChokeSlow * self:GetUpgradeMod( "choke_slow", 1 )
+	owner:PushSpeed( slow, slow, -1, "SLC_SCP049Choke", 1 )
+	owner:AddTimer( "SCP049ChokeSlow", self.ChokeSlowTime, 1, function()
+		owner:PopSpeed( "SLC_SCP049Choke" )
+	end )
+end
+
+function SWEP:StartSurgery( option )
+	if ROUND.preparing or ROUND.post then return end
+
+	local ct = CurTime()
+	if self:GetSurgery() >= ct or self:GetChoke() >= 0 then return end
+
+	local owner = self:GetOwner()
+
+	local pos = owner:GetShootPos()
+	local ent = util.TraceLine( {
+		start = pos,
+		endpos = pos + owner:GetAimVector() * 85,
+		filter = owner,
+		mask = MASK_SHOT
+	} ).Entity
+
+	if !IsValid( ent ) or ent:GetClass() != "prop_ragdoll" or ent:GetNWInt( "team", TEAM_SCP ) == TEAM_SCP then return end
+
+	self.SurgeryType = option
+	self.SurgeryTarget = ent
+	self:SetSurgery( ct + self.SurgeryTime - self:GetUpgradeMod( "surgery_time", 0 ) )
+end
+
+function SWEP:StopSurgery()
+	self.SurgeryType = nil
+	self.SurgeryTarget = nil
+	self:SetSurgery( 0 )
+	self:HUDNotify( "surgery_failed" )
+	//CenterMessage( "@WEAPONS.SCP049.surgery_failed;time:5", self:GetOwner() )
+end
+
+function SWEP:FinishSurgery()
+	if ROUND.preparing or ROUND.post then return end
+
+	local ent = self.SurgeryTarget
+	if !IsValid( ent ) then
+		self:StopSurgery()
+		return
+	end
+
+	local stats = SCP049_ZOMBIE_TYPES[self.SurgeryType]
+	if !stats or !ent.Data or ent.Data.team == TEAM_SCP then
+		self:StopSurgery()
+		return
+	end
+
+	local ply = ent:GetOwner()
+
+	if !IsValid( ply ) or !ply:IsValidSpectator() then
+		ply = QueueRemove( true )
+	end
+
+	if !IsValid( ply ) then
+		self:StopSurgery()
+		return
+	end
+
+	local owner = self:GetOwner()
+	local model, skin = self:TranslateZombieModel( ply, ent )
+	local surg = self:GetSurgeries()
+
+	local hp = stats.health * ( 1 + self:GetUpgradeMod( "stacks_hp", 0 ) * surg )
+	local dmg = stats.damage * ( 1 + self:GetUpgradeMod( "stacks_dmg", 0 ) * surg )
+
+	GetSCP( "SCP0492" ):SetupPlayer( ply, true, owner:GetPos() + Vector( 0, 0, 8 ), owner,
+		self.SurgeryType, hp, stats.speed, dmg, self:GetUpgradeMod( "zombie_ls", 0 ), model, skin )
+	
+	ent:Remove()
+	self.SurgeryType = nil
+	self.SurgeryTarget = nil
+	self:SetSurgery( 0 )
+	self:SetSurgeries( surg + 1 )
+	self:AddScore( 1 )
+	owner:AddFrags( 2 )
+	AddRoundStat( "049" )
+
+	if !self:HasUpgrade( "surgery_heal" ) then return end
+
+	local self_heal = self:GetUpgradeMod( "surgery_heal" )
+	local zombie_heal = self:GetUpgradeMod( "surgery_zombie_heal" )
+
+	owner:AddHealth( self_heal )
+
+	local pos = owner:GetPos()
+	for i, v in ipairs( player.GetAll() ) do
+		if v:SCPClass() != CLASSES.SCP0492 or v:GetPos():DistToSqr( pos ) > self.PassiveRadius then continue end
+
+		local wep = v:GetSCPWeapon()
+		if !IsValid( wep ) or wep:GetSCP049() != owner then continue end
+		v:AddHealth( zombie_heal )
+	end
+end
+
+function SWEP:TranslateZombieModel( ply, rag )
 	local team = ply:GetProperty( "last_team" )
 	local class = ply:GetProperty( "last_class" )
 
@@ -29,464 +440,286 @@ local function translate_zombie_model( ply, rag )
 	end
 end
 
-function SWEP:Initialize()
-	self:SetHoldType( self.HoldType )
-	self:InitializeLanguage( "SCP049" )
-
-	self.Targets = {}
-end
-
---SWEP.Target = NULL
-//SWEP.Targets = {}
-SWEP.LastAttack = 0
-
-SWEP.NCheck = 0
-SWEP.NHeal = 0
-function SWEP:Think()
-	self:PlayerFreeze()
-
-	if CLIENT then
-		if self.HoldingReload == true then
-			self.HoldingReload = false
-		elseif self.HoldingReload == false then
-			self.HoldingReload = nil
-
-			CloseWheelMenu()
-		end
-	end
-
-	if self.PerformingSurgery and self.SurgeryEnd then
-		if self.SurgeryEnd < CurTime() then
-			self:FinishSurgery( self.ZombieType, self.TargetBody )
-
-			self.PerformingSurgery = false
-			self.SurgeryEnd = nil
-			self.ZombieType = nil
-			self.TargetBody = nil
-		end
-	end
-
-	if self.NCheck <= CurTime() then
-		self.NCheck = CurTime() + 0.1
-
-		for k, v in pairs( self.Targets ) do
-			if !IsValid( k ) or !k:CheckSignature( v[2] ) then
-				self.Targets[k] = nil
-			end
-		end
-	end
-
-	if SERVER and self.NHeal < CurTime() then
-		self.NHeal = CurTime() + 90
-
-		local heal = self:GetUpgradeMod( "heal" )
-		if heal then
-			self:GetOwner():AddHealth( heal )
-		end
-	end
-end
-
-SWEP.NAttack = 0
-function SWEP:PrimaryAttack()
-	if self.NAttack > CurTime() then return end
-	
-	local owner = self:GetOwner()
-	local pos = owner:GetShootPos()
-
-	owner:LagCompensation( true )
-
-	local tr = util.TraceLine{
-		start = pos,
-		endpos = pos + owner:GetAimVector() * 75,
-		filter = owner,
-		mask = MASK_SHOT
-	}
-
-	owner:LagCompensation( false )
-
-	local ent = tr.Entity
-	if IsValid( ent ) and ent:IsPlayer() then
-		if ent:SCPTeam() != TEAM_SPEC and ent:SCPTeam() != TEAM_SCP then
-			self.NAttack = CurTime() + 5 - ( self:GetUpgradeMod( "cd" ) or 0 )
-
-			if !self.Targets[ent] then
-				self.Targets[ent] = { 0, ent:TimeSignature(), 0 }
-			end
-
-			if ent:CheckHazmat( 100 ) then
-				self:EmitSound( "SCP049.Remove714" )
-			elseif SERVER and ent:GetSCP714() or CLIENT and ent:CL_GetSCP714() then
-				self:EmitSound( "SCP049.Remove714" )
-
-				if SERVER then
-					ent:PlayerDropWeapon( "item_scp_714" )
-				end
-			else
-				local tab = self.Targets[ent]
-				tab[3] = CurTime() + 2
-				tab[1] = tab[1] + 1
-
-				if tab[1] >= 3 then
-					self.Targets[ent] = nil
-
-					if SERVER then
-						local dmginfo = DamageInfo()
-
-						dmginfo:SetDamage( ent:Health() )
-						dmginfo:SetAttacker( owner )
-						dmginfo:SetDamageType( DMG_DIRECT )
-
-						ent:TakeDamageInfo( dmginfo )
-
-						self:AddScore( 1 )
-					end
-				end
-
-				if SERVER then
-					owner:EmitSound( "SCP049.Attack" )
-					
-					owner:PushSpeed( 0.6, 0.6, -1, "SLC_SCP049" )
-					timer.Simple( 5, function()
-						if IsValid( self ) and self:CheckOwner() then
-							owner:PopSpeed( "SLC_SCP049" )
-						end
-					end )
-				end
-			end
-		end
-	end
-end
-
-function SWEP:SecondaryAttack()
-	self:CallBaseClass( "PrimaryAttack" )
-end
-
-SWEP.HoldingReload = false
-function SWEP:Reload()
-	if CLIENT then
-		if self.PerformingSurgery then return end
-
-		if self.HoldingReload == nil then
-			local owner = self:GetOwner()
-			local pos = owner:GetShootPos()
-
-			local tr = util.TraceLine{
-				start = pos,
-				endpos = pos + owner:GetAimVector() * 75,
-				filter = owner,
-				mask = MASK_SHOT
-			}
-
-			local ent = tr.Entity
-			if IsValid( ent ) and ent:GetClass() == "prop_ragdoll" then
-				if ent:GetNWInt( "team", TEAM_SCP ) != TEAM_SCP then
-					local options = {}
-
-					for i, v in ipairs( zombies ) do
-						table.insert( options, { v.material, self.Lang.zombies[v.name] or v.name, i } )
-					end
-
-					OpenWheelMenu( options, function( selected )
-						if selected then
-							net.Ping( "SLC_SCP049", selected )
-							self:Zombify( selected, ent )
-						end
-					end, function()
-						return !IsValid( owner ) or owner:SCPClass() != "SCP049"
-					end )
-
-					self.HoldingReload = true
-				end
-			end
-		elseif self.HoldingReload == false then
-			self.HoldingReload = true
-		end
-	end
-end
-
-function SWEP:Zombify( t, ent )
-	if ROUND.post then return end
-
-	t = tonumber( t )
-
-	if t then
-		self.PerformingSurgery = true
-		self.SurgeryEnd = CurTime() + 15 - ( self:GetUpgradeMod( "surgery_time" ) or 0 )
-		self.ZombieType = t
-		self.TargetBody = ent
-	end
-end
-
-SWEP.SurgeryStacks = 0
-function SWEP:FinishSurgery( t, ent )
-	if ROUND.post then return end
-	
-	if SERVER then
+function SWEP:OnUpgradeBought( name, active, group )
+	if name == "zombie_lifesteal" then
 		local owner = self:GetOwner()
-		local ply
-		local spawnent = owner
+		for i, v in ipairs( player.GetAll() ) do
+			if v:SCPClass() != CLASSES.SCP0492 then continue end
 
-		if IsValid( ent ) and ent.Data then
-			//spawnent = ent
-			if ent.Data.team != TEAM_SCP then
-				local bodyOwner = ent:GetOwner()
+			local wep = v:GetSCPWeapon()
+			if !IsValid( wep ) or wep:GetSCP049() != owner then continue end
 
-				if IsValid( bodyOwner ) and bodyOwner:SCPTeam() == TEAM_SPEC then
-					ply = bodyOwner
-				end
-			end
-		else
-			CenterMessage( "@WEAPONS.SCP049.surgery_failed#255,0,0;time:5", owner )
-			return
-			//spawnent = owner
-		end
-
-		if !ply then
-			//local qp = GetQueuePlayers( 1 )[1]
-			local qp = QueueRemove()
-			if IsValid( qp ) and qp:IsValidSpectator() then
-				ply = qp
-			end
-		end
-
-		if ply then
-			local hpbonus = ( self:GetUpgradeMod( "hp" ) or 0 ) + self.SurgeryStacks * 0.05
-
-			local stats = zombies[t] or {}
-			local scp = GetSCP( "SCP0492" )
-			local model, skin = translate_zombie_model( ply, ent )
-			
-			scp:SetupPlayer( ply, true, spawnent:GetPos() + Vector( 0, 0, 8 ), owner, (stats.health or 1) + hpbonus, stats.speed or 1, stats.damage or 1, self:GetUpgradeMod( "steal" ) or 0,
-								model, skin )
-
-			if self:HasUpgrade( "rm" ) then
-				local qp = QueueRemove()//GetQueuePlayers( 1 )[1]
-
-				if IsValid( qp ) and qp:IsValidSpectator() then
-					//local model, skin = translate_zombie_model( qp, ent )
-					scp:SetupPlayer( qp, true, spawnent:GetPos() + Vector( 0, 0, 8 ), owner, ((stats.health or 1) + hpbonus) * 0.5, stats.speed or 1, (stats.damage or 1) * 0.75,
-										self:GetUpgradeMod( "steal" ) or 0 /*, model, skin*/ )
-				end
-			end
-
-			if IsValid( ent ) then
-				ent:Remove()
-			end
-
-			AddRoundStat( "049" )
-			self:AddScore( 3 )
-			owner:AddFrags( 3 )
-
-			if self:HasUpgrade( "hidden" ) then
-				self.SurgeryStacks = self.SurgeryStacks + 1
-			end
-
-			--self heal
-			local sh = self:GetUpgradeMod( "sh" )
-			if sh then
-				owner:AddHealth( math.ceil( owner:GetMaxHealth() * sh ) )
-			end
-
-			--zombie heal
-			local zh = self:GetUpgradeMod( "zh" )
-			if zh then
-				local ownerpos = owner:GetPos()
-
-				for k, v in pairs( player.GetAll() ) do
-					if v:SCPClass() == CLASSES.SCP0492 and v:GetPos():DistToSqr( ownerpos ) <= 250000 then
-						v:AddHealth( math.ceil( v:GetMaxHealth() * zh ) )
-					end
-				end
-			end
-		else
-			CenterMessage( "@WEAPONS.SCP049.surgery_failed#255,0,0;time:5", owner )
+			wep.LifeSteal = self:GetUpgradeMod( "zombie_ls", 0 )
 		end
 	end
 end
 
-local text_color = Color( 150, 150, 150, 255 )
-function SWEP:DrawSCPHUD()
-	//if hud_disabled or HUDDrawInfo or ROUND.preparing then return end
+--[[-------------------------------------------------------------------------
+SCP Hooks
+---------------------------------------------------------------------------]]
+//lua_run ClearSCPHooks() EnableSCPHook("SCP049") TransmitSCPHooks()
+SCPHook( "SCP049", "EntityTakeDamage", function( ent, dmg )
+	if dmg:IsDamageType( DMG_DIRECT ) or !dmg:IsDamageType( DMG_BULLET ) or !IsValid( ent ) or !ent:IsPlayer() or ent:SCPClass() != CLASSES.SCP049 then return end
 
-	local owner = self:GetOwner()
-	local ply = owner:GetEyeTrace().Entity
+	local wep = ent:GetSCPWeapon()
+	if !IsValid( wep ) then return end
 
-	if IsValid( ply ) and ply:IsPlayer() then
-		if owner:GetPos():DistToSqr( ply:GetPos() ) < 14400 then
-			if self.Targets[ply] then
-				local tab = self.Targets[ply]
-
-				if tab[1] > 0 then
-					local progress = 0
-
-					if tab[3] > CurTime() then
-						progress = math.Map( tab[3] - CurTime(), 2, 0, 0, 1 )
-					else
-						progress = 1
-					end
-
-					local w, h = ScrW(), ScrH()
-
-					draw.NoTexture()
-					surface.SetDrawColor( 100, 100, 100 )
-					surface.DrawRing( w * 0.5, h * 0.5, 40, 10, 160, 30, tab[1] == 1 and progress or 1, 10 )
-
-					if tab[1] > 1 then
-						surface.DrawRing( w * 0.5, h * 0.5, 40, 10, 160, 30, tab[1] == 2 and progress or 1, 190 )
-					end
-				end
-			end
+	if wep:GetSurgery() >= CurTime() then
+		local prot = wep:GetUpgradeMod( "surgery_prot" )
+		if prot then
+			dmg:ScaleDamage( prot )
 		end
 	end
 
-	if self.PerformingSurgery and self.SurgeryEnd and self.SurgeryEnd > CurTime() then
-		draw.Text{
-			text = self.Lang.surgery,
-			pos = { ScrW() * 0.5, ScrH() * 0.6 },
-			color = text_color,
-			font = "SCPHUDMedium",
-			xalign = TEXT_ALIGN_CENTER,
-			yalign = TEXT_ALIGN_CENTER,
-		}
+	if wep:HasUpgrade( "zombie_prot" ) then
+		local prot = wep:GetUpgradeMod( "zombie_prot" ) * wep:GetNearby()
+		local prot_max = wep:GetUpgradeMod( "zombie_prot_max" )
 
-		draw.Text{
-			text = math.ceil( self.SurgeryEnd - CurTime() ),
-			pos = { ScrW() * 0.5, ScrH() * 0.63 },
-			color = text_color,
-			font = "SCPHUDMedium",
-			xalign = TEXT_ALIGN_CENTER,
-			yalign = TEXT_ALIGN_CENTER,
-		}
-	end
-end
-
-AddSounds( "SCP049.Attack", "scp_lc/scp/049/attack%i.ogg", 100, 1, 100, CHAN_STATIC, 0, 7 )
-sound.Add{
-	name = "SCP049.Remove714",
-	sound = "scp_lc/scp/049/remove714_1.ogg",
-	volume = 1,
-	level = 100,
-	pitch = 100,
-	channel = CHAN_STATIC,
-}
-
-if SERVER then
-	net.ReceivePing( "SLC_SCP049", function( data, ply )
-		local wep = ply:GetWeapon( "weapon_scp_049" )
-		if IsValid( wep ) then
-			local pos = ply:GetShootPos()
-
-			local tr = util.TraceLine{
-				start = pos,
-				endpos = pos + ply:GetAimVector() * 75,
-				filter = ply,
-				mask = MASK_SHOT
-			}
-
-			local ent = tr.Entity
-			if IsValid( ent ) and ent:GetClass() == "prop_ragdoll" and ent.Data then
-				if ent:GetNWInt( "team", TEAM_SCP ) != TEAM_SCP then
-					wep:Zombify( data, ent )
-					return
-				end
-			end
-
-			net.Ping( "SLC_SCP049", "", ply )
+		if prot > prot_max then
+			prot = prot_max
 		end
-	end )
 
-	SCPHook( "SCP049", "EntityTakeDamage", function( target, info )
-		if IsValid( target ) and target:IsPlayer() and target:SCPClass() == CLASSES.SCP049 then
-			local wep = target:GetWeapon( "weapon_scp_049" )
-			if IsValid( wep ) then
-				if wep.PerformingSurgery then
-					wep.PerformingSurgery = false
-					wep.SurgeryEnd = nil
-					wep.ZombieType = nil
-					wep.TargetBody = nil
-
-					net.Ping( "SLC_SCP049", "", target )
-				end
-
-				if info:IsDamageType( DMG_BULLET ) then
-					local def = wep:GetUpgradeMod( "def" )
-					if def then
-						info:ScaleDamage( def )
-					end
-				end
-			end
-		end
-	end )
-end
-
-if CLIENT then
-	net.ReceivePing( "SLC_SCP049", function( data )
-		local wep = LocalPlayer():GetWeapon( "weapon_scp_049" )
-		if IsValid( wep ) then
-			wep.PerformingSurgery = false
-			wep.SurgeryEnd = nil
-			wep.ZombieType = nil
-			wep.TargetBody = nil
-		end
-	end )
-end
-
-SCPHook( "SCP049", "StartCommand", function( ply, cmd )
-	if IsValid( ply ) and ply:SCPClass() == CLASSES.SCP049 then
-		local wep = ply:GetWeapon( "weapon_scp_049" )
-		if IsValid( wep ) then
-			if wep.PerformingSurgery then
-				cmd:ClearButtons()
-				cmd:ClearMovement()
-
-				cmd:SetButtons( IN_DUCK )
-			end
-		end
+		dmg:ScaleDamage( 1 - prot )
 	end
 end )
 
-DefineUpgradeSystem( "scp049", {
-	grid_x = 4,
-	grid_y = 3,
-	upgrades = {
-		{ name = "cure1", cost = 2, req = {}, reqany = false, pos = { 1, 1 }, mod = { def = 0.6 }, active = false },
-		{ name = "cure2", cost = 3, req = { "cure1" }, reqany = false, pos = { 1, 2 }, mod = { heal = 300 }, active = false },
-		{ name = "merci", cost = 5, req = { "cure2" }, reqany = false, pos = { 1, 3 }, mod = { cd = 2.5 }, active = true },
+SCPHook( "SCP049", "PostEntityTakeDamage", function( ent, dmg )
+	if !IsValid( ent ) or !ent:IsPlayer() then return end
 
-		{ name = "symbiosis1", cost = 1, req = {}, reqany = false, pos = { 2, 1 }, mod = { sh = 0.1 }, active = false },
-		{ name = "symbiosis2", cost = 3, req = { "symbiosis1" }, reqany = false, pos = { 2, 2 }, mod = { sh = 0.15, zh = 0.1 }, active = false },
-		{ name = "symbiosis3", cost = 5, req = { "symbiosis2" }, reqany = false, pos = { 2, 3 }, mod = { sh = 0.20, zh = 0.2 }, active = false },
+	local attacker = dmg:GetAttacker()
+	if IsValid( attacker ) and attacker:IsPlayer() and attacker:SCPClass() == CLASSES.SCP0492 then
+		local wep = attacker:GetSCPWeapon()
+		if !IsValid( wep ) or wep:GetProtection() < CurTime() then return end
 
-		{ name = "hidden", cost = 3, req = {}, reqany = false, pos = { 3, 1 }, mod = {}, active = false },
-		{ name = "trans", cost = 5, req = { "hidden" }, reqany = false, pos = { 3, 2 }, mod = { hp = 0.15, steal = 0.2 }, active = false },
-		{ name = "rm", cost = 7, req = { "trans", "doc2" }, reqany = true, pos = { 3, 3 }, mod = {}, active = false },
+		local scp = wep:GetSCP049()
+		if !IsValid( scp ) or scp:SCPClass() != CLASSES.SCP049 then return end
 
-		{ name = "doc1", cost = 1, req = {}, reqany = false, pos = { 4, 1 }, mod = { surgery_time = 5 }, active = false },
-		{ name = "doc2", cost = 4, req = { "doc1" }, reqany = false, pos = { 4, 2 }, mod = { surgery_time = 10 }, active = false },
+		local scp_wep = scp:GetSCPWeapon()
+		if !IsValid( scp_wep ) then return end
 
-		{ name = "outside_buff", cost = 1, req = {}, reqany = false,  pos = { 4, 3 }, mod = {}, active = false },
-	},
-	rewards = { --21
-		{ 1, 1 },
-		{ 2, 1 },
-		{ 4, 1 },
-		{ 6, 1 },
-		{ 8, 2 },
-		{ 10, 1 },
-		{ 12, 2 },
-		{ 16, 2 },
-		{ 20, 2 },
-		{ 24, 2 },
-		{ 28, 2 },
-		{ 32, 2 },
-		{ 36, 2 },
-	}
-} )
+		local heal = scp_wep:GetUpgradeMod( "zombie_heal" )
+		if !heal then return end
 
-function SWEP:OnUpgradeBought( name, info, group )
-	if SERVER and name == "merci" then
-		self:GetOwner():SetSCPChase( true )
+		scp:AddHealth( math.ceil( dmg:GetDamage() * heal ) )
+
+		return
 	end
+
+	if ent:SCPClass() != CLASSES.SCP049 then return end
+
+	local wep = ent:GetSCPWeapon()
+	if !IsValid( wep ) then return end
+
+	if wep:GetSurgery() > CurTime() and !wep:HasUpgrade( "surgery_dmg" ) then
+		wep:StopSurgery()
+	end
+
+	if !IsValid( wep.ChokeTarget ) then return end
+
+	wep.ChokeDamage = wep.ChokeDamage + dmg:GetDamage()
+	if wep.ChokeDamage >= wep.ChokeStopDamage * wep:GetUpgradeMod( "choke_dmg", 1 ) then
+		wep:StopChoke()
+	end
+end )
+
+SCPHook( "SCP049", "DoAnimationEvent", function( ply, event, data )
+	if event != PLAYERANIMEVENT_CUSTOM_SEQUENCE then return end
+
+	if data == 9049001 then
+		ply:AnimRestartGesture( GESTURE_SLOT_CUSTOM, ACT_HL2MP_SWIM_IDLE_FIST, false )
+		return ACT_INVALID
+	elseif data == 9049002 then
+		ply:AnimResetGestureSlot( GESTURE_SLOT_CUSTOM )
+		return ACT_INVALID
+	end
+end )
+
+SCPHook( "SCP049", "StartCommand", function( ply, cmd )
+	if ply:SCPClass() != CLASSES.SCP049 then return end
+
+	local wep = ply:GetSCPWeapon()
+	if !IsValid( wep ) or wep:GetSurgery() <= CurTime() then return end
+
+	cmd:ClearMovement()
+	cmd:ClearButtons()
+	cmd:SetButtons( IN_DUCK )
+end )
+
+if SERVER then
+	net.ReceivePing( "SCP049Surgery", function( data, ply )
+		if ply:SCPClass() != CLASSES.SCP049 then return end
+
+		local wep = ply:GetSCPWeapon()
+		if !IsValid( wep ) then return end
+
+		wep:StartSurgery( tonumber( data ) )
+	end )
 end
 
-InstallUpgradeSystem( "scp049", SWEP )
+--[[-------------------------------------------------------------------------
+Upgrade system
+---------------------------------------------------------------------------]]
+local icons = {}
+
+if CLIENT then
+	icons.choke = GetMaterial( "slc/hud/upgrades/scp/049/choke.png", "smooth" )
+	icons.buff = GetMaterial( "slc/hud/upgrades/scp/049/buff.png", "smooth" )
+	icons.zombify = GetMaterial( "slc/hud/upgrades/scp/049/zombify.png", "smooth" )
+	icons.zombie = GetMaterial( "slc/hud/upgrades/scp/049/zombie.png", "smooth" )
+	icons.prot = GetMaterial( "slc/hud/upgrades/scp/049/prot.png", "smooth" )
+end
+
+DefineUpgradeSystem( "scp049", {
+	grid_x = 4,
+	grid_y = 4,
+	upgrades = {
+		{ name = "choke1", cost = 1, req = {}, reqany = false, pos = { 1, 1 },
+			mod = { choke_cd = 0.9, choke_dmg = 1.4 }, icon = icons.choke, active = false },
+		{ name = "choke2", cost = 2, req = { "choke1" }, reqany = false, pos = { 1, 2 },
+			mod = { choke_rate = 1.25, choke_slow = 0.8 }, icon = icons.choke, active = false },
+		{ name = "choke3", cost = 4, req = { "choke2" }, reqany = false, pos = { 1, 3 },
+			mod = { choke_cd = 0.6, choke_dmg = 2.5, choke_rate = 2.2 }, icon = icons.choke, active = false },
+
+		{ name = "buff1", cost = 1, req = {}, reqany = false, pos = { 2, 1 },
+			mod = { buff_cd = 0.9, buff_dur = 1.2 }, icon = icons.buff, active = false },
+		{ name = "buff2", cost = 2, req = { "buff1" }, reqany = false, pos = { 2, 2 },
+			mod = { buff_radius = 1.25, buff_power = 1.2 }, icon = icons.buff, active = false },
+
+		{ name = "surgery_cd1", cost = 1, req = {}, reqany = false, pos = { 3, 1 },
+			mod = { surgery_time = 5 }, additive = true, icon = icons.zombify, active = false },
+		{ name = "surgery_cd2", cost = 1, req = { "surgery_cd1" }, reqany = false, pos = { 3, 2 },
+			mod = { surgery_time = 5 }, additive = true, icon = icons.zombify, active = false },
+		{ name = "surgery_heal", cost = 2, req = { "surgery_cd2" }, block = { "surgery_prot" }, reqany = false, pos = { 3, 4 },
+			mod = { surgery_heal = 200, surgery_zombie_heal = 50 }, icon = icons.zombify, active = false },
+		{ name = "surgery_dmg", cost = 2, req = { "surgery_cd2" }, reqany = false, pos = { 2.5, 3 },
+			mod = {}, icon = icons.zombify, active = false },
+		{ name = "surgery_prot", cost = 2, req = { "surgery_dmg" }, block = { "surgery_heal", "zombie_prot" }, reqany = false, pos = { 2, 4 },
+			mod = { surgery_prot = 0.3 }, icon = icons.prot, active = false },
+
+		{ name = "zombie_prot", cost = 2, req = {}, block = { "surgery_prot" }, reqany = false, pos = { 4, 1 },
+			mod = { zombie_prot = 0.05, zombie_prot_max = 0.75 }, icon = icons.prot, active = false },
+		{ name = "zombie_lifesteal", cost = 1, req = { "zombie_prot", "surgery_cd1" }, reqany = true, pos = { 4, 2 },
+			mod = { zombie_ls = 0.2 }, icon = icons.zombie, active = true },
+		{ name = "stacks_hp", cost = 2, req = { "zombie_lifesteal" }, block = { "stacks_dmg" }, reqany = false, pos = { 3.5, 3 },
+			mod = { stacks_hp = 0.03 }, icon = icons.zombie, active = false },
+		{ name = "stacks_dmg", cost = 2, req = { "zombie_lifesteal" }, block = { "stacks_hp" }, reqany = false, pos = { 4.5, 3 },
+			mod = { stacks_dmg = 0.02 }, icon = icons.zombie, active = false },
+		{ name = "zombie_heal", cost = 3, req = { "stacks_hp", "stacks_dmg" }, reqany = true, pos = { 4, 4 },
+			mod = { zombie_heal = 0.1 }, icon = icons.zombie, active = false },
+
+		{ name = "outside_buff", cost = 1, req = {}, reqany = false, pos = { 1, 4 }, mod = {}, active = false },
+	},
+	rewards = { --21 + 1 points -> 60% = 14 (-1 base) = 13 points
+		{ 1, 1 },
+		{ 2, 1 },
+		{ 3, 1 },
+		{ 4, 1 },
+		{ 5, 1 },
+		{ 6, 1 },
+		{ 7, 1 },
+		{ 8, 1 },
+		{ 9, 1 },
+		{ 10, 1 },
+		{ 12, 1 },
+		{ 14, 1 },
+		{ 16, 1 },
+	}
+}, SWEP )
+
+--[[-------------------------------------------------------------------------
+SCP HUD
+---------------------------------------------------------------------------]]
+if CLIENT then
+	local hud = SCPHUDObject( "SCP049", SWEP )
+	hud:AddCommonSkills()
+
+	hud:AddSkill( "choke" )
+		:SetButton( "attack" )
+		:SetMaterial( "slc/hud/scp/049/choke.png", "smooth" )
+		:SetCooldownFunction( "GetNextPrimaryFire" )
+
+	hud:AddSkill( "surgery" )
+		:SetButton( "reload" )
+		:SetMaterial( "slc/hud/scp/049/zombify.png", "smooth" )
+		:SetTextFunction( "GetSurgeries" )
+
+	hud:AddSkill( "boost" )
+		:SetButton( "scp_special" )
+		:SetMaterial( "slc/hud/scp/049/buff.png", "smooth" )
+		:SetCooldownFunction( "GetNextSpecialAttack" )
+
+	hud:AddSkill( "passive" )
+		:SetOffset( 0.5 )
+		:SetMaterial( "slc/hud/scp/049/prot.png", "smooth" )
+		:SetTextFunction( "GetNearby" )
+
+	hud:AddBar( "choke_bar" )
+		:SetMaterial( "slc/hud/scp/049/choke.png", "smooth" )
+		:SetColor( Color( 236, 110, 27 ) )
+		:SetTextFunction( function( swep, hud_obj, this )
+			local choke = swep:GetChoke()
+			if choke >= 0 then
+				this.last_progress = choke
+				return math.Round( choke ).."%"
+			elseif this.last_progress then
+				return math.Round( this.last_progress ).."%"
+			end
+		end )
+		:SetProgressFunction( function( swep )
+			return swep:GetChoke() / 100
+		end )
+		:SetVisibleFunction( function( swep )
+			return swep:GetChoke() >= 0
+		end )
+
+	hud:AddBar( "surgery_bar" )
+		:SetMaterial( "slc/hud/scp/049/zombify.png", "smooth" )
+		:SetColor( Color( 145, 236, 27 ) )
+		:SetTextFunction( function( swep, hud_obj, this )
+			local time = swep:GetSurgery() - CurTime()
+			if time >= 0 then
+				this.last_progress = time
+				return math.Round( time ).."s"
+			elseif this.last_progress then
+				return math.Round( this.last_progress ).."s"
+			end
+		end )
+		:SetProgressFunction( function( swep )
+			return ( swep:GetSurgery() - CurTime() ) / ( swep.SurgeryTime - swep:GetUpgradeMod( "surgery_time", 0 ) )
+		end )
+		:SetVisibleFunction( function( swep )
+			return swep:GetSurgery() >= CurTime()
+		end )
+
+	hud:AddBar( "boost_bar" )
+		:SetMaterial( "slc/hud/scp/049/buff.png", "smooth" )
+		:SetColor( Color( 236, 170, 27 ) )
+		:SetTextFunction( function( swep, hud_obj, this )
+			local time = swep:GetBoost() - CurTime()
+
+			if time < 0 then
+				time = 0
+			end
+			
+			return math.Round( time ).."s"
+		end )
+		:SetProgressFunction( function( swep )
+			return ( swep:GetBoost() - CurTime() ) / swep.BoostDuration
+		end )
+		:SetVisibleFunction( function( swep )
+			return swep:GetBoost() >= CurTime()
+		end )
+end
+
+--[[-------------------------------------------------------------------------
+Sounds
+---------------------------------------------------------------------------]]
+AddSounds( "SCP049.Attack", "scp_lc/scp/049/attack%i.ogg", 80, 1, 100, CHAN_STATIC, 0, 7 )
+sound.Add{
+	name = "SCP049.RemoveProtection",
+	sound = "scp_lc/scp/049/remove714_1.ogg",
+	volume = 1,
+	level = 80,
+	pitch = 100,
+	channel = CHAN_STATIC,
+}

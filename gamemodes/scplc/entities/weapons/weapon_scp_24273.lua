@@ -1,865 +1,1158 @@
-SWEP.Base 				= "weapon_scp_base"
-SWEP.DeepBase 			= "weapon_scp_base"
-SWEP.PrintName			= "SCP-2427-3"
+SWEP.Base 			= "weapon_scp_base"
+SWEP.PrintName		= "SCP-2427-3"
 
-SWEP.HoldType 			= "melee"
+SWEP.HoldType		= "melee"
+
+SWEP.DisableDamageEvent = true
+SWEP.ScoreOnDamage 	= true
+
+SWEP.ChangeCooldown = 10
+
+SWEP.JEvidenceMultiplier = 0.6
+SWEP.JEvidenceLoss = 0.5
+
+SWEP.PPassiveDefense = 0.2
+SWEP.PPassiveSlow = 0.2
+SWEP.PEvidenceDot = 0.85
+SWEP.PEvidenceRate = 0.03
+
+SWEP.DashCooldown = 8
+SWEP.DashDamage = 30
+SWEP.DashMaxDistance = 315
+
+SWEP.CamouflageCooldown = 40
+SWEP.CamouflageDuration = 20
+
+SWEP.DrainCooldown = 50
+SWEP.DrainDamage = 50
+SWEP.DrainTime = 10
+SWEP.DrainSlow = 0.3
+SWEP.DrainSlowTime = 5
+
+SWEP.SpectateCooldown = 60
+SWEP.SpectateRadius = 2000
+SWEP.SpectateTime = 30
+SWEP.SpectateDefense = 0.1
+SWEP.SpectateSpeed = 500
+
+SWEP.SpecialCooldown = 240
+SWEP.SpecialDamage = 100
+SWEP.SpecialTime = 12
+SWEP.SpecialDuration = 20
+SWEP.SpecialDefense = 0.5
+
+SWEP.GhostDuration = 12
+SWEP.GhostCooldown = 75
+SWEP.GhostRadius = 1500
+SWEP.GhostDelay = 0.2
+SWEP.GhostHeal = 0.6
+SWEP.GhostSpeed = 1.25
+
+local hud_materials = {
+	primary = {
+		Material( "slc/hud/scp/24273/dash.png", "smooth" ),
+		Material( "slc/hud/scp/24273/camo.png", "smooth" ),
+	},
+	secondary = {
+		Material( "slc/hud/scp/24273/drain.png", "smooth" ),
+		Material( "slc/hud/scp/24273/spect.png", "smooth" ),
+	},
+	special = {
+		Material( "slc/hud/scp/24273/special.png", "smooth" ),
+		Material( "slc/hud/scp/24273/ghost.png", "smooth" ),
+	},
+}
 
 function SWEP:SetupDataTables()
-	self:AddNetworkVar( "MindControl", "Int" )
-	self:AddNetworkVar( "MindControlPenalty", "Int" )
-	self:AddNetworkVar( "MindControlTarget", "Entity" )
-	//self:AddNetworkVar( "MindControlEnabled", "Bool" ) --only for manual stop purpose
+	self:CallBaseClass( "SetupDataTables" )
+
+	self:AddNetworkVar( "Mode", "Bool" ) --false -> judge
+	self:AddNetworkVar( "LookedAt", "Entity" )
+	self:AddNetworkVar( "Evidence", "Float" )
+	self:AddNetworkVar( "NextMode", "Float" )
+	self:AddNetworkVar( "Camouflage", "Float" )
+	self:AddNetworkVar( "Drain", "Float" )
+	self:AddNetworkVar( "Ghost", "Float" )
+	self:AddNetworkVar( "Special", "Float" )
+	self:AddNetworkVar( "SpectateTime", "Float" )
+	self:AddNetworkVar( "SpectateDuration", "Float" )
+	self:AddNetworkVar( "SpectateEntity", "Entity" )
+	self:AddNetworkVar( "DrainTarget", "Entity" )
 end
 
 function SWEP:Initialize()
 	self:SetHoldType( self.HoldType )
 	self:InitializeLanguage( "SCP24273" )
+	self:InitializeHUD()
 
-	self.MindControlBuffer = {}
-end		
+	self.Evidence = {}
+	self.Cooldowns = {}
+end
 
-SWEP.PopSpeed = 0
-SWEP.PrepareMindControl = 0
-SWEP.EnableDash = false
-SWEP.NTargetTrace = 0
-SWEP.NDistCheck = 0
+SWEP.NextGhostTick = 0
 function SWEP:Think()
+	if CLIENT then return end
+
 	self:PlayerFreeze()
 
 	local ct = CurTime()
 	local owner = self:GetOwner()
 
-	if CLIENT then
-		if !self.MindControlEnabled and self:GetMindControl() > 0 then
-			self.MindControlEnabled = true
-		end
-
-		if self.MindControlEnabled and self:GetMindControl() == 0 then
-			self.MindControlEnabled = false
-			self:StopMindControl()
-		end
+	local camo = self:GetCamouflage()
+	if camo > 0 and ( camo < ct or self.CamouflageRestrict and owner:GetPos():DistToSqr( self.CamouflageRestrict ) > self:GetUpgradeMod( "camo_limit", 25 ) ^ 2 ) then
+		self:StopCamouflage()
 	end
 
-	if self.PrepareMindControl != 0 and self.PrepareMindControl < ct then
-		self.PrepareMindControl = 0
+	local ghost = self:GetGhost()
+	if ghost != 0 and ghost < ct then
+		ghost = 0
+		self:SetGhost( 0 )
+		owner:SetMaterial( "" )
+		owner:PopSpeed( "SLC_SCP24273Ghost" )
+	elseif ghost >= ct and self.NextGhostTick < ct and owner:Health() < owner:GetMaxHealth() then
+		self.NextGhostTick = self.NextGhostTick + self.GhostDelay
 
-		if self.MCTarget then
-			local ply = self.MCTarget[1]
-			if IsValid( ply ) and ply:CheckSignature( self.MCTarget[2] ) then
-				local duration = self:GetMindControlDuration()
-
-				self:SetMindControl( ct + duration )
-				self:SetMindControlTarget( ply )
-
-				self:SetNextPrimaryFire( ct + self:GetMindControlDuration() + 5 )
-				self:SetNextSecondaryFire( ct + self:GetMindControlDuration() + 90 + self:GetUpgradeMod( "mc_cd", 0 ) )
-
-				local oa = owner:EyeAngles()
-				self.RestoreEyeAngles = oa
-
-				if CLIENT then
-					if IsValid( self.Clone ) then
-						self.Clone:Remove()
-					end
-
-					self.Clone = ClientsideModel( "models/player/alski/scp2427-3.mdl", RENDERGROUP_OPAQUE )
-					self.Clone:SetPos( owner:GetPos() )
-					self.Clone:SetAngles( Angle( 0, oa.yaw, 0 ) )
-
-					local seq = self.Clone:LookupSequence( "stary_spi" )
-					if seq > -1 then
-						self.Clone:SetSequence( seq )
-						self.Clone:SetCycle( 1 )
-					end
-				end
-
-				//target:SetDisableControls( true )
-
-				if SERVER then
-					self.MindControlBuffer.Initialized = false
-					self.MindControlBuffer.ViewDelta = nil
-
-					ply:SetProperty( "mind_control", { ct + duration, self } )
-
-					ply:ScreenFade( SCREENFADE.IN, Color( 0, 0, 0 ), 0.15, 0.25 )
-					/*timer.Simple( 0.15, function()
-						if IsValid( ply ) then
-							ply:ScreenFade( SCREENFADE.IN, Color( 0, 0, 0 ), 0.15, 0.25 )
-						end
-					end )*/
-
-					net.Start( "SLCMindControl" )
-						net.WriteBool( true )
-						net.WriteEntity( self )
-						net.WriteFloat( ct + duration )
-					net.Send( ply )
-				end
-			end
-
-			//self.MCTarget = nil
-		end
-	end
-
-	if SERVER then
-		if self:GetMindControl() >= ct then
-			local target = self:GetMindControlTarget()
-			--if IsValid( target ) then
-
-			local owner_pos = owner:GetPos()
-			local target_pos = target:GetPos()
-			if owner_pos:DistToSqr( target_pos ) <= 10000 then
-				if self.NTargetTrace <= ct then
-					self.NTargetTrace = ct + 0.5
-
-					local trace = util.TraceLine{
-						start = owner_pos + owner:OBBCenter(),
-						endpos = target_pos + target:OBBCenter(),
-						mask = MASK_SOLID_BRUSHONLY,
-						filter = { owner, target, self }
-					}
-
-					if !trace.Hit then
-						self:StopMindControl()
-
-						local dmg = DamageInfo()
-
-						dmg:SetAttacker( owner )
-						dmg:SetDamage( target:Health() )
-						dmg:SetDamageType( DMG_DIRECT )
-
-						target:TakeDamageInfo( dmg )
-
-						self:AddScore( 2 )
-						AddRoundStat( "24273" )
-
-						if self:HasUpgrade( "mc13" ) then
-							local time = self:GetNextSecondaryFire() - ct
-
-							if time > 0 then
-								self:SetNextPrimaryFire( ct + time * 0.6 )
-							end
-						elseif self:HasUpgrade( "mc23" ) then
-							owner:AddHealth( 400 )
-						end
-
-						--slash sound
-					end
-				end
-			end
-			--end
+		if self.NextGhostTick < ct then
+			self.NextGhostTick = ct + self.GhostDelay
 		end
 
-		if self.PopSpeed != 0 and self.PopSpeed <= ct then
-			self.PopSpeed = 0
-			owner:PopSpeed( "slc_2427_speed" )
-		end
-	end
+		local pos = owner:GetPos()
+		local radius = self.GhostRadius ^ 2
+		local heal = 0
 
-	local npf = self:GetNextPrimaryFire()
-	if npf > ct and npf - 7 + self:GetUpgradeMod( "dash_cd", 0 ) < ct and self.EnableDash then
-		self.EnableDash = false
+		for i, v in ipairs( player.GetAll() ) do
+			local tab = self.Evidence[v]
+			if !tab or tab[1] <= 0 or !v:CheckSignature( tab[2] ) or !self:CanTargetPlayer( v ) or v:GetPos():DistToSqr( pos ) > radius then continue end
 
-		local ang = owner:EyeAngles() * 1
-		ang.p = 0
+			heal = heal + 1
+			tab[1] = tab[1] - 0.01
 
-		self.DashDirection = ang:Forward()
-		self.DashTime = ct + 0.15
-		self.DashHit = {}
-
-		self.PopSpeed = ct + 3 - self:GetUpgradeMod( "dash_ptime", 0 )
-
-		if SERVER then
-			local spd = 0.5 + self:GetUpgradeMod( "dash_pspeed", 0 )
-			owner:PushSpeed( spd, spd, 1, "slc_2427_speed", 1 )
-		end
-	end
-
-	local jump_t = 0.5
-	if self.DashTime + jump_t >= ct then
-		local start = owner:GetShootPos()
-
-		owner:LagCompensation( true )
-
-		local trace = util.TraceHull{
-			start = start,
-			endpos = start + owner:GetAimVector() * 25,
-			mask = MASK_SHOT,
-			filter = owner,
-			mins = Vector( -6, -6, -32 ),
-			maxs = Vector( 6, 6, 6 )
-		}
-
-		owner:LagCompensation( false )
-
-		if trace.Hit then
-			local ent = trace.Entity
-
-			if IsValid( ent ) and !self.DashHit[ent] then
-				self.DashHit[ent] = true
-
-				if ent:IsPlayer() then
-					local team = ent:SCPTeam()
-					if team != TEAM_SPEC and team != TEAM_SCP then
-						//self.DashTime = 0
-						//self.StopTime = ct + 0.2
-
-						//ent:SetVelocity( self.DashDirection * 400 )
-
-						if SERVER then
-							local dmg = DamageInfo()
-
-							dmg:SetAttacker( owner )
-							dmg:SetInflictor( owner )
-							dmg:SetDamage( 50 + self:GetUpgradeMod( "dash_dmg", 0 ) )
-							dmg:SetDamageType( DMG_SLASH )
-
-							ent:TakeDamageInfo( dmg )
-
-							if ent:Health() <= 0 then
-								self:AddScore( 1 )
-							end
-						end
-					end
-				else
-					self:SCPDamageEvent( ent, 175 + self:GetUpgradeMod( "dash_dmg", 0 ) * 2 )
-				end
-			end
-		end
-	end
-
-	if self.DashTime != 0 and self.DashTime + jump_t < ct then
-		self.DashTime = 0
-		self.StopTime = ct + 0.2
-	end
-
-	local control_time = self:GetMindControl()
-	if control_time != 0 then
-		if control_time < ct then
-			self:StopMindControl()
-		elseif self.NDistCheck <= ct then
-			self.NDistCheck = ct + 1
-			local max_d = ( 3000 + self:GetUpgradeMod( "mc_dist", 0 ) * 1.5 )
-			if owner:GetPos():DistToSqr( self:GetMindControlTarget():GetPos() ) > max_d * max_d then
-				self:StopMindControl()
-			end
-		end
-	end
-end
-
-SWEP.DashTime = 0
-SWEP.StopTime = 0
-function SWEP:PrimaryAttack()
-	if ROUND.preparing or ROUND.post then return end
-
-	local ct = CurTime()
-	if self:GetNextPrimaryFire() > ct then return end
-
-	local owner = self:GetOwner()
-	if !owner:IsOnGround() then return end
-
-	//local owner = self:GetOwner()
-	local seq = owner:LookupSequence( "stary_skacze" )
-	if seq > -1 then
-		owner:DoCustomAnimEvent( PLAYERANIMEVENT_CUSTOM, seq )
-	end
-
-	self:SetNextPrimaryFire( ct + 7.5 - self:GetUpgradeMod( "dash_cd", 0 ) )
-
-	self.EnableDash = true
-end
-
-SWEP.NSecondaryAttack = 0
-SWEP.MindControl = 0
-function SWEP:SecondaryAttack()
-	if ROUND.preparing or ROUND.post then return end
-
-	local ct = CurTime()
-	if self:GetNextPrimaryFire() > ct or self:GetNextSecondaryFire() > ct then return end
-
-	local owner = self:GetOwner()
-	if owner:Health() == 1 then return end
-
-	local owner_pos = owner:GetPos()
-	local plys = FindInCylinder( owner_pos, 2000 + self:GetUpgradeMod( "mc_dist", 0 ), -400, 350, nil, nil, SCPTeams.GetPlayersByInfo( SCPTeams.INFO_HUMAN, true ) )
-
-	local len = #plys
-	if len > 0 then
-		local final = {}
-		for k, v in pairs( plys ) do
-			if owner_pos:DistToSqr( v:GetPos() ) >= 90000 and ( SERVER and !v:GetSCP714() or CLIENT and !v:CL_GetSCP714() ) then
-				table.insert( final, v )
+			if tab[1] < 0 then
+				tab[1] = 0
 			end
 		end
 
-		len = #final
-		if len > 0 then
-			//local target = plys[math.random( len )]
-			//print( len, math.Round( util.SharedRandom( "SCP23273MindControl", 1, len, self:GetNextSecondaryFire() ) ), util.SharedRandom( "SCP23273MindControl", 1, len, self:GetNextSecondaryFire() ) )
-			local target = final[math.Round( util.SharedRandom( "SCP23273MindControl", 1, len, self:GetNextSecondaryFire() ) )]
-
-			self.LockAngles = nil
-			self.PrepareMindControl = ct + 1
-			self.MCTarget = { target, target:TimeSignature() }
-
-			self:SetNextPrimaryFire( self.PrepareMindControl + 5 )
-			self:SetNextSecondaryFire( self.PrepareMindControl + 5 )
-
-			//local owner = self:GetOwner()
-			local seq, dur = owner:LookupSequence( "stary_spi" )
-			if seq > -1 then
-				self:SetNWFloat( "anim_time", ct + dur )
-			end
+		if heal > 0 then
+			owner:AddHealth( math.ceil( heal * self:GetUpgradeMod( "ghost_heal", self.GhostHeal ) ) )
 		end
+	end
+
+	local spectate = self:GetSpectateTime()
+	if spectate > 0 and spectate < ct then
+		local _, time = owner:LookupSequence( "stary_wstal" )
+
+		self:SetSpectateTime( -ct - time )
+		self:SetSpectateDuration( time )
+		self:SetSpectateEntity( NULL )
+		self:SetNextSecondaryFire( ct + self.SpectateCooldown * self:GetUpgradeMod( "spect_cd", 1 ) )
+	elseif spectate < 0 and -spectate < ct then
+		self:RestrictMode( 2 )
+		self:SetSpectateTime( 0 )
+		owner:StopDisableControls( "scp24273_spectate" )
+	end
+
+	if self.SpectateFly > 0 and self.SpectateFly <= ct then
+		self.SpectateFly = 0
+	end
+
+	if ghost == 0 then
+		self:EvidenceThink()
+	end
+
+	if !self:GetMode() then
+		self:DashThink()
+		self:DrainThink()
+		self:SpecialThink()
 	end
 end
 
-function SWEP:Reload()
+local evidence_trace = {}
+evidence_trace.mask = MASK_BLOCKLOS_AND_NPCS
+evidence_trace.output = evidence_trace
 
-end
-
-function SWEP:OnRemove()
-	self:StopMindControl( false, true )
-end
-
-function SWEP:GetMindControlDuration()
-	return 20 + self:GetUpgradeMod( "mc_dur", 0 )
-end
-
-//SWEP.MCPenalty = 0
-//SWEP.ClientValueCheck = 0
-function SWEP:StopMindControl( noanim1, noanim2 )
-	if SERVER and self.MCTarget and IsValid( self.MCTarget[1] ) then
-		net.Start( "SLCMindControl" )
-			net.WriteBool( false )
-		net.Send( self.MCTarget[1] )
+function SWEP:EvidenceThink()
+	local ent = self:GetView()
 	
-		if self.MCTarget[1]:GetProperty( "mind_control" ) then
-			self.MCTarget[1]:SetProperty( "mind_control" )
-		end
-
-		if !noanim1 then
-			self.MCTarget[1]:ScreenFade( SCREENFADE.IN, Color( 0, 0, 0 ), 0.15, 0.25 )
-		end
+	if !ent then
+		self:SetLookedAt( NULL )
+		self:SetEvidence( 0 )
+		
+		return
 	end
 
-	self.PrepareMindControl = 0
-	self.MCTarget = nil
+	local pos = ent:EyePos()
+	local ang = ent:EyeAngles()
+	local forward = ang:Forward()
 
-	--if SERVER then
-		self:SetMindControl( 0 )
-		self:SetMindControlTarget( NULL )
-	--end
+	evidence_trace.start = pos
+	evidence_trace.filter = ent
 
-	self.LockAngles = self.RestoreEyeAngles//nil
+	local min_dot = self.PEvidenceDot
+	local best_dot = -1
+	local best_ply = nil
 
-	local penalty_time = 3
+	for i, v in ipairs( player.GetAll() ) do
+		if !self:CanTargetPlayer( v ) then continue end
+
+		local ply_pos = v:GetPos() + v:OBBCenter()
+		local diff = ply_pos - pos
+		diff:Normalize()
+
+		local dot = forward:Dot( diff )
+		if dot < best_dot or dot < min_dot then continue end
+
+		evidence_trace.endpos = ply_pos
+
+		util.TraceLine( evidence_trace )
+		if evidence_trace.Entity != v then continue end
+
+		best_dot = dot
+		best_ply = v
+	end
+
+	if best_ply then
+		local tab = self.Evidence[best_ply]
+		if !tab or !best_ply:CheckSignature( tab[2] ) then
+			tab = { 0, best_ply:TimeSignature() }
+			self.Evidence[best_ply] = tab
+		end
+
+		if self:GetMode() then
+			tab[1] = tab[1] + self:GetUpgradeMod( "p_rate", self.PEvidenceRate ) * FrameTime() * math.Map( best_dot, min_dot, 1, 0.5, 1 )
+
+			if tab[1] > 1 then
+				tab[1] = 1
+			end
+		end
+
+		self:SetLookedAt( best_ply )
+		self:SetEvidence( tab[1] )
+	else
+		self:SetLookedAt( NULL )
+		self:SetEvidence( 0 )
+	end
+end
+
+local dash_offset = Vector( 0, 0, 32 )
+local dash_trace = {}
+dash_trace.mins = Vector( -8, -8, -8 )
+dash_trace.maxs = Vector( 8, 8, 8 )
+dash_trace.mask = MASK_SHOT
+dash_trace.output = dash_trace
+
+function SWEP:DashThink()
+	local ct = CurTime()
 	local owner = self:GetOwner()
-	if IsValid( owner ) then
-		if !noanim2 then
-			owner:ScreenFade( SCREENFADE.IN, Color( 0, 0, 0 ), 0.15, 0.25 )
 
-			local seq, dur = owner:LookupSequence( "stary_wstal" )
-			if seq > -1 then
-				if dur > penalty_time then
-					penalty_time = dur
-				end
-
-				owner:DoCustomAnimEvent( PLAYERANIMEVENT_CUSTOM, seq )
-			end
-		end
-
-		if self.RestoreEyeAngles then
-			owner:SetEyeAngles( self.RestoreEyeAngles )
-			self.RestoreEyeAngles = nil
-		end
+	if !controller.IsEnabled( owner, "scp24273_dash" ) then return end
+	
+	if self.DashTime < ct or owner:GetPos():DistToSqr( self.DashStart ) > self.DashMaxDistance ^ 2 then
+		controller.Stop( owner )
+		return
 	end
 
-	local ct = CurTime()
-	self:SetNextPrimaryFire( ct + 5 )
-	self:SetMindControlPenalty( ct + penalty_time )
+	dash_trace.start = owner:GetPos() + dash_offset
+	dash_trace.endpos = dash_trace.start + self.DashDirection * 33
+	dash_trace.filter = owner
 
-	if CLIENT then
-		if IsValid( self.Clone ) then
-			self.Clone:Remove()
-		end
+	owner:LagCompensation( true )
+	util.TraceHull( dash_trace )
+	owner:LagCompensation( false )
+
+	if !dash_trace.Hit then return end
+
+	local ent = dash_trace.Entity
+
+	if !IsValid( ent ) then
+		controller.Stop( owner )
+		return
 	end
+
+	if !ent:IsPlayer() then
+		self:SCPDamageEvent( ent, 50 )
+		controller.Stop( owner )
+		return
+	end
+
+	if self.DashFilter[ent] then return end
+	self.DashFilter[ent] = true
+
+	if !self:CanTargetPlayer( ent ) then return end
+
+	self:DealDamage( ent, self.DashDamage * self:GetUpgradeMod( "dash_dmg", 1 ) )
 end
 
-SCPHook( "SCP24273", "CalcMainActivity", function( ply, vel )
-	if ply:SCPClass() == CLASSES.SCP24273 then
-		local wep = ply:GetActiveWeapon()
-		if IsValid( wep ) then
-			local ct = CurTime()
-			if wep.GetMindControl and wep:GetMindControl() >= ct then
-				local seq, dur = ply:LookupSequence( "stary_spi" )
-				if seq > -1 then
-					local f = 1 - ( wep:GetNWInt( "anim_time" ) - ct ) / dur
-
-					if f > 1 then
-						f = 1
-					end
-
-					ply:SetCycle( f )
-					return -1, seq
-				end
-			end
-		end
-	end
-end )
-
-SCPHook( "SCP24273", "DoAnimationEvent", function( ply, event, data )
-	if ply:SCPClass() == CLASSES.SCP24273 then
-		if event == PLAYERANIMEVENT_CUSTOM then
-			ply:AddVCDSequenceToGestureSlot( GESTURE_SLOT_CUSTOM, data, 0, true )
-		end
-	end
-end )
-
-SCPHook( "SCP24273", "Move", function( ply, mv )
-	if ply:SCPClass() == CLASSES.SCP24273 then
-		local wep = ply:GetActiveWeapon()
-		if IsValid( wep ) then
-			local ct = CurTime()
-
-			if wep.DashTime and wep.DashTime >= ct then
-				local vel = wep.DashDirection * ( 850 + wep:GetUpgradeMod( "dash_power", 0 ) )
-
-				if ply:IsOnGround() then
-					vel.z = 251
-				end
-
-				mv:SetVelocity( vel )
-			end
-
-			if wep.StopTime and wep.StopTime > ct then
-				mv:SetVelocity( mv:GetVelocity() * 0.95 )
-			end
-		end
-	end
-end )
-
-local buttons_filter = bit.bor( IN_USE, IN_SPEED, IN_DUCK, IN_JUMP )
-SCPHook( "SCP24273", "StartCommand", function( ply, cmd )
-	local wep = ply:GetActiveWeapon()
-	local ct = CurTime()
-
-	local scpok = ply:SCPClass() == CLASSES.SCP24273 and IsValid( wep )
-	local mctime = wep.GetMindControl and wep:GetMindControl() >= ct
-
-	if scpok then
-		//local npf = wep:GetNextPrimaryFire()
-		if wep.EnableDash then
-			cmd:ClearMovement()
-			cmd:ClearButtons()
-		end
-
-		if wep.PrepareMindControl and wep.PrepareMindControl >= ct or wep.GetMindControlPenalty and wep:GetMindControlPenalty() >= ct then
-			cmd:ClearMovement()
-			cmd:ClearButtons()
-
-			if !wep.LockAngles then
-				wep.LockAngles = cmd:GetViewAngles()
-			end
-
-			cmd:SetViewAngles( wep.LockAngles )
-		end
-
-		if wep.PopSpeed and wep.PopSpeed > ct then
-			if cmd:KeyDown( IN_JUMP ) then
-				cmd:RemoveKey( IN_JUMP )
-			end
-
-			if cmd:KeyDown( IN_DUCK ) then
-				cmd:RemoveKey( IN_DUCK )
-			end
-		end
-	end
-
-	if CLIENT then
-		if ply.MindControlTime and ply.MindControlTime >= CurTime() then
-			cmd:ClearButtons()
-			cmd:ClearMovement()
-
-			cmd:SetButtons( ply.MindControlObject:GetNWInt( "mc_buttons" ) )
-
-			local desired = ply.MindControlObject:GetNWAngle( "mc_angles" )
-
-			if !ply.MindControlAngles then
-				ply.MindControlAngles = desired
-			end
-
-			local ang = LerpAngle( FrameTime() * 2, ply.MindControlAngles, desired )
-			ang.roll = 0
-
-			cmd:SetViewAngles( ang )
-			ply.MindControlAngles = ang
-
-			return true
-		end
-	end
-
-	if SERVER then
-		if scpok then
-			if mctime then
-				if cmd:KeyDown( IN_RELOAD ) and wep.MCTarget and IsValid( wep.MCTarget[1] ) and wep.MCTarget[1]:IsOnGround() then
-					wep:StopMindControl( false, false )
-					return true
-				end
-
-				--save data and write to controlled player
-				wep.MindControlBuffer.ViewAngles = cmd:GetViewAngles()
-				wep.MindControlBuffer.ForwardMove = cmd:GetForwardMove()
-				wep.MindControlBuffer.SideMove = cmd:GetSideMove()
-				wep.MindControlBuffer.UpMove = cmd:GetUpMove()
-
-				local buttons = bit.band( cmd:GetButtons(), buttons_filter )
-				wep.MindControlBuffer.Buttons = buttons
-
-				wep.MindControlBuffer.Initialized = true
-
-				wep:SetNWInt( "mc_buttons", buttons )
-				wep:SetNWAngle( "mc_angles", cmd:GetViewAngles() )
-
-				cmd:SetViewAngles( wep.LockAngles )
-
-				cmd:ClearMovement()
-				cmd:ClearButtons()
-			end
-		end
-
-		local ctrl = ply:GetProperty( "mind_control" )
-		if ctrl and ctrl[1] >= CurTime() and IsValid( ctrl[2] ) then
-			cmd:ClearButtons()
-			cmd:ClearMovement()
-
-			local buffer = ctrl[2].MindControlBuffer
-			if buffer and buffer.Initialized then
-				cmd:SetButtons( buffer.Buttons )
-				cmd:SetForwardMove( buffer.ForwardMove )
-				cmd:SetSideMove( buffer.SideMove )
-				cmd:SetUpMove( buffer.UpMove )
-
-				cmd:SetViewAngles( buffer.ViewAngles )
-				ply:SetEyeAngles( buffer.ViewAngles )
-
-				return true
-			end
-		end
-	end
-end )
-
-SCPHook( "SCP24273", "CanPlayerSeePlayer", function( ply1, ply2 )
-	if ply1:SCPClass() == CLASSES.SCP24273 then
-		local wep = ply1:GetActiveWeapon()
-		if IsValid( wep ) then
-			if wep.GetMindControl and wep:GetMindControl() > CurTime() then
-				local target = wep:GetMindControlTarget()
-				if IsValid( target ) and target == ply2 then
-					return false
-				end
-			end
-		end
-	end
-end )
-
-SCPHook( "SCP24273", "PlayerButtonDown", function( ply, button )
-	if SERVER then
-		local ctrl = ply:GetProperty( "mind_control" )
-		if ctrl and ctrl[1] < CurTime() then
-			return false
-		end
-	end
-
-	if CLIENT then
-		if ply.MindControlTime and ply.MindControlTime >= CurTime() then
-			return false
-		end
-	end
-end )
-
-SCPHook( "SCP24273", "PlayerPostThink", function( ply )
-	if SERVER then
-		local ctrl = ply:GetProperty( "mind_control" )
-		if ctrl and ctrl[1] < CurTime() then
-			ply:SetProperty( "mind_control", nil )
-			//ply:SetDisableControls( false )
-		end
-	end
-
-	if CLIENT then
-		if ply.MindControlTime and ply.MindControlTime < CurTime() then
-			ply.MindControlTime = nil
-			ply.MindControlObject = nil
-			ply.MindControlAngles = nil
-		end
-	end
-end )
-
-if SERVER then
-	util.AddNetworkString( "SLCMindControl" )
-
-	SCPHook( "SCP24273", "SetupPlayerVisibility", function( ply, ent )
-		if ply:SCPClass() == CLASSES.SCP24273 then
-			local wep = ply:GetActiveWeapon()
-			if IsValid( wep ) then
-				if wep.GetMindControl and wep:GetMindControl() > CurTime() then
-					local target = wep:GetMindControlTarget()
-					if IsValid( target ) then
-						AddOriginToPVS( target:GetPos() )
-					end
-				end
-			end
-		end
-	end )
-
-	SCPHook( "SCP24273", "DoPlayerDeath", function( ply, att, dmg )
-		local ctrl = ply:GetProperty( "mind_control" )
-		if ctrl and IsValid( ctrl[2] ) then
-			ctrl[2]:StopMindControl( true )
-
-			if !IsValid( att ) or !att:IsPlayer() or att == ply and !ply.Disconnected then
-				local owner = ctrl[2]:GetOwner()
-
-				local hp = owner:Health() - 1500
-				if hp < 1 then
-					hp = 1
-				end
-
-				owner:SetHealth( hp )
-			end
-		end
-
-		if ply:SCPClass() == CLASSES.SCP24273 then
-			local wep = ply:GetActiveWeapon()
-			if IsValid( wep ) then
-				wep:StopMindControl( false, true )
-			end
-		end
-	end )
-
-	SCPHook( "SCP24273", "PlayerCanHearPlayersVoice", function( listener, talker )
-		local ply
-
-		if talker:SCPClass() == CLASSES.SCP24273 then
-			ply = talker
-		elseif listener:SCPClass() == CLASSES.SCP24273 then
-			ply = listener
-		end
-
-		if ply then
-			local wep = ply:GetActiveWeapon()
-			if IsValid( wep ) then
-				if wep.GetMindControl and wep:GetMindControl() > CurTime() then
-					return false
-				end
-			end
-		end
-
-		if talker:GetProperty( "mind_control" ) then
-			return false
-		end
-	end )
-
-	SCPHook( "SCP24273", "PlayerCanPickupWeapon", function( ply, wep )
-		//if ply.MindControlTime and ply.MindControlTime >= CurTime() then
-		if ply:GetProperty( "mind_control" ) then
-			return false
-		end
-	end )
-end
-
-if CLIENT then
-	net.Receive( "SLCMindControl", function( len )
-		local status = net.ReadBool()
-
-		local ply = LocalPlayer()
-
-		if status then
-			local ctrl = net.ReadEntity()
-			local time = net.ReadFloat()
-
-			ply.MindControlTime = time
-			ply.MindControlObject = ctrl
-		else
-			ply.MindControlTime = nil
-			ply.MindControlObject = nil
-			ply.MindControlAngles = nil
-		end
-	end )
-
-	local overlay = GetMaterial( "slc/scp/2427overlay.png" )
-	SCPHook( "SCP24273", "SLCScreenMod", function( clr )
-		local ply = LocalPlayer()
-		local ct = CurTime()
-
-		if ply.MindControlTime and ply.MindControlTime >= ct then
-			clr.colour = 0
-			clr.contrast = clr.contrast * 0.8
-			DrawToyTown( 3, ScrH() / 1.7 )
-		end
-
-		if ply:SCPClass() == CLASSES.SCP24273 then
-			local wep = ply:GetActiveWeapon()
-			if IsValid( wep ) then
-				if wep.GetMindControl then
-					local time = wep:GetMindControl()
-					if time >= ct then
-						local f = 1 - (time - ct) / wep:GetMindControlDuration()
-
-						surface.SetMaterial( overlay )
-						surface.SetDrawColor( 155 + 100 * f, 100, 100, math.TimedSinWave( 0.7, 25 + 150 * f, 120 + 135 * f ) )
-						surface.DrawTexturedRect( 0, 0, ScrW(), ScrH() )
-					end
-				end
-			end
-		end
-	end )
-
-	local color_red = Color( 255, 0, 0 )
-	SCPHook( "SCP24273", "PreDrawHalos", function()
-		local ply = LocalPlayer()
-		if ply:SCPClass() == CLASSES.SCP24273 then
-			local wep = ply:GetActiveWeapon()
-			if IsValid( wep ) then
-				if IsValid( wep.Clone ) then
-					halo.Add( { wep.Clone }, color_red, 2, 2, 1, true, true )
-				end
-			end
-		end
-	end )
-
-	/*SCPHook( "SCP24273", "PlayerBindPress", function( ply, bind )
-		if ply.MindControlTime and ply.MindControlTime >= CurTime() then
-			return true
-		end
-	end )*/
-end
-
-function SWEP:CalcView( ply, origin, angles, fov )
-	local ct = CurTime()
-	if self.PrepareMindControl >= ct and IsValid( self.MCTarget[1] ) then
-		local f = 1 - ( self.PrepareMindControl - ct )
-
-		return LerpVector( f, origin, self.MCTarget[1]:EyePos() ) //origin + (self.MCTarget:EyePos() - origin ) * f
-	elseif self:GetMindControl() > ct then
-		local ent = self:GetMindControlTarget()
-		if IsValid( ent ) then
-			return ent:EyePos()//, angles, fov, true //, ent:EyeAngles(), fov
-		end
-	end
-end
-
-local color_red = Color( 255, 0, 0 )
-local color_green = Color( 0, 255, 0 )
-function SWEP:DrawSCPHUD()
-	//if hud_disabled or HUDDrawInfo or ROUND.preparing then return end
+local drain_trace = {}
+drain_trace.mask = MASK_SHOT
+drain_trace.output = drain_trace
+
+function SWEP:DrainThink()
+	local drain = self:GetDrain()
+	if drain == 0 then return end
 
 	local ct = CurTime()
-	local ctime = self:GetMindControl()
-	if ctime >= ct then
-		surface.SetDrawColor( 50, 20, 155 )
-		surface.DrawOutlinedRect( ScrW() * 0.4, ScrH() * 0.9, ScrW() * 0.2, ScrH() * 0.03 )
+	local owner = self:GetOwner()
 
-		local f = ( ctime - ct ) / self:GetMindControlDuration()
-
-		if f < 0 then
-			f = 0
+	if drain < 0 then
+		if -drain < ct then
+			owner:PopSpeed( "SLC_SCP24273Drain" )
+			self:SetDrain( 0 )
 		end
 
-		surface.DrawRect( ScrW() * 0.4, ScrH() * 0.9, ScrW() * 0.2 * f, ScrH() * 0.03 )
+		return
+	elseif drain > 0 and drain < ct then
+		self:SetDrain( 0 )
+		self:RestrictMode( 2 )
+
+		local target = self:GetDrainTarget()
+		if !IsValid( target ) then return end
+
+		local slow = 1 - self.DrainSlow
+		local slow_time = self.DrainSlowTime
+		target:PushSpeed( slow, slow, -1, "SLC_SCP24273Drain", 1 )
+		target:AddTimer( "SCP24273Drain", slow_time, 1, function()
+			target:PopSpeed( "SLC_SCP24273Drain" )
+		end )
+
+		self:DealDamage( target, self.DrainDamage )
+		self:SetDrainTarget( NULL )
 
 		return
 	end
 
-	local txt, color
+	local target = self:GetDrainTarget()
+	if !IsValid( target ) then return end
 
-	local npf = self:GetNextPrimaryFire()
-	local nsf = self:GetNextSecondaryFire()
+	owner:LagCompensation( true )
 
-	if npf > nsf then
-		nsf = npf
-	end
+	drain_trace.start = owner:GetShootPos()
+	drain_trace.endpos = target:GetPos() + target:OBBCenter()
+	drain_trace.filter = owner
 
-	if nsf > ct then
-		txt = string.format( self.Lang.mind_control_cd, math.ceil( nsf - ct ) )
-		color = color_red
-	else
-		txt = self.Lang.mind_control
-		color = color_green
-	end
+	util.TraceLine( drain_trace )
+	owner:LagCompensation( false )
 
-	draw.Text( {
-		text = txt,
-		pos = { ScrW() * 0.5, ScrH() * 0.97 },
-		font = "SCPHUDSmall",
-		color = color,
-		xalign = TEXT_ALIGN_CENTER,
-		yalign = TEXT_ALIGN_CENTER,
-	})
+	if drain_trace.Hit and drain_trace.Entity == target then return end
 
-	if npf > ct then
-		txt = string.format( self.Lang.dash_cd, math.ceil( npf - ct ) )
-		color = color_red
-	else
-		txt = self.Lang.dash
-		color = color_green
-	end
-
-	draw.Text( {
-		text = txt,
-		pos = { ScrW() * 0.5, ScrH() * 0.94 },
-		font = "SCPHUDSmall",
-		color = color,
-		xalign = TEXT_ALIGN_CENTER,
-		yalign = TEXT_ALIGN_CENTER,
-	})
+	local slow = 1 - self.DrainSlow
+	local slow_time = self.DrainSlowTime
+	owner:PushSpeed( slow, slow, -1, "SLC_SCP24273Drain", 1 )
+	self:SetDrain( -ct - slow_time )
 end
 
-DefineUpgradeSystem( "scp24273", {
-	grid_x = 4,
-	grid_y = 3,
-	upgrades = {
-		{ name = "dash1", cost = 2, req = {}, reqany = false,  pos = { 1, 1 }, mod = { dash_cd = 1, dash_power = 125 }, active = false },
-		{ name = "dash2", cost = 3, req = { "dash1" }, reqany = false,  pos = { 1, 2 }, mod = { dash_pspeed = 0.15, dash_ptime = 0.5 }, active = false },
-		{ name = "dash3", cost = 4, req = { "dash2" }, reqany = false,  pos = { 1, 3 }, mod = { dash_dmg = 50 }, active = false },
+local vec_up = Vector( 0, 0, 600 )
+function SWEP:SpecialThink()
+	local special = self:GetSpecial()
+	if special == 0 then return end
 
-		{ name = "mc11", cost = 1, req = {}, block = { "mc21" }, reqany = false,  pos = { 2, 1 }, mod = { mc_dur = 10, mc_cd = 20 }, active = false },
-		{ name = "mc12", cost = 3, req = { "mc11" }, reqany = false,  pos = { 2, 2 }, mod = { mc_dur = 20, mc_cd = 45 }, active = false },
-		{ name = "mc13", cost = 6, req = { "mc12", "mc22" }, block = { "mc23" }, reqany = true,  pos = { 2, 3 }, mod = { mc_dist = 1000 }, active = false }, --kill gives mc cd
+	local ct = CurTime()
+	local owner = self:GetOwner()
+	local owner_pos = owner:GetPos()
 
-		{ name = "mc21", cost = 1, req = {}, block = { "mc11" }, reqany = false,  pos = { 3, 1 }, mod = { mc_dur = -5, mc_cd = -10 }, active = false },
-		{ name = "mc22", cost = 3, req = { "mc21" }, reqany = false,  pos = { 3, 2 }, mod = { mc_dur = -10, mc_cd = -15 }, active = false },
-		{ name = "mc23", cost = 6, req = { "mc22", "mc12" }, block = { "mc13" }, reqany = true,  pos = { 3, 3 }, mod = { mc_dist = 500 }, active = false }, --kill gives hp
+	if special < ct then
+		self:SetSpecial( 0 )
+		self:RestrictMode( 2 )
+		owner:StopDisableControls( "scp24273_special" )
+		
+		self:CleanupTargets()
 
-		{ name = "mc3", cost = 2, req = { "mc21" }, reqany = false,  pos = { 4, 2 }, mod = { mc_def = 0.5 }, active = false },
+		return
+	end
 
-		{ name = "outside_buff", cost = 1, req = {}, reqany = false,  pos = { 4, 3 }, mod = {}, active = false },
-	},
-	rewards = { --15, mc kill grants 2 points, normal kill 1 point
-		{ 1, 2 },
-		{ 3, 1 },
-		{ 5, 1 },
-		{ 8, 2 },
-		{ 10, 2 },
-		{ 13, 2 },
-		{ 16, 3 },
-		{ 20, 2 }
-	}
-} )
+	local target_pos = owner_pos + owner:OBBCenter()
+	for i, v in ipairs( player.GetAll() ) do
+		if !self:CanTargetPlayer( v ) or self.SpecialFilter[v] then continue end
 
-SCPHook( "SCP24273", "EntityTakeDamage", function( ent, dmg )
-	if IsValid( ent ) and ent:IsPlayer() and ent:SCPClass() == CLASSES.SCP24273 then
-		local wep = ent:GetActiveWeapon()
-		if IsValid( wep ) and wep.UpgradeSystemMounted then
-			local mod = wep:GetUpgradeMod( "mc_def" )
+		local pos = v:GetPos()
+		local should_affect = !v:GetSCP714() and owner:TestVisibility( v, nil, nil, false )
+		local target = v:GetProperty( "scp24273_target" )
 
-			if mod then
-				if !dmg:IsDamageType( DMG_DIRECT ) then
-					dmg:ScaleDamage( mod )
-				end
-			end
+		if should_affect and !target then
+			target = target_pos
+
+			controller.Start( v, "scp24273_follow" )
+			v:SetProperty( "scp24273_target", target_pos, true )
+			v:SetProperty( "scp24273_player", owner )
+			v:SetProperty( "scp24273_time", ct )
+		elseif !should_affect and target then
+			target = nil
+
+			controller.Stop( v )
+			v:SetProperty( "scp24273_target", nil, true )
+			v:SetProperty( "scp24273_player", nil )
+			v:SetProperty( "scp24273_time", nil )
 		end
+
+		if target and pos:DistToSqr( target ) <= 2500 then
+			self.SpecialFilter[v] = true
+
+			controller.Stop( v )
+
+			local pct = math.Clamp( ( CurTime() - v:GetProperty( "scp24273_time", 0 ) ) / self.SpecialTime, 0, 1 )
+			local diff = pos - owner_pos
+
+			diff.z = 0
+			diff:Normalize()
+
+			v:SetVelocity( ( diff * 600 + vec_up ) * ( 0.5 + pct * 0.5 ) )
+			self:DealDamage( v, math.ceil( self.SpecialDamage * pct ) )
+
+			v:SetProperty( "scp24273_target", nil, true )
+			v:SetProperty( "scp24273_player", nil )
+			v:SetProperty( "scp24273_time", nil )
+		end
+	end
+end
+
+function SWEP:OnRemove()
+	if CLIENT then return end
+	self:CleanupTargets()
+end
+
+function SWEP:PrimaryAttack()
+	if CLIENT or ROUND.preparing or ROUND.post or !self:CanAttack() then return end
+
+	self:StopCamouflage()
+
+	local ct = CurTime()
+	local owner = self:GetOwner()
+
+	if self:GetMode() then
+		local dur = self.CamouflageDuration * self:GetUpgradeMod( "camo_dur", 1 )
+		self:SetNextPrimaryFire( ct + dur + self.CamouflageCooldown * self:GetUpgradeMod( "camo_cd", 1 ) )
+		self:SetCamouflage( ct + dur )
+
+		owner:SetMaterial( "sprites/heatwave" )
+		owner:RemoveAllDecals()
+
+		//REMOVE - Temp fix (https://github.com/Facepunch/garrysmod-issues/issues/5946)
+		BroadcastLua( "tmpfix=Entity("..owner:EntIndex()..") if IsValid(tmpfix) then tmpfix:RemoveAllDecals() end" )
+
+		owner:AddTimer( "SCP24273Camouflage", 0.5, 1, function()
+			self.CamouflageRestrict = owner:GetPos()
+		end )
+	else
+		if !owner:IsOnGround() then return end
+
+		local ang = owner:GetAngles()
+		ang.p = 0
+		ang.r = 0
+
+		self:SetNextPrimaryFire( ct + self.DashCooldown * self:GetUpgradeMod( "dash_cd", 1 ) )
+		self:RestrictMode( 2 )
+		self.DashDirection = ang:Forward()
+		self.DashStart = owner:GetPos()
+		self.DashTime = ct + 0.6
+		self.DashFilter = {}
+
+		controller.Start( owner, "scp24273_dash" )
+
+		owner:DoCustomAnimEvent( PLAYERANIMEVENT_CUSTOM_SEQUENCE, 1001 )
+	end
+end
+
+SWEP.SpectateFly = 0
+function SWEP:SecondaryAttack()
+	if CLIENT or ROUND.preparing or ROUND.post then return end
+	
+	local ct = CurTime()
+	local spectate = self:GetSpectateTime()
+	if ( spectate > 0 and spectate < ct or self.SpectateFly >= ct ) and !self:CanAttack() then return end
+
+	self:StopCamouflage()
+
+	local owner = self:GetOwner()
+
+	if self:GetMode() then
+		if spectate >= ct then
+			self:SetSpectateTime( 1 )
+		end
+
+		if spectate > 0 then return end
+
+		self:SetNextSecondaryFire( ct + 3 )
+
+		local owner_pos = owner:GetPos()
+		local radius = self.SpectateRadius ^ 2
+		local targets = {}
+		local len = 0
+
+		for i, v in ipairs( player.GetAll() ) do
+			if !self:CanTargetPlayer( v ) or v:GetPos():DistToSqr( owner_pos ) > radius then continue end
+
+			len = len + 1
+			targets[len] = v
+		end
+
+		if len < 1 then return end
+
+		local ent = targets[math.random( len )]
+		local path = SLCAStar( owner_pos, ent:GetPos(), "manhattan", nil, 200 )
+		if !path then return end
+
+		if path == true then
+			return
+		end
+		
+		for i, v in ipairs( path ) do
+			path[i] = v:GetCenter() + Vector( 0, 0, 64 )
+		end
+
+		local fly_time = 0
+		local path_time = { { 0, owner:EyePos() } }
+
+		for i = 2, #path do
+			local time = path[i - 1]:Distance( path[i] ) / self.SpectateSpeed
+			fly_time = fly_time + time
+			path_time[i] = { ct + fly_time, path[i] }
+		end
+
+		local dur = self.SpectateTime * self:GetUpgradeMod( "spect_dur", 1 )
+
+		self:SetNextSecondaryFire( ct + fly_time + 1 )
+		self:SetSpectateTime( ct + fly_time + dur )
+		self:SetSpectateDuration( fly_time + dur )
+		self:SetSpectateEntity( ent )
+
+		self.SpectateActivePath = 1
+		self.SpectatePathTime = path_time
+		self.SpectateFly = ct + fly_time
+		
+		owner:DisableControls( "scp24273_spectate", IN_ATTACK2 )
+
+		net.SendTable( "SCP24273Path", path, owner )
+	else
+		drain_trace.start = owner:GetShootPos()
+		drain_trace.endpos = drain_trace.start + owner:GetAimVector() * 250
+		drain_trace.filter = owner
+
+		owner:LagCompensation( true )
+		util.TraceLine( drain_trace )
+		owner:LagCompensation( false )
+
+		if !drain_trace.Hit then return end
+
+		local ent = drain_trace.Entity
+		if !IsValid( ent ) or !ent:IsPlayer() or !self:CanTargetPlayer( ent ) then return end
+
+		self:SetNextSecondaryFire( ct + self.DrainCooldown * self:GetUpgradeMod( "drain_cd", 1 ) )
+		self:SetDrain( ct + self.DrainTime * self:GetUpgradeMod( "drain_dur", 1 ) )
+		self:SetDrainTarget( ent )
+	end
+end
+
+function SWEP:SpecialAttack()
+	if CLIENT or ROUND.preparing or ROUND.post or !self:CanAttack() then return end
+
+	self:StopCamouflage()
+
+	local ct = CurTime()
+	local owner = self:GetOwner()
+
+	if self:GetMode() then
+		local dur = self.GhostDuration * self:GetUpgradeMod( "ghost_dur", 1 )
+		local speed = self.GhostSpeed
+
+		self:SetNextSpecialAttack( ct + dur + self.GhostCooldown * self:GetUpgradeMod( "ghost_cd", 1 ) )
+		self:SetGhost( ct + dur )
+		owner:SetMaterial( "models/props_combine/combine_fenceglow" )
+		owner:PushSpeed( speed, speed, -1, "SLC_SCP24273Ghost", 1 )
+	else
+		local dur = self.SpecialDuration * self:GetUpgradeMod( "special_dur", 1 )
+
+		self:SetNextSpecialAttack( ct + dur + self.SpecialCooldown * self:GetUpgradeMod( "special_cd", 1 ) )
+		self:SetSpecial( ct + dur )
+		self.SpecialFilter = {}
+		owner:DisableControls( "scp24273_special", CAMERA_MASK )
+	end
+end
+
+function SWEP:Reload()
+	local ct = CurTime()
+	if self:GetNextMode() > ct or !self:CanAttack() then return end
+
+	if !self:HasUpgrade( "change2" ) then
+		self:StopCamouflage()
+	end
+
+	self:SetNextMode( ct + self.ChangeCooldown * self:GetUpgradeMod( "change_cd", 1 ) )
+
+	local new = !self:GetMode()
+	self:SetMode( new )
+
+	if CLIENT then
+		self.HUDObject:GetSkill( "primary" ):SetMaterialOverride( new and hud_materials.primary[2] )
+		self.HUDObject:GetSkill( "secondary" ):SetMaterialOverride( new and hud_materials.secondary[2] )
+		self.HUDObject:GetSkill( "special" ):SetMaterialOverride( new and hud_materials.special[2] )
+
+		return
+	end
+
+	local cd_primary = self:GetNextPrimaryFire()
+	local cd_secondary = self:GetNextSecondaryFire()
+	local cd_special = self:GetNextSpecialAttack()
+
+	local cd_def = ct + 1
+	self:SetNextPrimaryFire( math.max( self.Cooldowns.primary or 0, cd_def ) )
+	self:SetNextSecondaryFire( math.max( self.Cooldowns.secondary or 0, cd_def ) )
+	self:SetNextSpecialAttack( math.max( self.Cooldowns.special or 0, cd_def ) )
+
+	self.Cooldowns.primary = cd_primary
+	self.Cooldowns.secondary = cd_secondary
+	self.Cooldowns.special = cd_special
+
+	local owner = self:GetOwner()
+
+	if new then
+		local speed = 1 - self:GetUpgradeMod( "p_slow", self.PPassiveSlow )
+		owner:PushSpeed( speed, speed, -1, "SLC_SCP24273Prosecutor", 1 )
+	else
+		owner:PopSpeed( "SLC_SCP24273Prosecutor" )
+
+		self:SetLookedAt( NULL )
+		self:SetEvidence( 0 )
+	end
+end
+
+function SWEP:CanAttack()
+	return self:GetDrain() == 0 and self:GetGhost() == 0 and self:GetSpectateTime() == 0 and !controller.IsEnabled( self:GetOwner() )
+end
+
+function SWEP:DealDamage( ply, dmg )
+	local evidence = self.Evidence[ply] and self.Evidence[ply][1] or 0
+	local info = DamageInfo()
+
+	if evidence >= 1 then
+		info:SetDamageType( DMG_DIRECT )
+		info:SetDamage( ply:Health() )
+	elseif evidence > 0 then
+		info:SetDamage( dmg * ( 1 + self:GetUpgradeMod( "j_mult", self.JEvidenceMultiplier ) * evidence ) )
+		self.Evidence[ply][1] = evidence * self:GetUpgradeMod( "j_loss", self.JEvidenceLoss )
+	else
+		info:SetDamage( dmg )
+	end
+
+	info:SetAttacker( self:GetOwner() )
+	
+	ply:TakeDamageInfo( info )
+end
+
+function SWEP:RestrictMode( time )
+	local ct = CurTime()
+	if self:GetNextMode() - ct >= time then return end
+
+	self:SetNextMode( ct + time )
+end
+
+function SWEP:StopCamouflage()
+	if CLIENT or self:GetCamouflage() == 0 then return end
+
+	self:SetCamouflage( 0 )
+	self.CamouflageRestrict = nil
+
+	self:GetOwner():SetMaterial( "" )
+end
+
+function SWEP:CleanupTargets()
+	local owner = self:GetOwner()
+
+	for i, v in ipairs( player.GetAll() ) do
+		if v:GetProperty( "scp24273_player" ) != owner then continue end
+
+		controller.Stop( v )
+		v:SetProperty( "scp24273_target", nil, true )
+		v:SetProperty( "scp24273_player", nil )
+		v:SetProperty( "scp24273_time", nil )
+	end
+end
+
+function SWEP:OnPlayerKilled( ply )
+	AddRoundStat( "24273" )
+end
+
+function SWEP:GetView()
+	local ct = CurTime()
+
+	if self.SpectateFly >= ct then return end
+
+	if self:GetSpectateTime() >= ct then
+		local ent = self:GetSpectateEntity()
+		if IsValid( ent ) then
+			return ent
+		end
+	end
+
+	local owner = self:GetOwner()
+	return owner
+end
+
+local color_white = Color( 255, 255, 255 )
+function SWEP:DrawSCPHUD()
+	local ent = self:GetLookedAt()
+	if !IsValid( ent ) then return end
+
+	local w, h = ScrW() * 0.5, ScrH() * 0.5
+
+	draw.SimpleText( ent:Nick(), "SCPHUDMedium", w, h - 16, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_BOTTOM )
+	draw.SimpleText( math.floor( self:GetEvidence() * 100 ).."%", "SCPHUDMedium", w, h + 16, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP )
+end
+
+SWEP.CameraPath = nil
+function SWEP:CalcView( ply, cur_pos, cur_ang )
+	if self.CameraReset then
+		self.CameraReset = false
+
+		self.CameraSegment = 2
+
+		self.CameraPosition = nil
+		self.CameraAngle = nil
+	end
+
+	if !self.CameraPath then
+		if self:GetSpectateTime() < CurTime() then return end
+
+		local target = self:GetSpectateEntity()
+		if !IsValid( target ) then return end
+				
+		return target:EyePos(), target:EyeAngles()
+	end
+
+	if !self.CameraPosition then
+		self.CameraPosition = cur_pos
+		self.CameraAngle = cur_ang
+	end
+
+	local target = self.CameraPath[self.CameraSegment]
+	if !target then
+		self.CameraPath = nil
+		return
+	end
+
+	local dt = FrameTime()
+	local dir = target - self.CameraPosition
+	dir:Normalize()
+	
+	local prev_ang = self.CameraAngle
+	local ang = dir:Angle()
+
+	self.CameraPosition = self.CameraPosition + dir * self.SpectateSpeed * dt
+	self.CameraAngle = LerpAngle( dt * 4, prev_ang, ang )
+
+	if self.CameraPosition:Distance( target ) < 30 then
+		self.CameraSegment = self.CameraSegment + 1
+	end
+
+	return self.CameraPosition, self.CameraAngle
+end
+
+--[[-------------------------------------------------------------------------
+Net
+---------------------------------------------------------------------------]]
+if SERVER then
+	net.AddTableChannel( "SCP24273Path" )
+end
+
+if CLIENT then
+	net.ReceiveTable( "SCP24273Path", function( data )
+		local ply = LocalPlayer()
+		local wep = ply:GetSCPWeapon()
+		if !IsValid( wep ) then return end
+
+		wep.CameraReset = true
+		wep.CameraPath = data
+	end )
+end
+
+--[[-------------------------------------------------------------------------
+SCP Hooks
+---------------------------------------------------------------------------]]
+//lua_run ClearSCPHooks() EnableSCPHook("SCP24273") TransmitSCPHooks()
+SCPHook( "SCP24273", "EntityTakeDamage", function( target, dmg )
+	if dmg:IsDamageType( DMG_DIRECT ) or !IsValid( target ) or !target:IsPlayer() or target:SCPClass() != CLASSES.SCP24273 then return end
+	
+	local wep = target:GetSCPWeapon()
+	if !IsValid( wep ) then return end
+
+	if wep:GetGhost() != 0 and !dmg:IsDamageType( DMG_BLAST ) and !dmg:IsDamageType( DMG_FALL ) then return true end
+	if !dmg:IsDamageType( DMG_BULLET ) then return end
+
+	wep:StopCamouflage()
+
+	if wep:GetMode() then
+		local def = 1 - wep:GetUpgradeMod( "p_prot", wep.PPassiveDefense )
+
+		if wep:GetSpectateTime() > CurTime() then
+			def = def - wep:GetUpgradeMod( "spect_prot", wep.SpectateDefense )
+		end
+
+		if def < 0.1 then
+			def = 0.1
+		end
+
+		dmg:ScaleDamage( def )
+	elseif wep:GetSpecial() >= CurTime() then
+		dmg:ScaleDamage( 1 - wep:GetUpgradeMod( "special_prot", wep.SpecialDefense ) )
 	end
 end )
 
-InstallUpgradeSystem( "scp24273", SWEP )
+SCPHook( "SCP24273", "CalcMainActivity", function( ply, speed )
+	if ply:SCPClass() != CLASSES.SCP24273 then return end
+
+	local wep = ply:GetSCPWeapon()
+	if !IsValid( wep ) then return end
+
+	local spectate = wep:GetSpectateTime()
+	if spectate == 0 then return end
+
+	local ct = CurTime()
+	local seq, dur = ply:LookupSequence( spectate > 0 and "stary_spi" or "stary_wstal" )
+
+	if spectate < 0 then
+		spectate = -spectate
+	end
+
+	if dur == 0 then
+		dur = 3
+	end
+
+	local f = math.Clamp( ( wep:GetSpectateDuration() - ( spectate - ct ) ) / dur, 0, 1 )
+
+	ply:SetCycle( f )
+	return ACT_INVALID, seq
+end )
+
+SCPHook( "SCP24273", "DoAnimationEvent", function( ply, event, data )
+	if ply:SCPClass() != CLASSES.SCP24273 then return end
+
+	if event == PLAYERANIMEVENT_CUSTOM_SEQUENCE and data == 1001 then
+		local seq = ply:LookupSequence( "stary_skacze" )
+		if seq == -1 then return end
+		ply:AddVCDSequenceToGestureSlot( GESTURE_SLOT_ATTACK_AND_RELOAD, seq, 0, true )
+		return ACT_INVALID
+	end
+end )
+
+SCPHook( "SCP24273", "SLCPlayerFootstep", function( ply, foot, snd )
+	if ply:SCPClass() != CLASSES.SCP24273 then return end
+
+	local wep = ply:GetSCPWeapon()
+	if !IsValid( wep ) or wep:GetCamouflage() == 0 then return end
+
+	return true
+end )
+
+SCPHook( "SCP24273", "CanPlayerSeePlayer", function( lp, other )
+	if lp:SCPClass() != CLASSES.SCP24273 then return end
+
+	local wep = lp:GetSCPWeapon()
+	if !IsValid( wep ) or wep:GetSpectateTime() == 0 then return end
+
+	if wep:GetSpectateEntity() == other then return false end
+end )
+
+SCPHook( "SCP24273", "SetupPlayerVisibility", function( ply, ve )
+	if ply:SCPClass() != CLASSES.SCP24273 then return end
+
+	local ct = CurTime()
+	local wep = ply:GetSCPWeapon()
+	if !IsValid( wep ) or wep:GetSpectateTime() < ct then return end
+
+	if wep.SpectateFly < ct then
+		local target = wep:GetSpectateEntity()
+		if IsValid( target ) then
+			AddOriginToPVS( target:EyePos() )
+		end
+
+		return
+	end
+
+	local act = wep.SpectateActivePath
+	local time = wep.SpectatePathTime
+
+	while time[act] and time[act][1] < ct do
+		act = act + 1
+	end
+
+	if !time[act] then return end
+
+	AddOriginToPVS( time[act][2] )
+end )
+
+if CLIENT then
+	local brain_beam = Material( "slc/misc/escort_marker.png", "smooth" )
+	local drain_color = Color( 140, 60, 180 )
+
+	SCPHook( "SCP24273", "PreDrawEffects", function()
+		local ply = LocalPlayer()
+		if ply:SCPClass() != CLASSES.SCP24273 then return end
+
+		local wep = ply:GetSCPWeapon()
+		if !IsValid( wep ) or wep:GetDrain() <= 0 then return end
+
+		local target = wep:GetDrainTarget()
+		if !IsValid( target ) then return end
+
+		local ply_pos = ply:GetPos() + ply:OBBCenter()
+		local target_pos = target:GetPos() + target:OBBCenter()
+
+		render.SetMaterial( brain_beam )
+		render.DrawBeam( ply_pos, target_pos, 1, 0, 1, drain_color )
+
+		return
+	end )
+end
+
+--[[-------------------------------------------------------------------------
+Upgrade system
+---------------------------------------------------------------------------]]
+local icons = {}
+
+if CLIENT then
+	icons.passive = GetMaterial( "slc/hud/upgrades/scp/24273/passive.png", "smooth" )
+	icons.camo = GetMaterial( "slc/hud/upgrades/scp/24273/camo.png", "smooth" )
+	icons.dash = GetMaterial( "slc/hud/upgrades/scp/24273/dash.png", "smooth" )
+	icons.spect = GetMaterial( "slc/hud/upgrades/scp/24273/spect.png", "smooth" )
+	icons.drain = GetMaterial( "slc/hud/upgrades/scp/24273/drain.png", "smooth" )
+	icons.ghost = GetMaterial( "slc/hud/upgrades/scp/24273/ghost.png", "smooth" )
+	icons.special = GetMaterial( "slc/hud/upgrades/scp/24273/special.png", "smooth" )
+	icons.combo = GetMaterial( "slc/hud/upgrades/scp/24273/combo.png", "smooth" )
+
+end
+
+DefineUpgradeSystem( "scp24273", {
+	grid_x = 5,
+	grid_y = 4,
+	upgrades = {
+		{ name = "j_passive1", cost = 2, req = {}, reqany = false, pos = { 1, 1 },
+			mod = { j_mult = 0.9, j_loss = 0.4 }, icon = icons.passive },
+		{ name = "j_passive2", cost = 2, req = { "j_passive1" }, block = { "p_passive2" }, reqany = false, pos = { 1, 2 },
+			mod = { j_mult = 1.2, j_loss = 0.25 }, icon = icons.passive },
+		{ name = "p_passive1", cost = 2, req = {}, reqany = false, pos = { 1, 3 },
+			mod = { p_prot = 0.4, p_slow = 0.3, p_rate = 0.06 }, icon = icons.passive },
+		{ name = "p_passive2", cost = 2, req = { "p_passive1" }, block = { "j_passive2" }, reqany = false, pos = { 1, 4 },
+			mod = { p_prot = 0.6, p_slow = 0.4, p_rate = 0.09 }, icon = icons.passive },
+
+		{ name = "dash1", cost = 1, req = {}, reqany = false, pos = { 2, 1 },
+			mod = { dash_cd = 0.9, dash_dmg = 1.1 }, icon = icons.dash },
+		{ name = "dash2", cost = 2, req = { "dash1" }, block = { "camo2" }, reqany = false, pos = { 2, 2 },
+			mod = { dash_cd = 0.75, dash_dmg = 1.25 }, icon = icons.dash },
+		{ name = "camo1", cost = 1, req = {}, reqany = false, pos = { 2, 3 },
+			mod = { camo_cd = 0.9, camo_limit = 100, camo_dur = 1.2 }, icon = icons.camo },
+		{ name = "camo2", cost = 1, req = { "camo1" }, block = { "dash2" }, reqany = false, pos = { 2, 4 },
+			mod = { camo_cd = 0.75, camo_limit = 250, camo_dur = 1.5 }, icon = icons.camo },
+
+		{ name = "drain1", cost = 1, req = {}, reqany = false, pos = { 3, 1 },
+			mod = { drain_cd = 0.9, drain_dur = 0.85 }, icon = icons.drain },
+		{ name = "drain2", cost = 1, req = { "drain1" }, block = { "spect2" }, reqany = false, pos = { 3, 2 },
+			mod = { drain_cd = 0.8, drain_dur = 0.6 }, icon = icons.drain },
+		{ name = "spect1", cost = 1, req = {}, reqany = false, pos = { 3, 3 },
+			mod = { spect_cd = 0.9, spect_dur = 1.5, spect_prot = 0.2 }, icon = icons.spect },
+		{ name = "spect2", cost = 2, req = { "spect1" }, block = { "drain2" }, reqany = false, pos = { 3, 4 },
+			mod = { spect_cd = 0.8, spect_dur = 2, spect_prot = 0.3 }, icon = icons.spect },
+
+		{ name = "combo", cost = 1, req = {}, reqany = false, pos = { 4.5, 1 },
+			mod = { special_prot = 0.6, ghost_dur = 1.1 }, icon = icons.combo },
+		{ name = "spec", cost = 3, req = { "combo" }, block = { "ghost1" }, reqany = false, pos = { 4, 2 },
+			mod = { special_prot = 0.9, special_cd = 0.75, special_dur = 1.5 }, icon = icons.special },
+		{ name = "ghost1", cost = 1, req = { "combo" }, block = { "spec" }, reqany = false, pos = { 5, 2 },
+			mod = { ghost_dur = 1.2, ghost_cd = 0.9, ghost_heal = 1 }, icon = icons.ghost },
+		{ name = "ghost2", cost = 2, req = { "ghost1" }, reqany = false, pos = { 5, 3 },
+			mod = { ghost_dur = 1.5, ghost_cd = 0.8, ghost_heal = 1.5 }, icon = icons.ghost },
+
+		{ name = "change1", cost = 1, req = {}, reqany = false, pos = { 4, 3 },
+			mod = { change_cd = 0.66 }, icon = icons.passive },
+		{ name = "change2", cost = 1, req = { "change1" }, reqany = false, pos = { 4, 4 },
+			mod = { change_cd = 0.25 }, icon = icons.passive },
+
+		{ name = "outside_buff", cost = 1, req = {}, reqany = false, pos = { 5, 4 }, mod = {}, active = false },
+	},
+	rewards = { --15 + 1 points -> 60% = 10 (-1 base) = 9 points
+		{ 50, 1 },
+		{ 100, 1 },
+		{ 175, 1 },
+		{ 275, 1 },
+		{ 375, 1 },
+		{ 500, 1 },
+		{ 750, 1 },
+		{ 900, 1 },
+		{ 1100, 1 },
+	}
+}, SWEP )
+
+--[[-------------------------------------------------------------------------
+SCP HUD
+---------------------------------------------------------------------------]]
+if CLIENT then
+	local hud = SCPHUDObject( "SCP24273", SWEP )
+	hud:AddCommonSkills()
+
+	hud:AddSkill( "primary" )
+		:SetButton( "attack" )
+		:SetMaterial( hud_materials.primary[1] )
+		:SetCooldownFunction( "GetNextPrimaryFire" )
+
+	hud:AddSkill( "secondary" )
+		:SetButton( "attack2" )
+		:SetMaterial( hud_materials.secondary[1] )
+		:SetCooldownFunction( "GetNextSecondaryFire" )
+
+	hud:AddSkill( "special" )
+		:SetButton( "scp_special" )
+		:SetMaterial( hud_materials.special[1] )
+		:SetCooldownFunction( "GetNextSpecialAttack" )
+
+	hud:AddSkill( "change" )
+		:SetOffset( 0.5 )
+		:SetButton( "reload" )
+		:SetMaterial( "slc/hud/scp/24273/passive.png", "smooth" )
+		:SetCooldownFunction( "GetNextMode" )
+
+	hud:AddBar( "camo_bar" )
+		:SetMaterial( "slc/hud/scp/24273/camo.png", "smooth" )
+		:SetColor( Color( 90, 225, 80 ) )
+		:SetTextFunction( function( swep, hud_obj, this )
+			return math.Round( this.last_time or 0 ).."s"
+		end )
+		:SetProgressFunction( function( swep, hud_obj, this )
+			local time = swep:GetCamouflage() - CurTime()
+			if time > 0 then
+				this.last_time = time
+			end
+
+			return ( this.last_time or 0 ) / swep.CamouflageDuration
+		end )
+		:SetVisibleFunction( function( swep )
+			return swep:GetCamouflage() != 0
+		end )
+
+	hud:AddBar( "spectate_bar" )
+		:SetMaterial( "slc/hud/scp/24273/spect.png", "smooth" )
+		:SetColor( Color( 33, 215, 160 ) )
+		:SetTextFunction( function( swep, hud_obj, this )
+			return math.Round( this.last_time or 0 ).."s"
+		end )
+		:SetProgressFunction( function( swep, hud_obj, this )
+			local time = swep:GetSpectateTime() - CurTime()
+			if time > 0 then
+				this.last_time = time
+				this.last_dur = swep:GetSpectateDuration()
+			end
+
+			return ( this.last_time or 0 ) / ( this.last_dur or 1 )
+		end )
+		:SetVisibleFunction( function( swep )
+			return swep:GetSpectateTime() >= CurTime()
+		end )
+
+	hud:AddBar( "drain_bar" )
+		:SetMaterial( "slc/hud/scp/24273/drain.png", "smooth" )
+		:SetColor( Color( 190, 50, 145 ) )
+		:SetTextFunction( function( swep, hud_obj, this )
+			return math.Round( this.last_time or 0 ).."s"
+		end )
+		:SetProgressFunction( function( swep, hud_obj, this )
+			local f = swep:GetDrain() - CurTime()
+			if f > 0 then
+				this.last_time = f
+			end
+
+			return ( this.last_time or 0 ) / swep.DrainTime
+		end )
+		:SetVisibleFunction( function( swep )
+			return swep:GetDrain() >= CurTime()
+		end )
+
+	hud:AddBar( "ghost_bar" )
+		:SetMaterial( "slc/hud/scp/24273/ghost.png", "smooth" )
+		:SetColor( Color( 30, 140, 15 ) )
+		:SetTextFunction( function( swep, hud_obj, this )
+			local time = swep:GetGhost() - CurTime()
+			if time < 0 then
+				time = 0
+			end
+
+			return math.Round( time ).."s"
+		end )
+		:SetProgressFunction( function( swep, hud_obj, this )
+			return ( swep:GetGhost() - CurTime() ) / swep.GhostDuration
+		end )
+		:SetVisibleFunction( function( swep )
+			return swep:GetGhost() != 0
+		end )
+
+	hud:AddBar( "special_bar" )
+		:SetMaterial( "slc/hud/scp/24273/special.png", "smooth" )
+		:SetColor( Color( 120, 40, 210 ) )
+		:SetTextFunction( function( swep, hud_obj, this )
+			local time = swep:GetSpecial() - CurTime()
+			if time < 0 then
+				time = 0
+			end
+
+			return math.Round( time ).."s"
+		end )
+		:SetProgressFunction( function( swep, hud_obj, this )
+			return ( swep:GetSpecial() - CurTime() ) / swep.SpecialDuration
+		end )
+		:SetVisibleFunction( function( swep )
+			return swep:GetSpecial() != 0
+		end )
+end
+
+--[[-------------------------------------------------------------------------
+Controllers
+---------------------------------------------------------------------------]]
+controller.Register( "scp24273_dash", {
+	OnStart = function( self, ply )
+		if SERVER then return end
+
+		local ang = ply:GetAngles()
+		ang.p = 0
+		ang.r = 0
+
+		self.DashDirection = ang:Forward()
+	end,
+	StartCommand = function( self, ply, cmd )
+		cmd:ClearButtons()
+		cmd:ClearMovement()
+	end,
+	Move = function( self, ply, mv )
+		local wep = ply:GetSCPWeapon()
+		if !IsValid( wep ) then return end
+
+		local vel = ( wep.DashDirection or self.DashDirection ) * 850
+
+		if ply:IsOnGround() then
+			vel.z = 251
+		end
+
+		mv:SetVelocity( vel )
+	end,
+} )
+
+controller.Register( "scp24273_follow", {
+	StartCommand = function( self, ply, cmd )
+		cmd:ClearButtons()
+		cmd:ClearMovement()
+
+		local target = ply:GetProperty( "scp24273_target" )
+		if !target then return end
+
+		cmd:SetButtons( IN_FORWARD )
+		cmd:SetForwardMove( 10000 )
+
+		//cmd:SetViewAngles( ( target - ply:EyePos() ):Angle() )
+	end,
+	Move = function( self, ply, mv )
+		local target = ply:GetProperty( "scp24273_target" )
+		if !target then return end
+
+		local dir = target - mv:GetOrigin()
+		dir.z = 0
+
+		//dir:Normalize()
+		
+		mv:SetMoveAngles( dir:Angle() )
+		//mv:SetVelocity( dir * mv:GetMaxSpeed() )
+	end,
+} )

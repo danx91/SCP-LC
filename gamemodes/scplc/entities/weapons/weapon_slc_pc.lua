@@ -194,8 +194,8 @@ function SWEP:OnDrop()
 		self:StopSequence()
 	end
 
-	//self:StopSound( "particle_cannon.shot" )
-	//self:StopSound( "particle_cannon.windup1" )
+	self:StopSound( "particle_cannon.shot" )
+	self:StopSound( "particle_cannon.windup1" )
 end
 
 function SWEP:PrimaryAttack()
@@ -280,7 +280,7 @@ if CLIENT then
 				t = 0
 			end
 
-			c_speed = Lerp( 1 - (t / 2), self.Speed, 0 )
+			c_speed = Lerp( 1 - ( t / 2 ), self.Speed, 0 )
 		elseif state == STATE.IDLE then
 			self.Speed = 0
 		end
@@ -465,3 +465,5 @@ sound.Add{
 	pitch = 100,
 	channel = CHAN_STATIC,
 }
+
+MarkAsWeapon( "weapon_slc_pc" )

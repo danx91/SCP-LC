@@ -50,37 +50,19 @@ function SWEP:SetupDataTables()
 	if self.HasBattery then self:AddNetworkVar( "Battery", "Int" ) self:SetBattery( 100 ) end
 	if self.Stacks > 1 then self:AddNetworkVar( "Count", "Int" ) self:SetCount( 1 ) end
 	if self.Durability > 0 then self:AddNetworkVar( "Durability", "Int" ) self:SetDurability( self.Durability ) end
-
-	/*self:AddNetworkVar( "DebugOwner", "Entity" )
-	if CLIENT then
-		self:NetworkVarNotify( "DebugOwner", self.DebugOwnerChanged )
-	end*/
 end
 
-/*function SWEP:DebugOwnerChanged( name, old, new )
-	if CLIENT then
-		if new != old then
-			if IsValid( new ) and new:EntIndex() != 0 then
-				self:Equip()
-			else
-				self:OnDrop()
-			end
-		end
-	end
-end*/
-
 function SWEP:InitializeLanguage()
-	if CLIENT and self.Language then
-		self.Lang = LANG.WEAPONS[self.Language] or {}
+	if SERVER or !self.Language then return end
 
-		if self.Lang then
-			self.PrintName = self.Lang.name or self.PrintName
-			self.PickupName = self.Lang.pickupname
-			self.ShowName = self.Lang.showname
-			self.Author	= self.Lang.author
-			self.Info = self.Lang.info
-		end
-	end
+	self.Lang = LANG.WEAPONS[self.Language] or {}
+	if !self.Lang then return end
+
+	self.PrintName = self.Lang.name or self.PrintName
+	self.PickupName = self.Lang.pickupname
+	self.ShowName = self.Lang.showname
+	self.Author	= self.Lang.author
+	self.Info = self.Lang.info
 end
 
 function SWEP:Initialize()
@@ -90,6 +72,19 @@ end
 
 function SWEP:OnSelect()
 	
+end
+
+function SWEP:CanEnable()
+	if !self.UseGroup then return true end
+
+	local owner = self:GetOwner()
+	if !IsValid( owner ) then return false end
+
+	for i, v in ipairs( owner:GetWeapons() ) do
+		if v != self and v.UseGroup == self.UseGroup and v.Toggleable and v:GetEnabled() then return false end
+	end
+
+	return true
 end
 
 function SWEP:Deploy()
@@ -112,25 +107,21 @@ function SWEP:Holster( wep )
 end
 
 function SWEP:OwnerChanged()
-	if CLIENT then
-		if IsValid( self:GetOwner() ) then
-			self:Equip()
-		else
-			self:OnDrop()
-		end
+	if SERVER then return end
+
+	if IsValid( self:GetOwner() ) then
+		self:Equip()
+	else
+		self:OnDrop()
 	end
 end
 
 function SWEP:Equip()
-	/*if SERVER then
-		self:SetDebugOwner( self:GetOwner() )
-	end*/
+	
 end
 
 function SWEP:OnDrop()
-	/*if SERVER then
-		self:SetDebugOwner( Entity( 0 ) )
-	end*/
+	
 end
 
 function SWEP:HolsterThink()
@@ -144,23 +135,19 @@ function SWEP:Think()
 end
 
 function SWEP:BatteryTick()
-	if SERVER and self.HasBattery then
-		if !self.Toggleable or self:GetEnabled() then
-			if self.NBatteryTake < CurTime() then
-				self.NBatteryTake = CurTime() + self.BatteryUsage
+	if CLIENT or !self.HasBattery or self.BatteryUsage <= 0 or ( self.Toggleable and !self:GetEnabled() ) then return end
+	if self.NBatteryTake > CurTime() then return end
 
-				local battery = self:GetBattery()
+	self.NBatteryTake = CurTime() + self.BatteryUsage
 
-				if battery > 0 then
-					self:SetBattery( battery - 1 )
-				end
+	local battery = self:GetBattery()
+	if battery > 0 then
+		self:SetBattery( battery - 1 )
+	end
 
-				if battery <= 0 and self.Toggleable then
-					self:SetEnabled( false )
-					self:BatteryDepleted()
-				end
-			end
-		end
+	if battery <= 0 and self.Toggleable then
+		self:SetEnabled( false )
+		self:BatteryDepleted()
 	end
 end
 
@@ -207,24 +194,21 @@ function SWEP:EquipAmmo( ply )
 	end
 end
 
-function SWEP:DragAndDrop( wep )
-	if self.HasBattery and wep:GetClass() == "item_slc_battery" then
-		if SERVER then
-			if self:GetBattery() < 100 then
-				self:SetBattery( 100 )
+function SWEP:DragAndDrop( wep, test )
+	if !self.HasBattery or wep:GetClass() != "item_slc_battery" then return false end
+	
+	if self:GetBattery() >= 100 then return false end
+	if !SERVER or test then return true end
 
-				if wep:GetCount() <= 1 then
-					wep:Remove()
-				else
-					wep:RemoveStack()
-				end
-			end
-		end
-
-		return true
+	self:SetBattery( 100 )
+	
+	if wep:GetCount() <= 1 then
+		wep:Remove()
+	else
+		wep:RemoveStack()
 	end
 
-	return false
+	return true
 end
 
 function SWEP:Damage( dmg )
@@ -242,6 +226,7 @@ end
 function SWEP:StoreWeapon( data )
 	if self.Stacks > 1 then
 		data.amount = self:GetCount()
+		data.stacks = self:GetCount()
 	end
 
 	if self.HasBattery then
@@ -250,9 +235,9 @@ function SWEP:StoreWeapon( data )
 end
 
 function SWEP:RestoreWeapon( data )
-	/*if data.stacks then
+	if data.stacks then
 		self:SetCount( data.stacks )
-	end*/
+	end
 
 	if data.battery then
 		self:SetBattery( data.battery )

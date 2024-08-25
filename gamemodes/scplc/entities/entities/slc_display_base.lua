@@ -55,10 +55,6 @@ if CLIENT then
 	function ENT:Draw()
 		self:DrawModel()
 
-		//debugoverlay.BoxAngles( self:GetPos(), Vector( -2.5, -37.5, -6 ), Vector( -0.5, 8, 24 ), self:GetAngles(), 0, Color( 255, 255, 255, 0 ) )
-		//debugoverlay.Axis( self:GetPos() + Vector( -0.3, -35.8, 23 ), self:GetAngles(), 3, 0, false )
-		//debugoverlay.Axis( self:GetPos() + Vector( -0.3, -1, -4.5 ), self:GetAngles(), 3, 0, false )
-
 		local ang = self:GetAngles()
 		local pos = self:GetPos()
 

@@ -6,6 +6,9 @@ local hitmarker = 0
 function ShowHitMarker()
 	if GetSettingsValue( "hud_hitmarker" ) then
 		hitmarker = 255
+
+		if GetSettingsValue( "hud_hitmarker_mute" ) then return end
+
 		timer.Simple( 0.05, function()
 			surface.PlaySound( "scp_lc/misc/hitmarker.ogg" )
 		end )
@@ -15,7 +18,7 @@ end
 --[[-------------------------------------------------------------------------
 Damage indicator
 ---------------------------------------------------------------------------]]
-local mat_full_dmg_ind = Material( "slc/hud/full_dmg_ind.png" )
+local mat_full_dmg_ind = Material( "slc/hud/full_dmg_ind.png", "smooth" )
 local mat_dmg_ind = Material( "slc/hud/dmg_ind.png", "smooth" )
 
 local full_dmg_a = 0
@@ -42,9 +45,9 @@ function ShowDamageIndicator( dmg, dx, dy )
 		local len = math.sqrt( dx * dx + dy * dy )
 		local x, y = dx / len, dy / len
 
-		local head = ind_list:Head()
-		if head and head.x == x and head.y == y then
-			head.dietime = rt + math.Clamp( head.dietime - rt + dmg / ind_mid * indicator_duration, indicator_duration * ind_min, indicator_duration * ind_max )
+		local tail = ind_list:Tail()
+		if tail and tail.x == x and tail.y == y then
+			tail.dietime = rt + math.Clamp( tail.dietime - rt + dmg / ind_mid * indicator_duration, indicator_duration * ind_min, indicator_duration * ind_max )
 		else
 			if ind_list:Size() >= indicator_max then
 				ind_list:PopFront()
@@ -111,7 +114,7 @@ hook.Add( "SLCPostDrawHUD", "SLCDamage", function()
 			eye_ang = 360 + eye_ang
 		end
 
-		if ind_list:Tail().dietime <= rt then
+		if ind_list:Head().dietime <= rt then
 			ind_list:PopFront()
 		end
 
@@ -133,6 +136,7 @@ hook.Add( "SLCPostDrawHUD", "SLCDamage", function()
 end )
 
 hook.Add( "SLCRegisterSettings", "SLCSCPDamageHUDSettings", function()
-	RegisterSettingsEntry( "hud_hitmarker", "switch", true )
-	RegisterSettingsEntry( "hud_damage_indicator", "switch", true )
+	RegisterSettingsEntry( "hud_hitmarker", "switch", true, nil, "hud_config" )
+	RegisterSettingsEntry( "hud_hitmarker_mute", "switch", false, nil, "hud_config" )
+	RegisterSettingsEntry( "hud_damage_indicator", "switch", true, nil, "hud_config" )
 end )

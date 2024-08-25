@@ -15,6 +15,7 @@ SWEP.ShouldDrawWorldModel 	= false
 
 SWEP.SelectFont = "SCPHUDMedium"
 
+SWEP.UseGroup = "vision"
 SWEP.Toggleable = true
 SWEP.HasBattery = true
 SWEP.BatteryUsage = 2
@@ -56,7 +57,7 @@ function SWEP:Think()
 		end
 	end
 
-	local status = self:GetOwner():UpdateHold( "cctv_scan", self )
+	local status = self:GetOwner():UpdateHold( self, "cctv_scan" )
 	if status == false then
 		self.ScanCD = CurTime() + 1
 		
@@ -73,7 +74,7 @@ end
 function SWEP:PrimaryAttack()
 	if !SERVER then return end
 	if self.NextChange > CurTime() then return end
-	if self:GetBattery() <= 0 then return end
+	if self:GetBattery() <= 0 or !self:CanEnable() then return end
 
 	self:SetEnabled( !self:GetEnabled() )
 	self.NextChange = CurTime() + 0.5
@@ -99,9 +100,9 @@ function SWEP:Reload()
 	if self.ScanCD > CurTime() then return end
 
 	local owner = self:GetOwner()
-	if owner:IsHolding( "cctv_scan", self ) then return end
+	if owner:IsHolding( self, "cctv_scan" ) then return end
 	
-	owner:StartHold( "cctv_scan", IN_RELOAD, 1.5, nil, self )
+	owner:StartHold( self, "cctv_scan", IN_RELOAD, 1.5 )
 	self:SetBattery( self:GetBattery() - 1 )
 end
 
@@ -236,14 +237,14 @@ function SWEP:DrawHUD()
 				local ry = math.random( h )
 				local nh = math.random( 1, 5 )
 				local c = math.random( 100, 200 )
-				local a = math.random( 0, 10 )
+				local a = math.random( 1, 10 )
 
 				surface.SetDrawColor( c, c, c, a )
 				surface.DrawRect( 0, ry, w, nh )
 			end
 		--end
 
-		local progress = self:GetOwner():HoldProgress( "cctv_scan", self )
+		local progress = self:GetOwner():HoldProgress( self, "cctv_scan" )
 		if progress then
 			surface.SetDrawColor( 255, 255, 255 )
 			surface.DrawRing( w * 0.5, h * 0.5, 40, 5, 360 * progress, 30 )
@@ -278,7 +279,7 @@ function SWEP:DrawHUD()
 
 			surface.SetDrawColor( 175 * ( 1 - pct ), 175 * pct, 0, 255 )
 			//surface.DrawRect( w * 0.878, h * 0.029, w * 0.084 * pct, h * 0.043 )
-			surface.DrawRect( w * 0.875 + 4, h * 0.025 + 4, (w * 0.09 - 8) * pct, h * 0.05 - 8 )
+			surface.DrawRect( w * 0.875 + 4, h * 0.025 + 4, ( w * 0.09 - 8 ) * pct, h * 0.05 - 8 )
 
 			if battery < 15 then
 				surface.SetDrawColor( 255, 0, 0, math.TimedSinWave( 0.5, 0, 255 ) )

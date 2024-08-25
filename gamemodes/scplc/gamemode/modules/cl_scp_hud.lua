@@ -1,267 +1,516 @@
 SLC_SCP_HUD = SLC_SCP_HUD or {}
 
-/*
-data = {
-	name = "",
-	language = "", --same as name by default
-	skills = {
-		{
-			name = "name",
-			pos = 1,
-			material = "path/to/material",
-			button = "button_name", --will be checked in this order: settings entry, bind, key
-			cooldown = "key_to_watch", --or function
-			show = "key_to_watch", --or function
-			text = "key_to_watch", --or function
-			active = "key_to_watch", --or function
-		},
-		...
-	}
-}
-*/
-
 --[[-------------------------------------------------------------------------
-SCP Skill Object
+Locals
 ---------------------------------------------------------------------------]]
-local SCPSkillObject = {}
+local color_white = Color( 255, 255, 255 )
+local color_black = Color( 0, 0, 0 )
+local color_red = Color( 200, 25, 45 )
+local color_green = Color( 25, 200, 45 )
+local color_cooldown = Color( 0, 0, 0, 240 )
 
-function SCPSkillObject:SetCooldown( start_time, end_time )
-	if end_time then
-		self.cd_start = start_time
-		self.cd_end = end_time
+local mat_bar = Material( "slc/hud/scp/scp_bar.png", "smooth" )
+local mat_bar_fill = Material( "slc/hud/scp/scp_bar_fill.png", "smooth" )
+
+local bar_ratio = mat_bar:Width() / mat_bar:Height()
+
+local data_functions = {
+	"Text",
+	"Visible",
+	"Cooldown",
+	"Progress",
+	"Active",
+	"Higlight", --TODO make higlight effect
+}
+--[[-------------------------------------------------------------------------
+SCPSkillObjectInstance
+---------------------------------------------------------------------------]]
+local SCPSkillObjectInstance = {}
+
+function SCPSkillObjectInstance:IsOnCooldown()
+	return self.CooldownTime > 0 and self.Cooldown >= CurTime()
+end
+
+function SCPSkillObjectInstance:SetColorOverride( col )
+	self.Color = col
+	return self
+end
+
+function SCPSkillObjectInstance:SetMaterialOverride( mat, args )
+	if type( mat ) == "string" then
+		self.Material = GetMaterial( mat, args )
 	else
-		local ct = CurTime()
+		self.Material = mat
+	end
 
-		self.cd_start = ct
-		self.cd_end = ct + start_time
+	return self
+end
+
+function SCPSkillObjectInstance:ParseButton()
+	local name = self.Data.Button
+	if !name then return end
+
+	local btn = GetBindButton( name ) or input.LookupBinding( name ) or name
+
+	if isnumber( btn ) then
+		self.Button = btn
+	elseif isstring( btn ) then
+		self.Button = input.GetKeyCode( btn )
+	end
+
+	self.ButtonName = input.GetKeyName( self.Button )
+end
+
+function SCPSkillObjectInstance:ButtonPressed()
+	if !self.Visible then return end
+
+	if !self.Active then
+		self.HUD:Notify( "skill_cant_use", 1, "npc/roller/code2.wav" )
+	elseif self:IsOnCooldown() then
+		self.HUD:Notify( "skill_not_ready", 1, "npc/roller/code2.wav" )
 	end
 end
 
-function SCPSkillObject:SetInactive( bool )
-	self.inactive = !!bool
-end
+function SCPSkillObjectInstance:Description( x, y, w, h )
+	if !vgui.CursorVisible() then return end
 
-function SCPSkillObject:GetName()
-	return self.name
-end
+	local data = self.Data
+	local mx, my = input.GetCursorPos()
+	if mx < x or mx > x + w or my < y or my > y + h then
+		self.Info = nil
+		return
+	end
 
-function SCPSkillObject:IsOnCooldown()
-	return self.cd_end > self.cd_start and self.cd_end >= CurTime()
-end
+	if self.Info then
+		SLCToolTip( self.Info )
+		return
+	end
 
+	if self.Info != nil then return end
 
-function SCPSkillObject:ParseButton()
-	if self.data_button then
-		local btn = GetBindButton( self.data_button ) or input.LookupBinding( self.data_button ) or self.data_button
-		local t = type( btn )
+	local lang = self.Lang or LANG.CommonSkills[data.Name]
+	local txt = data.Parser and data.Parser( self.HUD.Weapon, lang )
 
-		if t == "number" then
-			self.button = btn
-		elseif t == "string" then
-			self.button = input.GetKeyCode( btn )
-		end
+	if istable( txt ) then
+		local mb = MarkupBuilder()
+		mb:PushFont( "SCPHUDSmall" )
+		mb:Print( lang.name )
+		mb:Print( "\n" )
+		mb:Print( string.gsub( lang.dsc, "%[(.-)%]", txt ), nil )
 
-		self.button_name = input.GetKeyName( self.button )
+		txt = mb:ToString()
+	end
+
+	if !txt and lang then
+		local mb = MarkupBuilder()
+		mb:PushFont( "SCPHUDSmall" )
+		mb:Print( lang.name )
+		mb:Print( "\n" )
+		mb:Print( lang.dsc )
+
+		txt = mb:ToString()
+	end
+
+	if txt then
+		self.Info = markup.Parse( txt, ScrW() * 0.333 )
+	else
+		self.Info = false
 	end
 end
 
-local COLOR = {
-	white = Color( 255, 255, 255, 255 ),
-	inactive = Color( 100, 100, 100, 255 ),
-	cooldown = Color( 0, 0, 0, 240 ),
-	notification = Color( 200, 200, 200, 255 ),
-}
+function SCPSkillObjectInstance:UpdateDataFunctions()
+	local swep = self.HUD.Weapon
 
-local to_watch = {
-	"show",
-	"cooldown",
-	"text",
-	"active",
-}
-
-function SCPSkillObject:Render( swep )
-	local values = self.last_watch_values
-
-	for k, v in pairs( to_watch ) do
+	for i, fn_name in ipairs( data_functions ) do
+		local data_fn = self.Data[fn_name.."Function"]
+		local data_str = self.Data[fn_name.."Watch"]
 		local value
-		local func = self[v.."_func"]
-		local key = self[v.."_key"]
 
-		if func then
-			value = func( swep )
-		elseif key then
-			local data = swep[key]
-			local key_type = self[v.."_type"]
-
-			if !key_type then
-				key_type = type( data )
-				self[v.."_type"] = key_type
-			end
-
-			if key_type == "number" then
-				value = data
-			elseif key_type == "function" then
-				value = data( swep )
+		if data_fn then
+			value = data_fn( swep, self.HUD, self )
+		elseif data_str then
+			if isfunction( swep[data_str] ) then
+				value = swep[data_str]( swep )
+			else
+				value = swep[data_str]
 			end
 		end
 
-		local last = self.last_watch_values[v]
-		if last != nil then
-			if value != last then
-				if v == "show" then
-					self.visible = !!value
+		//if !value then continue end
 
-					if !value then
-						return
-					end
-				elseif v == "active" then
-					self:SetInactive( !value )
-				elseif v == "cooldown" then
-					if value == 0 then
-						self:SetCooldown( 0, 0 )
-					else
-						self:SetCooldown( CurTime(), value )
-					end
-				elseif v == "text" then
-					/*if value != "" then
-						self.display_text = value
-					end*/
-				end
+		local old = self.WatchTable[fn_name]
+		if value == old then continue end
+
+		if fn_name == "Text" then
+			self.Text = value != nil and tostring( value ) or nil
+		elseif fn_name == "Visible" then
+			self.Visible = !!value
+		elseif fn_name == "Cooldown" then
+			value = tonumber( value ) or 0
+
+			if value == 0 then
+				self.Cooldown = 0
+				self.CooldownTime = 0
+			else
+				self.Cooldown = value
+				self.CooldownTime = value - CurTime()
 			end
+		elseif fn_name == "Progress" then
+			self.Progress = tonumber( value )
+		elseif fn_name == "Active" then
+			self.Active = !!value
+		elseif fn_name == "Higlight" then
+			self.Higlight = !!value
 		end
 
-		values[v] = value
+		self.WatchTable[fn_name] = value
 	end
+end
+
+function SCPSkillObjectInstance:Draw( x, y, s )
+	self:UpdateDataFunctions()
+
+	if !self.Visible then return end
+	local data = self.Data
+	local mat = self.Material or data.Material
+
+	local cd_pct, cd_text
+
+	if self.Progress then
+		cd_pct = math.Clamp( self.Progress, 0, 1 )
+		cd_text = math.Round( cd_pct * 100 ).."%"
+	elseif self.CooldownTime > 0 and self.Cooldown > CurTime() then
+		local cd = self.Cooldown - CurTime()
+		cd_pct = math.Clamp( 1 - cd / self.CooldownTime, 0, 1 )
+		cd_text = cd > 1 and math.floor( cd ) or string.format( "%.1f", cd )
+	end
+
+	if mat then
+		if cd_pct or self.Active then
+			surface.SetDrawColor( 255, 255, 255 )
+		else
+			surface.SetDrawColor( 75, 75, 75 )
+		end
+
+		surface.SetMaterial( mat )
+		surface.DrawTexturedRect( x, y, s, s )
+	end
+
+	if cd_pct then
+		draw.NoTexture()
+		surface.SetDrawColor( color_cooldown )
+		surface.DrawCooldownRectCW( x, y, s, s, 1 - cd_pct )
+
+		if cd_text and GetSettingsValue( "scp_hud_skill_time" ) then
+			draw.SimpleText( cd_text, "SCPScaledHUDSmall_Blur", x + s * 0.5, y + s * 0.5, color_black, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+			draw.SimpleText( cd_text, "SCPScaledHUDSmall", x + s * 0.5, y + s * 0.5, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+		end
+	end
+
+	if cd_pct or self.Active then
+		surface.SetDrawColor( 255, 255, 255 )
+	else
+		surface.SetDrawColor( 75, 75, 75 )
+	end
+	surface.DrawOutlinedRect( x, y, s, s )
 
 	self:ParseButton()
 
-	local scale = GetHUDScale()
-	local sw, sh = ScrW(), ScrH()
-
-	local w = sw * scale
-	local h = sh * scale
-	local addy = sh - h
-
-	local dist = w * 0.03
-	local size = w * 0.04
-	local margin = h * 0.015
-
-	local total_w = ( size + margin ) * self.hud_object.max_pos - margin
-	local start_x = sw * 0.5 - total_w * 0.5
-
-	if start_x < SLC_HUD_END_X + dist then
-		start_x = SLC_HUD_END_X + dist
+	if self.ButtonName then
+		draw.SimpleText( LANG.MISC.buttons[self.ButtonName] or string.upper( self.ButtonName ), "SCPScaledHUDVSmall_Blur", x + s - 8, y + s, color_black, TEXT_ALIGN_RIGHT, TEXT_ALIGN_BOTTOM )
+		draw.SimpleText( LANG.MISC.buttons[self.ButtonName] or string.upper( self.ButtonName ), "SCPScaledHUDVSmall_Blur", x + s - 8, y + s, color_black, TEXT_ALIGN_RIGHT, TEXT_ALIGN_BOTTOM )
+		draw.SimpleText( LANG.MISC.buttons[self.ButtonName] or string.upper( self.ButtonName ), "SCPScaledHUDVSmall", x + s - 8, y + s, color_white, TEXT_ALIGN_RIGHT, TEXT_ALIGN_BOTTOM )
 	end
 
-	local draw_x = start_x + ( size + margin ) * ( self.pos - 1 )
-	local draw_y = h - margin - size + addy
-
-	surface.SetDrawColor( self.inactive and COLOR.inactive or COLOR.white )
-	surface.SetMaterial( self.material )
-	surface.DrawTexturedRect( draw_x, draw_y, size, size )
-
-	local ct = CurTime()
-	if self.cd_end >= ct then
-		local dur = self.cd_end - self.cd_start
-		local left = self.cd_end - ct
-
-		if dur > 0 then
-			draw.NoTexture()
-			surface.SetDrawColor( COLOR.cooldown )
-			surface.DrawCooldownRectCW( draw_x, draw_y, size, size, left / dur )
-		end
-
-		if GetSettingsValue( "scp_hud_skill_time" ) then
-			draw.Text( {
-				text = left > 1 and math.floor( left ) or string.format( "%.1f", left ),
-				font = "SCPHUDMedium",
-				color = COLOR.white,
-				pos = { draw_x + size / 2, draw_y + size / 2 },
-				xalign = TEXT_ALIGN_CENTER,
-				yalign = TEXT_ALIGN_CENTER,
-			} )
-		end
+	if self.Text then
+		draw.SimpleText( self.Text, "SCPScaledHUDVSmall_Blur", x + s - 8, y, color_black, TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP )
+		draw.SimpleText( self.Text, "SCPScaledHUDVSmall_Blur", x + s - 8, y, color_black, TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP )
+		draw.SimpleText( self.Text, "SCPScaledHUDVSmall", x + s - 8, y, color_white, TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP )
 	end
 
-	if values.text and values.text != "" then
-		draw.LimitedText( {
-			text = values.text,
-			font = "SCPScaledHUDSmall",
-			color = COLOR.white,
-			pos = { draw_x + size - 8, draw_y },
-			xalign = TEXT_ALIGN_RIGHT,
-			yalign = TEXT_ALIGN_TOP,
-			max_width = size,
-		} )
-	end
-
-	local btn_name = self.button_name
-	if btn_name then
-		draw.Text( {
-			text = LANG.MISC.buttons[btn_name] or string.upper( btn_name ),
-			font = "SCPScaledHUDSmall",
-			color = COLOR.white,
-			pos = { draw_x + size - 8, draw_y + size },
-			xalign = TEXT_ALIGN_RIGHT,
-			yalign = TEXT_ALIGN_BOTTOM,
-		} )
-	end
-
-	surface.SetDrawColor( self.inactive and COLOR.inactive or COLOR.white )
-	surface.DrawOutlinedRect( draw_x - 1, draw_y - 1, size + 2, size + 2 )
-
-	if vgui.CursorVisible() then
-		local mx, my = input.GetCursorPos()
-
-		if mx >= draw_x and mx <= draw_x + size and my >= draw_y and my <= draw_y + size then
-			self.hud_object.draw_info = self.name
-		end
-	end
-
-	return draw_x, draw_y, size
+	self:Description( x, y, s, s )
 end
 
-local function CreateSCPSkillObject( data )
-	local tab = setmetatable( {
-		name = data.name,
-		material = GetMaterial( data.material, "smooth" ),
-		cd_start = 0,
-		cd_end = 0,
-		pos = data.pos,
-		data_button = data.button,
-		inactive = false,
-		visible = true,
-		last_watch_values = {},
-	}, { __index = SCPSkillObject } )
+function SCPSkillObjectInstance:DrawBar( x, y, h )
+	self:UpdateDataFunctions()
 
-	for k, v in pairs( to_watch ) do
-		local watch_t = type( data[v] )
-		if watch_t == "string" then
-			tab[v.."_key"] = data[v]
-		elseif watch_t == "function" then
-			tab[v.."_func"] = data[v]
+	if !self.Visible then
+		self.Alpha = math.Approach( self.Alpha, 0, RealFrameTime() * 1.5 )
+		if self.Alpha == 0 then
+			return false
 		end
+	else
+		self.Alpha = math.Approach( self.Alpha, 1, RealFrameTime() * 2 )
 	end
 
-	tab:ParseButton()
+	local w = bar_ratio * h
+	local start_x = x - w * 0.5
+	local data = self.Data
+
+	surface.SetAlphaMultiplier( self.Alpha )
+
+	if self.Progress then
+		render.SetScissorRect( start_x, y, start_x + w * math.Clamp( self.Progress, 0, 1 ), y + h, true )
+
+		surface.SetDrawColor( self.Color or data.Color or color_white )
+		surface.SetMaterial( mat_bar_fill )
+		surface.DrawTexturedRect( start_x, y, w, h )
+
+		render.SetScissorRect( 0, 0, 0, 0, false )
+	end
+
+	surface.SetDrawColor( 255, 255, 255 )
+	surface.SetMaterial( mat_bar )
+	surface.DrawTexturedRect( start_x, y, w, h )
+
+	local mat = self.Material or data.Material
+	if mat then
+		surface.SetDrawColor( 255, 255, 255 )
+		surface.SetMaterial( mat )
+		surface.DrawTexturedRect( start_x - h * 1.5, y, h, h )
+		surface.DrawOutlinedRect( start_x - h * 1.5, y, h, h )
+	end
+
+	if self.Text then
+		local text_x = start_x + w + h * 0.5
+		local text_y = y + h * 0.5 - 4
+		draw.SimpleText( self.Text, "SCPScaledHUDSmall_Blur", text_x, text_y, color_black, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER )
+		draw.SimpleText( self.Text, "SCPScaledHUDSmall_Blur", text_x, text_y, color_black, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER )
+		draw.SimpleText( self.Text, "SCPScaledHUDSmall", text_x, text_y, color_white, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER )
+	end
+
+	surface.SetAlphaMultiplier( 1 )
+
+	self:Description( x - w * 0.5, y, w, h )
+
+	return true
+end
+
+--[[-------------------------------------------------------------------------
+SCPSkillObject
+---------------------------------------------------------------------------]]
+local SCPSkillObject = {}
+
+function SCPSkillObject:New( hud, name )
+	if self != SCPSkillObject then return end
+
+	local tab = setmetatable( {
+		Name = name,
+		HUD = hud,
+		Offset = 0,
+	}, {
+		__index = SCPSkillObject
+	} )
 
 	return tab
 end
 
-hook.Add( "PlayerButtonDown", "SLCSCPHUDButtons", function( ply, btn )
-	if IsFirstTimePredicted() and !vgui.CursorVisible() and ply:SCPTeam() == TEAM_SCP then
-		local wep = ply:GetActiveWeapon()
-		if IsValid( wep ) and wep.SCP then
-			local hud_object = wep.HUDObject
-			if hud_object then
-				hud_object:ButtonPressed( btn )
-			end
-		end
+function SCPSkillObject:Create( hud )
+	local lang = hud.Lang and hud.Lang[self.Name]
+
+	local tab = setmetatable( {
+		Data = self,
+		HUD = hud,
+		Lang = lang,
+		WatchTable = {},
+		Visible = true,
+		//Progress = 0,
+		Cooldown = 0,
+		CooldownTime = 0,
+		Active = true,
+		Highlight = false,
+		Alpha = 0,
+	}, {
+		__index = SCPSkillObjectInstance
+	} )
+
+	tab:ParseButton()
+	
+	return tab
+end
+
+function SCPSkillObject:SetBar()
+	self.Bar = true
+	return self
+end
+
+function SCPSkillObject:SetOffset( num )
+	self.Offset = num
+	return self
+end
+
+function SCPSkillObject:SetButton( name )
+	self.Button = name
+	return self
+end
+
+function SCPSkillObject:SetMaterial( mat, args )
+	if type( mat ) == "string" then
+		self.Material = GetMaterial( mat, args )
+	else
+		self.Material = mat
 	end
+
+	return self
+end
+
+function SCPSkillObject:SetColor( col )
+	self.Color = col
+	return self
+end
+
+function SCPSkillObject:SetParser( fn )
+	self.Parser = fn
+	return self
+end
+
+for i, v in ipairs( data_functions ) do
+	SCPSkillObject["Set"..v.."Function"] = function( self, fn )
+		self[v.."Function"] = nil
+		self[v.."Watch"] = nil
+
+		if isfunction( fn ) then
+			self[v.."Function"] = fn
+		elseif isstring( fn ) then
+			self[v.."Watch"] = fn
+		end
+
+		return self
+	end
+end
+
+setmetatable( SCPSkillObject, { __call = SCPSkillObject.New } )
+
+hook.Add( "PlayerButtonDown", "SLCSCPHUDButtons", function( ply, code )
+	if !IsFirstTimePredicted() or vgui.CursorVisible() or ply:SCPTeam() != TEAM_SCP then return end
+
+	local wep = ply:GetSCPWeapon()
+	if !IsValid( wep ) or !wep.HUDObject then return end
+
+	wep.HUDObject:ButtonPressed( code )
 end )
 
 --[[-------------------------------------------------------------------------
-SCP HUD Object
+SCPHUDObjectInstance
+---------------------------------------------------------------------------]]
+SCPHUDObjectInstance = {
+	BaseSize = 0.04,
+	BaseMargin = 0.01,
+}
+
+function SCPHUDObjectInstance:GetSkill( name )
+	return self.SkillsLookup[name]
+end
+
+function SCPHUDObjectInstance:GetBar( name )
+	return self.BarsLookup[name]
+end
+
+function SCPHUDObjectInstance:Notify( name, dur, snd )
+	local ct = CurTime()
+	self.Notification = name
+	self.NotificationTime = ct + dur
+	
+	if snd and self.NotificationSound < ct then
+		self.NotificationSound = ct + dur
+		surface.PlaySound( snd )
+	end
+end
+
+function SCPHUDObjectInstance:ButtonPressed( code )
+	for i, v in ipairs( self.Skills ) do
+		if v.Button == code then
+			v:ButtonPressed()
+		end
+	end
+end
+
+function SCPHUDObjectInstance:CalculateBounds()
+	local w = ScrW() * GetHUDScale()
+	local size = math.ceil( w * self.BaseSize )
+	local margin = math.ceil( w * self.BaseMargin )
+
+	self.Size = size
+	self.Margin = margin
+
+	if #self.Skills == 0 then
+		self.Width = 0
+		self.Height = 0
+		return
+	end
+
+	local num = 0
+
+	for i, v in ipairs( self.Skills ) do
+		num = num + 1 + v.Data.Offset
+	end
+
+	self.Width = num * ( size + margin ) - margin
+end
+
+function SCPHUDObjectInstance:Draw()
+	self:CalculateBounds()
+
+	local w, h = ScrW(), ScrH()
+	local x = ( w - self.Width ) * 0.5
+	local y = h - self.Margin - self.Size - ( GetSettingsValue( "hud_windowed_mode" ) and h * 0.0225 or 0 )
+	local min_x = SLC_HUD_END_X + self.Margin * 4
+	local offset = 0
+
+	if x < min_x then
+		x = min_x
+	end
+
+	for i, v in ipairs( self.Skills ) do
+		offset = offset + v.Data.Offset
+		v:Draw( x + ( i - 1 + offset ) * ( self.Size + self.Margin ), y, self.Size )
+	end
+
+	local dx = w - self.Size - self.Margin * 2
+	local lp = LocalPlayer()
+
+	if self.DamageModSkill and !lp:GetSCPHuman() then
+		self.DamageModSkill:Draw( dx, y, self.Size )
+		dx = dx - self.Size - self.Margin
+	end
+
+	if self.OverloadSkill and !lp:GetSCPHuman() and !lp:GetSCPDisableOverload() then
+		self.OverloadSkill:Draw( dx, y, self.Size )
+		dx = dx - self.Size - self.Margin
+	end
+
+	local ct = CurTime()
+	if self.NotificationTime > ct then
+		local diff = self.NotificationTime - ct
+		if diff < 0.5 then
+			surface.SetAlphaMultiplier( diff / 0.5 )
+		end
+
+		local text = self.Lang and self.Lang[self.Notification] or LANG.SCPHUD[self.Notification] or self.Notification
+
+		draw.SimpleText( text, "SCPScaledHUDSmall_Blur", w * 0.5, y - self.Margin, color_black, TEXT_ALIGN_CENTER, TEXT_ALIGN_BOTTOM )
+		draw.SimpleText( text, "SCPScaledHUDSmall_Blur", w * 0.5, y - self.Margin, color_black, TEXT_ALIGN_CENTER, TEXT_ALIGN_BOTTOM )
+		draw.SimpleText( text, "SCPScaledHUDSmall", w * 0.5, y - self.Margin, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_BOTTOM )
+
+		surface.SetAlphaMultiplier( 1 )
+	end
+
+	local bar_h = self.Size * 0.4
+	local dy = y - bar_h - self.Margin * 4
+
+	for i, v in ipairs( self.Bars ) do
+		local cy = Lerp( RealFrameTime() * 6, v.LastY or dy, dy )
+		if v:DrawBar( w * 0.5, cy, bar_h ) then
+			v.LastY = cy
+			dy = dy - bar_h - self.Margin
+		else
+			v.LastY = nil
+		end
+	end
+end
+
+--[[-------------------------------------------------------------------------
+SCPHUDObject
 ---------------------------------------------------------------------------]]
 SCPHUDObject = {}
 
@@ -269,186 +518,101 @@ function SCPHUDObject:New( name, swep )
 	if self != SCPHUDObject then return end
 
 	local tab = setmetatable( {
-		name = "invalid_hud_obj",
-		translated_name = "Invalid SCP HUD Object",
-		swep = swep,
-		skills = {},
-		skill_id = {},
-		notify_end = 0,
-		notify_text = "",
-		max_pos = 0,
-	}, { __index = SCPHUDObject } )
+		Name = name,
+		Lang = name,
+		Skills = {},
+		Bars = {},
+	}, {
+		__index = SCPHUDObject
+	} )
 
-	local data = SLC_SCP_HUD[name]
-	if data then
-		local obj_name = data.name or name
-		tab.name = obj_name
-		tab.max_pos = 0
+	SLC_SCP_HUD[name] = tab
 
-		local lang = LANG.WEAPONS[data.language or obj_name]
-		tab.translated_name = lang and lang.HUD and lang.HUD.name or obj_name
-
-		for i, v in ipairs( data.skills ) do
-			tab.skill_id[v.name] = i
-
-			local skill = CreateSCPSkillObject( v )
-			skill.hud_object = tab
-			tab.skills[i] = skill
-
-			if v.pos > tab.max_pos then
-				tab.max_pos = v.pos
-			end
-		end
+	if swep then
+		swep.HUDName = name
 	end
 
 	return tab
 end
 
-function SCPHUDObject:GetName()
-	return self.name
+function SCPHUDObject:Create( swep )
+	local tab = setmetatable( {
+		Data = self,
+		Weapon = swep,
+		Skills = {},
+		SkillsLookup = {},
+		Bars = {},
+		BarsLookup = {},
+		NotificationTime = 0,
+		NotificationSound = 0,
+		Lang = LANG.WEAPONS[self.Lang] and LANG.WEAPONS[self.Lang].skills
+	}, {
+		__index = SCPHUDObjectInstance
+	} )
+
+	for i, v in ipairs( self.Skills ) do
+		local skill = v:Create( tab )
+		tab.Skills[i] = skill
+		tab.SkillsLookup[v.Name] = skill
+	end
+
+	for i, v in ipairs( self.Bars ) do
+		local bar = v:Create( tab )
+		tab.Bars[i] = bar
+		tab.BarsLookup[v.Name] = bar
+	end
+
+	tab.OverloadSkill = self.OverloadSkill and self.OverloadSkill:Create( tab )
+	tab.DamageModSkill = self.DamageModSkill and self.DamageModSkill:Create( tab )
+
+	swep.HUDObject = tab
+	return tab
 end
 
-function SCPHUDObject:GetSkill( id )
-	if isstring( id ) then
-		return self:GetSkillByName( id )
-	else
-		return self.skills[id]
-	end
+function SCPHUDObject:SetLanguage( lang )
+	self.Lang = lang
 end
 
-function SCPHUDObject:GetSkillByName( id )
-	local nid = self.skill_id[id]
-	if nid then
-		return self:GetSkill( nid )
-	end
+function SCPHUDObject:AddSkill( name )
+	local skill = SCPSkillObject( self, name )
+	table.insert( self.Skills, skill )
+
+	return skill
 end
 
-function SCPHUDObject:AddText( txt, dur ) --TODO
-	
+function SCPHUDObject:AddBar( name )
+	local bar = SCPSkillObject( self, name )
+	table.insert( self.Bars, bar )
+
+	bar:SetBar()
+
+	return bar
 end
 
-function SCPHUDObject:Notify( txt, dur, snd )
-	local ct = CurTime()
+function SCPHUDObject:AddCommonSkills()
+	local overload = SCPSkillObject( self, "c_button_overload" )
+	local dmg_mod = SCPSkillObject( self, "c_dmg_mod" )
 
-	self.notify_text = txt
-	self.notify_end = ct + ( dur or 1 )
+	overload:SetMaterial( "slc/hud/scp/door_overload.png", "smooth" )
+		:SetCooldownFunction( function( swep, hud )
+			return _SCPOverloadCooldown
+		end )
 
-	if snd then
-		if !self.notify_snd or self.notify_snd <= ct then
-			self.notify_snd = ct + ( dur or 1 )
-			surface.PlaySound( snd )
-		end
-	end
-end
+	dmg_mod:SetMaterial( "slc/hud/scp/dmg_mod.png", "smooth" )
+		:SetTextFunction( function( swep, hud )
+			return string.format( "%.1f%%", 100 - GetSCPDamageScale( LocalPlayer() ) * 100 )
+		end )
+		:SetParser( function( swep, lang )
+			local mod = 100 - GetSCPDamageScale( LocalPlayer() ) * 100
+			return {
+				mod = MarkupBuilder.StaticPrint( math.Round( mod, 1 ).."%", mod < 0 and color_red or color_green )
+			}
+		end )
 
-function SCPHUDObject:ButtonPressed( button )
-	for k, v in pairs( self.skills ) do
-		if v.visible and v.button == button then
-			if v:IsOnCooldown() then
-				self:Notify( "skill_not_ready", 1, "npc/roller/code2.wav" )
-			elseif v.inactive then
-				self:Notify( "skill_cant_use", 1, "npc/roller/code2.wav" )
-			end
+	self.OverloadSkill = overload
+	self.DamageModSkill = dmg_mod
 
-			break
-		end
-	end
-end
-
-function SCPHUDObject:Render()
-	local h = ScrH() * GetHUDScale()
-
-	--Skills
-	local start_x, end_x, start_y
-	for k, v in pairs( self.skills ) do
-		local swep = self.swep
-		if IsValid( swep ) then
-			local x, y, size = v:Render( swep )
-
-			start_y = y
-
-			local pos = x + size
-			if !end_x or pos > end_x then
-				end_x = pos
-			end
-
-			if !start_x or x < start_x then
-				start_x = x
-			end
-		end
-	end
-
-	local ct = CurTime()
-
-	--Notifications
-	if self.notify_end > ct and self.notify_text != "" then
-		local color = COLOR.notification
-
-		local left = self.notify_end - ct
-		if left < 0.5 then
-			color = Color( color.r, color.g, color.b, left * 510 )
-		end
-
-		draw.Text( {
-			text = LANG.SCPHUD[self.notify_text] or self.notify_text,
-			font = "SCPScaledHUDVSmall",
-			color = color,
-			pos = { ( start_x + end_x ) * 0.5, start_y - h * 0.02 },
-			xalign = TEXT_ALIGN_CENTER,
-			yalign = TEXT_ALIGN_BOTTOM,
-		} )
-	end
-
-	--Messages
-	--TODO
-	local s_name = self.draw_info
-	if s_name then
-		self.draw_info = nil
-
-
-		local lang = LANG.WEAPONS[self.name]
-		if lang and lang.skills and lang.skills[s_name] then
-			local sw, sh = ScrW(), ScrH()
-			local mx, my = input.GetCursorPos()
-
-			local clang = lang.skills[s_name]
-			local marg = sh * 0.015
-			local name_h = sh * 0.04
-			local total_h = name_h
-			local feed
-
-			surface.SetFont( "SCPHUDMedium" )
-			local info_w = surface.GetTextSize( clang.name or s_name ) + marg * 4
-
-			if clang.dsc then
-				local th, tw
-				th, tw, feed = draw.SimulateMultilineText( clang.dsc, "SCPHUDSmall", sw * 0.3, marg, 0, 6, true )
-				total_h = total_h + th
-				if tw + marg * 2 > info_w then
-					info_w = tw + marg * 2
-				end
-			end
-
-			if mx + info_w > sw then
-				mx = sw - info_w
-			end
-
-			local dy = my - total_h
-
-			surface.SetDrawColor( 0, 0, 0, 240 )
-			surface.DrawRect( mx, dy, info_w, total_h )
-
-			surface.SetDrawColor( 255, 255, 255, 255 )
-			surface.DrawOutlinedRect( mx - 1, dy - 1, info_w + 2, total_h + 2, 1 )
-
-			draw.SimpleText( clang.name or s_name, "SCPHUDMedium", mx + marg, dy + name_h / 2, COLOR.white, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER )
-			dy = dy + name_h
-
-			if clang.dsc and feed then
-				draw.MultilineText( mx, dy, nil, "SCPHUDSmall", COLOR.white, sw * 0.3, marg, 0, TEXT_ALIGN_LEFT, 6, false, false, feed )
-			end
-		end
-	end
+	return self
 end
 
 setmetatable( SCPHUDObject, { __call = SCPHUDObject.New } )
@@ -456,8 +620,8 @@ setmetatable( SCPHUDObject, { __call = SCPHUDObject.New } )
 --[[-------------------------------------------------------------------------
 General
 ---------------------------------------------------------------------------]]
-function DefineSCPHUD( scp, data )
-	SLC_SCP_HUD[scp] = data
+function GetSCPHUDObject( name )
+	return SLC_SCP_HUD[name]
 end
 
 hook.Add( "SLCRegisterSettings", "SLCSCPHUDSettings", function()
@@ -465,8 +629,6 @@ hook.Add( "SLCRegisterSettings", "SLCSCPHUDSettings", function()
 
 	RegisterSettingsEntry( "scp_special", "bind", "key:G" )
 	RegisterSettingsEntry( "scp_hud_skill_time", "switch", true, nil, "scp_config" )
-	RegisterSettingsEntry( "scp_hud_overload_cd", "switch", true, nil, "scp_config" )
-	RegisterSettingsEntry( "scp_hud_dmg_mod", "switch", true, nil, "scp_config" )
 	RegisterSettingsEntry( "scp_nvmod", "switch", true, nil, "scp_config" )
 end )
 
@@ -474,37 +636,6 @@ OnPropertyChanged( "overload_cd", function( name, value )
 	if !isnumber( value ) then return end
 
 	_SCPOverloadCooldown = value
-end )
-
-local color_white = Color( 255, 255, 255 )
-local color_red = Color( 200, 25, 45 )
-local color_green = Color( 25, 200, 45 )
-hook.Add( "SLCPostDrawHUD", "TempSCPOverloadCD", function()
-	local lp = LocalPlayer()
-	if lp:SCPTeam() != TEAM_SCP then return end
-
-	local dy = 16
-
-	if !lp:GetSCPHuman() and GetSettingsValue( "scp_hud_dmg_mod" ) then
-		local _, th = draw.SimpleText( string.format( "%s: %.1f%%", LANG.SCPHUD.damage_scale, GetSCPDamageScale( lp ) * 100 ), "SCPHUDMedium", ScrW() / 2, dy, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP )
-		dy = dy + th
-	end
-
-	if !lp:GetSCPHuman() and !lp:GetSCPDisableOverload() and GetSettingsValue( "scp_hud_overload_cd" ) then
-		local text, color
-
-		local ct = CurTime()
-		if !_SCPOverloadCooldown or _SCPOverloadCooldown < ct then
-			text = LANG.SCPHUD.overload_ready
-			color = color_green
-		else
-			text = LANG.SCPHUD.overload_cd..math.ceil( _SCPOverloadCooldown - CurTime() )
-			color = color_red
-		end
-		
-		local _, th = draw.SimpleText( text, "SCPHUDMedium", ScrW() / 2, dy, color, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP )
-		dy = dy + th
-	end
 end )
 
 hook.Add( "SLCScreenMod", "SCPVisionMod", function( clr )

@@ -1,6 +1,6 @@
 SLC_LOOTING_OVERRIDE = SLC_LOOTING_OVERRIDE or {}
 
-local default_icon = GetMaterial( "slc/hud/upgrades/notowned.png" )
+local default_icon = GetMaterial( "slc/hud/upgrades/notowned.png", "smooth" )
 local default_color = Color( 125, 125, 125, 225 )
 
 local searching_slot = 0
@@ -114,7 +114,7 @@ net.Receive( "SLCLooting", function( len )
 						icon = ico or item_obj.SelectIcon or item_obj.WepSelectIcon,
 						color = item.color or item_obj.SelectColor,
 						amount = item.data and item.data.amount,
-						select_font = EQ_OVERRIDE_FONTS[item_obj.SelectFont] or item_obj.SelectFont,
+						select_font = INVENTORY_FONTS_OVERRIDE[item_obj.SelectFont] or item_obj.SelectFont,
 						select_text = item_obj.IconLetter or lng and ( lng.showname or lng.name ) or item_obj.PrintName or item.class,
 					} )
 				end
@@ -146,7 +146,7 @@ net.Receive( "SLCLooting", function( len )
 						icon = item_obj.SelectIcon or item_obj.WepSelectIcon,
 						color = item_obj.SelectColor,
 						amount = item.data and item.data.amount,
-						select_font = EQ_OVERRIDE_FONTS[item_obj.SelectFont] or item_obj.SelectFont,
+						select_font = INVENTORY_FONTS_OVERRIDE[item_obj.SelectFont] or item_obj.SelectFont,
 						select_text = item_obj.IconLetter or lng and ( lng.showname or lng.name ) or item_obj.PrintName or item.class,
 					} )
 				end

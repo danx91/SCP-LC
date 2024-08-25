@@ -6,10 +6,11 @@ function RebuildFonts()
 	local size_prim = SLC_PRIMARY_FONT_SIZE or 1
 	local size_digit = SLC_DIGITS_FONT_SIZE or 1
 	local size_info = SLC_INFO_FONT_SIZE or 1
+	local w = ScrW()
 
 	CreateFont( "SCPHUDESmall", {
 		font = font,
-		size = ScrW() * 0.01 * size_prim,
+		size = w * 0.01 * size_prim,
 		antialias = true,
 		weight = 500,
 		extended = true,
@@ -17,7 +18,7 @@ function RebuildFonts()
 
 	CreateFont( "SCPHUDVSmall", {
 		font = font,
-		size = ScrW() * 0.015 * size_prim,
+		size = w * 0.015 * size_prim,
 		antialias = true,
 		weight = 500,
 		extended = true,
@@ -25,7 +26,7 @@ function RebuildFonts()
 
 	CreateFont( "SCPHUDSmall", {
 		font = font,
-		size = ScrW() * 0.0175 * size_prim,
+		size = w * 0.0175 * size_prim,
 		antialias = true,
 		weight = 500,
 		extended = true,
@@ -33,7 +34,7 @@ function RebuildFonts()
 
 	CreateFont( "SCPHUDMedium", {
 		font = font,
-		size = ScrW() * 0.021 * size_prim,
+		size = w * 0.021 * size_prim,
 		antialias = true,
 		weight = 500,
 		extended = true,
@@ -41,7 +42,7 @@ function RebuildFonts()
 
 	CreateFont( "SCPHUDBig", {
 		font = font,
-		size = ScrW() * 0.0275 * size_prim,
+		size = w * 0.0275 * size_prim,
 		antialias = true,
 		weight = 500,
 		extended = true,
@@ -49,7 +50,7 @@ function RebuildFonts()
 
 	CreateFont( "SCPHUDVBig", {
 		font = font,
-		size = ScrW() * 0.035 * size_prim,
+		size = w * 0.035 * size_prim,
 		antialias = true,
 		weight = 500,
 		extended = true
@@ -57,21 +58,28 @@ function RebuildFonts()
 
 	CreateFont( "SCPNumbersBig", {
 		font = font_digit,
-		size = ScrW() * 0.02 * size_digit,
+		size = w * 0.02 * size_digit,
+		antialias = true,
+		weight = 500,
+	} )
+
+	CreateFont( "SCPNumbersMedium", {
+		font = font_digit,
+		size = w * 0.0175 * size_digit,
 		antialias = true,
 		weight = 500,
 	} )
 
 	CreateFont( "SCPNumbersSmall", {
 		font = font_digit,
-		size = ScrW() * 0.015 * size_digit,
+		size = w * 0.015 * size_digit,
 		antialias = true,
 		weight = 500,
 	} )
 
 	CreateFont( "SCPInfoScreenBig", {
 		font = font_info,
-		size = ScrW() * 0.04 * size_info,
+		size = w * 0.04 * size_info,
 		antialias = true,
 		weight = 500,
 		extended = true,
@@ -79,7 +87,7 @@ function RebuildFonts()
 
 	CreateFont( "SCPInfoScreenMedium", {
 		font = font_info,
-		size = ScrW() * 0.0325 * size_info,
+		size = w * 0.0325 * size_info,
 		antialias = true,
 		weight = 500,
 		extended = true,
@@ -87,7 +95,7 @@ function RebuildFonts()
 
 	CreateFont( "SCPInfoScreenSmall", {
 		font = font_info,
-		size = ScrW() * 0.015 * size_info,
+		size = w * 0.015 * size_info,
 		antialias = true,
 		weight = 500,
 		extended = true,
@@ -95,19 +103,19 @@ function RebuildFonts()
 
 	CreateFont( "SCPHLIcons", {
 		font = "HalfLife2",
-		size = ScrW() * 0.05,
+		size = w * 0.04,
 		antialias = true,
 	} )
 
 	CreateFont( "SCPCSSIcons", {
 		font = "csd",
-		size = ScrW() * 0.06,
+		size = w * 0.05,
 		antialias = true,
 	} )
 
 	CreateFont( "SCPCSSIconsSmall", {
 		font = "csd",
-		size = ScrW() * 0.05,
+		size = w * 0.04,
 		antialias = true,
 	} )
 
@@ -122,26 +130,45 @@ function RebuildScaledFonts( scale )
 
 	local size_prim = SLC_PRIMARY_FONT_SIZE or 1
 	local size_digit = SLC_DIGITS_FONT_SIZE or 1
+	local w = ScrW()
 
 	CreateFont( "SCPScaledHUDVSmall", {
 		font = font,
-		size = ScrW() * 0.017 * scale * size_prim,
+		size = w * 0.017 * scale * size_prim,
 		antialias = true,
 		weight = 500,
 		extended = true,
+	} )
+
+	CreateFont( "SCPScaledHUDVSmall_Blur", {
+		font = font,
+		size = w * 0.017 * scale * size_prim,
+		antialias = true,
+		weight = 500,
+		extended = true,
+		blursize = 4,
 	} )
 
 	CreateFont( "SCPScaledHUDSmall", {
 		font = font,
-		size = ScrW() * 0.020 * scale * size_prim,
+		size = w * 0.020 * scale * size_prim,
 		antialias = true,
 		weight = 500,
 		extended = true,
 	} )
 
+	CreateFont( "SCPScaledHUDSmall_Blur", {
+		font = font,
+		size = w * 0.020 * scale * size_prim,
+		antialias = true,
+		weight = 500,
+		extended = true,
+		blursize = 4,
+	} )
+
 	CreateFont( "SCPScaledHUDMedium", {
 		font = font,
-		size = ScrW() * 0.025 * scale * size_prim,
+		size = w * 0.025 * scale * size_prim,
 		antialias = true,
 		weight = 500,
 		extended = true,
@@ -149,22 +176,36 @@ function RebuildScaledFonts( scale )
 
 	CreateFont( "SCPScaledHUDBig", {
 		font = font,
-		size = ScrW() * 0.03 * scale * size_prim,
+		size = w * 0.03 * scale * size_prim,
 		antialias = true,
 		weight = 500,
 		extended = true,
 	} )
 
+	CreateFont( "SCPScaledNumbersVBig", {
+		font = font_digit,
+		size = w * 0.028 * scale * size_digit,
+		antialias = true,
+		weight = 500,
+	} )
+
 	CreateFont( "SCPScaledNumbersBig", {
 		font = font_digit,
-		size = ScrW() * 0.023 * scale * size_digit,
+		size = w * 0.023 * scale * size_digit,
+		antialias = true,
+		weight = 500,
+	} )
+
+	CreateFont( "SCPScaledNumbersMedium", {
+		font = font_digit,
+		size = w * 0.02 * scale * size_digit,
 		antialias = true,
 		weight = 500,
 	} )
 
 	CreateFont( "SCPScaledNumbersSmall", {
 		font = font_digit,
-		size = ScrW() * 0.017 * scale * size_digit,
+		size = w * 0.017 * scale * size_digit,
 		antialias = true,
 		weight = 500,
 	} )

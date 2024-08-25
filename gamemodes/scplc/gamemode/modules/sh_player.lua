@@ -8,34 +8,35 @@ end
 function GM:PlayerButtonDown( ply, button )
 	if SERVER then
 		numpad.Activate( ply, button )
-
+		
 		local rt = RealTime()
-
+		
 		if !ply.SLCAFKTimer then
 			ply.SLCAFKTimer = 0
 		end
-
+		
 		if ply.SLCAFKTimer <= rt then
 			if ply:IsAFK() then
 				ply:Set_SCPAFK( false )
 				QueueInsert( ply ) --insert player back to spawn queue
 				CheckRoundStart()
-
+				
 				PlayerMessage( "afk_end", ply )
 			end
-
+			
 			ply.SLCAFKTimer = rt
 			ply.AFKWarned = false
 		end
 	end
-
+	
 	if CLIENT and IsFirstTimePredicted() then
 		SLCAFKWarning = false
 
 		if button == GetBindButton( "eq_button" ) and hook.Run( "SLCCanUseBind", "eq" ) != false then
 
 			if CanShowEQ() then
-				ShowEQ()
+				//ShowEQ()
+				ShowGUIElement( "eq" )
 			end
 
 			HUDDrawInfo = true
@@ -58,9 +59,7 @@ function GM:PlayerButtonUp( ply, button )
 
 	if CLIENT and IsFirstTimePredicted() then
 		if button == GetBindButton( "eq_button" ) then
-			if IsEQVisible() then
-				HideEQ()
-			end
+			HideGUIElement( "eq" )
 
 			HUDDrawInfo = false
 
@@ -94,28 +93,30 @@ end
 if CLIENT then
 	hook.Add( "Tick", "SLCClientSideUse", function()
 		local ply = LocalPlayer()
-		if IsValid( ply ) and ply:KeyDown( IN_USE ) then
-			if ply:SCPTeam() != TEAM_SPEC then
-				local sp = ply:GetShootPos()
-				local tr = util.TraceLine{
-					start = sp,
-					endpos = sp + ply:GetAimVector() * 75,
-					filter = ply,
-				}
+		if !IsValid( ply ) or !ply:KeyDown( IN_USE ) then return end
+		if ply:SCPTeam() == TEAM_SPEC then return end
 
-				if tr.Hit and IsValid( tr.Entity ) then
-					if tr.Entity.CSUse then
-						tr.Entity:CSUse( ply )
-					end
-				end
-			end
-		end
+		local sp = ply:GetShootPos()
+		local tr = util.TraceLine{
+			start = sp,
+			endpos = sp + ply:GetAimVector() * 75,
+			filter = ply,
+		}
+
+		if !tr.Hit or !IsValid( tr.Entity ) then return end
+		if !tr.Entity.CSUse then return end
+		
+		tr.Entity:CSUse( ply )
 	end )
 end
 
+CAMERA_MASK = bit.lshift( 1, 31 )
+
 function GM:StartCommand( ply, cmd )
+	if controller.StartCommand( ply, cmd ) then return true end
+
 	if ply:Alive() and !IsValid( ply:GetActiveWeapon() ) then
-		local holster = ply:GetWeapon( "item_slc_holster" )
+		local holster = ply:GetWeaponByBase( "item_slc_holster" )
 		if IsValid( holster ) then
 			cmd:SelectWeapon( holster )
 		end
@@ -124,14 +125,14 @@ function GM:StartCommand( ply, cmd )
 	if ply.GetDisableControls and ply:GetDisableControls() then
 		cmd:ClearMovement()
 
-		local mask = ply:GetDisableControlsFlag()
+		local mask = ply:GetDisableControlsMask()
 		if mask == 0 then
 			cmd:ClearButtons()
 		else
 			cmd:SetButtons( bit.band( cmd:GetButtons(), mask ) )
 		end
 
-		if bit.band( mask, -2147483648 ) == 0 then --TEST camera movement mask
+		if bit.band( mask, CAMERA_MASK ) == 0 then
 			if !ply.DisableControlsAngle then
 				ply.DisableControlsAngle = cmd:GetViewAngles()
 			end
@@ -152,8 +153,10 @@ end
 
 function GM:PlayerSwitchWeapon( ply, old, new )
 	if IsValid( new ) then
-		if new.OnSelect then
-			new:OnSelect()
+		if new.eq_slot and new.eq_slot > 6 then return true end
+
+		if new.OnSelect and new:OnSelect() == true then
+			return true
 		end
 
 		if new.Selectable == false then
@@ -162,15 +165,26 @@ function GM:PlayerSwitchWeapon( ply, old, new )
 	end
 end
 
+local admin_weapons = {
+	weapon_physgun = true,
+	tool_slc_remover = true,
+	tool_slc_inv = true,
+}
+
 function GM:PlayerCanPickupWeapon( ply, wep )
+	if ply:GetAdminMode() then
+		local class = wep:GetClass()
+		return !!admin_weapons[class]
+	end
+
 	local t = ply:SCPTeam()
 	if t == TEAM_SPEC then return false end
 
-	if #ply:GetWeapons() >= ply:GetInventorySize() then
-		if wep.Stacks and wep.Stacks <= 1 then return false, "max_eq" end
+	if ply:GetFreeInventory() <= 0 then
+		if wep.Stacks and wep.Stacks <= 1 then return false, "max_eq" end --TEST does it work for non stackable items?
 
 		local pwep = ply:GetWeapon( wep:GetClass() )
-		if !IsValid( pwep ) then return false end
+		if !IsValid( pwep ) then return false, "max_eq" end
 		if pwep.CanStack and !pwep:CanStack() then return false, "cant_stack" end
 	end
 
@@ -249,9 +263,13 @@ function GM:SLCCanPickupWeaponClass( ply, class )
 
 	for k, v in pairs( ply:GetWeapons() ) do
 		if v:GetGroup() == group then
-			return false, "same_type"
+			//return false, "same_type"
 		end
 	end
+end
+
+function GM:PhysgunPickup( ply, ent )
+	return ply:GetAdminMode()
 end
 
 --From base gamemode
@@ -312,12 +330,12 @@ function GM:UpdateAnimation( ply, velocity, maxseqgroundspeed )
 end
 
 local PLAYER = FindMetaTable( "Player" )
+
 --[[-------------------------------------------------------------------------
 SLCProperties
 ---------------------------------------------------------------------------]]
 function PLAYER:ResetProperties()
 	self.SLCProperties = {}
-	//self.SLCPropertiesSync = {}
 end
 
 function PLAYER:SetProperty( key, value, sync )
@@ -336,13 +354,18 @@ end
 
 function PLAYER:GetProperty( key, def )
 	if !self.SLCProperties then self.SLCProperties = {} end
-	return self.SLCProperties[key] or def
+
+	if !self.SLCProperties[key] and def then
+		self.SLCProperties[key] = def
+	end
+
+	return self.SLCProperties[key]
 end
 
 --[[-------------------------------------------------------------------------
 Hold manager
 ---------------------------------------------------------------------------]]
-function PLAYER:StartHold( id, key, time, cb, tab )
+function PLAYER:StartHold( tab, id, key, time, cb, never )
 	if !self:KeyDown( key ) then return end
 
 	if !tab._ButtonHold then
@@ -351,15 +374,18 @@ function PLAYER:StartHold( id, key, time, cb, tab )
 
 	id = id..self:SteamID()
 
-	tab._ButtonHold[id] = {
+	local data = {
 		key = key,
 		duration = time,
 		time = CurTime() + time,
+		never = !!never,
 		cb = cb,
 	}
+
+	tab._ButtonHold[id] = data
 end
 
-function PLAYER:UpdateHold( id, tab )
+function PLAYER:UpdateHold( tab, id )
 	if !tab._ButtonHold then return end
 
 	id = id..self:SteamID()
@@ -368,19 +394,19 @@ function PLAYER:UpdateHold( id, tab )
 	if !data then return end
 
 	if data.interrupted or !self:KeyDown( data.key ) then
+		if data.cb then data.cb( self, tab, false ) end
 		tab._ButtonHold[id] = nil
-		if data.cb then data.cb( false ) end
-		return false
+		return false, data
 	end
 
-	if data.time <= CurTime() then
+	if !data.never and data.time <= CurTime() then
+		if data.cb then data.cb( self, tab, true ) end
 		tab._ButtonHold[id] = nil
-		if data.cb then data.cb( true ) end
-		return true
+		return true, data
 	end
 end
 
-function PLAYER:InterruptHold( id, tab )
+function PLAYER:InterruptHold( tab, id )
 	if !tab._ButtonHold then return end
 
 	id = id..self:SteamID()
@@ -391,7 +417,7 @@ function PLAYER:InterruptHold( id, tab )
 	tab._ButtonHold[id].interrupted = true
 end
 
-function PLAYER:IsHolding( id, tab )
+function PLAYER:IsHolding( tab, id )
 	if !tab._ButtonHold then return false end
 
 	id = id..self:SteamID()
@@ -402,7 +428,7 @@ function PLAYER:IsHolding( id, tab )
 	return self:KeyDown( data.key )
 end
 
-function PLAYER:HoldProgress( id, tab )
+function PLAYER:HoldProgress( tab, id )
 	if !tab._ButtonHold then return end
 
 	id = id..self:SteamID()
@@ -414,9 +440,54 @@ function PLAYER:HoldProgress( id, tab )
 end
 
 --[[-------------------------------------------------------------------------
+Disable Controls
+---------------------------------------------------------------------------]]
+function PLAYER:DisableControls( id, mask )
+	if !self.DisableControlsRegistry then
+		self.DisableControlsRegistry = {}
+	end
+
+	mask = mask or 0
+
+	self.DisableControlsRegistry[id] = mask
+
+	self:SetDisableControls( true )
+	self:SetDisableControlsMask( bit.band( self:GetDisableControlsMask(), mask ) )
+end
+
+function PLAYER:StopDisableControls( id )
+	if !self.DisableControlsRegistry or !self.DisableControlsRegistry[id] then return end
+
+	self.DisableControlsRegistry[id] = nil
+
+	if !next( self.DisableControlsRegistry ) then
+		self:SetDisableControls( false )
+		self:SetDisableControlsMask( -1 )
+		return
+	end
+
+	local mask = -1
+	for k, v in pairs( self.DisableControlsRegistry ) do
+		mask = bit.band( mask, v )
+		
+		if mask == 0 then break end
+	end
+
+	self:SetDisableControlsMask( mask )
+end
+
+function PLAYER:ResetDisableControls()
+	self:SetDisableControls( false )
+	self:SetDisableControlsMask( -1 )
+	self.DisableControlsRegistry = {}
+end
+
+--[[-------------------------------------------------------------------------
 Player functions
 ---------------------------------------------------------------------------]]
 function PLAYER:DataTables()
+	if !IsValid( self ) then return end
+
 	player_manager.SetPlayerClass( self, "class_slc" )
 	player_manager.RunClass( self, "SetupDataTables" )
 end
@@ -440,6 +511,10 @@ accessor( "SCPLevel" )
 accessor( "SCPExp" )
 accessor( "SCPClassPoints" )
 accessor( "DailyBonus" )
+
+function PLAYER:GetPrestigePoints()
+	return self:Get_PrestigePoints()
+end
 
 function PLAYER:RequiredXP( lvl )
 	if !lvl then
@@ -490,7 +565,25 @@ function PLAYER:IsSpectator()
 end
 
 function PLAYER:GetInventorySize()
-	return 8 + self:GetBackpack()
+	local backpack = self:GetWeapon( "item_slc_backpack" )
+	if IsValid( backpack ) then
+		return 6 + backpack:GetSize()
+	end
+
+	return 6
+end
+
+function PLAYER:GetFreeInventory()
+	local weps = self:GetWeapons()
+	local free = self:GetInventorySize()
+
+	for i, v in ipairs( weps ) do
+		if v:GetClass() == "item_slc_id" or v:IsDerived( "item_slc_holster" ) then continue end
+
+		free = free - 1
+	end
+
+	return free
 end
 
 function PLAYER:IsHuman()
@@ -514,7 +607,7 @@ function PLAYER:CheckHazardProtection( dmg )
 end
 
 function PLAYER:CheckGasmask( dmg )
-	/*local mask = self:GetWeapon( "item_slc_gasmask" )
+	local mask = self:GetWeaponByGroup( "gasmask" )
 	if IsValid( mask ) and mask:GetEnabled() then
 		if dmg then
 			mask:Damage( dmg )
@@ -522,28 +615,9 @@ function PLAYER:CheckGasmask( dmg )
 
 		return true
 	end
-
-	local heavy_mask = self:GetWeapon( "item_slc_heavymask" )
-	if IsValid( heavy_mask ) and heavy_mask:GetEnabled() then
-		if dmg then
-			heavy_mask:Damage( dmg )
-		end
-
-		return true
-	end*/
-
-	for k, v in pairs( self:GetWeapons() ) do
-		if v.Group == "gasmask" and v:GetEnabled() then
-			if dmg then
-				v:Damage( dmg )
-			end
-
-			return true
-		end
-	end
 end
 
-function PLAYER:CheckHazmat( dmg )
+function PLAYER:CheckHazmat( dmg, full )
 	local vest = self:GetVest()
 	local dur = self:GetVestDurability()
 	if vest > 0 and dur > 0 and VEST.GetName( vest ) == "hazmat" then
@@ -557,14 +631,60 @@ function PLAYER:CheckHazmat( dmg )
 			self:SetVestDurability( dur )
 		end
 		
-		return true
+		return !full or dur > 0
+	end
+
+	return false
+end
+
+function PLAYER:GetWeaponByGroup( group )
+	for i, v in ipairs( self:GetWeapons() ) do
+		if v.Group and v.Group == group then
+			return v
+		end
+	end
+end
+
+function PLAYER:GetWeaponByBase( base )
+	for i, v in ipairs( self:GetWeapons() ) do
+		if v:IsDerived( base ) then
+			return v
+		end
 	end
 end
 
 function PLAYER:GetMainWeapon()
-	for k, v in pairs( self:GetWeapons() ) do
+	for i, v in ipairs( self:GetWeapons() ) do
 		if SLC_WEAPONS_REG[v:GetClass()] then
 			return v
 		end
+	end
+end
+
+function PLAYER:GetSCPWeapon()
+	local wep = self:GetProperty( "scp_weapon" )
+	if wep then return wep end
+
+	for i, v in ipairs( self:GetWeapons() ) do
+		if v.SCP then
+			self:SetProperty( "scp_weapon", v )			
+			return v
+		end
+	end
+
+	return NULL
+end
+
+function PLAYER:TrueFOV()
+	return math.TrueFOV( self:GetFOV() )
+end
+
+function PLAYER:ChatPrint( ... )
+	if CLIENT then
+		chat.AddText( ... )
+	else
+		net.Start( "SLCChatPrint" )
+			net.WriteTable( { ... } )
+		net.Send( self )
 	end
 end

@@ -75,7 +75,7 @@ function GetRoundMVP()
 	local max = 0
 	local plys
 
-	for k, v in pairs( player.GetAll() ) do
+	for i, v in ipairs( player.GetAll() ) do
 		local frags = v:Frags()
 		if frags > max then
 			plys = { v }
@@ -106,7 +106,7 @@ function GetRoundSummary( stats )
 
 		if v.player_entry then
 			if !PlayerStats._STATS[v.player_entry] then
-				print( "Round stat '"..k.."' tried to use unknown player stat '"..tostring(v.player_entry).."'!" )
+				print( "Round stat '"..k.."' tried to use unknown player stat '"..tostring( v.player_entry ).."'!" )
 				continue
 			end
 
@@ -114,7 +114,7 @@ function GetRoundSummary( stats )
 
 			local best
 
-			for _, ply in pairs( player.GetAll() ) do
+			for _, ply in ipairs( player.GetAll() ) do
 				if ply.PlayerData then
 					local stat = ply.PlayerData:GetRoundStat( v.player_entry )
 
@@ -178,19 +178,20 @@ RegisterRoundStat( "escorts", { init = 0, ref = 9, importance = 60 } )
 RegisterRoundStat( "bleed", { init = 0, ref = 300, importance = 80 } )
 
 RegisterRoundStat( "023", { init = 0, ref = 10, importance = 30 } )
-RegisterRoundStat( "049", { init = 0, ref = 20, importance = 30 } )
-//RegisterRoundStat( "0492", { init = 0, ref = 12, importance = 30 } )
-RegisterRoundStat( "066", { init = 0, ref = 25, importance = 30 } )
+RegisterRoundStat( "049", { init = 0, ref = 16, importance = 30 } )
+RegisterRoundStat( "0492", { init = 0, ref = 12, importance = 30 } )
+RegisterRoundStat( "058", { init = 0, ref = 10, importance = 30 } )
+RegisterRoundStat( "066", { init = 0, ref = 20, importance = 30 } )
 RegisterRoundStat( "096", { init = 0, ref = 10, importance = 30 } )
-RegisterRoundStat( "106", { init = 0, ref = 15, importance = 30 } )
+RegisterRoundStat( "106", { init = 0, ref = 20, importance = 30 } )
 RegisterRoundStat( "173", { init = 0, ref = 10, importance = 30 } )
-RegisterRoundStat( "457", { init = 0, ref = 8, importance = 30 } )
-RegisterRoundStat( "682", { init = 0, ref = 15, importance = 30 } )
-RegisterRoundStat( "8602", { init = 0, ref = 6, importance = 30 } )
-RegisterRoundStat( "939", { init = 0, ref = 15, importance = 30 } )
-RegisterRoundStat( "966", { init = 0, ref = 40, importance = 30 } )
-RegisterRoundStat( "3199", { init = 0, ref = 6, importance = 30 } )
-RegisterRoundStat( "24273", { init = 0, ref = 8, importance = 30 } )
+RegisterRoundStat( "457", { init = 0, ref = 10, importance = 30 } )
+RegisterRoundStat( "682", { init = 0, ref = 10, importance = 30 } )
+RegisterRoundStat( "8602", { init = 0, ref = 10, importance = 30 } )
+RegisterRoundStat( "939", { init = 0, ref = 10, importance = 30 } )
+RegisterRoundStat( "966", { init = 0, ref = 10, importance = 30 } )
+RegisterRoundStat( "3199", { init = 0, ref = 10, importance = 30 } )
+RegisterRoundStat( "24273", { init = 0, ref = 10, importance = 30 } )
 
 RegisterRoundStat( "106recontain", { init = false, ref = true, importance = 25 } )
 RegisterRoundStat( "omega_warhead", { init = false, ref = true, importance = 10 } )

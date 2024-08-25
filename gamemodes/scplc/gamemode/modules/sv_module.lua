@@ -73,74 +73,6 @@ function GM:PlayerPostThink( ply )
 end
 
 --[[-------------------------------------------------------------------------
-Door unblocker
----------------------------------------------------------------------------]]
-local door_blockers = {}
-local door_blockers_pattern = {}
-
-function AddDoorBlocker( class, pattern )
-	table.insert( pattern and door_blockers_pattern or door_blockers, class )
-end
-
-function GM:SLCOnDoorClosed( ply, retry, act )
-	if !CVAR.slc_door_unblocker:GetBool() then return end
-
-	local activator = act or ACTIVATOR
-
-	if retry and retry > 1 then
-		timer.Simple( 0.25, function()
-			hook.Run( "SLCOnDoorClosed",  ply, retry - 1, activator )
-		end )
-	end
-
-	local dpos = activator:GetPos() - Vector( 0, 0, 55.5 )
-	local forward = activator:GetKeyValues().movedir
-	local right = forward:Angle():Right()
-
-	local pos_start = dpos - forward * 30 + right * 10
-	local pos_end = dpos - forward * 92 - right * 3 + Vector( 0, 0, 32 )
-
-	local found = ents.FindInBox( pos_start, pos_end )
-	if #found <= 0 then return end
-
-	local up = Vector( 0, 0, 16 )
-	local mid = ( pos_start + pos_end ) / 2
-	mid.z = dpos.z
-
-	for _, item in ipairs( found ) do
-		local class = item:GetClass()
-		local pos = item:GetPos()
-		pos.z = dpos.z
-
-		local is_blocker = ply and item:IsPlayer() or door_blockers[class]
-
-		if !is_blocker then
-			for _, pattern in ipairs( door_blockers_pattern ) do
-				if string.find( class, pattern ) then
-					is_blocker = true
-					break
-				end
-			end
-		end
-
-		if !is_blocker then continue end
-
-		local diff = ( pos - mid ):GetNormalized()
-		local dot = diff:Dot( right )
-
-		item:SetPos( pos + up + right * 64 * ( dot >= 0 and 1 or -1 ) )
-		item:DropToFloor()
-	end
-end
-
-AddDoorBlocker( "^item_slc_", true )
-AddDoorBlocker( "^weapon_", true )
-AddDoorBlocker( "^cw_", true )
-AddDoorBlocker( "^khr_", true )
-AddDoorBlocker( "slc_turret", true )
-AddDoorBlocker( "slc_vest", true )
-
---[[-------------------------------------------------------------------------
 Misc functions
 ---------------------------------------------------------------------------]]
 function GetActivePlayers()
@@ -188,6 +120,18 @@ function CenterMessage( msg, ply )
 	end
 end
 
+function ChatPrint( ply, ... )
+	net.Start( "SLCChatPrint" )
+		net.WriteTable( { ... } )
+	net.Send( ply )
+end
+
+function ChatBroadcast( ... )
+	net.Start( "SLCChatPrint" )
+		net.WriteTable( { ... } )
+	net.Broadcast()
+end
+
 function InfoScreen( ply, t, duration, data, ovteam, ovclass )
 	if type( ply ) == "Player" then
 		net.SendTable( "SLCInfoScreen", {
@@ -221,6 +165,16 @@ function ProgressBar( ply, enable, endtime, text, col1, col2 )
 	end
 end
 
+hook.Add( "PlayerPostThink", "SLCBlink", function( ply )
+	local ct = CurTime()
+	local nb = ply:GetNextBlink()
+	if ply:GetBlink() or nb == -1 or nb > ct or !SCPTeams.HasInfo( ply:SCPTeam(), SCPTeams.INFO_HUMAN ) then return end
+
+	local delay, duration = hook.Run( "SLCBlinkParams", ply )
+	ply:Blink( delay, duration )
+end )
+
+//Global blink time
 local blinkdelay = CVAR.slc_blink_delay:GetFloat()
 Timer( "PlayerBlink", blinkdelay, 0, function( self, n )
 	local ntime = CVAR.slc_blink_delay:GetFloat()
@@ -231,27 +185,26 @@ Timer( "PlayerBlink", blinkdelay, 0, function( self, n )
 
 	local plys = {}
 
-	for k, v in pairs( SCPTeams.GetPlayersByInfo( SCPTeams.INFO_HUMAN ) ) do
-		if !v:GetBlink() then
-			v:SetBlink( true )
-			table.insert( plys, v )
-		end
+	for i, v in ipairs( SCPTeams.GetPlayersByInfo( SCPTeams.INFO_HUMAN ) ) do
+		if v:GetBlink() or v:GetNextBlink() != -1 then continue end
+
+		v:SetBlink( true )
+		table.insert( plys, v )
+		hook.Run( "SLCBlink", v, 0.25, blinkdelay )
 	end
 
 	net.Start( "PlayerBlink" )
 		net.WriteFloat( 0.25 )
-		net.WriteUInt( blinkdelay, 6 )
+		net.WriteFloat( blinkdelay )
 	net.Send( plys )
 
-	timer.Create( "PlayerUnBlink", 0.4, 1, function()
+	timer.Create( "PlayerUnBlink", 0.3, 1, function()
 		for k, v in pairs( plys ) do
 			if IsValid( v ) then
 				v:SetBlink( false )
 			end
 		end
 	end )
-
-	hook.Run( "SLCBlink", 0.25, blinkdelay )
 end )
 
 Timer( "PlayXP", 300, 0, function()
@@ -265,7 +218,7 @@ Timer( "PlayXP", 300, 0, function()
 	if IsValid( rt ) then
 		local plus = rt:GetRemainingTime() <= rt:GetTime() * 0.5
 
-		for k, v in pairs( player.GetAll() ) do
+		for i, v in ipairs( player.GetAll() ) do
 			if !v:IsAFK() then
 				if SCPTeams.HasInfo( v:SCPTeam(), SCPTeams.INFO_ALIVE ) then
 					if plus then
@@ -282,7 +235,7 @@ Timer( "PlayXP", 300, 0, function()
 			end
 		end
 	else
-		for k, v in pairs( player.GetAll() ) do
+		for i, v in ipairs( player.GetAll() ) do
 			if !v:IsAFK() then
 				v:AddXP( pspec, "round" )
 				PlayerMessage( "rxpspec$"..pspec, v )
@@ -296,7 +249,7 @@ end )
 --TransmitSound( snd, status, volume )
 function TransmitSound( snd, status, arg1, arg2 )
 	if isvector( arg1 ) then
-		for k, v in pairs( player.GetAll() ) do
+		for i, v in ipairs( player.GetAll() ) do
 			if IsValid( v ) then
 				local dist = v:GetPos():Distance( arg1 )
 
@@ -331,7 +284,7 @@ function BroadcastDetection( ply, tab )
 	if IsValid( radio ) and radio:GetEnabled() then
 		local ch = radio:GetChannel()
 
-		for k, v in pairs( player.GetAll() ) do
+		for i, v in ipairs( player.GetAll() ) do
 			if v:SCPTeam() != TEAM_SCP and v:SCPTeam() != TEAM_SPEC and v != ply then
 				local r = v:GetWeapon( "item_slc_radio" )
 				if IsValid( r ) and r:GetEnabled() and r:GetChannel() == ch then
@@ -408,16 +361,18 @@ concommand.Add( "slc_debuginfo", function( ply, cmd, args )
 		print( "Round:" )
 		PrintTable( ROUND, 1 )
 		print( "\nPlayers" )
-		for k, v in pairs( player.GetAll() ) do
+		for _, v in ipairs( player.GetAll() ) do
 			print( "->", v, v:Nick(), v:SteamID() )
 			print( "\tGeneral info -> ", v:SCPTeam(), v:SCPClass(), v:Alive(), v:IsAFK(), v:GetModel(), v:GetObserverMode(), v:GetObserverTarget() )
 			print( "\tMisc -> ", v:IsBurning(), v:GetVest() )
 			print( "\tSpeed -> ", v:GetWalkSpeed(), v:GetRunSpeed(), v:GetCrouchedWalkSpeed() )
 			if v.SpeedStack then PrintTable( v.SpeedStack, 2 ) end
-			print( "\tInventory ->" )
+			print( "\tEngine inventory ->" )
 			PrintTable( v:GetWeapons(), 2 )
-			print( "Weapons debug info ->" )
-			for i, wep in ipairs( v:GetWeapons() ) do
+			print( "\tGamemode inventory ->" )
+			PrintTable( v:GetProperty( "inventory", {} ), 2 )
+			print( "\tWeapons debug info ->" )
+			for _, wep in ipairs( v:GetWeapons() ) do
 				if wep.DebugInfo then
 					print( "\t", wep )
 					wep:DebugInfo( 3 )

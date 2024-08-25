@@ -1,27 +1,20 @@
 SLC_AMBIENTS = SLC_AMBIENTS or {
 	Registry = {},
-	List = {},
 	Groups = {},
 	CACHE = {},
 }
 
 --[[-------------------------------------------------------------------------
-Global functions
+Global ambient functions
 ---------------------------------------------------------------------------]]
 function AddAmbient( name, path, check, group, volume, duration, fade )
 	if SLC_AMBIENTS.Registry[name] then
 		print( "Ambient '"..name.."' is already registered!" )
-		SLC_AMBIENTS.Registry[name] = { name = name, id = SLC_AMBIENTS.Registry[name].id, path = path, callback = check, duration = duration, volume = volume or 1, fade = fade }
+		SLC_AMBIENTS.Registry[name] = { name = name, path = path, callback = check, duration = duration, volume = volume or 1, fade = fade }
 		return false
 	end
 
-	if #SLC_AMBIENTS.List >= 255 then
-		print( "Reached ambients limit (255)!" )
-		return false
-	end
-
-	local id = table.insert( SLC_AMBIENTS.List, name )
-	SLC_AMBIENTS.Registry[name] = { name = name, id = id, path = path, callback = check, duration = duration, volume = volume or 1, fade = fade }
+	SLC_AMBIENTS.Registry[name] = { name = name, path = path, callback = check, duration = duration, volume = volume or 1, fade = fade }
 
 	if group then
 		if !SLC_AMBIENTS.Groups[group] then
@@ -46,7 +39,7 @@ function SelectAmbient( group )
 end
 
 --[[-------------------------------------------------------------------------
-Player functions
+Player ambient functions
 ---------------------------------------------------------------------------]]
 local PLAYER = FindMetaTable( "Player" )
 function PLAYER:PlayAmbient( name, loop, force, co )
@@ -58,7 +51,7 @@ function PLAYER:StopAmbient( name )
 end
 
 --[[-------------------------------------------------------------------------
-Serverside functions
+Serverside ambient functions
 ---------------------------------------------------------------------------]]
 if SERVER then
 	function PlayAmbient( name, loop, ply, force, co )
@@ -85,13 +78,13 @@ if SERVER then
 		net.Start( "SLCAmbient" )
 			net.WriteBool( true )
 			net.WriteBool( loop )
-			net.WriteUInt( obj.id, 8 )
+			net.WriteString( obj.name )
 		net.Send( ply )
 	end
 
 	function StopAmbient( ply, name )
 		if !IsValid( ply ) then return end
-
+		if !ply.SLCAmbient then ply.SLCAmbient = {} end
 		if name and !ply.SLCAmbient[name] then return end
 
 		local obj = name and SLC_AMBIENTS.Registry[name]
@@ -104,7 +97,7 @@ if SERVER then
 			net.WriteBool( !name )
 
 			if name then
-				net.WriteUInt( name and obj.id, 8 )
+				net.WriteString( obj.name )
 			end
 		net.Send( ply )
 	end
@@ -137,7 +130,7 @@ if SERVER then
 end
 
 --[[-------------------------------------------------------------------------
-Clientside functions
+Clientside ambient functions
 ---------------------------------------------------------------------------]]
 if CLIENT then
 	function GetIGModAudio( name, flags, dontcreate, cb )
@@ -224,18 +217,12 @@ if CLIENT then
 		local arg = net.ReadBool()
 
 		if status then
-			local name = SLC_AMBIENTS.List[net.ReadUInt( 8 )]
-			if !name then return end
-
-			PlayAmbient( name, arg )
+			PlayAmbient( net.ReadString(), arg )
 		else
 			if arg then
 				StopAmbient()
 			else
-				local name = SLC_AMBIENTS.List[net.ReadUInt( 8 )]
-				if !name then return end
-
-				StopAmbient( name )
+				StopAmbient( net.ReadString() )
 			end
 		end
 	end )
@@ -282,4 +269,60 @@ end
 	end
 end )*/
 
-AddAmbient( "scp_chase", "sound/scp_lc/chase.ogg", nil, nil, 1, 22, 5 )
+AddAmbient( "scp_chase", "sound/scp_lc/chase.ogg", nil, nil, 0.33, 22, 4 )
+
+--[[-------------------------------------------------------------------------
+PA System
+---------------------------------------------------------------------------]]
+local pa_queue = {}
+local pa_paused = false
+local pa_active
+
+local function pa_think()
+	if #pa_queue == 0 then
+		hook.Remove( "Think", "SLCPASystem" )
+		return
+	end
+
+	local ct = CurTime()
+	if pa_active and pa_active.finish >= ct then return end
+
+	local tab = table.remove( pa_queue )
+
+	TransmitSound( tab.snd, true, 1 )
+
+	pa_active = {
+		snd = tab.snd,
+		finish = CurTime() + tab.duration
+	}
+end
+
+function PlayPA( snd, duration )
+	if pa_paused or pa_active and pa_active.finish >= CurTime() then
+		table.insert( pa_queue, {
+			snd = snd,
+			duration = duration
+		} )
+
+		hook.Add( "Think", "SLCPASystem", pa_think )
+	else
+		TransmitSound( snd, true, 1 )
+
+		pa_active = {
+			snd = snd,
+			finish = CurTime() + duration
+		}
+	end
+end
+
+function PausePA()
+	pa_paused = true
+end
+
+function UnPausePA()
+	pa_paused = false
+end
+
+function IsPAActive()
+	return #pa_queue > 0 or pa_active and pa_active.finish >= CurTime()
+end

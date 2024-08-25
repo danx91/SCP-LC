@@ -79,15 +79,6 @@ ENT.AnimTime = 0
 ENT.NFireBullets = 0
 function ENT:Think()
 	local ct = CurTime()
-
-	if CLIENT then
-		if self.LCSUse != 0 and self.LCSUse + 0.1 < ct then
-			self.LCSUse = 0
-
-			CloseWheelMenu()
-		end
-	end
-
 	local status = self:GetStatus()
 	local pos = self:GetPos()
 	local ply = self.PickedBy
@@ -118,7 +109,7 @@ function ENT:Think()
 				if SERVER then
 					self:Remove()
 
-					if #ply:GetWeapons() >= ply:GetInventorySize() then
+					if ply:GetFreeInventory() <= 0 then
 						local wep = ents.Create( "item_slc_turret" )
 						if IsValid( wep ) then
 							wep:SetPos( pos )
@@ -208,8 +199,6 @@ function ENT:Think()
 					end
 				end
 
-				//debugoverlay.Line( pos, pos + (ang + self_ang):Forward() * 1000, 0.1, Color( 255, 255, 0 ) )
-
 				yaw = ang.y
 				pitch = ang.p
 				speed = 30
@@ -251,11 +240,7 @@ function ENT:Think()
 		if speed > 0 then
 			self.PredictedAngle = self.PredictedAngle:Approach( Angle( pitch, yaw, 0 ), FrameTime() * speed )
 		end
-
-		//debugoverlay.Line( pos, pos + (self.PredictedAngle + self:GetAngles()):Forward() * 1000, 0.1, Color( 255, 0, 255 ) )
 	end
-
-	//self:SetAngles( Angle(0) )
 
 	if CLIENT then
 		local ang = self:GetManipulateBoneAngles( 1 ) --clientside manipulation because serverside one causes net_graph to cover your whole screen (too much network traffic)
@@ -302,37 +287,42 @@ end
 
 ENT.LCSUse =  0
 function ENT:CSUse( ply )
-	if CLIENT then
-		--if ply:IsHuman() then
-		if ply == self:GetTurretOwner() and ply:CheckSignature( self:GetOwnerSignature() ) then
-			local ct = CurTime()
+	if ply != self:GetTurretOwner() or !ply:CheckSignature( self:GetOwnerSignature() ) then return end
 
-			if self:GetStatus() == STATUS_IDLE then
-				if self.LCSUse == 0 then
-					local mode = self:GetMode()
-					local options = { { "slc/misc/turret/pickup.png", LANG.WEAPONS.TURRET.pickup or "pickup", 0 } }
+	if self:GetStatus() != STATUS_IDLE then return end
+	if ply:IsHolding( self, "slc_turret_mode" ) then return end
 
-					for i, v in ipairs( self.Modes ) do
-						if i != mode then
-							table.insert( options, { v[2], LANG.WEAPONS.TURRET.MODES[v[1]] or v[1], i } )
-						end
-					end
+	ply:StartHold( self, "slc_turret_mode", IN_USE, 0, function()
+		CloseWheelMenu()
+	end, true )
 
-					OpenWheelMenu( options, function( selected )
-						//print( "selected", selected )
-						if selected then
-							net.Ping( "SLCTurretMode", selected )
-							self:RequestMode( LocalPlayer(), selected )
-						end
-					end, function()
-						return !IsValid( self ) or self.LCSUse + 1 < ct --!ply:KeyDown( IN_USE )
-					end, "slc/misc/turret/exit.png" )
-				end
+	local mode = self:GetMode()
+	local options = {
+		{
+			mat = "slc/misc/turret/pickup.png",
+			name = LANG.WEAPONS.TURRET.pickup or "pickup",
+			data = 0
+		}
+	}
 
-				self.LCSUse = ct
-			end
+	for i, v in ipairs( self.Modes ) do
+		if i != mode then
+			table.insert( options, {
+				mat = v[2],
+				name = LANG.WEAPONS.TURRET.MODES[v[1]] or v[1],
+				data = i
+			} )
 		end
 	end
+
+	OpenWheelMenu( options, function( selected )
+		if !selected then return end
+
+		net.Ping( "SLCTurretMode", selected )
+		self:RequestMode( LocalPlayer(), selected )
+	end, function()
+		return !IsValid( self ) or ply:UpdateHold( self, "slc_turret_mode" ) != nil
+	end, "slc/misc/turret/exit.png" )
 end
 
 ENT.HP = 250
@@ -348,13 +338,13 @@ function ENT:OnTakeDamage( dmginfo )
 		explosion:Spawn()
 		explosion:Fire( "explode", "", 0 )
 
-		for i, v in ipairs( ents.FindInSphere( pos, 200) ) do
+		for i, v in ipairs( ents.FindInSphere( pos, 200 ) ) do
 			if v:IsPlayer() and v:SCPTeam() != TEAM_SPEC then
 				local dist = v:GetPos():Distance( pos )
 
 				local dmginfo2 = DamageInfo()
 
-				dmginfo2:SetDamage( math.ceil( (201 - dist) / 2 ) )
+				dmginfo2:SetDamage( math.ceil( ( 201 - dist ) / 2 ) )
 				dmginfo2:SetAttacker( dmginfo:GetAttacker() )
 
 				v:TakeDamageInfo( dmginfo2 )
@@ -366,29 +356,30 @@ function ENT:OnTakeDamage( dmginfo )
 end
 
 function ENT:RequestMode( ply, mode )
-	--if ply:IsHuman() then
-	if ply == self:GetTurretOwner() and ply:CheckSignature( self:GetOwnerSignature() ) then
-		local status = self:GetStatus()
-		if status == STATUS_IDLE then
-			self:SetDesiredAngleY( 0 )
-			self:SetDesiredAngleP( 0 )
-			self:SetAnimSpeed( 10 )
+	if ply != self:GetTurretOwner() or !ply:CheckSignature( self:GetOwnerSignature() ) then return end
 
-			local ct = CurTime()
-			if mode == 0 then
-				self:SetStatus( STATUS_STOP )
-				self:SetStatusTime( ct + 5 )
+	local status = self:GetStatus()
+	if status != STATUS_IDLE then return end
 
-				ply.PickingTurret = self
-				self.PickedBy = ply
-			elseif self:GetMode() != mode then
-				self:SetStatus( STATUS_MODE )
-				self:SetStatusTime( ct + 3 )
-				self:SetMode( mode )
+	self:SetDesiredAngleY( 0 )
+	self:SetDesiredAngleP( 0 )
+	self:SetAnimSpeed( 10 )
 
-				//self.LastUser = ply
-			end
+	local ct = CurTime()
+	if mode == 0 then
+		self:SetStatus( STATUS_STOP )
+		self:SetStatusTime( ct + 5 )
+
+		if SERVER then
+			ply:EnableProgressBar( true, ct + 5, "lang:WEAPONS.TURRET.pickup_turret", Color( 200, 200, 200, 255 ), Color( 50, 225, 25, 255 ) )
 		end
+
+		ply.PickingTurret = self
+		self.PickedBy = ply
+	elseif self:GetMode() != mode then
+		self:SetStatus( STATUS_MODE )
+		self:SetStatusTime( ct + 3 )
+		self:SetMode( mode )
 	end
 end
 
@@ -419,9 +410,7 @@ if SERVER then
 			pos = pos + offset
 		end*/
 
-		//debugoverlay.Axis( pos, Angle( 0, 0, 0), 5, 0.1, true )
-
-		local ang = (pos - shoot_pos):Angle() - shoot_ang
+		local ang = ( pos - shoot_pos ):Angle() - shoot_ang
 		ang:Normalize()
 
 		if math.abs( ang.p ) <= vertical + 3 and math.abs( ang.y ) <= horizontal + 3 then

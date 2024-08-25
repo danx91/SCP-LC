@@ -25,7 +25,7 @@ function ENT:Initialize()
 			end
 		end
 
-		self:SetCollisionBounds( Vector( -16, -16, -16), Vector( 16, 16, 16 ) )
+		self:SetCollisionBounds( Vector( -16, -16, -16 ), Vector( 16, 16, 16 ) )
 	else
 		self:SetModel( self.Model )
 
@@ -62,7 +62,7 @@ end
 
 if CLIENT then
 	local ind = Material( "sprites/light_ignorez" )
-	local pick = Material( "slc/hud/pickup.png" )
+	local pick = Material( "slc/hud/pickup.png", "smooth" )
 
 	function ENT:Draw()
 		if self:GetShouldRender() then
@@ -107,6 +107,6 @@ if CLIENT then
 	end
 
 	hook.Add( "SLCRegisterSettings", "SLCSearchSettings", function()
-		RegisterSettingsEntry( "search_indicator", "switch", true )
+		RegisterSettingsEntry( "search_indicator", "switch", true, nil, "hud_config" )
 	end )
 end

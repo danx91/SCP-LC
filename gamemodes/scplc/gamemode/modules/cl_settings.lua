@@ -11,7 +11,7 @@ local MATS = {
 
 local COLOR = {
 	white = Color( 255, 255, 255 ),
-	black = Color( 0, 0, 0 ),
+	black = Color( 0, 0, 0, 175 ),
 	inactive = Color( 125, 125, 125 ),
 	border = Color( 175, 175, 175 ),
 	hover = Color( 75, 75, 75, 200 ),
@@ -20,6 +20,8 @@ local COLOR = {
 	vbar = Color( 75, 75, 75 ),
  	vbar_grip = Color( 125, 125, 125 ),
 }
+
+local suppress_settings = false
 
 --[[-------------------------------------------------------------------------
 Local functions
@@ -90,7 +92,7 @@ local function processSettingsEntry( k )
 		elseif v.stype == "switch" then
 			v.value = tobool( v.value )
 		elseif v.stype == "dropbox" and v.data.parse then
-			v.value = v.data.parse( v.value )
+			v.value = v.data.parse( v.value ) or v.value
 		end
 	end
 end
@@ -125,6 +127,7 @@ function SaveSettings()
 	local tab = {}
 
 	for k, v in pairs( SLC_SETTINGS ) do
+		if v.cvar then continue end
 		tab[k] = v.value
 	end
 
@@ -167,6 +170,11 @@ end
 Open window
 ---------------------------------------------------------------------------]]
 function OpenSettingsWindow()
+	if suppress_settings then
+		suppress_settings = false
+		return
+	end
+
 	if IsValid( SLC_SETTINGS_WINDOW ) then return end
 	processAllSettings()
 
@@ -206,6 +214,13 @@ function OpenSettingsWindow()
 
 		surface.SetDrawColor( 0, 0, 0, 175 )
 		surface.DrawRect( 0, 0, pw, ph )
+	end
+
+	window.OnKeyCodePressed = function( this, code )
+		if code == GetBindButton( "settings_button" ) then
+			suppress_settings = true
+			this:Close()
+		end
 	end
 
 	local upper_pnl = vgui.Create( "DPanel", window )
@@ -336,14 +351,15 @@ function OpenSettingsWindow()
 			end
 
 			btn.DoClick = function( self )
-				if main_panel.SelectedMenu != i then
+				/*if main_panel.SelectedMenu != i then
 					main_panel:Clear()
 
 					main_panel.SelectedMenu = i
 					main_panel.SelectedMenuName = v.name
 
 					v.create( main_panel )
-				end
+				end*/
+				window:LoadMenu( i )
 			end
 		end
 	end
@@ -355,9 +371,33 @@ function OpenSettingsWindow()
 		first.create( main_panel )
 	end
 
+	window.LoadMenu = function( this, num )
+		local force = false
+
+		if !num then
+			num = main_panel.SelectedMenu
+			force = true
+		end
+
+		local pnl = WINDOW_PANELS[num]
+
+		if pnl and ( main_panel.SelectedMenu != num or force ) then
+			main_panel:Clear()
+
+			main_panel.SelectedMenu = num
+			main_panel.SelectedMenuName = pnl.name
+
+			pnl.create( main_panel )
+		end
+	end
+
 	return window
 end
 
+function OpenSettingsPanel( num )
+	if !IsValid( SLC_SETTINGS_WINDOW ) then return end
+	SLC_SETTINGS_WINDOW:LoadMenu( num )
+end
 --[[-------------------------------------------------------------------------
 Base hooks
 ---------------------------------------------------------------------------]]
@@ -383,18 +423,20 @@ hook.Add( "SLCGamemodeLoaded", "SLCSettings", function()
 	end
 
 	for k, v in pairs( SLC_SETTINGS ) do
-		if data[k] != nil then
-			v.value = data[k]
-		else
-			v.value = v.default
+		if !v.cvar then
+			if data[k] != nil then
+				v.value = data[k]
+			else
+				v.value = v.default
+			end
 		end
 		
 		processSettingsEntry( k )
 	end
 
 	checkForConflicts()
-	//PrintTable( SLC_SETTINGS )
 	SaveSettings()
+	hook.Run( "SLCSettingsLoaded" )
 end )
 
 hook.Add( "SLCRegisterSettings", "SLCBaseSettings", function()
@@ -657,6 +699,10 @@ function AddConfigControl( parent, data, marg )
 			switch.state = !switch.state
 			data.value = switch.state
 
+			if data.data and data.data.callback then
+				if data.data.callback( data.value, data.name ) == true then return end
+			end
+
 			this.anim = true
 
 			local anim = this:NewAnimation( 0.25, 0, -1, function( tab, pnl )
@@ -673,7 +719,11 @@ function AddConfigControl( parent, data, marg )
 				pnl:SetPos( switch:GetWide() * 0.5 * f )
 			end
 
-			processSettingsEntry( switch.state )
+			if data.cvar then
+				data.cvar:SetInt( data.value and 1 or 0 )
+			end
+
+			processSettingsEntry( data.name )
 			SaveSettings()
 		end
 
@@ -691,14 +741,13 @@ function AddConfigControl( parent, data, marg )
 		end
 	elseif data.stype == "dropbox" then
 		local w = ScrW()
-
 		local options = {}
+		local tab = LANG.settings.config[(data.data.lang or data.name).."_options"]
 
 		for i, v in ipairs( data.data.list or {} ) do
 			if istable( v ) then
 				options[i] = v
 			else
-				local tab = LANG.settings.config[data.name.."_options"]
 				options[i] = { v, tab and tab[v] or v }
 			end
 		end
@@ -708,18 +757,24 @@ function AddConfigControl( parent, data, marg )
 		dropbox:DockMargin( marg, marg, marg, marg )
 		dropbox:SetWide( w * 0.15 )
 		dropbox:SetOptions( options )
-		dropbox:SetActive( data.value )
+		dropbox:SetActive( data.value, tab and tab[data.value] )
 
 		dropbox.OnSelect = function( this, id, value )
+			if data.value == value then return end
+
+			local old = data.value
 			data.value = value
-
+			
 			if data.data.callback then
-				if data.data.callback( value ) == true then return end
+				if data.data.callback( value, old, data.name ) == true then return end
 			end
-
+			
 			if data.cvar then
 				data.cvar:SetString( value )
 			end
+			
+			processSettingsEntry( data.name )
+			SaveSettings()
 		end
 	end
 end
@@ -781,6 +836,8 @@ function AddConfigPanel( panel_name, sort, def )
 end
 
 AddConfigPanel( "general_config", 9000, true )
+AddConfigPanel( "hud_config", 8900 )
+//AddConfigPanel( "performance_config", 7000 )
 
 --[[-------------------------------------------------------------------------
 Reset panel

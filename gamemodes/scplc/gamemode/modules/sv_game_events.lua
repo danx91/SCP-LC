@@ -6,7 +6,7 @@ function Use914( ent, ply )
 	SetRoundProperty( "914use", true )
 
 	local button = CacheEntity( SCP_914_STATUS )
-	if !button then return end
+	if !IsValid( button ) then return end
 
 	local angle = math.Round( button:GetAngles().roll )
 
@@ -33,7 +33,7 @@ function Use914( ent, ply )
 
 	if CVAR.slc_scp914_kill:GetBool() == true then
 		AddTimer( "SCP914KillPlayers", 7.5, 1, function() 
-			for k, v in pairs( player.GetAll() ) do
+			for i, v in ipairs( player.GetAll() ) do
 				if v:Alive() then
 					local pos = v:GetPos()
 					--print( "testing!" )
@@ -79,6 +79,12 @@ end
 --[[-------------------------------------------------------------------------
 Gate A Explosion
 ---------------------------------------------------------------------------]]
+GATEA_DESTROY = GATEA_DESTROY or {}
+
+function DestroyOnGateA( ent )
+	GATEA_DESTROY[ent] = true
+end
+
 local function IsGateAOpen()
 	for i, v in ipairs( ents.FindInSphere( POS_MIDDLE_GATE_A, 125 ) ) do
 		if v:GetClass() == "prop_dynamic" then 
@@ -98,10 +104,18 @@ local function DestroyGateA()
 			v:Remove()
 		end
 	end
+
+	for k, v in pairs( GATEA_DESTROY ) do
+		if IsValid( k ) then
+			k:Remove()
+		end
+
+		GATEA_DESTROY[k] = nil
+	end
 end
 
 local function TakeDamageA( ent, ply )
-	for k, v in pairs( player.GetAll() ) do
+	for i, v in ipairs( player.GetAll() ) do
 		if !v:Alive() or v:SCPTeam() == TEAM_SPEC then continue end
 
 		local pos = v:GetPos()
@@ -109,6 +123,10 @@ local function TakeDamageA( ent, ply )
 			if pos:WithinAABox( tab[1], tab[2] ) then
 				local dmg = math.Clamp( 1 - pos:Distance( POS_MIDDLE_GATE_A ) / GATE_A_EXPLOSION_RADIUS, 0, 1 ) * 10000
 				if dmg > 0 then
+					if dmg >= v:Health() then
+						v:SkipNextSuicide()
+					end
+
 					v:TakeDamage( dmg, v, ent )
 				end
 
@@ -119,7 +137,7 @@ local function TakeDamageA( ent, ply )
 end
 
 function ExplodeGateA( ply )
-	if GetRoundProperty( "gatea" ) then return end
+	if GetRoundProperty( "gatea" ) or GetRoundProperty( "gatea_destroyed" ) then return end
 	if IsGateAOpen() then return end
 
 	SetRoundProperty( "gatea", true )
@@ -149,6 +167,9 @@ function ExplodeGateA( ply )
 		if n + 1 == time then snd:Stop() end
 
 		if n == time then
+			SetRoundProperty( "gatea", false )
+			SetRoundProperty( "gatea_destroyed", true )
+
 			BroadcastLua( 'surface.PlaySound("ambient/explosions/exp2.wav")' )
 
 			local explosion = ents.Create( "env_explosion" )
@@ -193,10 +214,8 @@ function Recontain106( ply )
 	//local fplys = ents.FindInBox( CAGE_BOUNDS.MINS, CAGE_BOUNDS.MAXS )
 	local plys = {}
 	for i, v in ipairs( player.GetAll() ) do
-		if IsValid( v ) and v:IsPlayer() and v:SCPTeam() != TEAM_SPEC and v:SCPTeam() != TEAM_SCP then
-			if v:GetPos():WithinAABox( CAGE_BOUNDS.MINS, CAGE_BOUNDS.MAXS ) then
-				table.insert( plys, v )
-			end
+		if IsValid( v ) and v:IsPlayer() and SCPTeams.HasInfo( v:SCPTeam(), SCPTeams.INFO_HUMAN ) and v:GetPos():WithinAABox( CAGE_BOUNDS.MINS, CAGE_BOUNDS.MAXS ) then
+			table.insert( plys, v )
 		end
 	end
 
@@ -207,9 +226,10 @@ function Recontain106( ply )
 	end
 
 	local scps = {}
-	for k, v in pairs( player.GetAll() ) do
+	for i, v in ipairs( player.GetAll() ) do
 		if v:SCPClass() == CLASSES.SCP106 then
 			table.insert( scps, v )
+			v:SetProperty( "escape_override", false )
 		end
 	end
 
@@ -223,10 +243,12 @@ function Recontain106( ply )
 	SetRoundStat( "106recontain", true )
 
 	AddTimer( "106Recontain", 8, 1, function()
-		if ROUND.post or !GetRoundStat( "106recontain" ) then return end
+		if ROUND.post then return end
+
 		for k, v in pairs( plys ) do
 			if IsValid( v ) then
 				v:SkipNextKillRewards()
+				v:SkipNextSuicide()
 				v:Kill()
 			end
 		end
@@ -235,23 +257,24 @@ function Recontain106( ply )
 			if IsValid( v ) then
 				local swep = v:GetActiveWeapon()
 				if IsValid( swep ) and swep:GetClass() == "weapon_scp_106" then
+					v:DisableControls( "scp106_recontain" )
 					swep:TeleportSequence( CAGE_INSIDE )
 				end
 			end
 		end
 
 		AddTimer( "106Recontain", 12, 1, function()
-			if ROUND.post or !GetRoundStat( "106recontain" ) then return end
+			if ROUND.post then return end
 
 			hook.Run( "SLCSCP106Recontained", ply )
 
 			if IsValid( ply ) then
-				local points = math.ceil( SCPTeams.GetReward( TEAM_SCP ) * 1.5 * scpnum )
+				local points = math.ceil( SCPTeams.GetReward( TEAM_SCP ) * 0.5 * scpnum )
 				PlayerMessage( "r106success$"..points, ply, true )
 				ply:AddFrags( points )
 			end
 
-			local points = math.ceil( SCPTeams.GetReward( TEAM_SCP ) * 0.5 * scpnum / #plys )
+			local points = math.floor( SCPTeams.GetReward( TEAM_SCP ) * 1.5 * scpnum / #plys )
 			for k, v in pairs( plys ) do
 				if IsValid( v ) then
 					PlayerMessage( "r106success$"..points, v, true )
@@ -262,16 +285,17 @@ function Recontain106( ply )
 			for k, v in pairs( scps ) do
 				if IsValid( v ) then
 					v:SkipNextKillRewards()
+					v:SkipNextSuicide()
 					v:Kill()
 				end
 			end
 
 			local eloiid = CacheEntity( ELO_IID or ELO_IID_NAME )
-			if eloiid then
+			if IsValid( eloiid ) then
 				eloiid:Use( game.GetWorld(), game.GetWorld(), USE_TOGGLE, 1 )
 			end
 
-			TransmitSound( "scp_lc/announcements/recontained106.ogg", true, 1 )
+			PlayPA( "scp_lc/announcements/recontained106.ogg", 9 )
 		end )
 
 
@@ -287,7 +311,7 @@ OMEGA_DESTROY = OMEGA_DESTROY or {}
 
 local function omega_shelter()
 	local xp = CVAR.slc_xp_omega_shelter:GetInt()
-	for k, v in pairs( SCPTeams.GetPlayersByInfo( SCPTeams.INFO_HUMAN ) ) do
+	for i, v in ipairs( SCPTeams.GetPlayersByInfo( SCPTeams.INFO_HUMAN ) ) do
 		if v:GetPos():WithinAABox( OMEGA_SHELTER[1], OMEGA_SHELTER[2] ) then
 			//CenterMessage( string.format( "offset:75;escaped#255,0,0,SCPHUDVBig;shelter_escape;escapexp$%d", xp ), v )
 			InfoScreen( v, "escaped", INFO_SCREEN_DURATION, {
@@ -306,9 +330,6 @@ local function omega_shelter()
 			v:SetSCPTeam( TEAM_SPEC )
 			v:SetSCPClass( "spectator" )
 			v.DeathScreen = CurTime() + INFO_SCREEN_DURATION
-			//v:SetupSpectator()
-
-			//QueueInsert( v )
 
 			AddRoundStat( "escapes" )
 			//print( "SHELTER ESCAPE", v )
@@ -318,7 +339,7 @@ end
 
 hook.Add( "SLCPreround", "SLCOmegaWarhead", function()
 	local listener = SynchronousEventListener( "OmegaWarhead", 2, 2, function( lis, info )
-		if MAP_CHECKERS.OMEGA_REMOTE() then
+		if MAP_CHECKERS.OMEGA_REMOTE() and !GetRoundStat( "goc_countdown" ) and !IsGOCDeviceValid() then
 			OMEGAWarhead( info[1][1], info[2][1] )
 		else
 			lis:Broadcast( NULL, false, 1 )
@@ -369,7 +390,7 @@ end )
 function OMEGAWarhead( ply1, ply2 )
 	print( "OMEGA Activated", ply1, ply2 )
 	
-	if GetRoundStat( "omega_warhead" ) or GetRoundStat( "alpha_warhead" ) then return end
+	if GetRoundStat( "omega_warhead" ) or GetRoundStat( "alpha_warhead" ) or GetRoundStat( "goc_countdown" ) then return end
 	SetRoundStat( "omega_warhead", true )
 
 	if IsValid( ALPHA_WARHED_SCREEN ) then
@@ -421,7 +442,7 @@ function OMEGAWarhead( ply1, ply2 )
 				local facility = {}
 
 				local clr = Color( 255, 255, 255, 255 )
-				for k, v in pairs( player.GetAll() ) do
+				for i, v in ipairs( player.GetAll() ) do
 					if v:IsInZone( ZONE_SURFACE ) then
 						table.insert( surface, v )
 
@@ -438,7 +459,9 @@ function OMEGAWarhead( ply1, ply2 )
 									"omega_mia"
 								}
 							} )
+							
 							v:SkipNextKillRewards()
+							v:SkipNextSuicide()
 							v:Kill()
 
 							//print( "OMEGA KILL", v )
@@ -519,7 +542,7 @@ end )
 function ALPHAWarhead( ply )
 	print( "ALPHA activated", ply )
 
-	if GetRoundStat( "omega_warhead" ) or GetRoundStat( "alpha_warhead" ) then return end
+	if GetRoundStat( "omega_warhead" ) or GetRoundStat( "alpha_warhead" ) or GetRoundStat( "goc_countdown" ) then return end
 	SetRoundStat( "alpha_warhead", true )
 
 	local sel_omega = GetSELObject( "OmegaWarhead" )
@@ -557,11 +580,19 @@ function ALPHAWarhead( ply )
 				//print( "HOLDING ROUND" )
 				HoldRound()
 
+				for k, v in pairs( ALPHA_DESTROY ) do
+					if IsValid( k ) then
+						k:Remove()
+					end
+
+					ALPHA_DESTROY[k] = nil
+				end
+
 				local surface = {}
 				local facility = {}
 
 				local clr = Color( 255, 255, 255, 255 )
-				for k, v in pairs( player.GetAll() ) do
+				for i, v in ipairs( player.GetAll() ) do
 					if v:IsInZone( ZONE_SURFACE ) then
 						table.insert( surface, v )
 
@@ -574,7 +605,9 @@ function ALPHAWarhead( ply )
 									"alpha_mia"
 								}
 							} )
+
 							v:SkipNextKillRewards()
+							v:SkipNextSuicide()
 							v:Kill()
 
 							//print( "ALPHA KILL", v )
@@ -587,14 +620,6 @@ function ALPHAWarhead( ply )
 
 				TransmitSound( "scp_lc/warhead/explosion.ogg", true, surface, 1 )
 				TransmitSound( "scp_lc/warhead/explosion_far.ogg", true, facility, 1 )
-
-				for k, v in pairs( ALPHA_DESTROY ) do
-					if IsValid( k ) then
-						k:Remove()
-					end
-
-					ALPHA_DESTROY[k] = nil
-				end
 
 				//print( "RELEASING ROUND" )
 				ReleaseRound()
@@ -671,7 +696,7 @@ function ALLWarheads( time )
 
 			AddTimer( "GOCExplosion", 10, 1, function()
 				local clr = Color( 255, 255, 255, 255 )
-				for k, v in pairs( player.GetAll() ) do
+				for i, v in ipairs( player.GetAll() ) do
 					v:ScreenFade( SCREENFADE.IN, clr, 2, 3 )
 
 					if v:Alive() then
@@ -681,6 +706,7 @@ function ALLWarheads( time )
 								"omega_mia"
 							}
 						} )
+						
 						v:SkipNextKillRewards()
 						v:Kill()
 					end
@@ -698,6 +724,18 @@ function ALLWarheads( time )
 	end )
 
 	return true
+end
+
+function IsGOCDeviceValid()
+	local device_placed = LocateEntity( "slc_goc_device" )
+	if IsValid( device_placed ) then
+		return !device_placed:GetDestroyed()
+	end
+
+	if #SCPTeams.GetPlayersByTeam( TEAM_GOC ) == 0 then return false end
+
+	local dev = LocateEntity( "item_slc_goc_device" )
+	return dev == true or IsValid( dev )
 end
 
 --[[-------------------------------------------------------------------------
@@ -747,6 +785,7 @@ function InitiateLockdown( ply, ent, cb )
 		end
 	end )
 
+	hook.Run( "SLCLockdown", ply, dur )
 	return true
 end
 
@@ -783,11 +822,11 @@ end )
 --[[-------------------------------------------------------------------------
 Pocket Dimension
 ---------------------------------------------------------------------------]]
-function SendToPocketDimension( ply )
+function SendToPocketDimension( ply, attacker )
 	ply:SetPos( istable( POS_POCKETD ) and POS_POCKETD[math.random( #POS_POCKETD )] or POS_POCKETD )
 	ply:SetAngles( Angle( 0, math.random( -180, 180 ), 0 ) )
 	//ply:ScreenFade( bit.bor( SCREENFADE.IN, SCREENFADE.OUT ), Color( 0, 0, 0 ), 0.05, 0.3 )
-	ply:ApplyEffect( "decay" )
+	ply:ApplyEffect( "decay", attacker )
 
 	TransmitSound( "#scp_lc/scp/106/decay.ogg", true, ply, 1 )
 end

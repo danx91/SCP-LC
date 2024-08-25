@@ -34,7 +34,7 @@ function PANEL:DoClick()
 
 		local cont = vgui.Create( "DPanel", self )
 		cont:SetPos( x, y )
-		cont:SetSize( w, math.min( h * math.min( #self.Options, 5 ), sh - y - h ) )
+		cont:SetSize( w, math.min( ( h + 4 ) * math.min( #self.Options + 1, 5 ) , sh - y - h ) )
 		cont:SetPaintBackground( false )
 		cont:MakePopup()
 
@@ -84,6 +84,12 @@ function PANEL:DoClick()
 			surface.DrawOutlinedRect( 0, 0, pw, ph )
 		end
 
+		local _OnMouseWheeled = pnl.OnMouseWheeled
+		pnl.OnMouseWheeled = function( this, delta )
+			_OnMouseWheeled( this, delta )
+			return true
+		end
+
 		for i, v in ipairs( self.Options ) do
 			local btn = vgui.Create( "DButton", pnl )
 			btn:Dock( TOP )
@@ -125,7 +131,7 @@ function PANEL:SetOptions( options )
 	end
 end
 
-function PANEL:SetActive( option )
+function PANEL:SetActive( option, show_text )
 	for i, v in ipairs( self.Options ) do
 		if v[1] == option then
 			self:SetText( v[2] )
@@ -133,7 +139,7 @@ function PANEL:SetActive( option )
 		end
 	end
 
-	self:SetText( option )
+	self:SetText( show_text or option )
 end
 
 function PANEL:OnSelect( id, value )

@@ -14,6 +14,7 @@ util.AddNetworkString( "CameraDetect" )
 util.AddNetworkString( "CenterMessage" )
 util.AddNetworkString( "PlayerCommand" )
 util.AddNetworkString( "PlayerEffect" )
+util.AddNetworkString( "RefreshPlayerEffect" )
 util.AddNetworkString( "SCPUpgrade" )
 util.AddNetworkString( "DeathInfo" )
 util.AddNetworkString( "ClassUnlock" )
@@ -23,11 +24,14 @@ util.AddNetworkString( "SLCPlayerDataUpdate" )
 util.AddNetworkString( "SLCGamemodeConfig" )
 util.AddNetworkString( "SLCProgressBar" )
 util.AddNetworkString( "SLCLooting" )
-util.AddNetworkString( "SLCHooks" )
+util.AddNetworkString( "SCPHooks" )
 util.AddNetworkString( "SLCXPSummary" )
 util.AddNetworkString( "SLCGasZones" )
 util.AddNetworkString( "SLCHitMarker" )
 util.AddNetworkString( "SLCDamageIndicator" )
+util.AddNetworkString( "SLCMoveItem" )
+util.AddNetworkString( "SCPSpecialAttack" )
+util.AddNetworkString( "SLCChatPrint" )
 
 net.AddTableChannel( "SLCPlayerMeta" )
 net.AddTableChannel( "SLCGameruleData" )
@@ -126,10 +130,19 @@ net.Receive( "WeaponDnD", function( len, ply )
 	if IsValid( wep1 ) and IsValid( wep2 ) then
 		if wep1:GetOwner() == ply and wep2:GetOwner() == ply then
 			if wep2.DragAndDrop then
-				wep2:DragAndDrop( wep1 )
+				wep2:DragAndDrop( wep1, false )
 			end
 		end
 	end
+end )
+
+net.Receive( "SLCMoveItem", function( len, ply )
+	local from = net.ReadUInt( 8 )
+	local from_class = net.ReadString()
+	local to = net.ReadUInt( 8 )
+	local to_class = net.ReadString()
+
+	ply:MoveItem( from, to, from_class, to_class )
 end )
 
 net.Receive( "DropVest", function( len, ply )

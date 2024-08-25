@@ -144,6 +144,7 @@ function SWEP:OnDrop()
 end
 
 function SWEP:PrimaryAttack()
+
 end
 
 function SWEP:SecondaryAttack()
@@ -167,23 +168,19 @@ function SWEP:Reload()
 	self.RPressed = CurTime() + 0.1
 end
 
-function SWEP:DragAndDrop( wep )
-	if wep:GetClass() == "item_slc_access_chip" then
-		local owner = self:GetOwner()
-		if IsValid( owner ) and owner:GetActiveWeapon() == self then
-			//if self:GetChipID() == -1 then
-				if self:GetState() == STATE.IDLE then
-					local chip = GetChipByID( wep:GetChipID() )
-					if chip then
-						self:InstallChip( chip, wep )
-						return true
-					end
-				end
-			//end
-		end
-	else
-		return false
-	end
+function SWEP:DragAndDrop( wep, test )
+	if wep:GetClass() != "item_slc_access_chip" then return false end
+
+	local owner = self:GetOwner()
+	if !IsValid( owner ) or owner:GetActiveWeapon() != self then return false end
+	if self:GetState() != STATE.IDLE then return false end
+
+	local chip = GetChipByID( wep:GetChipID() )
+	if !chip then return false end
+	if test then return true end
+
+	self:InstallChip( chip, wep )
+	return true
 end
 
 function SWEP:StoreWeapon( data )
@@ -399,7 +396,7 @@ function SWEP:EjectChip( swap )
 
 					if SERVER then
 						if chip then
-							if #owner:GetWeapons() < owner:GetInventorySize() and !owner:HasWeapon( "item_slc_access_chip" ) then
+							if owner:GetFreeInventory() > 0 and !owner:HasWeapon( "item_slc_access_chip" ) then
 								local ent = owner:Give( "item_slc_access_chip" )
 								ent:SetChipData( chip, override )
 							else
@@ -492,33 +489,13 @@ if CLIENT then
 				self:DrawOmnitoolScreen()
 			cam.End2D()
 		render.PopRenderTarget()
-
-		/*if self:GetState() == STATE.PREPARING then
-			local mag = 1 - (self.ActionFinish - CurTime()) / self.LoadingDuration
-
-			if glitch_vt < CurTime() then
-				glitch_vt = CurTime() + math.random() * 0.25 - mag * 0.1 -- < 0!
-				glitch_v = util.GlitchData( 8 + math.Round( math.random() * 4 ), 0.003 + math.random() * 0.01 )
-			end
-
-			if glitch_ht < CurTime() then
-				glitch_ht = CurTime() + math.random() * 0.15
-				glitch_h = util.GlitchData( 5 + math.Round( math.random() * 5 ), math.random() * 0.03 + mag * 0.02 )
-			end
-
-			draw.GlitchToTexture( tex_id, glitch_rt, GLITCH_VERTICAL, glitch_v, true, 3, 3, 3, 255 ) --first pass - vertical
-			render.CopyTexture( glitch_rt, screen_rt )
-
-			draw.GlitchToTexture( tex_id, glitch_rt, GLITCH_HORIZONTAL, glitch_h, true, 3, 3, 3, 255 ) --seconds pass - horizontal
-			render.CopyTexture( glitch_rt, screen_rt )
-		end*/
 	end
 
 	local color_white = Color( 255, 255, 255 )
 	//local color_gray = Color( 100, 100, 100 )
 
 	local MATS = {
-		logo = Material( "slc/misc/scp_logo_128.png" ),
+		logo = Material( "slc/misc/scp_logo_128.png", "smooth" ),
 	}
 
 	local alpha = 0
@@ -538,13 +515,13 @@ if CLIENT then
 			end*/
 
 			draw.Text( {
-				text = mb and "MalO ver1.0.0" or (self.Lang.SCREEN.loading.."..."),
+				text = mb and "MalO ver1.0.0" or ( self.Lang.SCREEN.loading.."..." ),
 				pos = { w * 0.5, h * 0.3 },
 				font = "SCPHUDVBig",
 				color = color_white,
 				xalign = TEXT_ALIGN_CENTER,
 				yalign = TEXT_ALIGN_CENTER,
-			})
+			} )
 
 			surface.SetDrawColor( color_white )
 
@@ -591,7 +568,7 @@ if CLIENT then
 			color = color_white,
 			xalign = TEXT_ALIGN_RIGHT,
 			yalign = TEXT_ALIGN_CENTER,
-		})
+		} )
 
 		draw.Text( {
 			text = os.date( "%H:%M", os.time() ),
@@ -600,7 +577,7 @@ if CLIENT then
 			color = color_white,
 			xalign = TEXT_ALIGN_RIGHT,
 			yalign = TEXT_ALIGN_BOTTOM,
-		})
+		} )
 
 		surface.SetAlphaMultiplier( 1 )
 
@@ -613,7 +590,7 @@ if CLIENT then
 				xalign = TEXT_ALIGN_CENTER,
 				yalign = TEXT_ALIGN_CENTER,
 				max_width = SCREEN_WIDTH,
-			})
+			} )
 			draw.LimitedText( {
 				text = self.Lang.SCREEN.ejectconfirm,
 				pos = { w * 0.5, h * 0.7 },
@@ -622,7 +599,7 @@ if CLIENT then
 				xalign = TEXT_ALIGN_CENTER,
 				yalign = TEXT_ALIGN_CENTER,
 				max_width = SCREEN_WIDTH,
-			})
+			} )
 
 			return
 		end
@@ -636,7 +613,7 @@ if CLIENT then
 				xalign = TEXT_ALIGN_CENTER,
 				yalign = TEXT_ALIGN_CENTER,
 				max_width = SCREEN_WIDTH,
-			})
+			} )
 		elseif state == STATE.EJECTING then
 			draw.LimitedText( {
 				text = self.Lang.SCREEN.ejecting,
@@ -646,7 +623,7 @@ if CLIENT then
 				xalign = TEXT_ALIGN_CENTER,
 				yalign = TEXT_ALIGN_CENTER,
 				max_width = SCREEN_WIDTH
-			})
+			} )
 		else
 			surface.SetAlphaMultiplier( alpha )
 
@@ -672,7 +649,7 @@ if CLIENT then
 				color = color_white,
 				xalign = TEXT_ALIGN_LEFT,
 				yalign = TEXT_ALIGN_CENTER,
-			})
+			} )
 
 			local name
 			local id = self:GetChipID()
@@ -690,7 +667,7 @@ if CLIENT then
 				xalign = TEXT_ALIGN_LEFT,
 				yalign = TEXT_ALIGN_CENTER,
 				max_width = SCREEN_WIDTH - 75,
-			})
+			} )
 
 			surface.SetAlphaMultiplier( 1 )
 		end
@@ -720,6 +697,24 @@ if CLIENT then
 
 		desc:trim( true )
 		self.Info = tostring( desc )
+	end
+
+	function SWEP:BuildDescription( desc )
+		local id = self:GetChipID()
+		local chip = GetChipByID( id )
+
+		if chip then
+			desc:Print( self.Lang.chip2 ):Print( self.CHIP_LANG.NAMES[chip.name] or id,  Color( 200, 200, 30 ) ):Print( "\n" )
+			desc:Print( self.Lang.clearance2 ):Print( chip.level,  Color( 200, 200, 30 ) )
+
+			local cd = GetChipDescription( chip.name, self:GetAccessOverride(), self.CHIP_LANG.ACCESS, false )
+			if cd then
+				desc:Print( "\n" ):Print( string.rep( "-", 32 ) ):Print( "\n" )
+				desc:Print( self.CHIP_LANG.hasaccess ):Print( "\n\t" ):Print( cd, Color( 30, 200, 30 ) )
+			end
+		else
+			desc:Print( self.Lang.chip2 ):Print( self.Lang.none, Color( 200, 200, 30 ) )
+		end
 	end
 
 	SWEP.BoneAttachment = "ValveBiped.Bip01_R_Hand"

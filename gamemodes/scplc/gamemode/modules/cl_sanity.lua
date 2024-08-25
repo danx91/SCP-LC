@@ -99,9 +99,7 @@ end, function( ply )
 	ply.InsaneBlinkChangeOn = false
 end )
 
-hook.Add( "SLCBlink", "SLCInsaneBlink", function( duration, delay )
-	local ply = LocalPlayer()
-
+hook.Add( "SLCBlink", "SLCInsaneBlink", function( ply, duration, delay )
 	if ply.InsaneBlinkChange == 1 then
 		ply.InsaneBlinkChange = 2
 		ply.InsaneBlinkChangeOn = true

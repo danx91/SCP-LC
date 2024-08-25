@@ -17,6 +17,7 @@ SWEP.BatteryUsage 	= 0.1
 
 SWEP.scp914upgrade = "item_slc_thermal"
 SWEP.Group = "nvg"
+SWEP.UseGroup = "vision"
 
 function SWEP:Initialize()
 	self:SetHoldType( self.HoldType )
@@ -24,6 +25,6 @@ function SWEP:Initialize()
 end
 
 function SWEP:OnSelect()
-	if self:GetBattery() <= 0 then return end
+	if self:GetBattery() <= 0 or !self:CanEnable() then return end
 	self:SetEnabled( !self:GetEnabled() )
 end

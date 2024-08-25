@@ -29,10 +29,16 @@ SWEP.ShouldDrawWorldModel 	= false
 SWEP.FreezePlayer 			= false
 SWEP.ShouldFreezePlayer 	= false
 
+SWEP.DisableDamageEvent		= false
+
 SWEP.ScoreOnDamage 			= false
 SWEP.ScoreOnKill 			= false
 
 SWEP.SelectFont 			= "SCPHUDMedium"
+
+function SWEP:SetupDataTables()
+	self:AddNetworkVar( "NextSpecialAttack", "Float" )
+end
 
 function SWEP:InitializeLanguage( name )
 	if CLIENT then
@@ -41,9 +47,12 @@ function SWEP:InitializeLanguage( name )
 end
 
 function SWEP:InitializeHUD( name )
-	if CLIENT then
-		self.HUDObject = SCPHUDObject( name, self )
-	end
+	if SERVER or !name and !self.HUDName then return end
+
+	local hud = GetSCPHUDObject( name or self.HUDName )
+	if !hud then return end
+
+	hud:Create( self )
 end
 
 function SWEP:StoreWeapon( data )
@@ -121,15 +130,31 @@ end
 
 function SWEP:CanTargetPlayer( ply )
 	local t = ply:SCPTeam()
-	return t != TEAM_SPEC and !SCPTeams.IsAlly( TEAM_SCP, t )
+	return t != TEAM_SPEC and !SCPTeams.IsAlly( TEAM_SCP, t ) and !ply:HasGodMode() and !ply:HasEffect( "spawn_protection" )
 end
 
-SWEP.PrimaryCD = 0
 function SWEP:PrimaryAttack()
-	if ROUND.preparing then return end
-	
-	if self.PrimaryCD > CurTime() then return end
-	self.PrimaryCD = CurTime() + 0.5
+	self:DamageEvent()
+end
+
+function SWEP:SecondaryAttack()
+	self:DamageEvent()
+end
+
+function SWEP:SpecialAttack()
+
+end
+
+function SWEP:Reload()
+	self:DamageEvent()
+end
+
+SWEP.DamageEventCD = 0
+function SWEP:DamageEvent()
+	if ROUND.preparing or self.DisableDamageEvent then return end
+
+	if self.DamageEventCD > CurTime() then return end
+	self.DamageEventCD = CurTime() + 0.5
 
 	if SERVER then
 		local owner = self:GetOwner()
@@ -143,64 +168,96 @@ function SWEP:PrimaryAttack()
 		}
 
 		local ent = trace.Entity
-		if IsValid( ent ) then
-			if !ent:IsPlayer() then
-				self:SCPDamageEvent( ent, 50 )
-			end
+		if IsValid( ent ) and !ent:IsPlayer() then
+			self:SCPDamageEvent( ent, 50 )
 		end
 	end
 end
 
-function SWEP:SecondaryAttack()
+function SWEP:HUDNotify( text, time, snd )
+	if SERVER then
+		net.Ping( "SCPHUDNotify", text, self:GetOwner() )
+		return
+	end
 
-end
+	if !self.HUDObject then return end
 
-function SWEP:Reload()
-
+	self.HUDObject:Notify( text, time or 1, snd )
 end
 
 function SWEP:DrawHUD()
-	if hook.Run( "SLCShouldDrawSCPHUD" ) then
-		if self.HUDObject then
-			self.HUDObject:Render()
-		end
+	if !hook.Run( "SLCShouldDrawSCPHUD" ) then return end
 
-		if self.DrawSCPHUD then
-			self:DrawSCPHUD()
-		end
+	if self.HUDObject then
+		self.HUDObject:Draw()
+	end
+
+	if self.DrawSCPHUD then
+		self:DrawSCPHUD()
 	end
 end
 
-/*hook.Add( "PlayerButtonDown", "SLCSCPSpecialAbility", function( ply, btn )
-	local wep = ply:GetActiveWeapon()
-	if IsValid( wep ) and wep.SCP and btn == GetBindButton( "upgrade_tree_button" ) then
-	
-end )
+if CLIENT then
+	net.ReceivePing( "SCPHUDNotify", function( data )
+		local wep = LocalPlayer():GetSCPWeapon()
+		if !IsValid( wep ) then return end
 
-hook.Add( "PlayerButtonUp", "SLCSCPSpecialAbility", function( ply, btn )
-	GetBindButton( "upgrade_tree_button" )
-end )*/
+		wep:HUDNotify( data )
+	end )
+
+	hook.Add( "PlayerButtonDown", "SLCSCPSpecialAbility", function( ply, btn )
+		if ply:SCPTeam() != TEAM_SCP or ply:GetDisableControls() then return end
+		if btn != GetBindButton( "scp_special" ) then return end
+
+		local wep = ply:GetSCPWeapon()
+		if !IsValid( wep ) then return end
+		
+		if wep:GetNextSpecialAttack() > CurTime() then return end
+
+		wep:SpecialAttack()
+
+		net.Start( "SCPSpecialAttack" )
+		net.SendToServer()
+	end )
+end
 
 if SERVER then
+	net.Receive( "SCPSpecialAttack", function( len, ply )
+		if ply:SCPTeam() != TEAM_SCP then return end
+
+		local wep = ply:GetSCPWeapon()
+		if !IsValid( wep ) then return end
+		
+		if wep:GetNextSpecialAttack() > CurTime() then return end
+
+		wep:SpecialAttack()
+	end )
+
 	hook.Add( "PostEntityTakeDamage", "SLCGenericSCPDamage", function( target, dmg, took )
 		if !IsValid( target ) or !target:IsPlayer() then return end
 
 		local att = dmg:GetAttacker()
 		if !IsValid( att ) or !att:IsPlayer() or att == target or att:SCPTeam() != TEAM_SCP then return end
 
-		local wep = att:GetActiveWeapon()
-		if !IsValid( wep ) or !wep.UpgradeSystemMounted or !wep.ScoreOnDamage then return end
+		local dmg_num = math.max( dmg:GetDamage(), dmg:GetDamageCustom() )
+		if dmg_num == 0 then return end
 
-		local score = math.max( dmg:GetDamage(), dmg:GetDamageCustom() )
-		if score == 0 then return end
+		local wep = att:GetSCPWeapon()
+		if !IsValid( wep ) then return end
 
-		wep:AddScore( score )
+		if wep.OnPlayerDamaged then
+			wep:OnPlayerDamaged( dmg_num, target )
+		end
+
+		if !wep.UpgradeSystemMounted or !wep.ScoreOnDamage then return end
+
+		wep:AddScore( dmg_num )
 	end )
 
 	hook.Add( "SLCPlayerDeath", "SLCGenericSCPKill", function( ply, att )
 		if !IsValid( ply ) or !ply:IsPlayer() or !IsValid( att ) or !att:IsPlayer() or att == ply or att:SCPTeam() != TEAM_SCP then return end
 
-		local wep = att:GetActiveWeapon()
+		local wep = att:GetSCPWeapon()
 		if !IsValid( wep ) then return end
 
 		if wep.UpgradeSystemMounted and wep.ScoreOnKill then

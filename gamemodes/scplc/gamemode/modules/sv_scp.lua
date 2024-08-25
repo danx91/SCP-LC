@@ -26,6 +26,8 @@ local SCP_VALID_ENTRIES = {
 	reward_override = true,
 	disable_overload = true,
 	no_chase = true,
+	hide = true,
+	avoid = true,
 }
 
 local SCP_DYNAMIC_VARS = {}
@@ -69,7 +71,14 @@ function SendSCPList( ply )
 
 	for i, v in ipairs( TransmitSCPS ) do
 		local obj = SCPObjects[v]
-		table.insert( data, { name = v, model = obj.model, hp = obj.basestats.base_health, speed = obj.basestats.base_speed, no_select = obj.basestats.no_select } )
+		table.insert( data, {
+			name = v,
+			model = obj.model,
+			hp = obj.basestats.base_health,
+			speed = obj.basestats.base_speed,
+			no_select = obj.basestats.no_select,
+			hide = obj.basestats.hide
+		} )
 	end
 
 	net.Start( "SCPList" )
@@ -216,11 +225,7 @@ local function setup_scp_internal( self, ply, ... )
 	local args = {...}
 	local basestats = table.Copy( self.basestats )
 
-	if self.callback then
-		if self.callback( ply, basestats, ... ) then
-			return
-		end
-	end
+	if self.callback and self.callback( ply, basestats, ... ) then return end
 
 	ply:UnSpectate()
 	ply:Cleanup( basestats.no_strip == true )
@@ -276,8 +281,6 @@ local function setup_scp_internal( self, ply, ... )
 		if IsValid( wep ) then
 			wep.ShouldFreezePlayer = basestats.prep_freeze == true
 		end
-
-		ply:SetProperty( "scp_weapon", wep, true )
 	end
 
 	ply:SetArmor( 0 )
@@ -321,22 +324,15 @@ function ObjectSCP:SetupPlayer( ply, instant, ... )
 		ply:SetSCPTeam( TEAM_SCP )
 		ply:SetSCPClass( CLASSES[self.name] )
 
-		ply:SetProperty( "spawning_scp", { time = CurTime() + INFO_SCREEN_DURATION, obj = self, args = {...} } )
+		ply:SetProperty( "spawning_scp", { obj = self } )
 		InfoScreen( ply, "spawn", INFO_SCREEN_DURATION )
+
+		local args = {...}
+		ply:AddTimer( "Spawn", INFO_SCREEN_DURATION, 1, function()
+			setup_scp_internal( self, ply, unpack( args ) )
+		end )
 	end
 end
-
-hook.Add( "Tick", "SLCSpawnSCPTick", function()
-	local ct = CurTime()
-
-	for i, v in ipairs( player.GetAll() ) do
-		local data = v:GetProperty( "spawning_scp" )
-		if data and data.time < ct then
-			v:SetProperty( "spawning_scp", nil )
-			setup_scp_internal( data.obj, v, unpack( data.args ) )
-		end
-	end
-end )
 
 setmetatable( ObjectSCP, { __call = ObjectSCP.Create } )
 --------------------------------------------------------------------------------
@@ -350,7 +346,7 @@ hook.Add( "SLCGamemodeLoaded", "SLCSCPModule", function()
 	//if SetupForceSCP then SetupForceSCP() end
 	hook.Run( "SetupForceSCP" )
 
-	//for k, v in pairs( player.GetAll() ) do
+	//for i, v in ipairs( player.GetAll() ) do
 		SendSCPList()
 	//end
 end )

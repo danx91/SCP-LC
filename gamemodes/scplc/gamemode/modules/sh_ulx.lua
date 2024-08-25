@@ -31,13 +31,16 @@ SLCAuth.AddLibrary( "ulx", "ULX", {
 
 function InitializeSCPULX()
 	local class_names = {}
-	for group_name, group in pairs( GetGroups() ) do
+	local support_groups = { "random" }
+	for group_name, group in pairs( GetClassGroups() ) do
 		if group_name != "SUPPORT" then
 			for k, class in pairs( group ) do
 				table.insert( class_names, k )
 			end
 		else
-			for _, sup_group in pairs( group ) do
+			for sup_name, sup_group in pairs( group ) do
+				table.insert( support_groups, sup_name )
+
 				for k, class in pairs( sup_group ) do
 					table.insert( class_names, k )
 				end
@@ -46,7 +49,10 @@ function InitializeSCPULX()
 	end
 
 	function ulx.forcespawn( ply, plyt, class_n, silent )
-		if !class_n or !ROUND.active then return end
+		if !class_n or !ROUND.active then
+			ULib.tsayError( ply, "Round is not active!", true )
+			return
+		end
 		
 		if !plyt:GetActive() then
 			ULib.tsayError( ply, "Player "..plyt:Nick().." is inactive! Force spawn failed", true )
@@ -56,7 +62,7 @@ function InitializeSCPULX()
 		local class
 		local spawn
 
-		for group_name, group in pairs( GetGroups() ) do
+		for group_name, group in pairs( GetClassGroups() ) do
 			if group_name != "SUPPORT" then
 				local _, grspwn = GetClassGroup( group_name )
 				for k, c in pairs( group ) do
@@ -90,9 +96,9 @@ function InitializeSCPULX()
 		plyt:SetupPlayer( class, pos, true )
 
 		if silent then
-			ulx.fancyLogAdmin( ply, true, "#A force spawned #T as "..class.name, plyt )
+			ulx.fancyLogAdmin( ply, true, "#A force spawned #T as #s", plyt, class.name )
 		else
-			ulx.fancyLogAdmin( ply, "#A force spawned #T as "..class.name, plyt )
+			ulx.fancyLogAdmin( ply, "#A force spawned #T as #s", plyt, class.name )
 		end
 	end
 
@@ -104,15 +110,34 @@ function InitializeSCPULX()
 	forcespawn:defaultAccess( ULib.ACCESS_SUPERADMIN )
 	forcespawn:help( "Sets player to specific class and spawns him" )
 
+	function ulx.spawnsupport( ply, name, silent )
+		if SpawnSupport( name ) then
+			if silent then
+				ulx.fancyLogAdmin( ply, true, "#A spawned support #s", name )
+			else
+				ulx.fancyLogAdmin( ply, "#A spawned support #s", name )
+			end
+		else
+			ULib.tsayError( ply, "Failed to spawn support '"..name.."'!", true )
+		end
+	end
+
+	local spawnsupport = ulx.command( ULX_CAT, "ulx spawn_support", ulx.spawnsupport, "!spawnsupport" )
+	spawnsupport:addParam{ type = ULib.cmds.StringArg, hint = "Support name (or random)", completes = support_groups }
+	spawnsupport:addParam{ type = ULib.cmds.BoolArg, invisible = true }
+	spawnsupport:setOpposite( "ulx silent spawn_support", { nil, nil, true } )
+	spawnsupport:defaultAccess( ULib.ACCESS_SUPERADMIN )
+	spawnsupport:help( "Spawns support" )
+
 	function ulx.slcxp( ply, plyt, xp, silent )
 		if !isnumber( xp ) then return end
 
 		plyt:AddXP( xp, "cmd" )
 
 		if silent then
-			ulx.fancyLogAdmin( ply, true, "#A gave #T "..xp.." experience", plyt )
+			ulx.fancyLogAdmin( ply, true, "#A gave #T #i experience", plyt, xp )
 		else
-			ulx.fancyLogAdmin( ply, "#A gave #T "..xp.." experience", plyt )
+			ulx.fancyLogAdmin( ply, "#A gave #T #i experience", plyt, xp )
 		end
 	end
 
@@ -132,9 +157,9 @@ function InitializeSCPULX()
 		end
 
 		if silent then
-			ulx.fancyLogAdmin( ply, true, "#A gave #T "..lvl.." level(s)", plyt )
+			ulx.fancyLogAdmin( ply, true, "#A gave #T #i level(s)", plyt, lvl )
 		else
-			ulx.fancyLogAdmin( ply, "#A gave #T "..lvl.." level(s)", plyt )
+			ulx.fancyLogAdmin( ply, "#A gave #T #i level(s)", plyt, lvl )
 		end
 	end
 
@@ -145,52 +170,6 @@ function InitializeSCPULX()
 	level:setOpposite( "ulx silent level", { nil, nil, nil, true }, "!slevel" )
 	level:defaultAccess( ULib.ACCESS_SUPERADMIN )
 	level:help( "Gives level to specified player" )
-
-	/*function ulx.adminmode( ply, silent )
-		ply:ToggleAdminModePref()
-		if ply.admpref then
-			if ply.AdminMode then
-				if silent then
-					ulx.fancyLogAdmin( ply, true, "#A entered admin mode" )
-				else
-					ulx.fancyLogAdmin( ply, "#A entered admin mode" )
-				end
-			else
-				if silent then
-					ulx.fancyLogAdmin( ply, true, "#A will enter admin mode in next round" )
-				else
-					ulx.fancyLogAdmin( ply, "#A will enter admin mode in next round" )
-				end
-			end
-		else
-			if silent then
-				ulx.fancyLogAdmin( ply, "#A will no longer be in admin mode" )
-			else
-				ulx.fancyLogAdmin( ply, "#A will no longer be in admin mode" )
-			end
-		end
-	end
-
-	local adminmode = ulx.command( ULX_CAT, "ulx admin_mode", ulx.adminmode, "!adminmode" )
-	adminmode:addParam{ type = ULib.cmds.BoolArg, invisible = true }
-	adminmode:setOpposite( "ulx silent admin_mode", { nil, true }, "!sadminmode" )
-	adminmode:defaultAccess( ULib.ACCESS_ADMIN )
-	adminmode:help( "Toggles admin mode" )*/
-
-	/*function ulx.requestntf( ply, silent )
-		SpawnNTFS()
-		if silent then
-			ulx.fancyLogAdmin( ply, true, "#A spawned support units" )
-		else
-			ulx.fancyLogAdmin( ply, "#A spawned support units" )
-		end
-	end
-
-	local requestntf = ulx.command( ULX_CAT, "ulx request_ntf", ulx.requestntf, "!ntf" )
-	requestntf:addParam{ type = ULib.cmds.BoolArg, invisible = true }
-	requestntf:setOpposite( "ulx silent request_ntf", { nil, true }, "!sntf" )
-	requestntf:defaultAccess( ULib.ACCESS_SUPERADMIN )
-	requestntf:help( "Spawns support units" )*/
 
 	function ulx.destroygatea( ply, silent )
 		ExplodeGateA()
@@ -232,9 +211,9 @@ function InitializeSCPULX()
 			ent:Spawn()
 
 			if silent then
-				ulx.fancyLogAdmin( ply, true, "#A spawned '"..chip.."' chip" )
+				ulx.fancyLogAdmin( ply, true, "#A spawned #s chip", chip )
 			else
-				ulx.fancyLogAdmin( ply, "#A spawned '"..chip.."' chip" )
+				ulx.fancyLogAdmin( ply, "#A spawned #s chip", chip )
 			end
 		else
 			ULib.tsayError( ply, "Unknown chip name '"..chip.."'!", true )
@@ -260,16 +239,15 @@ function InitializeSCPULX()
 
 	local function rem_info( ply, target, type, silent )
 		if silent then
-			ulx.fancyLogAdmin( ply, true, "#A removed #T data: "..type, target )
+			ulx.fancyLogAdmin( ply, true, "#A removed #T data: #s", target, type )
 		else
-			ulx.fancyLogAdmin( ply, "#A removed #T data: "..type, target )
+			ulx.fancyLogAdmin( ply, "#A removed #T data: #s", target, type )
 		end
 	end
 
 	function ulx.removedata( ply, target, atype, silent )
 		if atype == "level" then
-			target:Set_SCPLevel( 0 )
-			target:SetSCPData( "level", 0 )
+			target:SetSCPLevel( 0 )
 
 			rem_info( ply, target, atype, silent )
 		elseif atype == "xp" then
@@ -278,8 +256,14 @@ function InitializeSCPULX()
 
 			rem_info( ply, target, atype, silent )
 		elseif atype == "class_points" then
-			target:Set_SCPClassPoints( 0 )
-			target:SetSCPData( "class_points", 0 )
+			target:SetClassPoints( 0 )
+
+			rem_info( ply, target, atype, silent )
+		elseif atype == "prestige" then
+			target:SetPrestigeLevel( 0 )
+			target:SetSCPData( "prestige_level", 0 )
+			target:SetPrestigePoints( 0 )
+			target.PlayerInfo:Set( "prestige_classes", {} )
 
 			rem_info( ply, target, atype, silent )
 		elseif atype == "owned_classes" then
@@ -287,13 +271,15 @@ function InitializeSCPULX()
 
 			rem_info( ply, target, atype, silent )
 		elseif atype == "all" then
-			target:Set_SCPLevel( 0 )
-			target:SetSCPData( "level", 0 )
+			target:SetSCPLevel( 0 )
 			target:Set_SCPExp( 0 )
 			target:SetSCPData( "xp", 0 )
-			target:Set_SCPClassPoints( 0 )
-			target:SetSCPData( "class_points", 0 )
+			target:SetClassPoints( 0 )
 			target.PlayerInfo:Set( "unlocked_classes", {} )
+			target:SetPrestigeLevel( 0 )
+			target:SetSCPData( "prestige_level", 0 )
+			target:SetPrestigePoints( 0 )
+			target.PlayerInfo:Set( "prestige_classes", {} )
 
 			rem_info( ply, target, atype, silent )
 		else
@@ -303,16 +289,97 @@ function InitializeSCPULX()
 
 	local removedata = ulx.command( ULX_CAT, "ulx remove_data", ulx.removedata )
 	removedata:addParam{ type = ULib.cmds.PlayerArg, hint = "Target" }
-	removedata:addParam{ type = ULib.cmds.StringArg, hint = "Type", completes = { "level", "xp", "class_points", "owned_classes", "all" } }
+	removedata:addParam{ type = ULib.cmds.StringArg, hint = "Type", completes = { "level", "xp", "class_points", "prestige", "owned_classes", "all" } }
 	removedata:addParam{ type = ULib.cmds.BoolArg, invisible = true }
-	removedata:setOpposite( "ulx silent remove_data", { nil, nil, true } )
+	removedata:setOpposite( "ulx silent remove_data", { nil, nil, nil, true } )
 	removedata:defaultAccess( ULib.ACCESS_SUPERADMIN )
 	removedata:help( "Removes player data" )
+
+	function ulx.punish( ply, target )
+		if !target:Alive() then return end
+
+		target:SetFrags( 0 )
+
+		target:ForceSuicideQueue()
+		target:Kill()
+
+		ulx.fancyLogAdmin( ply, "#A punished #T", target )
+	end
+
+	local punish = ulx.command( ULX_CAT, "ulx punish", ulx.punish, "!punish" )
+	punish:addParam{ type = ULib.cmds.PlayerArg, hint = "Target" }
+	punish:defaultAccess( ULib.ACCESS_ADMIN )
+	punish:help( "Punish player" )
+
+	function ulx.punishid( ply, id )
+		local target
+		if string.match( id, "^%d+$" ) then
+			target = player.GetBySteamID64( id )
+		else
+			target = player.GetBySteamID( id )
+		end
+
+		if !IsValid( target ) or !target:Alive() then return end
+		
+		target:SetFrags( 0 )
+
+		target:ForceSuicideQueue()
+		target:Kill()
+
+		ulx.fancyLogAdmin( ply, "#A punished #T", target )
+	end
+
+	local punishid = ulx.command( ULX_CAT, "ulx punishid", ulx.punishid, "!punishid" )
+	punishid:addParam{ type=ULib.cmds.StringArg, hint="steamid" }
+	punishid:defaultAccess( ULib.ACCESS_ADMIN )
+	punishid:help( "Punish player (SteamID)" )
+
+	function ulx.xslay( ply, target )
+		if !target:Alive() then return end
+
+		target:SkipNextSuicide()
+		target:Kill()
+
+		ulx.fancyLogAdmin( ply, "#A xslayed #T", target )
+	end
+
+	local xslay = ulx.command( ULX_CAT, "ulx xslay", ulx.xslay, "!xslay" )
+	xslay:addParam{ type = ULib.cmds.PlayerArg, hint = "Target" }
+	xslay:defaultAccess( ULib.ACCESS_ADMIN )
+	xslay:help( "Slay player skipping low priority queue" )
+
+	function ulx.spawnd( ply, target )
+		if !ROUND.active then
+			ULib.tsayError( ply, "Round is not active!", true )
+			return
+		end
+		
+		if !target:GetActive() then
+			ULib.tsayError( ply, "Player "..target:Nick().." is inactive! Force spawn failed", true )
+			return
+		end
+
+		if target:Alive() then
+			ULib.tsayError( ply, "Player "..target:Nick().." is already alive! Force spawn failed", true )
+			return
+		end
+
+		target:SetupPlayer( GetClassData( CLASSES.CLASSD ), ply:GetPos(), true )
+		ulx.fancyLogAdmin( ply, "#A spawned #T as Class D", target )
+	end
+
+	local spawnd = ulx.command( ULX_CAT, "ulx spawnd", ulx.spawnd, "!spawnd" )
+	spawnd:addParam{ type = ULib.cmds.PlayerArg, hint = "Target" }
+	spawnd:defaultAccess( ULib.ACCESS_ADMIN )
+	spawnd:help( "Slay player skipping low priority queue" )
 end
 
 hook.Add( "SetupForceSCP", "ULXForceSCP", function()
 	function ulx.forcescp( plyc, plyt, scp, silent )
-		if !scp or !ROUND.active then return end
+		if !scp or !ROUND.active then
+			ULib.tsayError( plyc, "Round is not active!", true )
+			return
+		end
 
 		if !plyt:GetActive() then
 			ULib.tsayError( plyc, "Player "..plyt:GetName().." is inactive! Force spawn failed", true )
@@ -324,9 +391,9 @@ hook.Add( "SetupForceSCP", "ULXForceSCP", function()
 			scp_obj:SetupPlayer( plyt, true )
 
 			if silent then
-				ulx.fancyLogAdmin( plyc, true, "#A force spawned #T as "..scp, plyt )
+				ulx.fancyLogAdmin( plyc, true, "#A force spawned #T as #s", plyt, scp )
 			else
-				ulx.fancyLogAdmin( plyc, "#A force spawned #T as "..scp, plyt )
+				ulx.fancyLogAdmin( plyc, "#A force spawned #T as #s", plyt, scp )
 			end
 		else
 			ULib.tsayError( plyc, "Invalid SCP "..scp.."!", true )

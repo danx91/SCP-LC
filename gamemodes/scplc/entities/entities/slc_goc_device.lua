@@ -21,9 +21,18 @@ function ENT:Initialize()
 	if SERVER then
 		self:PhysicsInit( SOLID_VPHYSICS )
 
-		local ct = CurTime()
-		self:SetStartTime( ct )
-		self:SetFinishTime( ct + CVAR.slc_time_goc_device:GetFloat() )
+		if GetRoundStat( "omega_warhead" ) or GetRoundStat( "alpha_warhead" ) then
+			self:SetStartTime( -1 )
+			self:SetFinishTime( -1 )
+		else
+			local ct = CurTime()
+			self:SetStartTime( ct )
+			self:SetFinishTime( ct + CVAR.slc_time_goc_device:GetFloat() )
+
+			SetRoundStat( "goc_countdown", true )
+			EnableZoneVentilation( ZONE_WARHEAD )
+		end
+		
 	end
 
 	local phys = self:GetPhysicsObject()
@@ -52,7 +61,7 @@ function ENT:Think()
 		self:EmitSound( "SLC.GOCDestroyed" )
 	end
 
-	if !self:GetDestroyed() and self:Finished() and !self.Detonated then
+	if !self:GetDestroyed() and self:Finished() and !self.Detonated and self:GetStartTime() > 0 then
 		self.Detonated = true
 
 		ALLWarheads( CVAR.slc_time_goc_warheads:GetInt() )
@@ -64,6 +73,11 @@ function ENT:Think()
 			
 			v:AddXP( xp )
 			PlayerMessage( "xp_goc_device$"..xp, v )
+
+			local mask = v:GetWeaponByGroup( "gasmask" )
+			if IsValid( mask ) then
+				mask:Refill()
+			end
 		end
 	end
 end
@@ -75,6 +89,8 @@ function ENT:OnTakeDamage( dmginfo )
 	if !IsValid( att ) or !att:IsPlayer() or SCPTeams.IsAlly( att:SCPTeam(), TEAM_GOC ) then return end
 
 	self:SetDestroyed( true )
+	SetRoundStat( "goc_countdown", false )
+	DisableZoneVentilation( ZONE_WARHEAD )
 
 	local data = EffectData()
 	data:SetOrigin( self:GetPos() )
@@ -95,7 +111,7 @@ end
 
 if CLIENT then
 	local color_white = Color( 255, 255, 255 )
-	local goc_logo = Material( "slc/misc/goc_logo_256.png" )
+	local goc_logo = Material( "slc/misc/goc_logo_256.png", "smooth" )
 
 	local glitch_data = util.GlitchData( 10, 4 )
 	local glitch_mode = 0

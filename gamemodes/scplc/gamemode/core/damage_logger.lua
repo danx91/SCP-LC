@@ -323,7 +323,7 @@ setmetatable( DamageLogger, { __call = DamageLogger.New } )
 	DamageLogger.Print( data )
 end )*/
 
-/*for k, v in pairs( player.GetAll() ) do
+/*for i, v in ipairs( player.GetAll() ) do
 	DamageLogger( v )
 end*/
 

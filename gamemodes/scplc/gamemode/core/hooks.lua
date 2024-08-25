@@ -1,28 +1,31 @@
-SLCHooks = SLCHooks or {
+--[[-------------------------------------------------------------------------
+SCP Hooks
+---------------------------------------------------------------------------]]
+SCPHooks = SCPHooks or {
 	__ActiveSCPs = {},
 	__PreventUpdate = false,
 }
 
 function SCPHook( scp, name, func )
-	if !SLCHooks[scp] then
-		SLCHooks[scp] = {}
+	if !SCPHooks[scp] then
+		SCPHooks[scp] = {}
 	end
 
-	SLCHooks[scp][name] = func
+	SCPHooks[scp][name] = func
 end
 
 function EnableSCPHook( scp )
-	if SLCHooks.__ActiveSCPs[scp] then return end
-	SLCHooks.__ActiveSCPs[scp] = true
+	if SCPHooks.__ActiveSCPs[scp] then return end
+	SCPHooks.__ActiveSCPs[scp] = true
 
-	if SERVER and !SLCHooks.__PreventUpdate then
-		net.Start( "SLCHooks" )
+	if SERVER and !SCPHooks.__PreventUpdate then
+		net.Start( "SCPHooks" )
 			net.WriteBool( false )
 			net.WriteString( scp )
 		net.Broadcast()
 	end
 
-	local tab = SLCHooks[scp]
+	local tab = SCPHooks[scp]
 	if !tab then return end
 
 	for k, v in pairs( tab ) do
@@ -32,9 +35,9 @@ function EnableSCPHook( scp )
 end
 
 function DisableSCPHook( scp )
-	SLCHooks.__ActiveSCPs[scp] = nil
+	SCPHooks.__ActiveSCPs[scp] = nil
 
-	local tab = SLCHooks[scp]
+	local tab = SCPHooks[scp]
 	if !tab then return end
 
 	for k, v in pairs( tab ) do
@@ -44,22 +47,22 @@ function DisableSCPHook( scp )
 end
 
 function ClearSCPHooks()
-	for scp, _ in pairs( SLCHooks.__ActiveSCPs ) do
-		if !SLCHooks[scp] then continue end
+	for scp, _ in pairs( SCPHooks.__ActiveSCPs ) do
+		if !SCPHooks[scp] then continue end
 
-		for k, _ in pairs( SLCHooks[scp] ) do
+		for k, _ in pairs( SCPHooks[scp] ) do
 			hook.Remove( k, scp )
 			//print( "[clear] hook removed", k, scp )
 		end
 	end
 
-	SLCHooks.__ActiveSCPs = {}
+	SCPHooks.__ActiveSCPs = {}
 end
 
 function TransmitSCPHooks( ply )
-	net.Start( "SLCHooks" )
+	net.Start( "SCPHooks" )
 		net.WriteBool( true )
-		net.WriteTable( SLCHooks.__ActiveSCPs )
+		net.WriteTable( SCPHooks.__ActiveSCPs )
 
 	if ply then
 		net.Send( ply )
@@ -67,3 +70,37 @@ function TransmitSCPHooks( ply )
 		net.Broadcast()
 	end
 end
+
+--[[-------------------------------------------------------------------------
+Round Hooks
+---------------------------------------------------------------------------]]
+RoundHooks = RoundHooks or {}
+
+function AddRoundHook( name, identifier, func )
+	hook.Add( name, identifier, func )
+
+	if !RoundHooks[name] then
+		RoundHooks[name] = {}
+	end
+
+	RoundHooks[name][identifier] = true
+end
+
+function RemoveRoundHook( name, identifier )
+	hook.Remove( name, identifier )
+
+	if !RoundHooks[name] then return end
+	RoundHooks[name][identifier] = nil
+end
+
+function ClearRoundHooks()
+	for name, tab in pairs( RoundHooks ) do
+		for identifier, _ in pairs( tab ) do
+			hook.Remove( name, identifier )
+		end
+	end
+
+	RoundHooks = {}
+end
+
+hook.Add( "SLCRoundCleanup", "ClearRoundHooks", ClearRoundHooks )

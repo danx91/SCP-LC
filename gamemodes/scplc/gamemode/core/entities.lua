@@ -132,11 +132,22 @@ end
 --[[-------------------------------------------------------------------------
 TestVisibility
 ---------------------------------------------------------------------------]]
-function ENTITY:TestVisibility( ply, mask, headonly )
-	if !IsValid( ply ) then return end
-	if !ply:TestPVS( self ) then return false end
+local visibility_trace = {}
+visibility_trace.output = visibility_trace
 
-	mask = mask or MASK_BLOCKLOS_AND_NPCS
+local default_mask = bit.bor( CONTENTS_MOVEABLE, CONTENTS_OPAQUE, CONTENTS_SOLID, CONTENTS_BLOCKLOS, CONTENTS_MONSTER )
+function ENTITY:TestVisibility( ply, mask, headonly, vlimit, hlimit, z_offset )
+	if !IsValid( ply ) then return end
+	if SERVER and !ply:TestPVS( self ) then return false end
+
+	local dist = self:GetPos():DistToSqr( ply:GetPos() )
+	local sight = ply:GetSightLimit()
+
+	if sight != -1 then
+		if dist > sight * sight then
+			return false
+		end
+	end
 
 	local obb_bot, obb_top = self:GetModelBounds()
 	local obb_mid = ( obb_bot + obb_top ) * 0.5
@@ -151,57 +162,45 @@ function ENTITY:TestVisibility( ply, mask, headonly )
 
 	local top, mid, bot = self:LocalToWorld( obb_top ), self:LocalToWorld( obb_mid ), self:LocalToWorld( obb_bot )
 
-	local dist = self:GetPos():DistToSqr( ply:GetPos() )
-	local sight = ply:GetSightLimit()
-
-	if sight != -1 then
-		if dist > sight * sight then
-			return false
-		end
-	end
-
 	local eyepos = ply:EyePos()
-	local eyevec = ply:EyeAngles():Forward()
+	local eyeang = ply:EyeAngles()
 
 	local mid_z = mid:Copy()
-	mid_z.z = mid_z.z + 17.5
+	mid_z.z = mid_z.z + ( z_offset or 17.5 )
 
-	local line = ( mid_z - eyepos ):GetNormalized()
-	local angle = math.acos( eyevec:Dot( line ) ) --TODO remove acos
+	local line = ( ( headonly and top or mid_z ) - eyepos ):GetNormalized()
+	if vlimit != false and eyeang:Forward():Dot( line ) < 0 then return false end
 
-	if angle <= 0.8 then
-		local trace_top = util.TraceLine{
-			start = eyepos,
-			endpos = top,
-			filter = { self, ply },
-			mask = mask
-		}
+	local ang = line:Angle()
+	local diff = ang - eyeang
+	diff:Normalize()
 
-		if !trace_top.Hit then return true end
-		if headonly then return false end
+	if vlimit != false and ( math.abs( diff.y ) > ( hlimit or 53 ) or math.abs( diff.p ) > ( vlimit or 43 ) ) then return false end
 
-		local trace_mid = util.TraceLine{
-			start = eyepos,
-			endpos = mid,
-			filter = { self, ply },
-			mask = mask
-		}
+	visibility_trace.start = eyepos
+	visibility_trace.mask = mask or default_mask
+	visibility_trace.filter = { self, ply }
 
-		if !trace_mid.Hit then return true end
+	visibility_trace.endpos = top
+	util.TraceLine( visibility_trace )
 
-		local trace_bot = util.TraceLine{
-			start = eyepos,
-			endpos = bot,
-			filter = { self, ply },
-			mask = mask
-		}
+	if !visibility_trace.Hit then return true end
+	if headonly then return false end
 
-		if !trace_bot.Hit then return true end
-	end
+	visibility_trace.endpos = mid
+	util.TraceLine( visibility_trace )
 
-	return false
+	if !visibility_trace.Hit then return true end
+
+	visibility_trace.endpos = bot
+	util.TraceLine( visibility_trace )
+
+	return !visibility_trace.Hit
 end
 
+--[[-------------------------------------------------------------------------
+GetNameEx
+---------------------------------------------------------------------------]]
 function ENTITY:GetNameEx( pname_limit, blacklist, rep )
 	if !IsValid( self ) then return end
 	local name = self.GetName and self:GetName() or self:GetClass()
@@ -219,7 +218,10 @@ function ENTITY:GetNameEx( pname_limit, blacklist, rep )
 	return name
 end
 
-ENTITY.OldInstallDataTable = ENTITY.OldInstallDataTable or ENTITY.InstallDataTable
+--[[-------------------------------------------------------------------------
+DT Registry
+---------------------------------------------------------------------------]]
+/*ENTITY.OldInstallDataTable = ENTITY.OldInstallDataTable or ENTITY.InstallDataTable
 function ENTITY:InstallDataTable()
 	self:OldInstallDataTable()
 
@@ -232,5 +234,53 @@ function ENTITY:InstallDataTable()
 		table.insert( self.DTRegistry, name )
 
 		self:OldNetworkVar( type, slot, name, ex )
+	end
+end*/
+
+--[[-------------------------------------------------------------------------
+FullSwapModels
+---------------------------------------------------------------------------]]
+function ENTITY:FullSwapModels( other )
+	local other_data = {
+		model = other:GetModel(),
+		color = other:GetColor(),
+		material = other:GetMaterial(),
+		skin = other:GetSkin(),
+		bodygroups = {},
+		materials = {},
+	}
+
+	for i = 0, other:GetNumBodyGroups() - 1 do
+		other_data.bodygroups[i] = other:GetBodygroup( i )
+	end
+
+	for i = 0, #other:GetMaterials() - 1 do
+		other_data.materials[i] = other:GetSubMaterial( i )
+	end
+
+	other:SetModel( self:GetModel() )
+	other:SetColor( self:GetColor() )
+	other:SetMaterial( self:GetMaterial() )
+	other:SetSkin( self:GetSkin() )
+
+	for i = 0, other:GetNumBodyGroups() - 1 do
+		other:SetBodygroup( i, self:GetBodygroup( i ) )
+	end
+
+	for i = 0, #other:GetMaterials() - 1 do
+		other:SetSubMaterial( i, self:GetSubMaterial( i ) )
+	end
+
+	self:SetModel( other_data.model )
+	self:SetColor( other_data.color )
+	self:SetMaterial( other_data.material )
+	self:SetSkin( other_data.skin )
+
+	for i = 0, self:GetNumBodyGroups() - 1 do
+		self:SetBodygroup( i, other_data.bodygroups[i] )
+	end
+
+	for i = 0, #self:GetMaterials() - 1 do
+		self:SetSubMaterial( i, other_data.materials[i] )
 	end
 end

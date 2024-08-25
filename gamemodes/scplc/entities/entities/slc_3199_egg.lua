@@ -2,68 +2,64 @@ AddCSLuaFile()
 
 ENT.Type = "anim"
 
-ENT.EHealth = 2000
+ENT.SpawnRegen = false
+ENT.NextRegen = 0
 ENT.Locked = NULL
-
-function ENT:SetupDataTables()
-	self:AddNetworkVar( "Active", "Bool" )
-end
 
 function ENT:Initialize()
 	self:SetModel( "models/player/alski/scp3199/egg.mdl" )
 	
 	if SERVER then
+		self:SetMaxHealth( 2500 )
+		self:SetHealth( 1 )
+
 		self:PhysicsInit( SOLID_VPHYSICS )
 
-		local p = GetRoundProperty( "3199_eggs" )
-
-		if !p then
-			p = {}
-			SetRoundProperty( "3199_eggs", p )
-		end
-
-		table.insert( p, self )
+		local outside = SLCZones.IsInZone( self:GetPos(), ZONE_FLAG_SURFACE )
+		DestroyOnWarhead( self, outside, !outside )
 	end
 
 	self:SetCollisionGroup( COLLISION_GROUP_DEBRIS )
 end
 
-ENT.NRegen = 0
 function ENT:Think()
-	if SERVER and self.EHealth < 2000 then
-		if self.NRegen < CurTime() then
-			self.NRegen = CurTime() + 0.5
+	if CLIENT or self.NextRegen > CurTime() then return end
 
-			self.EHealth = self.EHealth + 20
+	local health = self:Health()
+	if health >= 2500 then return end
 
-			if self.EHealth > 2000 then
-				self.EHealth = 2000
-			end
-		end
+	self.NextRegen = CurTime() + ( self.SpawnRegen and 1 or 0.1 )
+
+	health = health + 20
+
+	if health >= 2500 then
+		health = 2500
+		self.SpawnRegen = false
 	end
+
+	self:SetHealth( health )
 end
 
 function ENT:OnTakeDamage( dmg )
-	local att = dmg:GetAttacker()
-	if !IsValid( self.Locked ) or !self.Locked:CheckSignature( self.LockedSignature ) then
-		if IsValid( att ) and att:IsPlayer() then
-			local t = att:SCPTeam()
-			if t != TEAM_SPEC and t != TEAM_SCP then
-				self.EHealth = self.EHealth - dmg:GetDamage()
-				self.NRegen = CurTime() + 1
+	if IsValid( self.Locked ) and self.Locked:CheckSignature( self.LockedSignature ) then return end
 
-				if self.EHealth <= 0 then
-					att:AddFrags( 5 )
-					PlayerMessage( "destory_scp$5", att )
-					self:Destroy()
-				end
-			end
-		end
+	local att = dmg:GetAttacker()
+	if !IsValid( att ) or !att:IsPlayer() or SCPTeams.IsAlly( att:SCPTeam(), TEAM_SCP ) then return end
+
+	local health = self:Health() - dmg:GetDamage()
+	self:SetHealth( health )
+
+	self.NextRegen = CurTime() + 1
+
+	if health <= 0 then
+		att:AddFrags( 5 )
+		PlayerMessage( "destory_scp$5", att )
+
+		self:Destroy()
 	end
 end
 
 function ENT:Destroy()
-	--create effects
 	self:Remove()
 end
 
@@ -71,14 +67,8 @@ function ENT:UpdateTransmitState()
 	return TRANSMIT_ALWAYS
 end
 
-function ENT:NotActive()
-	return !self:GetActive() and ( !IsValid( self.Locked ) or !self.Locked:CheckSignature( self.LockedSignature ) )
-end
-
 if SERVER then
-	function SpawnSCP3199Eggs( num )
-		num = num or 3
-
+	function SpawnSCP3199Egg( owner )
 		local tab = GetRoundProperty( "3199_spawns" )
 
 		if !tab then
@@ -86,32 +76,37 @@ if SERVER then
 			SetRoundProperty( "3199_spawns", tab )
 		end
 
-		local spawned = 0
-		while #tab > 0 and spawned < num do
-			local egg = ents.Create( "slc_3199_egg" )
-
-			if IsValid( egg ) then
-				egg:SetPos( table.remove( tab, math.random( #tab ) ) )
-				egg:Spawn()
-
-				DestroyOnWarhead( egg, false, true )
-
-				spawned = spawned + 1
-			end
+		local egg = ents.Create( "slc_3199_egg" )
+		if IsValid( egg ) then
+			egg:SetPos( table.remove( tab, math.random( #tab ) ) )
+			egg:SetOwner( owner )
+			egg:Spawn()
 		end
+		
+		return egg
 	end
 end
 
 if CLIENT then
 	local color_green = Color( 30, 130, 30, 120 )
-	local color_red = Color( 130, 30, 30, 120 )
 
 	SCPHook( "SCP3199", "PostDrawOpaqueRenderables", function()
 		local ply = LocalPlayer()
 		if ply:SCPClass() != CLASSES.SCP3199 then return end
 
+		local len = 0
+		local eggs = {}
+
+		for i, v in ipairs( ents.GetAll() ) do
+			if v:GetClass() == "slc_3199_egg" and v:GetOwner() == ply then
+				len = len + 1
+				eggs[len] = v
+			end
+		end
+
 		render.ClearStencil()
 
+		render.SetStencilReferenceValue( 1 )
 		render.SetStencilWriteMask( 0xFF )
 		render.SetStencilTestMask( 0xFF )
 
@@ -122,25 +117,23 @@ if CLIENT then
 
 		render.SetStencilEnable( true )
 
-		for k, v in pairs( ents.FindByClass( "slc_3199_egg" ) ) do
-			render.SetStencilReferenceValue( v:GetActive() and 2 or 1 )
-			v:DrawModel()
+		for i = 1, len do
+			eggs[i]:DrawModel()
 		end
 
 		render.SetStencilFailOperation( STENCIL_KEEP )
 		render.SetStencilCompareFunction( STENCIL_EQUAL )
 
 		cam.Start2D()
-			render.SetStencilReferenceValue( 1 )
-			surface.SetDrawColor( color_red )
-			surface.DrawRect( 0, 0, ScrW(), ScrH() )
-
-			render.SetStencilReferenceValue( 2 )
 			surface.SetDrawColor( color_green )
 			surface.DrawRect( 0, 0, ScrW(), ScrH() )
 		cam.End2D()
 
 		render.SetStencilEnable( false )
+
+		for i = 1, len do
+			eggs[i]:DrawModel()
+		end
 	end )
 end
 

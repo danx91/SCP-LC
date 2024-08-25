@@ -66,12 +66,12 @@ function SWEP:Think()
 	if CLIENT then return end
 
 	local owner = self:GetOwner()
-	if owner:IsHolding( "medkit_heal", self ) and !self:IsValidHealTarget( self.HealTarget ) then
+	if owner:IsHolding( self, "medkit_heal" ) and ( !self:IsValidHealTarget( self.HealTarget ) or ROUND.post ) then
 		self:StopHeal()
 		return
 	end
 
-	local status = owner:UpdateHold( "medkit_heal", self )
+	local status = owner:UpdateHold( self, "medkit_heal" )
 	if status == true then
 		local target = self.HealTarget
 		self:StopHeal()
@@ -108,7 +108,7 @@ function SWEP:PrimaryAttack()
 	if CLIENT or ROUND.post or self.HealCooldown > CurTime() then return end
 
 	local owner = self:GetOwner()
-	if owner:IsHolding( "medkit_heal", self ) then return end
+	if owner:IsHolding( self, "medkit_heal" ) then return end
 
 	self:Heal( owner, IN_ATTACK )
 end
@@ -127,7 +127,7 @@ function SWEP:SecondaryAttack()
 		maxs = Vector( 8, 8, 8 )
 	}
 
-	if owner:IsHolding( "medkit_heal", self ) then
+	if owner:IsHolding( self, "medkit_heal" ) then
 		if trace.Entity != self.HealTarget then
 			self:StopHeal()
 			return
@@ -149,9 +149,9 @@ function SWEP:StopHeal( time )
 	local owner = self:GetOwner()
 
 	if IsValid( owner ) then
-		owner:InterruptHold( "medkit_heal", self )
+		owner:InterruptHold( self, "medkit_heal" )
 	elseif IsValid( self.LastOwner ) then
-		self.LastOwner:InterruptHold( "medkit_heal", self )
+		self.LastOwner:InterruptHold( self, "medkit_heal" )
 	end
 end
 
@@ -190,7 +190,7 @@ function SWEP:Heal( ply, key )
 	
 	self.HealTarget = ply
 
-	owner:StartHold( "medkit_heal", key, self.HealTime, nil, self )
+	owner:StartHold( self, "medkit_heal", key, self.HealTime )
 	self:SetHealEnd( CurTime() + self.HealTime )
 end
 

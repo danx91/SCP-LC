@@ -40,18 +40,15 @@ function vector:DropToFloor( maxdist )
 	end
 end
 
-/*function vector:RotateAroundPoint( point, angle )
-	local dir = self - point
+//https://gamedev.stackexchange.com/a/110233
+local function is_right( p0, p1, p2 )
+	return ( p1.x - p0.x ) * ( p2.y - p0.y ) - ( p2.x - p0.x ) * ( p1.y - p0.y ) < 0
+end
 
-	print( self, point )
-	print( "dir", dir )
-
-	dir:Rotate( angle )
-
-	self.x = self.x + dir.x
-	self.y = self.y + dir.y
-	self.z = self.z + dir.z
-end*/
+//a, b, c, d are vertices of rectange in counter-clockwise order! This ignores z values!
+function vector:WithinRotatedRect( a, b, c, d )
+	return is_right( a, b, self ) and is_right( b, c, self ) and is_right( c, d, self ) and is_right( d, a, self )
+end
 
 local angle = FindMetaTable( "Angle" )
 
@@ -60,10 +57,10 @@ function angle:Copy()
 end
 
 function angle:Approach( ang, inc )
-	local angle = self:To360()
+	local angle360 = self:To360()
 	local target = ang:To360()
 
-	return math.Angle360ToAngle( math.ApproachAngle360( angle, target, inc ) )
+	return math.Angle360ToAngle( math.ApproachAngle360( angle360, target, inc ) )
 end
 
 function angle:To360()
@@ -134,14 +131,14 @@ function math.Angle360ToAngle( ang )
 	return Angle( ang.p, ang.y, ang.r )
 end
 
-function math.ApproachAngle360( angle, target, inc )
-	math.NormalizeAngle360( angle )
+function math.ApproachAngle360( ang, target, inc )
+	math.NormalizeAngle360( ang )
 	math.NormalizeAngle360( target )
 
 	inc = math.abs( inc )
 	local result = { p = 0, y = 0, r = 0 }
 
-	for k, v in pairs( angle ) do
+	for k, v in pairs( ang ) do
 		local diff = target[k] - v
 
 		local abs_diff = math.abs( diff )
@@ -190,33 +187,26 @@ function math.SinWave( x, freq, amp, offset )
 	return wave
 end
 
-function math.NumStep( start, endnum, step )
-	if start == endnum then return start end
-	local mul = endnum - start
-	mul = mul / math.abs( mul )
-	local result = start + step * mul
-	if mul > 0 then
-		result = math.min( result, endnum )
-	else
-		result = math.max( result, endnum )
-	end
-	return result
-end
-
 function math.Map( num, min, max, newmin, newmax )
 	if max == min then error( "Invalid arguments to math.Map" ) end
 
 	return newmin + ( num - min ) / ( max - min ) * ( newmax - newmin )
 end
 
-local po2 = setmetatable( {}, { __index = function( tab, key )
-	if !isnumber( key ) then return end
+function math.TrueFOV( fov )
+	return 2 * math.deg( math.atan( math.tan( foc / 2 ) * 1.77777 ) )
+end
 
-	local num = math.pow( 2, key )
-	tab[key] = num
+local po2 = setmetatable( {}, {
+	__index = function( tab, key )
+		if !isnumber( key ) then return end
 
-	return num
-end } )
+		local num = math.pow( 2, key )
+		tab[key] = num
+
+		return num
+	end
+} )
 
 function math.PowerOf2( pow ) --Memoizing po2 values is almost useless (for values up to 2^32 this function is 7% faster and for values up to 2^512 is about 11% faster)
 	return po2[pow]

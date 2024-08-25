@@ -80,7 +80,7 @@ function PLAYER:TakeSanity( num, sanitytype, data )
 end
 
 local suppress = false
-local fov = 53 -- = math.deg( math.atan( math.tan( math.rad( ply:GetFOV() ) / 2 ) * ( 16 / 9 ) / ( 4 / 3 ) ) ) // player fov is almost always 90
+local fov = 53
 function SanityEvent( amount, sanitytype, origin, distance, inflictor, victim )
 	if suppress then
 		suppress = false
@@ -89,10 +89,10 @@ function SanityEvent( amount, sanitytype, origin, distance, inflictor, victim )
 
 	local tab = {}
 
-	for k, v in pairs( FindInCylinder( origin, distance, -1000, 1000, nil, MASK_SOLID_BRUSHONLY, SCPTeams.GetPlayersByInfo( SCPTeams.INFO_HUMAN ) ) ) do
+	for i, v in ipairs( FindInCylinder( origin, distance, -1000, 1000, nil, MASK_SOLID_BRUSHONLY, SCPTeams.GetPlayersByInfo( SCPTeams.INFO_HUMAN ) ) ) do
 		local pos = v:EyePos()
 		local eang = v:EyeAngles().yaw
-		local tang = (pos - origin):Angle().yaw
+		local tang = ( pos - origin ):Angle().yaw
 
 		if eang < 0 then eang = 360 + eang end
 		if tang < 0 then tang = 360 + tang end

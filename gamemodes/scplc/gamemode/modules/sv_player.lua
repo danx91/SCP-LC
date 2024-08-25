@@ -34,6 +34,9 @@ function PLAYER:Cleanup( norem )
 	self:SetSanity( 100 )
 	self:SetMaxSanity( 100 )
 
+	controller.Stop( self )
+	self:SetParent( NULL )
+	self:SetMoveType( MOVETYPE_WALK )
 	self:SetExhausted( false )
 	self:SetStamina( 100 )
 	self:SetMaxStamina( 100 )
@@ -41,8 +44,9 @@ function PLAYER:Cleanup( norem )
 	self:SetStaminaBoost( 0 )
 	self:SetStaminaBoostDuration( 0 )
 
-	self:SetDisableControls( false )
-	self:SetDisableControlsFlag( 0 )
+	self:ResetDisableControls()
+
+	self:SetQueuePosition( 0 )
 
 	self:SetRenderMode( RENDERMODE_NORMAL )
 	self:SetColor( Color( 255, 255, 255, 255 ) )
@@ -59,13 +63,16 @@ function PLAYER:Cleanup( norem )
 	self:Freeze( false )
 	self:SetNoDraw( false )
 	self:SetCustomCollisionCheck( false )
+	self:SetCollisionGroup( COLLISION_GROUP_PASSABLE_DOOR )
+	self:SetSolid( SOLID_BBOX )
+	self:SetCanZoom( false )
+	self:DrawShadow( false )
 	self:StopBurn()
 	self:GodDisable()
 
 	self:StopAmbient()
 
 	if !norem then
-		self:SetBackpack( 0 )
 		self:SetVest( 0 )
 		self:RemoveAllItems()
 	end
@@ -158,12 +165,19 @@ local function setup_player_internal( self, class, spawn )
 		self:Set_SCPPersonaT( class.persona.team )
 	end
 
-	if class.backpack and class.backpack > 0 then
-		self:SetBackpack( class.backpack )
-	end
-
-	self:Give( "item_slc_holster" )
+	self:Give( class.holster_override or "item_slc_holster" )
 	self:Give( "item_slc_id" )
+
+	if class.backpack then
+		local bp_id = BACKPACK.GetID( class.backpack )
+		if bp_id then
+			local bp = self:Give( "item_slc_backpack" )
+			if IsValid( bp ) then
+
+				bp:SetBackpack( bp_id )
+			end
+		end
+	end
 
 	local chip = GetChip( class.chip )
 	if class.omnitool then
@@ -211,8 +225,10 @@ local function setup_player_internal( self, class, spawn )
 
 	self:SetModel( istable( class.model ) and table.Random( class.model ) or class.model )
 
-	if class.skin then
-		self:SetSkin( class.skin )
+	self:SetSkin( class.skin or 0 )
+
+	for i = 1, self:GetNumBodyGroups() do
+		self:SetBodygroup( i, 0 )
 	end
 
 	if class.bodygroups then
@@ -250,7 +266,7 @@ local function setup_player_internal( self, class, spawn )
 		self:ApplyEffect( "spawn_protection" )
 	end
 
-	self.ClassData = class
+	self.ClassData = table.Copy( class )
 
 	if class.vest then
 		self:EquipVest( class.vest, true )
@@ -273,24 +289,16 @@ function PLAYER:SetupPlayer( class, spawn, instant )
 
 		self:SetSCPClass( class.name )
 		self:SetSCPTeam( class.team )
-		//self:InvalidatePlayerForSpectate()
 
-		self:SetProperty( "spawning", { time = CurTime() + INFO_SCREEN_DURATION, class = class, spawn = spawn } )
+		self:SetProperty( "spawning", { class = class, spawn = spawn } )
 		//info screen
 		InfoScreen( self, "spawn", INFO_SCREEN_DURATION )
+
+		self:AddTimer( "Spawn", INFO_SCREEN_DURATION, 1, function()
+			setup_player_internal( self, class, spawn )
+		end )
 	end
 end
-
-hook.Add( "Tick", "SLCSetupPlayer", function()
-	local ct = CurTime()
-	for i, v in ipairs( player.GetAll() ) do
-		local spawn_data = v:GetProperty( "spawning" )
-		if spawn_data and spawn_data.time < ct then
-			v:SetProperty( "spawning", nil )
-			setup_player_internal( v, spawn_data.class, spawn_data.spawn )
-		end
-	end
-end )
 
 function PLAYER:EquipVest( vest, silent, dur )
 	if self:GetVest() > 0 then return end
@@ -439,11 +447,11 @@ function PLAYER:CreatePlayerRagdoll( disable_loot )
 
 	rag:SetOwner( self )
 
-	for i, v in ipairs( rag:GetMaterials() ) do
-		local mat = self:GetSubMaterial( i - 1 )
+	for i = 0, #rag:GetMaterials() - 1 do
+		local mat = self:GetSubMaterial( i )
 
 		if mat != "" then
-			rag:SetSubMaterial( i - 1, mat )
+			rag:SetSubMaterial( i, mat )
 		end
 	end
 
@@ -458,7 +466,6 @@ function PLAYER:CreatePlayerRagdoll( disable_loot )
 
 		if IsValid( physobj ) then
 			local pos, ang = self:GetBonePosition( rag:TranslatePhysBoneToBone( i ) )
-
 			if pos and ang then
 				physobj:SetPos( pos )
 				physobj:SetAngles( ang )
@@ -472,6 +479,8 @@ function PLAYER:CreatePlayerRagdoll( disable_loot )
 	rag:SetNWInt( "team", self:SCPTeam() )
 	rag:SetNWFloat( "time", CurTime() )
 
+	//rag:ResetSequence( "0_Death_64" )
+
 	rag.Data = {
 		time = CurTime(),
 		team = self:SCPTeam(),
@@ -479,7 +488,12 @@ function PLAYER:CreatePlayerRagdoll( disable_loot )
 		persona = { self:SCPPersona() },
 	}
 
-	if !disable_loot and self:IsHuman() then
+	if disable_loot != true and self:IsHuman() then
+		/*local inv_bp = self:GetWeapon( "item_slc_backpack" )
+		if IsValid( inv_bp ) then
+			inv_bp:StoreBackpack()
+		end*/
+
 		local loot = {}
 
 		for i, v in pairs( self:GetWeapons() ) do
@@ -525,46 +539,78 @@ function PLAYER:CreatePlayerRagdoll( disable_loot )
 			w, h = 4, 2
 		end
 
-		rag:InstallTable( "Lootable" )
-		rag:SetLootData( w, h, loot )
-
-		rag:CallOnRemove( "looting", function( ent )
-			ent:DropAllListeners()
-
+		local function create_backpack( pos )
 			local backpack = ents.Create( "slc_lootable" )
+			if !IsValid( backpack ) then return end
+
 			backpack.Model = "models/blacksnow/backpack.mdl"
 			backpack.RemoveOnEmpty = true
 			backpack:SetShouldRender( true )
-			backpack:SetPos( ent:GetPos() + Vector( 0, 0, 5 ) )
+			backpack:SetPos( pos )
 			backpack:Spawn()
 
-			backpack:CopyLootData( ent )
-		end )
+			return backpack
+		end
 
-		rag.LootableCheck = 0
+		if disable_loot == "force_backpack" then
+			local backpack = create_backpack( self:GetPos() + Vector( 0, 0, 5 ) )
+			if backpack then
+				backpack:SetLootData( w, h, loot )
+			end
+		else
+			rag:InstallTable( "Lootable" )
+			rag:SetLootData( w, h, loot )
+
+			rag:CallOnRemove( "looting", function( ent )
+				ent:DropAllListeners()
+
+				local backpack = create_backpack( ent:GetPos() + Vector( 0, 0, 5 ) )
+				if backpack then
+					backpack:CopyLootData( ent )
+				end
+			end )
+
+			rag.LootableCheck = 0
+		end
 	end
 
 	self._RagEntity = rag
 	return rag
 end
 
-function PLAYER:Blink( dur, nextblink )
-	if !self:GetBlink() then
-		self:SetBlink( true )
+function PLAYER:Blink( delay, duration )
+	if self:GetBlink() then return end
 
-		net.Start( "PlayerBlink" )
-			net.WriteFloat( dur )
-			net.WriteUInt( nextblink, 6 )
-		net.Send( self )
+	local stop = false
 
-		Timer( "PlayerUnBlink"..self:SteamID64(), math.max( dur, 0.4 ), 1, function()
-			if IsValid( self ) then
-				self:SetBlink( false )
-			end
-		end )
-
-		hook.Run( "SLCBlink", dur, nextblink )
+	if !delay then
+		delay = CVAR.slc_blink_delay:GetFloat()
+		stop = true
 	end
+
+	if !duration then
+		duration = 0.25
+	end
+
+	if delay < duration then
+		delay = duration
+	end
+
+	self:SetBlink( true )
+	self:SetNextBlink( stop and -1 or CurTime() + delay )
+
+	net.Start( "PlayerBlink" )
+		net.WriteFloat( duration )
+		net.WriteFloat( delay )
+	net.Send( self )
+
+	self:AddTimer( "PlayerUnBlink", duration + 0.05, 1, function()
+		if IsValid( self ) then
+			self:SetBlink( false )
+		end
+	end )
+
+	hook.Run( "SLCBlink", self, duration, delay )
 end
 
 --[[-------------------------------------------------------------------------
@@ -577,7 +623,7 @@ function PLAYER:SetUserGroup( ... )
 end
 
 cvars.AddChangeCallback( CVAR.slc_premium_groups:GetName(), function( cvar, old, new )
-	for k, v in pairs( player.GetAll() ) do
+	for i, v in ipairs( player.GetAll() ) do
 		v:CheckPremium()
 	end
 end, "PremiumGroups" )
@@ -796,7 +842,8 @@ function PLAYER:PlayerDropWeapon( class, all, force )
 	if !IsValid( wep ) then return end
 
 	if wep.Droppable == false then return end
-	if !force and ( wep.PreventDropping == true or wep.CanDrop and wep:CanDrop() == false or hook.Run( "SLCPlayerCanDropWeapon", self, class, all ) == false ) then return end
+	if !force and ( wep.PreventDropping == true or wep.CanDrop and wep:CanDrop() == false or hook.Run( "SLCPlayerCanDropWeapon", self, class, all ) == false
+		or wep.eq_slot and wep.eq_slot > 6 ) then return end
 
 	if wep.Stacks and wep.Stacks > 1 then
 		local count = wep:GetCount()
@@ -829,7 +876,7 @@ function PLAYER:PlayerDropWeapon( class, all, force )
 
 	//print( wep:Clip1(), self:GetAmmoCount( wep:GetPrimaryAmmoType() ) )
 	if wep.SLCPreDrop then
-		wep:SLCPreDrop()
+		wep:SLCPreDrop( force, all )
 	end
 
 	self:DropWeapon( wep )
@@ -837,6 +884,8 @@ function PLAYER:PlayerDropWeapon( class, all, force )
 	/*if wep.OnDrop then
 		wep:OnDrop()
 	end*/
+
+	self:UpdateEQ()
 end
 
 function PLAYER:StoreWeapon( class, norem )
@@ -878,7 +927,7 @@ function PLAYER:RestoreWeapon( data, wep )
 
 	local class = data.class
 
-	if !IsValid( wep ) and table.Count( self:GetWeapons() ) < self:GetInventorySize() and hook.Run( "SLCCanPickupWeaponClass", self, class ) != false then
+	if !IsValid( wep ) and self:GetFreeInventory() > 0 and hook.Run( "SLCCanPickupWeaponClass", self, class ) != false then
 		wep = self:Give( class )
 	end
 
@@ -898,6 +947,150 @@ function PLAYER:RestoreWeapons( tab )
 	for k, v in pairs( tab ) do
 		self:RestoreWeapon( v )
 	end
+end
+
+function PLAYER:ForceHolster()
+	local holster = self:GetWeaponByBase( "item_slc_holster" )
+	if IsValid( holster ) then
+		self:SetActiveWeapon( holster )
+	end
+end
+
+function PLAYER:SelectWeaponByBase( base )
+	local wep = self:GetWeaponByBase( base )
+	if IsValid( wep ) then
+		self:SelectWeapon( wep:GetClass() )
+	end
+end
+
+function PLAYER:UpdateEQ()
+	local weps = self:GetWeapons()
+	local lookup_weps = CreateLookupTable( weps )
+	local backpack = self:GetWeapon( "item_slc_backpack" )
+	local bp_size = IsValid( backpack ) and backpack:GetSize() or 0
+	local inventory = self:GetProperty( "inventory", {} )
+
+	//Remove weapon from cached inventory if they are missing from player inventory
+	for k, v in pairs( inventory ) do
+		if !IsValid( v ) or !lookup_weps[v] then
+			//print( "REM WEP", k, v )
+			inventory[k] = nil
+		end
+	end
+
+	local lookup_tab = CreateLookupTable( inventory )
+
+	//Add new weapons to cached inventory
+	for i, v in ipairs( weps ) do
+		local class = v:GetClass()
+		if lookup_tab[v] or class == "item_slc_id" or v:IsDerived( "item_slc_holster" ) then continue end
+
+		local target = 0
+
+		//Find first empty slot in EQ
+		for j = 1, 6 + bp_size do
+			if !inventory[j] then
+				target = j
+				break
+			end
+		end
+
+		//Add if empty slot is found
+		if target > 0 then
+			inventory[target] = v
+			v.eq_slot = target
+			//print( "ADD WEP EQ", target, v )
+		else
+			error( "Too many items! "..self:Nick().." "..#weps.."/"..6 + bp_size )
+		end
+	end
+end
+
+function PLAYER:MoveItem( from, to, from_class, to_class )
+	if !self:Alive() or self:SCPTeam() == TEAM_SPEC then return end
+
+	local ct = CurTime()
+	local inventory = self:GetProperty( "inventory", {} )
+	local transition = self:GetProperty( "inventory_transition", 0 )
+	local max_eq = self:GetInventorySize()
+	local backpack = from > 6 or to > 6
+
+	if from > max_eq or to > max_eq then
+		self:SyncEQ()
+		error( "EQ out of sync (max slots)! "..self:Nick() )
+	end
+
+	local item_from = inventory[from]
+	local item_to = inventory[to]
+
+	//print( "EQ Move", self, item_from, from.." "..from_class, "<=>", item_to, to.." "..to_class, "BP?", backpack )
+
+	if !IsValid( item_from ) then
+		self:SyncEQ()
+		error( "EQ out of sync (no item)! "..self:Nick() )
+	end
+
+	if from_class and from_class != ( IsValid( item_from ) and item_from:GetClass() or "" ) then
+		self:SyncEQ()
+		error( "EQ out of sync (F mismatch)! "..self:Nick() )
+	end
+
+	if to_class and to_class != ( IsValid( item_to ) and item_to:GetClass() or "" ) then
+		self:SyncEQ()
+		error( "EQ out of sync (T mismatch)! "..self:Nick() )
+	end
+
+	local wep = self:GetActiveWeapon()
+	if backpack and ( item_from == wep or item_to == wep ) then
+		self:SyncEQ()
+		error( "Tried to backpack active item! "..self:Nick() )
+	end
+
+	if item_from and item_from.eq_trans and item_from.eq_trans > ct then
+		print( "Invalid eq move! F", self, from, to )
+		self:SyncEQ()
+		return
+	end
+
+	if item_to and item_to.eq_trans and item_to.eq_trans > ct then
+		print( "Invalid eq move! T", self, from, to )
+		self:SyncEQ()
+		return
+	end
+
+	inventory[to] = item_from
+	inventory[from] = item_to
+
+	if item_from then item_from.eq_slot = to end
+	if item_to then item_to.eq_slot = from end
+
+	if backpack then
+		if transition < ct then
+			transition = ct
+		end
+
+		transition = transition + CVAR.slc_time_swapping:GetFloat()
+		self:SetProperty( "inventory_transition", transition )
+
+		if item_from then item_from.eq_trans = transition end
+		if item_to then item_to.eq_trans = transition end
+	end
+end
+
+function PLAYER:SyncEQ()
+	local inventory = self:GetProperty( "inventory", {} )
+	local tab = {}
+
+	print( "Syncing EQ", self )
+
+	for k, v in pairs( inventory ) do
+		if !IsValid( v ) then continue end
+		tab[k] = v:GetClass()
+	end
+
+	net.Start( "SLCMoveItem" )
+		net.WriteTable( tab )
+	net.Send( self )
 end
 
 --[[-------------------------------------------------------------------------
@@ -988,37 +1181,37 @@ Timer( "SLCAFKCheck", 10, 0, function( self, n )
 	local server_full = #players == game.MaxPlayers()
 
 	for k, v in pairs( players ) do
-		if !v:IsBot() then
-			if !v:IsAFK() then
-				--print( "check", v, v.SLCAFKTimer, rt )
-				if v:Alive() and afk_autoslay > 0 and v.SLCAFKTimer and v.SLCAFKTimer + afk_autoslay < rt then
-					if v.AFKWarned then return end
+		if v:IsBot() then continue end
 
-					v.AFKWarned = true
-					net.Ping( "AFKSlayWarning", "", v )
+		if !v:IsAFK() then
+			--print( "check", v, v.SLCAFKTimer, rt )
+			if v:Alive() and afk_autoslay > 0 and v.SLCAFKTimer and v.SLCAFKTimer + afk_autoslay < rt then
+				if v.AFKWarned then continue end
 
-					AddTimer( "SLCAFKSlay"..v:SteamID(), 15, 1, function()
-						print( "fn", !v:Alive(), afk_autoslay <= 0, !v.SLCAFKTimer, v.SLCAFKTimer + afk_autoslay >= rt )
-						if !v:Alive() or afk_autoslay <= 0 or !v.SLCAFKTimer or v.SLCAFKTimer + afk_autoslay >= rt then return end
-						
-						v:SkipNextKillRewards()
-						v:Kill()
-						v:MakeAFK()
-					end )
-				elseif afk_time > 0 and v.SLCAFKTimer and v.SLCAFKTimer + afk_time < rt then
+				v.AFKWarned = true
+				net.Ping( "AFKSlayWarning", "", v )
+
+				v:AddTimer( "SLCAFKSlay", 15, 1, function()
+					//print( "fn", !v:Alive(), afk_autoslay <= 0, !v.SLCAFKTimer, v.SLCAFKTimer + afk_autoslay >= rt )
+					if !v:Alive() or afk_autoslay <= 0 or !v.SLCAFKTimer or v.SLCAFKTimer + afk_autoslay >= rt then return end
+					
+					v:SkipNextKillRewards()
+					v:Kill()
 					v:MakeAFK()
-				end
-			elseif !SLCAuth.HasAccess( v, "slc afkdontkick" ) then
-				--print( "Player afk", v, math.floor( rt - v.SLCAFKTimer ) )
+				end )
+			elseif afk_time > 0 and v.SLCAFKTimer and v.SLCAFKTimer + afk_time < rt then
+				v:MakeAFK()
+			end
+		elseif !SLCAuth.HasAccess( v, "slc afkdontkick" ) then
+			--print( "Player afk", v, math.floor( rt - v.SLCAFKTimer ) )
 
-				if afk_mode == 1 and server_full then
-					print( "AFK player kicked - Server is full" )
+			if afk_mode == 1 and server_full then
+				print( "AFK player kicked - Server is full" )
+				v:Kick( "AFK" )
+			elseif afk_mode >= 2 then
+				if math.floor( rt - v.SLCAFKTimer ) >= afk_mode then
+					print( "AFK player kicked - Maximum AFK time exceeded" )
 					v:Kick( "AFK" )
-				elseif afk_mode >= 2 then
-					if math.floor( rt - v.SLCAFKTimer ) >= afk_mode then
-						print( "AFK player kicked - Maximum AFK time exceded" )
-						v:Kick( "AFK" )
-					end
 				end
 			end
 		end
@@ -1026,16 +1219,42 @@ Timer( "SLCAFKCheck", 10, 0, function( self, n )
 end )
 
 --[[-------------------------------------------------------------------------
+Admin Mode
+---------------------------------------------------------------------------]]
+function PLAYER:ToggleAdminMode()
+	if self:GetAdminMode() then
+		self:SetAdminMode( false )
+
+		self:SetActive( true )
+		self:KillSilent()
+		self:Cleanup()
+		self:SetupSpectator()
+	else
+		self:SetAdminMode( true )
+
+		self:SetActive( false )
+		self:InvalidatePlayerForSpectate()
+		self:SetSCPTeam( TEAM_SPEC )
+		self:SetSCPClass( "spectator" )
+		self:UnSpectate()
+		self:Cleanup()
+		self:Spawn()
+		self:GodEnable()
+		self:SetNoDraw( true )
+		self:SetMoveType( MOVETYPE_NOCLIP )
+
+		self:Give( "weapon_physgun" )
+		self:Give( "tool_slc_remover" )
+		self:Give( "tool_slc_inv" )
+	end
+end
+
+--[[-------------------------------------------------------------------------
 SLCTask
 ---------------------------------------------------------------------------]]
 function PLAYER:IsDoingSLCTask( name )
 	local task = self:GetProperty( "slc_task" )
-
-	if name then
-		return task and task.name == name
-	else
-		return !!task
-	end
+	return task and ( !name or task.name == name ) or false
 end
 
 function PLAYER:StartSLCTask( name, time, check, show_bar, block_movement, args )
@@ -1045,7 +1264,6 @@ function PLAYER:StartSLCTask( name, time, check, show_bar, block_movement, args 
 		end
 
 		local end_time = CurTime() + time
-		local old_flag = self:GetDisableControlsFlag()
 
 		self:SetProperty( "slc_task", {
 			name = name,
@@ -1055,27 +1273,25 @@ function PLAYER:StartSLCTask( name, time, check, show_bar, block_movement, args 
 			check = check,
 			block_movement = block_movement,
 			show_bar = show_bar,
-			was_blocked = self:GetDisableControls(),
-			blocked_flag = old_flag,
 			args = args,
 		} )
 
 		if show_bar then
-			local bar_name
+			local bar_name, bar_c1, bar_c2
 
 			if isstring( show_bar ) then
 				bar_name = show_bar
+			elseif istable( show_bar ) then
+				bar_name = show_bar.name
+				bar_c1 = show_bar.c1
+				bar_c2 = show_bar.c2
 			end
 
-			self:EnableProgressBar( true, end_time, bar_name )
+			self:EnableProgressBar( true, end_time, bar_name, bar_c1, bar_c2 )
 		end
 
 		if block_movement then
-			self:SetDisableControls( true )
-
-			if isnumber( block_movement ) then
-				self:SetDisableControlsFlag( bit.bor( old_flag, block_movement ) )
-			end
+			self:DisableControls( "slc_task_"..name, isnumber( block_movement ) and block_movement or 0 )
 		end
 	end )
 
@@ -1089,14 +1305,7 @@ function PLAYER:StopSLCTask( data )
 	end
 
 	if task.block_movement then
-		local cur = self:GetDisableControls()
-
-		if !cur or !task.was_blocked then
-			self:SetDisableControls( false )
-			self:SetDisableControlsFlag( 0 )
-		else
-			self:SetDisableControlsFlag( task.blocked_flag ) --WARN: old flags might got already removed
-		end
+		self:StopDisableControls( "slc_task_"..task.name )
 	end
 
 	if data then
@@ -1120,6 +1329,7 @@ hook.Add( "Tick", "SLCTaskTick", function()
 		end
 	end
 end )
+
 --[[-------------------------------------------------------------------------
 Footsteps
 ---------------------------------------------------------------------------]]
@@ -1192,229 +1402,6 @@ function PLAYER:UpdateStepTime()
 end
 
 --[[-------------------------------------------------------------------------
-Chase system
----------------------------------------------------------------------------]]
---Area
-local ChaseArea = {}
-
-function ChaseArea:New( cont )
-	local tab = {}
-	
-	tab.Controller = cont
-	tab.UID = cont.AreaUIDs
-	cont.AreaUIDs = cont.AreaUIDs + 1
-	
-	return setmetatable( tab, { __index = ChaseArea } )
-end
-
-function ChaseArea:Think()
-	local ct = CurTime()
-	if self.DieTime <= ct then return true end
-
-	//debugoverlay.Sphere( self.Position, self.Radius, 0.3, Color( 255, 255, 255, 0 ), true )
-
-	local tab = self.Controller.ChasedBy
-	for i, v in ipairs( player.FindInSphere( self.Position, self.Radius ) ) do
-		if v:SCPTeam() != TEAM_SCP or !v:GetSCPChase() then continue end
-
-		if !tab[v] then
-			tab[v] = {
-				start_time = ct,
-				start_area_id = self.UID,
-				is_active = false,
-			}
-		end
-
-		local last_id = tab[v].last_area_id
-		if !last_id or self.UID > last_id then
-			tab[v].prev_area_id = last_id
-			tab[v].last_area_id = self.UID
-			tab[v].last_area_dietime = self.DieTime
-		end
-	end
-end
-
-function ChaseArea:SetRadius( rad )
-	self.Radius = rad
-end
-
-function ChaseArea:SetPos( pos )
-	self.Position = pos
-end
-
-function ChaseArea:SetDieTime( dt )
-	self.DieTime = dt
-end
-
-setmetatable( ChaseArea, { __call = ChaseArea.New } )
-
---controller
-local ChaseController = {}
-
-function ChaseController:New( ply )
-	local tab = {}
-	
-	tab.Player = ply
-	tab.Areas = {}
-	tab.ChasedBy = {}
-	tab.NextThink = 0
-	tab.AreaUIDs = 0
-	
-	return setmetatable( tab, { __index = ChaseController } )
-end
-
-function ChaseController:Think()
-	local ct = CurTime()
-	if self.NextThink > ct then return end
-	self.NextThink = ct + 0.25
-
-	local ply = self.Player
-	local pos = ply:GetPos()
-
-	if !self.LastArea or self.LastArea:DistToSqr( pos ) > self.LastAreaRadiusSqr and !ply:KeyDown( IN_DUCK ) then
-		local area = ChaseArea( self )
-		table.insert( self.Areas, 1, area )
-
-		if #self.Areas == 9 then
-			self.Areas[9] = nil
-		end
-
-		local sprint = ply:KeyDown( IN_SPEED )
-		local radius = sprint and 300 or 150
-		local time = sprint and 8 or 6
-
-		area:SetPos( pos )
-		area:SetRadius( radius )
-		area:SetDieTime( ct + time )
-
-		self.LastArea = pos
-		self.LastAreaRadiusSqr = radius * radius
-	end
-
-	for i = #self.Areas, 1, -1 do
-		if self.Areas[i]:Think() then
-			table.remove( self.Areas, i )
-		end
-	end
-
-	for chase_ply, chase_data in pairs( self.ChasedBy ) do
-		if !IsValid( chase_ply ) or chase_data.last_area_dietime <= ct then
-			self.ChasedBy[chase_ply] = nil
-			continue
-		end
-
-		if !chase_data.is_active then
-			chase_data.is_active = chase_data.last_area_id > chase_data.start_area_id
-		end
-	end
-end
-
-setmetatable( ChaseController, { __call = ChaseController.New } )
-
-function PLAYER:ChaseThink()
-	if !self:Alive() then return end
-
-	local t = self:SCPTeam()
-	if t == TEAM_SPEC then return end
-
-	if t != TEAM_SCP then
-		local cont = self:GetProperty( "slc_chase_controller" )
-		if !cont then
-			cont = ChaseController( self )
-			self:SetProperty( "slc_chase_controller", cont )
-		end
-
-		cont:Think()
-	end
-end
-
-function PLAYER:IsChasedBy( other )
-	local cont = self:GetProperty( "slc_chase_controller" )
-	if !cont then return false end
-
-	local data = cont.ChasedBy[other]
-	if !data then return false end
-
-	return data.is_active
-end
-
-function PLAYER:IsChasing( other )
-	return other:IsChasedBy( self )
-end
-
-function PLAYER:GetChasedPlayers()
-	local res = {}
-	local ind = 0
-
-	for _, ply in ipairs( player.GetAll() ) do
-		if ply:IsChasedBy( self ) then
-			ind = ind + 1
-			res[ind] = ply
-		end
-	end
-
-	return res, ind
-end
-
-local next_chase_tick = 0
-hook.Add( "Tick", "SLCChaseTick", function()
-	local ct = CurTime()
-
-	if next_chase_tick > ct then return end
-	next_chase_tick = ct + 0.5
-
-	local ply_tab = {}
-
-	for _, ply in ipairs( player.GetAll() ) do
-		local cont = ply:GetProperty( "slc_chase_controller" )
-		if !cont then continue end
-
-		for chase_ply, chase_data in pairs( cont.ChasedBy ) do
-			if !chase_data.is_active then continue end
-
-			ply_tab[ply] = true
-			ply_tab[chase_ply] = true
-		end
-	end
-
-	for _, ply in ipairs( player.GetAll() ) do
-		local data = ply:GetProperty( "slc_chase_data" )
-		if !data and !ply_tab[ply] then continue end
-
-		local isscp = ply:SCPTeam() == TEAM_SCP
-
-		if ply_tab[ply] then
-			if !data then
-				data = {
-					increase = 0,
-					level = 0,
-					scp = isscp
-				}
-
-				ply:SetProperty( "slc_chase_data", data )
-				ply:PlayAmbient( "scp_chase", true, true, function( pl )
-					return !pl:GetProperty( "slc_chase_data" )
-				end )
-			end
-
-			data.finish = ct + 5
-
-			if data.increase < ct then
-				data.increase = ct + 20
-				data.level = data.level + 1
-
-				ply:ApplyEffect( isscp and "scp_chase" or "human_chase" )
-				ply:SetChaseLevel( data.level )
-			end
-		elseif data.finish < ct then
-			ply:SetProperty( "slc_chase_data", nil )
-			ply:RemoveEffect( isscp and "scp_chase" or "human_chase" )
-			ply:SetChaseLevel( 0 )
-			ply:StopAmbient( "scp_chase" )
-		end
-	end
-end )
---[[-------------------------------------------------------------------------
 Progress Bar Binding
 ---------------------------------------------------------------------------]]
 function PLAYER:EnableProgressBar( enable, endtime, text, col1, col2 )
@@ -1444,6 +1431,15 @@ end
 
 function PLAYER:AddClassPoints( cp )
 	self:SetClassPoints( self:Get_SCPClassPoints() + cp )
+end
+
+function PLAYER:SetPrestigePoints( pp )
+	self:Set_PrestigePoints( pp )
+	self:SetSCPData( "prestige_points", pp )
+end
+
+function PLAYER:AddPrestigePoints( cp )
+	self:SetPrestigePoints( self:GetPrestigePoints() + cp )
 end
 
 function PLAYER:SetSCPLevel( lvl )
@@ -1484,6 +1480,7 @@ function PLAYER:AddXP( xp, category )
 
 	local plyxp = self:SCPExp()
 	local level = self:SCPLevel()
+	local orig_xp = plyxp
 
 	local ref = setmetatable( {
 		value = 1,
@@ -1521,6 +1518,11 @@ function PLAYER:AddXP( xp, category )
 		self:SetSCPData( "daily_bonus", daily_bonus )
 	end
 
+	local sp_xp = CVAR.slc_spectator_points_xp:GetInt()
+	if sp_xp > 0 then
+		self:SetSpectatorPoints( self:GetSpectatorPoints() + math.floor( ( plyxp - orig_xp ) / sp_xp ) )
+	end
+
 	local req = self:RequiredXP( level ) //lvlxp + lvlinc * level
 	local lvls = 0
 
@@ -1545,17 +1547,21 @@ function PLAYER:ExperienceSummary()
 	return tmp or {}
 end
 
-function PLAYER:ResetDailyBonus()
-	local rs = tonumber( self:GetSCPData( "daily_bonus_reset", 0 ) ) or 0
-	if rs < SLC_UNIX_DAY then
-		print( "Resetting daily XP bonus", self )
+function PLAYER:ResetDailyBonus( force )
+	self:GetSCPData( "daily_bonus_reset", 0 ):Then( function( rs )
+		if !IsValid( self ) then return end
 
-		self:SetSCPData( "daily_bonus_reset", SLC_UNIX_DAY )
+		rs = tonumber( rs ) or 0
+		if rs < SLC_UNIX_DAY or force then
+			print( "Resetting daily XP bonus", self )
 
-		local amount = CVAR.slc_dailyxp_amount:GetInt()
-		self:Set_DailyBonus( amount )
-		self:SetSCPData( "daily_bonus", amount )
-	end
+			self:SetSCPData( "daily_bonus_reset", SLC_UNIX_DAY )
+
+			local amount = CVAR.slc_dailyxp_amount:GetInt()
+			self:Set_DailyBonus( amount )
+			self:SetSCPData( "daily_bonus", amount )
+		end
+	end )
 end
 
 function PLAYER:AddSanity( s )
@@ -1586,12 +1592,20 @@ function PLAYER:SkipNextRagdoll()
 	self._SkipNextRagdoll = true
 end
 
+function PLAYER:SkipNextSuicide()
+	self._SkipNextSuicide = true
+end
+
+function PLAYER:ForceSuicideQueue()
+	self._ForceSuicideQueue = true
+end
+
 function PLAYER:IsAboutToSpawn()
 	return !!self:GetProperty( "spawning" ) or !!self:GetProperty( "spawning_scp" )
 end
 
 function PLAYER:IsValidSpectator()
-	return !self:Alive() and self:IsActive() and !self:IsAFK() and self:SCPTeam() == TEAM_SPEC and !self:IsAboutToSpawn()
+	return !self:Alive() and self:IsActive() and !self:IsAFK() and self:SCPTeam() == TEAM_SPEC and !self:IsAboutToSpawn() and !self.SetupAsSpectator and !self.DeathScreen
 end
 
 function PLAYER:SCPCanInteract()

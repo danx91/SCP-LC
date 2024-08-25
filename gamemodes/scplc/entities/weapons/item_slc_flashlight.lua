@@ -27,13 +27,13 @@ if CLIENT then
 end
 
 function SWEP:SetupDataTables()
-	self:Super( "SetupDataTables" )
+	self:CallBaseClass( "SetupDataTables" )
 
 	self:AddNetworkVar( "Light", "Entity" )
 end
 
 function SWEP:Initialize()
-	self:Super( "Initialize" )
+	self:CallBaseClass( "Initialize" )
 
 	if CLIENT then
 		self.PixelVis = util.GetPixelVisibleHandle()
@@ -61,7 +61,7 @@ function SWEP:OnDrop()
 end
 
 function SWEP:Deploy()
-	self:Super( "Deploy" )
+	self:CallBaseClass( "Deploy" )
 
 	if SERVER then
 		local light = self:GetLight()

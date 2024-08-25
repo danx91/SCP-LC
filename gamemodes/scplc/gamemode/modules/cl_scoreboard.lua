@@ -1,4 +1,4 @@
---Lower value is sorted higher
+--Lower values are sorted higher
 --WARNING!! Don't use values higher than 20 and lower than -20!!
 local SORT = {
 	inactive = 20,
@@ -7,13 +7,17 @@ local SORT = {
 	[TEAM_SPEC] = 15,
 	[TEAM_CLASSD] = 14,
 	[TEAM_SCI] = 13,
-	[TEAM_MTF] = 12,
-	teammates = 5,
+	[TEAM_GUARD] = 12,
+	[TEAM_MTF] = 11,
+	[TEAM_CI] = 10,
+	[TEAM_GOC] = 9,
+	[TEAM_SCP] = 8,
+	teammates = 1,
 	localplayer = 0,
 }
 
 --Higher value is sorted higher
-local custom_ranks = {
+local custom_badges = {
 	vip = {
 		sorting = 100,
 		color = Color( 180, 180, 15 ),
@@ -26,7 +30,7 @@ local custom_ranks = {
 	author = {
 		sorting = 999,
 		color = Color( 100, 25, 140 ),
-		func = "76561198110788144"--Can be either SteamID64, table of SteamID64s or function with player as argument
+		func = "76561198110788144" --Can be either SteamID64, table of SteamID64s or function with player as argument
 	},
 	/*contributor = {
 		sorting = 15,
@@ -52,55 +56,66 @@ local custom_ranks = {
 		sorting = 0,
 		color = Color( 190, 50, 150 ),
 		func = "76561198110788144"
-	},
-	*/
+	},*/
+	
 }
 
-local web_ranks_status = 0
+--[[-------------------------------------------------------------------------
+IMPORTANT - PLEASE READ!
 
-local function fetch_web_ranks()
-	if web_ranks_status == 1 then return end
+Badges grant absolutely NOTHING other than just badge itself on scoreboard, it grants NO in-game benefits at all.
+If you don't like idea of fetching data from gamemode github, you can disable it, but it's used to give credits for people who helped me a lot
+with the development of the gamemode, so please consider leaving it as is (of course you can add your custom badges).
 
-	web_ranks_status = 1
+If you don't trust this code (or me), trust facts: there is no malicious thing this code can do. The worst possible thing I (or person who somehow hacked into my github)
+can do with this, is to load thousands of useless keys of data, however JSONToTable will fail after reaching 15k keys so no harm can be done anyway.
+---------------------------------------------------------------------------]]
+
+local web_badges_status = 0
+
+local function fetch_web_badges()
+	if web_badges_status == 1 then return end
+
+	web_badges_status = 1
 	print( "Fetching badges from github..." )
 
 	http.Fetch( "https://danx91.github.io/SCP-LC/badges.min.json", function( body, size, head, code )
 		print( "Badges: OK", code )
 
 		if code != 200 then
-			web_ranks_status = -1
+			web_badges_status = -1
 			return
 		end
 
 		local tbl = util.JSONToTable( body )
 		if !tbl then
-			web_ranks_status = 0
+			web_badges_status = 0
 			return
 		end
 
-		local ranks, users = 0, 0
+		local badges, users = 0, 0
 		for k, v in pairs( tbl ) do
-			custom_ranks[k] = {
+			custom_badges[k] = {
 				sorting = v.sorting,
 				color = Color( v.color[1], v.color[2], v.color[3] ),
 				func = v.ids
 			}
 
-			ranks = ranks + 1
+			badges = badges + 1
 			users = users + #v.ids
 		end
 		
-		web_ranks_status = 2
-		print( "Badges fully loaded!", "Badges: "..ranks, "Users: "..users )
+		web_badges_status = 2
+		print( "Badges fully loaded!", "Badges: "..badges, "Users: "..users )
 	end, function( err )
 		print( "BADGES FETCH ERROR", err )
-		web_ranks_status = -1
+		web_badges_status = -1
 	end )
 end
 
 if !DEVELOPER_MODE then
 	timer.Simple( 10, function()
-		fetch_web_ranks()
+		fetch_web_badges()
 	end )
 end
 
@@ -113,9 +128,9 @@ local player_ranks = {
 	}
 }
 
-function ScoreboardPlayerData( ply, ranks )
-	if web_ranks_status == 0 then
-		fetch_web_ranks()
+function ScoreboardPlayerData( ply )
+	if !DEVELOPER_MODE and web_badges_status == 0 then
+		fetch_web_badges()
 	end
 
 	local lp = LocalPlayer()
@@ -142,29 +157,22 @@ function ScoreboardPlayerData( ply, ranks )
 	return sorting, color
 end
 
-function ScoreboardPlayerRanks( ply, tab )
-	tab.ranks = {}
+function ScoreboardPlayerBadges( ply, tab )
+	local badges = {}
+
+	if tab then
+		tab.badges = badges
+	end
 
 	local rank = ply:GetUserGroup()
-	local ignore = false
-	for k, v in pairs( player_ranks.ranks ) do
-		if k == rank then
-			if v then
-				local color = IsColor( v ) and v or player_ranks.default
-				table.insert( tab.ranks, { k, color, 0 } )
-			end
-
-			ignore = true
-
-			break
-		end
+	local group_rank = player_ranks.ranks[rank]
+	if group_rank then
+		table.insert( badges, { rank, IsColor( group_rank ) and group_rank or player_ranks.default, 0 } )
+	elseif group_rank != false then
+		table.insert( badges, { rank, player_ranks.default, 0 } )
 	end
 
-	if !ignore then
-		table.insert( tab.ranks, { rank, player_ranks.default, 0 } )
-	end
-
-	for k, v in pairs( custom_ranks ) do
+	for k, v in pairs( custom_badges ) do
 		local shouldhave = false
 
 		if isstring( v.func ) then
@@ -183,42 +191,27 @@ function ScoreboardPlayerRanks( ply, tab )
 		end
 
 		if shouldhave then
-			table.insert( tab.ranks, { k, v.color, v.sorting } )
+			table.insert( badges, { k, v.color, v.sorting } )
 		end
 	end
 
-	table.sort( tab.ranks, function( a, b ) return a[3] > b[3] end )
+	table.sort( badges, function( a, b ) return a[3] > b[3] end )
+
+	return badges
 end
 
-/*function GM:HUDDrawScoreBoard() --TODO: buttons to class viewer, stat viewer and settings
-	if !ScoreboardVisible then return end
-
-	//local w, h = ScrW(), ScrH()
-
-	
-end*/
+function AddRankBadge( rank, color )
+	player_ranks.ranks[rank] = color
+end
 
 function GM:ScoreboardShow()
+	if RunGUISkinFunction( "eq", "is_visible" ) then return end
+	
 	ScoreboardVisible = true
-
-	HideEQ()
-
-	if !IsValid( SCOREBOARD ) then
-		RunGUISkinFunction( "create_scoreboard" )
-	else
-		SCOREBOARD:Show()
-		RunGUISkinFunction( "show_scoreboard" )
-	end
+	ShowGUIElement( "scoreboard" )
 end
 
 function GM:ScoreboardHide()
 	ScoreboardVisible = false
-
-	SCOREBOARD:Hide()
-	SCOREBOARD:Remove()
-	RunGUISkinFunction( "hide_scoreboard" )
+	HideGUIElement( "scoreboard" )
 end
-
-hook.Add( "HUDPaint", "ScoreboardArrow", function()
-	RunGUISkinFunction( "overlay_scoreboard" )
-end )

@@ -14,6 +14,7 @@ SWEP.BatteryUsage 	= 0.6
 SWEP.DrawCrosshair = false
 
 SWEP.Group = "nvg"
+SWEP.UseGroup = "vision"
 
 SWEP.scp914upgrade = "item_slc_nvgplus"
 
@@ -24,6 +25,10 @@ end
 
 function SWEP:Think()
 	self:CallBaseClass( "Think" )
+end
+
+function SWEP:OnSelect()
+	if !self:CanEnable() then return true end
 end
 
 if CLIENT then

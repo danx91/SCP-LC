@@ -6,7 +6,7 @@ end
 --[[-------------------------------------------------------------------------
 SLC AL
 ---------------------------------------------------------------------------]]
-SLCAuth.AddLibrary( "serverguard", "Serverguard", { --TEST testing required
+SLCAuth.AddLibrary( "serverguard", "Serverguard", {
 	CheckAccess = function( ply, access )
 		return serverguard.player:HasPermission( ply, access )
 	end,
@@ -38,7 +38,7 @@ function command:Execute(player, silent, arguments)
         return
     end
 
-	for group_name, group in pairs( getGroups() ) do
+	for group_name, group in pairs( GetClassGroups() ) do
 		if group_name != "SUPPORT" then
 			local _, grspwn = getClassGroup( group_name )
 			for k, c in pairs( group ) do
@@ -86,7 +86,7 @@ function command:ContextMenu(player, menu, rankData)
 	menuOption:SetImage("icon16/user.png");
 
 	local class_names = {}
-	for group_name, group in pairs( getGroups() ) do
+	for group_name, group in pairs( GetClassGroups() ) do
 		if group_name != "SUPPORT" then
 			for k, class in pairs( group ) do
 				table.insert( class_names, k )

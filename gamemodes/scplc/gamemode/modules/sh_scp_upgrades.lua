@@ -30,7 +30,7 @@ local generic_skill_icons = {
 		}
 	}
 ]]
-function DefineUpgradeSystem( name, data )
+function DefineUpgradeSystem( name, data, swep )
 	local ids = {}
 
 	for i, v in ipairs( data.upgrades ) do
@@ -38,6 +38,15 @@ function DefineUpgradeSystem( name, data )
 
 		if !v.icon and generic_skill_icons[v.name] then
 			v.icon = GetMaterial( generic_skill_icons[v.name] )
+		end
+	end
+
+	local auto = data.rewards._auto
+	if auto then
+		data.rewards._auto = nil
+
+		for i = 1, auto[1] do
+			data.rewards[i] = { i * auto[2], 1 }
 		end
 	end
 
@@ -49,6 +58,9 @@ function DefineUpgradeSystem( name, data )
 	data.total_reward = total
 	data.upgradeid = ids
 	SLC_SCP_UPGRADES[name] = data
+
+	if !swep then return end
+	InstallUpgradeSystem( name, swep )
 end
 
 function InstallUpgradeSystem( name, swep )
@@ -197,7 +209,11 @@ function InstallUpgradeSystem( name, swep )
 				end
 
 				for k, v in pairs( upgrade.mod ) do
-					self.UpgradeSystemRegistry.mod[k] = v
+					if upgrade.additive then
+						self.UpgradeSystemRegistry.mod[k] = ( self.UpgradeSystemRegistry.mod[k] or 0 ) + v
+					else
+						self.UpgradeSystemRegistry.mod[k] = v
+					end
 				end
 
 				if upgrade.active and self.OnUpgradeBought then
@@ -260,7 +276,7 @@ if SERVER then
 
 	net.Receive( "SCPUpgrade", function( len, ply )
 		local id = net.ReadUInt( 8 )
-		local wep = ply:GetActiveWeapon()
+		local wep = ply:GetSCPWeapon()
 		if !IsValid( wep ) or !wep.UpgradeSystemMounted then return end
 
 		wep:BuyUpgrade( id )
@@ -272,7 +288,6 @@ GUI
 ---------------------------------------------------------------------------]]
 if CLIENT then
 	net.ReceiveTable( "SCPUpgradeSync", function( data )
-
 		WaitForSync( function()
 			local wep = LocalPlayer():GetWeapon( data[1] )
 
@@ -297,7 +312,7 @@ if CLIENT then
 		local num = net.ReadUInt( 8 )
 		local total = net.ReadUInt( 8 )
 
-		local wep = LocalPlayer():GetActiveWeapon()
+		local wep = LocalPlayer():GetSCPWeapon()
 		if !IsValid( wep ) or !wep.UpgradeSystemMounted then return end
 
 		local cur = wep:GetUpgradePoints()
@@ -356,6 +371,7 @@ if CLIENT then
 		locked = Material( "slc/hud/upgrades/locked.png" )
 	}
 	local recomputed = false
+	local nf_yoffset = 0
 
 	local color_white = Color( 255, 255, 255, 255 )
 	local color_white100 = Color( 255, 255, 255, 100 )
@@ -368,7 +384,7 @@ if CLIENT then
 		if !HUDSCPUpgradesOpen then return end
 		next_frame = true
 
-		local wep = LocalPlayer():GetActiveWeapon()
+		local wep = LocalPlayer():GetSCPWeapon()//LocalPlayer():GetActiveWeapon()
 		if !IsValid( wep ) or !wep.UpgradeSystemMounted then return end
 
 		local upg = SLC_SCP_UPGRADES[wep.UpgradeSystemName]
@@ -476,9 +492,10 @@ if CLIENT then
 			//render.PushFilterMag( TEXFILTER.LINEAR )
 			PushFilters( TEXFILTER.LINEAR )
 			
-			if v.icon then
+			local icon = wep.UpgradeIconsOverride and wep.UpgradeIconsOverride[v.name] or v.icon
+			if icon then
 				surface.SetDrawColor( color_white )
-				surface.SetMaterial( v.icon )
+				surface.SetMaterial( icon )
 				surface.DrawTexturedRect( sx, sy, icosize, icosize )
 			end
 
@@ -553,10 +570,10 @@ if CLIENT then
 
 		if info then
 			local clang = lang[info.name] or LANG.GenericUpgrades[info.name] or {}
-
 			local cx, cy = input.GetCursorPos()
-
 			local width = w * 0.3
+
+			cy = cy + nf_yoffset
 
 			if cx + width > w then
 				cx = w - width
@@ -610,19 +627,40 @@ if CLIENT then
 					end
 
 					if !wep.cached_description[info.name] then
-						wep.cached_description[info.name] = string.gsub( dsc, "%[([%w_]+)%]", info.mod )
+						wep.cached_description[info.name] = string.gsub( dsc, "%[([%/%+%-%%]?)(%+?)([%w_]+)%]", function( prefix, plus, name )
+							if !info.mod[name] then
+								return "?"..name
+							end
+
+							if prefix == "-" then
+								local num = 1 - info.mod[name]
+								return ( num > 0 and plus or "" )..( num * 100 ).."%"
+							elseif prefix == "+" then
+								local num = info.mod[name] - 1
+								return ( num > 0 and plus or "" )..( num * 100 ).."%"
+							elseif prefix == "/" then
+								local num = 1 / info.mod[name] - 1
+								return ( num > 0 and plus or "" )..math.Round( num * 100 ).."%"
+							elseif prefix == "%" then
+								local num = info.mod[name]
+								return ( num > 0 and plus or "" )..( info.mod[name] * 100 ).."%"
+							end
+
+							return info.mod[name]
+						end )
 					end
 
 					dsc = wep.cached_description[info.name]
 				end
 
 				local height = draw.MultilineText( cx + w * 0.01, cur_y + h * 0.01, dsc, "SCPHUDSmall", nil, w * 0.28, 0, 0, TEXT_ALIGN_LEFT, nil, true )
+				local tx_h = math.ceil( height + h * 0.015 )
 
-				surface.DrawRect( cx, cur_y, width, math.ceil( height + h * 0.015 ) )
+				surface.DrawRect( cx, cur_y, width, tx_h )
 
 				draw.MultilineText( cx + w * 0.01, cur_y + h * 0.01, dsc, "SCPHUDSmall", color_white, w * 0.28, 0, 0, TEXT_ALIGN_LEFT )
 
-				cur_y = cur_y + math.ceil( height + h * 0.015 )
+				cur_y = cur_y + tx_h
 			end
 
 			if info.req and #info.req > 0 and !wep:UpgradeUnlocked( info.name ) then
@@ -693,6 +731,14 @@ if CLIENT then
 			surface.SetDrawColor( 150, 150, 150, 50 )
 			surface.DrawOutlinedRect( cx - 2, cy - 2, width + 4, math.ceil( cur_y - cy + 4 ), 2 )
 
+			cur_y = cur_y - nf_yoffset
+
+			if cur_y > h then
+				nf_yoffset = h - cur_y
+			else
+				nf_yoffset = 0
+			end
+
 			//render.SetStencilEnable( false )
 		end
 	end
@@ -700,7 +746,7 @@ if CLIENT then
 	hook.Add( "DrawOverlay", "SCPUpgradesOverlay", drawUpgrades )
 
 	function ShowSCPUpgrades()
-		local wep = LocalPlayer():GetActiveWeapon()
+		local wep = LocalPlayer():GetSCPWeapon()//GetActiveWeapon()
 		if wep.UpgradeSystemMounted then
 			HUDSCPUpgradesOpen = true
 			gui.EnableScreenClicker( true )

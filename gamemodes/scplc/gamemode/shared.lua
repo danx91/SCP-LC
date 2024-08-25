@@ -14,7 +14,7 @@ LANGUAGE = {
 	EQ_LONG_TEXT = bit.lshift( 1, 0 ),
 }
 
-function registerLanguage( tab, name, ... )
+function RegisterLanguage( tab, name, ... )
 	if !tab or !name then return end
 
 	if _LANG[name] then
@@ -31,7 +31,7 @@ function registerLanguage( tab, name, ... )
 	print( "# Language loaded: "..name )
 end
 
-function setLanguageFlag( name, flag )
+function SetLanguageFlag( name, flag )
 	if _LANG_FLAGS[name] and flag then
 		_LANG_FLAGS[name] = bit.bor( _LANG_FLAGS[name], flag )
 	end

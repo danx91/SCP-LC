@@ -205,7 +205,7 @@ local function printRules( name )
 				if data.value == data.default then
 					MsgC( color, string.ExactLength( v, 30 ), Color( 255, 255, 255 ), "| ", string.ExactLength( data.type or "?", 18 ), "| ", data.value == nil and "?" or data.value, "\n" )
 				else
-					MsgC( color, string.ExactLength( v, 30 ), Color( 255, 255, 255 ), "| ", string.ExactLength( data.type or "?", 18 ), "| ", Color( 175, 175, 175 ), data.value == nil and "?" or data.value, Color( 255, 255, 255 ), "   ["..tostring(data.default == nil and "?" or data.default).."]", "\n" )
+					MsgC( color, string.ExactLength( v, 30 ), Color( 255, 255, 255 ), "| ", string.ExactLength( data.type or "?", 18 ), "| ", Color( 175, 175, 175 ), data.value == nil and "?" or data.value, Color( 255, 255, 255 ), "   ["..tostring( data.default == nil and "?" or data.default ).."]", "\n" )
 				end
 			end
 		end
@@ -228,7 +228,7 @@ concommand.Add( "slc_gamerule", function( ply, cmd, args )
 		return
 	end
 
-	if SERVER and (!IsValid( ply ) or ply:IsListenServerHost()) then
+	if SERVER and ( !IsValid( ply ) or ply:IsListenServerHost() ) then
 		if args[1] == "get" then
 			printRules( args[2] )
 		elseif args[1] == "set" then
@@ -352,7 +352,7 @@ end, function( cmd, args )
 end, "" )
 
 /*timer.Simple( 0, function()
-	for k, v in pairs( player.GetAll() ) do
+	for i, v in ipairs( player.GetAll() ) do
 		gamerule.SendAll( v )
 	end 
 end )*/

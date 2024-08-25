@@ -110,7 +110,7 @@ function SWEP:PrimaryAttack()
 		if selected == 1 then
 			if SERVER then
 				ComTab_Transmit()
-				TransmitSound( "scp_lc/announcements/camera_check.ogg", true )
+				PlayPA( "scp_lc/announcements/camera_check.ogg", 15 )
 
 				AddTimer( "ComTabFacilityScan", dur, 1, function()
 					if IsValid( self ) then
@@ -143,9 +143,9 @@ function SWEP:PrimaryAttack()
 					ComTab_Transmit()
 
 					if total > 0 then
-						TransmitSound( "scp_lc/announcements/camera_found.ogg", true )
+						PlayPA( "scp_lc/announcements/camera_found.ogg", 12 )
 					else
-						TransmitSound( "scp_lc/announcements/camera_notfound.ogg", true )
+						PlayPA( "scp_lc/announcements/camera_notfound.ogg", 10 )
 					end
 				end )
 			end
@@ -159,7 +159,7 @@ function SWEP:PrimaryAttack()
 						self:ResetAction( STATE.IDLE, 0 )
 					end
 
-					TransmitSound( string.format( "scp_lc/announcements/tesla%i.ogg", math.random( 3 ) ), true )
+					PlayPA( string.format( "scp_lc/announcements/tesla%i.ogg", math.random( 3 ) ), 9 )
 
 					local btn = GetButton( "Tesla" )
 
@@ -201,7 +201,7 @@ if SERVER then
 	function ComTab_Transmit()
 		local tab = {}
 		
-		for k, v in pairs( player.GetAll() ) do
+		for i, v in ipairs( player.GetAll() ) do
 			if v:HasWeapon( "item_slc_commander_tablet" ) then
 				table.insert( tab, v )
 			end
@@ -267,7 +267,7 @@ if CLIENT then
 	local pointer = "➤"
 
 	local fade = Material( "vgui/gradient-l" )
-	local logo = Material( "slc/misc/scp_logo_128.png" )
+	local logo = Material( "slc/misc/scp_logo_128.png", "smooth" )
 	local alpha = 0
 
 	local color_white = Color( 255, 255, 255 )

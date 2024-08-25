@@ -55,7 +55,7 @@ hook.Add( "SLCFactoryReset", "SLCResetConvars", function()
 			end
 		end
 	end
-end)
+end )
 
 --[[-------------------------------------------------------------------------
 Options window
@@ -399,7 +399,6 @@ if CLIENT then
 					
 
 					if data.custom_check then
-						//print( "has check", data.custom_check, value, type(value), data.custom_check( value ) )
 						self.has_error = !data.custom_check( value ) or num and ( data.min and value < data.min or data.max and value > data.max )
 
 						if self.has_error then

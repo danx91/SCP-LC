@@ -2,13 +2,10 @@ AddCSLuaFile()
 
 ENT.Type 			= "anim"  
 ENT.Base 			= "base_anim"
- 
-ENT.Spawnable			= false
-ENT.AdminSpawnable		= false
 
 ENT.Speed = 11
 ENT.Size = 1
-ENT.Gravity = Vector( 0, 0, 0.07 )
+ENT.Gravity = Vector( 0, 0, 4 )
 ENT.EffectName = "SLCBloodSplash"
  
 function ENT:SetupDataTables()
@@ -16,55 +13,56 @@ function ENT:SetupDataTables()
 end
 
 function ENT:Initialize()
-	self.RemoveTime = CurTime() + 10
+	self.DieTime = CurTime() + 10
 
 	self:SetModel( "models/hunter/plates/plate.mdl" )
-	self:PhysicsInit( SOLID_NONE )
-	self:SetMoveType( MOVETYPE_NONE )
+
+	if SERVER then
+		self:PhysicsInit( SOLID_NONE )
+		self:SetMoveType( MOVETYPE_NONE )
+	end
 
 	self.Velocity = self:GetAngles():Forward() * self.Speed
 end
 
 function ENT:Think()
 	local ct = CurTime()
+	local pos = self:GetPos()
 
 	if SERVER then
-		if self.RemoveTime <= ct then
+		if self.DieTime <= ct then
 			self:Remove()
 			return
 		end
 
-		local pos = self:GetPos()
 		local hull_size = 3 * self:GetSize()
 
 		local filter = SCPTeams.GetPlayersByTeam( TEAM_SCP )
 		filter[#filter + 1] = self
 
-		local trace = util.TraceHull{
+		local trace = util.TraceHull( {
 			start = pos,
 			endpos = pos + self.Velocity,
 			mask = MASK_SHOT,
 			filter = filter,
 			mins = Vector( -hull_size, -hull_size, -hull_size ),
 			maxs = Vector( hull_size, hull_size, hull_size ),
-		}
+		} )
 
 		if trace.Hit then
 			util.Decal( "Blood", trace.HitPos + trace.HitNormal * 5, trace.HitPos - trace.HitNormal * 5 )
-			local size = self:GetSize()
 
+			local size = self:GetSize()
 			local num = math.floor( 6 * size )
 			local ang = 2 * math.pi / num
-
 			local vang = trace.HitNormal:Angle()
 			local up = vang:Up()
 			local right = vang:Right()
-
 			local radius_min = 10 * size
 			local radius_max = 25 * size
 
 			for i = 1, num do
-				local n = ang * (i - 1 + ( math.random() * 0.5 - 0.25 ) )
+				local n = ang * ( i - 1 + ( math.random() * 0.5 - 0.25 ) )
 				local d_pos = trace.HitPos + math.sin( n ) * right * math.random( radius_min, radius_max ) - math.cos( n ) * up * math.random( radius_min, radius_max )
 				util.Decal( "Blood", d_pos + trace.HitNormal * 15, d_pos - trace.HitNormal * 15 )
 			end
@@ -77,21 +75,20 @@ function ENT:Think()
 
 			self:OnHit( trace )
 			self:Remove()
+
 			return
 		end
 
 		self:SetPos( pos + self.Velocity )
-		self.Velocity = self.Velocity - self.Gravity
+		self.Velocity = self.Velocity - self.Gravity * FrameTime()
 	end
 
 	self:NextThink( ct )
 	return true
 end
 
-function ENT:OnRemove()
-end
-
 function ENT:OnHit( trace )
+
 end
 
 function ENT:Draw()

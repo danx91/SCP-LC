@@ -1,17 +1,38 @@
 local WEAPON = FindMetaTable( "Weapon" )
 
+--[[-------------------------------------------------------------------------
+Weapon Groups
+---------------------------------------------------------------------------]]
 SLC_WEAPON_GROUP_OVERRIDE = {
 	weapon_crowbar = "melee",
 	weapon_stunstick = "melee",
 }
 
---[[-------------------------------------------------------------------------
-Weapon Groups
----------------------------------------------------------------------------]]
 function WEAPON:GetGroup()
 	return SLC_WEAPON_GROUP_OVERRIDE[self:GetClass()] or self.Group
 end
 
+--[[-------------------------------------------------------------------------
+Misc
+---------------------------------------------------------------------------]]
+SLC_OTHER_WEAPONS_REG = SLC_OTHER_WEAPONS_REG or {}
+
+function MarkAsWeapon( class )
+	SLC_OTHER_WEAPONS_REG[class] = true
+end
+
+function WEAPON:IsAttackWeapon()
+	local class = self:GetClass()
+
+	if SLC_WEAPONS_REG[class] then return true end
+	if SLC_OTHER_WEAPONS_REG[class] then return true end
+
+	return false
+end
+
+
+MarkAsWeapon( "weapon_crowbar" )
+MarkAsWeapon( "weapon_stunstick" )
 --[[-------------------------------------------------------------------------
 ResetViewModelBones
 ---------------------------------------------------------------------------]]

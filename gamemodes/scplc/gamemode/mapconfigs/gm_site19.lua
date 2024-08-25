@@ -21,14 +21,14 @@ SPAWN_SCP24273 = Vector( 4016.164551, 3882.115967, 1.00 )
 SPAWN_SCP3199 = Vector( 2498.00, 1534.00, 1.00 )
 
 SPAWN_SCP023 = {
-	Vector(4140.746094, -194.712585, 25.031250),
-	Vector(4166.099609, 1101.125732, 25.031250),
-	Vector(2979.323486, 2380.352051, 25.527580),
-	Vector(834.628296, 3650.139893, 25.031250),
-	Vector(-454.112244, 3658.908936, 25.031250),
+	Vector( 4140.746094, -194.712585, 25.031250 ),
+	Vector( 4166.099609, 1101.125732, 25.031250 ),
+	Vector( 2979.323486, 2380.352051, 25.527580 ),
+	Vector( 834.628296, 3650.139893, 25.031250 ),
+	Vector( -454.112244, 3658.908936, 25.031250 ),
 }
 
-OUTSIDE_966 = Vector(4165.00, 2375.00, 50.00)
+OUTSIDE_966 = Vector( 4165.00, 2375.00, 50.00 )
 
 EGGS_3199 = {
 	Vector( 610.00, 1891.00, 129.00 ),
@@ -223,6 +223,25 @@ if SERVER then
 	--[[-------------------------------------------------------------------------
 	SCP Items
 	---------------------------------------------------------------------------]]
+	ItemSpawnRule( "scp009", {
+		item = { item_scp_009 = 10, _none = 10 },
+		amount = 1,
+		spawns = {
+			Vector( 413.00, 2028.00, 267.00 ),
+			Vector( 2733.00, -1177.00, -21.00 ),
+			Vector( 1828.00, 1361.00, 11.00 ),
+
+			Vector( 2177.00, 1957.00, 11.00 ),
+			Vector( 4510.00, 3359.00, 11.00 ),
+			Vector( 5355.00, 1057.00, -501.00 ),
+
+			Vector( -799.00, 2595.00, 47.00 ),
+			Vector( -1444.00, 3328.00, 47.00 ),
+			Vector( 1687.00, 4177.00, 11.00 ),
+		},
+		post_tab = post,
+	}, true )
+
 	ItemSpawnRule( "scp714", {
 		item = "item_scp_714",
 		spawns = {
@@ -260,6 +279,27 @@ if SERVER then
 			Vector( -2008.00, 2866.00, -84.00 ),
 			Vector( -3711.00, 3161.00, 11.00 ),
 			Vector( -527.00, 4436.00, -24.00 ),
+		},
+		post_tab = post,
+	}, true )
+
+	ItemSpawnRule( "scp689", {
+		item = { slc_scp_689 = 10, _none = 70 },
+		amount = 1,
+		spawns = {
+			Vector( 1237.00, 299.00, 12.00 ),
+			Vector( 2894.00, 450.00, 11.00 ),
+			Vector( -1362.00, -858.00, 12.00 ),
+
+			Vector( 4155.00, -191.00, 12.00 ),
+			Vector( 4161.00, 1089.00, 12.00 ),
+			Vector( 2880.00, 3519.00, 11.00 ),
+			Vector( 3515.00, 2240.00, 11.00 ),
+
+			Vector( -446.00, 2383.00, 11.00 ),
+			Vector( -2366.00, 2994.00, 11.00 ),
+			Vector( -444.00, 4262.00, 11.00 ),
+			Vector( 989.00, 3014.00, 11.00 ),
 		},
 		post_tab = post,
 	}, true )
@@ -831,6 +871,33 @@ if SERVER then
 		},
 		post_tab = post,
 	}, true )
+
+	--[[-------------------------------------------------------------------------
+	Backpacks
+	---------------------------------------------------------------------------]]
+	ItemSpawnRule( "backpacks", {
+		item = { ["func:backpack:small"] = 8, ["func:backpack:medium"] = 4 },
+		amount = { 0, 4 },
+		spawns = {
+			Vector( -566.00, 1912.00, 11.00 ),
+			Vector( 653.00, -1182.00, 47.00 ),
+			Vector( 2214.00, -1765.00, -757.00 ),
+			Vector( 2462.00, -1763.00, 11.00 ),
+			Vector( 2745.00, 215.00, 11.00 ),
+			Vector( 2173.00, 1360.00, 11.00 ),
+			Vector( -678.00, -423.00, 11.00 ),
+			Vector( 833.00, 557.00, 11.00 ),
+
+			Vector( 4990.00, -427.00, 11.00 ),
+			Vector( 5121.00, 2613.00, 11.00 ),
+			Vector( 2982.00, 3642.00, 11.00 ),
+			Vector( 2942.00, 1788.00, 11.00 ),
+			
+			Vector( -447.00, 2203.00, 11.00 ),
+			Vector( -2201.00, 3010.00, 11.00 ),
+		},
+		post_tab = post,
+	}, true )
 end
 
 --[[-------------------------------------------------------------------------
@@ -859,7 +926,7 @@ FUSE_BOXES = {
 		fuse = 0.333,
 	},
 	{
-		name = "lcz_cp_room",
+		name = "ez_cp_room",
 		pos = Vector( 355.00, 3562.00, -70.00 ),
 		ang = Angle( 0, -90, 0 ),
 		rating = 5,
@@ -872,13 +939,42 @@ FUSE_BOXES = {
 		rating = 10,
 		fuse = 0,
 	},
-	/*{
-		name = "gate_b_2",
-		pos = Vector( -3526.00, 2645.00, 60.00 ),
-		ang = Angle( 0, 180, 0 ),
-		rating = 10,
+	{
+		name = "ez_vent_1",
+		pos = Vector( -3057.00, 4056.00, 319.00 ),
+		ang = Angle( 0, 0, 0 ),
+		rating = 5,
 		fuse = 0,
-	},*/
+	},
+	{
+		name = "ez_vent_2",
+		pos = Vector( -3057.00, 3870.00, 319.00 ),
+		ang = Angle( 0, 0, 0 ),
+		rating = 5,
+		fuse = 0,
+	},
+	{
+		name = "ez_vent_3",
+		pos = Vector( -3057.00, 3790.00, 319.00 ),
+		ang = Angle( 0, 0, 0 ),
+		rating = 5,
+		fuse = 0,
+	},
+	{
+		name = "hcz_106_vent",
+		pos = Vector( 1835.00, 4010.00, 60.00 ),
+		ang = Angle( 0, 180, 0 ),
+		rating = 6,
+		fuse = 0,
+		time = 90,
+	},
+	{
+		name = "scp106_recontain",
+		pos = Vector( 4070.00, 3644.00, 60.00 ),
+		ang = Angle( 0, 0, 0 ),
+		rating = 16,
+		fuse = 0,
+	},
 }
 
 --[[-------------------------------------------------------------------------
@@ -1241,6 +1337,8 @@ PREVENT_BREAK = {
 	Vector( 2816.00, 16.00, 74.00 ),
 	Vector( 2816.00, 880.00, 74.00 ),
 	Vector( 2816.00, 1296.00, 74.00 ),
+	Vector( -6752.00, -512.50, 2308.00 ),
+	Vector( -6880.00, -512.50, 2308.00 ),
 }
 
 --[[-------------------------------------------------------------------------
@@ -1256,6 +1354,10 @@ BLOCKERS = {
 			group = "filter_group_name", --this is prefered over options below, however these can be mixed together
 			classes = { "list", "of", "classes" }, --names, not ids - classes are registered few (1?) ticks after map config
 			teams = { TEAM_NAME1, TEAM_NAME2 },
+			round = { --Block everything during preparing/postround
+				preparing = true/false,
+				post = true/false,
+			},
 		}
 	},*/
 	{
@@ -1273,7 +1375,10 @@ BLOCKERS = {
 		bounds = { Vector( -80, -55, 0 ), Vector( 80, 75, 15 ) },
 		filter = {
 			mode = BLOCKER_WHITELIST,
-			classes = { "SCP106" }
+			classes = { "SCP106" },
+			round = {
+				preparing = true,
+			},
 		}
 	},
 }
@@ -1355,6 +1460,23 @@ MAP_ZONES = {
 		{ Vector( 1536, 3912, -250 ), Vector( 1850, 4500, 500 ) },
 		{ Vector( 3200, 2300, -1500 ), Vector( 8750, 6750, -600 ) },
 	},
+	[ZONE_WARHEAD] = {
+		{ Vector( 3900.00, 100.00, -600.00 ), Vector( 4800.00, 800.00, -200.00 ) },
+	},
+	[ZONE_SCP106] = {
+		{ Vector( 1850, 3912, -500 ), Vector( 3000, 4500, 500 ) },
+		{ Vector( 1750, 4500, -500 ), Vector( 3000, 5300, 500 ) },
+	},
+	[ZONE_RESTRICT173] = {
+		{ Vector( -760.00, 4835.00, -5.00 ), Vector( 10.00, 5420.00, 400.00 ) },
+		{ Vector( -4010.00, 1710.00, -5.00 ), Vector( -3250.00, 2470.00, 300.00 ) },
+	},
+	[ZONE_SCP914] = {
+		{ Vector( 1326.25, -1150.00, -5.00 ), Vector( 1800.00, -505.00, 290.00 ) },
+	},
+	[ZONE_FOREST] = {
+		{ Vector( 3200, 2300, -1500 ), Vector( 8750, 6750, -600 ) },
+	},
 }
 
 --[[-------------------------------------------------------------------------
@@ -1368,11 +1490,16 @@ SCP_914_INTAKE_MAXS = Vector( 1677.00, -549.00, 128.00 )
 SCP_914_OUTPUT_MINS = Vector( 1618.00, -1116.00, 0.00 )
 SCP_914_OUTPUT_MAXS = Vector( 1675.00, -995.00, 128.00 )
 
-SCP_914_OUTPUT = Vector(1651.584229, -1052.149902, 7.470211)
+SCP_914_OUTPUT = Vector( 1651.584229, -1052.149902, 7.470211 )
 SCP_914_DOORS = {
 	Vector( 1604.50, -571.00, 55.50 ),
 	Vector( 1604.50, -1019.00, 55.50 )
 }
+
+--[[-------------------------------------------------------------------------
+Intercom
+---------------------------------------------------------------------------]]
+INTERCOM = { Vector( -2595.00, 4035.00, 310.00 ), Angle( 0, 180, 0 ) }
 
 --[[-------------------------------------------------------------------------
 Alpha Warhead
@@ -1422,9 +1549,9 @@ Escape/Escort
 ---------------------------------------------------------------------------]]
 POS_ESCAPE = { Vector( -6986.00, -896.00, 2230.00 ), Vector( -6450.00, -500.00, 2395.00 ) }
 
-POS_ESCORT = Vector( -2878.00, 1742.00, 2300.00 ) --Generic escort pos, used if game fails to find escort pos for specified team
+POS_ESCORT = { Vector( -3071, 1600, 2290 ), Vector( -2689, 1800, 2400 ), Angle( 0, 0, -2.2 ) } --Generic escort pos, used if game fails to find escort pos for specified team
 POS_ESCORT_MTF = POS_ESCORT
-POS_ESCORT_CI = Vector( 545.00, 6979.00, 2080.00 )
+POS_ESCORT_CI = { Vector( 501, 6785, 2020 ), Vector( 629, 7167, 2120 ) }
 
 --[[-------------------------------------------------------------------------
 Gate destroy system
@@ -1442,64 +1569,6 @@ EXPLOSION_AREAS_A = {
 	{ Vector( -750, 4607, -10 ), Vector( 25, 5400, 314 ) },
 	{ Vector( -772, 3775, -80 ), Vector( -300, 4610, 130 ) },
 }
-
-/*hook.Add( "Think", "gastest", function()
-	local poslol = {
-		{ Vector( 2816, 1440, 500 ), Vector( -2600, -500, -1000 ), Color( 255, 255, 255 ) },
-		{ Vector( 3250, -2500, 500 ), Vector( -2600, -500, -1000 ), Color( 255, 255, 255 ) },
-		{ Vector( 1000, 1440, 500 ), Vector( 1400, 1900, -1000 ), Color( 255, 255, 255 ) },
-		{ Vector( 1000, 1440, 500 ), Vector( -2600, 2100, -1000 ), Color( 255, 255, 255 ) },
-		{ Vector( 2816, 72, 500 ), Vector( 3250, 824, -1000 ), Color( 255, 255, 255 ) },
-
-		{ Vector( 3250, -3000, 500 ), Vector( 6500, 1440, -1000 ), Color( 0, 255, 255 ) },
-		{ Vector( 1900, 2100, 500 ), Vector( 5500, 1440, -1000 ), Color( 0, 255, 255 ) },
-		{ Vector( 2176, 2100, 500 ), Vector( 5500, 2650, -500 ), Color( 0, 255, 255 ) },
-		{ Vector( 1536, 3912, 500 ), Vector( 5500, 2650, -500 ), Color( 0, 255, 255 ) },
-		{ Vector( 1850, 3912, 500 ), Vector( 3000, 4500, -500 ), Color( 0, 255, 255 ) },
-		{ Vector( 1750, 4500, 500 ), Vector( 3000, 5300, -500 ), Color( 0, 255, 255 ) },
-		{ Vector( 2816, -500, 500 ), Vector( 3250, 72, -1000 ), Color( 0, 255, 255 ) },
-		{ Vector( 2816, 824, 500 ), Vector( 3250, 1440, -1000 ), Color( 0, 255, 255 ) },
-
-		{ Vector( -3250, 5500, 500 ), Vector( 1536, 2100, -250 ), Color( 255, 0, 255 ) },
-		{ Vector( -3250, 3500, 500 ), Vector( -4000, 1700, -250 ), Color( 255, 0, 255 ) },
-		{ Vector( 1536, 2100, 500 ), Vector( 2176, 2650, -250 ), Color( 255, 0, 255 ) },
-		{ Vector( 1000, 2100, 500 ), Vector( 1900, 1900, -250 ), Color( 255, 0, 255 ) },
-		{ Vector( 1536, 3912, 500 ), Vector( 1850, 4500, -250 ), Color( 255, 0, 255 ) },
-		{ Vector( 8750, 2300, -600 ), Vector( 3200, 6750, -1500 ), Color( 255, 0, 255 ) },
-		
-		{ Vector( 1500, 3760, 500 ), Vector( 4350, 5390, 1200 ), Color( 255, 0, 0 ) },
-		{ Vector( 1500, 6500, -250 ), Vector( 4350, 5390, 1200 ), Color( 255, 0, 0 ) },
-	}
-
-	--[[for k, v in pairs( poslol ) do
-		OrderVectors( v[1], v[2] )
-		print( string.format( "{ Vector( %i, %i, %i ), Vector( %i, %i, %i ) },", v[1].x, v[1].y, v[1].z, v[2].x, v[2].y, v[2].z ) )
-	end
-	print( "-----" )]]
-
-	for k, v in pairs( poslol ) do
-		local pos1, pos2, col = v[1], v[2], v[3]
-
-		debugoverlay.Axis( pos1, Angle( 0 ), 10, 0.1, true )
-		debugoverlay.Axis( pos2, Angle( 0 ), 20, 0.1, true )
-
-		local iz = false
-		debugoverlay.Line( Vector( pos1.x, pos1.y, pos1.z ), Vector( pos2.x, pos1.y, pos1.z ), 0.1, col, iz )
-		debugoverlay.Line( Vector( pos2.x, pos1.y, pos1.z ), Vector( pos2.x, pos2.y, pos1.z ), 0.1, col, iz )
-		debugoverlay.Line( Vector( pos2.x, pos2.y, pos1.z ), Vector( pos1.x, pos2.y, pos1.z ), 0.1, col, iz )
-		debugoverlay.Line( Vector( pos1.x, pos2.y, pos1.z ), Vector( pos1.x, pos1.y, pos1.z ), 0.1, col, iz )
-
-		debugoverlay.Line( Vector( pos1.x, pos1.y, pos2.z ), Vector( pos2.x, pos1.y, pos2.z ), 0.1, col, iz )
-		debugoverlay.Line( Vector( pos2.x, pos1.y, pos2.z ), Vector( pos2.x, pos2.y, pos2.z ), 0.1, col, iz )
-		debugoverlay.Line( Vector( pos2.x, pos2.y, pos2.z ), Vector( pos1.x, pos2.y, pos2.z ), 0.1, col, iz )
-		debugoverlay.Line( Vector( pos1.x, pos2.y, pos2.z ), Vector( pos1.x, pos1.y, pos2.z ), 0.1, col, iz )
-
-		debugoverlay.Line( Vector( pos1.x, pos1.y, pos1.z ), Vector( pos1.x, pos1.y, pos2.z ), 0.1, col, iz )
-		debugoverlay.Line( Vector( pos1.x, pos2.y, pos1.z ), Vector( pos1.x, pos2.y, pos2.z ), 0.1, col, iz )
-		debugoverlay.Line( Vector( pos2.x, pos1.y, pos1.z ), Vector( pos2.x, pos1.y, pos2.z ), 0.1, col, iz )
-		debugoverlay.Line( Vector( pos2.x, pos2.y, pos1.z ), Vector( pos2.x, pos2.y, pos2.z ), 0.1, col, iz )
-	end
-end )*/
 
 --[[-------------------------------------------------------------------------
 GOC
@@ -1523,15 +1592,15 @@ POS_DOOR = {
 }
 
 POS_BUTTON = {
-	Vector(5040.000000, -2376.000000, 54.000000), --049
-	Vector(362.000000, 1592.000000, 294.000000), --173
-	Vector(4993.000000, 3592.000000, 53.000000), --096
-	Vector(4216.00, 2256.00, 38.00), --966
+	Vector( 5040.000000, -2376.000000, 54.000000 ), --049
+	Vector( 362.000000, 1592.000000, 294.000000 ), --173
+	Vector (4993.000000, 3592.000000, 53.000000 ), --096
+	Vector( 4216.00, 2256.00, 38.00 ), --966
 	Vector( 1264.00, -958.50, 53.00 ), --914
 }
 
 POS_ROT_BUTTON = {
-	Vector(2288.000000, 3396.010010, -201.139999), --682
+	Vector(2288.000000, 3396.010010, -201.139999 ), --682
 }
 
 --[[-------------------------------------------------------------------------
@@ -1587,19 +1656,19 @@ DOOR_RESTRICT106 = {
 Pocket dimension
 ---------------------------------------------------------------------------]]
 POS_POCKETD = {
-	Vector(2421.7827148438, 4650.9155273438, 537.03125),
-	Vector(2378.9016113281, 4566.8305664063, 537.03125),
-	Vector(2273.0007324219, 4526.1396484375, 537.03125),
-	Vector(2203.7729492188, 4572.9760742188, 537.03125),
-	Vector(2165.5126953125, 4657.6489257813, 537.03125),
-	Vector(2233.5170898438, 4717.2373046875, 537.03125),
-	Vector(2308.3076171875, 4728.3671875, 537.03125),
-	Vector(2357.279296875, 4665.8432617188, 537.03125),
-	Vector(2335.2951660156, 4590.3525390625, 537.03125),
-	Vector(2279.5068359375, 4589.185546875, 537.03125),
-	Vector(2300.6682128906, 4651.541015625, 537.03125),
-	Vector(2246.9846191406, 4668.0068359375, 537.03125),
-	Vector(2232.6259765625, 4620.3232421875, 537.03125),
+	Vector( 2421.7827148438, 4650.9155273438, 537.03125 ),
+	Vector( 2378.9016113281, 4566.8305664063, 537.03125 ),
+	Vector( 2273.0007324219, 4526.1396484375, 537.03125 ),
+	Vector( 2203.7729492188, 4572.9760742188, 537.03125 ),
+	Vector( 2165.5126953125, 4657.6489257813, 537.03125 ),
+	Vector( 2233.5170898438, 4717.2373046875, 537.03125 ),
+	Vector( 2308.3076171875, 4728.3671875, 537.03125 ),
+	Vector( 2357.279296875, 4665.8432617188, 537.03125 ),
+	Vector( 2335.2951660156, 4590.3525390625, 537.03125 ),
+	Vector( 2279.5068359375, 4589.185546875, 537.03125 ),
+	Vector( 2300.6682128906, 4651.541015625, 537.03125 ),
+	Vector( 2246.9846191406, 4668.0068359375, 537.03125 ),
+	Vector( 2232.6259765625, 4620.3232421875, 537.03125 ),
 }
 
 --[[-------------------------------------------------------------------------
@@ -1652,11 +1721,11 @@ BUTTONS = {
 		fuse_box = "hcz_049_door"
 	},
 	{
-		name = "LCZ Check Point Room",
+		name = "EZ Check Point Room",
 		pos = Vector( 792.00, 3977.00, 53.00 ),
 		suppress_texts = true,
 		disable_overload = true,
-		fuse_box = "lcz_cp_room"
+		fuse_box = "ez_cp_room"
 	},
 	{
 		name = "D Cells Control",
@@ -1922,31 +1991,28 @@ BUTTONS = {
 		name = "SCP-106",
 		pos = Vector( 2280.00, 3959.00, 53.00 ),
 		override = preparing_override,
+		msg_access = "",
 	},
 	{
 		name = "SCP-457",
 		pos = Vector( 6208.00, -144.00, 53.00 ),
 		override = preparing_override,
+		msg_access = "",
 	},
 
 	--scp 914
 	{
 		name = "SCP-914 Upgrade",
-		pos = Vector( 1567.00, -832.00, 46.00 ),
-		tolerance = { x = 5 },
+		ent_id = 2197,
 		override = function( ply, ent, data )
 			return Use914( ent, ply )
 		end,
-		//msg_access = "",
-		//msg_deny = "",
 		suppress_texts = true,
 		scp_disallow = true,
 	},
 	{
 		name = "SCP-914 Mode",
 		pos = Vector( 1563.00, -832.00, 62.00 ),
-		//msg_access = "",
-		//msg_deny = "",
 		override = function( ply, ent, data )
 			return !GetRoundProperty( "914use" )
 		end,
@@ -1967,6 +2033,7 @@ BUTTONS = {
 		msg_deny = "",
 		msg_omnitool = "device_noomni",
 		disable_overload = true,
+		fuse_box = "scp106_recontain"
 	},
 	{
 		name = "ELO-IID",
@@ -1974,8 +2041,6 @@ BUTTONS = {
 		override = function( pl, ent, data )
 			return !GetRoundStat( "106recontain" )
 		end,
-		//msg_access = "",
-		//msg_deny = "",
 		suppress_texts = true,
 		scp_disallow = true,
 	},
@@ -1985,8 +2050,6 @@ BUTTONS = {
 		override = function( pl, ent, data )
 			return !GetRoundStat( "106recontain" )
 		end,
-		//msg_access = "",
-		//msg_deny = "",
 		suppress_texts = true,
 		scp_disallow = true,
 	},
@@ -2030,7 +2093,7 @@ BUTTONS = {
 				end
 
 				local relay = CacheEntity( "relay_lockdown_off" )
-				if relay then
+				if IsValid( relay ) then
 					relay:Fire( "Trigger" )
 				end
 
@@ -2092,15 +2155,11 @@ BUTTONS = {
 		name = "966 door",
 		pos = Vector( 4216.00, 2256.00, 38.00 ),
 		disabled = true,
-		//scp_disallow = true,
-		//suppress_check = true,
 	},
 	{
 		name = "049 door",
 		pos = Vector( 5040.00, -2376.00, 54.00 ),
 		disabled = true,
-		//scp_disallow = true,
-		//suppress_check = true,
 	},
 	{
 		name = "Alpha Lever",
@@ -2138,6 +2197,13 @@ BUTTONS = {
 		scp_disallow = true,
 		suppress_check = true,
 	},
+
+	--disabled
+	{
+		name = "Admin Room",
+		ent_id = 3071,
+		disabled = true,
+	},
 }
 
 --[[-------------------------------------------------------------------------
@@ -2169,127 +2235,113 @@ end
 --[[-------------------------------------------------------------------------
 Button controllers
 ---------------------------------------------------------------------------]]
-ButtonController( "Warhead Elevator", {
-	access = ACCESS_WARHEAD_ELEVATOR,
-	msg_omnitool = "elevator_noomni",
-	buttons_set = {
-		{ Vector( 4535.00, 408.00, 53.00 ), Vector( 4553.00, 492.00, -331.00 ) },
-		{ Vector( 4553.00, 492.00, 53.00 ), Vector( 4535.00, 408.00, -331.00 ) },
-	},
-	/*on_use = function( ply, ent, data, setid )
-		print( "Warhead Elevator used!", ply, ent, data, setid )
-	end,*/
-	cooldown = 15,
-	initial_state = 1,
-	debug_use = 1,
-	//disable_overload = true,
+if SERVER then
+	ButtonController( "Warhead Elevator", {
+		access = ACCESS_WARHEAD_ELEVATOR,
+		msg_omnitool = "elevator_noomni",
+		buttons_set = {
+			{ Vector( 4535.00, 408.00, 53.00 ), Vector( 4553.00, 492.00, -331.00 ) },
+			{ Vector( 4553.00, 492.00, 53.00 ), Vector( 4535.00, 408.00, -331.00 ) },
+		},
+		cooldown = 15,
+		initial_state = 1,
+		debug_use = true,
 
-	elevator = true,
-} )
+		elevator = true,
+	} )
 
-ButtonController( "LCZ Elevator 1", {
-	buttons_set = {
-		{ Vector( 792.00, -2239.00, 53.00 ), Vector( 620.00, -465.00, -715.00 ) },
-		{ Vector( 876.00, -2257.00, 53.00 ), Vector( 533.00, -447.00, -715.00 ) },
-	},
-	/*on_use = function( ply, ent, data, setid )
-		print( "LCZ 1 Elevator used!", ply, ent, data, setid )
-	end,*/
-	suppress_texts = true,
-	cooldown = 15,
-	initial_state = 1,
-	debug_use = 1,
-	disable_overload = true,
+	ButtonController( "LCZ Elevator 1", {
+		buttons_set = {
+			{ Vector( 792.00, -2239.00, 53.00 ), Vector( 620.00, -465.00, -715.00 ) },
+			{ Vector( 876.00, -2257.00, 53.00 ), Vector( 533.00, -447.00, -715.00 ) },
+		},
+		suppress_texts = true,
+		cooldown = 15,
+		initial_state = 1,
+		debug_use = true,
+		disable_overload = true,
 
-	elevator = true,
-} )
+		elevator = true,
+	} )
 
-ButtonController( "LCZ Elevator 2", {
-	buttons_set = {
-		{ Vector( 872.00, 415.00, 53.00 ), Vector( 2452.00, 145.00, -715.00 ) },
-		{ Vector( 788.00, 433.00, 53.00 ), Vector( 2537.00, 127.00, -715.00 ) },
-	},
-	/*on_use = function( ply, ent, data, setid )
-		print( "LCZ 2 Elevator used!", ply, ent, data, setid )
-	end,*/
-	suppress_texts = true,
-	cooldown = 15,
-	initial_state = 1,
-	debug_use = 1,
-	disable_overload = true,
-	
-	elevator = true,
-} )
+	ButtonController( "LCZ Elevator 2", {
+		buttons_set = {
+			{ Vector( 872.00, 415.00, 53.00 ), Vector( 2452.00, 145.00, -715.00 ) },
+			{ Vector( 788.00, 433.00, 53.00 ), Vector( 2537.00, 127.00, -715.00 ) },
+		},
+		suppress_texts = true,
+		cooldown = 15,
+		initial_state = 1,
+		debug_use = true,
+		disable_overload = true,
+		
+		elevator = true,
+	} )
 
-ButtonController( "HCZ Elevator 1", {
-	buttons_set = {
-		{ Vector( 4648.00, -97.00, 53.00 ), Vector( 4564.00, -1503.00, 69.00 ) },
-		{ Vector( 4564.00, -79.00, 53.00 ), Vector( 4664.00, -1533.00, 69.00 ) },
-	},
-	/*on_use = function( ply, ent, data, setid )
-		print( "HCZ 1 Elevator used!", ply, ent, data, setid )
-	end,*/
-	suppress_texts = true,
-	cooldown = 15,
-	initial_state = 1,
-	debug_use = 1,
-	disable_overload = true,
-	
-	elevator = true,
-} )
+	ButtonController( "HCZ Elevator 1", {
+		buttons_set = {
+			{ Vector( 4648.00, -97.00, 53.00 ), Vector( 4564.00, -1503.00, 69.00 ) },
+			{ Vector( 4564.00, -79.00, 53.00 ), Vector( 4664.00, -1533.00, 69.00 ) },
+		},
+		suppress_texts = true,
+		cooldown = 15,
+		initial_state = 1,
+		debug_use = true,
+		disable_overload = true,
+		
+		elevator = true,
+	} )
 
-ButtonController( "HCZ Elevator 2", {
-	buttons_set = {
-		{ Vector( 4952.00, -287.00, 53.00 ), Vector( 5036.00, -1729.00, 69.00 ) },
-		{ Vector( 5036.00, -305.00, 53.00 ), Vector( 4936.00, -1699.00, 69.00 ) },
-	},
-	/*on_use = function( ply, ent, data, setid )
-		print( "HCZ 2 Elevator used!", ply, ent, data, setid )
-	end,*/
-	suppress_texts = true,
-	cooldown = 15,
-	initial_state = 1,
-	debug_use = 1,
-	disable_overload = true,
-	
-	elevator = true,
-} )
+	ButtonController( "HCZ Elevator 2", {
+		buttons_set = {
+			{ Vector( 4952.00, -287.00, 53.00 ), Vector( 5036.00, -1729.00, 69.00 ) },
+			{ Vector( 5036.00, -305.00, 53.00 ), Vector( 4936.00, -1699.00, 69.00 ) },
+		},
+		suppress_texts = true,
+		cooldown = 15,
+		initial_state = 1,
+		debug_use = true,
+		disable_overload = true,
+		
+		elevator = true,
+	} )
 
-ButtonController( "Gate A Elevator", {
-	buttons_set = {
-		{ Vector( -193.00, 5144.00, 53.00 ), Vector( -175.00, 5228.00, 2613.00 ) },
-		{ Vector( -175.00, 5228.00, 53.00 ), Vector( -193.00, 5144.00, 2613.00 ) },
-	},
-	/*on_use = function( ply, ent, data, setid )
-		print( "Gate A Elevator used!", ply, ent, data, setid )
-	end,*/
-	suppress_texts = true,
-	cooldown = 15,
-	initial_state = 1,
-	debug_use = 1,
-	warhead_lockdown = true,
-	disable_overload = true,
-	
-	elevator = true,
-} )
+	ButtonController( "Gate A Elevator", {
+		buttons_set = {
+			{ Vector( -193.00, 5144.00, 53.00 ), Vector( -175.00, 5228.00, 2613.00 ) },
+			{ Vector( -175.00, 5228.00, 53.00 ), Vector( -193.00, 5144.00, 2613.00 ) },
+		},
+		on_use = function( ply, ent, data, setid )
+			if !GetRoundProperty( "gatea" ) then return end
 
-ButtonController( "Gate B Elevator", {
-	buttons_set = {
-		{ Vector( -3944.00, 1921.00, 53.00 ), Vector( -3860.00, 1903.00, 2613.00 ) },
-		{ Vector( -3860.00, 1903.00, 53.00 ), Vector( -3944.00, 1921.00, 2613.00 ) },
-	},
-	/*on_use = function( ply, ent, data, setid )
-		print( "Gate B Elevator used!", ply, ent, data, setid )
-	end,*/
-	suppress_texts = true,
-	cooldown = 15,
-	initial_state = 1,
-	debug_use = 1,
-	warhead_lockdown = true,
-	disable_overload = true,
-	
-	elevator = true,
-} )
+			local id = ent:MapCreationID()
+			return id == 3789 or id == 3792
+		end,
+		suppress_texts = true,
+		cooldown = 15,
+		initial_state = 1,
+		debug_use = true,
+		warhead_lockdown = true,
+		disable_overload = true,
+		
+		elevator = true,
+	} )
+
+	ButtonController( "Gate B Elevator", {
+		buttons_set = {
+			{ Vector( -3944.00, 1921.00, 53.00 ), Vector( -3860.00, 1903.00, 2613.00 ) },
+			{ Vector( -3860.00, 1903.00, 53.00 ), Vector( -3944.00, 1921.00, 2613.00 ) },
+		},
+		suppress_texts = true,
+		cooldown = 15,
+		initial_state = 1,
+		debug_use = true,
+		warhead_lockdown = true,
+		disable_overload = true,
+		
+		elevator = true,
+	} )
+end
 
 --[[-------------------------------------------------------------------------
 Cameras
@@ -2378,6 +2430,7 @@ CCTV = {
 		pos = Vector( -698.344604, 5353.954590, 260.359039 ),
 		ang = Angle( 27.820, -43.104, 0.000 ),
 		destroy_omega = true,
+		destroy_gatea = true,
 	},
 	{
 		name = "Gate B",

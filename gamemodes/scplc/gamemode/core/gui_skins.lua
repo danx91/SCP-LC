@@ -1,23 +1,53 @@
+/*
+SkinFunc = {
+	create = function() end, --allocate resources etc.
+	remove = function() end, --remove resources etc.
+	show = function() end, --open element
+	hide = function() end, --close element
+
+	//how to draw elements other than vgui ones? Register draw hook in 'create' and remove it in 'remove'
+}
+*/
+
 if CLIENT then
 	SLCSkins = {}
+	SLCSkinsTargets = {}
 
-	function AddGUISkin( target, name, func )
+	function AddGUISkin( target, name, functbl )
 		if !SLCSkins[name] then
 			SLCSkins[name] = {}
 		end
 
-		SLCSkins[name][target] = func
+		SLCSkins[name][target] = functbl
+		SLCSkinsTargets[target] = true
 	end
 
-	function RunGUISkinFunction( target, ... )
-		local name = GetSettingsValue( "hud_skin_"..target )
-		if name and SLCSkins[name] and SLCSkins[name][target] then
-			return SLCSkins[name][target]( ... )
+	function RunGUISkinFunction( target, fn, name )
+		name = name or GetSettingsValue( "hud_skin_"..target )
+
+		if name and SLCSkins[name] and SLCSkins[name][target] and SLCSkins[name][target][fn] then
+			return SLCSkins[name][target][fn]()
 		end
 
-		if SLCSkins.default[target] then
-			return SLCSkins.default[target]( ... )
-		end
+		/*if SLCSkins.default[target] and SLCSkins.default[target][fn] then
+			return SLCSkins.default[target][fn]()
+		end*/
+	end
+
+	function CreateGUIElement( target )
+		RunGUISkinFunction( target, "create" )
+	end
+
+	function RemoveGUIElement( target )
+		RunGUISkinFunction( target, "remove" )
+	end
+
+	function ShowGUIElement( target )
+		RunGUISkinFunction( target, "show" )
+	end
+
+	function HideGUIElement( target )
+		RunGUISkinFunction( target, "hide" )
 	end
 
 	print( "\tLoading GUI Skins:" )
@@ -33,9 +63,62 @@ if CLIENT then
 
 		local funcs = {}
 
+		local change_cb = function( new, old, name )
+			local main_entry = GetSettingsEntry( "hud_skin_main" )
+			if main_entry then
+				local all = true
+
+				for k, v in pairs( SLCSkinsTargets ) do
+					local entry = GetSettingsEntry( "hud_skin_"..k )
+					if !entry then continue end
+	
+					if entry.value != new then
+						all = false
+						break
+					end
+				end
+
+				if all then
+					main_entry.value = new
+				else
+					main_entry.value = "custom"
+				end
+			end
+
+			local target = string.match( name, "^hud_skin_(.+)$" )
+			RunGUISkinFunction( target, "remove", old )
+			CreateGUIElement( target )
+
+			OpenSettingsPanel()
+			SaveSettings()
+
+			return true
+		end
+
+		local main_cb = function( new, old, name )
+			for k, v in pairs( SLCSkinsTargets ) do
+				local entry = GetSettingsEntry( "hud_skin_"..k )
+				if !entry then continue end
+
+				for i, item in ipairs( entry.data.list ) do
+					if item == new then
+						RunGUISkinFunction( k, "remove", entry.value )
+						entry.value = new
+						CreateGUIElement( k )
+						break
+					end
+				end
+			end
+
+			OpenSettingsPanel()
+			SaveSettings()
+
+			return true
+		end
+
 		for k, v in pairs( SLCSkins ) do
 			if k != "default" then
-				table.insert( names, v )
+				table.insert( names, k )
 			end
 
 			for fname, _ in pairs( v ) do
@@ -47,74 +130,18 @@ if CLIENT then
 			end
 		end
 
-		RegisterSettingsEntry( "hud_skin_main", "dropbox", "default", names, "skins" )
+		RegisterSettingsEntry( "hud_skin_main", "dropbox", "default", { list = names, callback = main_cb }, "skins" )
 
 		for k, v in pairs( funcs ) do
-			RegisterSettingsEntry( "hud_skin_"..k, "dropbox", "default", v, "skins" )
+			RegisterSettingsEntry( "hud_skin_"..k, "dropbox", "default", { list = v, callback = change_cb, lang = "hud_skin_main" }, "skins" )
 		end
 
-		local COLOR = {
-			white = Color( 255, 255, 255, 255 ),
-			black = Color( 0, 0, 0, 255 ),
-			inactive = Color( 125, 125, 125, 255 ),
-			border = Color( 175, 175, 175, 255 ),
-			hover = Color( 75, 75, 75, 200 ),
-			selected = Color( 115, 115, 115, 25 ),
-			conflict = Color( 225, 50, 50, 255 ),
-		}
+		AddConfigPanel( "skins", 5000 )
+	end )
 
-		local order = {
-			dropbox = 1,
-			switch = 3,
-		}
-
-		AddSettingsPanel( "skins", function( parent )
-			local tab = {}
-
-			for k, v in pairs( SLC_SETTINGS ) do
-				if order[v.stype] and  v.panel == "skins" then
-					table.insert( tab, { name = k, data = v, sorting = order[v.stype] } )
-				end
-			end
-		
-			table.sort( tab, function( a, b )
-				if a.sorting != b.sorting then
-					return a.sorting < b.sorting
-				end
-		
-				return a.data.id < b.data.id
-			end )
-		
-			local w, h = ScrW(), ScrH()
-			local options_margin = w * 0.006
-		
-			for i, v in ipairs( tab ) do
-				local pnl = vgui.Create( "DPanel", parent )
-				pnl:SetTall( h * 0.06 )
-				pnl:Dock( TOP )
-				pnl:DockMargin( 0, h * 0.01, 0, 0 )
-		
-				pnl.Paint = function( this, pw, ph )
-					surface.SetDrawColor( COLOR.border )
-					surface.DrawLine( 0, ph - 1, pw, ph - 1 )
-				end
-		
-				AddConfigControl( pnl, v.data, options_margin )
-		
-				local name = vgui.Create( "DPanel", pnl )
-				name:Dock( FILL )
-				name:DockMargin( options_margin, options_margin, options_margin, options_margin )
-				name.Paint = function( this, pw, ph )
-					draw.Text{
-						text = LANG.settings.config[v.name] or v.name,
-						pos = { 0, ph * 0.5 },
-						font = "SCPHUDSmall",
-						color = COLOR.white,
-						xalign = TEXT_ALIGN_LEFT,
-						yalign = TEXT_ALIGN_CENTER,
-					}
-				end
-			end
-		end, false, 5000 )
+	hook.Add( "SLCSettingsLoaded", "SLCGUISkins", function()
+		for k, v in pairs( SLCSkinsTargets ) do
+			CreateGUIElement( k )
+		end
 	end )
 end

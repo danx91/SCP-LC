@@ -20,7 +20,7 @@ function SWEP:Think()
 	local owner = self:GetOwner()
 	if !IsValid( owner ) or owner:SCPTeam() != TEAM_GOC then return end
 
-	local status = owner:UpdateHold( "gocdevice_place", self )
+	local status = owner:UpdateHold( self, "gocdevice_place" )
 
 	if status == true then
 		if SERVER then
@@ -31,11 +31,7 @@ function SWEP:Think()
 				device:Spawn()
 			end
 
-			local holster = owner:GetWeapon( "item_slc_holster" )
-			if IsValid( holster ) then
-				owner:SetActiveWeapon( holster )
-			end
-			
+			owner:ForceHolster()
 			self:Remove()
 		elseif IsValid( self.Indicator ) then
 			self.Indicator:Remove()
@@ -47,9 +43,9 @@ function SWEP:Think()
 	else
 		local valid, pos, ang = self:TestIndicator()
 
-		if owner:IsHolding( "gocdevice_place", self ) then
+		if owner:IsHolding( self, "gocdevice_place" ) then
 			if !valid then
-				owner:InterruptHold( "gocdevice_place", self )
+				owner:InterruptHold( self, "gocdevice_place" )
 			end
 		else
 			self.LastPos = pos
@@ -75,10 +71,10 @@ end
 
 function SWEP:PrimaryAttack()
 	local owner = self:GetOwner()
-	if owner:IsHolding( "gocdevice_place", self ) or owner:SCPTeam() != TEAM_GOC then return end
+	if owner:IsHolding( self, "gocdevice_place" ) or owner:SCPTeam() != TEAM_GOC then return end
 	if !self:TestIndicator() then return end
 	
-	owner:StartHold( "gocdevice_place", IN_ATTACK, self.PlaceTime, nil, self )
+	owner:StartHold( self, "gocdevice_place", IN_ATTACK, self.PlaceTime )
 
 	if SERVER then
 		owner:EnableProgressBar( true, CurTime() + self.PlaceTime, "lang:WEAPONS.GOCDEVICE.placing", Color( 200, 200, 200, 255 ), Color( 50, 225, 25, 255 ) )
@@ -114,7 +110,7 @@ function SWEP:TestIndicator()
 		end
 	end
 
-	return valid, pos, Angle( 0, (owner:GetPos() - pos):Angle().y + 90, 0 )
+	return valid, pos, Angle( 0, ( owner:GetPos() - pos ):Angle().y + 90, 0 )
 end
 
 function SWEP:CanPickUp( ply )
@@ -126,7 +122,7 @@ end
 hook.Add( "StartCommand", "SLCGOCDeviceCMD", function( ply, cmd )
 	local wep = ply:GetWeapon( "item_slc_goc_device" )
 	if IsValid( wep ) then
-		if ply:IsHolding( "gocdevice_place", wep ) then
+		if ply:IsHolding( wep, "gocdevice_place" ) then
 			cmd:ClearMovement()
 
 			if !wep.ViewAngles then wep.ViewAngles = cmd:GetViewAngles() end

@@ -2,6 +2,7 @@ function GM:PlayerInitialSpawn( ply )
 	ply.playermeta = {}
 
 	ply:DataTables()
+
 	PlayerInfo( ply )
 	PlayerData( ply )
 	DamageLogger( ply )
@@ -12,9 +13,6 @@ function GM:PlayerInitialSpawn( ply )
 	if ply:IsBot() then
 		hook.Run( "PlayerReady", ply )
 	end
-
-	//table.insert( ROUND.queue, ply )
-	//QueueInsert( ply )
 
 	timer.Simple( 15, function()
 		if !IsValid( ply ) then return end
@@ -33,7 +31,6 @@ function GM:PlayerSpawn( ply )
 	end
 
 	ply:SetCanZoom( false )
-	
 	ply:SetCollisionGroup( COLLISION_GROUP_PASSABLE_DOOR ) //xD ??? Stupid but works!
 
 	if IsValid( ply._RagEntity ) then
@@ -93,10 +90,9 @@ end
 function GM:PlayerShouldTakeDamage( ply, attacker )
 	if ROUND.post then return false end
 	if ply:HasEffect( "spawn_protection" ) then return false end
-	if !attacker:IsPlayer() then return true end
+	if !attacker:IsPlayer() or ply == attacker then return true end
 	if ROUND.preparing then return false end
 	
-
 	local t_vic = ply:SCPTeam()
 	local t_att = attacker:SCPTeam()
 
@@ -121,9 +117,9 @@ function GM:DoPlayerDeath( ply, attacker, dmginfo )
 		SanityEvent( 10, SANITY_TYPE.DEATH, ply:GetPos() + Vector( 0, 0, 20 ), 1000, attacker, ply )
 	end
 
-	ply.StoredProperties = ply.SLCProperties
-
 	ply:DropEQ()
+
+	ply.StoredProperties = ply.SLCProperties
 
 	if !ply._SkipNextRagdoll then
 		ply:CreatePlayerRagdoll()
@@ -159,7 +155,6 @@ function GM:PlayerDeath( victim, inflictor, attacker )
 	local killinfo = victim.Logger:GetDeathDetails()
 	if killinfo then
 		local len = #killinfo.assists
-
 		local preventrdm = false
 
 		if !IsValid( attacker ) or !attacker:IsPlayer() or victim == attacker then
@@ -181,12 +176,6 @@ function GM:PlayerDeath( victim, inflictor, attacker )
 		end
 
 		if !victim._SkipNextKillRewards then
-			//print( "PRE" )
-			//PrintTable( killinfo )
-
-			//print( "POST" )
-			//PrintTable( killinfo )
-
 			if IsValid( attacker ) and attacker:IsPlayer() and victim != attacker then
 				//local ivp = IsValid( attacker ) and attacker:IsPlayer() and victim != attacker
 
@@ -297,6 +286,7 @@ function GM:PlayerDeath( victim, inflictor, attacker )
 	//victim.LastClass = victim:SCPClass()
 	victim:SetProperty( "last_team", victim:SCPTeam() )
 	victim:SetProperty( "last_class", victim:SCPClass() )
+	victim:SetProperty( "last_killer", attacker )
 
 	if pprop.death_info_override then
 		victim:SetProperty( "death_info_override", pprop.death_info_override )
@@ -336,51 +326,46 @@ function GM:PlayerDeathThink( ply )
 		if override then
 			InfoScreen( ply, override.type, INFO_SCREEN_DURATION, override.args, ply:GetProperty( "last_team" ), ply:GetProperty( "last_class" ) )
 		else
-			local kill = ply.Logger:GetDeathDetails()
+			local killer = ply:GetProperty( "last_killer" )
 			local msg = { "unknown" }
-			//local data
 
-			/*local cause = ply:GetProperty( "death_cause_override" )
-			if cause then
-				if istable( cause ) then
-					data = cause
-				else
-					msg = cause
-				end
-			else*/
-				if IsValid(  kill.killer ) then
-					if kill.killer == ply then
-						msg = { "suicide" }
-					elseif kill.killer:IsPlayer() then
-						local kteam = kill.killer:SCPTeam()
+			if IsValid( killer ) then
+				if killer == ply then
+					msg = { "suicide" }
+				elseif killer:IsPlayer() then
+					local kteam = killer:SCPTeam()
 
-						if kteam == TEAM_SPEC then
-							kteam = kill.killer:GetProperty( "last_team" )
-						end
-
-						msg = {
-							{ "killed_by", "text;"..EscapeMessage( kill.killer:Nick() ) },
-						}
-
-						if kteam and kteam != TEAM_SPEC then
-							table.insert( msg, { "killer_t", "team;"..kteam } )
-						end
-					else
-						msg = { "hazard" }
+					if kteam == TEAM_SPEC then
+						kteam = killer:GetProperty( "last_team" )
 					end
-				end
-			--end
 
-			/*if !data then
-				data = { msg }
-			end*/
+					msg = {
+						{ "killed_by", "text;"..EscapeMessage( killer:Nick() ) },
+					}
+
+					if kteam and kteam != TEAM_SPEC then
+						table.insert( msg, { "killer_t", "team;"..kteam } )
+					end
+				else
+					msg = { "hazard" }
+				end
+			end
 
 			InfoScreen( ply, "dead", INFO_SCREEN_DURATION, msg, ply:GetProperty( "last_team" ), ply:GetProperty( "last_class" ) )
 		end
 	elseif ply.DeathScreen and ply.DeathScreen < CurTime() then
 		ply.DeathScreen = nil
 
-		QueueInsert( ply )
+		local killer = ply:GetProperty( "last_killer" )
+		if ply._ForceSuicideQueue or !ply._SkipNextSuicide and ( killer == ply or !IsValid( killer ) or !killer:IsPlayer() ) then
+			QueueInsertSuicide( ply )
+		else
+			QueueInsert( ply )
+		end
+
+		ply._ForceSuicideQueue = false
+		ply._SkipNextSuicide = false
+
 		ply:SetupSpectator()
 	elseif !ply.DeathScreen then
 		local obs = ply:GetObserverTarget()
@@ -405,6 +390,7 @@ function GM:PlayerSwitchFlashlight( ply, enabled )
 end
 
 function GM:PlayerUse( ply, ent )
+	if ply:GetAdminMode() then return true end
 	if ply:SCPTeam() == TEAM_SPEC or ply:IsAboutToSpawn() then return false end
 
 	local ct = CurTime()
@@ -587,6 +573,7 @@ end
 
 function GM:PlayerCanHearPlayersVoice( listener, talker )
 	if ROUND.infoscreen then return false end
+	if listener:GetAdminMode() or talker:GetAdminMode() then return true end
 	if !listener:IsActive() then return false end
 
 	local t_lis = listener:SCPTeam()
@@ -630,4 +617,10 @@ end
 
 function GM:PlayerCanPickupItem( ply, item )
 	return false
+end
+
+function GM:WeaponEquip( wep, ply )
+	timer.Simple( 0, function()
+		ply:UpdateEQ()
+	end )
 end

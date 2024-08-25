@@ -2,8 +2,10 @@
 This library provides JS-like promise that allows you to create flat async code.
 It follows MDN description of promise and guarantees:
 	1. Cllback added with Then() will never be called faster than in the next tick
-	2. Callback will be called even if they were added after promise was resolved or rejected
-	3. Multiple callback can be added. They will be invoked one after another, in the order in which they were added
+	2. Callbacks will be called even if they were added after promise was resolved or rejected
+	3. Multiple callbacks can be added. They will be invoked one after another, in the order in which they were added
+	4. IMPORTANT: All LUA errors inside promise ARE REDIRECTED to catch method and will produce no error!
+	5. Returning promise in Finally, adds it to execution chain, but returned value is ignored
 
 Promises support chaining and internal error catching.
 For more info how to use promises, visit: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Using_promises
@@ -119,6 +121,25 @@ function SLCPromise:Catch( func )
 	return self:Then( nil, func )
 end
 
+function SLCPromise:Finally( func )
+	local function fn( val )
+		local ret = func( val )
+		if !istable( ret ) or !ret._ISPROMISE then
+			return val
+		end
+
+		return SLCPromise( function( resolve, reject )
+			ret:Then( function()
+				resolve( val )
+			end, function()
+				reject( val )
+			end )
+		end )
+	end
+
+	return self:Then( fn, fn )
+end
+
 function SLCPromise:GetStatus()
 	return self._STATUS
 end
@@ -126,7 +147,7 @@ end
 setmetatable( SLCPromise, { __call = SLCPromise.New } )
 
 --[[-------------------------------------------------------------------------
-ispromise
+Global functions
 ---------------------------------------------------------------------------]]
 function ispromise( arg )
 	return istable( arg ) and arg._ISPROMISE == true
@@ -210,3 +231,14 @@ function SLCPromisify( func )
 		end )
 	end
 end
+
+--[[-------------------------------------------------------------------------
+Default promises
+---------------------------------------------------------------------------]]
+hook.Add( "SLCFullyLoaded", "DefaultPromises", function()
+	SLCPromise.Resolved = SLCPromise()
+	SLCPromise.Resolved:Resolve()
+
+	SLCPromise.Rejected = SLCPromise()
+	SLCPromise.Rejected:Reject()
+end )

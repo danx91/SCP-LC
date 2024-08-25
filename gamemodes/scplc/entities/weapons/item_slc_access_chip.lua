@@ -19,7 +19,7 @@ SWEP.ChipName = ""
 function SWEP:HandleUpgrade( mode, num_mode, exit, ply )
 	local new, override = SelectUpgrade( self.ChipName, mode )
 
-	hook.Run( "SLCChipUpgraded", self.ChipName, new, ply )
+	hook.Run( "SLCChipUpgraded", self.ChipName, new, ply, self.PickupPriority )
 
 	//print( "Chip upgraded!", new, override )
 
@@ -123,6 +123,18 @@ if CLIENT then
 			if desc then
 				self.Info = self.Info..string.format( "\n%s\n\t%s", self.Lang.hasaccess, desc )
 			end
+		end
+	end
+
+	function SWEP:BuildDescription( desc )
+		local chip = GetChipByID( self:GetChipID() )
+		if !chip then return end
+
+		desc:Print( self.Lang.clearance2 ):Print( chip.level, Color( 200, 200, 30 ) )
+
+		local cd = GetChipDescription( chip.name, override or self:GetAccessOverride(), self.Lang.ACCESS, false )
+		if cd then
+			desc:Print( "\n" ):Print( self.Lang.hasaccess ):Print( "\n\t" ):Print( cd, Color( 30, 200, 30 ) )
 		end
 	end
 end

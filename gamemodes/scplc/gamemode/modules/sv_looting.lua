@@ -160,7 +160,7 @@ net.Receive( "SLCLooting", function( len, ply )
 					end
 					
 					if result == nil and !upd then
-						if !IsValid( wep ) and table.Count( ply:GetWeapons() ) < ply:GetInventorySize() and hook.Run( "SLCCanPickupWeaponClass", ply, obj.info.class ) != false then
+						if !IsValid( wep ) and ply:GetFreeInventory() > 0 and hook.Run( "SLCCanPickupWeaponClass", ply, obj.info.class ) != false then
 							wep = ply:Give( obj.info.class )
 						end
 
@@ -323,7 +323,7 @@ local function chip_roll( data )
 			rng = math.random( data.ntd.chip_max )
 		end
 
-		local chip = SelectChip( rng )
+		local chip = SelectChip( rng, data.ntd.blacklist )
 		data.ntd.chip = chip
 	end
 end
@@ -658,19 +658,25 @@ AddLootPool( "toilet", {
 	items = {
 		{ class = "item_slc_alpha_card1", weight = 1 },
 		{ class = "item_slc_alpha_card2", weight = 1 },
+		{ class = "item_slc_commander_tablet", weight = 1 },
 		{ class = "weapon_slc_pc", weight = 1 },
 		{ class = "item_slc_morphine", weight = 1, post = function( ply, item, data, ntd ) item.ExtraHealth = 999 item.SelfInjectSpeed = 0.1 item.InjectSpeed = 0.1 end },
 		{ class = "item_slc_adrenaline", weight = 1, post = function( ply, item, data, ntd ) item.BoostTime = 300 item.SelfInjectSpeed = 0.1 item.InjectSpeed = 0.1 end },
 		{ class = "__slc_ammo", weight = 1, ntd = { min = 333, max = 999 }, roll = ammo_roll, func = ammo_func },
 		{ class = "cw_fiveseven", weight = 2 },
-		{ class = "item_slc_access_chip", weight = 3, ntd = { chip_min = 3, chip_max = 5 }, post = chip_post, roll = chip_roll },
+		{ class = "item_scp_009", weight = 2 },
+		{ class = "item_slc_access_chip", weight = 2, ntd = { chip_min = 3, chip_max = 5 }, post = chip_post, roll = chip_roll },
 		{ class = "item_slc_gasmask", weight = 3, post = function( ply, item, data, ntd ) item:SetUpgraded( true ) end },
 		{ class = "item_scp_500", weight = 5 },
 		{ class = "item_slc_nvgplus", weight = 5 },
+		{ class = "item_slc_thermal", weight = 5 },
 		{ class = "item_slc_medkitplus", weight = 5 },
-		{ class = "item_slc_camera", weight = 5 },
 		{ class = "weapon_taser", weight = 5 },
-		{ class = "item_slc_battery", weight = 20 },
+		{ class = "weapon_slc_glass_knife", weight = 5, post = function( ply, item, data, ntd ) item.AttackDamage = 1 item.StrongAttackDamage = 99 end },
+		{ class = "item_slc_turret", weight = 5 },
+		{ class = "item_slc_heavymask", weight = 10 },
+		{ class = "item_slc_camera", weight = 15 },
+		{ class = "item_slc_battery", weight = 15 },
 	}
 } )
 

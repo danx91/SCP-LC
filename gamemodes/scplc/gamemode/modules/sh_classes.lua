@@ -13,9 +13,11 @@
 		sanity = 100,
 		max_sanity = 100, --can be nil
 		vest = nil,
-		backpack = nil,
 		max = 0,
 		tier = 0,
+		hide = false, --nil!
+		select_group = "", --nil!
+		weight = 1, --nil!
 		persona = { class = <fake_class>, team = <fake_team> },
 		override = function( ply ) end, --return false to disallow, nil to do standard check, true to allow
 		spawn = <Vector or table of vectors> Override group spawn
@@ -36,6 +38,7 @@ local SelectInfo = {}
 local SelectClasses = {}
 SelectClasses.SUPPORT = {}
 
+local highest_tier = 0
 local AllClasses = {}
 local ClassTiers = {}
 
@@ -104,8 +107,8 @@ function GetSupportGroup( name )
 	return SelectClasses.SUPPORT[name], SpawnInfo.SUPPORT[name]
 end
 
-function GetGroups()
-	return SelectClasses
+function GetClassGroups()
+	return table.Copy( SelectClasses )
 end
 
 function GetSupportData( name )
@@ -149,9 +152,13 @@ function RegisterClass( name, group, model, data, support )
 	AllClasses[name] = data
 	usetab[group][name] = data
 
-	local tier = data.tier or 1
+	local tier = data.tier or 0
 	if !ClassTiers[tier] then
 		ClassTiers[tier] = {}
+	end
+
+	if tier > highest_tier then
+		highest_tier = tier
 	end
 
 	ClassTiers[tier][name] = true
@@ -201,6 +208,7 @@ end
 function SelectSupportGroup()
 	if CLIENT then return end
 
+	local total = 0
 	local newlist = {}
 
 	for i, v in ipairs( SuppWeightList ) do
@@ -217,17 +225,14 @@ function SelectSupportGroup()
 				return v.name, SupportData[v.name]
 			else
 				table.insert( newlist, { name = v.name, weight = override or cvar } )
+				total = total + ( override or cvar )
 			end
 		else
 			table.insert( newlist, { name = v.name, weight = cvar } )
+			total = total + cvar
 		end
 	end
-
-	local total = 0
-	for i, v in ipairs( newlist ) do
-		total = total + v.weight
-	end
-
+	
 	local dice = math.random( total )
 	total = 0
 
@@ -308,6 +313,10 @@ function PLAYER:IsClassUnlocked( name )
 
 	local class = AllClasses[name]
 	if class then
+		if class.tier and class.tier == -1 then
+			return self.playermeta.prestige[name]
+		end
+
 		return !class.tier or class.tier == 0 or self.playermeta.classes[name]
 	end
 
@@ -316,14 +325,19 @@ end
 
 function PLAYER:CanUnlockClass( name )
 	local class = AllClasses[name]
-	if !class or self:SCPClassPoints() < 1 then return false end
+	if !class then return false end
 	if self.playermeta.classes[name] then return false end
+	if self.playermeta.prestige[name] then return false end
+	if class.tier == -1 then return self:GetPrestigePoints() > 0 end
+	if self:SCPClassPoints() < 1 then return false end
 	if class.tier and !self:CanUnlockClassTier( class.tier ) then return false end
 
 	return true
 end
 
 function PLAYER:CanUnlockClassTier( tier )
+	if tier == -1 then return true end
+
 	if tier and tier > 1 then
 		for k, v in pairs( ClassTiers[tier - 1] ) do
 			if !self.playermeta.classes[k] then
@@ -338,13 +352,26 @@ end
 function PLAYER:UnlockClass( name )
 	if !self:CanUnlockClass( name ) then return false end
 
-	if SERVER then
-		self:AddClassPoints( -1 )
-		self.PlayerInfo:Get( "unlocked_classes" )[name] = true
-		self.PlayerInfo:Update()
-	end
+	local class = AllClasses[name]
+	if !class then return false end
 
-	self.playermeta.classes[name] = true
+	if class.tier == -1 then
+		if SERVER then
+			self:AddPrestigePoints( -1 )
+			self.PlayerInfo:Get( "prestige_classes" )[name] = true
+			self.PlayerInfo:Update()
+		end
+
+		self.playermeta.prestige[name] = true
+	else
+		if SERVER then
+			self:AddClassPoints( -1 )
+			self.PlayerInfo:Get( "unlocked_classes" )[name] = true
+			self.PlayerInfo:Update()
+		end
+
+		self.playermeta.classes[name] = true
+	end
 
 	if CLIENT then
 		net.Start( "ClassUnlock" )
@@ -355,37 +382,91 @@ function PLAYER:UnlockClass( name )
 	return true
 end
 
+function PLAYER:CanPrestige()
+	return self:CanUnlockClassTier( highest_tier + 1 )
+end
+
+function PLAYER:PerformPrestige()
+	if !self:CanPrestige() then return end
+
+	if SERVER then
+		self:AddPrestigePoints( 1 )
+
+		local new_level = self:GetPrestigeLevel() + 1
+		self:SetPrestigeLevel( new_level )
+		self:SetSCPData( "prestige_level", new_level )
+
+		self:ResetDailyBonus( true )
+
+		self:SetClassPoints( 0 )
+		self:SetSCPLevel( 0 )
+		self:Set_SCPExp( 0 )
+		self:SetSCPData( "xp", 0 )
+
+		self.PlayerInfo:Set( "unlocked_classes", {} )
+		self.PlayerInfo:Update()
+	end
+
+	self.playermeta.classes = {}
+
+	if CLIENT then
+		net.Ping( "SLCPrestige" )
+	end
+end
+
 if SERVER then
 	hook.Add( "SLCPlayerMeta", "SLCClassInfo", function( p, playermeta )
 		local classinfo = p.PlayerInfo:Get( "unlocked_classes" )
+		local prestigeinfo = p.PlayerInfo:Get( "prestige_classes" )
 
 		if !classinfo then
 			classinfo = {}
 			p.PlayerInfo:Set( "unlocked_classes", classinfo )
 		end
 
+		if !prestigeinfo then
+			prestigeinfo = {}
+			p.PlayerInfo:Set( "prestige_classes", prestigeinfo )
+		end
+
 		local classmeta = {}
-		local refound = false
+		local prestigemeta = {}
+		local refund = false
+
 		for k, v in pairs( classinfo ) do
 			if v then
 				if AllClasses[k] then
 					classmeta[k] = true
 				else
-					refound = true
+					refund = true
 				end
 			else
 				classinfo[k] = nil
 			end
 		end
 
+		for k, v in pairs( prestigeinfo ) do
+			if v then
+				if AllClasses[k] then
+					prestigemeta[k] = true
+				else
+					refund = true
+				end
+			else
+				prestigeinfo[k] = nil
+			end
+		end
+
 		p.PlayerInfo:Update()
 
-		playermeta.refound = refound
+		playermeta.refund = refund
 		playermeta.classes = classmeta
+		playermeta.prestige = prestigemeta
 	end )
 
-	net.ReceivePing( "SLCRefoundClasses", function( data, p )
+	net.ReceivePing( "SLCrefundClasses", function( data, p )
 		local points = 0
+		local prestige_points = 0
 
 		local classinfo = p.PlayerInfo:Get( "unlocked_classes" )
 		if classinfo then
@@ -395,15 +476,30 @@ if SERVER then
 					points = points + 1
 				end
 			end
-
-			p.PlayerInfo:Update()
 		end
 
-		if points > 0 then
-			net.Ping( "SLCRefoundClasses", points, p )
-			//print( "Refounded", points, p )
+		local prestigeinfo = p.PlayerInfo:Get( "prestige_classes" )
+		if prestigeinfo then
+			for k, v in pairs( prestigeinfo ) do
+				if !AllClasses[k] then
+					prestigeinfo[k] = nil
+					prestige_points = prestige_points + 1
+				end
+			end
+		end
+
+		p.PlayerInfo:Update()
+
+		if points > 0 or prestige_points > 0 then
+			net.Ping( "SLCrefundClasses", points..","..prestige_points, p )
+			
 			p:AddClassPoints( points )
+			p:AddPrestigePoints( prestige_points )
 		end
+	end )
+
+	net.ReceivePing( "SLCPrestige", function( data, p )
+		p:PerformPrestige()
 	end )
 
 	hook.Add( "SLCRegisterGamerules", "SLCLANRule", function()

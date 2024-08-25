@@ -1,93 +1,129 @@
-SWEP.Base 				= "weapon_scp_base"
-SWEP.DeepBase 			= "weapon_scp_base"
-SWEP.PrintName			= "SCP-3199"
+SWEP.Base 			= "weapon_scp_base"
+SWEP.PrintName		= "SCP-3199"
 
 SWEP.ViewModel 			= "models/weapons/alski/scp3199arms.mdl"
 SWEP.ShouldDrawViewModel = true
 
 SWEP.HoldType 			= "melee"
 
-SWEP.ScoreOnDamage = true
-SWEP.Frenzy = 0
-SWEP.Penalty = 0
-SWEP.Tokens = 0
-SWEP.FrenzyBaseDuration = 60
+SWEP.DisableDamageEvent = true
+SWEP.ScoreOnDamage 	= true
+
+SWEP.AttackCooldown = 2
+SWEP.AttackDamage = 10
+SWEP.AttackDamageMultiplier = 0.06
+
+SWEP.FrenzyDuration = 20
+SWEP.FrenzySpeed = 1.05
+SWEP.FrenzySpeedMultiplier = 0.001
+SWEP.FrenzyPenalty = 0.2
+SWEP.FrenzyPenaltyStacks = 0.25
+SWEP.FrenzyDetect = 1600
+
+SWEP.SpecialCooldown = 30
+SWEP.SpecialDamage = 15
+SWEP.SpecialBaseSlow = 0.2
+SWEP.SpecialSlowCap = 0.1
+SWEP.SpecialSlow = 0.015
+SWEP.SpecialSlowDuration = 5
+SWEP.SpecialThreshold = 5
+SWEP.SpecialBleed = 12
+
+SWEP.EggTime = 5
+SWEP.MaxEggs = 5
+SWEP.EggsProtection = 0.15
+SWEP.EggsProtectionMax = 0.75
+SWEP.RespawnTime = 45
 
 function SWEP:SetupDataTables()
+	self:CallBaseClass( "SetupDataTables" )
+
+	self:AddNetworkVar( "EggReady", "Bool" )
+	self:AddNetworkVar( "TotalStacks", "Int" )
+	self:AddNetworkVar( "FrenzyStacks", "Int" )
+	self:AddNetworkVar( "TotalEggs", "Int" )
 	self:AddNetworkVar( "Frenzy", "Float" )
-	self:AddNetworkVar( "Penalty", "Float" )
-	self:AddNetworkVar( "Tokens", "Int" )
+	self:AddNetworkVar( "EggTime", "Float" )
+	self:AddNetworkVar( "RespawnTime", "Float" )
 end
 
 function SWEP:Initialize()
 	self:SetHoldType( self.HoldType )
 	self:InitializeLanguage( "SCP3199" )
+	self:InitializeHUD()
 
-
+	self:SetEggReady( true )
 end
 
 SWEP.NextIdle = 0
+SWEP.NextFrenzyRegen = 0
 SWEP.NextTransmit = 0
-SWEP.NextRegen = 0
+SWEP.NextEggCheck = 0
 function SWEP:Think()
 	self:PlayerFreeze()
 	self:SwingThink()
 
 	local ct = CurTime()
+	local owner = self:GetOwner()
+
 	if self.NextIdle <= ct then
-		local vm = self:GetOwner():GetViewModel()
+		local vm = owner:GetViewModel()
 		local seq, time = vm:LookupSequence( "idlearms" )
 
 		self.NextIdle = ct + time
 		vm:SendViewModelMatchingSequence( seq )
 	end
 
-	if SERVER then
-		local owner = self:GetOwner()
+	if CLIENT then return end
 
-		if self.Frenzy != 0 then
-			if self.Frenzy < ct then
-				self:StopFrenzy()
-			else
-				local regen = self:GetUpgradeMod( "regen" )
-				if regen and self.NextRegen < ct then
-					self.NextRegen = ct + ( 1 - ( self:GetUpgradeMod( "regentime" ) or 0 ) * self.Tokens )
+	if !self.Eggs then
+		self.Eggs = {
+			SpawnSCP3199Egg( owner )
+		}
 
-					owner:AddHealth( regen )
-				end
+		self:CheckEggs()
+	end
 
-				if !self:GetUpgradeMod( "ddisable" ) and self.NextTransmit < ct then
-					self.NextTransmit = ct + 1
+	if self.NextEggCheck < ct then
+		self:CheckEggs()
+	end
 
-					local pos = owner:GetPos()
-					local tab = {}
+	local frenzy = self:GetFrenzy()
+	if frenzy != 0 and frenzy < ct then
+		self:StopFrenzy( false )
+	elseif frenzy >= ct then
+		if self.NextFrenzyRegen <= ct then
+			self.NextFrenzyRegen = self.NextFrenzyRegen + 1
 
-					local radius = 2500 + ( self:GetUpgradeMod( "range" ) or 0 )
-					local max_dist = radius * radius
-
-					for k, v in pairs( player.GetAll() ) do
-						if !IsValid( v ) or !self:CanTargetPlayer( v ) or v:HasEffect( "deep_wounds" ) or pos:DistToSqr( v:GetPos() ) > max_dist then continue end
-						
-						local cpos = v:GetPos() + v:OBBCenter()
-						table.insert( tab, {
-							x = cpos.x,
-							y = cpos.y,
-							z = cpos.z
-						} )
-					end
-
-					if #tab > 0 then
-						net.SendTable( "SCP3199_Frenzy", tab, owner )
-					end
-				end
+			if self.NextFrenzyRegen < ct then
+				self.NextFrenzyRegen = ct + 1
 			end
+
+			owner:AddHealth( math.ceil( self:GetTotalStacks() / 3 ) )
 		end
 
-		if self.Penalty != 0 and self.Penalty < ct then
-			self.Penalty = 0
-			self:SetPenalty( 0 )
-
-			owner:PopSpeed( "SLC_SCP3199_Penalty" )
+		if self.NextTransmit <= ct then
+			self.NextTransmit = ct + 1
+	
+			local pos = owner:GetPos()
+			local tab = {}
+	
+			local radius = ( self.FrenzyDetect * self:GetUpgradeMod( "passive_radius", 1 ) ) ^ 2
+	
+			for i, v in ipairs( player.GetAll() ) do
+				if !self:CanTargetPlayer( v ) or v:HasEffect( "deep_wounds" ) or pos:DistToSqr( v:GetPos() ) > radius then continue end
+				
+				local cpos = v:GetPos() + v:OBBCenter()
+				table.insert( tab, {
+					x = cpos.x,
+					y = cpos.y,
+					z = cpos.z
+				} )
+			end
+	
+			if #tab > 0 then
+				net.SendTable( "SCP3199Frenzy", tab, owner )
+			end
 		end
 	end
 end
@@ -105,39 +141,37 @@ local paths = {
 		20,
 		-20,
 	},
-	spec = {
+	/*spec = {
 		Vector( 0, 0, 0 ),
 		Vector( 10, 0, 0 ),
 		0,
 		0,
-	},
+	},*/
 }
 
 local mins, maxs = Vector( -1, -1, -1 ), Vector( 1, 1, 1 )
-local mins_str, maxs_str = Vector( -1, -6, -6 ), Vector( 1, 6, 6 )
+//local mins_str, maxs_str = Vector( -1, -6, -6 ), Vector( 1, 6, 6 )
 
-SWEP.NextAttack = 0
 function SWEP:PrimaryAttack()
+	if ROUND.preparing or ROUND.post then return end
+
 	local ct = CurTime()
-	if ROUND.post or ROUND.preparing or self.NextAttack > ct or self:GetPenalty() != 0 then return end
-	self.NextAttack = ct + 0.5
+	self:SetNextPrimaryFire( ct + self.AttackCooldown * self:GetUpgradeMod( "attack_cd", 1 ) )
 
 	local owner = self:GetOwner()
-
 	owner:DoAnimationEvent( ACT_HL2MP_GESTURE_RANGE_ATTACK_MELEE )
 
 	local vm = owner:GetViewModel()
-	local seq = self.LastSeq == 1 and 2 or 1
-	self.LastSeq = seq
+	local seq = self.LastAttackSequence == 1 and 2 or 1
+	self.LastAttackSequence = seq
 
-	if seq > -1 then
-		local dur = vm:SequenceDuration( seq )
+	local dur = vm:SequenceDuration( seq )
 
-		self.NextIdle = ct + dur
-		vm:SendViewModelMatchingSequence( seq )
-	end
+	self.NextIdle = ct + dur
+	vm:SendViewModelMatchingSequence( seq )
 
 	local any_hit = false
+	local hit_wounded = false
 	local ent_filter = {}
 	local path = paths[seq]
 
@@ -154,11 +188,11 @@ function SWEP:PrimaryAttack()
 		mins = mins,
 		maxs = maxs,
 		on_start = function()
-			self:EmitSound( "Zombie.AttackMiss" )
+			self:EmitSound( "SCP3199.Miss" )
 		end,
-		callback = function( trace, id )
+		callback = function( trace, id, center )
 			if trace.HitWorld then
-				self:EmitSound( "Zombie.AttackHit" )
+				self:EmitSound( "SCP3199.Hit" )
 				return true, id < 4 and {
 					distance = 65,
 					bounds = 2.5,
@@ -170,177 +204,139 @@ function SWEP:PrimaryAttack()
 
 			ent_filter[ent] = true
 
-			if ent:IsPlayer() then
-				self:EmitSound( "Bounce.Flesh" )
-
-				if CLIENT or !self:CanTargetPlayer( ent ) then return end
-
-				local dmg = math.random( 30, 40 )
-
-				local has_deep_wounds = ent:HasEffect( "deep_wounds" )
-				if has_deep_wounds then
-					dmg = math.floor( dmg - 25 )
-				end
-
-				SuppressHostEvents( NULL )
-				ent:TakeDamage( dmg, owner, owner )
-				SuppressHostEvents( owner )
-
-				if self.Frenzy == 0 or !has_deep_wounds then
-					any_hit = true
-					ent:ApplyEffect( "deep_wounds", owner )
-
-					self.Tokens = self.Tokens + 1
-					
-					local max_stacks = 5 + ( self:GetUpgradeMod( "stacks" ) or 0 )
-					if self.Tokens > max_stacks then
-						self.Tokens = max_stacks
-					else
-						owner:PushSpeed( 1.05, 1.05, -1, "SLC_SCP3199_Tokens_"..self.Tokens, 1 )
-					end
-
-					self:SetTokens( self.Tokens )
-
-					local frenzy = self.FrenzyBaseDuration * ( self:GetUpgradeMod( "frenzy" ) or 1 )
-					self.Frenzy = ct + frenzy
-					self:SetFrenzy( self.Frenzy )
-				end
-			else
-				self:EmitSound( "Zombie.AttackHit" )
-				
-				if self.Killed and ent:GetClass() == "slc_3199_egg" then
-					any_hit = true
-					
-					if SERVER and ent:NotActive() then
-						self.Killed = false
-						ent:SetActive( true )
-					end
-				end
+			if !ent:IsPlayer() then
+				self:EmitSound( "SCP3199.Hit" )
 
 				if SERVER then
 					SuppressHostEvents( NULL )
 					self:SCPDamageEvent( ent, 50 )
 					SuppressHostEvents( owner )
 				end
+
+				return true
+			end
+
+			self:EmitSound( "Bounce.Flesh" )
+
+			if CLIENT or !self:CanTargetPlayer( ent ) then return end
+
+			local total_stacks = self:GetTotalStacks()
+			local dmg_mult = self:GetUpgradeMod( "attack_dmg", 1 ) + ( self.AttackDamageMultiplier + self:GetUpgradeMod( "attack_dmg_stacks", 0 ) ) * total_stacks
+			local has_deep_wounds = ent:HasEffect( "deep_wounds" )
+
+			if has_deep_wounds then
+				dmg_mult = dmg_mult * 0.25
+			end
+
+			SuppressHostEvents( NULL )
+			ent:TakeDamage( self.AttackDamage * dmg_mult, owner, owner )
+			SuppressHostEvents( owner )
+
+			local frenzy = self:GetFrenzy()
+			local frenzy_stacks = self:GetFrenzyStacks()
+			if frenzy == 0 or !has_deep_wounds then
+				any_hit = true
+				ent:ApplyEffect( "deep_wounds" )
+
+				frenzy_stacks = frenzy_stacks + 1
+
+				local max_stacks = 5 + self:GetUpgradeMod( "frenzy_max", 0 )
+				if frenzy_stacks > max_stacks then
+					frenzy_stacks = max_stacks
+				else
+					local speed = self.FrenzySpeed + ( self.FrenzySpeedMultiplier + self:GetUpgradeMod( "frenzy_speed_stacks", 0 ) ) * total_stacks
+					owner:PushSpeed( speed, speed, -1, "SLC_SCP3199Frenzy"..frenzy_stacks, 1 )
+				end
+
+				self:SetFrenzyStacks( frenzy_stacks )
+				self:SetTotalStacks( total_stacks + 1 )
+				self:SetFrenzy( CurTime() + self.FrenzyDuration * self:GetUpgradeMod( "frenzy_duration", 1 ) )
+			elseif frenzy > 0 and has_deep_wounds then
+				hit_wounded = true
 			end
 		end,
 		on_end = function()
-			if !any_hit then
-				if self.Frenzy != 0 then
-					self:StopFrenzy()
-				end
+			if SERVER and !any_hit and self:GetFrenzy() > 0 then
+				self:StopFrenzy( hit_wounded )
 			end
 		end 
 	} )
 end
 
 function SWEP:SecondaryAttack()
+	if CLIENT or ROUND.preparing or ROUND.post then return end
+
 	local ct = CurTime()
-	if ROUND.post or self.NextAttack > ct or self:GetTokens() < 5 then return end
-	self.Frenzy = ct + 1.5
-	self:SetFrenzy( self.Frenzy )
+	if self:GetFrenzy() < ct or self:GetFrenzyStacks() < self.SpecialThreshold then return end
 
-	self.NextAttack = ct + 1.5
+	self:SetNextSecondaryFire( ct + self.SpecialCooldown )
+	self:StopFrenzy( false )
 
 	local owner = self:GetOwner()
+	local stacks = self:GetTotalStacks()
 
-	owner:DoAnimationEvent( ACT_HL2MP_GESTURE_RANGE_ATTACK_MELEE2 )
+	local dmg = self.SpecialDamage * self:GetUpgradeMod( "special_dmg", 1 )
+	local slow = math.Clamp( 1 - self.SpecialBaseSlow - ( self.SpecialSlow + self:GetUpgradeMod( "special_slow", 0 ) ) * stacks, self.SpecialSlowCap, 1 )
+	local slow_dur = self.SpecialSlowDuration * self:GetUpgradeMod( "special_slow_duration", 1 )
+	local bleed = math.floor( stacks / self.SpecialBleed )
 
-	local vm = owner:GetViewModel()
-	local seq, dur = vm:LookupSequence( "armsattacksecondary" )
-
-	if seq > -1 then
-		self.NextIdle = ct + dur
-		vm:SendViewModelMatchingSequence( seq )
+	if bleed > 3 then
+		bleed = 3
 	end
 
-	local path = paths.spec
-	self:SwingAttack( {
-		path_start = path[1],
-		path_end = path[2],
-		fov_start = path[3],
-		fov_end = path[4],
-		delay = 0.65,
-		duration = 0.5,
-		num = 6,
-		distance = 50,
-		mins = mins_str,
-		maxs = maxs_str,
-		on_start = function()
-			self:EmitSound( "Zombie.AttackMiss" )
-		end,
-		callback = function( trace, id )
-			local ent = trace.Entity
-			if !IsValid( ent ) or !ent:IsPlayer() or !self:CanTargetPlayer( ent ) then return end
+	for i, v in ipairs( player.GetAll() ) do
+		if v:HasEffect( "deep_wounds" ) and self:CanTargetPlayer( v ) then
+			v:TakeDamage( dmg, ower, owner )
 
-			self:EmitSound( "Zombie.AttackHit" )
+			v:PushSpeed( slow, slow, -1, "SLC_SCP3199Slow", 1 )
+			v:AddTimer( "SCP3199Slow", slow_dur, 1, function()
+				v:PopSpeed( "SLC_SCP3199Slow" )
+			end )
 
-			if CLIENT then return true end
-
-			if ent:HasEffect( "deep_wounds" ) then
-				local dmg = DamageInfo()
-
-				dmg:SetDamage( ent:Health() )
-				dmg:SetDamageType( DMG_DIRECT )
-				dmg:SetAttacker( owner )
-
-				SuppressHostEvents( NULL )
-				ent:TakeDamageInfo( dmg )
-				SuppressHostEvents( owner )
-			else
-				ent:ApplyEffect( "deep_wounds", owner )
-				SuppressHostEvents( NULL )
-				ent:TakeDamage( 75, owner, owner )
-				SuppressHostEvents( owner )
+			if bleed > 0 then
+				v:ApplyEffect( "bleeding", bleed, owner )
 			end
-
-			return true
-		end,
-		on_end = function()
-			self:StopFrenzy()
 		end
-	} )
+	end
 end
 
-function SWEP:StopFrenzy()
-	if !SERVER then return end
-	
-	self.Tokens = 0
-	self:SetTokens( 0 )
+function SWEP:SpecialAttack()
+	if CLIENT or ROUND.preparing or ROUND.post or !self:GetEggReady() then return end
 
-	self.Frenzy = 0
-	self:SetFrenzy( 0 )
+	local ct = CurTime()
+	if self:GetEggTime() >= ct or self:GetFrenzy() > 0 then return end
 
 	local owner = self:GetOwner()
+	if !owner:IsOnGround() or owner:Crouching() then return end
 
-	for i = 1, 7 do
-		owner:PopSpeed( "SLC_SCP3199_Tokens_"..i )
+	self:CheckEggs()
+	if #self.Eggs >= self.MaxEggs then
+		self:HUDNotify( "eggs_max" )
+		return
 	end
 
-	owner:PushSpeed( 0.2, 0.2, -1, "SLC_SCP3199_Penalty", 1 )
-	self.Penalty = CurTime() + 5
-	self:SetPenalty( self.Penalty )
-end
+	self:SetEggTime( CurTime() + self.EggTime )
 
-function SWEP:OnPlayerKilled( ply )
-	AddRoundStat( "3199" )
-	self.Killed = true
-end
-
-function SWEP:TranslateActivity( act )
-	if act == ACT_MP_WALK or act == ACT_MP_RUN then
-		if self:GetFrenzy() != 0 then
-			return ACT_HL2MP_RUN
-		else
-			return ACT_HL2MP_WALK
+	owner:AddTimer( "SCP3199Egg", 5, 1, function()
+		self:CheckEggs()
+		if #self.Eggs >= self.MaxEggs then
+			self:HUDNotify( "eggs_max" )
+			return
 		end
-	end
 
-	if self.ActivityTranslate[act] != nil then
-		return self.ActivityTranslate[act]
-	end
+		self:SetEggTime( 0 )
+		self:SetEggReady( false )
 
-	return -1
+		local egg = ents.Create( "slc_3199_egg" )
+		if IsValid( egg ) then
+			egg:SetPos( owner:GetPos() )
+			egg:SetOwner( owner )
+			egg:Spawn()
+
+			table.insert( self.Eggs, egg )
+			self:CheckEggs()
+		end
+	end )
 end
 
 SWEP.FOVIncrease = 0
@@ -356,231 +352,415 @@ function SWEP:TranslateFOV( fov )
 	end
 end
 
-SCPHook( "SCP3199", "StartCommand", function( ply, cmd )
-	if ply:SCPClass() == CLASSES.SCP3199 then
-		local wep = ply:GetActiveWeapon()
-		if IsValid( wep ) then
-			local ct = CurTime()
+function SWEP:StopFrenzy( wrong )
+	local ct = CurTime()
+	local owner = self:GetOwner()
 
-			if wep.GetPenalty then
-				local p = wep:GetPenalty()
-				if p > ct then
-					local ang = cmd:GetViewAngles()
+	for i = 1, self:GetFrenzyStacks() do
+		owner:PopSpeed( "SLC_SCP3199Frenzy"..i )
+	end
 
-					if !wep.PenaltyPitch then
-						wep.PenaltyPitch = ang.pitch
-					end
+	self:SetFrenzy( 0 )
+	self:SetFrenzyStacks( 0 )
+	self:SetNextPrimaryFire( ct + 5 )
+	self:SetNextSpecialAttack( ct + 5 )
 
-					wep.PenaltyPitch = math.Approach( wep.PenaltyPitch, 50, FrameTime() * 15 )
-					ang.pitch = wep.PenaltyPitch
+	if wrong then
+		self:SetTotalStacks( math.floor( self:GetTotalStacks() * ( 1 - self.FrenzyPenaltyStacks ) ) )
+	end
 
-					cmd:SetViewAngles( ang )
-				elseif wep.PenaltyPitch then
-					wep.PenaltyPitch = nil
-				end
+	owner:PushSpeed( self.FrenzyPenalty, self.FrenzyPenalty, -1, "SLC_SCP3199Penalty", 1 )
+	owner:AddTimer( "SCP3199Penalty", 5, 1, function()
+		owner:PopSpeed( "SLC_SCP3199Penalty" )
+	end )
+end
+
+function SWEP:CheckEggs()
+	local num = 0
+
+	for i, v in rpairs( self.Eggs ) do
+		if IsValid( v ) and !IsValid( v.Locked ) then
+			num = num + 1
+		else
+			table.remove( self.Eggs, i )
+		end
+	end
+
+	self:SetTotalEggs( num )
+	self.NextEggCheck = CurTime() + 1
+end
+
+function SWEP:EggRespawn()
+	self:CheckEggs()
+
+	local total = self:GetTotalEggs()
+	if total <= 0 then return end
+
+	local owner = self:GetOwner()
+	local egg = self.Eggs[math.random( total )]
+	
+	self:StopFrenzy( false )
+	self:SetRespawnTime( CurTime() + self.RespawnTime )
+
+	owner:CreatePlayerRagdoll( true )
+
+	local pos = egg:GetPos()
+	owner:SetPos( pos )
+
+	owner:AddTimer( "SCP3199EggPos", 0.2, 5, function()
+		owner:SetPos( pos )
+	end )
+
+	owner:SetNoDraw( true )
+	owner:SetSolid( SOLID_NONE )
+	owner:DisableControls( "scp3199_respawn", CAMERA_MASK )
+
+	egg:SetOwner( owner )
+	egg.Locked = owner
+	egg.LockedSignature = owner:TimeSignature()
+
+	owner:AddTimer( "SCP3199Respawn", self.RespawnTime, 1, function()
+		if !IsValid( egg ) then
+			if !self:EggRespawn() then
+				owner:SkipNextSuicide()
+				owner:Kill()
 			end
-		end
-	end
-end )
 
-SCPHook( "SCP3199", "SLCMovementAnimSpeed", function( ply, vel, speed, len, movement )
-	if ply:SCPClass() == CLASSES.SCP3199 then
-		local n = len / 75
-
-		if n < 1.5 then
-			n = 1.5
+			return
 		end
 
-		return n, true
-	end
-end )
+		owner:SetNoDraw( false )
+		owner:SetSolid( SOLID_BBOX )
+		owner:StopDisableControls( "scp3199_respawn" )
+		owner:SetHealth( owner:GetMaxHealth() )
 
+		egg:Remove()
+	end )
+
+	return true
+end
+
+function SWEP:OnPlayerKilled( ply )
+	self:SetEggReady( true )
+	AddRoundStat( "3199" )
+end
+
+function SWEP:OnUpgradeBought( name, active, group )
+	if SERVER and name == "egg" then
+		table.insert( self.Eggs, SpawnSCP3199Egg( self:GetOwner() ) )
+		self:CheckEggs()
+	end
+end
+
+local heart = Material( "slc/hud/scp/3199/heart.png", "smooth" )
+
+SWEP.FrenzyDetectDraw = 0
+function SWEP:DrawSCPHUD()
+	local frenzy = self:GetFrenzy()
+	if frenzy == 0 then return end
+
+	local ct = CurTime()
+	if self.FrenzyDetectDraw < ct then return end
+
+	local w = ScrW()
+	local t = self.FrenzyDetectDraw - ct
+
+	surface.SetDrawColor( 255, 255, 255, 255 * t )
+	surface.SetMaterial( heart )
+
+	local size = w * 0.02
+
+	for i, v in ipairs( self.FrenzyDetectTable ) do
+		local pos = Vector( v.x, v.y, v.z ):ToScreen()
+		if pos.visible then
+			surface.DrawTexturedRect( pos.x - size * 0.5, pos.y - size * 0.5, size, size )
+		end
+	end
+end
+
+--[[-------------------------------------------------------------------------
+Net
+---------------------------------------------------------------------------]]
 if SERVER then
-	net.AddTableChannel( "SCP3199_Frenzy" )
+	net.AddTableChannel( "SCP3199Frenzy" )
 end
 
 if CLIENT then
-	local color_white = Color( 255, 255, 255 )
-	local color_gray = Color( 170, 170, 170 ) 
-	local color_green = Color( 0, 255, 0 )
-
-	local heart = Material( "slc/hud/scp/heart1.png" )
-	local ico = Material( "slc/hud/scp/3199attack.png" )
-
-	SWEP.DrawSpotted = 0
-	function SWEP:DrawSCPHUD()
-		local frenzy = self:GetFrenzy()
-		if frenzy != 0 then
-			local w, h = ScrW(), ScrH()
-			local ct = CurTime()
-
-			if self.FrenzySpotted and self.DrawSpotted >= ct then
-				surface.SetDrawColor( 255, 255, 255, 255 * ( self.DrawSpotted - ct ) )
-				surface.SetMaterial( heart )
-				for k, v in pairs( self.FrenzySpotted ) do
-					local pos = Vector( v.x, v.y, v.z ):ToScreen()
-					if pos.visible then
-						surface.DrawTexturedRect( pos.x - w * 0.01, pos.y - w * 0.01, w * 0.02, w * 0.02 )
-					end
-				end
-			end
-
-			if frenzy >= ct then
-				local frenzy_duration = self.FrenzyBaseDuration * ( self:GetUpgradeMod( "frenzy" ) or 1 )
-				local f = ( frenzy - ct ) / frenzy_duration
-
-				if f > 0 then
-					surface.SetMaterial( ico )
-					surface.SetDrawColor( color_white )
-					surface.DrawTexturedRect( w * 0.48, h * 0.75, w * 0.04, w * 0.04 )
-
-
-					draw.NoTexture()
-					surface.SetDrawColor( color_gray )
-					surface.DrawCooldownHollowRectCW( w * 0.48, h * 0.75, w * 0.04, w * 0.04, 10, f, HRCSTYLE_TRIANGLE_DYNAMIC )
-
-					local tokens = self:GetTokens()
-					draw.Text{
-						text = tokens,
-						pos = { w * 0.514, h * 0.75 + w * 0.032 },
-						color = color_white,
-						font = "SCPHUDSmall",
-						xalign = TEXT_ALIGN_CENTER,
-						yalign = TEXT_ALIGN_CENTER,
-					}
-
-					if tokens >= 5 and !self:GetUpgradeMod( "sdisable" ) then
-						draw.Text{
-							text = self.Lang.special,
-							pos = { w * 0.5, h * 0.97 },
-							color = color_green,
-							font = "SCPHUDSmall",
-							xalign = TEXT_ALIGN_CENTER,
-							yalign = TEXT_ALIGN_CENTER,
-						}
-					end
-				end
-			end
-		end
-	end
-
-	net.ReceiveTable( "SCP3199_Frenzy", function( data )
+	net.ReceiveTable( "SCP3199Frenzy", function( data )
 		local ply = LocalPlayer()
+
 		ply:EmitSound( "SLCPlayer.Heartbeat" )
 
-		local wep = ply:GetWeapon( "weapon_scp_3199" )
-		if IsValid( wep ) then
-			wep.DrawSpotted = CurTime() + 1
-			wep.FrenzySpotted = data
-		end
+		local wep = ply:GetSCPWeapon()
+		if !IsValid( wep ) then return end
+
+		wep.FrenzyDetectDraw = CurTime() + 1
+		wep.FrenzyDetectTable = data
 	end )
 end
 
-if SERVER then
-	SCPHook( "SCP3199", "EntityTakeDamage", function( target, dmg )
-		if IsValid( target ) and target:IsPlayer() then
-			if target:SCPClass() == CLASSES.SCP3199 then
-				if dmg:GetDamage() >= target:Health() then
-					local wep = target:GetActiveWeapon()
+--[[-------------------------------------------------------------------------
+SCP Hooks
+---------------------------------------------------------------------------]]
+//lua_run ClearSCPHooks() EnableSCPHook("SCP3199") TransmitSCPHooks()
+SCPHook( "SCP3199", "EntityTakeDamage", function( target, dmg )
+	if dmg:IsDamageType( DMG_DIRECT ) or !IsValid( target ) or !target:IsPlayer() or target:SCPClass() != CLASSES.SCP3199 then return end
+	
+	local wep = target:GetSCPWeapon()
+	if !IsValid( wep ) then return end
+	if wep:GetRespawnTime() >= CurTime() then return true end
 
-					if IsValid( wep ) then
-						local tab = GetRoundProperty( "3199_eggs" )
-
-						if tab and #tab > 0 then
-							local egg
-
-							for i = 1, #tab do
-								local e = tab[i]
-								if IsValid( e ) and e:GetActive() then
-									egg = e
-									break
-								end
-							end
-
-							if egg then
-								egg:SetActive( false )
-								egg.Locked = target
-								egg.LockedSignature = target:TimeSignature()
-
-								target:SetProperty( "3199_respawn", egg )
-								target:SetStasis( wep:GetUpgradeMod( "stasis" ) or 50 )
-								target:SpectateEntity( egg )
-
-								return true
-							end
-						end
-					end
-				end
-			end
+	if dmg:IsDamageType( DMG_BULLET ) then
+		wep:CheckEggs()
+		local prot = 1 - math.Clamp( wep:GetTotalEggs() * wep.EggsProtection, 0, wep.EggsProtectionMax )
+		if prot < 1 then
+			dmg:ScaleDamage( prot )
 		end
-	end )
+	end
+end )
 
-	SCPHook( "SCP3199", "SLCPlayerStasisStart", function( ply, data )
-		if ply:SCPClass() == CLASSES.SCP3199 then
-			data.health = data.max_health
-		end
-	end )
+SCPHook( "SCP3199", "SLCPostScaleDamage", function( target, dmg )
+	if dmg:IsDamageType( DMG_DIRECT ) or !IsValid( target ) or !target:IsPlayer() or target:SCPClass() != CLASSES.SCP3199 then return end
+	
+	local wep = target:GetSCPWeapon()
+	if !IsValid( wep ) then return end
+	if wep:GetRespawnTime() >= CurTime() then return true end
+	if dmg:GetDamage() < target:Health() then return end
 
-	SCPHook( "SCP3199", "SLCPlayerStasisEnd", function( ply, data )
-		if ply:SCPClass() == CLASSES.SCP3199 then
-			local egg = ply:GetProperty( "3199_respawn" )
+	return wep:EggRespawn()
+end )
 
-			if IsValid( egg ) then
-				ply:SetPos( egg:GetPos() )
+SCPHook( "SCP3199", "StartCommand", function( ply, cmd )
+	if ply:SCPClass() != CLASSES.SCP3199 then return end
 
-				egg:Destroy()
-			end
-		end
-	end )
+	local wep = ply:GetSCPWeapon()
+	if !IsValid( wep ) or wep:GetEggTime() < CurTime() then return end
+
+	cmd:ClearMovement()
+	cmd:ClearButtons()
+	cmd:SetButtons( IN_DUCK )
+end )
+
+SCPHook( "SCP3199", "SLCMovementAnimSpeed", function( ply, vel, speed, len, movement )
+	if ply:SCPClass() != CLASSES.SCP3199 then return end
+
+	local n = len / 75
+	if n < 1.5 then
+		n = 1.5
+	end
+
+	return n, true
+end )
+
+SCPHook( "SCP3199", "PreDrawViewModel", function( vm, ply, wep )
+	if ply:SCPClass() != CLASSES.SCP3199 then return end
+	if !IsValid( wep ) or wep:GetClass() != "weapon_scp_3199" or wep:GetRespawnTime() < CurTime() then return end
+
+	return true
+end )
+
+--[[-------------------------------------------------------------------------
+Upgrade system
+---------------------------------------------------------------------------]]
+local icons = {}
+
+if CLIENT then
+	icons.frenzy = GetMaterial( "slc/hud/upgrades/scp/3199/frenzy.png", "smooth" )
+	icons.attack = GetMaterial( "slc/hud/upgrades/scp/3199/attack.png", "smooth" )
+	icons.special = GetMaterial( "slc/hud/upgrades/scp/3199/special.png", "smooth" )
+	icons.passive = GetMaterial( "slc/hud/upgrades/scp/3199/passive.png", "smooth" )
+	icons.egg = GetMaterial( "slc/hud/upgrades/scp/3199/egg.png", "smooth" )
 end
 
 DefineUpgradeSystem( "scp3199", {
 	grid_x = 4,
-	grid_y = 3,
+	grid_y = 4,
 	upgrades = {
-		{ name = "regen1", cost = 1, req = {}, reqany = false,  pos = { 1, 1 }, mod = { regen = 2 }, active = false }, --taste of blood
-		{ name = "regen2", cost = 2, req = { "regen1" }, reqany = false,  pos = { 1, 2 }, mod = { regentime = 0.1 }, active = false },
+		{ name = "frenzy1", cost = 1, req = {}, reqany = false, pos = { 1, 1 },
+			mod = { frenzy_duration = 1.5, frenzy_max = 1 }, icon = icons.frenzy },
+		{ name = "frenzy2", cost = 2, req = { "frenzy1" }, reqany = false, pos = { 1, 2 },
+			mod = { frenzy_max = 2, frenzy_speed_stacks = 0.001 }, icon = icons.frenzy },
+		{ name = "frenzy3", cost = 2, req = { "frenzy2" }, reqany = false, pos = { 1, 3 },
+			mod = { frenzy_duration = 2, frenzy_speed_stacks = 0.002  }, icon = icons.frenzy },
 
-		{ name = "frenzy1", cost = 2, req = {}, reqany = false,  pos = { 2, 1 }, mod = { stacks = 1, frenzy = 1.2 }, active = false }, --huntr's game
-		{ name = "frenzy2", cost = 4, req = { "frenzy1" }, reqany = false,  pos = { 2, 2 }, mod = { stacks = 2, frenzy = 1.5, range = 500, sdisable = true }, active = false },
-		
-		{ name = "egg1", cost = 3, req = {}, reqany = false,  pos = { 3, 1 }, mod = {}, active = true },
-		{ name = "egg2", cost = 3, req = {}, reqany = false,  pos = { 4, 1 }, mod = {}, active = true },
-		{ name = "egg3", cost = 1, req = { "egg1", "egg2" }, reqany = true,  pos = { 3, 2 }, mod = { stasis = 20 }, active = false },
+		{ name = "attack1", cost = 1, req = {}, reqany = false, pos = { 2, 1 },
+			mod = { attack_cd = 0.66, attack_dmg = 1.1 }, icon = icons.attack },
+		{ name = "attack2", cost = 2, req = { "attack1" }, reqany = false, pos = { 2, 2 },
+			mod = { attack_cd = 0.3, attack_dmg_stacks = 0.02 }, icon = icons.attack },
+		{ name = "attack3", cost = 3, req = { "attack2" }, reqany = false, pos = { 2, 3 },
+			mod = { attack_dmg = 1.25, attack_dmg_stacks = 0.04 }, icon = icons.attack },
 
+		{ name = "special1", cost = 1, req = {}, reqany = false, pos = { 3, 1 },
+			mod = { special_dmg = 1.15, special_slow = 0.005, special_slow_duration = 1.2 }, icon = icons.special },
+		{ name = "special2", cost = 2, req = { "special1" }, reqany = false, pos = { 3, 2 },
+			mod = { special_dmg = 1.4, special_slow = 0.01, special_slow_duration = 1.4 }, icon = icons.special },
 
-		{ name = "ch", cost = 5, req = {}, reqany = false,  pos = { 2, 3 }, mod = { ddisable = true }, active = 1.25 }, --blind fury
+		{ name = "passive", cost = 1, req = {}, reqany = false, pos = { 4, 1 },
+			mod = { passive_radius = 1.5 }, icon = icons.passive },
 
-		{ name = "outside_buff", cost = 1, req = {}, reqany = false,  pos = { 4, 2 }, mod = {}, active = false },
+		{ name = "egg", cost = 3, req = {}, reqany = false, pos = { 4, 2.5 },
+			mod = {}, icon = icons.egg, active = true },
+
+		{ name = "outside_buff", cost = 1, req = {}, reqany = false, pos = { 4, 4 }, mod = {}, active = false },
 	},
-	rewards = { -- ~55%-60% --8 + 1
-		{ 100, 1 },
-		{ 200, 1 },
-		{ 350, 2 },
-		{ 500, 2 },
-		{ 750, 2 },
+	rewards = { --18 + 1 points -> 60% = 11 (-1 base) = 10 points
+		{ 75, 1 },
+		{ 150, 1 },
+		{ 250, 1 },
+		{ 350, 1 },
+		{ 450, 1 },
+		{ 600, 1 },
+		{ 750, 1 },
+		{ 900, 1 },
+		{ 1050, 1 },
+		{ 1200, 1 },
 	}
-} )
+}, SWEP )
 
-function SWEP:OnUpgradeBought( name, info, group )
-	if SERVER then
-		if name == "ch" and self:CheckOwner() then
-			self:GetOwner():PushSpeed( info, info, -1, "SLCSCP3199Upgrade", 1 )
-		elseif name == "egg1" then
-			SpawnSCP3199Eggs( 1 )
-		elseif name == "egg2" then
-			local tab = GetRoundProperty( "3199_eggs" )
+--[[-------------------------------------------------------------------------
+SCP HUD
+---------------------------------------------------------------------------]]
+if CLIENT then
+	local color_green = Color( 25, 200, 45 )
 
-			if tab then
-				for k, v in pairs( tab ) do
-					if IsValid( v ) and v:NotActive() then
-						v:SetActive( true )
-						break
-					end
-				end
+	local hud = SCPHUDObject( "SCP3199", SWEP )
+	hud:AddCommonSkills()
+
+	hud:AddSkill( "primary" )
+		:SetButton( "attack" )
+		:SetMaterial( "slc/hud/scp/3199/attack.png", "smooth" )
+		:SetCooldownFunction( "GetNextPrimaryFire" )
+
+	hud:AddSkill( "special" )
+		:SetButton( "attack2" )
+		:SetMaterial( "slc/hud/scp/3199/special.png", "smooth" )
+		:SetCooldownFunction( "GetNextSecondaryFire" )
+		:SetActiveFunction( function( swep )
+			return swep:GetFrenzyStacks() >= swep.SpecialThreshold
+		end )
+		:SetTextFunction( "GetFrenzyStacks" )
+		:SetParser( function( swep, lang )
+			return {
+				tokens = MarkupBuilder.StaticPrint( swep.SpecialThreshold, color_green ),
+			}
+		end )
+
+	hud:AddSkill( "egg" )
+		:SetButton( "scp_special" )
+		:SetMaterial( "slc/hud/scp/3199/egg.png", "smooth" )
+		:SetCooldownFunction( "GetNextSpecialAttack" )
+		:SetActiveFunction( function( swep )
+			return swep:GetEggReady() and swep:GetFrenzy() == 0
+		end )
+		:SetTextFunction( function( swep )
+			return ( math.Clamp( swep:GetTotalEggs() * swep.EggsProtection, 0, swep.EggsProtectionMax ) * 100 ).."%"
+		end )
+		:SetParser( function( swep, lang )
+			return {
+				prot = MarkupBuilder.StaticPrint( ( swep.EggsProtection * 100 ).."%", color_green ),
+				cap = MarkupBuilder.StaticPrint( ( swep.EggsProtectionMax * 100 ).."%", color_green ),
+				eggs = MarkupBuilder.StaticPrint( swep:GetTotalEggs(), color_green ),
+				max = MarkupBuilder.StaticPrint( swep.MaxEggs, color_green ),
+			}
+		end )
+
+	hud:AddSkill( "passive" )
+		:SetMaterial( "slc/hud/scp/3199/passive.png", "smooth" )
+		:SetOffset( 0.5 )
+		:SetTextFunction( "GetTotalStacks" )
+		:SetParser( function( swep, lang )
+			local stacks = swep:GetTotalStacks()
+			local dmg = ( swep.AttackDamageMultiplier + swep:GetUpgradeMod( "attack_dmg_stacks", 0 ) ) * stacks * 100
+			local speed = ( swep.FrenzySpeedMultiplier + swep:GetUpgradeMod( "frenzy_speed_stacks", 0 ) ) * stacks * 100
+			local slow = math.Clamp( ( swep.SpecialSlow + swep:GetUpgradeMod( "special_slow", 0 ) ) * stacks, 0, 1 - swep.SpecialSlowCap - swep.SpecialBaseSlow ) * 100
+			local bleed = math.Clamp( math.floor( stacks / swep.SpecialBleed ), 0, 3 )
+			local heal = math.ceil( stacks / 3 )
+
+			return {
+				dmg = MarkupBuilder.StaticPrint( dmg.."%", color_green ),
+				speed = MarkupBuilder.StaticPrint( speed.."%", color_green ),
+				slow = MarkupBuilder.StaticPrint( slow.."%", color_green ),
+				bleed = MarkupBuilder.StaticPrint( bleed, color_green ),
+				heal = MarkupBuilder.StaticPrint( heal, color_green ),
+				penalty = MarkupBuilder.StaticPrint( ( swep.FrenzyPenaltyStacks * 100 ).."%", color_green ),
+			}
+		end )
+
+	hud:AddBar( "frenzy_bar" )
+		:SetMaterial( "slc/hud/scp/3199/frenzy.png", "smooth" )
+		:SetColor( Color( 240, 194, 45 ) )
+		:SetTextFunction( function( swep )
+			local time = swep:GetFrenzy() - CurTime()
+
+			if time < 0 then
+				time = 0
 			end
-		end			
-	end
+
+			return math.Round( time ).."s"
+		end )
+		:SetProgressFunction( function( swep )
+			return ( swep:GetFrenzy() - CurTime() ) / ( swep.FrenzyDuration * swep:GetUpgradeMod( "frenzy_duration", 1 ) )
+		end )
+		:SetVisibleFunction( function( swep )
+			return swep:GetFrenzy() > 0
+		end )
+
+	hud:AddBar( "egg_bar" )
+		:SetMaterial( "slc/hud/scp/3199/egg.png", "smooth" )
+		:SetColor( Color( 15, 69, 90 ) )
+		:SetTextFunction( function( swep )
+			local time = swep:GetEggTime() - CurTime()
+
+			if time < 0 then
+				time = 0
+			end
+
+			return math.Round( time ).."s"
+		end )
+		:SetProgressFunction( function( swep )
+			return ( swep:GetEggTime() - CurTime() ) / swep.EggTime
+		end )
+		:SetVisibleFunction( function( swep )
+			return swep:GetEggTime() > 0
+		end )
+
+	hud:AddBar( "respawn_bar" )
+		:SetMaterial( "slc/hud/scp/3199/egg.png", "smooth" )
+		:SetColor( Color( 95, 140, 140 ) )
+		:SetTextFunction( function( swep )
+			local time = swep:GetRespawnTime() - CurTime()
+
+			if time < 0 then
+				time = 0
+			end
+
+			return math.Round( time ).."s"
+		end )
+		:SetProgressFunction( function( swep )
+			return ( swep:GetRespawnTime() - CurTime() ) / swep.RespawnTime
+		end )
+		:SetVisibleFunction( function( swep )
+			return swep:GetRespawnTime() > CurTime()
+		end )
 end
 
-InstallUpgradeSystem( "scp3199", SWEP )
+--[[-------------------------------------------------------------------------
+Sounds
+---------------------------------------------------------------------------]]
+sound.Add{
+	name = "SCP3199.Miss",
+	sound = "npc/zombie/claw_miss1.wav",
+	volume = 1,
+	level = 75,
+	pitch = 100,
+	channel = CHAN_STATIC,
+}
+
+sound.Add{
+	name = "SCP3199.Hit",
+	sound = "npc/zombie/claw_strike1.wav",
+	volume = 1,
+	level = 75,
+	pitch = 100,
+	channel = CHAN_STATIC,
+}

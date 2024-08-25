@@ -13,18 +13,35 @@ function PlayerStats.Register( name, flags )
 	PlayerStats._STATS[name] = flags
 end
 
---set = function( ply, old, new ) return true to prevent
---reset = function( ply, val ) return true to prevent
 function RegisterPlayerStatus( name, default, set, reset, transmit )
 	assert( name != "_reset", "PlayerStatus name '_reset' is forbidden!" )
 
+	local db_key
 	local t = type( default )
+	if t == "string" then
+		local key, init = string.match( default, "^!(.+):(.-)$" )
+		if key and init then
+			db_key = key
+
+			local try_num = tonumber( init )
+			if try_num then
+				default = try_num
+			elseif init == "true" then
+				default = true
+			elseif init == "false" then
+				default = false
+			else
+				default = init
+			end
+		end
+	end
+	
 	assert( !transmit or t == "number" or t == "boolean", "Failed to register PlayerStatus! Transmited PlayerStatus only supports numbers and booleans!" )
 
-	PlayerStatus[name] = { def = default, set = set, reset = reset, transmit = transmit and t }
+	PlayerStatus[name] = { def = default, set = set, reset = reset, transmit = transmit and t, db = db_key }
 end
 
-local function HasFlag( num, flag )
+local function has_flag( num, flag )
 	return bit.band( num, flag ) == flag
 end
 
@@ -47,48 +64,18 @@ function PlayerData:Create( ply )
 		data.Status[k] = v.def
 
 		ply["Set"..k] = function( p, value )
-			data:SetStatus( k, value )
+			data:SetStatus( k, value, v.db )
 		end
 
 		ply["Get"..k] = function( p )
 			return data:GetStatus( k )
 		end
 
-		/*if v.transmit then
-			local use = nil
-
-			if v.transmit == "BOOL" or v.transmit == "INT" or v.transmit == "FLOAT" or v.transmit == "STRING" then
-				use = v[4]
-			else
-				local t = type( v.def )
-				if t == "number" then
-					use = "FLOAT"
-				elseif t == "string" then
-					use = "STRING"
-				elseif t == "boolean" then
-					use = "BOOL"
-				end
-			end
-
-			if use then
-				local id = ply:AddSLCVar( "PD_"..k, use )
-
-				if id then
-					v.transmit_ok = true
-				end
-
-				if CLIENT then
-					ply:SetSLCVarCallback( id, use, function( p, val )
-						/*if v[2] then
-							v[2]( p, k, val )
-						end*/
-
-						/*print( "callback", p, k, val )
-						data.Status[k] = val
-					end )
-				end
-			end
-		end*/
+		if SERVER and v.db then
+			ply:GetSCPData( v.db, v.def ):Then( function( db_val )
+				data:SetStatus( k, tonumber( db_val ) or db_val )
+			end )
+		end
 	end
 
 	data:SetupData()
@@ -103,7 +90,7 @@ function PlayerData:AddStat( name, value, replace )
 	local sessionstat = self.Session[name]
 
 	if stat then
-		if HasFlag( stat, PlayerStats.STAT_INT ) or HasFlag( stat, PlayerStats.STAT_NUMBER ) then
+		if has_flag( stat, PlayerStats.STAT_INT ) or has_flag( stat, PlayerStats.STAT_NUMBER ) then
 			globalstat = replace and value or ( ( globalstat or 0 ) + ( value or 1 ) )
 			roundstat = replace and value or ( ( roundstat or 0 ) + ( value or 1 ) )
 			sessionstat = replace and value or ( ( sessionstat or 0 ) + ( value or 1 ) )
@@ -117,7 +104,7 @@ function PlayerData:AddStat( name, value, replace )
 		self.Round[name] = roundstat
 		self.Session[name] = sessionstat
 
-		if HasFlag( stat, PlayerStats.STAT_ARCHIVE ) then
+		if has_flag( stat, PlayerStats.STAT_ARCHIVE ) then
 			self.Player:SetSCPData( name, globalstat )
 		end
 	end
@@ -128,11 +115,11 @@ function PlayerData:GetStat( name )
 	local stat = self.Stats[name]
 
 	if !stat then
-		if HasFlag( stat_flag, PlayerStats.STAT_NUMBER ) or HasFlag( stat_flag, PlayerStats.STAT_INT ) then
+		if has_flag( stat_flag, PlayerStats.STAT_NUMBER ) or has_flag( stat_flag, PlayerStats.STAT_INT ) then
 			stat = 0
-		elseif HasFlag( stat_flag, PlayerStats.STAT_BOOLEAN ) then
+		elseif has_flag( stat_flag, PlayerStats.STAT_BOOLEAN ) then
 			stat = false
-		elseif HasFlag( stat_flag, PlayerStats.STAT_STRING ) then
+		elseif has_flag( stat_flag, PlayerStats.STAT_STRING ) then
 			stat = ""
 		end
 	end
@@ -145,11 +132,11 @@ function PlayerData:GetRoundStat( name )
 	local stat = self.Round[name]
 
 	if !stat then
-		if HasFlag( stat_flag, PlayerStats.STAT_NUMBER ) or HasFlag( stat_flag, PlayerStats.STAT_INT ) then
+		if has_flag( stat_flag, PlayerStats.STAT_NUMBER ) or has_flag( stat_flag, PlayerStats.STAT_INT ) then
 			stat = 0
-		elseif HasFlag( stat_flag, PlayerStats.STAT_BOOLEAN ) then
+		elseif has_flag( stat_flag, PlayerStats.STAT_BOOLEAN ) then
 			stat = false
-		elseif HasFlag( stat_flag, PlayerStats.STAT_STRING ) then
+		elseif has_flag( stat_flag, PlayerStats.STAT_STRING ) then
 			stat = ""
 		end
 	end
@@ -162,11 +149,11 @@ function PlayerData:GetSessionStat( name )
 	local stat = self.Session[name]
 
 	if !stat then
-		if HasFlag( stat_flag, PlayerStats.STAT_NUMBER ) or HasFlag( stat_flag, PlayerStats.STAT_INT ) then
+		if has_flag( stat_flag, PlayerStats.STAT_NUMBER ) or has_flag( stat_flag, PlayerStats.STAT_INT ) then
 			stat = 0
-		elseif HasFlag( stat_flag, PlayerStats.STAT_BOOLEAN ) then
+		elseif has_flag( stat_flag, PlayerStats.STAT_BOOLEAN ) then
 			stat = false
-		elseif HasFlag( stat_flag, PlayerStats.STAT_STRING ) then
+		elseif has_flag( stat_flag, PlayerStats.STAT_STRING ) then
 			stat = ""
 		end
 	end
@@ -229,21 +216,21 @@ end
 
 function PlayerData:SetupData()
 	for k, v in pairs( PlayerStats._STATS ) do
-		local saved = HasFlag( v, PlayerStats.STAT_ARCHIVE ) and self.Player:GetSCPData( k )
+		local saved = has_flag( v, PlayerStats.STAT_ARCHIVE ) and self.Player:GetSCPData( k ) --TODO turn to promise
 
-		if HasFlag( v, PlayerStats.STAT_NUMBER ) or HasFlag( v, PlayerStats.STAT_INT ) then
+		if has_flag( v, PlayerStats.STAT_NUMBER ) or has_flag( v, PlayerStats.STAT_INT ) then
 			if saved != nil then 
 				self.Stats[k] = tonumber( saved )
 			else
 				self.Stats[k] = 0
 			end
-		elseif HasFlag( v, PlayerStats.STAT_BOOLEAN ) then
+		elseif has_flag( v, PlayerStats.STAT_BOOLEAN ) then
 			if saved != nil then 
 				self.Stats[k] = tobool( saved )
 			else
 				self.Stats[k] = false
 			end
-		elseif HasFlag( v, PlayerStats.STAT_STRING ) then
+		elseif has_flag( v, PlayerStats.STAT_STRING ) then
 			if saved != nil then 
 				self.Stats[k] = saved
 			else
@@ -259,7 +246,7 @@ function PlayerData:GetStatus( name )
 	return self.Status[name]
 end
 
-function PlayerData:SetStatus( name, value )
+function PlayerData:SetStatus( name, value, db )
 	assert( value != nil, "Bad argument #2 to SetStatus, any value expected got nil" )
 	assert( self.Status[name] != nil, "Tried to set invalid player status: "..name )
 
@@ -268,16 +255,9 @@ function PlayerData:SetStatus( name, value )
 		if !obj.set or obj.set( self.Player, self.Status[name], value ) != true then
 			self.Status[name] = value
 
-			/*if obj.transmit_ok then
-				local func = self.Player["SetPD"..name]
-				if func then
-					func( v.def )
-				end
-			end*/
-
-			/*if obj[4] then
-				net.Ping( "SLCPlayerData", name..":"..tostring( value ), self.Player )
-			end*/
+			if db then
+				self.Player:SetSCPData( db, value )
+			end
 
 			if SERVER and obj.transmit then
 				net.Start( "SLCPlayerDataUpdate" )
@@ -300,6 +280,8 @@ setmetatable( PlayerData, { __call = PlayerData.Create } )
 if CLIENT then
 	net.Receive( "SLCPlayerDataUpdate", function( len )
 		local ply = LocalPlayer()
+		if !IsValid( ply ) or !ply.PlayerData then return end
+		
 		local name = net.ReadString()
 
 		if name == "_reset" then
@@ -331,9 +313,13 @@ end
 --------------------------------------------------------------------
 
 ---------------------------- BASE STATUS ----------------------------
-//RegisterPlayerStatus( "name", <initial value>, func/false[nil], nil/func/ture/false*, transmit )
+//RegisterPlayerStatus( "name", <initial value>, set: func/false[nil], reset: nil/func/ture/false*, transmit )
+//set = function( ply, old, new ) return true to prevent
+//reset = function( ply, val ) return true to prevent
 //* - true: only on roundend, false: never, nil: always, func: return true to suppress
 //name cannot contain ':'
+//if <initial value> is like '!key:value', value will be initially set to 'value' and will be replaced from value in database with key 'key'
+//(gamemode will always try to convert 'value' to number or bool)
 
 RegisterPlayerStatus( "Premium", false, function( ply, old, new ) ply:Set_SCPPremium( new ) end, false )
 RegisterPlayerStatus( "Active", false, function( ply, old, new ) ply:Set_SCPActive( new ) end, false )
@@ -341,7 +327,9 @@ RegisterPlayerStatus( "Active", false, function( ply, old, new ) ply:Set_SCPActi
 RegisterPlayerStatus( "InitialTeam", 0, false, true )
 
 RegisterPlayerStatus( "Blink", false )
+RegisterPlayerStatus( "NextBlink", -1 )
 RegisterPlayerStatus( "SightLimit", -1 )
+RegisterPlayerStatus( "SCPPenalty", "!scp_penalty:0", false, false )
 
 RegisterPlayerStatus( "SCPHuman", false, nil, nil, true )
 RegisterPlayerStatus( "SCPCanInteract", false )
@@ -351,11 +339,8 @@ RegisterPlayerStatus( "SCPDisableOverload", false, nil, nil, true )
 
 RegisterPlayerStatus( "SCPChase", false )
 RegisterPlayerStatus( "ChaseLevel", 0 )
-
-RegisterPlayerStatus( "SCP714", false, nil, nil, true )
-RegisterPlayerStatus( "SCP096Chase", false )
 --------------------------------------------------------------------
- /*for k, v in pairs( player.GetAll() ) do
+ /*for i, v in ipairs( player.GetAll() ) do
  	PlayerData( v )
  	v:SetActive( true )
  end*/

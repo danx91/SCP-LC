@@ -1,6 +1,5 @@
 hook.Add( "StartCommand", "SLCSprint", function( ply, cmd )
 	if cmd:KeyDown( IN_WALK ) then cmd:RemoveKey( IN_WALK ) end
-
 	if ply:IsBot() then return end
 	if ply:SCPTeam() == TEAM_SPEC then return end
 	//if ply:SCPTeam() == TEAM_SCP then return end
@@ -17,7 +16,8 @@ hook.Add( "StartCommand", "SLCSprint", function( ply, cmd )
 	elseif cmd:KeyDown( IN_JUMP ) and IsFirstTimePredicted() then
 		if !ply.WasJumpDown and ply:OnGround() and !ply:InVehicle() then
 			local stamina = ply:GetStamina()
-			local mask = ply:GetWeapon( "item_slc_gasmask" )
+			local mask = ply:GetWeaponByGroup( "gasmask" )
+			
 			if !IsValid( mask ) or !mask:GetEnabled() or !mask:GetUpgraded() or stamina - 10 > 30 then
 				ply.StaminaRegen = CurTime() + 1.5
 				stamina = stamina - 10
@@ -99,13 +99,14 @@ local function CalcStamina( ply )
 		return
 	end
 
+	local ct = CurTime()
 	local exhausted = ply:GetExhausted()
 	local stamina = ply:GetStamina()
 	local max_stamina = ply:GetMaxStamina()
 	local stamina_limit = ply:GetStaminaLimit()
 	local boost = ply:GetStaminaBoost()
 
-	if boost > CurTime() then
+	if boost > ct then
 		if exhausted then
 			ply:SetExhausted( false )
 
@@ -133,7 +134,7 @@ local function CalcStamina( ply )
 		regen_delay_running = 1,
 		use_rate = 1,
 	}
-	
+
 	local skip = hook.Run( "SLCStamina", ply, data, stamina, max_stamina, stamina_limit )
 	if skip then
 		return
@@ -143,8 +144,12 @@ local function CalcStamina( ply )
 		stamina_limit = max_stamina
 	end
 
-	if ply.StaminaRegen < CurTime() then
-		ply.StaminaRegen = CurTime() + data.regen_delay
+	if ply.StaminaRegen <= ct then
+		ply.StaminaRegen = ply.StaminaRegen + data.regen_delay
+
+		if ply.StaminaRegen < ct then
+			ply.StaminaRegen = ct + data.regen_delay
+		end
 
 		if exhausted then
 			stamina = stamina + data.regen_rate_exhausted
@@ -157,8 +162,12 @@ local function CalcStamina( ply )
 		stamina = stamina_limit
 	end
 
-	if ply.RunCheck < CurTime() then
-		ply.RunCheck = CurTime() + data.use_delay
+	if ply.RunCheck < ct then
+		ply.RunCheck = ply.RunCheck + data.use_delay
+
+		if ply.RunCheck < ct then
+			ply.RunCheck = CurTime() + data.use_delay
+		end
 
 		if ply.Running then
 			ply.Running = false
@@ -206,8 +215,8 @@ end
 
 hook.Add( "Tick", "SCPStaminaTick", function()
 	if SERVER then
-		for k, ply in pairs( player.GetAll() ) do
-			CalcStamina( ply )
+		for i, v in ipairs( player.GetAll() ) do
+			CalcStamina( v )
 		end
 	else
 		CalcStamina( LocalPlayer() )

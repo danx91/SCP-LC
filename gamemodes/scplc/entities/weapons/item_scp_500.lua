@@ -34,6 +34,7 @@ function SWEP:OnSelect()
 							}
 						} )
 
+						owner:SkipNextSuicide()
 						owner:Kill()
 					end
 				end

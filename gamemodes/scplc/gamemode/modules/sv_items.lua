@@ -533,6 +533,10 @@ function GM:SpawnItems()
 				DestroyOnWarhead( cctv, v.destroy_alpha, v.destroy_omega )
 			end
 
+			if v.destroy_gatea then
+				DestroyOnGateA( cctv )
+			end
+
 			v.ent = cctv
 		end
 	end
@@ -583,4 +587,8 @@ ItemSpawnFunction( "fuse", function( args, data )
 		fuse:SetRating( args[2] and math.random( args[1], args[2] ) or args[1] or 5 )
 		return fuse
 	end
+end )
+
+ItemSpawnFunction( "backpack", function( args, data )
+	return BACKPACK.Create( args[1] )
 end )

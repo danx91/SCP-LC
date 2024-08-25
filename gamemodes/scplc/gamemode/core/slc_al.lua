@@ -85,6 +85,7 @@ timer.Simple( 0, function()
 	SLCAuth.RegisterAccess( "slc afkdontkick", "Don't kick players with this access if they are AFK" )
 	SLCAuth.RegisterAccess( "slc manageal", "Allows players change settings of SLC Auth Library" )
 	SLCAuth.RegisterAccess( "slc gamemodeconfig", "Allows players change server setting through ConVar editor" )
+	SLCAuth.RegisterAccess( "slc adminmode", "Allows players to enter admin mode" )
 end )
 --[[-------------------------------------------------------------------------
 Settings window --TODO

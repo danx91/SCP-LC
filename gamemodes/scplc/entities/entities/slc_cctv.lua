@@ -23,14 +23,20 @@ function ENT:Initialize()
 	//self:AddEFlags( EFL_FORCE_CHECK_TRANSMIT )
 end
 
-function ENT:OnTakeDamage( dmginfo )
+ENT.DestroyPenalty = 3
+function ENT:OnTakeDamage( dmg )
 	self:Remove()
 
 	local data = EffectData()
-
 	data:SetOrigin( self:GetPos() )
-
 	util.Effect( "cball_explode", data, true, true )
+
+	local attacker = dmg:GetAttacker()
+	if !IsValid( attacker ) or !attacker:IsPlayer() or !SCPTeams.HasInfo( attacker:SCPTeam(), SCPTeams.INFO_STAFF ) then return end
+
+	local n = math.min( self.DestroyPenalty, attacker:Frags() )
+	attacker:AddFrags( -n )
+	PlayerMessage( string.format( "property_dmg$%d#200,25,25", self.DestroyPenalty ), attacker )
 end
 
 function ENT:UpdateTransmitState()

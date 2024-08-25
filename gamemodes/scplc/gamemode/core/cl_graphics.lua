@@ -614,7 +614,7 @@ local function HRCSegment( x, y, direction, short, long, pct, mode )
 				x = x + short * y_dir
 			end
 
-			local t2f = pct < 1 - f and (pct - f) / (1 - 2 * f) or 1
+			local t2f = pct < 1 - f and ( pct - f ) / ( 1 - 2 * f ) or 1
 			local t2s = ( long - 2 * short ) * t2f
 
 			local t2sy = t2s * y_dir
@@ -637,12 +637,12 @@ local function HRCSegment( x, y, direction, short, long, pct, mode )
 
 			if pct > 1 - f then
 				if alt then
-					y = y + (long - 2 * short) * y_dir
+					y = y + ( long - 2 * short ) * y_dir
 				else
-					x = x + (long - 2 * short) * y_dir
+					x = x + ( long - 2 * short ) * y_dir
 				end
 
-				local t3f = pct < 1 and (pct - 1 + f) / f or 1
+				local t3f = pct < 1 and ( pct - 1 + f ) / f or 1
 				local t3s = short * t3f
 
 				local t3sx = t3s * x_dir
@@ -653,7 +653,7 @@ local function HRCSegment( x, y, direction, short, long, pct, mode )
 						surface.DrawPoly( {
 							{ x = x, y = y },
 							{ x = x, y = y + t3sy },
-							{ x = x + short * (1 - t3f) * x_dir, y = y + t3sy },
+							{ x = x + short * ( 1 - t3f ) * x_dir, y = y + t3sy },
 							{ x = x + short * x_dir, y = y }
 						} )
 					else
@@ -668,7 +668,7 @@ local function HRCSegment( x, y, direction, short, long, pct, mode )
 						surface.DrawPoly( {
 							{ x = x, y = y },
 							{ x = x + t3sx, y = y },
-							{ x = x + t3sx, y = y + short * (1 - t3f) * y_dir },
+							{ x = x + t3sx, y = y + short * ( 1 - t3f ) * y_dir },
 							{ x = x, y = y + short * y_dir }
 						} )
 					else
@@ -797,7 +797,7 @@ function draw.MultilineText( x, y, text, font, color, maxWidth, margin, dist, al
 						else
 							local max_c = string.len( cur_txt ) / cw * maxWidth
 							table.insert( final, string.sub( cur_txt, 0, max_c - 3 ).."..." )
-							//print( "LONG", string.sub( cur_txt, 0, max_c - 3 - 3).."..." )
+							//print( "LONG", string.sub( cur_txt, 0, max_c - 3 - 3 ).."..." )
 							break
 						end
 					elseif cur_txt == next_txt then
@@ -954,7 +954,7 @@ function draw.Glitch( x, y, w, h, mode, data )
 				surface.SetDrawColor( tab.color )
 			end
 
-			surface.DrawTexturedRectUV( x + step_x * (i - 1), y + tab.offset * h, step_x, h, step_u * (i - 1), 0, step_u * i, 1)
+			surface.DrawTexturedRectUV( x + step_x * ( i - 1 ), y + tab.offset * h, step_x, h, step_u * ( i - 1 ), 0, step_u * i, 1 )
 		end
 	elseif mode == GLITCH_HORIZONTAL then
 		local yseg = #data
@@ -968,7 +968,7 @@ function draw.Glitch( x, y, w, h, mode, data )
 				surface.SetDrawColor( tab.color )
 			end
 
-			surface.DrawTexturedRectUV( x + tab.offset * w, y + step_y * (i - 1), w, step_y, 0, step_v * (i - 1), 1, step_v * i )
+			surface.DrawTexturedRectUV( x + tab.offset * w, y + step_y * ( i - 1 ), w, step_y, 0, step_v * ( i - 1 ), 1, step_v * i )
 		end
 	end
 end
@@ -1100,46 +1100,3 @@ function PopFilters()
 	render.PopFilterMin()
 	render.PopFilterMag()
 end
-
-/*SURFACE_SCALE_X = 1
-SURFACE_SCALE_Y = 1
-function surface.SetScaling( x, y )
-	SURFACE_SCALE_X = x or 1
-	SURFACE_SCALE_Y = y or 1
-end
-
-SURFACE_TRANSLATE_X = 0
-SURFACE_TRANSLATE_Y = 0
-function surface.SetTranslation( x, y )
-	SURFACE_TRANSLATE_X = x or 0
-	SURFACE_TRANSLATE_Y = y or 0
-end
-
-_surfaceDrawRect = _surfaceDrawRect or surface.DrawRect
-function surface.DrawRect( x, y, w, h )
-	_surfaceDrawRect( x * SURFACE_SCALE_X + SURFACE_TRANSLATE_X, y * SURFACE_SCALE_Y + SURFACE_TRANSLATE_Y, w * SURFACE_SCALE_X, h * SURFACE_SCALE_Y )
-end
-
-_surfaceDrawTexturedRect = _surfaceDrawTexturedRect or surface.DrawTexturedRect
-function surface.DrawTexturedRect( x, y, w, h )
-	_surfaceDrawTexturedRect( x * SURFACE_SCALE_X + SURFACE_TRANSLATE_X, y * SURFACE_SCALE_Y + SURFACE_TRANSLATE_Y, w * SURFACE_SCALE_X, h * SURFACE_SCALE_Y )
-end*/
-
-/*_VGUIC = _VGUIC or vgui.Create
-VGUIREG = VGUIREG or {}
-
-
-function vgui.Create( class, parent, name )
-	local tmp = _VGUIC( class, parent, name )
-	table.insert( VGUIREG, tmp )
-	return tmp
-end
-
-function RemoveAllDerma()
-	for i = 1, #VGUIREG do
-		local v = table.remove( VGUIREG, i )
-		if IsValid( v ) then
-			v:Remove()
-		end
-	end
-end*/

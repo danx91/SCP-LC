@@ -15,6 +15,7 @@ end
 Gas System
 ---------------------------------------------------------------------------]]
 SLC_GAS = SLC_GAS or {}
+SLC_GAS_VENT = SLC_GAS_VENT or {}
 SLC_GAS_ZONES = {
 	ZONE_LCZ,
 	ZONE_HCZ,
@@ -22,15 +23,27 @@ SLC_GAS_ZONES = {
 }
 
 if SERVER then
-	function UpdateGasStatus( ply )
+	function UpdateGasStatus( reset, ply )
 		net.Start( "SLCGasZones" )
+			net.WriteBool( !!reset )
 			net.WriteTable( SLC_GAS )
+			net.WriteTable( SLC_GAS_VENT )
 		
 		if ply then
 			net.Send( ply )
 		else
 			net.Broadcast()
 		end
+	end
+
+	function EnableZoneVentilation( zone )
+		SLC_GAS_VENT[zone] = true
+		UpdateGasStatus( false  )
+	end
+
+	function DisableZoneVentilation( zone )
+		SLC_GAS_VENT[zone] = nil
+		UpdateGasStatus( false )
 	end
 
 	hook.Add( "SLCRound", "SLCGasZones", function( time )
@@ -51,22 +64,22 @@ if SERVER then
 			end )
 		end
 
-		UpdateGasStatus()
+		UpdateGasStatus( true )
 	end )
 
 	hook.Add( "PlayerReady", "SLCGasZones", function( ply )
-		UpdateGasStatus( ply )
+		UpdateGasStatus( true, ply )
 	end )
 
 	hook.Add( "SLCRoundCleanup", "SLCGasZones", function( time )
 		SLC_GAS = {}
+		SLC_GAS_VENT = {}
 
 		for k, v in pairs( SLC_GAS_ZONES ) do
 			SLC_GAS[v] = { 0, 0 }
 		end
 
-		UpdateGasStatus()
-		//print( "upd!" )
+		UpdateGasStatus( true )
 	end )
 
 	hook.Add( "PlayerPostThink", "SLCGasZones", function( ply )
@@ -76,6 +89,10 @@ if SERVER then
 
 		if ply:SCPTeam() == TEAM_SPEC or !ply:Alive() then return end
 		
+		for k, v in pairs( SLC_GAS_VENT ) do
+			if ply:IsInZone( k ) then return end
+		end
+
 		for k, v in pairs( SLC_GAS_ZONES ) do
 			if SLC_GAS[v] and SLC_GAS[v][1] > 0 and SLC_GAS[v][1] <= ct and ply:IsInZone( v ) then
 				local _, dmg, delay = GetGasPower( v )
@@ -94,6 +111,27 @@ if SERVER then
 			end
 		end
 	end )
+
+	hook.Add( "SLCFuseInstalled", "SLCGasVentilation", function( name )
+		if string.match( name, "^ez_vent_%d+$" ) then
+			for box_name, box in pairs( SLC_FUSE_BOXES ) do
+				if !string.match( box_name, "^ez_vent_%d+$" ) then continue end
+				if box:GetFuse() < box:GetRating() then return end
+			end
+
+			EnableZoneVentilation( ZONE_EZ )
+		elseif name == "hcz_106_vent" then
+			EnableZoneVentilation( ZONE_SCP106 )
+		end
+	end )
+
+	hook.Add( "SLCFuseRemoved", "SLCGasVentilation", function( name )
+		if string.match( name, "^ez_vent_%d+$" ) then
+			DisableZoneVentilation( ZONE_EZ )
+		elseif name == "hcz_106_vent" then
+			DisableZoneVentilation( ZONE_SCP106 )
+		end
+	end )
 end
 
 if CLIENT then
@@ -103,17 +141,27 @@ if CLIENT then
 		local ply = LocalPlayer()
 		if !ply:Alive() and ply:GetObserverMode() == OBS_MODE_NONE then return end
 		
+		local vent = false
 		local ct = CurTime()
 		local pct = 0
 
-		for k, v in pairs( SLC_GAS_ZONES ) do
-			if SLC_GAS[v] and SLC_GAS[v][1] > 0 and SLC_GAS[v][1] <= ct and ply:IsInZone( v ) then
-				pct = GetGasPower( v )
+		for k, v in pairs( SLC_GAS_VENT ) do
+			if ply:IsInZone( k ) then
+				vent = true
 				break
 			end
 		end
 
-		pct = math.Approach( SLC_GAS.GasPower, pct, FrameTime() * 0.75 )
+		if !vent then
+			for k, v in pairs( SLC_GAS_ZONES ) do
+				if SLC_GAS[v] and SLC_GAS[v][1] > 0 and SLC_GAS[v][1] <= ct and ply:IsInZone( v ) then
+					pct = GetGasPower( v )
+					break
+				end
+			end
+		end
+
+		pct = math.Approach( SLC_GAS.GasPower, pct, FrameTime() * ( vent and 0.15 or 0.3 ) )
 		SLC_GAS.GasPower = pct
 
 		if pct > 0 then
@@ -135,4 +183,19 @@ function GetGasPower( zone )
 
 	local pct = math.Clamp( ( CurTime() - tab[1] ) / ( tab[2] - tab[1] ), 0, 1 )
 	return pct, 1 + math.floor( 2 * pct ), 2 - 1.5 * pct
+end
+
+--[[-------------------------------------------------------------------------
+Shared Escape
+---------------------------------------------------------------------------]]
+function IsOnEscape( ply )
+	if SERVER then
+		return !!LAST_ESCAPE_LOOKUP[ply], ESCAPE_STATUS == 2
+	else
+		return ESCAPE_STATUS > 0, ESCAPE_STATUS == 2
+	end
+end
+
+function IsEscapeBlocked()
+	return ESCAPE_STATUS == 2
 end

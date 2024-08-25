@@ -2,9 +2,6 @@ AddCSLuaFile()
 
 ENT.Type 			= "anim"  
 ENT.Base 			= "base_anim"
- 
-ENT.Spawnable			= false
-ENT.AdminSpawnable		= false
 
 ENT.Damage = 0
 ENT.PoisonDamage = 0
@@ -24,76 +21,89 @@ function ENT:Initialize()
 	end
 
 	local ct = CurTime()
-	self.RemoveTime = ct + dur
+	self.DieTime = ct + dur
 	self.ArmTime = ct + 1
 
 	self:SetModel( "models/hunter/plates/plate.mdl" )
-	self:PhysicsInit( SOLID_NONE )
-	self:SetMoveType( MOVETYPE_NONE )
 
-	if CLIENT then
-		self.Particles = {}
+	if SERVER then
+		self:PhysicsInit( SOLID_NONE )
+		self:SetMoveType( MOVETYPE_NONE )
 
-		local pos = self:GetPos()
-		local size = self:GetSize()
-		local ang = Angle( 0, 0, 0 )
-		local up = Vector( 0, 0, 1 )
-		local rot = 360 / self.ParticleNum
+		return
+	end
 
-		for i = 1, self.ParticleNum do
-			self.Particles[i] = { pos = pos + ang:Forward() * 64 * size, roll = math.random() * math.pi * 2 - math.pi, delta = ( math.random( 0, 1 ) * 2 - 1 ) * 0.08 }
-			ang:RotateAroundAxis( up, rot )
-		end
+	self.Particles = {}
+
+	local pos = self:GetPos()
+	local size = self:GetSize()
+	local ang = Angle( 0, 0, 0 )
+	local up = Vector( 0, 0, 1 )
+	local rot = 360 / self.ParticleNum
+
+	for i = 1, self.ParticleNum do
+		self.Particles[i] = { pos = pos + ang:Forward() * 64 * size, roll = math.random() * math.pi * 2 - math.pi, delta = ( math.random( 0, 1 ) * 2 - 1 ) * 0.08 }
+		ang:RotateAroundAxis( up, rot )
 	end
 end
 
-ENT.NDamageTick = 0
+ENT.NextDamageTick = 0
 function ENT:Think()
-	if SERVER then
-		local ct = CurTime()
-		
-		if ct >= self.RemoveTime then
-			self:Remove()
-			return
+	if CLIENT then return end
+
+	local ct = CurTime()
+	
+	if self.DieTime <= ct then
+		self:Remove()
+		return
+	end
+
+	if self.ArmTime > ct or self.NextDamageTick > ct then return end
+
+	self.NextDamageTick = self.NextDamageTick + 0.5
+
+	if self.NextDamageTick < ct then
+		self.NextDamageTick = ct + 0.5
+	end
+
+	local owner = self:GetOwner()
+	local wep = owner:GetSCPWeapon()
+
+	local owner_valid = IsValid( wep ) and wep:CheckOwner()
+	local pos = self:GetPos()
+	local radius = ( 64 * self:GetSize() ) ^ 2
+
+	for i, v in ipairs( player.GetAll() ) do
+		if v:GetPos():DistToSqr( pos ) > radius or v:CheckHazardProtection( 50 ) then continue end
+
+		if owner_valid and !wep:CanTargetPlayer( v ) then continue end
+		if !owner_valid then
+			local t = v:SCPTeam()
+			if t == TEAM_SPEC or SCPTeams.IsAlly( TEAM_SCP, t ) then continue end
+		end
+	
+		v:ApplyEffect( "poison", owner, self.PoisonDamage )
+
+		if self.Damage <= 0 then continue end
+
+		local dmg = DamageInfo()
+		dmg:SetDamageType( DMG_POISON )
+		dmg:SetDamage( self.Damage )
+
+		if owner_valid then
+			dmg:SetAttacker( owner )
 		end
 
-		if self.ArmTime <= ct and self.NDamageTick <= ct then
-			self.NDamageTick = ct + 0.5
-
-			local owner = self:GetOwner()
-			local owner_valid = IsValid( owner )
-			local owner_team = owner_valid and owner:SCPTeam()
-			for i, v in ipairs( ents.FindInSphere( self:GetPos(), 64 * self:GetSize() ) ) do
-				if IsValid( v ) and v:IsPlayer() then
-					local t = v:SCPTeam()
-					if t != TEAM_SPEC and ( !owner_team or !SCPTeams.IsAlly( owner_team, t ) ) then
-						v:ApplyEffect( "poison", owner, self.PoisonDamage )
-
-						if self.Damage > 0 then
-							local dmg = DamageInfo()
-							dmg:SetDamageType( DMG_POISON )
-							dmg:SetDamage( self.Damage )
-
-							if owner_valid then
-								dmg:SetAttacker( owner )
-							end
-
-							v:TakeDamageInfo( dmg )
-						end
-					end
-				end
-			end
-		end
+		v:TakeDamageInfo( dmg )
 	end
 end
 
 function ENT:OnRemove()
-	if CLIENT then
-		for i = 1, self.ParticleNum do
-			local data = self.Particles[i]
-			if data and data.particle then
-				data.particle:SetDieTime( 0 )
-			end
+	if SERVER then return end
+
+	for i, v in ipairs( self.Particles ) do
+		if v.particle then
+			v.particle:SetDieTime( 0 )
 		end
 	end
 end

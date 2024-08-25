@@ -71,9 +71,31 @@ function AddTables( tab1, tab2 )
 		end
 	end
 end
+--[[-------------------------------------------------------------------------
+Roman numbers
+---------------------------------------------------------------------------]]
+local roman_values = { 1, 4, 5, 9, 10, 40, 50, 90, 100, 400, 500, 900, 1000 }
+local roman_digits = { "I", "IV", "V", "IX", "X", "XL", "L", "XC", "C", "CD", "D", "CM", "M" }
+local roman_cache = {}
+
+function ToRoman( num )
+	if roman_cache[num] then
+		return roman_cache[num]
+	end
+
+	local result = ""
+
+	for i = 13, 1, -1 do
+		result = result..string.rep( roman_digits[i], math.floor( num / roman_values[i] ) )
+		num = num % roman_values[i]
+	end
+
+	roman_cache[num] = result
+	return result
+end
 
 --[[-------------------------------------------------------------------------
-List
+List (double linked list)
 ---------------------------------------------------------------------------]]
 local function list_iter( tab )
 	local cur = tab[1]
@@ -93,11 +115,11 @@ function List:New()
 	}, { __index = List } )
 end
 
-function List:PushBack( item )
+function List:PushFront( item )
 	local _head = self.head
 
 	self.head = {
-		prev = _head,
+		next = _head,
 		data = item
 	}
 
@@ -108,18 +130,18 @@ function List:PushBack( item )
 	end
 
 	if _head then
-		_head.next = self.head
+		_head.prev = self.head
 	end
 
 	return self.size
 end
 
-function List:PushFront( item )
+function List:PushBack( item )
 	local _tail = self.tail
 
 	self.tail = {
-		data = item,
-		next = _tail
+		prev = _tail,
+		data = item
 	}
 
 	self.size = self.size + 1
@@ -129,21 +151,21 @@ function List:PushFront( item )
 	end
 
 	if _tail then
-		_tail.prev = self.tail
+		_tail.next = self.tail
 	end
 
 	return self.size
 end
 
-function List:PopBack()
+function List:PopFront()
 	if !self.head then return end
 
 	local item = self.head
 
-	self.head = self.head.prev
+	self.head = self.head.next
 
 	if self.head then
-		self.head.next = nil
+		self.head.prev = nil
 	end
 
 	self.size = self.size - 1
@@ -151,18 +173,18 @@ function List:PopBack()
 	if self.size == 1 then self.tail = self.head end
 	if self.size == 0 then self.tail = nil end
 
-	return item
+	return item.data
 end
 
-function List:PopFront()
+function List:PopBack()
 	if !self.tail then return end
 
 	local item = self.tail
 
-	self.tail = self.tail.next
+	self.tail = self.tail.prev
 
 	if self.tail then
-		self.tail.prev = nil
+		self.tail.next = nil
 	end
 
 	self.size = self.size - 1
@@ -170,7 +192,7 @@ function List:PopFront()
 	if self.size == 1 then self.head = self.tail end
 	if self.size == 0 then self.head = nil end
 
-	return item
+	return item.data
 end
 
 function List:Size()
@@ -186,7 +208,7 @@ function List:Tail()
 end
 
 function List:Iter()
-	return list_iter, { self.tail }
+	return list_iter, { self.head }
 end
 
 setmetatable( List, { __call = List.New } )
@@ -245,6 +267,8 @@ function FindInCylinder( orig, radius, zmin, zmax, filter, mask, feed )
 		end
 	end
 
+	fic_trace.start = orig
+
 	for i, v in ipairs( feed or ents.GetAll() ) do
 		if filter and !filter[v:GetClass()] then continue end
 		local pos = v:GetPos() + v:OBBCenter()
@@ -254,15 +278,12 @@ function FindInCylinder( orig, radius, zmin, zmax, filter, mask, feed )
 		if dist.x * dist.x + dist.y * dist.y > radius then continue end
 
 		if mask then
-			fic_trace.start = orig
 			fic_trace.endpos = pos
 			fic_trace.mask = mask
 
 			util.TraceLine( fic_trace )
 
-			if fic_trace.Hit then
-				continue
-			end
+			if fic_trace.Hit then continue end
 		end
 
 		index = index + 1

@@ -1,9 +1,9 @@
 --[[-------------------------------------------------------------------------
 Language: Polish
-Date: 12.08.2021
-Translated by: Slusher, alski
-Updated by: Zaptyp (https://steamcommunity.com/id/Zaptyp/)
-Edited again by: Slusher (https://steamcommunity.com/id/Slusheer/)
+Date: 30.07.2024
+Translated by: 
+Slusher (https://steamcommunity.com/id/Slusheer/)
+alski (https://steamcommunity.com/profiles/76561198179611206/)
 ---------------------------------------------------------------------------]]
 
 local lang = {}
@@ -15,8 +15,8 @@ lang.self_en = "Polish"
 NRegistry
 ---------------------------------------------------------------------------]]
 lang.NRegistry = {
-	scpready = "Możesz zostać wybrany jako SCP w następnej rundzie",
-	scpwait = "Musisz poczekać %i rund aby zagrać jako SCP",
+	scpready = "Możesz zostać SCP w następnej rundzie (%ix szansa)",
+	scpwait = "Musisz poczekać %i rundy aby zagrać jako SCP",
 	abouttostart = "Gra rozpocznie się za %i sekund!",
 	kill = "Otrzymujesz %d punktów za zabójstwo %s: %s!",
 	kill_n = "Zabiłeś %s: %s!",
@@ -66,11 +66,20 @@ lang.NRegistry = {
 	goc_detonation = "Detonacja głowic ALPHA i OMEGA za %i sekund. Natychmiast udaj się do punktu ewakuacji albo schronu!",
 	fuserating = "Potrzebujesz mocniejszego bezpiecznika!",
 	nofuse = "Aby móc korzystać z tego urządzenia, potrzebny jest bezpiecznik",
+	cantremfuse = "Bezpiecznik przegrzewa się – jest zbyt gorący, aby go wyjąć!",
+	fusebroken = "Bezpiecznik jest uszkodzony i przyspawany w miejscu!",
 	nopower = "Nacisnąłeś przycisk, ale nic się nie stało...",
 	nopower_omni = "Przyłożyłeś omnitool do czytnika, ale nic się nie stało...",
 	docs = "Otrzymałeś %i punktów za ucieczkę z %i dokumentami",
 	docs_pick = "Zdobyłeś cenne dokumenty Fundacji SCP - ucieknij z nimi, aby otrzymać nagrodę!",
 	gaswarn = "Dekontaminacja %s za 60 sekund",
+	queue_alive = "Jesteś żywy",
+	queue_not = "Nie jesteś w kolejce do wsparcia!",
+	queue_low = "Znajdujesz się w kolejce wsparcia o niskim priorytecie!",
+	queue_pos = "Twoja pozycja w kolejce wsparcia: %i",
+	support_optout = "Nie pojawiłeś się jako wsparcie, ponieważ zrezygnowałeś. Możesz to zmienić w !settings",
+	property_dmg = "Straciłeś %d punktów za zniszczenie własności Fundacji!",
+	unknown_cmd = "Nieznane polecenie: %s"
 }
 
 lang.NFailed = "Nie udało się uzyskać dostępu do NRegistry z kluczem: %s"
@@ -102,6 +111,8 @@ lang.NCRegistry = {
 	stat_escorts = "Graczy odeskortowano: %i",
 	stat_023 = "Nagłe zgony spowodowane przez SCP 023: %i",
 	stat_049 = "Gracze \"wyleczeni\" przez SCP 049: %i",
+	stat_0492 = "Gracze zmasakrowani przez zombie: %i",
+	stat_058 = "Gracze zabici przez SCP-058: %i",
 	stat_066 = "Gracze zabici przez głośną muzykę: %i",
 	stat_096 = "Gracze zabici przez SCP 096: %i",
 	stat_106 = "Gracze przeteleportowani do wymiaru łuzowego: %i",
@@ -119,7 +130,6 @@ lang.NCRegistry = {
 }
 
 lang.NCFailed = "Nie udało się uzyskać dostępu do NCRegistry z kluczem: %s"
-
 
 --[[-------------------------------------------------------------------------
 Main menu
@@ -150,7 +160,8 @@ Animacje menu są stworzone przez Madow
 
 Modele:
 	Alski - strażnicy, omnitool, wieżyczka i nie tylko
-	
+	Slusher - SCP-689, drzwi, tablet i nie tylko
+
 Materiały:
 	Foer - Logo trybu i kilka innych grafik
 	SCP Containment Breach
@@ -180,6 +191,7 @@ hud.pickup = "Podnieś"
 hud.class = "Klasa"
 hud.team = "Drużyna"
 hud.class_points = "Punkty Klas"
+hud.prestige_points = "Punkty Prestiżu"
 hud.hp = "HP"
 hud.stamina = "ENERGIA"
 hud.sanity = "PSYCHIKA"
@@ -188,27 +200,35 @@ hud.extra_hp = "Dodatkowe HP"
 
 hud.escaping = "Uciekanie..."
 hud.escape_blocked = "Ucieczka zablokowana!"
+hud.waiting = "Oczekiwanie na graczy"
 
 --[[-------------------------------------------------------------------------
 EQ
 ---------------------------------------------------------------------------]]
-lang.eq_lmb = "LPM - Wybierz"
-lang.eq_rmb = "PPM - Upuść"
-lang.eq_hold = "Przytrzymaj LPM - Przenieś"
-lang.eq_vest = "Pancerz"
-lang.eq_key = "Naciśnij '%s' aby otworzyć EQ"
+local eq = {}
+lang.EQ = eq
+
+eq.eq = "Ekwipunek"
+eq.actions = "Akcje"
+eq.backpack = "Plecak"
+eq.id = "To jest Twoje ID, pokaż je innym, aby ujawnić swoją klasę i drużynę"
+eq.no_id = "Nie posiadasz ID"
+eq.class = "Twoja klasa: "
+eq.team = "Twoja drużyna: "
+eq.p_class = "Twoja fałszywa klasa: "
+eq.p_team = "Twoja fałszywa drużyna: "
+eq.allies = "Twoi sojusznicy:"
+eq.durability = "Wytrzymałość: "
+eq.mobility = "Mobilność: "
+eq.weight = "Waga: "
+eq.weight_unit = "KG"
+eq.multiplier = "Mnożnik obrażeń"
+eq.count = "Ilość"
+
 lang.eq_unknown = "Nieznany przedmiot"
-lang.eq_backpack = "Plecak"
-lang.eq_swapping = "Zamiana przedmiotów"
-
-lang.info = "Informacje"
-lang.author = "Autor"
-lang.mobility = "Mobilność"
-lang.weight = "Waga"
-lang.vest_multiplier = "Mnożnik obrażeń"
 lang.durability = "Wytrzymałość"
+lang.info = "Informacje"
 
-lang.weight_unit = "kg"
 lang.eq_buttons = {
 	escort = "Eskortuj",
 	gatea = "Detonuj Gate A"
@@ -264,7 +284,6 @@ effects.radiation = "Radiacja"
 effects.deep_wounds = "Głębokie rany"
 effects.poison = "Trucizna"
 effects.heavy_bleeding = "Silne krwawienie"
-effects.weak_bleeding = "Słabe krwawienie"
 effects.spawn_protection = "Ochrona początkowa"
 effects.fracture = "Złamanie"
 effects.decay = "Rozkład"
@@ -274,6 +293,11 @@ effects.expd_rubber_bones = "Eksperymentalny Efekt"
 effects.expd_stamina_tweaks = "Eksperymentalny Efekt"
 effects.expd_revive = "Eksperymentalny Efekt"
 effects.expd_recovery = "Regeneracja"
+effects.electrical_shock = "Porażenie prądem"
+effects.scp009 = "SCP-009"
+effects.scp106_withering = "Obumieranie"
+effects.scp966_effect = "Wyczerpanie"
+effects.scp966_mark = "Znak Śmierci"
 
 --[[-------------------------------------------------------------------------
 Class viewer
@@ -282,13 +306,19 @@ lang.classviewer = "Katalog klas"
 lang.preview = "Podgląd"
 lang.random = "Losowo"
 lang.buy = "Kup"
-lang.refound = "Zwróć"
+lang.buy_prestige = "Kup za Prestiż"
+lang.refund = "Zwróć"
+lang.prestige = "Prestiż"
+lang.prestige_warn = "Zaraz osiągniesz prestiż. Ten proces zresetuje Twój poziom, XP, punkty odblokowania klasy i odblokowane klasy, a ty otrzymasz 1 punkt prestiżu.\n\nOSTRZEŻENIE: Tej akcji nie można cofnąć!"
 lang.none = "Brak"
-lang.refounded = "Wszystkie usunięte klasy zostały zwrócone. Otrzymałeś %d punktów prestiżu."
+lang.refunded = "Wszystkie usunięte klasy zostały zwrócone. Otrzymałeś %d punktów prestiżu."
 lang.tierlocked = "Musisz kupić każdą klasę z poprzedniego tieru, aby odblokować klasy z tego tieru (również klasy z innych kategorii)"
+lang.xp = "XP"
+lang.level = "Poziom"
 
 lang.details = {
 	details = "Szczegóły",
+	prestige = "Nagroda za Prestiż",
 	name = "Nazwa",
 	tier = "Tier",
 	team = "Drużyna",
@@ -371,6 +401,8 @@ lang.settings = {
 	panels = {
 		binds = "Klawiatura",
 		general_config = "Ogólne ustawienia",
+		hud_config = "Konfiguracja HUD-u",
+		performance_config = "Wydajność",
 		scp_config = "Ustawienia SCP",
 		skins = "Skórki GUI",
 		reset = "Reset trybu gry",
@@ -392,14 +424,28 @@ lang.settings = {
 		scp_hud_overload_cd = "Pokaż czas odnowienia przeciążenia",
 		any_button_close_search = "Zamknij menu przeszukania dowolnym klawiszem",
 		hud_hitmarker = "Hitmarkery",
+		hud_hitmarker_mute = "Wycisz hitmarkery",
 		hud_damage_indicator = "Wskaźniki obrażeń",
 		scp_hud_dmg_mod = "Pokaż modyfikator obrażeń SCP",
 		scp_nvmod = "Zwiększ jasność ekranu podczas grania jako SCP",
 		dynamic_fov = "Dynamiczny FOV",
 		hud_draw_crosshair = "Pokaż celownik",
 		hud_hl2_crosshair = "Celownik z HL2",
+		hud_lq = "Obrazy i wielokąty o niskiej jakości (jeśli to możliwe)",
+		hud_image_poly = "Obrazy zamiast wielokątów (jeśli to możliwe)",
+		hud_windowed_mode = "Przesunięcie HUD (dla trybu okienkowego)",
+		hud_avoid_roman = "Unikaj cyfr rzymskich",
+		hud_escort = "Pokaż strefy eskorty",
+		hud_timer_always = "Zawsze pokazuj czas",
+		hud_stamina_always = "Zawsze pokazuj wytrzymałość",
+		eq_instant_desc = "Natychmiastowy opis przedmiotu w EQ",
+		scp106_spots = "Zawsze pokazuj miejsca teleportacji SCP-106",
 
+		cvar_slc_support_optout = "Zrezygnuj z grania jako wsparcie",
 		cvar_slc_language = "Język",
+		cvar_slc_language_options = {
+			default = "Domyślny",
+		},
 		cvar_slc_hud_scale = "Skala HUD",
 		cvar_slc_hud_scale_options = {
 			normal = "Normalna",
@@ -409,6 +455,17 @@ lang.settings = {
 			vsmall = "Bardzo mała",
 			imretard = "Minimalna",
 		},
+		
+		hud_skin_main = "Główny",
+		hud_skin_scoreboard = "Tablica wyników",
+		hud_skin_hud = "HUD",
+		hud_skin_eq = "Ekwipunek",
+
+		hud_skin_main_options = {
+			custom = "Niestandardowy",
+			default = "Domyślny",
+			legacy = "Przestarzały",
+		}
 	},
 }
 
@@ -433,7 +490,7 @@ lang.gamemode_config = {
 --[[-------------------------------------------------------------------------
 Scoreboard
 ---------------------------------------------------------------------------]]
-lang.unconnected = "Niepodłączony"
+lang.unconnected = "Niepołączony"
 
 lang.scoreboard = {
 	name = "Tablica wyników",
@@ -442,6 +499,7 @@ lang.scoreboard = {
 	level = "Poziom",
 	score = "Wynik",
 	ranks = "Rangi",
+	badges = "Odznaki",
 }
 
 lang.ranks = {
@@ -523,12 +581,16 @@ Generic
 lang.nothing = "Nic"
 lang.exit = "Wyjdź"
 lang.default = "Domyślny"
+lang.yes = "Tak"
+lang.no = "Nie"
 
 --[[-------------------------------------------------------------------------
 Misc
 ---------------------------------------------------------------------------]]
 local misc = {}
 lang.MISC = misc
+
+misc.escort_zone = "Strefa eskorty"
 
 misc.content_checker = {
 	title = "Zawartość trybu",
@@ -564,6 +626,13 @@ misc.alpha_warhead = {
 	ready = "Głowica ALPHA jest bezczynna\n\nKody zaakceptowane!\nOczekiwanie na aktywację...",
 	no_remote = "Aktywacja głowicy ALPHA nie powiodła się\n\nNie udało się nawiązać połączenia z głowicą!\t",
 	active = "Głowica ALPHA aktywowana\n\nNatychmiastowo przystąp do ewakuacji!\nDetonacja za %.2fs",
+}
+
+misc.intercom = {
+	name = "Interkom",
+	idle = "Interkom jest w gotowości",
+	active = "Interkom jest aktywny\n\nPozostały czas: %is",
+	cooldown = "Interkom odnawia się\n\nPozostały czas: %is",
 }
 
 misc.zones = {
@@ -608,7 +677,6 @@ To problem z gmodem i nie mogę go naprawić. Aby to naprawić, musisz ręcznie 
 Przejdź do 'steamapps/common/GarrysMod/garrysmod/cache/workshop/resource/fonts' i usuń następujące pliki: 'impacted.ttf', 'ds-digital.ttf' and 'unispace.ttf']],
 	ok = "OK"
 }
-
 --[[-------------------------------------------------------------------------
 Vests
 ---------------------------------------------------------------------------]]
@@ -666,13 +734,16 @@ lang.UNK_CLASSES = {
 	CLASSD = "Nieznana Klasa D",
 	SCI = "Nieznany Naukowiec",
 	GUARD = "Nieznany Ochroniarz",
+	MTF = "Nieznany MTF",
+	CI = "Nieznany CI",
+	GOC = "Nieznany GOC"
 }
-
 
 local classes = {}
 lang.CLASSES = classes
 
 classes.unknown = "Nieznana"
+classes.spectator = "Obserwator"
 
 classes.SCP023 = "SCP 023"
 classes.SCP049 = "SCP 049"
@@ -696,12 +767,14 @@ classes.kleptod = "Kleptoman Klasy D"
 classes.contrad = "Klasa D z kontrabandą"
 classes.ciagent = "Agent CI"
 classes.expd = "Eksperymentalna Klasa D"
+classes.classd_prestige = "Krawiec Klasy D"
 
 classes.sciassistant = "Asystent naukowca"
 classes.sci = "Naukowiec"
 classes.seniorsci = "Starszy naukowiec"
 classes.headsci = "Główny naukowiec"
 classes.contspec = "Specjalista zabezpieczeń"
+classes.sci_prestige = "Uciekinier klasy D"
 
 classes.guard = "Ochroniarz"
 classes.chief = "Szef ochrony"
@@ -711,6 +784,9 @@ classes.specguard = "Specjalista ochrony"
 classes.guardmedic = "Ochroniarz sanitariusz"
 classes.tech = "Technik ochrony"
 classes.cispy = "Szpieg CI"
+classes.lightcispy = "Lekki Szpieg CI"
+classes.heavycispy = "Ciężki Szpieg CI"
+classes.guard_prestige = "Inżynier Ochrony"
 
 classes.ntf_1 = "MTF NTF - PM"
 classes.ntf_2 = "MTF NTF - STRZELBA"
@@ -723,6 +799,7 @@ classes.alpha1sniper = "Strzelec Wyborowy MTF Alfa-1"
 classes.alpha1medic = "Medyk MTF Alpha-1"
 classes.alpha1com = "Dowódca MTF Alpha-1"
 classes.ci = "Chaos Insurgency"
+classes.cisniper = "Snajper Chaos Insurgency"
 classes.cicom = "Dowódca Chaos Insurgency"
 classes.cimedic = "Medyk Chaos Insurgency"
 classes.cispec = "Specjalista Chaos Insurgency"
@@ -755,6 +832,10 @@ local generic_guard = [[- Uratuj naukowców
 - Zlikwiduj wszystkie obiekty Klasy D i SCP
 - Słuchaj swojego przełożonego]]
 
+local generic_cispy = [[- Udawaj, że jesteś ochroniarzem
+- Pomóż pozostałemu personelowi klasy D
+- Sabotażuj działania ochrony]]
+
 local generic_ntf = [[- Dostań się do placówki
 - Pomóż pozostałym pracownikom w środku
 - Nie pozwól uciec obiektom Klasy D i SCP]]
@@ -784,6 +865,10 @@ lang.CLASS_OBJECTIVES = {
 - Unikaj personelu i obiektów SCP
 - Przeszedłeś dziwne eksperymenty]],
 
+	classd_prestige = [[- Ucieknij z placówki
+- Unikaj personelu i obiektów SCP
+- Możesz kraść ubrania z martwych ciał]],
+
 	sciassistant = generic_sci,
 
 	sci = generic_sci,
@@ -793,6 +878,10 @@ lang.CLASS_OBJECTIVES = {
 	headsci = generic_sci,
 
 	contspec = generic_sci,
+
+	sci_prestige = [[- Ucieknij z placówki
+- Unikaj personelu i obiektów SCP
+- Ukradłeś ubrania i identyfikator naukowca]],
 
 	guard = generic_guard,
 
@@ -814,15 +903,21 @@ lang.CLASS_OBJECTIVES = {
 - Zlikwiduj wszystkie obiekty Klasy D i SCP
 - Wspieraj innych ochroniarzy swoją wieżyczką]],
 
-	cispy = [[- Udawaj ochroniarza
-- Pomóż Personelowi Klasy D
-- Sabotuj ochroniarzy]],
+cispy = generic_cispy,
 
-	ntf_1 = generic_ntf,
+lightcispy = generic_cispy,
 
-	ntf_2 = generic_ntf,
+heavycispy = generic_cispy,
 
-	ntf_3 = generic_ntf,
+guard_prestige = [[- Uratuj naukowców
+- Zlikwiduj wszystkie obiekty Klasy D i SCP
+- Możesz tymczasowo zablokować drzw]],
+
+ntf_1 = generic_ntf,
+
+ntf_2 = generic_ntf,
+
+ntf_3 = generic_ntf,
 
 	ntfmedic = [[- Pomóż personelowi wewnątrz placówki
 - Nie pozwól uciec obiektom Klasy D i SCP
@@ -856,6 +951,10 @@ lang.CLASS_OBJECTIVES = {
 - Wyeliminuj personel placówki
 - Słuchaj swojego przełożonego]],
 
+	cisniper = [[- Pomóż Personelowi Klasy D
+- Wyeliminuj personel placówki
+- Ochroniaj swój zespół od tyłu]],
+
 	cicom = [[- Pomóż Personelowi Klasy D
 - Wyeliminuj personel placówki
 - Wydawaj rozkazy innym sojusznikom]],
@@ -868,7 +967,7 @@ lang.CLASS_OBJECTIVES = {
 - Wspieraj CI swoim działkiem
 - Słuchaj swojego przełożonego]],
 
-ciheavy = [[- Pomóż Personelowi Klasy D
+	ciheavy = [[- Pomóż Personelowi Klasy D
 - Zapewniaj ogień osłaniający
 - Słuchaj swojego przełożonego]],
 
@@ -971,7 +1070,7 @@ Wytrzymałość: Bardzo wysoka
 Zwinność: Wysoka
 Potencjał bojowy: Średni
 Czy może uciec: Nie
-Czy może eskortować: Tylko klase D
+Czy może eskortować: Tylko klasę D
 Eskortowany przez: Nikogo
 
 Przegląd:
@@ -982,12 +1081,26 @@ Uzbrojony w paralizator. Jako agent CI udziel pomocy klasie D i współpracuj z 
 Wytrzymałość: ?
 Zwinność: ?
 Potencjał bojowy: ?
-Czy może uciec: Nie
-Czy może eskortować: Tylko klase D
-Eskortowany przez: Nikogo
+Czy może uciec: Tak
+Czy może eskortować: Nie
+Eskortowany przez: CI
 
 Przegląd:
 Klasa, która przeszła kilka dziwnych eksperymentów wewnątrz placówki. Kto wie, co było przedmiotem ty badań...
+]],
+
+	classd_prestige = [[Poziom trudności: Trudny
+Wytrzymałość: Zwykła
+Zwinność: Zwykła
+Potencjał bojowy: Wysoki
+Czy może uciec: Tak
+Czy może eskortować: Nie
+Eskortowany przez: CI
+
+Przegląd:
+Wygląda jak klasa podstawowa, ale ma możliwość kradzieży ubrań z martwych ciał. Współpracuj z innymi, aby stawić czoła obiektom SCP i personelowi obiektu. Członkowie CI mogą Cię eskortować.
+
+Pomysłodawca: Mr.Kiełbasa (zwycięzca konkursu)
 ]],
 
 	sciassistant = [[Poziom trudności: Średni
@@ -1048,6 +1161,20 @@ Eskortowany przez: Ochronę, Wsparcie MTF
 
 Przegląd:
 Jeden z naukowców o wysokiej użyteczności i wysokim HP, ma również najwyższy poziom dostępu. Współpracuj z personelem placówki i trzymaj się z dala od obiektów SCP. Możesz być eskortowany przez oddział MTF.
+]],
+
+sci_prestige = [[Poziom trudności: Trudny
+Wytrzymałość: Zwykła
+Zwinność: Zwykła
+Potencjał bojowy: Średni
+Czy może uciec: Tak
+Czy może eskortować: Nie
+Eskortowany przez: CI
+
+Przegląd:
+Uciekinier klasy D, który włamał się do szafy jakiegoś naukowca i ukradł ubrania oraz dowód osobisty. Udawaj naukowca i współpracuj z klasą D i CI.
+
+Pomysłodawca: Artieusz (zwycięzca konkursu)
 ]],
 
 	guard = [[Poziom trudności: Łatwy
@@ -1139,11 +1266,49 @@ Wytrzymałość: Zwykła
 Zwinność: Wysoka
 Potencjał bojowy: Średni
 Czy może uciec: Nie
-Czy może eskortować: Tylko klase D
+Czy może eskortować: Tylko klasę D
 Eskortowany przez: Nikogo
 
 Przegląd:
 Szpieg CI. Wysoka użyteczność. Spróbuj wtopić się w ochroniarzy i pomóż klasie D.
+]],
+
+lightcispy = [[Poziom trudności: Bardzo Trudny
+Wytrzymałość: Niska
+Zwinność: Wysoka
+Potencjał bojowy: Niski
+Czy może uciec: Nie
+Czy może eskortować: Tylko klasę D
+Eskortowany przez: Nikogo
+
+Przegląd:
+Lekki szpieg CI. Wysoka użyteczność. Spróbuj wmieszać się w grupę ochroniarzy i pomóc klasie D.
+]],
+
+	heavycispy = [[Poziom trudności: Bardzo Trudny
+Wytrzymałość: Wysoka
+Zwinność: Niska
+Potencjał bojowy: Wysoki
+Czy może uciec: Nie
+Czy może eskortować: Class D
+Eskortowany przez: Nikogo
+
+Przegląd:
+Ciężki szpieg CI. Niższa użyteczność, lepszy pancerz i większe zdrowie. Spróbuj wmieszać się w grupę ochroniarzy i pomóc klasie D.
+]],
+
+	guard_prestige = [[Poziom trudności: Trudny
+Wytrzymałość: Zwykła
+Zwinność: Zwykła
+Potencjał bojowy: Wysoki
+Czy może uciec: Nie
+Czy może eskortować: Scientists
+Eskortowany przez: Nikogo
+
+Przegląd:
+Jeden ze strażników. Posiada urządzenie, które może tymczasowo zablokować drzwi w ich obecnym stanie. Wykorzystaj swoją broń i narzędzia, aby pomóc innym członkom personelu oraz zabić SCP i klasę D. Możesz eskortować Naukowców.
+
+Pomysłodawca: F"$LAYER (zwycięzca konkursu)
 ]],
 
 	ntf_1 = [[Poziom trudności: Średni
@@ -1271,11 +1436,23 @@ Wytrzymałość: Wysoka
 Zwinność: Wysoka
 Potencjał bojowy: Średni
 Czy może uciec: Nie
-Czy może eskortować: Tylko klase D
+Czy może eskortować: Tylko klasę D
 Eskortowany przez: Nikogo
 
 Przegląd:
 Jednostka Rebelii Chaosu. Wejdź do placówki, pomóż klasie D i zabij personel placówki.
+]],
+
+cisniper = [[Poziom trudności: Średni
+Wytrzymałość: Zwykła
+Zwinność: Wysoka
+Potencjał bojowy: Wysoki
+Czy może uciec: Nie
+Czy może eskortować: Tylko klasę D
+Eskortowany przez: Nikogo
+
+Przegląd:
+Jednostka Rebelii Chaosu. Wejdź do obiektu, pomóż klasie D i zabij personel obiektu. Osłaniaj swój zespół.
 ]],
 
 	cicom = [[Poziom trudności: Średni
@@ -1283,7 +1460,7 @@ Wytrzymałość: Bardzo wysoka
 Zwinność: Wysoka
 Potencjał bojowy: Wysoki
 Czy może uciec: Nie
-Czy może eskortować: Tylko klase D
+Czy może eskortować: Tylko klasę D
 Eskortowany przez: Nikogo
 
 Przegląd:
@@ -1295,7 +1472,7 @@ Wytrzymałość: Wysoka
 Zwinność: Wysoka
 Potencjał bojowy: Normalny
 Czy może uciec: Nie
-Czy może eskortować: Tylko klase D
+Czy może eskortować: Tylko klasę D
 Eskortowany przez: Nikogo
 
 Przegląd:
@@ -1307,7 +1484,7 @@ Wytrzymałość: Średnio-wysoka
 Zwinność: Średnio-wysoka
 Potencjał bojowy: Wysoki
 Czy może uciec: Nie
-Czy może eskortować: Tylko klase D
+Czy może eskortować: Tylko klasę D
 Eskortowany przez: Nikogo
 
 Przegląd:
@@ -1319,7 +1496,7 @@ Wytrzymałość: Średnio-wysoka
 Zwinność: Średnio-wysoka
 Potencjał bojowy: Bardzo wysoki
 Czy może uciec: Nie
-Czy może eskortować: Tylko klase D
+Czy może eskortować: Tylko klasę D
 Eskortowany przez: Nikogo
 
 Przegląd:
@@ -1362,149 +1539,24 @@ Przegląd:
 Podstawowy żołnierz GOC. Użyj swojego tableta, aby znaleźć urządzenie GOC a następnie dostarcz je i aktywuj. Po pomyślnym aktywowaniu ucieknij do schronu. Posiadasz granaty dymne.
 ]],
 
-	SCP023 = [[Poziom trudności: Trudny
-Wytrzymałość: Niska
-Zwinność: Wysoka
-Obrażenia: Natychmiast zabija
-
-Przegląd:
-Jeśli ktoś cię zobaczy, zostanie umieszczony na Twojej liście. Raz na jakiś czas teleportujesz się do jednego gracza z listy i spalasz go na śmierć. Możesz stawiać swojego klona.
-]],
-
-	SCP049 = [[Poziom trudności: Trudny
-Wytrzymałość: Niska
-Zwinność: Wysoka
-Obrażenia: Natychmiast zabija po 3 atakach
-
-Przegląd:
-Zaatakuj gracza 3 razy, aby go zabić. Możesz tworzyć zombie z ciał (klawisz przeładowania).
-]],
-
-SCP0492 = [[Ogólne:
-Zombie stworzony przez SCP-049. Występuje jako jeden z poniższych rodzajów:
+SCP0492 = [[Ogólnie:
+Zombie stworzony przez SCP-049. Występuje w jednym z następujących typów:
 
 Normalny zombie:
-Poziom trudności: Niski   |  Wytrzymałość: Średnia
-Zwinność: Średnia         |  Obrażenia: Średnie / Wysokie
-Standardowy zombie ze zrównoważonymi statystykami
+Trudność: Łatwa | Wytrzymałość: Zwykła | Zwinność: Zwykła | Obrażenia: Zwykłe
+Przyzwoity wybór ze zrównoważonymi statystykami
 
-Lekki zombie:
-Poziom trudności: Średni  |  Wytrzymałość: Niska
-Zwinność: Wysoka          |  Obrażenia: Średnie / Wysokie
-Szybsza wersja zombie, posiada mniej HP i obrażeń
+Zabójca zombie:
+Trudność: Średnia | Wytrzymałość: Niska | Zwinność: Wysoka | Obrażenia: Zwykłe/Wysokie
+Najszybszy, ale ma najniższe zdrowie i obrażenia
 
-Ciężki zombie:
-Poziom trudności: Średni  |  Wytrzymałość: Wysoka
-Zwinność: Niska           |  Obrażenia: Średnie / Wysokie
-Powolny zombie, który wytrzymuje więcej obrażeń i wykonuje potężniejsze ataki
-]],
+Wybuchające zombie:
+Trudność: Średnia | Wytrzymałość: Wysoka | Zwinność: Niska | Obrażenia: Zwykłe/Wysokie
+Niska prędkość ruchu, ale ma wysokie zdrowie i największe obrażenia
 
-	SCP066 = [[Poziom trudności: Średni
-Wytrzymałość: Wysoka
-Zwinność: Zwykła
-Obrażenia: Niskie / Obszarowe
-
-Przegląd:
-Grasz bardzo głośną muzykę, uszkadzając bębenki słuchowe wszystkich graczy w pobliżu.
-]],
-
-	SCP058 = [[Poziom trudności: Średni
-Wytrzymałość: Zwykła
-Zwinność: Zwykła
-Obrażenia: Średnie
-
-Przegląd:
-SCP z elastycznym stylem gry. Może atakować wręcz i strzelać. Posiada różne ulepszenia, które mogą dodać truciznę do ataków, zmodyfikować atak strzału lub odblokować zdolność eksplozji.
-]],
-
-	SCP096 = [[Poziom trudności: Trudny
-Wytrzymałość: Wysoka
-Zwinność: Bardzo Niska / Ekstremalna kiedy jest rozwścieczony
-Obrażenia: Natychmiast zabija
-
-Przegląd:
-Jeśli ktoś cię zobaczy, wpadniesz w gniew. Kiedy jesteś wściekły biegasz niezwykle szybko i możesz zabijać swoje cele.
-]],
-
-	SCP106 = [[Poziom trudności: Średni
-Wytrzymałość: Zwykła
-Zwinność: Niska
-Obrażenia: Średnie / Natychmiast zabija w Wymiarze Łuzowym
-
-Przegląd:
-Możesz przechodzić przez drzwi. Zaatakuj kogoś, by teleportował ich do wymiaru łuzowego. W wymiarze łuzowym natychmiast zabijasz swoje cele.
-]],
-
-	SCP173 = [[Poziom trudności: Łatwy
-Wytrzymałość: Ekstremalna
-Zwinność: Super Ekstremalna
-Obrażenia: Natychmiast zabija
-
-Przegląd:
-Jesteś niesamowicie szybki, ale nie możesz się ruszać, jeśli ktoś cię zobaczy. Automatycznie zabijasz pobliskich graczy. Możesz użyć specjalnego ataku, aby teleportować się do jednego gracza w zasięgu.
-]],
-
-	SCP457 = [[Poziom trudności: Łatwy
-Wytrzymałość: Zwykła
-Zwinność: Zwykła
-Obrażenia: Średnie / Ogień może się rozprzestrzeniać
-
-Przegląd:
-Płoniesz i możesz podpalać pobliskich graczy. Możesz także umieszczać pułapki, które aktywują się, gdy ktoś na nie nadepnie.
-]],
-
-	SCP682 = [[Poziom trudności: Trudny
-Wytrzymałość: Super Ekstremalna
-Zwinność: Zwykła
-Obrażenia: Wysokie
-
-Przegląd:
-Niezwykle wytrzymały i zabójczy. Użyj specjalnej zdolności, aby zyskać odporność na obrażenia na krótki okres czasu.
-]],
-
-	SCP8602 = [[Poziom trudności: Średni
-Wytrzymałość: Wysoka
-Zwinność: Wysoka
-Obrażenia: niskie / wysokie (silny atak)
-
-Przegląd:
-Jeśli ktoś znajduje się w pobliżu ściany, możesz przgwoździć go do tej ściany, zadając mu ogromne obrażenia. Stracisz też trochę zdrowia.
-]],
-
-	SCP939 = [[Poziom trudności: Średni
-Wytrzymałość: Zwykła
-Zwinność: Wysoka
-Obrażenia: Średnie
-
-Przegląd:
-Zostawiasz ślad niewidzialnej, toksycznej chmury. Odurzeni gracze nie mogą używać LPM i PPM.
-]],
-
-	SCP966 = [[Poziom trudności: Średni
-Wytrzymałość: Niska
-Zwinność: Wysoka
-Obrażenia: Niskie / Nakłada krwawienie
-
-Przegląd:
-Jesteś niewidzialny. Twoje ataki zawsze powodują krwawienie.
-]],
-
-	SCP24273 = [[Poziom trudności: Trudny
-Wytrzymałość: Zwykła
-Zwinność: Zwykła
-Obrażenia: Wysoka / Natychmiastowa śmierć podczas Kontroli Umysłu
-
-Przegląd:
-Możesz doskoczyć do przodu, aby zadać obrażenia pierwszemu trafionemu graczowi. Specjalna zdolność pozwala przez krótki czas sterować innym graczem. Sprowadzenie do ciebie kontrolowanego gracza pozwoli ci natychmiast go zabić. Popełnienie samobójstwa podczas kontrolowania gracza spowoduje utratę zdrowia.
-]],
-
-	SCP3199 = [[Poziom trudności: Bardzo Trudny
-Wytrzymałość: Niska
-Zwinność: Bardzo Wysoka
-Obrażenia: niskie / średnie
-
-Przegląd:
-Atakowanie gracza wywołuje szał i zadaje głębokie rany. W szale poruszasz się nieco szybciej i możesz zobaczyć lokalizację pobliskich graczy. Chybienie ataku lub atakowanie gracza, który ma już głębokie rany, zatrzymuje szaleństwo i nakłada karę. Posiadanie co najmniej 5 żetonów szału pozwala na użycie ataku specjalnego. Atak specjalny zabija gracza po krótkim przygotowaniu.
+Spitting zombie:
+Trudność: Średnia | Wytrzymałość: Wysoka | Zwinność: Niska | Obrażenia: Zwykłe/Wysokie
+Najwolniejszy typ zombie, ale zadaje duże obrażenia i najwięcej zdrowia
 ]],
 }
 
@@ -1518,129 +1570,296 @@ lang.GenericUpgrades = {
 	}
 }
 
+lang.CommonSkills = {
+	c_button_overload = {
+		name = "Przeciążenie",
+		dsc = "Umożliwia przeciążenie większości zamkniętych drzwi. Przeciążone drzwi otwierają się (lub zamykają) na krótki okres czasu."
+	},
+	c_dmg_mod = {
+		name = "Ochrona przed obrażeniami",
+		dsc = "Aktualna ochrona: [mod]\n\nOchrona ta nie dotyczy obrażeń otrzymanych bezpośrednio. Uwzględnia jedynie modyfikatory skalowania czasu i zewnętrzne wzmocnienia. Modyfikatory danych SCP nie są uwzględnione!"
+	},
+}
+
 local wep = {}
 lang.WEAPONS = wep
 
 wep.SCP023 = {
-	editMode1 = "Naciśnij LPM, aby umieścić widmo",
-	editMode2 = "PPM - Anuluj, R - Obróć",
-	preys = "Dostępne ofiary: %i",
-	attack = "Następny atak: %s",
-	trapActive = "Pułapka jest aktywna!",
-	trapInactive = "Naciśnij PPM, aby umieścić pułapkę",
+	skills = {
+		_overview = { "passive", "drain", "clone", "hunt" },
+		drain = {
+			name = "Wysysanie energii",
+			dsc = "Zacznij wysysać energię od pobliskich graczy. Jeśli wszyscy gracze opuszczą obszar umiejętności, zdolność się wyłączy",
+		},
+		clone = {
+			name = "Klon",
+			dsc = "Umieść sobowtóra, który będzie naśladował działanie twojej zdolności pasywnej (w tym ulepszeń). Klon będzie wędrował i ścigał pobliskich graczy",
+		},
+		hunt = {
+			name = "Polowanie",
+			dsc = "Natychmiast zabij jedną z twoich ofiar lub osoby w ich pobliżu i teleportuj się do ich ciała",
+		},
+		passive = {
+			name = "Umiejętność pasywna",
+			dsc = "Kolizja z graczami powoduje ich podpalenie",
+		},
+		drain_bar = {
+			name = "Wysysanie",
+			dsc = "Pozostały czas działania zdolności wysysania",
+		},
+	},
+
 	upgrades = {
-		attack1 = {
-			name = "Żądza I",
-			info = "Czas odnowienia twojego ataku zostaje skrócony o 20 sekund",
+		parse_description = true,
+
+		passive = {
+			name = "Żarzący się Węgielek",
+			info = "Ulepsza twoją zdolność pasywną, zwiększając obrażenia od palenia o [+burn_power]",
 		},
-		attack2 = {
-			name = "Żądza II",
-			info = "Czas odnowienia twojego ataku zostaje skrócony o 20 sekund\n\t• Całkowity czas odnowienia: 40s",
+		invis1 = {
+			name = "Niewidzialny Płomień I",
+			info = "Usprawnia twoją zdolność pasywną\n\t• Znikasz dla odległych graczy\n\t• Gracze, którzy cię nie widzą, nie będą dodawani do polowania\n\t• To ulepszenie dotyczy również twojego klona\n\t• Stajesz się całkowicie niewidzialny [invis_range] jednostek dalej",
 		},
-		attack3 = {
-			name = "Żądza III",
-			info = "Czas odnowienia twojego ataku zostaje skrócony o 20 sekunds\n\t• Całkowity czas odnowienia: 60s",
+		invis2 = {
+			name = "Niewidzialny Płomień II",
+			info = "Ulepsza twoją niewidzialność\n\t• Stajesz się całkowicie niewidzialny [invis_range] jednostek dalej",
 		},
-		trap1 = {
-			name = "Zły znak I",
-			info = "Czas odnowienia twojej pułapki zostaje skrócony do 40 sekund",
+		prot1 = {
+			name = "Niezniszczalny Ogień I",
+			info = "Usprawnia twoją zdolność pasywną, zapewniając ochronę przed obrażeniami od kul o [-prot]",
 		},
-		trap2 = {
-			name = "Zły znak II",
-			info = "Czas odnowienia twojej pułapki zostaje skrócony do 20 sekund\nOdległość podróży widma zostaje zwiększona o 25 jednostek",
+		prot2 = {
+			name = "Niezniszczalny Ogień II",
+			info = "Ulepsza twoją ochronę przed kulami do [-prot]",
 		},
-		trap3 = {
-			name = "Zły znak III",
-			info = "Odległość podróży widma zostaje zwiększona o 25 jednostek\n\t• Całkowity wzrost: 50 jednostek",
+		drain1 = {
+			name = "Wysysanie Mocy I",
+			info = "Ulepsza twoją zdolność wysysania\n\t• Czas trwania zwiększony o [+drain_dur]\n\t• Maksymalna odległość zwiększona o [+drain_dist]",
 		},
-		hp = {
-			name = "Samiec alfa I",
-			info = "Zyskujesz 1000 HP (maksymalne HP również) i 10% ochrony przed pociskami, ale czas odnowienia pułapki wydłuża się o 30 sekund",
+		drain2 = {
+			name = "Wysysanie Mocy II",
+			info = "Ulepsza twoją zdolność wysysania\n\t• Szybkość wysysania zwiększona o [/drain_rate]\n\t• Leczenie za [%drain_heal] wyssanej energii",
 		},
-		speed = {
-			name = "Samiec alfa II",
-			info = "Zyskujesz 10% prędkości ruchu i dodatkowe 15% ochrony przed pociskami, ale czas odnowienia pułapki wydłuża się o 30 sekund\n\t• Całkowita ochrona: 25%, Całkowite wydłużenie czasu odnowienia: 60 s",
+		drain3 = {
+			name = "Wysysanie Mocy III",
+			info = "Ulepsza twoją zdolność wysysania\n\t• Czas trwania zwiększony o [+drain_dur]\n\t• Maksymalna odległość zwiększona o [+drain_dist]",
 		},
-		alt = {
-			name = "Samiec alfa III",
-			info = "Czas odnowienia ataku zostaje skrócony o 30 sekund i zyskujesz 15% ochrony przed pociskami, ale nie możesz już używać swojej pułapki\n\t• Całkowita ochrona: 40% ",
+		drain4 = {
+			name = "Wysysanie Mocy IV",
+			info = "Ulepsza twoją zdolność wysysania\n\t• Szybkość wysysania zwiększona o [/drain_rate]\n\t• Leczenie za [%drain_heal] wyssanej energii",
+		},
+		hunt1 = {
+			name = "Niezniszczalny Ogień I",
+			info = "Wzmacnia twoją zdolność polowania\n\t• Czas odnowienia skrócony o [-hunt_cd]",
+		},
+		hunt2 = {
+			name = "Niezniszczalny Ogień II",
+			info = "Wzmacnia twoją zdolność polowania\n\t• Czas odnowienia skrócony o [-hunt_cd]\n\t• Zasięg wyszukiwania losowej ofiary zwiększony o [+hunt_range]",
 		},
 	}
 }
 
 wep.SCP049 = {
-	surgery = "Przeprowadzanie operacji",
-	surgery_failed = "Operacja się nie powiodła!",
 	zombies = {
 		normal = "Standardowy Zombie",
-		light = "Lekki Zombie",
-		heavy = "Ciężki Zombie",
+		assassin = "Zombie Zabójca",
+		boomer = "Wybuchający Zombie",
+		heavy = "Plujący Zombie",
 	},
+	zombies_desc = {
+		normal = "Standardowy zombie\n\t• Posiada zarówno lekkie, jak i ciężkie ataki\n\t• Dobry wybór z zrównoważonymi statystykami",
+		assassin = "Zombie zabójca\n\t• Posiada lekki atak i umiejętność szybkiego ataku\n\t• Najszybszy, ale ma najniższe zdrowie i obrażenia",
+		boomer = "Wybuchający ciężki zombie\n\t• Posiada ciężki atak i zdolność wybuchu\n\t• Niska prędkość ruchu, ale ma dużo zdrowia i największe obrażenia",
+		heavy = "Plujący ciężki zombie\n\t• Posiada ciężki atak i zdolność strzału\n\t• Najwolniejszy typ zombie, ale ma wysokie obrażenia i najwięcej zdrowia",
+	},
+	skills = {
+		_overview = { "passive", "choke", "surgery", "boost" },
+		surgery_failed = "Operacja nieudana!",
+
+		choke = {
+			name = "Dotyk Doktora",
+			dsc = "Dusi gracza na śmierć. Ta zdolność może zostać przerwana przez otrzymanie wystarczającej ilości obrażeń",
+		},
+		surgery = {
+			name = "Operacja",
+			dsc = "Wykonaj operację na ciele, przekształcając je w SCP-049-2. Otrzymanie obrażeń przerywa operację",
+		},
+		boost = {
+			name = "Powstań!",
+			dsc = "Zapewnia wzmocnienie tobie i wszystkim pobliskim instancjom SCP-049-2",
+		},
+		passive = {
+			name = "Umiejętność pasywna",
+			dsc = "Zombie znajdujące się w pobliżu zyskują ochronę przed obrażeniami od kul",
+		},
+		choke_bar = {
+			name = "Dotyk Doktora",
+			dsc = "Gdy jest pełny, cel umiera",
+		},
+		surgery_bar = {
+			name = "Operacja",
+			dsc = "Pozostały czas operacji",
+		},
+		boost_bar = {
+			name = "Powstań!",
+			dsc = "Pozostały czas wzmocnienia",
+		},
+	},
+
 	upgrades = {
-		cure1 = {
-			name = "Jestem \"lekarstwem\" I",
-			info = "Uzyskaj 40% ochronę przed pociskami",
+		parse_description = true,
+
+		choke1 = {
+			name = "Dotyk Doktora I",
+			info = "Ulepsza twoją zdolność duszenia\n\t• Czas odnowienia skrócony o [-choke_cd]\n\t• Próg obrażeń zwiększony o [+choke_dmg]",
 		},
-		cure2 = {
-			name = "Jestem \"lekarstwem\" II",
-			info = "Odzyskaj 300 HP co 180 sekund",
+		choke2 = {
+			name = "Dotyk Doktora II",
+			info = "Ulepsza twoją zdolność duszenia\n\t• Szybkość duszenia zwiększona o [+choke_rate]\n\t• Spowolnienie po duszeniu zmniejszone o [-choke_slow]",
 		},
-		merci = {
-			name = "Akt Miłosierdzia",
-			info = "Czas odnowienia podstawowego ataku zostaje skrócony o 2,5 sekundy\nNie nakładasz już efektu „Blokady drzwi” na pobliskich ludzi",
+		choke3 = {
+			name = "Dotyk Doktora III",
+			info = "Ulepsza twoją zdolność duszenia\n\t• Czas odnowienia skrócony o [-choke_cd]\n\t• Próg obrażeń zwiększony o [+choke_dmg]\n\t• Szybkość duszenia zwiększona o [+choke_rate]",
 		},
-		symbiosis1 = {
-			name = "Symbioza I",
-			info = "Po wykonaniu operacji zostaniesz wyleczony o 10% maksymalnego zdrowia",
+		buff1 = {
+			name = "Powstań I",
+			info = "Ulepsza twoją zdolność wzmacniania\n\t• Czas odnowienia skrócony o [-buff_cd]\n\t• Czas trwania wzmocnienia zwiększony o [+buff_dur]",
 		},
-		symbiosis2 = {
-			name = "Symbioza II",
-			info = "Po wykonaniu operacji zostajesz wyleczony o 15% maksymalnego zdrowia\nPobliskie SCP 049-2 są leczone o 10% ich maksymalnego zdrowia",
+		buff2 = {
+			name = "Powstań II",
+			info = "Ulepsza twoją zdolność wzmacniania\n\t• Zasięg wzmocnienia zwiększony o [+buff_radius]\n\t• Moc wzmocnienia zwiększona o [+buff_power]",
 		},
-		symbiosis3 = {
-			name = "Symbioza III",
-			info = "Po wykonaniu operacji zostajesz wyleczony o 20% maksymalnego zdrowia\nPobliskie SCP 049-2 są leczone o 20% ich maksymalnego zdrowia",
+		surgery_cd1 = {
+			name = "Precyzja Chirurgiczna I",
+			info = "Skraca czas operacji o [surgery_time]s\n\t• To ulepszenie jest kumulatywne",
 		},
-		hidden = {
-			name = "Ukryty potencjał",
-			info = "Otrzymujesz 1 ładunek za każdą udaną operację\nKażdy ładunek zwiększa HP zombie o 5%\n\t• Ta umiejętność działa tylko na nowo powstałe zombie",
+		surgery_cd2 = {
+			name = "Precyzja Chirurgiczna II",
+			info = "Skraca czas operacji o [surgery_time]s\n\t• To ulepszenie jest kumulatywne",
 		},
-		trans = {
-			name = "Transfuzja",
-			info = "Twoje zombie mają zwiększone HP o 15%\nTwoje zombie zyskują 20% kradzieży życia\n\t • Ta umiejętność działa tylko na nowo powstałe zombie",
+		surgery_heal = {
+			name = "Transplantacja",
+			info = "Ulepsza twoją zdolność operacji\n\t• Po operacji leczysz się o [surgery_heal] HP\n\t• Po operacji wszystkie pobliskie zombie leczą się o [surgery_zombie_heal] HP",
 		},
-		rm = {
-			name = "Radykalna terapia",
-			info = "Gdy tylko jest to możliwe, tworzysz 2 zombie z 1 ciała\n\t• Jeśli dostępny jest tylko 1 obserwator, tworzysz tylko 1 zombie\n\t• Oba zombie są tego samego typu\n\t• HP drugiego zombie jest zmniejszone o 50%\n\t• Obrażenia drugiego zombie są zmniejszone o 25%",
+		surgery_dmg = {
+			name = "Niepowstrzymana operacja",
+			info = "Otrzymywanie obrażeń nie przerywa już operacji",
 		},
-		doc1 = {
-			name = "Chirurgiczna precyzja I",
-			info = "Czas operacji skraca się o 5 sekund",
+		surgery_prot = {
+			name = "Stabilna Ręka",
+			info = "Podczas operacji zyskujesz ochronę przed kulami [-surgery_prot]",
 		},
-		doc2 = {
-			name = "Chirurgiczna precyzja II",
-			info = "Czas operacji skraca się o 5 sekund\n\t• Całkowite skrócenie czasu operacji: 10s",
+		zombie_prot = {
+			name = "Pielęgniarka",
+			info = "Zyskujesz ochronę przed kulami za każdego pobliskiego SCP-049-2\n\t• Ochrona za każdego pobliskiego zombie: [%zombie_prot]\n\t• Maksymalna ochrona: [%zombie_prot_max]",
 		},
+		zombie_lifesteal = {
+			name = "Transfuzja I",
+			info = "Zombie zyskują [%zombie_ls] kradzieży życia na podstawowych atakach",
+		},
+		stacks_hp = {
+			name = "Zastrzyk Sterydów",
+			info = "Podczas tworzenia zombie ich zdrowie zwiększa się o [%stacks_hp] za każdą poprzednią operację",
+		},
+		stacks_dmg = {
+			name = "Radykalna Terapia",
+			info = "Podczas tworzenia zombie ich obrażenia zwiększają się o [%stacks_dmg] za każdą poprzednią operację",
+		},
+		zombie_heal = {
+			name = "Transfuzja II",
+			info = "Leczysz się o [%zombie_heal] dowolnych obrażeń zadanych przez pobliskie zombie",
+		}
 	}
 }
 
 wep.SCP0492 = {
-	too_far = "Stajesz się słabszy!"
+	skills = {
+		prot = {
+			name = "Ochrona",
+			dsc = "Zyskujesz ochronę przed obrażeniami, gdy jesteś blisko SCP-049",
+		},
+		boost = {
+			name = "Wzmocnienie",
+			dsc = "Wskazuje, kiedy wzmocnienie SCP-049 jest aktywne na tobie",
+		},
+		light_attack = {
+			name = "Lekki Atak",
+			dsc = "Wykonaj lekki atak",
+		},
+		heavy_attack = {
+			name = "Ciężki Atak",
+			dsc = "Wykonaj ciężki atak",
+		},
+		rapid = {
+			name = "Szybki Atak",
+			dsc = "Wykonaj szybki atak",
+		},
+		shot = {
+			name = "Strzał",
+			dsc = "Wystrzel pocisk zadający obrażenia",
+		},
+		explode = {
+			name = "Wybuch",
+			dsc = "Aktywuje się, gdy masz 50 HP lub mniej. Zyskujesz zdolność stania się nieśmiertelnym oraz zwiększenie prędkości. Po krótkim czasie wybuchasz, zadając obrażenia w małym promieniu",
+		},
+		boost_bar = {
+			name = "Wzmocnienie",
+			dsc = "Pozostały czas wzmocnienia",
+		},
+		explode_bar = {
+			name = "Wybuch",
+			dsc = "Pozostały czas do wybuchu",
+		},
+	},
+
+	upgrades = {
+		parse_description = true,
+
+		primary1 = {
+			name = "Atak Podstawowy I",
+			info = "Ulepsza twój główny atak\n\t• Czas odnowienia skrócony o [-primary_cd]",
+		},
+		primary2 = {
+			name = "Atak Podstawowy II",
+			info = "Ulepsza twój główny atak\n\t• Czas odnowienia skrócony o [-primary_cd]\n\t• Obrażenia zwiększone o [+primary_dmg]",
+		},
+		secondary1 = {
+			name = "Atak Wtórny I",
+			info = "Ulepsza twój atak wtórny\n\t• Obrażenia zwiększone o [+secondary_dmg]",
+		},
+		secondary2 = {
+			name = "Atak Wtórny II",
+			info = "Ulepsza twój atak wtórny\n\t• Obrażenia zwiększone o [+secondary_dmg]\n\t• Czas odnowienia skrócony o [-secondary_cd]",
+		},
+		overload = {
+			name = "Przeciążenie",
+			info = "Zapewnia dodatkowe [overloads] przeciążenia przycisków",
+		},
+		buff = {
+			name = "Powstań!",
+			info = "Wzmacnia twoją ochronę i wzmocnienie SCP-049\n\t• Moc ochrony: [%+prot_power]\n\t• Moc wzmocnienia: [++buff_power]",
+		},
+	}
 }
 
 wep.SCP058 = {
 	skills = {
+		_overview = { "primary_attack", "shot", "explosion" },
 		primary_attack = {
 			name = "Atak podstawowy",
-			dsc = "Atakuj żądłem bezpośrednio przed siebie. Nakłada truciznę, jeśli kupione zostanie odpowiednie ulepszenie.",
+			dsc = "Atakuj swoim żądłem bezpośrednio przed sobą. Zadaje truciznę, jeśli odpowiednie ulepszenie zostało zakupione",
 		},
 		shot = {
 			name = "Strzał",
-			dsc = "Wystrzeliwuje opadający pocisk w kierunku w którym patrzysz. Ulepszenia wpływają na czas odnowienia, prędkość, rozmiar i efekty tej umiejętności.",
+			dsc = "Wystrzeliwuje pocisk w kierunku celowania. Pocisk porusza się po trajektorii balistycznej. Ulepszenia związane ze strzałem wpływają na czas odnowienia, prędkość, rozmiar i efekty tej zdolności",
+		},
+		explosion = {
+			name = "Eksplozja",
+			dsc = "Uwalnia wybuch skażonej krwi, zadając ogromne obrażenia pobliskim celom",
 		},
 		shot_stacks = {
 			name = "Ładunki strzałów",
-			dsc = "Pokazuje aktualną ilość pocisków. Różne ulepszenia związane z pociskami wpływają na maksymalną ilość i czas odnowienia.",
+			dsc = "Pokazuje zmagazynowaną ilość strzałów. Różne ulepszenia związane ze strzałami wpływają na maksymalną ilość i czas odnowienia",
 		},
 	},
 
@@ -1648,503 +1867,994 @@ wep.SCP058 = {
 		parse_description = true,
 
 		attack1 = {
-			name = "Jadowite żądło I",
-			info = "Dodaje truciznę do podstawowego ataku"
+			name = "Trujące Żądło I",
+			info = "Dodaje truciznę do ataków podstawowych",
 		},
 		attack2 = {
-			name = "Jadowite żądło II",
-			info = "Zwiększa obrażenia trucizny i skraca czas odnowienia ataku. \n\t• Dodaje [prim_dmg] obrażeń do ataku\n\t• Atak trucizną zadaje [pp_dmg] obrażeń\n\t• Czas odnowienia zostaje zmniejszony o [prim_cd]s"
+			name = "Trujące Żądło II",
+			info = "Zwiększa obrażenia ataku, obrażenia trucizny i skraca czas odnowienia\n\t• Dodaje [prim_dmg] obrażeń do ataków\n\t• Trucizna ataku zadaje [pp_dmg] obrażeń\n\t• Czas odnowienia skrócony o [prim_cd]s",
 		},
 		attack3 = {
-			name = "Jadowite żądło III",
-			info = "Zwiększa obrażenia trucizny i skraca czas odnowienia ataku.\n\t• Jeśli cel nie jest zatruty, natychmiast nakłada 2 ładunki trucizny\n\t• Trucizna wywołana atakiem zadaje [pp_dmg] obrażeń\n\t• Czas odnowienia jest zmniejszony o [prim_cd]s"
+			name = "Trujące Żądło III",
+			info = "Zwiększa obrażenia trucizny i skraca czas odnowienia\n\t• Jeśli cel nie jest zatruty, natychmiast nakłada 2 ładunki trucizny\n\t• Trucizna ataku zadaje [pp_dmg] obrażeń\n\t• Czas odnowienia skrócony o [prim_cd]s",
 		},
 		shot = {
-			name = "Spaczona Krew",
-			info = "Dodaje truciznę do ataków dystansowych"
+			name = "Skażona Krew",
+			info = "Dodaje truciznę do ataków strzałem",
 		},
 		shot11 = {
-			name = "Napływ I",
-			info = "Zwiększa obrażenia i rozmiar pocisku, ale także wydłuża czas odnowienia i spowalnia go\n\t• Mnożnik obrażeń pocisku: [shot_damage]\n\t• Mnożnik wielkości pocisku: [shot_size]\n\t• Mnożnik prędkości pocisku: [shot_speed]\n\t• Całkowity czas odnowienia zwiększony o [shot_cd]s"
+			name = "Fala I",
+			info = "Zwiększa obrażenia i rozmiar pocisku, ale także zwiększa czas odnowienia i spowalnia pocisk\n\t• Obrażenia pocisku zwiększone o [+shot_damage]\n\t• Zmiana rozmiaru pocisku: [++shot_size]\n\t• Zmiana prędkości pocisku: [++shot_speed]\n\t• Czas odnowienia zwiększony o [shot_cd]s",
 		},
 		shot12 = {
-			name = "Napływ II",
-			info = "Zwiększa obrażenia i rozmiar pocisku, ale także wydłuża czas odnowienia i spowalnia pocisk\n\t• Efekt trucizny jest usunięty\n\t• Mnożnik obrażeń pocisku: [shot_damage]\n\t• Mnożnik wielkości pocisku: [shot_size]\n\t• Mnożnik prędkości pocisku: [shot_speed]\n\t• Całkowity czas odnowienia zwiększony o [shot_cd]s"
+			name = "Fala II",
+			info = "Zwiększa obrażenia i rozmiar pocisku, ale także zwiększa czas odnowienia i spowalnia pocisk\n\t• Obrażenia pocisku zwiększone o [+shot_damage]\n\t• Zmiana rozmiaru pocisku: [++shot_size]\n\t• Zmiana prędkości pocisku: [++shot_speed]\n\t• Czas odnowienia zwiększony o [shot_cd]s",
 		},
 		shot21 = {
-			name = "Krwawa mgła I",
-			info = "Strzał pozostawia po uderzeniu mgłę, raniąc i zatruwając każdego, kto jej dotknie.\n\t• Usunięte obrażenia bezpośrednie i obszarowe\n\t• Mgła zadaje [cloud_damage] obrażeń przy kontakcie\n\t• Trucizna wywołana przez chmure zadaje [sp_dmg] obrażeń\n\t• Ładunki strzałów ograniczone do [stacks]\n\t• Czas odnowienia zwiększony o [shot_cd]s\n\t• Mnożnik czasu regeneracji ładunków: [regen_rate]"
+			name = "Krwawa Mgła I",
+			info = "Strzał pozostawia mgłę po uderzeniu, raniąc i trując każdego, kto ją dotknie.\n\t• Usunięte bezpośrednie i rozpryskowe obrażenia\n\t• Chmura zadaje [cloud_damage] obrażeń przy kontakcie\n\t• Trucizna zadawana przez chmurę zadaje [sp_dmg] obrażeń\n\t• Ładunki strzałów ograniczone do [stacks]\n\t• Czas odnowienia zwiększony o [shot_cd]s\n\t• Tempo zdobywania ładunków: [/+regen_rate]",
 		},
 		shot22 = {
-			name = "Krwawa mgła II",
-			info = "Zwiększa obrażenia zadawane przez mgłe.\n\t• Mgła zadaje [cloud_damage] obrażeń przy kontakcie\n\t• Trucizna wywołana przez chmure zadaje [sp_dmg] obrażeń\n\t• Mnożnik czasu regeneracji ładunków: [regen_rate]"
+			name = "Krwawa Mgła II",
+			info = "Zwiększa efektywność mgły pozostawionej przez strzały.\n\t• Chmura zadaje [cloud_damage] obrażeń przy kontakcie\n\t• Trucizna zadawana przez chmurę zadaje [sp_dmg] obrażeń\n\t• Tempo zdobywania ładunków: [/+regen_rate]",
 		},
 		shot31 = {
 			name = "Wielostrzał I",
-			info = "Pozwala na strzelanie z dużą prędkością podczas trzymania przycisku ataku.\n\t• Odblokowuje możliwość szybkiego oddawania strzałów\n\t• Usunięte obrażenia bezpośrednie i obszarowe\n\t• Ładunki strzałów ograniczone do [stacks]\n\t• Mnożnik czasu regeneracji ładunków: [regen_rate]\n\t• Mnożnik wielkości pocisku: [shot_size]\n\t• Mnożnik prędkości pocisku: [shot_speed]"
+			info = "Pozwala na szybkie strzelanie przy trzymaniu przycisku ataku\n\t• Odblokowuje zdolność szybkiego strzelania\n\t• Usunięte bezpośrednie i rozpryskowe obrażenia\n\t• Ładunki strzałów ograniczone do [stacks]\n\t• Tempo zdobywania ładunków: [/+regen_rate]\n\t• Zmiana rozmiaru pocisku: [++shot_size]\n\t• Zmiana prędkości pocisku: [++shot_speed]",
 		},
 		shot32 = {
 			name = "Wielostrzał II",
-			info = "Zwiększa maksymalne ładunki i zwiększa prędkość strzału.\n\t• Ładunki strzałów ograniczone do [stacks]\n\t• Mnożnik czasu regeneracji ładunków: [regen_rate]\n\t• Mnożnik wielkości pocisku: [shot_size]\n\t• Mnożnik prędkości pocisku: [shot_speed]"
+			info = "Zwiększa maksymalne ładunki i przyspiesza strzelanie\n\t• Ładunki strzałów ograniczone do [stacks]\n\t• Tempo zdobywania ładunków: [/+regen_rate]\n\t• Zmiana rozmiaru pocisku: [++shot_size]\n\t• Zmiana prędkości pocisku: [++shot_speed]",
 		},
 		exp1 = {
-			name = "Tętniczy wybuch",
-			info = "Odblokowuje możliwość eksplozji zadającej ogromne obrażenia, za każdym razem, gdy ilość zdrowia spadnie poniżej każdej wielokrotności 1000 HP po raz pierwszy"
+			name = "Wybuch Aorty",
+			info = "Odblokowuje zdolność eksplozji, która zadaje ogromne obrażenia pobliskim celom. Ta zdolność aktywuje się, gdy twoje zdrowie spada poniżej każdego wielokrotności 1000 HP po raz pierwszy. Jeśli kupione, gdy masz poniżej 1000 HP, pierwsze otrzymane obrażenia aktywują tę zdolność. Poprzednie progi nie mogą być osiągnięte (nawet przy leczeniu)",
 		},
 		exp2 = {
-			name = "Toksyczny wybuch",
-			info = "Ulepsza twoją zdolność do eksplozji\n\t• Nakłada 2 ładunki trucizny\n\t• Mnożnik zasięgu: [explosion_radius]"
+			name = "Toksyczny Wybuch",
+			info = "Wzmacnia twoją zdolność eksplozji\n\t• Nakłada 2 ładunki trucizny\n\t• Promień zwiększony o [+explosion_radius]",
 		},
 	}
 }
 
 wep.SCP066 = {
-	wait = "Następny atak za: %is",
-	ready = "Atak gotowy!",
-	chargecd = "Czas odnowienia doskoku: %is",
+	skills = {
+		_overview = { "eric", "music", "dash", "boost" },
+		not_threatened = "Nie czujesz się zagrożony, aby atakować!",
+
+		music = {
+			name = "Symfonia nr 2",
+			dsc = "Jeśli czujesz się zagrożony, możesz emitować głośną muzykę",
+		},
+		dash = {
+			name = "Skok",
+			dsc = "Rzuć się do przodu. Jeśli trafisz gracza, przykleisz się do niego na krótki czas",
+		},
+		boost = {
+			name = "Dopalacz",
+			dsc = "Zdobądź jeden z 3 dopalaczy, który jest obecnie aktywny. Po użyciu zostanie zastąpiony przez kolejny. Moc wszystkich dopalaczy wzrasta wraz z każdym ładunkiem (ograniczona do [cap] ładunków).\n\nObecny dopalacz: [boost]\n\nDopalacz szybkości: [speed]\nDopalacz obrony przed kulami: [def]\nDopalacz regeneracji: [regen]",
+			buffs = {
+				"Szybkość",
+				"Obrona przed kulami",
+				"Regeneracja",
+			},
+		},
+		eric = {
+			name = "Eric?",
+			dsc = "Pytasz nieuzbrojonych graczy, czy są Erikiem. Za każdym razem zdobywasz jeden ładunek",
+		},
+		music_bar = {
+			name = "Symfonia nr 2",
+			dsc = "Pozostały czas tej zdolności",
+		},
+		dash_bar = {
+			name = "Czas odłączenia",
+			dsc = "Pozostały czas przyczepienia do celu",
+		},
+		boost_bar = {
+			name = "Dopalacz",
+			dsc = "Pozostały czas tej zdolności",
+		},
+	},
+
 	upgrades = {
-		range1 = {
-			name = "Rezonans I",
-			info = "Zasięg obrażeń zostaje zwiększony o 100",
+		parse_description = true,
+
+		eric1 = {
+			name = "Eric? I",
+			info = "Zmniejsza czas odnowienia umiejętności pasywnej o [-eric_cd]",
 		},
-		range2 = {
-			name = "Rezonans II",
-			info = "Zasięg obrażeń zostaje zwiększony o 100\n\t• Całkowity wzrost: 200",
+		eric2 = {
+			name = "Eric? II",
+			info = "Zmniejsza czas odnowienia umiejętności pasywnej o [-eric_cd]",
 		},
-		range3 = {
-			name = "Rezonans III",
-			info = "Zasięg obrażeń zostaje zwiększony o 100\n\t• Całkowity wzrost: 300",
+		music1 = {
+			name = "Symfonia nr 2 I",
+			info = "Ulepsza twój atak podstawowy\n\t• Czas odnowienia zmniejszony o [-music_cd]\n\t• Zasięg zwiększony o [+music_range]",
 		},
-		damage1 = {
-			name = "Bass I",
-			info = "Obrażenia zwiększone do 115%, ale zasięg zmniejszony do 90%",
+		music2 = {
+			name = "Symfonia nr 2 II",
+			info = "Ulepsza twój atak podstawowy\n\t• Czas odnowienia zmniejszony o [-music_cd]\n\t• Zasięg zwiększony o [+music_range]",
 		},
-		damage2 = {
-			name = "Bass II",
-			info = "Obrażenia zwiększone do 150%, ale zasięg zmniejszony do 75%",
+		music3 = {
+			name = "Symfonia nr 2 III",
+			info = "Ulepsza twój atak podstawowy\n\t• Obrażenia zwiększone o [+music_damage]",
 		},
-		damage3 = {
-			name = "Bass III",
-			info = "Obrażenia zwiększone do 200%, ale zasięg zmniejszony do 50%",
+		dash1 = {
+			name = "Skok I",
+			info = "Ulepsza twoją zdolność skakania\n\t• Czas odnowienia zmniejszony o [-dash_cd]\n\t• Pozostajesz [+detach_time] dłużej na swoim celu",
 		},
-		def1 = {
-			name = "Fala negacji I",
-			info = "Podczas puszczania muzyki negujesz 10% nadchodzących obrażeń",
+		dash2 = {
+			name = "Skok II",
+			info = "Ulepsza twoją zdolność skakania\n\t• Czas odnowienia zmniejszony o [-dash_cd]\n\t• Pozostajesz [+detach_time] dłużej na swoim celu",
 		},
-		def2 = {
-			name = "Fala negacji II",
-			info = "Podczas puszczania muzyki negujesz 25% nadchodzących obrażeń",
+		dash3 = {
+			name = "Skok III",
+			info = "Ulepsza twoją zdolność skakania\n\t• Gdy jesteś przyczepiony do celu, możesz ponownie użyć tej zdolności, aby się odczepić\n\t• Podczas odczepiania, możesz przyczepić się do innego gracza\n\t• Nie możesz przyczepić się do tego samego gracza więcej niż raz podczas jednego użycia tej zdolności",
 		},
-		charge = {
-			name = "Doskok",
-			info = "Odblokowuje możliwość doskoku do przodu, naciskając klawisz przeładowania\n\t• Czas odnowienia umiejętności: 20 s",
+		boost1 = {
+			name = "Dopalacz I",
+			info = "Ulepsza twoją zdolność dopalacza\n\t• Czas odnowienia zmniejszony o [-boost_cd]\n\t• Czas trwania zwiększony o [+boost_dur]",
 		},
-		sticky = {
-			name = "Lepki",
-			info = "Po wskoczeniu w człowieka trzymasz się go przez następne 10 sekund",
-		}
+		boost2 = {
+			name = "Dopalacz II",
+			info = "Ulepsza twoją zdolność dopalacza\n\t• Czas odnowienia zmniejszony o [-boost_cd]\n\t• Moc zwiększona o [+boost_power]",
+		},
+		boost3 = {
+			name = "Dopalacz III",
+			info = "Ulepsza twoją zdolność dopalacza\n\t• Czas trwania zwiększony o [+boost_dur]\n\t• Moc zwiększona o [+boost_power]",
+		},
 	}
 }
 
 wep.SCP096 = {
-	charges = "Ładunki regeneracji: %i",
-	regen = "Regenerowanie HP - ładunki: %i",
+	skills = {
+		_overview = { "passive", "lunge", "regen", "special" },
+		lunge = {
+			name = "Szarża",
+			dsc = "Rzuć się do przodu w gniewie. Natychmiast kończy gniew. Nie będziesz jadł ciała po szarży",
+		},
+		regen = {
+			name = "Regeneracja",
+			dsc = "Usiądź w miejscu i zamień ładunki regeneracji na zdrowie",
+		},
+		special = {
+			name = "Koniec polowania",
+			dsc = "Zatrzymaj gniew. Zdobądź ładunki regeneracji za każdy aktywny cel",
+		},
+		passive = {
+			name = "Umiejętność pasywna",
+			dsc = "Jeśli ktoś na ciebie patrzy, wpadasz w gniew. Natychmiast zabijasz graczy, którzy cię rozwścieczyli",
+		},
+	},
+
 	upgrades = {
-		sregen1 = {
-			name = "Spokojny duch I",
-			info = "Zyskujesz jeden ładunek regeneracji co 4 sekundy zamiast 5 sekund"
+		parse_description = true,
+
+		rage = {
+			name = "Gniew",
+			info = "Otrzymanie [rage_dmg] w [rage_time] sekund od jednego gracza wprawia cię w gniew",
 		},
-		sregen2 = {
-			name = "Spokojny duch II",
-			info = "Twoje ładunki regeneracyjne leczą cię za 6 HP zamiast 5 HP"
+		heal1 = {
+			name = "Pożeranie I",
+			info = "Po zabiciu celu, pożeraj ciało celu i zyskaj ochronę przed kulami na czas trwania\n\t• Leczenie na tick: [heal]\n\t• Ticki leczenia: [heal_ticks]\n\t• Ochrona przed obrażeniami od kul: [-prot]",
 		},
-		sregen3 = {
-			name = "Spokojny duch III",
-			info = "Twoja regeneracja jest o 66% szybsza"
+		heal2 = {
+			name = "Pożeranie II",
+			info = "Ulepsza twoje pożeranie\n\t• Leczenie na tick: [heal]\n\t• Ticki leczenia: [heal_ticks]\n\t• Ochrona przed obrażeniami od kul: [-prot]",
 		},
-		kregen1 = {
-			name = "Hannibal I",
-			info = "Po udanym zabiciu regenerujesz dodatkowe 90 HP"
+		multi1 = {
+			name = "Niekończący się Gniew I",
+			info = "Pozwala na zabicie wielu celów w gniewie przez ograniczony czas po pierwszym zabiciu\n\t• Maksymalna liczba celów: [multi]\n\t• Limit czasowy: [multi_time] sekund\n\t• Ochrona przed obrażeniami od kul po zabiciu pierwszego celu zwiększona o [+prot]",
 		},
-		kregen2 = {
-			name = "Hannibal II",
-			info = "Po udanym zabiciu regenerujesz dodatkowe 90 HP\n\t• Całkowity wzrost leczenia: 180 HP"
+		multi2 = {
+			name = "Niekończący się Gniew II",
+			info = "Pozwala na zabicie jeszcze więcej celów w gniewie\n\t• Maksymalna liczba celów: [multi]\n\t• Limit czasowy: [multi_time] sekund\n\t• Ochrona przed obrażeniami od kul po zabiciu pierwszego celu zwiększona o [+prot]",
 		},
-		hunt1 = {
-			name = "Nieśmiały I",
-			info = "Obszar polowań został zwiększony do 4250 jednostek"
+		regen1 = {
+			name = "Krzyk Rozpaczy I",
+			info = "Ulepsza twoją zdolność regeneracji\n\t• Leczenie zwiększone o [+regen_mult]",
 		},
-		hunt2 = {
-			name = "Nieśmiały II",
-			info = "Obszar polowań został zwiększony do 5500 jednostek"
+		regen2 = {
+			name = "Krzyk Rozpaczy II",
+			info = "Ulepsza twoją zdolność regeneracji\n\t• Szybkość zyskiwania ładunków zwiększona o [/regen_stacks]",
 		},
-		hp = {
-			name = "Goliat",
-			info = "Twoje maksymalne zdrowie zostanie zwiększone do 4000 HP\n\t• Twoje obecne zdrowie nie jest zwiększone"
+		regen3 = {
+			name = "Krzyk Rozpaczy III",
+			info = "Ulepsza twoją zdolność regeneracji\n\t• Leczenie zwiększone o [+regen_mult]\n\t• Szybkość zyskiwania ładunków zwiększona o [/regen_stacks]",
 		},
-		def = {
-			name = "Uporczywy",
-			info = "Zyskujesz 30% ochrony przed pociskami"
-		}
+		spec1 = {
+			name = "Łaska I",
+			info = "Ulepsza twoją specjalną zdolność i dodaje drenaż zdrowia psychicznego\n\t• Zyskujesz [+spec_mult] więcej ładunków\n\t• Drenaż zdrowia psychicznego: [sanity]",
+		},
+		spec2 = {
+			name = "Łaska II",
+			info = "Ulepsza twoją specjalną zdolność\n\t• Zyskujesz [+spec_mult] więcej ładunków\n\t• Drenaż zdrowia psychicznego: [sanity]",
+		},
 	}
 }
 
 wep.SCP106 = {
-	swait = "Czas odnowienia umiejętności specjalnej: %is",
-	sready = "Specjalna umiejętność jest gotowa!",
+	cancel = "Naciśnij [%s], aby anulować",
+
+	skills = {
+		_overview = { "passive", "wither", "teleport", "trap" },
+		withering = {
+			name = "Obumieranie",
+			dsc = "Nadaj celowi efekt obumierania. Obumieranie stopniowo spowalnia cel w czasie. Atakowanie celu, który jest wewnątrz Kieszonkowego Wymiaru, natychmiast go zabija\n\nCzas trwania efektu [dur]\nMaksymalne spowolnienie: [slow]",
+		},
+		trap = {
+			name = "Pułapka",
+			dsc = "Umieść pułapkę na ścianie. Kiedy pułapka się aktywuje, cel zostaje spowolniony i możesz ponownie użyć tej umiejętności, aby natychmiast teleportować się do tej pułapki",
+		},
+		teleport = {
+			name = "Teleportacja",
+			dsc = "Użyj, aby umieścić punkt teleportacji. Trzymając się blisko istniejącego punktu teleportacji, możesz wybrać miejsce docelowe, zwolnij, aby teleportować się do wybranego miejsca",
+		},
+		passive = {
+			name = "Kolekcja Zębów",
+			dsc = "Kule nie mogą cię zabić, ale mogą tymczasowo cię powalić, także możesz przechodzić przez drzwi. Dotknięcie gracza teleportuje go do Kieszonkowego Wymiaru. Każdy gracz teleportowany do Kieszonkowego Wymiaru przyznaje jeden ząb. Zebrane zęby wzmacniają twoją umiejętność zwiędnięcia",
+		},
+		teleport_cd = {
+			name = "Teleportacja",
+			dsc = "Pokazuje czas odnowienia punktu teleportacji",
+		},
+		passive_bar = {
+			name = "Kolekcja Zębów",
+			dsc = "Kiedy ten pasek osiągnie zero, zostaniesz powalony",
+		},
+		trap_bar = {
+			name = "Pułapka",
+			dsc = "Pokazuje, jak długo pułapka będzie aktywna",
+		}
+	},
+
 	upgrades = {
-		cd1 = {
-			name = "Spacer pustki I",
-			info = "Czas odnowienia zdolności specjalnej zostaje skrócony o 15 sekund"
+		parse_description = true,
+
+		passive1 = {
+			name = "Kolekcja Zębów I",
+			info = "Ulepsza twoją umiejętność pasywną\n\t• Zwiększa obrażenia wymagane do powalenia cię o [+passive_dmg]\n\t• Skraca czas ogłuszenia po powaleniu o [-passive_cd]",
 		},
-		cd2 = {
-			name = "Spacer pustki II",
-			info = "Czas odnowienia zdolności specjalnej zostaje skrócony o 15 sekund\n\t• Całkowity czas odnowienia: 30 s"
+		passive2 = {
+			name = "Kolekcja Zębów II",
+			info = "Ulepsza twoją umiejętność pasywną\n\t• Zwiększa obrażenia wymagane do powalenia cię o [+passive_dmg]\n\t• Obrażenia zadawane graczom zwiększone o [+teleport_dmg]",
 		},
-		cd3 = {
-			name = "Spacer pustki III",
-			info = "Czas odnowienia zdolności specjalnej zostaje skrócony o 15 sekund\n\t• Całkowity czas odnowienia: 45 s"
+		passive3 = {
+			name = "Kolekcja Zębów III",
+			info = "Ulepsza twoją umiejętność pasywną\n\t• Zwiększa obrażenia wymagane do powalenia cię o [+passive_dmg]\n\t• Skraca czas ogłuszenia po powaleniu o [-passive_cd]\n\t• Obrażenia zadawane graczom zwiększone o [+teleport_dmg]",
 		},
-		tpdmg1 = {
-			name = "Rozkładający dotyk I",
-			info = "Po teleportacji zyskujesz 15 dodatkowych obrażeń na 10 s"
+		withering1 = {
+			name = "Obumieranie I",
+			info = "Ulepsza twoją umiejętność obumierania\n\t• Skraca czas odnowienia o [-attack_cd]\n\t• Zwiększa podstawowy czas trwania efektu o [+withering_dur]",
 		},
-		tpdmg2 = {
-			name = "Rozkładający dotyk II",
-			info = "Po teleportacji zyskujesz 20 dodatkowych obrażeń na 20 s"
+		withering2 = {
+			name = "Obumieranie II",
+			info = "Ulepsza twoją umiejętność obumierania\n\t• Skraca czas odnowienia o [-attack_cd]\n\t• Zwiększa podstawowe spowolnienie efektu o [+withering_slow]",
 		},
-		tpdmg3 = {
-			name = "Rozkładający dotyk III",
-			info = "Po teleportacji zyskujesz 25 dodatkowych obrażeń na 30 s"
+		withering3 = {
+			name = "Obumieranie III",
+			info = "Ulepsza twoją umiejętność obumierania\n\t• Skraca czas odnowienia o [-attack_cd]\n\t• Zwiększa podstawowy czas trwania efektu o [+withering_dur]\n\t• Zwiększa podstawowe spowolnienie efektu o [+withering_slow]",
 		},
-		tank1 = {
-			name = "Tarcza łuzowa I",
-			info = "Uzyskaj 20% ochrony przed pociskami, ale będziesz o 10% wolniejszy"
+		tp1 = {
+			name = "Teleportacja I",
+			info = "Ulepsza twoją umiejętność teleportacji\n\t• Maksymalna liczba punktów zwiększona o [spot_max]\n\t• Skraca czas odnowienia punktu o [-spot_cd]",
 		},
-		tank2 = {
-			name = "Tarcza łuzowa II",
-			info = "Uzyskaj 20% ochrony przed pociskami, ale będziesz o 10% wolniejszy\n\t• Całkowita ochrona: 40%\n\t• Całkowite spowolnienie: 20%"
+		tp2 = {
+			name = "Teleportacja II",
+			info = "Ulepsza twoją umiejętność teleportacji\n\t• Maksymalna liczba punktów zwiększona o [spot_max]\n\t• Skraca czas odnowienia teleportacji o [-tp_cd]",
+		},
+		tp3 = {
+			name = "Teleportacja III",
+			info = "Ulepsza twoją umiejętność teleportacji\n\t• Maksymalna liczba punktów zwiększona o [spot_max]\n\t• Skraca czas odnowienia punktu o [-spot_cd]\n\t• Skraca czas odnowienia teleportacji o [-tp_cd]",
+		},
+		trap1 = {
+			name = "Pułapka I",
+			info = "Ulepsza twoją umiejętność pułapki\n\t• Skraca czas odnowienia pułapki o [-trap_cd]\n\t• Zwiększa czas życia pułapki o [+trap_life]",
+		},
+		trap2 = {
+			name = "Pułapka II",
+			info = "Ulepsza twoją umiejętność pułapki\n\t• Skraca czas odnowienia pułapki o [-trap_cd]\n\t• Zwiększa czas życia pułapki o [+trap_life]",
 		},
 	}
 }
 
+local scp173_prot = {
+	name = "Wzmocniony Beton",
+	info = "• Zyskujesz redukcję obrażeń od kul o [%prot]\n• Ta umiejętność łączy się z innymi umiejętnościami tego samego typu",
+}
+
 wep.SCP173 = {
-	swait = "Czas odnowienia umiejętności specjalnej: %is",
-	sready = "Specjalna umiejętność jest gotowa!",
-	upgrades = {
-		specdist1 = {
-			name = "Widmo I",
-			info = "Zasięg twojej umiejętności specjalnej zostaje zwiększony o 500"
+	restricted = "Ograniczony!",
+
+	skills = {
+		_overview = { "gas", "decoy", "stealth" },
+		gas = {
+			name = "Gaz",
+			dsc = "Emituj chmurę drażniącego gazu, która spowolni, ograniczy widoczność i zwiększy częstotliwość mrugania pobliskich graczy",
 		},
-		specdist2 = {
-			name = "Widmo II",
-			info = "Zasięg twojej umiejętności specjalnej zostaje zwiększony o 700\n\t• Całkowity wzrost: 1200"
+		decoy = {
+			name = "Wabik",
+			dsc = "Umieść wabik, który będzie rozpraszał i wysysał poczytalność graczy",
 		},
-		specdist3 = {
-			name = "Widmo III",
-			info = "Zasięg twojej umiejętności specjalnej zostaje zwiększony o 800\n\t• Całkowity wzrost: 2000"
+		stealth = {
+			name = "Kamuflaż",
+			dsc = "Wejdź w tryb kamuflażu. W trybie kamuflażu jesteś niewidzialny i możesz przechodzić przez drzwi. Dodatkowo, stajesz się niewrażliwy na obrażenia (obrażenia obszarowe, takie jak eksplozje, mogą cię nadal dosięgnąć), ale również nie możesz zadawać obrażeń graczom ani wchodzić w interakcje ze światem",
 		},
-		boost1 = {
-			name = "Pragnienie krwi I",
-			info = "Za każdym razem, gdy zabijesz człowieka, zyskasz 150 HP, a czas odnowienia zdolności specjalnej zostanie skrócony o 10%"
+		looked_at = {
+			name = "Zamrożenie!",
+			dsc = "Pokazuje, czy ktoś na ciebie patrzy",
 		},
-		boost2 = {
-			name = "Pragnienie krwi II",
-			info = "Za każdym razem, gdy zabijesz człowieka, zyskasz 300 HP, a czas odnowienia zdolności specjalnej zostanie skrócony o 25%"
+		next_decoy = {
+			name = "Ładunki wabików",
+			dsc = "Liczba dostępnych wabików",
 		},
-		boost3 = {
-			name = "Pragnienie krwi III",
-			info = "Za każdym razem, gdy zabijesz człowieka, zyskasz 500 HP, a czas odnowienia zdolności specjalnej zostanie skrócony o 50%"
-		},
-		prot1 = {
-			name = "Betonowa skóra I",
-			info = "Natychmiast leczy 1000 HP i zapewnia 10% ochrony przed pociskami"
-		},
-		prot2 = {
-			name = "Betonowa skóra II",
-			info = "Natychmiast leczy 1000 HP i zapewnia 10% ochrony przed pociskami\n\t• Całkowita ochrona: 20%"
-		},
-		prot3 = {
-			name = "Betonowa skóra III",
-			info = "Natychmiast leczy 1000 HP i zapewnia 20% ochrony przed pociskami\n\t• Całkowita ochrona: 40%"
+		stealth_bar = {
+			name = "Kamuflaż",
+			dsc = "Pozostały czas umiejętności kamuflażu",
 		},
 	},
-	back = "Możesz przytrzymać R, aby wrócić do poprzedniej pozycji",
+
+	upgrades = {
+		parse_description = true,
+
+		horror_a = {
+			name = "Przytłaczająca Obecność",
+			info = "Zasięg horroru jest zwiększony o [+horror_dist]",
+		},
+		horror_b = {
+			name = "Niepokojąca Obecność",
+			info = "Wysysanie poczytalności przez horror jest zwiększone o [+horror_sanity]",
+		},
+		attack_a = {
+			name = "Szybki Zabójca",
+			info = "Zasięg zabójstwa jest zwiększony o [+snap_dist]",
+		},
+		attack_b = {
+			name = "Zwinny Zabójca",
+			info = "Zasięg ruchu jest zwiększony o [+move_dist]",
+		},
+		gas1 = {
+			name = "Gaz I",
+			info = "Zasięg gazu jest zwiększony o [+gas_dist]",
+		},
+		gas2 = {
+			name = "Gaz II",
+			info = "Zasięg gazu jest zwiększony o [+gas_dist] i czas odnowienia gazu jest skrócony o [-gas_cd]",
+		},
+		decoy1 = {
+			name = "Wabik I",
+			info = "Czas odnowienia wabika jest skrócony o [-decoy_cd]",
+		},
+		decoy2 = {
+			name = "Wabik II",
+			info = "• Czas odnowienia wabika jest skrócony do 0.5s\n• Oryginalny czas odnowienia dotyczy ładunków wabików\n• Limit wabików jest zwiększony o [decoy_max]",
+		},
+		stealth1 = {
+			name = "Kamuflaż I",
+			info = "Czas odnowienia kamuflażu jest skrócony o [-stealth_cd]",
+		},
+		stealth2 = {
+			name = "Kamuflaż II",
+			info = "• Czas odnowienia kamuflażu jest skrócony o [-stealth_cd]\n• Czas trwania kamuflażu jest zwiększony o [+stealth_dur]",
+		},
+		prot1 = scp173_prot,
+		prot2 = scp173_prot,
+		prot3 = scp173_prot,
+		prot4 = scp173_prot,
+	},
 }
 
 wep.SCP457 = {
-	swait = "Czas odnowienia umiejętności specjalnej: %is",
-	sready = "Specjalna umiejętność jest gotowa!",
-	placed = "Aktywne pułapki: %i/%i",
-	nohp = "Za mało HP!",
+	skills = {
+		_overview = { "passive", "fireball", "trap", "ignite" },
+		fireball = {
+			name = "Kula Ognia",
+			dsc = "Koszt paliwa: [cost]\nWystrzel kulę ognia, która będzie podróżować do momentu zderzenia z czymś",
+		},
+		trap = {
+			name = "Pułapka",
+			dsc = "Koszt paliwa: [cost]\nUmieść pułapkę, która podpali graczy, którzy ją dotkną",
+		},
+		ignite = {
+			name = "Wewnętrzna Wściekłość",
+			dsc = "Koszt paliwa: [cost] za każdą wywołaną falę ognia\nWypuść fale płomieni wokół siebie. Zasięg tej umiejętności jest nieograniczony, a każda kolejna fala ognia zużywa więcej paliwa. Ta umiejętność nie może zostać przerwana",
+		},
+		passive = {
+			name = "Umiejętność pasywna",
+			dsc = "Podpalasz każdego, kogo dotkniesz. Podpalenie gracza dodaje paliwo",
+		},
+	},
+
 	upgrades = {
-		fire1 = {
-			name = "Ludzka pochodnia I",
-			info = "Twój zasięg palenia zostaje zwiększony o 25"
+		parse_description = true,
+
+		passive1 = {
+			name = "Żywa Pochodnia I",
+			info = "Ulepsza twoją pasywną umiejętność\n\t• Zasięg ognia zwiększony o [+fire_radius]\n\t• Ilość paliwa zyskana zwiększona o [+fire_fuel]",
 		},
-		fire2 = {
-			name = "Ludzka pochodnia II",
-			info = "Twoje obrażenia od ognia zostają zwiększone o 0,5"
+		passive2 = {
+			name = "Żywa Pochodnia II",
+			info = "Ulepsza twoją pasywną umiejętność\n\t• Zasięg ognia zwiększony o [+fire_radius]\n\t• Obrażenia od ognia zwiększone o [+fire_dmg]",
 		},
-		fire3 = {
-			name = "Ludzka pochodnia III",
-			info = "Twój zasięg palenia jest zwiększony o 50, a twoje obrażenia od ognia o 0,5\n\t• Całkowity wzrost zasięgu: 75\n\t• Całkowity wzrost obrażeń: 1"
+		passive3 = {
+			name = "Żywa Pochodnia III",
+			info = "Ulepsza twoją pasywną umiejętność\n\t• Ilość paliwa zyskana zwiększona o [+fire_fuel]\n\t• Obrażenia od ognia zwiększone o [+fire_dmg]",
+		},
+		passive_heal1 = {
+			name = "Płomień Życia I",
+			info = "Leczysz się o [%fire_heal] obrażeń zadanych przez ogień z jakiejkolwiek twojej umiejętności",
+		},
+		passive_heal2 = {
+			name = "Płomień Życia II",
+			info = "Leczysz się o [%fire_heal] obrażeń zadanych przez ogień z jakiejkolwiek twojej umiejętności",
+		},
+		fireball1 = {
+			name = "Gra w Zbijaka I",
+			info = "Ulepsza twoją umiejętność kuli ognia\n\t• Czas odnowienia skrócony o [-fireball_cd]\n\t• Prędkość zwiększona o [+fireball_speed]\n\t• Koszt paliwa zmniejszony o [-fireball_cost]",
+		},
+		fireball2 = {
+			name = "Gra w Zbijaka II",
+			info = "Ulepsza twoją umiejętność kuli ognia\n\t• Obrażenia zwiększone o [+fireball_dmg]\n\t• Rozmiar zwiększony o [+fireball_size]\n\t• Koszt paliwa zmniejszony o [-fireball_cost]",
+		},
+		fireball3 = {
+			name = "Gra w Zbijaka III",
+			info = "Ulepsza twoją umiejętność kuli ognia\n\t• Czas odnowienia skrócony o [-fireball_cd]\n\t• Obrażenia zwiększone o [+fireball_dmg]\n\t• Prędkość zwiększona o [+fireball_speed]",
 		},
 		trap1 = {
-			name = "Mała niespodzianka I",
-			info = "Żywotność pułapki jest zwiększona do 4 minut i będzie się palić 1 s dłużej"
+			name = "To Pułapka! I",
+			info = "Ulepsza twoją umiejętność pułapki\n\t• Dodatkowe pułapki: [trap_max]\n\t• Koszt paliwa zmniejszony o [-trap_cost]\n\t• Czas działania zwiększony o [+trap_time]",
 		},
 		trap2 = {
-			name = "Mała niespodzianka II",
-			info = "Trwałość pułapki jest zwiększona do 5 minut i będzie się palić 1 s dłużej, a jej obrażenia zwiększone o 0,5\n\t• Całkowity wzrost czasu palenia: 2s"
+			name = "To Pułapka! II",
+			info = "Ulepsza twoją umiejętność pułapki\n\t• Dodatkowe pułapki: [trap_max]\n\t• Obrażenia zwiększone o [+trap_dmg]\n\t• Czas działania zwiększony o [+trap_time]",
 		},
 		trap3 = {
-			name = "Mała niespodzianka III",
-			info = "Pułapka będzie się palić 1 s dłużej, a jej obrażenia zostaną zwiększone o 0,5\n\t• Całkowity wzrost czasu palenia: 3 s\n\t• Całkowity wzrost obrażeń: 1"
+			name = "To Pułapka! III",
+			info = "Ulepsza twoją umiejętność pułapki\n\t• Koszt paliwa zmniejszony o [-trap_cost]\n\t• Obrażenia zwiększone o [+trap_dmg]\n\t• Czas działania zwiększony o [+trap_time]",
 		},
-		heal1 = {
-			name = "Skwiercząca przekąska I",
-			info = "Płonący ludzie przywracają ci 1 punkt zdrowia"
+		ignite1 = {
+			name = "Wewnętrzna Wściekłość I",
+			info = "Ulepsza twoją umiejętność wewnętrznej wściekłości\n\t• Szybkość fal zwiększona o [/ignite_rate]\n\t• Pierwsza fala wywołuje dodatkowe [ignite_flames] płomienie",
 		},
-		heal2 = {
-			name = "Skwiercząca przekąska II",
-			info = "Płonący ludzie przywracają ci 1 punkt zdrowia\n\t• Całkowity wzrost leczenia: 2"
+		ignite2 = {
+			name = "Wewnętrzna Wściekłość II",
+			info = "Ulepsza twoją umiejętność wewnętrznej wściekłości\n\t• Koszt paliwa zmniejszony o [-ignite_cost]\n\t• Pierwsza fala wywołuje dodatkowe [ignite_flames] płomienie",
 		},
-		speed = {
-			name = "Szybki ogień",
-			info = "Twoja prędkość wzrasta o 10%"
+		fuel = {
+			name = "Dostawa Paliwa!",
+			info = "Natychmiast zyskujesz [fuel] paliwa",
 		}
 	}
 }
 
 wep.SCP682 = {
-	swait = "Czas odnowienia umiejętności specjalnej: %is",
-	sready = "Specjalna umiejętność jest gotowa!",
-	s_on = "Jesteś odporny na wszelkie obrażenia! %is",
+	skills = {
+		_overview = { "primary", "secondary", "charge", "shield" },
+		primary = {
+			name = "Podstawowy atak",
+			dsc = "Atakuj ręką bezpośrednio przed sobą, zadając niewielkie obrażenia",
+		},
+		secondary = {
+			name = "Gryzienie",
+			dsc = "Przytrzymaj klawisz, aby przygotować silny atak, który zada duże obrażenia w stożkowatym obszarze przed tobą",
+		},
+		charge = {
+			name = "Szarża",
+			dsc = "Po krótkim opóźnieniu szarżujesz do przodu i stajesz się niepowstrzymany. Przy pełnej prędkości zabijasz wszystkich na swojej drodze i zyskujesz zdolność do przełamywania większości drzwi. Ta umiejętność musi zostać odblokowana w drzewku ulepszeń",
+		},
+		shield = {
+			name = "Tarcza",
+			dsc = "Tarcza, która absorbuje każde obrażenia inne niż bezpośrednie/upadek. Ta umiejętność jest modyfikowana przez zakupione ulepszenia w twoim drzewku ulepszeń",
+		},
+		shield_bar = {
+			name = "Tarcza",
+			dsc = "Aktualna ilość tarczy, która absorbuje każde obrażenia inne niż bezpośrednie/upadek",
+		},
+	},
+
 	upgrades = {
-		time1 = {
-			name = "Niezłomny I",
-			info = "Czas trwania twojej zdolności specjalnej wydłuża się o 2,5 s\n\t• Całkowity czas trwania: 12,5 s"
+		parse_description = true,
+
+		shield_a = {
+			name = "Wzmocniona Tarcza",
+			info = "Ulepsza moc twojej tarczy\n\t• Moc tarczy: [%shield]\n\t• Czas odnowienia: [%shield_cd]",
 		},
-		time2 = {
-			name = "Niezłomny II",
-			info = "Czas trwania twojej zdolności specjalnej wydłuża się o 2,5 s\n\t• Całkowity czas trwania: 15 s"
+		shield_b = {
+			name = "Regeneracyjna Tarcza",
+			info = "Zmienia moc twojej tarczy\n\t• Moc tarczy: [%shield]\n\t• Czas odnowienia: [%shield_cd]\n\t• Czas odnowienia rozpoczyna się po całkowitym wyczerpaniu tarczy\n\t• Gdy tarcza jest w czasie odnowienia, regenerujesz [shield_regen] HP/s",
 		},
-		time3 = {
-			name = "Niezłomny III",
-			info = "Czas trwania twojej zdolności specjalnej wydłuża się o 2,5 s\n\t• Całkowity czas trwania: 17,5 s"
+		shield_c = {
+			name = "Tarcza Ofiary",
+			info = "Zmienia moc twojej tarczy\n\t• Czas odnowienia: [%shield_cd]\n\t• Czas odnowienia rozpoczyna się po całkowitym wyczerpaniu tarczy\n\t• Moc twojej tarczy jest równa twojemu maksymalnemu HP\n\t• Gdy tarcza pęka, tracisz [shield_hp] maksymalnego HP",
 		},
-		prot1 = {
-			name = "Dostosowanie I",
-			info = "Otrzymujesz 10% mniej obrażeń od kul"
+		shield_d = {
+			name = "Odbijająca Tarcza",
+			info = "Zmienia moc twojej tarczy\n\t• Moc tarczy: [%shield]\n\t• Czas odnowienia: [%shield_cd]\n\t• Czas odnowienia rozpoczyna się po całkowitym wyczerpaniu tarczy\n\t• Twoja tarcza blokuje tylko [%shield_pct] obrażeń\n\t• [%reflect_pct] z zablokowanych obrażeń jest odbijane do atakującego",
 		},
-		prot2 = {
-			name = "Dostosowanie II",
-			info = "Otrzymujesz 15% mniej obrażeń od kul\n\t• Całkowita redukcja obrażeń: 25%"
+
+		shield_1 = {
+			name = "Tarcza I",
+			info = "Dodaje efekty do twojej tarczy. Po całkowitym wyczerpaniu tarczy otrzymujesz dodatkowe [+shield_speed_pow] prędkości ruchu na [shield_speed_dur] sekund",
 		},
-		prot3 = {
-			name = "Dostosowanie III",
-			info = "Otrzymujesz 15% mniej obrażeń od kul\n\t• Całkowita redukcja obrażeń: 40%"
+		shield_2 = {
+			name = "Tarcza II",
+			info = "Dodaje efekty do twojej tarczy. Po całkowitym wyczerpaniu tarczy otrzymujesz dodatkowe [+shield_speed_pow] prędkości ruchu na [shield_speed_dur] sekund. Dodatkowo, każdy 1 punkt otrzymanych obrażeń skraca czas odnowienia tarczy o [shield_cdr] sekund",
 		},
-		speed1 = {
-			name = "Wściekły pośpiechI",
-			info = "Po użyciu umiejętności specjalnej zyskujesz 10% prędkości ruchu do momentu otrzymania obrażeń"
+
+		attack_1 = {
+			name = "Wzmocniony Zamach",
+			info = "Ulepsza twój podstawowy atak\n\t• Czas odnowienia skrócony o [-prim_cd]\n\t• Obrażenia zwiększone o [prim_dmg]",
 		},
-		speed2 = {
-			name = "Wściekły pośpiech II",
-			info = "Po użyciu umiejętności specjalnej zyskujesz 20% prędkości ruchu do momentu otrzymania obrażeń"
+		attack_2 = {
+			name = "Wzmocnione Gryzienie",
+			info = "Ulepsza twoje gryzienie\n\t• Zasięg zwiększony o [+sec_range]\n\t• Prędkość ruchu podczas przygotowania zwiększona o [+sec_speed]",
 		},
-		ult = {
-			name = "Regeneracja",
-			info = "5 sekund po otrzymaniu obrażeń regeneruje 5% brakującego zdrowia"
+		attack_3 = {
+			name = "Bezlitosne Uderzenie",
+			info = "Ulepsza zarówno podstawowy atak, jak i gryzienie\n\t• Oba ataki zadają krwawienie\n\t• Atak gryzienia zadaje złamanie, gdy jest w pełni naładowany",
 		},
+
+		charge_1 = {
+			name = "Szarża",
+			info = "Odblokowuje umiejętność szarży",
+		},
+		charge_2 = {
+			name = "Bezlitosna Szarża",
+			info = "Wzmacnia umiejętność szarży\n\t• Czas odnowienia skrócony o [-charge_cd]\n\t• Czas ogłuszenia i spowolnienia skrócony o [-charge_stun]",
+		}
 	}
 }
 
 wep.SCP8602 = {
+	skills = {
+		_overview = { "passive", "primary", "defense", "charge" },
+		primary = {
+			name = "Atak",
+			dsc = "Wykonaj podstawowy atak",
+		},
+		defense = {
+			name = "Postawa Obronna",
+			dsc = "Przytrzymaj, aby aktywować. Podczas przytrzymywania zyskujesz ochronę z czasem, ale jesteś również spowolniony. Zwolnij, aby rzucić się do przodu i zadać obrażenia równe [dmg_ratio] pochłoniętych obrażeń. Ta umiejętność nie ma limitu czasu trwania",
+		},
+		charge = {
+			name = "Szarża",
+			dsc = "Zyskuj prędkość z czasem i zadaj obrażenia pierwszemu graczowi przed sobą. Jeśli zaatakowany gracz jest wystarczająco blisko ściany, przypnij go do tej ściany, aby zwiększyć obrażenia",
+		},
+		passive = {
+			name = "Umiejętność pasywna",
+			dsc = "Widzisz gracza w swoim lesie i przez jakiś czas po jego opuszczeniu. Gracze w lesie tracą poczytalność, jeśli nie mają poczytalności, tracą zdrowie. Leczenie za przejętą poczytalność/zdrowie od graczy w lesie. To leczenie może przekroczyć twoje maksymalne zdrowie",
+		},
+		overheal_bar = {
+			name = "Nadleczenie",
+			dsc = "Nadleczone zdrowie",
+		},
+		defense_bar = {
+			name = "Obrona",
+			dsc = "Aktualna moc ochrony",
+		},
+		charge_bar = {
+			name = "Szarża",
+			dsc = "Pozostały czas szarży",
+		},
+	},
+
 	upgrades = {
-		charge11 = {
-			name = "Brutalność I",
-			info = "Obrażenia silnego ataku zostają zwiększone o 5"
+		parse_description = true,
+
+		passive1 = {
+			name = "Gęste Lasy I",
+			info = "Ulepsza twoją pasywną zdolność\n\t• Maksymalne nadleczenie zwiększone o [+overheal]\n\t• Szybkość pasywna zwiększona o [/passive_rate]\n\t• Czas wykrywania gracza zwiększony o [+detect_time]",
 		},
-		charge12 = {
-			name = "Brutalność II",
-			info = "Obrażenia silnego ataku zostają zwiększone o 10\n\t• Całkowite zwiększenie obrażeń: 15"
+		passive2 = {
+			name = "Gęste Lasy II",
+			info = "Ulepsza twoją pasywną zdolność\n\t• Maksymalne nadleczenie zwiększone o [+overheal]\n\t• Szybkość pasywna zwiększona o [/passive_rate]\n\t• Czas wykrywania gracza zwiększony o [+detect_time]",
 		},
-		charge13 = {
-			name = "Brutalność III",
-			info = "Obrażenia silnego ataku zostają zwiększone o 10\n\t• Całkowite zwiększenie obrażeń: 25"
+		primary = {
+			name = "Proste ale Niebezpieczne",
+			info = "Ulepsza twój podstawowy atak\n\t• Czas odnowienia skrócony o [-primary_cd]\n\t• Obrażenia zwiększone o [+primary_dmg]",
 		},
-		charge21 = {
+		def1a = {
+			name = "Zwinna Zbroja",
+			info = "Zmienia twoją zdolność obronnej postawy\n\t• Czas aktywacji skrócony o [-def_time]\n\t• Czas odnowienia zwiększony o [+def_cooldown]",
+		},
+		def1b = {
+			name = "Szybka Zbroja",
+			info = "Zmienia twoją zdolność obronnej postawy\n\t• Czas aktywacji zwiększony o [+def_time]\n\t• Czas odnowienia skrócony o [-def_cooldown]",
+		},
+		def2a = {
+			name = "Długi Rzut",
+			info = "Zmienia twoją zdolność obronnej postawy\n\t• Maksymalny dystans rzutu zwiększony o [+def_range]\n\t• Szerokość rzutu zmniejszona o [-def_width]",
+		},
+		def2b = {
+			name = "Niezgrabny Rzut",
+			info = "Zmienia twoją zdolność obronnej postawy\n\t• Maksymalny dystans rzutu zmniejszony o [-def_range]\n\t• Szerokość rzutu zwiększona o [+def_width]",
+		},
+		def3a = {
+			name = "Ciężka Zbroja",
+			info = "Zmienia twoją zdolność obronnej postawy\n\t• Maksymalna ochrona zwiększona o [+def_prot]\n\t• Maksymalne spowolnienie zwiększone o [+def_slow]",
+		},
+		def3b = {
+			name = "Lekka Zbroja",
+			info = "Zmienia twoją zdolność obronnej postawy\n\t• Maksymalna ochrona zmniejszona o [-def_prot]\n\t• Maksymalne spowolnienie zmniejszone o [-def_slow]",
+		},
+		def4 = {
+			name = "Efektywna Zbroja",
+			info = "Ulepsza twoją zdolność obronnej postawy\n\t• Współczynnik konwersji obrażeń zwiększony o [+def_mult]",
+		},
+		charge1 = {
 			name = "Szarża I",
-			info = "Zasięg silnego ataku zostaje zwiększony o 15"
+			info = "Ulepsza twoją zdolność szarży\n\t• Czas odnowienia skrócony o [-charge_cd]\n\t• Czas trwania zwiększony o [+charge_time]\n\t• Podstawowe obrażenia zwiększone o [+charge_dmg]",
 		},
-		charge22 = {
+		charge2 = {
 			name = "Szarża II",
-			info = "Zasięg silnego ataku zostaje zwiększony o 15\n\t• Całkowite zwiększenie zasięgu: 30"
+			info = "Ulepsza twoją zdolność szarży\n\t• Zasięg zwiększony o [+charge_range]\n\t• Czas trwania zwiększony o [+charge_time]\n\t• Obrażenia przypięcia zwiększone o [+charge_pin_dmg]",
 		},
-		charge31 = {
-			name = "Wspólny ból",
-			info = "Kiedy wykonujesz silny atak, wszyscy w pobliżu punktu uderzenia otrzymają 20% obrażeń"
+		charge3 = {
+			name = "Szarża III",
+			info = "Ulepsza twoją zdolność szarży\n\t• Prędkość zwiększona o [+charge_speed]\n\t• Podstawowe obrażenia zwiększone o [+charge_dmg]\n\t• Przypięcie gracza do ściany łamie jego kości",
 		},
 	}
 }
 
 wep.SCP939 = {
+	skills = {
+		_overview = { "passive", "primary", "trail", "special" },
+		primary = {
+			name = "Atak",
+			dsc = "Ugryź wszystkich w stożkowym obszarze przed sobą",
+		},
+		trail = {
+			name = "ANM-C227",
+			dsc = "Przytrzymaj klawisz, aby pozostawić ślad ANM-C227 za sobą",
+		},
+		special = {
+			name = "Detekcja",
+			dsc = "Zacznij wykrywać graczy wokół siebie",
+		},
+		passive = {
+			name = "Umiejętność pasywna",
+			dsc = "Nie widzisz graczy, ale widzisz fale dźwiękowe. Masz aurę ANM-C227 wokół siebie",
+		},
+		special_bar = {
+			name = "Detekcja",
+			dsc = "Pozostały czas detekcji",
+		},
+	},
+
 	upgrades = {
-		heal1 = {
-			name = "Żądza krwi I",
-			info = "Twoje ataki leczą cię o co najmniej 22,5 HP (do 30)"
+		parse_description = true,
+
+		passive1 = {
+			name = "Aura I",
+			info = "Ulepsza twoją pasywną zdolność\n\t• Promień aury zwiększony o [+aura_radius]\n\t• Obrażenia aury zwiększone o [aura_damage]",
 		},
-		heal2 = {
-			name = "Żądza krwi II",
-			info = "Twoje ataki leczą cię o co najmniej 37,5 HP (do 50)"
+		passive2 = {
+			name = "Aura II",
+			info = "Ulepsza twoją pasywną zdolność\n\t• Promień aury zwiększony o [+aura_radius]\n\t• Obrażenia aury zwiększone o [aura_damage]",
 		},
-		heal3 = {
-			name = "Żądza krwi III",
-			info = "Twoje ataki leczą cię o co najmniej 52,5 HP (do 70)"
+		passive3 = {
+			name = "Aura III",
+			info = "Ulepsza twoją pasywną zdolność\n\t• Promień aury zwiększony o [+aura_radius]\n\t• Obrażenia aury zwiększone o [aura_damage]",
 		},
-		amn1 = {
-			name = "Śmiertelny oddech I",
-			info = "Twój zasięg trucizny został zwiększony do 100"
+		attack1 = {
+			name = "Ugryzienie I",
+			info = "Ulepsza twoją zdolność ataku\n\t• Czas odnowienia skrócony o [-attack_cd]\n\t• Obrażenia zwiększone o [+attack_dmg]",
 		},
-		amn2 = {
-			name = "Śmiertelny oddech II",
-			info = "Twoja trucizna zadaje teraz obrażenia: 1,5 dmg / s"
+		attack2 = {
+			name = "Ugryzienie II",
+			info = "Ulepsza twoją zdolność ataku\n\t• Czas odnowienia skrócony o [-attack_cd]\n\t• Zasięg zwiększony o [+attack_range]",
 		},
-		amn3 = {
-			name = "Śmiertelny oddech III",
-			info = "Twój zasięg trucizny zostaje zwiększony do 125, a twoje obrażenia od trucizny zwiększone do 3 dmg / s"
+		attack3 = {
+			name = "Ugryzienie III",
+			info = "Ulepsza twoją zdolność ataku\n\t• Obrażenia zwiększone o [+attack_dmg]\n\t• Zasięg zwiększony o [+attack_range]\n\t• Twoje ataki mają szansę na wywołanie krwawienia",
+		},
+		trail1 = {
+			name = "Amnezja I",
+			info = "Ulepsza twoją zdolność ANM-C227\n\t• Promień zwiększony o [+trail_radius]\n\t• Szybkość generowania ładunków zwiększona o [/trail_rate]",
+		},
+		trail2 = {
+			name = "Amnezja II",
+			info = "Ulepsza twoją zdolność ANM-C227\n\t• Obrażenia zwiększone o [trail_dmg]\n\t• Maksymalna liczba ładunków zwiększona o [+trail_stacks]",
+		},
+		trail3a = {
+			name = "Amnezja III A",
+			info = "Ulepsza twoją zdolność ANM-C227\n\t• Czas trwania śladu zwiększony o [+trail_life]\n\t• Promień zwiększony o [+trail_radius]",
+		},
+		trail3b = {
+			name = "Amnezja III B",
+			info = "Ulepsza twoją zdolność ANM-C227\n\t• Maksymalna liczba ładunków zwiększona o [+trail_stacks]",
+		},
+		trail3c = {
+			name = "Amnezja III C",
+			info = "Ulepsza twoją zdolność ANM-C227\n\t• Szybkość generowania ładunków zwiększona o [/trail_rate]",
+		},
+		special1 = {
+			name = "Echolokacja I",
+			info = "Ulepsza twoją specjalną zdolność\n\t• Czas odnowienia skrócony o [-special_cd]\n\t• Promień zwiększony o [+special_radius]",
+		},
+		special2 = {
+			name = "Echolokacja II",
+			info = "Ulepsza twoją specjalną zdolność\n\t• Czas odnowienia skrócony o [-special_cd]\n\t• Czas trwania zwiększony o [+special_times]",
 		},
 	}
 }
 
 wep.SCP966 = {
+	fatigue = "Poziom zmęczenia:",
+
+	skills = {
+		_overview = { "passive", "attack", "channeling", "mark" },
+		attack = {
+			name = "Podstawowy atak",
+			dsc = "Wykonaj podstawowy atak. Możesz atakować tylko graczy z co najmniej 10 ładunkami zmęczenia. Atakowani gracze tracą część ładunków zmęczenia. Efekty tego ataku zależą od drzewa umiejętności",
+		},
+		channeling = {
+			name = "Kanałowanie",
+			dsc = "Kanałuj zdolność wybraną w drzewie umiejętności",
+		},
+		mark = {
+			name = "Znak Śmierci",
+			dsc = "Oznacz gracza. Oznaczeni gracze będą przenosić ładunki zmęczenia z innych pobliskich graczy na siebie",
+		},
+		passive = {
+			name = "Zmęczenie",
+			dsc = "Od czasu do czasu nakładasz ładunki zmęczenia na pobliskich graczy. Zyskujesz również pasywne ładunki za każdy nałożony ładunek zmęczenia",
+		},
+		channeling_bar = {
+			name = "Kanałowanie",
+			dsc = "Pozostały czas kanałowanej zdolności",
+		},
+		mark_bar = {
+			name = "Znak Śmierci",
+			dsc = "Pozostały czas znaku na oznaczonym graczu",
+		},
+	},
+
 	upgrades = {
-		lockon1 = {
-			name = "Szał I",
-			info = "Czas potrzebny do ataku jest skrócony do 2,5 s"
+		parse_description = true,
+
+		passive1 = {
+			name = "Zmęczenie I",
+			info = "Ulepsza twoją pasywną zdolność\n\t• Szybkość pasywna zwiększona o [/passive_rate]",
 		},
-		lockon2 = {
-			name = "Szał II",
-			info = "Czas potrzebny do ataku jest skrócony do 2 s"
+		passive2 = {
+			name = "Zmęczenie II",
+			info = "Ulepsza twoją pasywną zdolność\n\t• Szybkość pasywna zwiększona o [/passive_rate]\n\t• Zasięg pasywny zwiększony o [+passive_radius]",
 		},
-		dist1 = {
-			name = "Zew łowcy I",
-			info = "Zasięg ataku zostaje zwiększony o 15"
+		basic1 = {
+			name = "Ostre Pazury I",
+			info = "Ulepsza twój podstawowy atak, zwiększając obrażenia o [%basic_dmg] za każdy [basic_stacks] pasywny ładunek. Dodatkowo, zyskując pasywne ładunki, odblokowuje:\n\t• [bleed1_thr] ładunków: Nakłada krwawienie, jeśli cel nie krwawi\n\t• [drop1_thr] ładunków: Zmniejsza utratę ładunków zmęczenia celu do [%drop1]\n\t• [slow_thr] ładunki: Cel jest spowolniony o [-slow_power] na [slow_dur] sekund",
 		},
-		dist2 = {
-			name = "Zew łowcy II",
-			info = "Zasięg ataku zostaje zwiększony o 15\n\t• Całkowity wzrost zasięgu: 30"
+		basic2 = {
+			name = "Ostre Pazury II",
+			info = "Ulepsza twój podstawowy atak, zwiększając obrażenia o [%basic_dmg] za każdy [basic_stacks] pasywny ładunek. Dodatkowo, zyskując pasywne ładunki, odblokowuje:\n\t• [bleed2_thr] ładunków: Nakłada krwawienie przy trafieniu\n\t• [drop2_thr] ładunków: Zmniejsza utratę ładunków zmęczenia celu do [%drop2]\n\t• [hb_thr] ładunków: Nakłada ciężkie krwawienie zamiast krwawienia przy trafieniu",
 		},
-		dist3 = {
-			name = "Zew łowcy III",
-			info = "Zasięg ataku zostaje zwiększony o 15\n\t• Całkowity wzrost zasięgu: 45"
+		heal = {
+			name = "Wysysanie Krwi",
+			info = "Ulecz [%heal_rate] za każdy pasywny ładunek na każdy ładunek zmęczenia celu przy trafieniu",
 		},
-		dmg1 = {
-			name = "Ostre pazury I",
-			info = "Obrażenia od ataku zostają zwiększone o 5"
+		channeling_a = {
+			name = "Nieskończone Zmęczenie",
+			info = "Odblokowuje zdolność kanałowania, która pozwala skupić się na jednym celu\n\t• Pasywna jest wyłączona podczas kanałowania\n\t• Czas odnowienia [channeling_cd] sekund\n\t• Maksymalny czas trwania [channeling_time] sekund\n\t• Cel zyskuje ładunkek zmęczenia co [channeling_rate] sekund",
 		},
-		dmg2 = {
-			name = "Ostre pazury II",
-			info = "Obrażenia od ataku zostają zwiększone o 5\n\t• Całkowite zwiększenie obrażeń: 10"
+		channeling_b = {
+			name = "Wysysanie Energii",
+			info = "Odblokowuje zdolność kanałowania, która pozwala wysysać ładunki zmęczenia z pobliskich graczy\n\t• Pasywna jest wyłączona podczas kanałowania\n\t• Czas odnowienia [channeling_cd] sekund\n\t• Maksymalny czas trwania [channeling_time] sekund\n\t• Każde [channeling_rate] sekund, przenosi 1 ładunek zmęczenia od wszystkich pobliskich graczy do pasywnych ładunków",
 		},
-		bleed1 = {
-			name = "Głębokie rany I",
-			info = "Twoje ataki mają 25% szansy na wywołanie krwawienia wyższego poziomu"
+		channeling = {
+			name = "Wzmocnione Kanałowanie",
+			info = "Ulepsza twoją zdolność kanałowania\n\t• Zasięg kanałowania zwiększony o [+channeling_range_mul]\n\t• Czas trwania kanałowania zwiększony o [+channeling_time_mul]",
 		},
-		bleed2 = {
-			name = "Głębokie rany II",
-			info = "Twoje ataki mają 50% szansy na wywołanie krwawienia wyższego poziomu"
+		mark1 = {
+			name = "Śmiertelny Znak I",
+			info = "Ulepsza zdolność oznaczania:\n\t• Szybkość przenoszenia ładunków zwiększona o [/mark_rate]",
+		},
+		mark2 = {
+			name = "Śmiertelny Znak II",
+			info = "Ulepsza zdolność oznaczania:\n\t• Szybkość przenoszenia ładunków zwiększona o [/mark_rate]\n\t• Zasięg przenoszenia ładunków zwiększony o [+mark_range]",
 		},
 	}
 }
 
 wep.SCP24273 = {
-	mind_control = "Kontrola umysłu jest gotowa! Naciśnij PPM",
-	mind_control_cd = "Kontrola umysłu się odnawia! Czas odnowienia: %is",
-	dash = "Atak gotowy!",
-	dash_cd = "Atak się odnawia! Czas odnowienia: %is",
+	skills = {
+		_overview = { "change", "primary", "secondary", "special" },
+		primary = {
+			name = "Szarańcza / Kamuflaż",
+			dsc = "\nSędzia:\nRusz naprzód, zadając obrażenia wszystkim na swojej drodze\n\nProkurator:\nAktywuj kamuflaż. Podczas kamuflażu jesteś mniej widoczny. Używanie umiejętności, poruszanie się lub otrzymywanie obrażeń przerywa go",
+		},
+		secondary = {
+			name = "Egzaminacja / Nadzór",
+			dsc = "\nSędzia:\nSkup się na wybranym graczu przez jakiś czas. Po pełnym wykonaniu, spowolnij cel i zadaj obrażenia. Jeśli utracisz linię wzroku, umiejętność zostaje przerwana, a ty zostajesz spowolniony\n\nProkurator:\nOpuszcz swoje ciało i patrz z perspektywy losowego pobliskiego gracza. Twoja pasywna zdolność również działa z perspektywy tego gracza",
+		},
+		special = {
+			name = "Wyrok / Duch",
+			dsc = "\nSędzia:\nPozostaj na miejscu i zmuszaj wszystkich w pobliżu do zbliżania się do ciebie. Po zakończeniu, gracze w bliskiej odległości otrzymują obrażenia i zostają odrzuceni\n\nProkurator:\nWejdź w formę ducha. W formie ducha jesteś odporny na wszelkie obrażenia (z wyjątkiem wybuchów i bezpośrednich obrażeń)",
+		},
+		change = {
+			name = "Sędzia / Prokurator",
+			dsc = "\nZmiana między trybem Sędziego i Prokuratora\n\nSędzia:\nObrażenia, które zadajesz, są zwiększane przez dowody zgromadzone na celu. Atakowanie celu zmniejsza poziom dowodów. Atakowanie graczy z pełnym dowodem natychmiast ich zabija\n\nProkurator:\nJesteś spowolniony i otrzymujesz ochronę przed obrażeniami od kul. Patrzenie na graczy gromadzi dowody przeciwko nim",
+		},
+		camo_bar = {
+			name = "Kamuflaż",
+			dsc = "Pozostały czas kamuflażu",
+		},
+		spectate_bar = {
+			name = "Nadzór",
+			dsc = "Pozostały czas nadzoru",
+		},
+		drain_bar = {
+			name = "Egzaminacja",
+			dsc = "Pozostały czas egzaminacji",
+		},
+		ghost_bar = {
+			name = "Duch",
+			dsc = "Pozostały czas formy ducha",
+		},
+		special_bar = {
+			name = "Wyrok",
+			dsc = "Pozostały czas wyroku",
+		},
+	},
+
 	upgrades = {
+		parse_description = true,
+
+		j_passive1 = {
+			name = "Surowy Sędzia I",
+			info = "Ulepsza twoją pasywną zdolność sędziego\n\t• Dowody zwiększają obrażenia do dodatkowych [%j_mult]\n\t• Utrata dowodów przy ataku zmniejszona do [%j_loss]",
+		},
+		j_passive2 = {
+			name = "Surowy Sędzia II",
+			info = "Ulepsza twoją pasywną zdolność sędziego\n\t• Dowody zwiększają obrażenia do dodatkowych [%j_mult]\n\t• Utrata dowodów przy ataku zmniejszona do [%j_loss]",
+		},
+		p_passive1 = {
+			name = "Prokurator Rejonowy I",
+			info = "Ulepsza twoją pasywną zdolność prokuratora\n\t• Ochrona przed kulami zwiększona do [%p_prot]\n\t• Spowolnienie zwiększone do [%p_slow]\n\t• Szybkość gromadzenia dowodów zwiększona do [%p_rate] na sekundę",
+		},
+		p_passive2 = {
+			name = "Prokurator Rejonowy II",
+			info = "Ulepsza twoją pasywną zdolność prokuratora\n\t• Ochrona przed kulami zwiększona do [%p_prot]\n\t• Spowolnienie zwiększone do [%p_slow]\n\t• Szybkość gromadzenia dowodów zwiększona do [%p_rate] na sekundę",
+		},
 		dash1 = {
-			name = "Bezwzględna Szarża I",
-			info = "Czas odnowienia twojego ataku zostaje skrócony o 1 sekunde, a jego moc zostaje zwiększona o 15%"
+			name = "Szarańcza I",
+			info = "Ulepsza twoją zdolność szarańczy\n\t• Czas odnowienia zmniejszony o [-dash_cd]\n\t• Obrażenia zwiększone o [+dash_dmg]",
 		},
 		dash2 = {
-			name = "Bezwzględna Szarża II",
-			info = "Czas kary po ataku jest zmniejszony o 1 sekundę, a kara do szybkości zmniejszona z 40% do 25%"
+			name = "Szarańcza II",
+			info = "Ulepsza twoją zdolność szarańczy\n\t• Czas odnowienia zmniejszony o [-dash_cd]\n\t• Obrażenia zwiększone o [+dash_dmg]",
 		},
-		dash3 = {
-			name = "Bezwzględna Szarża III",
-			info = "Twoje obrażenia od ataku zostają zwiększone o 50"
+		camo1 = {
+			name = "Kamuflaż I",
+			info = "Ulepsza twoją zdolność kamuflażu\n\t• Czas odnowienia zmniejszony o [-camo_cd]\n\t• Czas trwania zwiększony o [+camo_dur]\n\t• Możesz poruszać się [camo_limit] jednostek bez przerywania tej zdolności",
 		},
-		mc11 = {
-			name = "Wytrwały łowca I",
-			info = "Czas trwania kontroli umysłu jest wydłużony o 10 sekund, ale czas odnowienia jest wydłużony o 20 sekund"
+		camo2 = {
+			name = "Kamuflaż II",
+			info = "Ulepsza twoją zdolność kamuflażu\n\t• Czas odnowienia zmniejszony o [-camo_cd]\n\t• Czas trwania zwiększony o [+camo_dur]\n\t• Możesz poruszać się [camo_limit] jednostek bez przerywania tej zdolności",
 		},
-		mc12 = {
-			name = "Wytrwały łowca II",
-			info = "Czas trwania kontroli umysłu jest wydłużony o 10 sekund, ale czas odnowienia jest wydłużony o 25 sekund\n\t• Całkowite wydłużenie czasu trwania: 20s\n\t• Całkowite wydłużenie czasu odnowienia: 45s"
+		drain1 = {
+			name = "Egzaminacja I",
+			info = "Ulepsza twoją zdolność pasywną prokuratora\n\t• Czas odnowienia zmniejszony o [-drain_cd]\n\t• Czas trwania zmniejszony o [-drain_dur]",
 		},
-		mc21 = {
-			name = "Niecierpliwy łowca I",
-			info = "Czas trwania kontroli umysłu zostaje skrócony o 5 sekund, a czas odnowienia skrócony o 10 sekund"
+		drain2 = {
+			name = "Egzaminacja II",
+			info = "Ulepsza twoją zdolność pasywną prokuratora\n\t• Czas odnowienia zmniejszony o [-drain_cd]\n\t• Czas trwania zmniejszony o [-drain_dur]",
 		},
-		mc22 = {
-			name = "Niecierpliwy łowca II",
-			info = "Czas trwania kontroli umysłu zostaje skrócony o 10 sekund, a czas odnowienia skrócony o 15 sekund"
+		spect1 = {
+			name = "Nadzór I",
+			info = "Ulepsza twoją zdolność pasywną prokuratora\n\t• Czas odnowienia zmniejszony o [-spect_cd]\n\t• Czas trwania zwiększony o [+spect_dur]\n\t• Ochrona przed obrażeniami od kul zwiększona do [%spect_prot]",
 		},
-		mc3 = {
-			name = "Niezłomny łowca",
-			info = "Podczas kontroli umysłu zyskujesz 50% redukcji dla wszystkich rodzajów obrażeń"
+		spect2 = {
+			name = "Nadzór II",
+			info = "Ulepsza twoją zdolność pasywną prokuratora\n\t• Czas odnowienia zmniejszony o [-spect_cd]\n\t• Czas trwania zwiększony o [+spect_dur]\n\t• Ochrona przed obrażeniami od kul zwiększona do [%spect_prot]",
 		},
-		mc13 = {
-			name = "Surowy sędzia",
-			info = "Zabicie zdobyczy podczas Kontroli Umysłu skraca jej czas odnowienia o 40%. Zasięg kontroli umysłu zostaje zwiększony o 1000 jednostek"
+		combo = {
+			name = "Sąd Najwyższy",
+			info = "Ulepsza twoją zdolność wyroku i ducha\n\t• Ochrona wyroku zwiększona do [%special_prot]\n\t• Czas trwania ducha zwiększony o [+ghost_dur]",
 		},
-		mc23 = {
-			name = "Karmazynowy Sędzia",
-			info = "Zabicie zdobyczy podczas Kontroli Umysłu leczy cię o 400 HP. Zasięg kontroli umysłu zostaje zwiększony o 500 jednostek"
+		spec = {
+			name = "Wyrok",
+			info = "Ulepsza twoją zdolność wyroku\n\t• Czas odnowienia zmniejszony o [-special_cd]\n\t• Czas trwania zwiększony o [+special_dur]\n\t• Ochrona zwiększona do [%special_prot]",
+		},
+		ghost1 = {
+			name = "Duch I",
+			info = "Ulepsza twoją zdolność ducha\n\t• Czas odnowienia zmniejszony o [-ghost_cd]\n\t• Czas trwania zwiększony o [+ghost_dur]\n\t• Leczenie zwiększone do [ghost_hel] za 1 spożyty dowód",
+		},
+		ghost2 = {
+			name = "Duch II",
+			info = "Ulepsza twoją zdolność ducha\n\t• Czas odnowienia zmniejszony o [-ghost_cd]\n\t• Czas trwania zwiększony o [+ghost_dur]\n\t• Leczenie zwiększone do [ghost_hel] za 1 spożyty dowód",
+		},
+		change1 = {
+			name = "Zmiana I",
+			info = "Czas odnowienia zmiany skrócony o [-change_cd]",
+		},
+		change2 = {
+			name = "Zmiana II",
+			info = "Czas odnowienia zmiany skrócony o [-change_cd]. Dodatkowo, zmiana trybu nie zakłóca już zdolności kamuflażu",
 		},
 	}
 }
 
 wep.SCP3199 = {
-	special = "Specjalna umiejętność jest gotowa! Naciśnij PPM",
+	skills = {
+		_overview = { "passive", "primary", "special", "egg" },
+		eggs_max = "Masz już maksymalną liczbę jajek!",
+
+		primary = {
+			name = "Attack",
+			dsc = "Wykonaj podstawowy atak. Trafienie celu aktywuje (lub odnawia) szał, nakłada efekt głębokich ran oraz przyznaje ładunek pasywny i ładunek szału.\nAtaki zadają zmniejszone obrażenia celom z głębokimi ranami. Chybienie ataku przerywa szał. Trafienie tylko celu z głębokimi ranami przerywa szał i nakłada karę w ładunkach",
+		},
+		special = {
+			name = "Atak z Zaświatów",
+			dsc = "Aktywuje się po [tokens] udanych atakach z rzędu. Użyj, aby natychmiast zakończyć szał i uszkodzić wszystkich graczy, którzy mają głębokie rany. Dotknięci gracze są również spowolnieni",
+		},
+		egg = {
+			name = "Jajka",
+			dsc = "Po zabiciu gracza możesz złożyć jajko. Kiedy otrzymasz śmiertelne obrażenia, odrodzisz się przy losowym jajku. Odrodzenie zużywa jajko. Dodatkowo, każde jajko zapewnia [prot] ochrony przed kulami (z limitem [cap])\n\nObecne jajka: [eggs] / [max]",
+		},
+		passive = {
+			name = "Umiejętność pasywna",
+			dsc = "Podczas szału widzisz lokalizację pobliskich graczy bez głębokich ran. Zdobywanie ładunków szału również przyznaje ładunki pasywne. Jeśli twój atak trafi tylko gracza z głębokimi ranami, stracisz [penalty] ładunków. Ładunki pasywne ulepszają twoje inne umiejętności\n\nRegeneracja [heal] HP na sekundę podczas szału\nBonus do obrażeń ataku: [dmg]\nBonus do prędkości podczas szału: [speed]\nDodatkowe spowolnienie ataku specjalnego: [slow]\nAtaki specjalne zadają [bleed] poziom(y) krwawienia",
+		},
+		frenzy_bar = {
+			name = "Szał",
+			dsc = "Pozostały czas szału",
+		},
+		egg_bar = {
+			name = "Jajko",
+			dsc = "Pozostały czas do złożenia jajka",
+		},
+	},
+
 	upgrades = {
-		regen1 = {
-			name = "Smak krwi I",
-			info = "Regeneruje 2 HP na sekundę będąc w Szale"
-		},
-		regen2 = {
-			name = "Smak krwi II",
-			info = "Współczynnik regeneracji zdrowia zostaje zwiększony o 10% za każdy ładunek Szału"
-		},
+		parse_description = true,
+
 		frenzy1 = {
-			name = "Gra myśliwego I",
-			info = "Twoje maksymalne ładunki Szału są zwiększone o 1\nTwój czas trwania Szału jest zwiększony o 20%"
+			name = "Szał I",
+			info = "Ulepsza twoją umiejętność szału\n\t• Czas trwania zwiększony o [+frenzy_duration]\n\t• Maksymalne ładunki zwiększone o [frenzy_max]",
 		},
 		frenzy2 = {
-			name = "Gra myśliwego II",
-			info = "Twoje maksymalne ładunki Szału są zwiększone o 1\nTwój czas trwania Szału jest zwiększony o 30%\nTwój atak specjalny jest wyłączony\n\t• Zwiększenie łącznej liczby ładunków Szału: 2\n\t• Całkowite wydłużenie czasu trwania: 50%"
+			name = "Szał II",
+			info = "Ulepsza twoją umiejętność szału\n\t• Maksymalne ładunki zwiększone o [frenzy_max]\n\t• Prędkość podczas szału zwiększona o [%frenzy_speed_stacks] za każdy ładunek pasywny",
 		},
-		ch = {
-			name = "Ślepa furia",
-			info = "Twoja prędkość wzrasta o 25%\nNie możesz już wykrywać bicia serca pobliskich ludzi"
+		frenzy3 = {
+			name = "Szał III",
+			info = "Ulepsza twoją umiejętność szału\n\t• Czas trwania zwiększony o [+frenzy_duration]\n\t• Prędkość podczas szału zwiększona o [%frenzy_speed_stacks] za każdy ładunek pasywny",
 		},
-		egg1 = {
-			name = "Kolejny",
-			info = "Tworzysz 1 nowe nieaktywne jajko po zakupie tego ulepszenia\n\t• Jajo nie zostanie utworzone, jeśli na mapie nie ma wolnego miejsca na jajko"
+		attack1 = {
+			name = "Ostre Pazury I",
+			info = "Ulepsza twoją umiejętność atakuy\n\t• Czas odnowienia skrócony o [-attack_cd]\n\t• Obrażenia zwiększone o [+attack_dmg]",
 		},
-		egg2 = {
-			name = "Dziedzictwo",
-			info = "Jedno z nieaktywnych jaj zostanie aktywowane po zakupie tego ulepszenia\n\t• Nie przyniesie to efektu, jeśli na mapie nie ma nieaktywnego jajka"
+		attack2 = {
+			name = "Ostre Pazury II",
+			info = "Ulepsza twoją umiejętność atakuy\n\t• Czas odnowienia skrócony o [-attack_cd]\n\t• Obrażenia zwiększone o [%attack_dmg_stacks] za każdy ładunek pasywny",
 		},
-		egg3 = {
-			name = "Jajko wielkanocne",
-			info = "Twój czas odrodzenia został zmniejszony do 20 sekund"
+		attack3 = {
+			name = "Ostre Pazury III",
+			info = "Ulepsza twoją umiejętność atakuy\n\t• Obrażenia zwiększone o [+attack_dmg]\n\t• Obrażenia zwiększone o [%attack_dmg_stacks] za każdy ładunek pasywny",
+		},
+		special1 = {
+			name = "Atak z Zaświatów I",
+			info = "Ulepsza twoją umiejętność specjalną\n\t• Obrażenia zwiększone o [+special_dmg]\n\t• Spowolnienie zwiększone o [%special_slow] za każdy ładunek pasywny\n\t• Czas trwania spowolnienia zwiększony o [+special_slow_duration]",
+		},
+		special2 = {
+			name = "Atak z Zaświatów II",
+			info = "Ulepsza twoją umiejętność specjalną\n\t• Obrażenia zwiększone o [+special_dmg]\n\t• Spowolnienie zwiększone o [%special_slow] za każdy ładunek pasywny\n\t• Czas trwania spowolnienia zwiększony o [+special_slow_duration]",
+		},
+		passive = {
+			name = "Zmysł Krwi",
+			info = "Zwiększona promień pasywnego wykrywania o [+passive_radius]",
+		},
+		egg = {
+			name = "Jajko Wielkanocne",
+			info = "Natychmiastowe złożenie nowego jajka. Ta umiejętność może przekroczyć limit jajek",
 		},
 	}
+}
+
+wep.SCP009 = {
+	name = "SCP-009",
 }
 
 wep.SCP500 = {
@@ -2189,6 +2899,7 @@ wep.SCP1025 = {
 
 wep.HOLSTER = {
 	name = "Dłonie",
+	info = "Użyj, aby ukryć aktualnie wyposażony przedmiot"
 }
 
 wep.ID = {
@@ -2231,6 +2942,7 @@ wep.ACCESS_CHIP = {
 	showname = "CZIP",
 	pickupname = "CZIP",
 	clearance = "Poziom dostępu: %i",
+	clearance2 = "Poziom dostępu: ",
 	hasaccess = "Zapewnia dostęp do:",
 	NAMES = {
 		general = "Ogólny",
@@ -2305,7 +3017,9 @@ wep.OMNITOOL = {
 	pickupname = "Omnitool",
 	none = "BRAK",
 	chip = "Włożony chip: %s",
+	chip2 = "Włożony chip: ",
 	clearance = "Poziom dostępu: %i",
+	clearance2 = "Poziom dostępu: ",
 	SCREEN = {
 		loading = "Ładowanie",
 		name = "Omnitool v4.78",
@@ -2327,10 +3041,6 @@ wep.MEDKITPLUS = {
 	name = "Duża apteczka (Pozostało ładunków: %d)",
 	showname = "Apteczka+",
 	pickupname = "Apteczka+",
-}
-
-wep.TASER = {
-	name = "Paralizator"
 }
 
 wep.FLASHLIGHT = {
@@ -2357,6 +3067,7 @@ wep.FUSE = {
 wep.TURRET = {
 	name = "Wieżyczka",
 	placing_turret = "Rozkładanie działka",
+	pickup_turret = "Podnoszenie działka",
 	pickup = "Podnieś",
 	MODES = {
 		off = "Wyłącz",
@@ -2424,6 +3135,18 @@ wep.DOCUMENT = {
 	}
 }
 
+wep.BACKPACK = {
+	name = "Plecak",
+	info = "Umożliwia przechowywanie większej ilości przedmiotów",
+	size = "Wielkość: ",
+	NAMES = {
+		small = "Mały Plecak",
+		medium = "Średni Plecak",
+		large = "Duży Plecak",
+		huge = "Ogromny Plecak",
+	}
+}
+
 wep.ADRENALINE = {
 	name = "Adrenalina",
 	info = "Na krótki okres czasu zapewnia chwilowe zwiększenie wytrzymałości",
@@ -2444,6 +3167,10 @@ wep.MORPHINE_BIG = {
 	info = "Zapewnia dużo tymczasowego zdrowia, które z czasem zanika",
 }
 
+wep.TASER = {
+	name = "Paralizator"
+}
+
 wep.PIPE = {
 	name = "Metalowa rura"
 }
@@ -2452,9 +3179,57 @@ wep.GLASS_KNIFE = {
 	name = "Szklany nóż"
 }
 
+wep.CLOTHES_CHANGER = {
+	name = "Zmieniacz ubrań (Dłonie)",
+	info = "Działa jak zwykłe dłonie. Dodatkowo pozwala na kradzież ubrań z ciał zwłok. Spójrz na martwe ciało i przytrzymaj LPM, aby użyć",
+	skill = "Zmieniacz ubrań",
+	wait = "Czekaj",
+	ready = "Gotowy",
+	progress = "Zamiana ubrań",
+	vest = "Zdejmij pancerz aby zmienić ubrania"
+}
+
+wep.DOOR_BLOCKER = {
+	name = "Bloker Drzwi",
+	info = "Wyceluj w przycisk i przytrzymaj LPM, aby naładować. Zwolnij LPM, aby rozładować i tymczasowo zablokować korzystanie z drzwi",
+	skill = "Bloker Drzwi",
+	wait = "Czekaj",
+	ready = "Gotowy",
+	progress = "Ładowanie"
+}
+
 wep.__slc_ammo = "Amunicja"
 
 wep.weapon_stunstick = "Pałka"
 wep.weapon_crowbar = "Łom"
 
-registerLanguage( lang, "polish", "polski", "pl" )
+--[[-------------------------------------------------------------------------
+Minigames
+---------------------------------------------------------------------------]]
+local minigames = {}
+lang.minigames = minigames
+
+--[[-------------------------------------------------------------------------
+Snake
+---------------------------------------------------------------------------]]
+local snake = {}
+minigames.snake = snake
+
+snake.score = "Wynik"
+snake.high_score = "Rekord"
+snake.game_over = "Koniec Gry!"
+snake.paused = "Przygotuj się!"
+snake.info = "Naciśnij W, A, S lub D, aby rozpocząć"
+snake.restart = "Naciśnij spację, aby uruchomić ponownie"
+
+--[[-------------------------------------------------------------------------
+Data binds - DO NOT EDIT!
+---------------------------------------------------------------------------]]
+lang.__binds = {
+	["badges"] = "ranks",
+}
+
+--[[-------------------------------------------------------------------------
+Register language
+---------------------------------------------------------------------------]]
+RegisterLanguage( lang, "polish", "polski", "pl" )

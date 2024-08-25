@@ -17,27 +17,32 @@ function PLAYER:SetupDataTables()
 	ply:NetworkVar( "Int", 4, "_SCPClassPoints" )
 	ply:NetworkVar( "Int", 5, "TimeSignature" )
 	ply:NetworkVar( "Int", 6, "Stamina" ) --although this could be SLCVar, NetworkVar is more reliable and has prediction error correction
+	ply:NetworkVar( "Int", 7, "PrestigeLevel" )
 
 	ply:NetworkVar( "Float", 0, "ExtraHealth" )
 	ply:NetworkVar( "Float", 1, "MaxExtraHealth" )
 
 	ply:NetworkVar( "String", 0, "_SCPClass" )
 	ply:NetworkVar( "String", 1, "_SCPPersonaC" )
+	ply:NetworkVar( "String", 2, "Controller" )
 
 	ply:AddSLCVar( "Sanity", 0, "INT" )
 	ply:AddSLCVar( "MaxSanity", 1, "INT" )
 	ply:AddSLCVar( "Vest", 2, "INT" )
 	ply:AddSLCVar( "MaxStamina", 3, "INT" )
 	ply:AddSLCVar( "StaminaLimit", 4, "INT" )
-	ply:AddSLCVar( "DisableControlsFlag", 5, "INT" )
+	ply:AddSLCVar( "DisableControlsMask", 5, "INT" )
 	ply:AddSLCVar( "_DailyBonus", 6, "INT" )
-	ply:AddSLCVar( "Backpack", 7, "INT" )
+	ply:AddSLCVar( "QueuePosition", 7, "INT" )
+	ply:AddSLCVar( "_PrestigePoints", 8, "INT" )
+	ply:AddSLCVar( "SpectatorPoints", 9, "INT" )
 
 	ply:AddSLCVar( "VestDurability", 0, "FLOAT" )
 	ply:AddSLCVar( "StaminaBoost", 1, "FLOAT" )
 	ply:AddSLCVar( "StaminaBoostDuration", 2, "FLOAT" )
 
 	ply:AddSLCVar( "DisableControls", 0, "BOOL" )
+	ply:AddSLCVar( "AdminMode", 1, "BOOL" )
 
 	if SERVER then
 		ply:Set_SCPActive( false )
@@ -62,8 +67,8 @@ function PLAYER:SetupDataTables()
 		ply:SetVest( 0 )
 		ply:SetMaxStamina( 100 )
 		ply:SetStaminaLimit( 100 )
-		ply:SetDisableControlsFlag( 0 )
-		ply:SetBackpack( 0 )
+		ply:SetDisableControlsMask( -1 )
+		ply:SetQueuePosition( 0 ) //0 - not in queue, -1 - in suicide queue
 
 		ply:SetVestDurability( -1 )
 		ply:SetStaminaBoost( 0 )
@@ -71,10 +76,23 @@ function PLAYER:SetupDataTables()
 
 		ply:SetDisableControls( false )
 
-		ply:SetDataFromDB( "level", 0, tonumber, "_SCPLevel" )
-		ply:SetDataFromDB( "xp", 0, tonumber, "_SCPExp" )
-		ply:SetDataFromDB( "class_points", 0, tonumber, "_SCPClassPoints" )
-		ply:SetDataFromDB( "daily_bonus", 0, tonumber, "_DailyBonus" )
+		SLCPromiseJoin(
+			ply:GetSCPData( "level", 0 ),
+			ply:GetSCPData( "xp", 0 ),
+			ply:GetSCPData( "class_points", 0 ),
+			ply:GetSCPData( "daily_bonus", 0 ),
+			ply:GetSCPData( "prestige_points", 0 ),
+			ply:GetSCPData( "prestige_level", 0 ),
+			ply:GetSCPData( "spectator_points", 0 )
+		):Then( function( data )
+			ply:Set_SCPLevel( tonumber( data[1] ) )
+			ply:Set_SCPExp( tonumber( data[2] ) )
+			ply:Set_SCPClassPoints( tonumber( data[3] ) )
+			ply:Set_DailyBonus( tonumber( data[4] ) )
+			ply:SetPrestigePoints( tonumber( data[5] ) )
+			ply:SetPrestigeLevel( tonumber( data[6] ) )
+			ply:SetSpectatorPoints( tonumber( data[7] ) )
+		end )
 	end
 
 	if CLIENT then

@@ -19,7 +19,7 @@ if CLIENT then
 	SWEP.SelectColor = Color( 255, 210, 0, 255 )
 end
 
-function SWEP:SetupDataTables()
+function SWEP:SetupDataTables()	
 	self:AddNetworkVar( "NextIdle", "Float" )
 	self:AddNetworkVar( "ComboTime", "Float" )
 
@@ -215,3 +215,4 @@ function SWEP:DestroyWeapon( pos )
 end
 
 AddLoadout( "weapon_slc_glass_knife", nil, "melee_low" )
+MarkAsWeapon( "weapon_slc_glass_knife" )

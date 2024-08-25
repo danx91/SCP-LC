@@ -70,11 +70,13 @@ function SWEP:SecondaryAttack()
 	syringe_trace.endpos = start + owner:GetAimVector() * 60
 	syringe_trace.filter = owner
 
+	owner:LagCompensation( true )
 	util.TraceLine( syringe_trace )
 
 	if !syringe_trace.Hit then
 		util.TraceHull( syringe_trace )
 	end
+	owner:LagCompensation( false )
 
 	if !syringe_trace.Hit then return end
 

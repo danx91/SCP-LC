@@ -238,7 +238,7 @@ function InfoScreenMacro( name, func )
 	macro_list[name] = func
 end
 
-local overlay = Material( "slc/misc/info_bg.png" )
+local overlay = Material( "slc/misc/info_bg.png", "smooth" )
 local color_white = Color( 255, 255, 255, 255 )
 
 hook.Add( "DrawOverlay", "SLCInfoScreen", function()

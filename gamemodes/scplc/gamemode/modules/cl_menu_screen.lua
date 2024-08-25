@@ -1,11 +1,11 @@
 local color_white = Color( 255, 255, 255 )
 local color_inactive = Color( 155, 155, 155 )
-local color_black125 = Color( 0, 0, 0, 125)
+local color_black125 = Color( 0, 0, 0, 125 )
 local color_black250 = Color( 0, 0, 0, 250 )
 local color_light = Color( 100, 100, 100, 255 )
 local color_dark = Color( 40, 40, 40, 255 )
 
-local logo_mat = GetMaterial( "slc/logo.png" )
+local logo_mat = GetMaterial( "slc/logo.png", "smooth" )
 local logo_ratio = logo_mat:Height() / logo_mat:Width()
 
 local grad = Material( "vgui/gradient-l" )
@@ -50,14 +50,14 @@ end
 local ls_mat = {}
 
 for i = 1, 4 do
-	ls_mat[i] = GetMaterial( "slc/ls/"..i..".png" )
+	ls_mat[i] = GetMaterial( "slc/ls/"..i..".png", "smooth" )
 end
 
 function OpenMenuScreen()
 	if IsValid( SLCMenuScreen ) then SLCMenuScreen:Remove() end
 	if LocalPlayer().IsActive and LocalPlayer():IsActive() then return end
 
-	local url = "https://github.com/danx91/scp-lc-menu-videos/raw/main/vid"..math.random(4)..".webm"
+	local url = "https://github.com/danx91/scp-lc-menu-videos/raw/main/vid"..math.random( 4 )..".webm"
 
 	SLCMenuScreen = vgui.Create( "HTML" )
 
@@ -112,9 +112,17 @@ html, body {
 		surface.DrawTexturedRect( 0, 0, pw, ph )
 	end
 
+	SLCMenuScreen.DebugNotif = RealTime() + 30
+
 	SLCMenuScreen.PaintOver = function( this, pw, ph )
-		local _, th = draw.SimpleText( "SFM animations created by Madow", "SCPHUDSmall", w - 16, h, color_white, TEXT_ALIGN_RIGHT, TEXT_ALIGN_BOTTOM )
-		draw.SimpleText( "Gamemode created by ZGFueDkx (danx91)", "SCPHUDSmall", w - 16, h - th, color_white, TEXT_ALIGN_RIGHT, TEXT_ALIGN_BOTTOM )
+		local offset_y = GetSettingsValue( "hud_windowed_mode" ) and h * 0.0225 or 0
+
+		local _, th = draw.SimpleText( "SFM animations created by Madow", "SCPHUDSmall", w - 16, h - offset_y, color_white, TEXT_ALIGN_RIGHT, TEXT_ALIGN_BOTTOM )
+		draw.SimpleText( "Gamemode created by ZGFueDkx (danx91)", "SCPHUDSmall", w - 16, h - th - offset_y, color_white, TEXT_ALIGN_RIGHT, TEXT_ALIGN_BOTTOM )
+
+		if this.DebugNotif < RealTime() then
+			draw.SimpleText( "Stuck on this screen? Write slc_menu_debug in console", "SCPHUDSmall", 16, h - offset_y, color_white, TEXT_ALIGN_LEFT, TEXT_ALIGN_BOTTOM )
+		end
 	end
 
 	SLCMenuScreen:MakePopup()
@@ -490,3 +498,13 @@ html, body {
 		CheckContent()
 	end
 end
+
+concommand.Add( "slc_menu_debug", function()
+	if !IsValid( SLCMenuScreen ) then return end
+
+	cookie.Set( "slc_auto_content_check", 0 )
+	SLCMenuScreen:Remove()
+	MakePlayerReady()
+
+	SLCPopup( "DEBUG", "Debug command has been used!\nMenu has been closed and content downloader has been dsabled!\n\nIf you used this command because you got stuck on menu, pleas report it to the gamemode author providing description what happened." )
+end )

@@ -13,11 +13,12 @@ SWEP.Toggleable 			= true
 SWEP.EnableHolsterThink		= true
 SWEP.HasBattery 			= true
 SWEP.HolsterBatteryUsage	= true
-SWEP.BatteryUsage 			= 0.2
+SWEP.BatteryUsage 			= 0.45
 
 SWEP.DrawCrosshair = false
 
 SWEP.Group = "nvg"
+SWEP.UseGroup = "vision"
 
 SWEP.FrameRate = 10
 
@@ -26,7 +27,7 @@ function SWEP:Think()
 end
 
 function SWEP:OnSelect()
-	if self:GetBattery() <= 0 then return end
+	if self:GetBattery() <= 0 or !self:CanEnable() then return end
 	self:SetEnabled( !self:GetEnabled() )
 end
 
@@ -138,13 +139,13 @@ if CLIENT then
 		surface.SetMaterial( thermal_mat_ex )
 
 		local ratio = w / h
-		surface.DrawTexturedRect( -( TEX_SIZE * ( ratio - 1) ) / 2, 0, TEX_SIZE * ratio, TEX_SIZE )
+		surface.DrawTexturedRect( -( TEX_SIZE * ( ratio - 1 ) ) / 2, 0, TEX_SIZE * ratio, TEX_SIZE )
 		cam.End2D()
 
 		render.PopRenderTarget()
 	end
 
-	hook.Add( "PreDrawEffects", "SLCThermal", function(a,b)
+	hook.Add( "PreDrawEffects", "SLCThermal", function()
 		local ply = LocalPlayer()
 		if !ply:Alive() then return end
 

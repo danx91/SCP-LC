@@ -1,6 +1,11 @@
+local draw_escort_zones
+
 --[[-------------------------------------------------------------------------
 HUD Scaling
 ---------------------------------------------------------------------------]]
+local last_width = ScrW()
+local scaled_fonts_built = false
+
 HUD_SCALES = {
 	vbig = 1.1,
 	big = 1.05,
@@ -15,8 +20,7 @@ local hudscalecvar = CreateClientConVar( "cvar_slc_hud_scale", 1, true )
 cvars.AddChangeCallback( "cvar_slc_hud_scale", function( name, old, new )
 	print( "HUD scale changed! Rebuilding fonts..." )
 
-	RebuildScaledFonts( GetHUDScale( new ) )
-	SLC_HUD_END_X = ScrW() * 0.315 * new + ScrH() * 0.01 + 3
+	scaled_fonts_built = false
 end, "HUDChangeCallback" )
 
 concommand.Add( "slc_hud_scale", function( ply, cmd, args )
@@ -43,7 +47,7 @@ end, function( cmd, args )
 	return tbl
 end )
 
-hook.Add( "SLCRegisterSettings", "SLCHUDScale", function()
+hook.Add( "SLCRegisterSettings", "SLCHUDSettings", function()
 	local tab = {}
 
 	for k, v in pairs( HUD_SCALES ) do
@@ -68,11 +72,27 @@ hook.Add( "SLCRegisterSettings", "SLCHUDScale", function()
 			RunConsoleCommand( "slc_hud_scale", value )
 			return true
 		end,
+	}, "hud_config" )
+
+	RegisterSettingsEntry( "hud_draw_crosshair", "switch", true, nil, "hud_config" )
+	RegisterSettingsEntry( "hud_hl2_crosshair", "switch", false, nil, "hud_config" )
+	RegisterSettingsEntry( "hud_timer_always", "switch", false, nil, "hud_config" )
+	RegisterSettingsEntry( "hud_stamina_always", "switch", false, nil, "hud_config" )
+
+	RegisterSettingsEntry( "hud_windowed_mode", "switch", false, nil, "skins" )
+	RegisterSettingsEntry( "hud_escort", "switch", true, {
+		callback = function( value, name )
+			if value then
+				hook.Add( "PostDrawOpaqueRenderables", "SLCEscortZones", draw_escort_zones )
+			else
+				hook.Remove( "PostDrawOpaqueRenderables", "SLCEscortZones" )
+			end
+		end
 	} )
 end )
 
-function GetHUDScale( val )
-	return ( val or hudscalecvar:GetFloat() ) * 0.8
+function GetHUDScale()
+	return hudscalecvar:GetFloat()
 end
 
 --[[-------------------------------------------------------------------------
@@ -105,8 +125,9 @@ end
 HUDPaint
 ---------------------------------------------------------------------------]]
 local MATS = {
-	button = Material( "slc/hud/key.png" ),
-	escape_blocked = Material( "slc/hud/escape_blocked.png" ),
+	button = Material( "slc/hud/key.png", "smooth" ),
+	escape_blocked = Material( "slc/hud/escape_blocked.png", "smooth" ),
+	escort_marker = Material( "slc/misc/escort_marker.png", "smooth" ),
 }
 
 local COLOR = {
@@ -125,9 +146,6 @@ HUDNextBlink = 0
 HUDPickupHint = false
 HUDSpectatorInfo = false
 
-local last_width = ScrW()
-local scaled_fonts_built = false
-
 SLC_HUD_END_X = 0
 
 function GM:HUDPaint()
@@ -139,7 +157,6 @@ function GM:HUDPaint()
 		print( "Building HUD fonts..." )
 
 		RebuildScaledFonts( scale )
-		SLC_HUD_END_X = w * 0.315 * scale + h * 0.01 + 3
 	end
 
 	if w != last_width then
@@ -254,11 +271,9 @@ function GM:HUDPaint()
 					yalign = TEXT_ALIGN_BOTTOM,
 				}
 
-				PushFilters( TEXFILTER.LINEAR )
-					surface.SetDrawColor( COLOR.white )
-					surface.SetMaterial( MATS.escape_blocked )
-					surface.DrawTexturedRect( x, y, s, s )
-				PopFilters()
+				surface.SetDrawColor( COLOR.white )
+				surface.SetMaterial( MATS.escape_blocked )
+				surface.DrawTexturedRect( x, y, s, s )
 
 				/*draw.Text{
 					text = "Someone is blocking escape for your team!",
@@ -276,22 +291,18 @@ function GM:HUDPaint()
 	Draw HUD
 	---------------------------------------------------------------------------]]
 	if hud_disabled then return end
-
 	hook.Run( "SLCPreDrawHUD" )
-
-	RunGUISkinFunction( "pre_hud" )
-	RunGUISkinFunction( ply:SCPTeam() == TEAM_SPEC and "spectator_hud" or "hud" )
-
-	if HUDDrawInfo or ROUND.post then
-		RunGUISkinFunction( "additional_hud" )
-	end
+	hook.Run( "SLCDrawHUD" )
 
 	if ply:SCPTeam() == TEAM_SPEC then
 		hook.Run( "SLCPostDrawHUD" )
+
+		if ply:GetAdminMode() then
+			DrawSLCCrossHair( w / 2, h / 2 )
+		end
+
 		return
 	end
-
-	RunGUISkinFunction( "post_hud" )
 
 	--[[-------------------------------------------------------------------------
 	Pickup hint
@@ -641,7 +652,7 @@ local dishudnf = false
 local wasdisabled = false
 
 function GM:SLCShouldDrawSCPHUD()
-	return !hud_disabled and !HUDDrawInfo and !ROUND.preparing and !ROUND.post
+	return !hud_disabled and !HUDDrawingInfo /*and !ROUND.preparing*/ and !ROUND.post
 end
 
 function DisableHUDNextFrame()
@@ -653,11 +664,13 @@ hook.Add( "Think", "SCPHUDThink", function()
 		if !hud_disabled then
 			wasdisabled = hud_disabled
 			hud_disabled = true
+			ShowGUIElement( "hud" )
 		end
 
 		dishudnf = false
 	elseif hud_disabled and wasdisabled == false then
 		hud_disabled = false
+		HideGUIElement( "hud" )
 	end
 end )
 
@@ -669,21 +682,116 @@ function DrawSLCCrossHair( x, y )
 	local d = math.ceil( h * 0.005 )
 	local l = math.ceil( h * 0.005 )
 
-	surface.SetDrawColor( 255, 255, 255, hitmarker )
+	surface.SetDrawColor( 255, 255, 255 )
 	surface.DrawRect( x - d - l, y - 1, l, 1 )
 	surface.DrawRect( x + d, y - 1, l, 1 )
 	surface.DrawRect( x - 1, y - d - l, 1, l )
 	surface.DrawRect( x - 1, y + d, 1, l )
 
-	surface.SetDrawColor( 0, 0, 0, hitmarker )
+	surface.SetDrawColor( 0, 0, 0 )
 	surface.DrawOutlinedRect( x - d - l - 1, y - 2, l + 2, 3 )
 	surface.DrawOutlinedRect( x + d - 1, y - 2, l + 2, 3 )
 	surface.DrawOutlinedRect( x - 2, y - d - l - 1, 3, l + 2 )
 	surface.DrawOutlinedRect( x - 2, y + d - 1, 3, l + 2 )
 end
 
+--[[-------------------------------------------------------------------------
+Escape zones
+---------------------------------------------------------------------------]]
 
-hook.Add( "SLCRegisterSettings", "SLCCrosshairSettings", function()
-	RegisterSettingsEntry( "hud_draw_crosshair", "switch", true )
-	RegisterSettingsEntry( "hud_hl2_crosshair", "switch", false )
+local function draw_stripped_box( x, y, w, h, len, dist, thick ) 
+	local x_num = math.floor( ( w - dist * 4 ) / len )
+	local x_len = ( w - dist - thick * 2 ) / x_num
+
+	local y_num = math.floor( ( h - dist * 4 ) / len )
+	local y_len = ( h - dist - thick * 2 ) / y_num
+
+	surface.DrawRect( x, y, thick, thick )
+	surface.DrawRect( x, y + h - thick, thick, thick )
+	surface.DrawRect( x + w - thick, y, thick, thick )
+	surface.DrawRect( x + w - thick, y + h - thick, thick, thick )
+
+	local x_start = x + dist + thick
+	local y_start = y + dist + thick
+	local y_end = y + h - thick
+	local x_end = x + w - thick
+	local x_d = x_len - dist
+	local y_d = y_len - dist
+
+	for i = 0, x_num - 1 do
+		surface.DrawRect( x_start + i * x_len, y, x_d, thick )
+		surface.DrawRect( x_start + i * x_len, y_end, x_d, thick )
+	end
+
+	for i = 0, y_num - 1 do
+		surface.DrawRect( x, y_start + i * y_len, thick, y_d )
+		surface.DrawRect( x_end, y_start + i * y_len, thick, y_d )
+	end
+end
+
+local angle_zero = Angle( 0 )
+function draw_escort_zones()
+	local ply = LocalPlayer()
+	local t = ply:SCPTeam()
+
+	local teams = {}
+
+	if SCPTeams.CanEscort( t, true ) then
+		teams[t] = true
+	end
+
+	for i, v in ipairs( SCPTeams.GetEscortedBy( t ) ) do
+		teams[v] = true
+	end
+
+	local color = SCPTeams.GetColor( t )
+	local done = {}
+
+	for k, v in pairs( teams ) do
+		local pos = _G["POS_ESCORT_"..SCPTeams.GetName( k )] or POS_ESCORT
+		if done[pos] then continue end
+		done[pos] = true
+
+		local p_mid = ( pos[1] + pos[2] ) / 2
+		p_mid.z = pos[1].z + 10
+
+		local dist = ply:GetPos():Distance( p_mid )
+		if dist > 1000 then continue end
+
+		local alpha = math.Clamp( ( 1000 - dist ) / 500, 0, 1 )
+		local alpha2 = math.Clamp( ( dist - 200 ) / 200, 0, 1 )
+
+		local dx = p_mid.x - pos[1].x
+		local dy = p_mid.y - pos[1].y
+
+		surface.SetAlphaMultiplier( alpha )
+
+		cam.Start3D2D( p_mid, pos[3] or angle_zero, 1 )
+			surface.SetDrawColor( color )
+			draw_stripped_box( -dx, -dy, dx * 2, dy * 2, 30, 10, 8 )
+		cam.End3D2D()
+
+		local ang = Angle( 0, 0, 90 )
+		
+		ang.y = ( ply:GetPos() - p_mid ):Angle().y + 90
+
+		if alpha2 < alpha then
+			surface.SetAlphaMultiplier( alpha2 )
+		end
+
+		cam.Start3D2D( p_mid + Vector( 0, 0, 80 ), ang, 0.333 )
+			surface.SetDrawColor( 255, 255, 255, 100 )
+			surface.SetMaterial( MATS.escort_marker )
+			surface.DrawTexturedRect( -10, 30, 20, 200 )
+
+			draw.SimpleText( LANG.MISC.escort_zone, "SCPHUDVBig", 0, 0, Color( 255, 255, 255 ), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+		cam.End3D2D()
+
+		surface.SetAlphaMultiplier( 1 )
+	end
+end
+
+hook.Add( "SLCSettingsLoaded", "SLCEscortZones", function()
+	if !GetSettingsValue( "hud_escort" ) then return end
+	hook.Add( "PostDrawOpaqueRenderables", "SLCEscortZones", draw_escort_zones )
 end )

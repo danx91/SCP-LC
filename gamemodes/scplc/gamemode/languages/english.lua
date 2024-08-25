@@ -2,6 +2,7 @@
 Language: English
 Date: 15.02.2021
 Translated by: danx91 (aka ZGFueDkx)
+Updated: 27.07.2024
 ---------------------------------------------------------------------------]]
 
 local lang = {}
@@ -13,7 +14,7 @@ lang.self_en = "English" --Language name (in english)
 NRegistry
 ---------------------------------------------------------------------------]]
 lang.NRegistry = {
-	scpready = "You can be selected as SCP in next round",
+	scpready = "You can be become SCP in the next round (%ix chance)",
 	scpwait = "You have to wait %i rounds to be able to play as SCP",
 	abouttostart = "Game will start in %i seconds!",
 	kill = "You received %d points for killing %s: %s!",
@@ -31,13 +32,13 @@ lang.NRegistry = {
 	rxpplus = "You received %i experience for surviving more than half of the round!",
 	roundxp = "You received %i experience for your points",
 	gateexplode = "Time to Gate A explosion: %i",
-	explodeterminated = "Gate A destruction has been terminated",
-	r106used = "SCP 106 recontain procedure can be triggered only once per round",
-	r106eloiid = "Power down ELO-IID electromagnet in order to start SCP 106 recontain procedure",
-	r106sound = "Enable sound transmission in order to start SCP 106 recontain procedure",
-	r106human = "Alive human is required in cage in order to start SCP 106 recontain procedure",
-	r106already = "SCP 106 is already recontained",
-	r106success = "You received %i points for recontaining SCP 106!",
+	explodeterminated = "Gate A explosion has been terminated",
+	r106used = "SCP-106 recontain procedure can be triggered only once per round",
+	r106eloiid = "Power down ELO-IID electromagnet in order to start SCP-106 recontain procedure",
+	r106sound = "Enable sound transmission in order to start SCP-106 recontain procedure",
+	r106human = "Alive human is required in cage in order to start SCP-106 recontain procedure",
+	r106already = "SCP-106 is already recontained",
+	r106success = "You received %i points for recontaining SCP-106!",
 	vestpickup = "You picked up vest",
 	vestdrop = "You dropped your vest",
 	hasvest = "You already has vest! Use your EQ to drop it",
@@ -64,11 +65,20 @@ lang.NRegistry = {
 	goc_detonation = "OMEGA and ALPHA Warhead detonation in %i seconds. Proceed to the evacuation or enter the blast shelter immediately!",
 	fuserating = "You need a fuse with a higher rating!",
 	nofuse = "You need a fuse to use this device",
+	cantremfuse = "Fuse is overheating - it's too hot to remove!",
+	fusebroken = "Fuse is broken and it's welded in place!",
 	nopower = "You've pressed the button, but nothing happened...",
 	nopower_omni = "You've put omnitool to the reader, but nothing happened...",
 	docs = "You received %i points for escaping with %i document(s)",
 	docs_pick = "You obtained valuable documents of SCP Foundation - escape with it to get reward!",
 	gaswarn = "%s decontamination in 60 seconds",
+	queue_alive = "You are alive",
+	queue_not = "You are not in the support queue!",
+	queue_low = "You are in the low priority support queue!",
+	queue_pos = "Your position in the support queue: %i",
+	support_optout = "You didn't spawn as support because you opted out. You can change that in !settings",
+	property_dmg = "You lost %d points for destroying Foundation property!",
+	unknown_cmd = "Unknown command: %s"
 }
 
 lang.NFailed = "Failed to access NRegistry with key: %s"
@@ -95,29 +105,30 @@ lang.NCRegistry = {
 	stat_rdmdmg = "RDM damage: %i",
 	stat_dmg = "Damage dealt: %i",
 	stat_bleed = "Bleeding damage: %i",
-	stat_106recontain = "SCP 106 has been recontained",
+	stat_106recontain = "SCP-106 has been recontained",
 	stat_escapes = "Escaped players: %i",
 	stat_escorts = "Players escorted: %i",
-	stat_023 = "Sudden deaths caused by SCP 023: %i",
-	stat_049 = "Cured people: %i",
-	stat_066 = "Played masterpieces: %i",
+	stat_023 = "Players killed by SCP-023: %i",
+	stat_049 = "Players cured by SCP-049: %i",
+	stat_0492 = "Players mauled by zombies: %i",
+	stat_058 = "Players killed by SCP-058: %i",
+	stat_066 = "Masterpieces played by SCP-066: %i",
 	stat_096 = "Players killed by shy guy: %i",
 	stat_106 = "Players teleported to Pocket Dimension: %i",
 	stat_173 = "Snapped necks: %i",
-	stat_457 = "Incinerated players: %i",
+	stat_457 = "Players burned alive: %i",
 	stat_682 = "Players killed by overgrown reptile: %i",
-	stat_8602 = "Players nailed to wall: %i",
-	stat_939 = "SCP 939 preys: %i",
-	stat_966 = "Insidious cuts: %i",
-	stat_3199 = "Assassinations by SCP 3199: %i",
-	stat_24273 = "People judged by SCP 2427-3: %i",
+	stat_8602 = "Players killed by SCP-860-2: %i",
+	stat_939 = "SCP-939 preys: %i",
+	stat_966 = "Players put to sleep: %i",
+	stat_3199 = "Assassinations by SCP-3199: %i",
+	stat_24273 = "People judged by SCP-2427-3: %i",
 	stat_omega_warhead = "Omega warhead has been detonated",
 	stat_alpha_warhead = "Alpha warhead has been detonated",
 	stat_goc_warhead = "GOC device was activated",
 }
 
 lang.NCFailed = "Failed to access NCRegistry with key: %s"
-
 
 --[[-------------------------------------------------------------------------
 Main menu
@@ -148,7 +159,8 @@ Menu animations are created by Madow
 
 Models:
 	Alski - guards, omnitool, turret and more
-	
+	Slusher - SCP-689, doors, tablet and more
+
 Materials:
 	Foer - Workshop logo and few other graphics
 	SCP Containment Breach
@@ -178,6 +190,7 @@ hud.pickup = "Pick up"
 hud.class = "Class"
 hud.team = "Team"
 hud.class_points = "Class Unlock Points"
+hud.prestige_points = "Prestige Points"
 hud.hp = "HP"
 hud.stamina = "STAMINA"
 hud.sanity = "SANITY"
@@ -186,27 +199,35 @@ hud.extra_hp = "Extra HP"
 
 hud.escaping = "Escaping..."
 hud.escape_blocked = "Escape Blocked!"
+hud.waiting = "Waiting for players"
 
 --[[-------------------------------------------------------------------------
 EQ
 ---------------------------------------------------------------------------]]
-lang.eq_lmb = "LMB - Select"
-lang.eq_rmb = "RMB - Drop"
-lang.eq_hold = "Hold LMB - Move item"
-lang.eq_vest = "Vest"
-lang.eq_key = "Press '%s' to open EQ"
+local eq = {}
+lang.EQ = eq
+
+eq.eq = "Equipment"
+eq.actions = "Actions"
+eq.backpack = "Backpack"
+eq.id = "This is your ID, show it to others to reveal your class and team"
+eq.no_id = "You don't have ID"
+eq.class = "Your class: "
+eq.team = "Your team: "
+eq.p_class = "Your fake class: "
+eq.p_team = "Your fake team: "
+eq.allies = "Your allies:"
+eq.durability = "Durability: "
+eq.mobility = "Mobility: "
+eq.weight = "Weight: "
+eq.weight_unit = "KG"
+eq.multiplier = "Damage multiplier:"
+eq.count = "Count"
+
 lang.eq_unknown = "Unknown item"
-lang.eq_backpack = "Backpack"
-lang.eq_swapping = "Swapping items"
-
-lang.info = "Information"
-lang.author = "Author"
-lang.mobility = "Mobility"
-lang.weight = "Weight"
-lang.vest_multiplier = "Damage multiplier"
 lang.durability = "Durability"
+lang.info = "Information"
 
-lang.weight_unit = "kg"
 lang.eq_buttons = {
 	escort = "Escort",
 	gatea = "Destroy Gate A"
@@ -262,7 +283,6 @@ effects.radiation = "Radiation"
 effects.deep_wounds = "Deep Wounds"
 effects.poison = "Poison"
 effects.heavy_bleeding = "Heavy Bleeding"
-effects.weak_bleeding = "Weak Bleeding"
 effects.spawn_protection = "Spawn Protection"
 effects.fracture = "Fracture"
 effects.decay = "Decay"
@@ -272,6 +292,11 @@ effects.expd_rubber_bones = "Experimental Effect"
 effects.expd_stamina_tweaks = "Experimental Effect"
 effects.expd_revive = "Experimental Effect"
 effects.expd_recovery = "Recovery"
+effects.electrical_shock = "Electrical Shock"
+effects.scp009 = "SCP-009"
+effects.scp106_withering = "Withering"
+effects.scp966_effect = "Fatigue"
+effects.scp966_mark = "Death Mark"
 
 --[[-------------------------------------------------------------------------
 Class viewer
@@ -280,13 +305,19 @@ lang.classviewer = "Class Viewer"
 lang.preview = "Preview"
 lang.random = "Random"
 lang.buy = "Buy"
-lang.refound = "Refund"
+lang.buy_prestige = "Buy - Prestige"
+lang.refund = "Refund"
+lang.prestige = "Prestige"
+lang.prestige_warn = "You are about to prestige. This process will reset your level, XP, class unlock points and unlocked classes and you will be awarded with 1 prestige point.\n\nWARNING: This action cannot be reverted!"
 lang.none = "None"
-lang.refounded = "All removed classes has been refunded. You've recived %d class points."
+lang.refunded = "All removed classes has been refunded. You've received %d class points and %d prestige points!"
 lang.tierlocked = "You have to buy every class from previous tiers in order to unlock classes in this tier (also classes from other categories)"
+lang.xp = "XP"
+lang.level = "Level"
 
 lang.details = {
 	details = "Details",
+	prestige = "Prestige Reward",
 	name = "Name",
 	tier = "Tier",
 	team = "Team",
@@ -368,11 +399,13 @@ lang.settings = {
 
 	panels = {
 		binds = "Keybinds",
-		general_config = "General config",
-		scp_config = "SCP config",
+		general_config = "General Config",
+		hud_config = "HUD Config",
+		performance_config = "Performance",
+		scp_config = "SCP Config",
 		skins = "GUI Skins",
-		reset = "Reset gamemode",
-		cvars = "ConVars editor",
+		reset = "Reset Gamemode",
+		cvars = "ConVars Editor",
 	},
 
 	binds = {
@@ -388,16 +421,30 @@ lang.settings = {
 		scp_hud_skill_time = "Show SCP skill cooldown",
 		smooth_blink = "Enable smooth blink",
 		scp_hud_overload_cd = "Show overload cooldown",
-		any_button_close_search = "Press any button to close search menu",
+		any_button_close_search = "Any button closes search menu",
 		hud_hitmarker = "Show hitmarkers",
+		hud_hitmarker_mute = "Mute hitmarkers",
 		hud_damage_indicator = "Show damage indicator",
 		scp_hud_dmg_mod = "Show SCP received damage modificator",
 		scp_nvmod = "Increase screen brightness when playing SCP",
 		dynamic_fov = "Dynamic FOV",
 		hud_draw_crosshair = "Draw crosshair",
 		hud_hl2_crosshair = "Legacy HL2 crosshair",
+		hud_lq = "Low quality images and polygons (if possible)",
+		hud_image_poly = "Images instead of polygons (if possible)",
+		hud_windowed_mode = "HUD offset (for windowed mode)",
+		hud_avoid_roman = "Avoid roman digits",
+		hud_escort = "Show escort zones",
+		hud_timer_always = "Always show time",
+		hud_stamina_always = "Always show stamina",
+		eq_instant_desc = "Instant item description in EQ",
+		scp106_spots = "Always show SCP-106 teleport spots",
 
+		cvar_slc_support_optout = "Support spawn opt-out",
 		cvar_slc_language = "Language",
+		cvar_slc_language_options = {
+			default = "Default",
+		},
 		cvar_slc_hud_scale = "HUD Scale",
 		cvar_slc_hud_scale_options = {
 			normal = "Normal",
@@ -407,6 +454,17 @@ lang.settings = {
 			vsmall = "Very small",
 			imretard = "Tiny",
 		},
+
+		hud_skin_main = "Main",
+		hud_skin_scoreboard = "Scoreboard",
+		hud_skin_hud = "HUD",
+		hud_skin_eq = "Equipment",
+
+		hud_skin_main_options = {
+			custom = "Custom",
+			default = "Default",
+			legacy = "Legacy",
+		}
 	},
 }
 
@@ -440,6 +498,7 @@ lang.scoreboard = {
 	level = "Level",
 	score = "Score",
 	ranks = "Ranks",
+	badges = "Badges",
 }
 
 lang.ranks = {
@@ -471,7 +530,7 @@ lang.upgrades = {
 SCP HUD
 ---------------------------------------------------------------------------]]
 lang.SCPHUD = {
-	skill_not_ready = "Skill is not ready yet!",
+	skill_not_ready = "Skill is on cooldown!",
 	skill_cant_use = "Skill can't be used now!",
 	overload_cd = "Next overload: ",
 	overload_ready = "Overload ready!",
@@ -499,7 +558,7 @@ lang.info_screen_registry = {
 	escape3 = "You survived in blast shelter",
 	escorted = "You have been escorted",
 	killed_by = "You have been killed by: %s",
-	suicide = "You've commited suicide",
+	suicide = "You've committed suicide",
 	unknown = "Cause of your death is unknown",
 	hazard = "You have been killed by hazard",
 	alpha_mia = "Last known location: Surface",
@@ -521,12 +580,16 @@ Generic
 lang.nothing = "Nothing"
 lang.exit = "Exit"
 lang.default = "Default"
+lang.yes = "Yes"
+lang.no = "No"
 
 --[[-------------------------------------------------------------------------
 Misc
 ---------------------------------------------------------------------------]]
 local misc = {}
 lang.MISC = misc
+
+misc.escort_zone = "Escort zone"
 
 misc.content_checker = {
 	title = "Gamemode Content",
@@ -543,7 +606,7 @@ misc.content_checker = {
 	btn_download = "Download",
 	btn_check = "Check & Download",
 	allok = "All addons are installed!",
-	nsub_warn = "You don't have some of the requreired addons! We downloaded and mounted them, but please download them using Steam Workshop. Check console to see which addons are missing.",
+	nsub_warn = "You don't have some of the required addons! We downloaded and mounted them, but please download them using Steam Workshop. Check console to see which addons are missing.",
 	disabled_warn = "Some of required addons are disabled! gamemode mounted it for you, but some content may still be missing. Please head to the menu and enable disabled addons (list in the console).",
 	missing = "Missing addons",
 	disabled = "Disabled addons",
@@ -562,6 +625,13 @@ misc.alpha_warhead = {
 	ready = "ALPHA Warhead is idle\n\nCodes accepted!\nWaiting for activation...",
 	no_remote = "ALPHA Warhead failed\n\nFailed to establish connection to warhead!\t",
 	active = "ALPHA Warhead is engaged\n\nProceed to evacuation immediately!\nDetonation in %.2fs",
+}
+
+misc.intercom = {
+	name = "Intercom",
+	idle = "Intercom is idle",
+	active = "Intercom is active\n\nRemaining time: %is",
+	cooldown = "Intercom is on cooldown\n\nRemaining time: %is",
 }
 
 misc.zones = {
@@ -663,28 +733,32 @@ lang.UNK_CLASSES = {
 	CLASSD = "Unknown Class D",
 	SCI = "Unknown Scientist",
 	GUARD = "Unknown Guard",
+	MTF = "Unknown MTF",
+	CI = "Unknown CI",
+	GOC = "Unknown GOC"
 }
 
 local classes = {}
 lang.CLASSES = classes
 
 classes.unknown = "Unknown"
+classes.spectator = "Spectator"
 
-classes.SCP023 = "SCP 023"
-classes.SCP049 = "SCP 049"
-classes.SCP0492 = "SCP 049-2"
-classes.SCP058 = "SCP 058"
-classes.SCP066 = "SCP 066"
-classes.SCP096 = "SCP 096"
-classes.SCP106 = "SCP 106"
-classes.SCP173 = "SCP 173"
-classes.SCP457 = "SCP 457"
-classes.SCP682 = "SCP 682"
-classes.SCP8602 = "SCP 860-2"
-classes.SCP939 = "SCP 939"
-classes.SCP966 = "SCP 966"
-classes.SCP3199 = "SCP 3199"
-classes.SCP24273 = "SCP 2427-3"
+classes.SCP023 = "SCP-023"
+classes.SCP049 = "SCP-049"
+classes.SCP0492 = "SCP-049-2"
+classes.SCP058 = "SCP-058"
+classes.SCP066 = "SCP-066"
+classes.SCP096 = "SCP-096"
+classes.SCP106 = "SCP-106"
+classes.SCP173 = "SCP-173"
+classes.SCP457 = "SCP-457"
+classes.SCP682 = "SCP-682"
+classes.SCP8602 = "SCP-860-2"
+classes.SCP939 = "SCP-939"
+classes.SCP966 = "SCP-966"
+classes.SCP3199 = "SCP-3199"
+classes.SCP24273 = "SCP-2427-3"
 
 classes.classd = "Class D"
 classes.veterand = "Class D Veteran"
@@ -692,12 +766,14 @@ classes.kleptod = "Class D Kleptomaniac"
 classes.contrad = "Class D with Contraband"
 classes.ciagent = "CI Agent"
 classes.expd = "Experimental Class D"
+classes.classd_prestige = "Class D Tailor"
 
 classes.sciassistant = "Scientist Assistant"
 classes.sci = "Scientist"
 classes.seniorsci = "Senior Scientist"
 classes.headsci = "Head Scientist"
 classes.contspec = "Containment Specialist"
+classes.sci_prestige = "Class D Escapee"
 
 classes.guard = "Security Guard"
 classes.chief = "Security Chief"
@@ -707,6 +783,9 @@ classes.specguard = "Security Guard Specialist"
 classes.guardmedic = "Security Guard Medic"
 classes.tech = "Security Guard Technician"
 classes.cispy = "CI Spy"
+classes.lightcispy = "Light CI Spy"
+classes.heavycispy = "Heavy CI Spy"
+classes.guard_prestige = "Security Guard Engineer"
 
 classes.ntf_1 = "MTF NTF - SMG"
 classes.ntf_2 = "MTF NTF - Shotgun"
@@ -719,6 +798,7 @@ classes.alpha1sniper = "MTF Alpha-1 Marksman"
 classes.alpha1medic = "MTF Alpha-1 Medic"
 classes.alpha1com = "MTF Alpha-1 Commander"
 classes.ci = "Chaos Insurgency"
+classes.cisniper = "Chaos Insurgency Marksman"
 classes.cicom = "Chaos Insurgency Commander"
 classes.cimedic = "Chaos Insurgency Medic"
 classes.cispec = "Chaos Insurgency Specialist"
@@ -737,7 +817,7 @@ classes_id.ntf_3 = "MTF NTF"
 --[[-------------------------------------------------------------------------
 Class Info - NOTE: Each line is limited to 48 characters!
 Screen is designed to hold max of 5 lines of text and THERE IS NO internal protection!
-Note that last (5th) line should be shorter to prevent text overlaping (about 38 characters)
+Note that last (5th) line should be shorter to prevent text overlapping (about 38 characters)
 ---------------------------------------------------------------------------]]
 local generic_classd = [[- Escape from the facility
 - Avoid staff and SCP objects
@@ -750,6 +830,10 @@ local generic_sci = [[- Escape from the facility
 local generic_guard = [[- Rescue scientists
 - Terminate all Class D and SCPs
 - Listen to your supervisor]]
+
+local generic_cispy = [[- Pretend to be a guard
+- Help remaining Class D Personnel
+- Sabotage security actions]]
 
 local generic_ntf = [[- Get to the facility
 - Help the remaining staff inside
@@ -780,6 +864,10 @@ lang.CLASS_OBJECTIVES = {
 - Avoid staff and SCP objects
 - You underwent some strange experiments]],
 
+	classd_prestige = [[- Escape from the facility
+- Avoid staff and SCP objects
+- You can steal clothes from dead bodies]],
+
 	sciassistant = generic_sci,
 
 	sci = generic_sci,
@@ -789,6 +877,10 @@ lang.CLASS_OBJECTIVES = {
 	headsci = generic_sci,
 
 	contspec = generic_sci,
+
+	sci_prestige = [[- Escape from the facility
+- Avoid staff and SCP objects
+- You stole clothes and ID of scientist]],
 
 	guard = generic_guard,
 
@@ -810,9 +902,15 @@ lang.CLASS_OBJECTIVES = {
 - Terminate all Class D and SCPs
 - Support other guards with your turret]],
 
-	cispy = [[- Pretend to be a guard
-- Help remaining Class D Personnel
-- Sabotage security actions]],
+	cispy = generic_cispy,
+
+	lightcispy = generic_cispy,
+
+	heavycispy = generic_cispy,
+
+	guard_prestige = [[- Rescue scientists
+	- Terminate all Class D and SCPs
+	- You can temporarily block doors]],
 
 	ntf_1 = generic_ntf,
 
@@ -851,6 +949,10 @@ lang.CLASS_OBJECTIVES = {
 	ci = [[- Help Class D Personnel
 - Eliminate all facility staff
 - Listen to your supervisor]],
+
+	cisniper = [[- Help Class D Personnel
+- Eliminate all facility staff
+- Protect your team from behind]],
 
 	cicom = [[- Help Class D Personnel
 - Eliminate all facility staff
@@ -978,12 +1080,26 @@ Armed with taser CI unit. Provide help to Class D and cooperate with them. You c
 Toughness: ?
 Agility: ?
 Combat potential: ?
-Can escape: No
-Can escort: Class D
-Escorted by: None
+Can escape: Yes
+Can escort: None
+Escorted by: CI
 
 Overview:
 Class that underwent some strange experiments inside the facility. Who knows what was the subject of said experiments...
+]],
+
+	classd_prestige = [[Difficulty: Hard
+Toughness: Normal
+Agility: Normal
+Combat potential: High
+Can escape: Yes
+Can escort: None
+Escorted by: CI
+
+Overview:
+Looks just like basic class, but has ability to steal clothes from dead bodies. Cooperate with others to face SCPs and facility staff. You can be escorted by CI members.
+
+Idea by: Mr.Kiełbasa (contest winner)
 ]],
 
 	sciassistant = [[Difficulty: Medium
@@ -1046,6 +1162,20 @@ Overview:
 One of the scientists with high utility and HP, also have best access level. Cooperate with facility staff and stay away from SCPs. You can be escorted by MTFs members.
 ]],
 
+	sci_prestige = [[Difficulty: Hard
+Toughness: Normal
+Agility: Normal
+Combat potential: Medium
+Can escape: Yes
+Can escort: None
+Escorted by: CI
+
+Overview:
+Runaway Class D who broke into some scientist's closet and stole clothes and ID. Pretend to be a scientist and cooperate with Class D and CI.
+
+Idea by: Artieusz (contest winner)
+]],
+
 	guard = [[Difficulty: Easy
 Toughness: Normal
 Agility: Normal
@@ -1060,7 +1190,7 @@ Basic security guard. Utilize your weapon and tools to help other staff members 
 
 	lightguard = [[Difficulty: Hard
 Toughness: Low
-Agility: Very High
+Agility: High
 Combat potential: Low
 Can escape: No
 Can escort: Scientists
@@ -1132,14 +1262,52 @@ One of the guards. Has placeable turret, with 3 fire modes (Hold E on turret to 
 
 	cispy = [[Difficulty: Very Hard
 Toughness: Normal
-Agility: High
+Agility: Normal
 Combat potential: Normal
 Can escape: No
 Can escort: Class D
 Escorted by: None
 
 Overview:
-CI spy. High utility. Try to blend in Security Guards and help Class D.
+CI spy. Try to blend in Security Guards and help Class D.
+]],
+
+	lightcispy = [[Difficulty: Very Hard
+Toughness: Low
+Agility: High
+Combat potential: Low
+Can escape: No
+Can escort: Class D
+Escorted by: None
+
+Overview:
+Light CI spy. High utility. Try to blend in Security Guards and help Class D.
+]],
+
+	heavycispy = [[Difficulty: Very Hard
+Toughness: High
+Agility: Low
+Combat potential: High
+Can escape: No
+Can escort: Class D
+Escorted by: None
+
+Overview:
+Heavy CI spy. Lower utility, better armor and higher health. Try to blend in Security Guards and help Class D.
+]],
+
+	guard_prestige = [[Difficulty: Hard
+Toughness: Normal
+Agility: Normal
+Combat potential: High
+Can escape: No
+Can escort: Scientists
+Escorted by: None
+
+Overview:
+One of the guards. Has device that can temporarily block doors in their current state. Utilize your weapon and tools to help other staff members and to kill SCPs and Class D. You can escort Scientists.
+
+Idea by: F"$LAYER (contest winner)
 ]],
 
 	ntf_1 = [[Difficulty: Medium
@@ -1235,7 +1403,7 @@ Can escort: Scientists
 Escorted by: None
 
 Overview:
-MTF Alpha-1 Unit. Heavly armored, high utility unit, armed with marksman rifle. Get into facility and secure it. Help staff inside and kill SCPs and Class D.
+MTF Alpha-1 Unit. Heavily armored, high utility unit, armed with marksman rifle. Get into facility and secure it. Help staff inside and kill SCPs and Class D.
 ]],
 
 	alpha1medic = [[Difficulty: Hard
@@ -1247,7 +1415,7 @@ Can escort: Scientists
 Escorted by: None
 
 Overview:
-MTF Alpha-1 Unit. Heavly armored, high utility unit, provides heal. Get into facility and secure it. Help staff inside and kill SCPs and Class D.
+MTF Alpha-1 Unit. Heavily armored, high utility unit, provides heal. Get into facility and secure it. Help staff inside and kill SCPs and Class D.
 ]],
 
 	alpha1com = [[Difficulty: Hard
@@ -1259,7 +1427,7 @@ Can escort: Scientists
 Escorted by: None
 
 Overview:
-MTF Alpha-1 Unit. Heavly armored, high utility unit. Get into facility and secure it. Help staff inside and kill SCPs and Class D.
+MTF Alpha-1 Unit. Heavily armored, high utility unit. Get into facility and secure it. Help staff inside and kill SCPs and Class D.
 ]],
 
 	ci = [[Difficulty: Medium
@@ -1272,6 +1440,18 @@ Escorted by: None
 
 Overview:
 Chaos Insurgency unit. Get into facility and help Class D and kill facility staff.
+]],
+
+	cisniper = [[Difficulty: Medium
+Toughness: Normal
+Agility: High
+Combat potential: High
+Can escape: No
+Can escort: Class D
+Escorted by: None
+
+Overview:
+Chaos Insurgency unit. Get into facility and help Class D and kill facility staff. Cover your team.
 ]],
 
 	cicom = [[Difficulty: Medium
@@ -1331,7 +1511,7 @@ Can escort: No
 Escorted by: None
 
 Overview:
-Basic Global Occult Coalition soldier. Destroy all SCPs, use your personal tablet to locate GOC device that was earlier delivered to the facility then deploy and protect it. Escape to the evacuation shelter after successfuly deploying the device.
+Basic Global Occult Coalition soldier. Destroy all SCPs, use your personal tablet to locate GOC device that was earlier delivered to the facility then deploy and protect it. Escape to the evacuation shelter after successfully deploying the device.
 ]],
 
 	gocmedic = [[Difficulty: Medium
@@ -1343,7 +1523,7 @@ Can escort: No
 Escorted by: None
 
 Overview:
-Basic Global Occult Coalition soldier. Destroy all SCPs, use your personal tablet to locate GOC device that was earlier delivered to the facility then deploy and protect it. Escape to the evacuation shelter after successfuly deploying the device. You sapwn with the medkit.
+Basic Global Occult Coalition soldier. Destroy all SCPs, use your personal tablet to locate GOC device that was earlier delivered to the facility then deploy and protect it. Escape to the evacuation shelter after successfully deploying the device. You spawn with the medkit.
 ]],
 
 	goccom = [[Difficulty: Medium
@@ -1355,152 +1535,27 @@ Can escort: No
 Escorted by: None
 
 Overview:
-Basic Global Occult Coalition soldier. Destroy all SCPs, use your personal tablet to locate GOC device that was earlier delivered to the facility then deploy and protect it. Escape to the evacuation shelter after successfuly deploying the device. You have smoke grenades.
-]],
-
-	SCP023 = [[Difficulty: Hard
-Toughness: Low
-Agility: High
-Damage: Instant Death
-
-Overview:
-If someone sees you, they will be put on your list. Once in a while you teleport to one player on list and burn them to death. You can place your clone.
-]],
-
-	SCP049 = [[Difficulty: Hard
-Toughness: Low
-Agility: High
-Damage: Instant Death after 3 attacks
-
-Overview:
-Attack player 3 times to kill them. You can create zombies out of bodies (reload key).
+Basic Global Occult Coalition soldier. Destroy all SCPs, use your personal tablet to locate GOC device that was earlier delivered to the facility then deploy and protect it. Escape to the evacuation shelter after successfully deploying the device. You have smoke grenades.
 ]],
 
 	SCP0492 = [[General:
-A zombie created by SCP-049. Comes as one of selected types:
+A zombie created by SCP-049. Comes as one of following types:
 
 Normal zombie:
-Difficulty: Low     |  Toughness: Normal
-Agility: Normal     |  Damage: Normal/High
-Standard zombie with balanced stats
+Difficulty: Easy | Toughness: Normal | Agility: Normal | Damage: Normal
+A decent choice with balanced statistics
 
-Light zombie:
-Difficulty: Medium  |  Toughness: Low
-Agility: High       |  Damage: Normal/High
-Faster version of zombie but has less HP and damage
+Assasin zombie:
+Difficulty: Medium | Toughness: Low | Agility: High | Damage: Normal/High
+The fastest one, but has the lowest health and damage
 
-Heavy zombie:
-Difficulty: Medium  |  Toughness: High
-Agility: Low        |  Damage: Normal/High
-Slow zombie that can tank more damage and can perform more powerful attacks
-]],
+Exploding zombie:
+Difficulty: Medium | Toughness: High | Agility: Low | Damage: Normal/High
+Low movement speed, but has high health and highest damage
 
-	SCP066 = [[Difficulty: Medium
-Toughness: High
-Agility: Normal
-Damage: Low / AoE
-
-Overview:
-You play very loud music damaging all players near you.
-]],
-
-	SCP058 = [[Difficulty: Medium
-Toughness: Normal
-Agility: Normal
-Damage: Normal
-
-Overview:
-SCP with flexible playstyle. Can attack melee and shot. Has various upgrades which can add poison to attacks, modify shot attack or unlocks ability to explode.
-]],
-
-	SCP096 = [[Difficulty: Hard
-Toughness: High
-Agility: Very Low / Extreme when enraged
-Damage: Instant Death
-
-Overview:
-If someone sees you, you will become enraged. While in rage, you run extremely fast and you can kill your targets.
-]],
-
-	SCP106 = [[Difficulty: Medium
-Toughness: Normal
-Agility: Low
-Damage: Medium / Instant death in Pocket Dimension
-
-Overview:
-You can walk through walls. Attack somebody to teleport them to pocket dimension. While in pocket dimension you instantly kill your targets.
-]],
-
-	SCP173 = [[Difficulty: Easy
-Toughness: Extreme
-Agility: Super Extreme
-Damage: Instant Death
-
-Overview:
-You are extremely fast, but you can't move if someone sees you. You automatically kill nearby players. You can use special attack to teleport to one player in range.
-]],
-
-	SCP457 = [[Difficulty: Easy
-Toughness: Normal
-Agility: Normal
-Damage: Medium / Fire can spread
-
-Overview:
-You are burning and you can burn nearby players. You can also place traps that activate when someone steps on them.
-]],
-
-	SCP682 = [[Difficulty: Hard
-Toughness: Super Extreme
-Agility: Normal
-Damage: High
-
-Overview:
-Extremely tough and deadly. Use special ability to gain damage immunity for short period of time.
-]],
-
-	SCP8602 = [[Difficulty: Medium
-Toughness: High
-Agility: High
-Damage: Low / High (strong attack)
-
-Overview:
-If someone is near a wall, you can pin them against this wall, dealing massive damage to them. You will also lose some health.
-]],
-
-	SCP939 = [[Difficulty: Medium
-Toughness: Normal
-Agility: High
-Damage: Medium
-
-Overview:
-You leave trail of invisible, toxic cloud. Intoxicated players can't use LMB and RMB.
-]],
-
-	SCP966 = [[Difficulty: Medium
-Toughness: Low
-Agility: High
-Damage: Low / Bleeding
-
-Overview:
-You are invisible. Your attacks always inflict bleeding.
-]],
-
-	SCP24273 = [[Difficulty: Hard
-Toughness: Normal
-Agility: Normal
-Damage: High / Instant death during Mind Control
-
-Overview:
-You can dash forward to deal damage to first hit player. Special ability allows you to control other player for a short time. Bringing controlled player to you, will allow you to kill him instantly. Commiting suicide while controlling player will cause health loss.
-]],
-
-	SCP3199 = [[Difficulty: Very Hard
-Toughness: Low
-Agility: Very High
-Damage: Low / Medium
-
-Overview:
-Attacking the player grants you frenzy and inflicts deep wounds. While in frenzy, you move slightly faster and you can see location of nearby players. Missing an attack or attacking a player who already has deep wounds, stops frenzy and applies penalty. Having at least 5 frenzy tokens allows you to use special attack. Special attack kills player after short preparation.
+Spitting zombie:
+Difficulty: Medium | Toughness: High | Agility: Low | Damage: Normal/High
+The slowest zombie type, but has high damage and the most health
 ]],
 }
 
@@ -1514,129 +1569,296 @@ lang.GenericUpgrades = {
 	}
 }
 
+lang.CommonSkills = {
+	c_button_overload = {
+		name = "Overload",
+		dsc = "Allows you to overload most of locked doors. Overloaded doors open (or close) for a short period of time"
+	},
+	c_dmg_mod = {
+		name = "Damage protection",
+		dsc = "Current protection: [mod]\n\nThis is the protection against received non-direct damage. It takes into account only modificators of time scaling and outside buff. SCP specific modificators are not included!"
+	},
+}
+
 local wep = {}
 lang.WEAPONS = wep
 
 wep.SCP023 = {
-	editMode1 = "Press LMB to place spectre",
-	editMode2 = "RMB - cancel, R - Rotate",
-	preys = "Available preys: %i",
-	attack = "Next attack: %s",
-	trapActive = "Trap is active!",
-	trapInactive = "Press RMB to place trap",
+	skills = {
+		_overview = { "passive", "drain", "clone", "hunt" },
+		drain = {
+			name = "Stamina Drain",
+			dsc = "Start draining stamina from nearby players. If all players leave area, ability is instantly put on cooldown",
+		},
+		clone = {
+			name = "Clone",
+			dsc = "Place clone that will mimic work of your passive (including upgrades). Clone will wander around and chase nearby players",
+		},
+		hunt = {
+			name = "Hunt",
+			dsc = "Instantly kill one of your preys or people near them and teleport to their body",
+		},
+		passive = {
+			name = "Passive",
+			dsc = "Colliding with players ignites them",
+		},
+		drain_bar = {
+			name = "Drain",
+			dsc = "Remaining time of drain ability",
+		},
+	},
+
 	upgrades = {
-		attack1 = {
-			name = "Lust I",
-			info = "Your attack cooldown is reduced by 20 seconds",
+		parse_description = true,
+
+		passive = {
+			name = "Incandescent Ember",
+			info = "Upgrades your passive ability increasing burning damage by [+burn_power]",
 		},
-		attack2 = {
-			name = "Lust II",
-			info = "Your attack cooldown is reduced by 20 seconds\n\t• Total cooldown: 40s",
+		invis1 = {
+			name = "Invisible Flame I",
+			info = "Enhances your passive ability\n\t• You fade away for distant players\n\t• Players who can't see you, won't be added to hunt preys\n\t• This upgrade also applies to your clone\n\t• You become fully invisible [invis_range] units away",
 		},
-		attack3 = {
-			name = "Lust III",
-			info = "Your attack cooldown is reduced by 20 seconds\n\t• Total cooldown: 60s",
+		invis2 = {
+			name = "Invisible Flame II",
+			info = "Upgrades your invisibility\n\t• You become fully invisible [invis_range] units away",
 		},
-		trap1 = {
-			name = "Bad Omen I",
-			info = "Your trap cooldown is reduced to 40 seconds",
+		prot1 = {
+			name = "Undying Fire I",
+			info = "Enhances your passive ability by providing [-prot] bullet damage protection",
 		},
-		trap2 = {
-			name = "Bad Omen II",
-			info = "Your trap cooldown is reduced to 20 seconds\nSpectre travel distance is increased by 25 units",
+		prot2 = {
+			name = "Undying Fire II",
+			info = "Upgrades your protection against bullets to [-prot]",
 		},
-		trap3 = {
-			name = "Bad Omen III",
-			info = "Spectre travel distance is increased by 25 units\n\t• Total increase: 50 units",
+		drain1 = {
+			name = "Power Drain I",
+			info = "Upgrades your drain ability\n\t• Duration increased by [+drain_dur]\n\t• Maximum distance increased by [+drain_dist]",
 		},
-		hp = {
-			name = "Alpha male I",
-			info = "You gain 1000 HP (also maximum HP) and 10% bullet protection, but trap cooldown is increased by 30 seconds",
+		drain2 = {
+			name = "Power Drain II",
+			info = "Upgrades your drain ability\n\t• Drain rate increased by [/drain_rate]\n\t• Heal for [%drain_heal] drained stamina",
 		},
-		speed = {
-			name = "Alpha male II",
-			info = "You gain 10% movement speed and additional 15% bullet protection, but trap cooldown is increased by 30 seconds\n\t• Total protection: 25%, total cooldown increase: 60s",
+		drain3 = {
+			name = "Power Drain III",
+			info = "Upgrades your drain ability\n\t• Duration increased by [+drain_dur]\n\t• Maximum distance increased by [+drain_dist]",
 		},
-		alt = {
-			name = "Alpha male III",
-			info = "Your attack cooldown is reduced by 30 seconds and you gain 15% bullet protection, but you can no longer use your trap\n\t• Total protection: 40%",
+		drain4 = {
+			name = "Power Drain IV",
+			info = "Upgrades your drain ability\n\t• Drain rate increased by [/drain_rate]\n\t• Heal for [%drain_heal] drained stamina",
+		},
+		hunt1 = {
+			name = "Endless Flame I",
+			info = "Empowers your hunt ability\n\t• Cooldown reduced by [-hunt_cd]",
+		},
+		hunt2 = {
+			name = "Endless Flame II",
+			info = "Empowers your hunt ability\n\t• Cooldown reduced by [-hunt_cd]\n\t• Random prey search radius increased by [+hunt_range]",
 		},
 	}
 }
 
 wep.SCP049 = {
-	surgery = "Performing surgery",
-	surgery_failed = "Surgery failed!",
 	zombies = {
 		normal = "Standard Zombie",
-		light = "Light Zombie",
-		heavy = "Heavy Zombie"
+		assassin = "Assassin Zombie",
+		boomer = "Exploding Zombie",
+		heavy = "Spiting Zombie",
 	},
+	zombies_desc = {
+		normal = "A standard zombie\n\t• Has both light and heavy attacks\n\t• Decent choice with balanced statistics",
+		assassin = "An assassin zombie\n\t• Has light attack and rapid attack ability\n\t• The fastest one, but has the lowest health and damage",
+		boomer = "An exploding heavy zombie\n\t• Has heavy attack and explode ability\n\t• Low movement speed, but has high health and highest damage",
+		heavy = "A spiting heavy zombie\n\t• Has heavy attack and shot ability\n\t• The slowest zombie type, but has high damage and the most health",
+	},
+	skills = {
+		_overview = { "passive", "choke", "surgery", "boost" },
+		surgery_failed = "Surgery failed!",
+
+		choke = {
+			name = "Doctor's Touch",
+			dsc = "Choke player to death. This ability can be interrupted by receiving enough damage",
+		},
+		surgery = {
+			name = "Surgery",
+			dsc = "Perform surgery on the body turning it into SCP-049-2 instance. Receiving damage interrupts surgery",
+		},
+		boost = {
+			name = "Rise!",
+			dsc = "Provides boost to you and all nearby SCP-049-2 instances",
+		},
+		passive = {
+			name = "Passive",
+			dsc = "Zombies near you gain bullet damage protection",
+		},
+		choke_bar = {
+			name = "Doctor's Touch",
+			dsc = "When full, target dies",
+		},
+		surgery_bar = {
+			name = "Surgery",
+			dsc = "Remaining time of the surgery",
+		},
+		boost_bar = {
+			name = "Rise!",
+			dsc = "Remaining time of the boost",
+		},
+	},
+
 	upgrades = {
-		cure1 = {
-			name = "I am the Cure I",
-			info = "Get 40% bullet protection",
+		parse_description = true,
+
+		choke1 = {
+			name = "Doctor's Touch I",
+			info = "Upgrades your choke ability\n\t• Cooldown reduced by [-choke_cd]\n\t• Damage threshold increased by [+choke_dmg]",
 		},
-		cure2 = {
-			name = "I am the Cure II",
-			info = "Recover 300HP every 180 seconds",
+		choke2 = {
+			name = "Doctor's Touch II",
+			info = "Upgrades your choke ability\n\t• Choke speed increased by [+choke_rate]\n\t• Slow after choke reduced by [-choke_slow]",
 		},
-		merci = {
-			name = "Act of Mercy",
-			info = "Primary attack cooldown is reduced by 2.5 seconds\nYou no longer apply the 'Door Lock' effect to nearby humans",
+		choke3 = {
+			name = "Doctor's Touch III",
+			info = "Upgrades your choke ability\n\t• Cooldown reduced by [-choke_cd]\n\t• Damage threshold increased by [+choke_dmg]\n\t• Choke speed increased by [+choke_rate]",
 		},
-		symbiosis1 = {
-			name = "Symbiosis I",
-			info = "After performing surgery, you are healed by 10% of your maximum health",
+		buff1 = {
+			name = "Rise I",
+			info = "Upgrades your boost ability\n\t• Cooldown reduced by [-buff_cd]\n\t• Boost duration increased by [+buff_dur]",
 		},
-		symbiosis2 = {
-			name = "Symbiosis II",
-			info = "After performing surgery, you are healed by 15% of your maximum health\nNearby SCP 049-2 instances are healed by 10% of their maximum health",
+		buff2 = {
+			name = "Rise II",
+			info = "Upgrades your boost ability\n\t• Boost radius increased by [+buff_radius]\n\t• Boost power increased by [+buff_power]",
 		},
-		symbiosis3 = {
-			name = "Symbiosis III",
-			info = "After performing surgery, you are healed by 20% of your maximum health\nNearby SCP 049-2 instances are healed by 20% of their maximum health",
-		},
-		hidden = {
-			name = "Hidden Potential",
-			info = "You gain 1 token for every successful surgery\nEach token increases HP of zombies by 5%\n\t• This ability only affects newly created zombies",
-		},
-		trans = {
-			name = "Transfusion",
-			info = "Your zombies have their HP increased by 15%\nYour zombies gain 20% of life steal\n\t• This ability only affects newly created zombies",
-		},
-		rm = {
-			name = "Radical Therapy",
-			info = "Whenever it's possible, you create 2 zombies from 1 body\n\t• If only 1 spectator is available, you create only 1 zombie\n\t• Both zombies are of the same type\n\t• Second zombie has HP reduced by 50%\n\t• Second zombie has damage reduced by 25%",
-		},
-		doc1 = {
+		surgery_cd1 = {
 			name = "Surgical Precision I",
-			info = "Surgery time is reduced by 5s",
+			info = "Reduces surgery time by [surgery_time]s\n\t• This upgrade is stackable",
 		},
-		doc2 = {
+		surgery_cd2 = {
 			name = "Surgical Precision II",
-			info = "Surgery time is reduced by 5s\n\t• Total surgery time reduction: 10s",
+			info = "Reduces surgery time by [surgery_time]s\n\t• This upgrade is stackable",
 		},
+		surgery_heal = {
+			name = "Transplantation",
+			info = "Upgrades your surgery ability\n\t• After surgery you heal for [surgery_heal] HP\n\t• After surgery all zombies nearby heal for [surgery_zombie_heal] HP",
+		},
+		surgery_dmg = {
+			name = "Unstoppable surgery",
+			info = "Receiving damage no longer stops surgery",
+		},
+		surgery_prot = {
+			name = "Steady Hand",
+			info = "During surgery gain [-surgery_prot] bullet protection",
+		},
+		zombie_prot = {
+			name = "The nurse",
+			info = "Gain bullet damage protection for each SCP-049-2 nearby\n\t• Protection for each zombie nearby: [%zombie_prot]\n\t• Maximum protection: [%zombie_prot_max]",
+		},
+		zombie_lifesteal = {
+			name = "Transfusion I",
+			info = "Zombies gain [%zombie_ls] life steal on basic attacks",
+		},
+		stacks_hp = {
+			name = "Steroids injection",
+			info = "When creating zombie, their health is increased by [%stacks_hp] for each prior surgery",
+		},
+		stacks_dmg = {
+			name = "Radical Therapy",
+			info = "When creating zombie, their damage is increased by [%stacks_dmg] for each prior surgery",
+		},
+		zombie_heal = {
+			name = "Transfusion II",
+			info = "You heal for [%zombie_heal] of any damage dealt by zombies nearby",
+		}
 	}
 }
 
 wep.SCP0492 = {
-	too_far = "You are becoming weaker!"
+	skills = {
+		prot = {
+			name = "Protection",
+			dsc = "You gain some damage protection when near SCP-049",
+		},
+		boost = {
+			name = "Boost",
+			dsc = "Indicates whenever SCP-049 boost is active on you",
+		},
+		light_attack = {
+			name = "Light Attack",
+			dsc = "Perform a light attack",
+		},
+		heavy_attack = {
+			name = "Heavy Attack",
+			dsc = "Perform a heavy attack",
+		},
+		rapid = {
+			name = "Rapid Attack",
+			dsc = "Perform a rapid attack",
+		},
+		shot = {
+			name = "Shot",
+			dsc = "Shot damaging projectile",
+		},
+		explode = {
+			name = "Explode",
+			dsc = "Enables when you have 50 HP or less. Gain ability to become unkillable and gain speed boost. After short time, you will explode dealing damage in small radius",
+		},
+		boost_bar = {
+			name = "Boost",
+			dsc = "Remaining boost time",
+		},
+		explode_bar = {
+			name = "Explode",
+			dsc = "Remaining time to an explosion",
+		},
+	},
+
+	upgrades = {
+		parse_description = true,
+
+		primary1 = {
+			name = "Primary Attack I",
+			info = "Upgrades your primary attack\n\t• Cooldown reduced by [-primary_cd]",
+		},
+		primary2 = {
+			name = "Primary Attack II",
+			info = "Upgrades your primary attack\n\t• Cooldown reduced by [-primary_cd]\n\t• Damage increased by [+primary_dmg]",
+		},
+		secondary1 = {
+			name = "Secondary Attack I",
+			info = "Upgrades your secondary attack\n\t• Damage increased by [+secondary_dmg]",
+		},
+		secondary2 = {
+			name = "Secondary Attack II",
+			info = "Upgrades your secondary attack\n\t• Damage increased by [+secondary_dmg]\n\t• Cooldown reduced by [-secondary_cd]",
+		},
+		overload = {
+			name = "Overload",
+			info = "Grants additional [overloads] button overloads",
+		},
+		buff = {
+			name = "Rise!",
+			info = "Empowers your protection and SCP-049 boost\n\t• Protection power: [%+prot_power]\n\t• Boost power: [++buff_power]",
+		},
+	}
 }
 
 wep.SCP058 = {
 	skills = {
+		_overview = { "primary_attack", "shot", "explosion" },
 		primary_attack = {
 			name = "Primary attack",
-			dsc = "Attack with your sting directly in front of you. Applies poison if an appropriate upgrade is bought.",
+			dsc = "Attack with your sting directly in front of you. Applies poison if an appropriate upgrade is bought",
 		},
 		shot = {
 			name = "Shot",
-			dsc = "Shots projectile in your aim direction. Projectile will move in ballistic curve. Shot related upgrades affect cooldown, speed, size and effects of this ability.",
+			dsc = "Shots projectile in your aim direction. Projectile will move in ballistic curve. Shot related upgrades affect cooldown, speed, size and effects of this ability",
+		},
+		explosion = {
+			name = "Explode",
+			dsc = "Release burst of corrupted blood dealing massive damage to targets nearby",
 		},
 		shot_stacks = {
 			name = "Shot stacks",
-			dsc = "Show stored amount of shots. Various shot related upgrades affect maximum amount and cooldown time.",
+			dsc = "Show stored amount of shots. Various shot related upgrades affect maximum amount and cooldown time",
 		},
 	},
 
@@ -1649,11 +1871,11 @@ wep.SCP058 = {
 		},
 		attack2 = {
 			name = "Poisonous Sting II",
-			info = "Buffs attack damage, poison damage and decreases cooldown.\n\t• Adds [prim_dmg] damage to attacks\n\t• Attack poison deals [pp_dmg] damage\n\t• Cooldown is reduced by [prim_cd]s"
+			info = "Buffs attack damage, poison damage and decreases cooldown\n\t• Adds [prim_dmg] damage to attacks\n\t• Attack poison deals [pp_dmg] damage\n\t• Cooldown is reduced by [prim_cd]s"
 		},
 		attack3 = {
 			name = "Poisonous Sting III",
-			info = "Buffs poison damage and decreases cooldown.\n\t• If target is not poisoned, instantly apply 2 stacks of poison\n\t• Attack poison deals [pp_dmg] damage\n\t• Cooldown is reduced by [prim_cd]s"
+			info = "Buffs poison damage and decreases cooldown\n\t• If target is not poisoned, instantly apply 2 stacks of poison\n\t• Attack poison deals [pp_dmg] damage\n\t• Cooldown is reduced by [prim_cd]s"
 		},
 		shot = {
 			name = "Corrupted Blood",
@@ -1661,500 +1883,991 @@ wep.SCP058 = {
 		},
 		shot11 = {
 			name = "Surge I",
-			info = "Increases damage and projectile size but also increases cooldown and slows down projectile\n\t• Projectile damage multiplier: [shot_damage]\n\t• Projectile size multiplier: [shot_size]\n\t• Projectile speed multiplier: [shot_speed]\n\t• Total cooldown increased by [shot_cd]s"
+			info = "Increases damage and projectile size but also increases cooldown and slows down projectile\n\t• Projectile damage increased by [+shot_damage]\n\t• Projectile size change: [++shot_size]\n\t• Projectile speed change: [++shot_speed]\n\t• Cooldown increased by [shot_cd]s"
 		},
 		shot12 = {
 			name = "Surge II",
-			info = "Increases damage and projectile size but also increases cooldown and slows down projectile\n\t• Poison effect is removed\n\t• Projectile damage multiplier: [shot_damage]\n\t• Projectile size multiplier: [shot_size]\n\t• Projectile speed multiplier: [shot_speed]\n\t• Total cooldown increased by [shot_cd]s"
+			info = "Increases damage and projectile size but also increases cooldown and slows down projectile\n\t• Projectile damage increased by [+shot_damage]\n\t• Projectile size change: [++shot_size]\n\t• Projectile speed change: [++shot_speed]\n\t• Cooldown increased by [shot_cd]s"
 		},
 		shot21 = {
 			name = "Bloody Mist I",
-			info = "Shot leaves mist on impact, hurting and poisoning everyone who touches it.\n\t• Direct and splash damage is removed\n\t• Cloud deals [cloud_damage] damage on contact\n\t• Poison inflicted by cloud deals [sp_dmg] damage\n\t• Shot stacks limited to [stacks]\n\t• Cooldown increased by [shot_cd]s\n\t• Stacks are generated at [regen_rate] rate"
+			info = "Shot leaves mist on impact, hurting and poisoning everyone who touches it.\n\t• Direct and splash damage is removed\n\t• Cloud deals [cloud_damage] damage on contact\n\t• Poison inflicted by cloud deals [sp_dmg] damage\n\t• Shot stacks limited to [stacks]\n\t• Cooldown increased by [shot_cd]s\n\t• Stacks gain rate: [/+regen_rate]"
 		},
 		shot22 = {
 			name = "Bloody Mist II",
-			info = "Buffs mist left by shots.\n\t• Cloud deals [cloud_damage] damage on contact\n\t• Poison inflicted by cloud deals [sp_dmg] damage\n\t• Stacks are generated at [regen_rate] rate"
+			info = "Buffs mist left by shots.\n\t• Cloud deals [cloud_damage] damage on contact\n\t• Poison inflicted by cloud deals [sp_dmg] damage\n\t• Stacks gain rate: [/+regen_rate]"
 		},
 		shot31 = {
 			name = "Multishot I",
-			info = "Allows you to shot at rapid speed while holding attack button.\n\t• Unlock ability of rapid shoting\n\t• Direct and splash damage is removed\n\t• Shot stacks limited to [stacks]\n\t• Stacks are generated at [regen_rate] rate\n\t• Projectile size multiplier: [shot_size]\n\t• Projectile speed multiplier: [shot_speed]"
+			info = "Allows you to shot at rapid speed while holding attack button\n\t• Unlock ability of rapid shooting\n\t• Direct and splash damage is removed\n\t• Shot stacks limited to [stacks]\n\t• Stacks gain rate: [/+regen_rate]\n\t• Projectile size change: [++shot_size]\n\t• Projectile speed change: [++shot_speed]"
 		},
 		shot32 = {
 			name = "Multishot II",
-			info = "Increases maximum stacks and buffs shot speed.\n\t• Shot stacks limited to [stacks]\n\t• Stacks are generated at [regen_rate] rate\n\t• Projectile size multiplier: [shot_size]\n\t• Projectile speed multiplier: [shot_speed]"
+			info = "Increases maximum stacks and buffs shot speed\n\t• Shot stacks limited to [stacks]\n\t• Stacks gain rate: [/+regen_rate]\n\t• Projectile size change: [++shot_size]\n\t• Projectile speed change: [++shot_speed]"
 		},
 		exp1 = {
 			name = "Aortal Burst",
-			info = "Unlocks ability to explode dealing massive damage when your health decreases below each multiple of 1000 HP for the first time"
+			info = "Unlocks explode ability that deals massive damage to nearby targets. This ability activates when your health decreases below each multiple of 1000 HP for the first time. If bought when below 1000 HP, first received damage activates this ability. Previous thresholds can't be reached (even with healing)"
 		},
 		exp2 = {
 			name = "Toxic Blast",
-			info = "Buffs your ability to explode\n\t• Applies 2 stacks of poison\n\t• Radius multiplier: [explosion_radius]"
+			info = "Buffs your explode ability\n\t• Applies 2 stacks of poison\n\t• Radius increased by [+explosion_radius]"
 		},
 	}
 }
 
 wep.SCP066 = {
-	wait = "Next attack: %is",
-	ready = "Attack is ready!",
-	chargecd = "Dash cooldown: %is",
-	upgrades = {
-		range1 = {
-			name = "Resonance I",
-			info = "Damage radius is increased by 100",
+	skills = {
+		_overview = { "eric", "music", "dash", "boost" },
+		not_threatened = "You don't feel threatened enough to attack!",
+
+		music = {
+			name = "Symphony No. 2",
+			dsc = "If you feel threatened, you can emit loud music",
 		},
-		range2 = {
-			name = "Resonance II",
-			info = "Damage radius is increased by 100\n\t• Total increase: 200",
-		},
-		range3 = {
-			name = "Resonance III",
-			info = "Damage radius is increased by 100\n\t• Total increase: 300",
-		},
-		damage1 = {
-			name = "Bass I",
-			info = "Damage is increased to 115%, but radius is reduced to 90%",
-		},
-		damage2 = {
-			name = "Bass II",
-			info = "Damage is increased to 150%, but radius is reduced to 75%",
-		},
-		damage3 = {
-			name = "Bass III",
-			info = "Damage is increased to 200%, but radius is reduced to 50%",
-		},
-		def1 = {
-			name = "Negation Wave I",
-			info = "While playing music, you negate 20% of incoming damage",
-		},
-		def2 = {
-			name = "Negation Wave II",
-			info = "While playing music, you negate 50% of incoming damage",
-		},
-		charge = {
+		dash = {
 			name = "Dash",
-			info = "Unlocks ability to dash forward by pressing reload key\n\t• Ability cooldown: 20s",
+			dsc = "Dash forward. If you hit player, you will stick to them for a short time",
 		},
-		sticky = {
-			name = "Sticky",
-			info = "After dashing into human, you stick to him for the next 10s",
-		}
+		boost = {
+			name = "Boost",
+			dsc = "Get one of 3 boosts that is currently active. After use it will be replaced by the next one. Power of all boosts increases with each passive stack (capped at [cap] stacks).\n\nCurrent boost: [boost]\n\nSpeed boost: [speed]\nBullet defense boost: [def]\nRegeneration boost: [regen]",
+			buffs = {
+				"Speed",
+				"Bullet defense",
+				"Regeneration",
+			},
+		},
+		eric = {
+			name = "Eric?",
+			dsc = "You ask unarmed players if they are Eric. Get one passive stack each time",
+		},
+		music_bar = {
+			name = "Symphony No. 2",
+			dsc = "Remaining time of this ability",
+		},
+		dash_bar = {
+			name = "Detach time",
+			dsc = "Remaining time of being attached to this target",
+		},
+		boost_bar = {
+			name = "Boost",
+			dsc = "Remaining time of this ability",
+		},
+	},
+
+	upgrades = {
+		parse_description = true,
+
+		eric1 = {
+			name = "Eric? I",
+			info = "Reduces passive cooldown by [-eric_cd]",
+		},
+		eric2 = {
+			name = "Eric? II",
+			info = "Reduces passive cooldown by [-eric_cd]",
+		},
+		music1 = {
+			name = "Symphony No. 2 I",
+			info = "Upgrades your primary attack\n\t• Cooldown decreased by [-music_cd]\n\t• Range increased by [+music_range]",
+		},
+		music2 = {
+			name = "Symphony No. 2 II",
+			info = "Upgrades your primary attack\n\t• Cooldown decreased by [-music_cd]\n\t• Range increased by [+music_range]",
+		},
+		music3 = {
+			name = "Symphony No. 2 III",
+			info = "Upgrades your primary attack\n\t• Damage increased by [+music_damage]",
+		},
+		dash1 = {
+			name = "Dash I",
+			info = "Upgrades your dash ability\n\t• Cooldown decreased by [-dash_cd]\n\t• You stay [+detach_time] longer on your target",
+		},
+		dash2 = {
+			name = "Dash II",
+			info = "Upgrades your dash ability\n\t• Cooldown decreased by [-dash_cd]\n\t• You stay [+detach_time] longer on your target",
+		},
+		dash3 = {
+			name = "Dash III",
+			info = "Upgrades your dash ability\n\t• While attached to a target, you can reuse this ability to jump off\n\t• While jumping off, you can attach to another player\n\t• You can't stick to the same player more than once in a single use of this ability",
+		},
+		boost1 = {
+			name = "Boost I",
+			info = "Upgrades your boost ability\n\t• Cooldown decreased by [-boost_cd]\n\t• Duration increased by [+boost_dur]",
+		},
+		boost2 = {
+			name = "Boost II",
+			info = "Upgrades your boost ability\n\t• Cooldown decreased by [-boost_cd]\n\t• Power increased by [+boost_power]",
+		},
+		boost3 = {
+			name = "Boost III",
+			info = "Upgrades your boost ability\n\t• Duration increased by [+boost_dur]\n\t• Power increased by [+boost_power]",
+		},
 	}
 }
 
 wep.SCP096 = {
-	charges = "Regeneration charges: %i",
-	regen = "Regenerating HP - charges: %i",
+	skills = {
+		_overview = { "passive", "lunge", "regen", "special" },
+		lunge = {
+			name = "Lunge",
+			dsc = "Lunge forward while in rage. Instantly ends rage. You won't eat body after lunge",
+		},
+		regen = {
+			name = "Regeneration",
+			dsc = "Sit in place and convert regeneration stacks to health",
+		},
+		special = {
+			name = "Hunt's over",
+			dsc = "Stop rage. Get regeneration stacks for each active target",
+		},
+		passive = {
+			name = "Passive",
+			dsc = "If someone looks at you, you become enraged. You instantly kill players who enraged you",
+		},
+	},
+
 	upgrades = {
-		sregen1 = {
-			name = "Calm Spirit I",
-			info = "You gain one regenration charge each 4 seconds instead of 5 seconds"
+		parse_description = true,
+
+		rage = {
+			name = "Anger",
+			info = "Receiving [rage_dmg] in [rage_time] seconds from single player will enrage you",
 		},
-		sregen2 = {
-			name = "Calm Spirit II",
-			info = "Your regeneration charges heal you for 6 HP instead of 5 HP"
+		heal1 = {
+			name = "Devour I",
+			info = "After killing target, devour target's body and gain bullet protection for duration\n\t• Heal per tick: [heal]\n\t• Heal ticks: [heal_ticks]\n\t• Bullet damage protection: [-prot]",
 		},
-		sregen3 = {
-			name = "Calm Spirit III",
-			info = "Your regeneration rate is 66% faster"
+		heal2 = {
+			name = "Devour II",
+			info = "Upgrades your devour\n\t• Heal per tick: [heal]\n\t• Heal ticks: [heal_ticks]\n\t• Bullet damage protection: [-prot]",
 		},
-		kregen1 = {
-			name = "Hannibal I",
-			info = "You regenerate additional 90 HP for successful kill"
+		multi1 = {
+			name = "Endless Rage I",
+			info = "Allows you to kill multiple targets while in rage for a limited time after first kill\n\t• Maximum targets: [multi]\n\t• Time limit: [multi_time] seconds\n\t• Bullet damage after killing first target increased by [+prot]",
 		},
-		kregen2 = {
-			name = "Hannibal II",
-			info = "You regenerate additional 90 HP for successful kill\n\t• Total heal increase: 180HP"
+		multi2 = {
+			name = "Endless Rage II",
+			info = "Allows you to kill even more targets while in rage\n\t• Maximum targets: [multi]\n\t• Time limit: [multi_time] seconds\n\t• Bullet damage after killing first target increased by [+prot]",
 		},
-		hunt1 = {
-			name = "Shy I",
-			info = "Hunting area is increased to 4250 units"
+		regen1 = {
+			name = "Cry of Despair I",
+			info = "Upgrades your regeneration ability\n\t• Heal increased by [+regen_mult]",
 		},
-		hunt2 = {
-			name = "Shy II",
-			info = "Hunting area is increased to 5500 units"
+		regen2 = {
+			name = "Cry of Despair II",
+			info = "Upgrades your regeneration ability\n\t• Stacks gain rate increased by [/regen_stacks]",
 		},
-		hp = {
-			name = "Goliath",
-			info = "Your maximum health is increased to 4000 HP\n\t• Your current health is not increased"
+		regen3 = {
+			name = "Cry of Despair III",
+			info = "Upgrades your regeneration ability\n\t• Heal increased by [+regen_mult]\n\t• Stacks gain rate increased by [/regen_stacks]",
 		},
-		def = {
-			name = "Persistent",
-			info = "You gain 30% bullet protection"
-		}
+		spec1 = {
+			name = "Mercy I",
+			info = "Upgrades your special ability and adds sanity drain\n\t• Gain [+spec_mult] more stacks\n\t• Sanity drain: [sanity]",
+		},
+		spec2 = {
+			name = "Mercy II",
+			info = "Upgrades your special ability\n\t• Gain [+spec_mult] more stacks\n\t• Sanity drain: [sanity]",
+		},
 	}
 }
 
 wep.SCP106 = {
-	swait = "Special ability cooldown: %is",
-	sready = "Special ability is ready!",
+	cancel = "Press [%s] to cancel",
+
+	skills = {
+		_overview = { "passive", "withering", "teleport", "trap" },
+		withering = {
+			name = "Withering",
+			dsc = "Inflict withering effect on target. Withering gradually slow target over time. Attacking target who is inside Pocket Dimension instantly kill them\n\nEffect duration [dur]\nMaximum slow: [slow]",
+		},
+		trap = {
+			name = "Trap",
+			dsc = "Place trap on the wall. When trap activates, target is slowed and you can use this ability again to instantly teleport to that trap",
+		},
+		teleport = {
+			name = "Teleport",
+			dsc = "Use to place teleport spot. When held near existing teleport spot, you can select teleport destination, release to teleport to selected spot",
+		},
+		passive = {
+			name = "Teeth Collection",
+			dsc = "Bullets can't kill you, but they can temporarily knock you down, also you can pass through doors. Touching player, teleports them to Pocket Dimension. Each player teleported to Pocket Dimension grants one tooth. Collected teeth empower your withering ability",
+		},
+		teleport_cd = {
+			name = "Teleport",
+			dsc = "Shows cooldown of teleport spot",
+		},
+		passive_bar = {
+			name = "Teeth Collection",
+			dsc = "When this bar reaches zero, you will be knocked down",
+		},
+		trap_bar = {
+			name = "Trap",
+			dsc = "Shows how long trap will remain active"
+		}
+	},
+
 	upgrades = {
-		cd1 = {
-			name = "Void Walk I",
-			info = "Special ability cooldown is reduced by 15s"
+		parse_description = true,
+
+		passive1 = {
+			name = "Teeth Collection I",
+			info = "Upgrades your passive ability\n\t• Increases damage required to knock you down by [+passive_dmg]\n\t• Reduces knock down stun by [-passive_cd]",
 		},
-		cd2 = {
-			name = "Void Walk II",
-			info = "Special ability cooldown is reduced by 15s\n\t• Total cooldown: 30s"
+		passive2 = {
+			name = "Teeth Collection II",
+			info = "Upgrades your passive ability\n\t• Increases damage required to knock you down by [+passive_dmg]\n\t• Damage dealt to players increased by [+teleport_dmg]",
 		},
-		cd3 = {
-			name = "Void Walk III",
-			info = "Special ability cooldown is reduced by 15s\n\t• Total cooldown: 45s"
+		passive3 = {
+			name = "Teeth Collection III",
+			info = "Upgrades your passive ability\n\t• Increases damage required to knock you down by [+passive_dmg]\n\t• Reduces knock down stun by [-passive_cd]\n\t• Damage dealt to players increased by [+teleport_dmg]",
 		},
-		tpdmg1 = {
-			name = "Decaying Touch I",
-			info = "After teleport gain 15 additional damage for 10s"
+		withering1 = {
+			name = "Withering I",
+			info = "Upgrades your withering ability\n\t• Cooldown decreased by [-attack_cd]\n\t• Effect base duration increased by [+withering_dur]",
 		},
-		tpdmg2 = {
-			name = "Decaying Touch II",
-			info = "After teleport gain 20 additional damage for 20s"
+		withering2 = {
+			name = "Withering II",
+			info = "Upgrades your withering ability\n\t• Cooldown decreased by [-attack_cd]\n\t• Effect base slow increased by [+withering_slow]",
 		},
-		tpdmg3 = {
-			name = "Decaying Touch III",
-			info = "After teleport gain 25 additional damage for 30s"
+		withering3 = {
+			name = "Withering III",
+			info = "Upgrades your withering ability\n\t• Cooldown decreased by [-attack_cd]\n\t• Effect base duration increased by [+withering_dur]\n\t• Effect base slow increased by [+withering_slow]",
 		},
-		tank1 = {
-			name = "Pocket Shield I",
-			info = "Get 20% bullet damage protection, but you will be 10% slower"
+		tp1 = {
+			name = "Teleport I",
+			info = "Upgrades your teleport ability\n\t• Maximum spots increased by [spot_max]\n\t• Spot cooldown decreased by [-spot_cd]",
 		},
-		tank2 = {
-			name = "Pocket Shield II",
-			info = "Get 20% bullet damage protection, but you will be 10% slower\n\t• Total protection: 40%\n\t• Total slow: 20%"
+		tp2 = {
+			name = "Teleport II",
+			info = "Upgrades your teleport ability\n\t• Maximum spots increased by [spot_max]\n\t• Teleport cooldown decreased by [-tp_cd]",
+		},
+		tp3 = {
+			name = "Teleport III",
+			info = "Upgrades your teleport ability\n\t• Maximum spots increased by [spot_max]\n\t• Spot cooldown decreased by [-spot_cd]\n\t• Teleport cooldown decreased by [-tp_cd]",
+		},
+		trap1 = {
+			name = "Trap I",
+			info = "Upgrades your trap ability\n\t• Trap cooldown decreased by [-trap_cd]\n\t• Trap life time increased by [+trap_life]",
+		},
+		trap2 = {
+			name = "Trap II",
+			info = "Upgrades your trap ability\n\t• Trap cooldown decreased by [-trap_cd]\n\t• Trap life time increased by [+trap_life]",
 		},
 	}
 }
 
+local scp173_prot = {
+	name = "Reinforced Concrete",
+	info = "• Gain [%prot] bullet damage reduction\n• This ability stacks with other skills of the same type",
+}
+
 wep.SCP173 = {
-	swait = "Special ability cooldown: %is",
-	sready = "Special ability is ready!",
-	upgrades = {
-		specdist1 = {
-			name = "Wraith I",
-			info = "Your special ability distance is increased by 500"
+	restricted = "Restricted!",
+
+	skills = {
+		_overview = { "gas", "decoy", "stealth" },
+		gas = {
+			name = "Gas",
+			dsc = "Emit cloud of irritating gas that will slow down, obscure vision and increase blinking rate of players nearby",
 		},
-		specdist2 = {
-			name = "Wraith II",
-			info = "Your special ability distance is increased by 700\n\t• Total increase: 1200"
+		decoy = {
+			name = "Decoy",
+			dsc = "Place decoy that will distract and drain sanity of players",
 		},
-		specdist3 = {
-			name = "Wraith III",
-			info = "Your special ability distance is increased by 800\n\t• Total increase: 2000"
+		stealth = {
+			name = "Stealth",
+			dsc = "Enter stealth mode. In stealth mode you are invisible and you can pass through doors. Additionally, you become invulnerable to damage (AOE damage like explosions can still hit you), but you also can't inflict any damage to players and you can't interact with the world",
 		},
-		boost1 = {
-			name = "Bloodthirster I",
-			info = "Each time you kill human you will gain 150 HP and your special ability cooldown will be decreased by 10%"
+		looked_at = {
+			name = "Freeze!",
+			dsc = "Shows if someone is looking at you",
 		},
-		boost2 = {
-			name = "Bloodthirster II",
-			info = "Each time you kill human you will gain 300 HP and your special ability cooldown will be decreased by 25%"
+		next_decoy = {
+			name = "Decoy stacks",
+			dsc = "Number of available decoys",
 		},
-		boost3 = {
-			name = "Bloodthirster III",
-			info = "Each time you kill human you will gain 500 HP and your special ability cooldown will be decreased by 50%"
-		},
-		prot1 = {
-			name = "Concrete Skin I",
-			info = "Instantly heal 1000 HP and get 10% protection against bullet wounds"
-		},
-		prot2 = {
-			name = "Concrete Skin II",
-			info = "Instantly heal 1000 HP and get 10% protection against bullet wounds\n\t• Total protection: 20%"
-		},
-		prot3 = {
-			name = "Concrete Skin III",
-			info = "Instantly heal 1000 HP and get 20% protection against bullet wounds\n\t• Total protection: 40%"
+		stealth_bar = {
+			name = "Stealth",
+			dsc = "Remaining time of stealth ability",
 		},
 	},
-	back = "You can hold R to back to previous position",
+
+	upgrades = {
+		parse_description = true,
+
+		horror_a = {
+			name = "Overwhelming Presence",
+			info = "Horror radius is increased by [+horror_dist]",
+		},
+		horror_b = {
+			name = "Unnerving Presence",
+			info = "Horror sanity drain is increased by [+horror_sanity]",
+		},
+		attack_a = {
+			name = "Swift Killer",
+			info = "Kill radius is increased by [+snap_dist]",
+		},
+		attack_b = {
+			name = "Agile Killer",
+			info = "Move radius is increased by [+move_dist]",
+		},
+		gas1 = {
+			name = "Gas I",
+			info = "Gas radius is increased by [+gas_dist]",
+		},
+		gas2 = {
+			name = "Gas II",
+			info = "Gas radius is increased by [+gas_dist] and gas cooldown is reduced by [-gas_cd]",
+		},
+		decoy1 = {
+			name = "Decoy I",
+			info = "Decoy cooldown is reduced by [-decoy_cd]",
+		},
+		decoy2 = {
+			name = "Decoy II",
+			info = "• Decoy cooldown is reduced to 0.5s\n• Original cooldown applies to decoy stacks instead\n• Decoys limit is increased by [decoy_max].",
+		},
+		stealth1 = {
+			name = "Stealth I",
+			info = "Stealth cooldown is reduced by [-stealth_cd]",
+		},
+		stealth2 = {
+			name = "Stealth I",
+			info = "• Stealth cooldown is reduced by [-stealth_cd]\n• Stealth duration is increased by [+stealth_dur]",
+		},
+		prot1 = scp173_prot,
+		prot2 = scp173_prot,
+		prot3 = scp173_prot,
+		prot4 = scp173_prot,
+	},
 }
 
 wep.SCP457 = {
-	swait = "Special ability cooldown: %is",
-	sready = "Special ability is ready!",
-	placed = "Active traps: %i/%i",
-	nohp = "Not enough HP!",
+	skills = {
+		_overview = { "passive", "fireball", "trap", "ignite" },
+		fireball = {
+			name = "Fireball",
+			dsc = "Fuel cost: [cost]\nFire fireball that will travel forward until it collides with something",
+		},
+		trap = {
+			name = "Trap",
+			dsc = "Fuel cost: [cost]\nPlace trap that will ignite players that touch it",
+		},
+		ignite = {
+			name = "Inner Rage",
+			dsc = "Fuel cost: [cost] for each spawned fire\nRelease waves of flames near you. Range of this ability is unlimited and each subsequent ring of fire consumes more fuel. This ability cannot be interrupted",
+		},
+		passive = {
+			name = "Passive",
+			dsc = "You ignite everyone you touch. Igniting player adds fuel",
+		},
+	},
+
 	upgrades = {
-		fire1 = {
-			name = "Live Torch I",
-			info = "Your burn radius is increased by 25"
+		parse_description = true,
+
+		passive1 = {
+			name = "Living Torch I",
+			info = "Upgrades your passive ability\n\t• Fire radius increased by [+fire_radius]\n\t• Fuel gain increased by [+fire_fuel]",
 		},
-		fire2 = {
-			name = "Live Torch II",
-			info = "Your burn damage is increased by 0.5"
+		passive2 = {
+			name = "Living Torch II",
+			info = "Upgrades your passive ability\n\t• Fire radius increased by [+fire_radius]\n\t• Fire damage increased by [+fire_dmg]",
 		},
-		fire3 = {
-			name = "Live Torch III",
-			info = "Your burn radius is increased by 50 and your burn damage is increased by 0.5\n\t• Total radius increase: 75\n\t• Total damage increase: 1"
+		passive3 = {
+			name = "Living Torch III",
+			info = "Upgrades your passive ability\n\t• Fuel gain increased by [+fire_fuel]\n\t• Fire damage increased by [+fire_dmg]",
+		},
+		passive_heal1 = {
+			name = "Flame of Life I",
+			info = "You heal for [%fire_heal] damage caused by fire from any of your abilities",
+		},
+		passive_heal2 = {
+			name = "Flame of Life II",
+			info = "You heal for [%fire_heal] damage caused by fire from any of your abilities",
+		},
+		fireball1 = {
+			name = "Dodgeball I",
+			info = "Upgrades your fireball ability\n\t• Cooldown decreased by [-fireball_cd]\n\t• Speed increased by [+fireball_speed]\n\t• Fuel cost decreased by [-fireball_cost]",
+		},
+		fireball2 = {
+			name = "Dodgeball II",
+			info = "Upgrades your fireball ability\n\t• Damage increased by [+fireball_dmg]\n\t• Size increased by [+fireball_size]\n\t• Fuel cost decreased by [-fireball_cost]",
+		},
+		fireball3 = {
+			name = "Dodgeball III",
+			info = "Upgrades your fireball ability\n\t• Cooldown decreased by [-fireball_cd]\n\t• Damage increased by [+fireball_dmg]\n\t• Speed increased by [+fireball_speed]",
 		},
 		trap1 = {
-			name = "Little Surprise I",
-			info = "Trap lifetime is increased to 4 minutes and will burn 1s longer"
+			name = "It's a Trap! I",
+			info = "Upgrades your trap ability\n\t• Additional traps: [trap_max]\n\t• Fuel cost decreased by [-trap_cost]\n\t• Lifetime increased by [+trap_time]",
 		},
 		trap2 = {
-			name = "Little Surprise II",
-			info = "Trap lifetime is increased to 5 minutes and will burn 1s longer and its damage is increased by 0.5\n\t• Total burn time increase: 2s"
+			name = "It's a Trap! II",
+			info = "Upgrades your trap ability\n\t• Additional traps: [trap_max]\n\t• Damage increased by [+trap_dmg]\n\t• Lifetime increased by [+trap_time]",
 		},
 		trap3 = {
-			name = "Little Surprise III",
-			info = "Trap will burn 1s longer and its damage is increased by 0.5\n\t• Total burn time increase: 3s\n\t• Total damage increase: 1"
+			name = "It's a Trap! III",
+			info = "Upgrades your trap ability\n\t• Fuel cost decreased by [-trap_cost]\n\t• Damage increased by [+trap_dmg]\n\t• Lifetime increased by [+trap_time]",
 		},
-		heal1 = {
-			name = "Sizzling Snack I",
-			info = "Burning people will heal you for additional 1 health"
+		ignite1 = {
+			name = "Inner Rage I",
+			info = "Upgrades your inner rage ability\n\t• Wave rate increased by [/ignite_rate]\n\t• First ring spawns [ignite_flames] additional flames",
 		},
-		heal2 = {
-			name = "Sizzling Snack II",
-			info = "Burning people will heal you for additional 1 health\n\t• Total heal increase: 2"
+		ignite2 = {
+			name = "Inner Rage II",
+			info = "Upgrades your inner rage ability\n\t• Fuel cost decreased by [-ignite_cost]\n\t• First ring spawns [ignite_flames] additional flames",
 		},
-		speed = {
-			name = "Fast Fire",
-			info = "Your speed is increased by 10%"
+		fuel = {
+			name = "Fuel Delivery!",
+			info = "Instantly gain [fuel] fuel",
 		}
 	}
 }
 
 wep.SCP682 = {
-	swait = "Special ability cooldown: %is",
-	sready = "Special ability is ready!",
-	s_on = "You are immune to any damage! %is",
+	skills = {
+		_overview = { "primary", "secondary", "charge", "shield" },
+		primary = {
+			name = "Basic attack",
+			dsc = "Attack with your hand directly in front of you inflicting minor damage",
+		},
+		secondary = {
+			name = "Bite",
+			dsc = "Hold key to prepare a strong attack that will inflict major damage in a cone shaped area in front of you",
+		},
+		charge = {
+			name = "Charge",
+			dsc = "After a short delay charge forward and become unstoppable. When on full speed, kill everyone in your path and gain ability to breach most of doors. This skill has to be unlocked in upgrade tree",
+		},
+		shield = {
+			name = "Shield",
+			dsc = "Shield that will absorb any non-direct/fall damage. This ability is affected by bought upgrades on your skill tree",
+		},
+		shield_bar = {
+			name = "Shield",
+			dsc = "Current amount of shield that will absorb any non-direct/fall damage",
+		},
+	},
+
 	upgrades = {
-		time1 = {
-			name = "Unbroken I",
-			info = "Your special ability duration is increased by 2.5s\n\t• Total duration: 12.5s"
+		parse_description = true,
+
+		shield_a = {
+			name = "Empowered Shield",
+			info = "Upgrades power of your shield\n\t• Shield power: [%shield]\n\t• Cooldown: [%shield_cd]",
 		},
-		time2 = {
-			name = "Unbroken II",
-			info = "Your special ability duration is increased by 2.5s\n\t• Total duration: 15s"
+		shield_b = {
+			name = "Regeneration Shield",
+			info = "Alters power of your shield\n\t• Shield power: [%shield]\n\t• Cooldown: [%shield_cd]\n\t• Cooldown starts after shield is fully depleted\n\t• When shield is on cooldown, regenerate [shield_regen] HP/s",
 		},
-		time3 = {
-			name = "Unbroken III",
-			info = "Your special ability duration is increased by 2.5s\n\t• Total duration: 17.5s"
+		shield_c = {
+			name = "Shield of Sacrifice",
+			info = "Alters power of your shield\n\t• Cooldown: [%shield_cd]\n\t• Cooldown starts after shield is fully depleted\n\t• Power of your shield is equal to your maximum HP\n\t• When broken, you lose [shield_hp] maximum HP",
 		},
-		prot1 = {
-			name = "Adaptation I",
-			info = "You take 10% less bullet damage"
+		shield_d = {
+			name = "Reflective Shield",
+			info = "Alters power of your shield\n\t• Shield power: [%shield]\n\t• Cooldown: [%shield_cd]\n\t• Cooldown starts after shield is fully depleted\n\t• Your shield blocks only [%shield_pct] of damage\n\t• [%reflect_pct] of blocked damage is reflected to attacker",
 		},
-		prot2 = {
-			name = "Adaptation II",
-			info = "You take 15% less bullet damage\n\t• Total damage reduction: 25%"
+
+		shield_1 = {
+			name = "Shield I",
+			info = "Adds effects to your shield. Once fully broken, receive additional [+shield_speed_pow] movement speed for [shield_speed_dur] seconds",
 		},
-		prot3 = {
-			name = "Adaptation III",
-			info = "You take 15% less bullet damage\n\t• Total damage reduction: 40%"
+		shield_2 = {
+			name = "Shield II",
+			info = "Adds effects to your shield. Once fully broken, receive additional [+shield_speed_pow] movement speed for [shield_speed_dur] seconds. Additionally, every 1 point of received damage shortens shield cooldown by [shield_cdr] seconds",
 		},
-		speed1 = {
-			name = "Furious Rush I",
-			info = "After using special ability, gain 10% movement speed until receiving damage"
+
+		attack_1 = {
+			name = "Empowered Swing",
+			info = "Upgrades your basic attack\n\t• Cooldown reduced by [-prim_cd]\n\t• Damage increased by [prim_dmg]",
 		},
-		speed2 = {
-			name = "Furious Rush II",
-			info = "After using special ability, gain 20% movement speed until receiving damage"
+		attack_2 = {
+			name = "Empowered Bite",
+			info = "Upgrades your bite\n\t• Range increased by [+sec_range]\n\t• Movement speed while preparing is increased by [+sec_speed]",
 		},
-		ult = {
-			name = "Regeneration",
-			info = "5 seconds after receiving damage, regenerate 5% of missing health"
+		attack_3 = {
+			name = "Merciless Strike",
+			info = "Upgrades both basic attack and bite\n\t• Both attacks inflict bleeding\n\t• Bite attack inflicts fracture when fully charged",
+		},
+
+		charge_1 = {
+			name = "Charge",
+			info = "Unlocks charge ability",
+		},
+		charge_2 = {
+			name = "Ruthless Charge",
+			info = "Empowers charge ability\n\t• Cooldown is reduced by [-charge_cd]\n\t• Stun and slow duration are reduced by [-charge_stun]",
 		},
 	}
 }
 
 wep.SCP8602 = {
+	skills = {
+		_overview = { "passive", "primary", "defense", "charge" },
+		primary = {
+			name = "Attack",
+			dsc = "Perform basic attack",
+		},
+		defense = {
+			name = "Defensive Stance",
+			dsc = "Hold to activate. While holding, gain protection over time but you are also slowed. Release to dash forward and deal damage equal to [dmg_ratio] of mitigated damage. This ability doesn't have duration limit",
+		},
+		charge = {
+			name = "Charge",
+			dsc = "Gain speed over time and deal damage to first player in front of you. If attacked player is close enough to wall, pin them to that wall to increase damage",
+		},
+		passive = {
+			name = "Passive",
+			dsc = "You see player inside your forest and for some time after they exit it. Players inside forest lose sanity, if they are out of sanity, they lose health instead. Heal for taken sanity/heath from players inside forest. This healing can exceed your maximum health",
+		},
+		overheal_bar = {
+			name = "Overheal",
+			dsc = "Overhealed health",
+		},
+		defense_bar = {
+			name = "Defense",
+			dsc = "Current protection power",
+		},
+		charge_bar = {
+			name = "Charge",
+			dsc = "Remaining charge time",
+		},
+	},
+
 	upgrades = {
-		charge11 = {
-			name = "Brutality I",
-			info = "Damage of strong attack is increased by 5"
+		parse_description = true,
+
+		passive1 = {
+			name = "Dense Woods I",
+			info = "Upgrades your passive ability\n\t• Maximum overheal increased by [+overheal]\n\t• Passive rate increased by [/passive_rate]\n\t• Player detect time increased by [+detect_time]",
 		},
-		charge12 = {
-			name = "Brutality II",
-			info = "Damage of strong attack is increased by 10\n\t• Total damage increase: 15"
+		passive2 = {
+			name = "Dense Woods II",
+			info = "Upgrades your passive ability\n\t• Maximum overheal increased by [+overheal]\n\t• Passive rate increased by [/passive_rate]\n\t• Player detect time increased by [+detect_time]",
 		},
-		charge13 = {
-			name = "Brutality III",
-			info = "Damage of strong attack is increased by 10\n\t• Total damage increase: 25"
+		primary = {
+			name = "Simple but Dangerous",
+			info = "Upgrades your basic attack\n\t• Cooldown decreased by [-primary_cd]\n\t• Damage increased by [+primary_dmg]",
 		},
-		charge21 = {
+		def1a = {
+			name = "Swift Armor",
+			info = "Alters your defensive stance ability\n\t• Activation time reduced by [-def_time]\n\t• Cooldown increased by [+def_cooldown]",
+		},
+		def1b = {
+			name = "Rapid Armor",
+			info = "Alters your defensive stance ability\n\t• Activation time increased by [+def_time]\n\t• Cooldown decreased by [-def_cooldown]",
+		},
+		def2a = {
+			name = "Long Dash",
+			info = "Alters your defensive stance ability\n\t• Dash maximum distance increased by [+def_range]\n\t• Dash width reduced by [-def_width]",
+		},
+		def2b = {
+			name = "Clumsy Dash",
+			info = "Alters your defensive stance ability\n\t• Dash maximum distance reduced by [-def_range]\n\t• Dash width increased by [+def_width]",
+		},
+		def3a = {
+			name = "Heavy Armor",
+			info = "Alters your defensive stance ability\n\t• Maximum protection increased by [+def_prot]\n\t• Maximum slow increased by [+def_slow]",
+		},
+		def3b = {
+			name = "Light Armor",
+			info = "Alters your defensive stance ability\n\t• Maximum protection decreased by [-def_prot]\n\t• Maximum slow reduced by [-def_slow]",
+		},
+		def4 = {
+			name = "Effective Armor",
+			info = "Upgrades your defensive stance ability\n\t• Damage conversion multiplier increased by [+def_mult]",
+		},
+		charge1 = {
 			name = "Charge I",
-			info = "Range of strong attack is increased by 15"
+			info = "Upgrades your charge ability\n\t• Cooldown decreased by [-charge_cd]\n\t• Duration increased by [+charge_time]\n\t• Basic damage increased by [+charge_dmg]",
 		},
-		charge22 = {
+		charge2 = {
 			name = "Charge II",
-			info = "Range of strong attack is increased by 15\n\t• Total range increase: 30"
+			info = "Upgrades your charge ability\n\t• Range increased by [+charge_range]\n\t• Duration increased by [+charge_time]\n\t• Pin damage increased by [+charge_pin_dmg]",
 		},
-		charge31 = {
-			name = "Shared Pain",
-			info = "When you perform strong attack, everyone nearby impact point will receive 20% of the original damage"
+		charge3 = {
+			name = "Charge III",
+			info = "Upgrades your charge ability\n\t• Speed increased by [+charge_speed]\n\t• Basic damage increased by [+charge_dmg]\n\t• Pinning player to wall breaks their bones",
 		},
 	}
 }
 
 wep.SCP939 = {
+	skills = {
+		_overview = { "passive", "primary", "trail", "special" },
+		primary = {
+			name = "Attack",
+			dsc = "Bite everyone in cone shaped area on front of you",
+		},
+		trail = {
+			name = "ANM-C227",
+			dsc = "Hold key to leave ANM-C227 trail behind you",
+		},
+		special = {
+			name = "Detection",
+			dsc = "Start detecting players around you",
+		},
+		passive = {
+			name = "Passive",
+			dsc = "You can't see players, but you can see sound waves. You have ANM-C227 aura around you",
+		},
+		special_bar = {
+			name = "Detection",
+			dsc = "Remaining detection time",
+		},
+	},
+
 	upgrades = {
-		heal1 = {
-			name = "Bloodlust I",
-			info = "Your attacks heal you for at least 22.5 HP (up to 30)"
+		parse_description = true,
+
+		passive1 = {
+			name = "Aura I",
+			info = "Upgrades your passive ability\n\t• Aura radius increased by [+aura_radius]\n\t• Aura damage increased by [aura_damage]",
 		},
-		heal2 = {
-			name = "Bloodlust II",
-			info = "Your attacks heal you for at least 37.5 HP (up to 50)"
+		passive2 = {
+			name = "Aura II",
+			info = "Upgrades your passive ability\n\t• Aura radius increased by [+aura_radius]\n\t• Aura damage increased by [aura_damage]",
 		},
-		heal3 = {
-			name = "Bloodlust III",
-			info = "Your attacks heal you for at least 52.5 HP (up to 70)"
+		passive3 = {
+			name = "Aura III",
+			info = "Upgrades your passive ability\n\t• Aura radius increased by [+aura_radius]\n\t• Aura damage increased by [aura_damage]",
 		},
-		amn1 = {
-			name = "Lethal Breath I",
-			info = "Your poison radius is increased to 100"
+		attack1 = {
+			name = "Bite I",
+			info = "Upgrades your attack ability\n\t• Cooldown decreased by [-attack_cd]\n\t• Damage increased by [+attack_dmg]",
 		},
-		amn2 = {
-			name = "Lethal Breath II",
-			info = "Your poison now deals damage: 1.5 dmg/s"
+		attack2 = {
+			name = "Bite II",
+			info = "Upgrades your attack ability\n\t• Cooldown decreased by [-attack_cd]\n\t• Range increased by [+attack_range]",
 		},
-		amn3 = {
-			name = "Lethal Breath III",
-			info = "Your poison radius is increased to 125 and your poison damage is increased to 3 dmg/s"
+		attack3 = {
+			name = "Bite III",
+			info = "Upgrades your attack ability\n\t• Damage increased by [+attack_dmg]\n\t• Range increased by [+attack_range]\n\t• Your attacks have chance to apply bleeding",
+		},
+		trail1 = {
+			name = "Amnesia I",
+			info = "Upgrades your ANM-C227 ability\n\t• Radius increased by [+trail_radius]\n\t• Stacks generation rate increased by [/trail_rate]",
+		},
+		trail2 = {
+			name = "Amnesia II",
+			info = "Upgrades your ANM-C227 ability\n\t• Damage increased by [trail_dmg]\n\t• Maximum stacks increased by [+trail_stacks]",
+		},
+		trail3a = {
+			name = "Amnesia III A",
+			info = "Upgrades your ANM-C227 ability\n\t• Life time of trail increased by [+trail_life]\n\t• Radius increased by [+trail_radius]",
+		},
+		trail3b = {
+			name = "Amnesia III B",
+			info = "Upgrades your ANM-C227 ability\n\t• Maximum stacks increased by [+trail_stacks]",
+		},
+		trail3c = {
+			name = "Amnesia III C",
+			info = "Upgrades your ANM-C227 ability\n\t• Stacks generation rate increased by [/trail_rate]",
+		},
+		special1 = {
+			name = "Echolocation I",
+			info = "Upgrades your special ability\n\t• Cooldown decreased by [-special_cd]\n\t• Radius increased by [+special_radius]",
+		},
+		special2 = {
+			name = "Echolocation II",
+			info = "Upgrades your special ability\n\t• Cooldown decreased by [-special_cd]\n\t• Duration increased by [+special_times]",
 		},
 	}
 }
 
 wep.SCP966 = {
+	fatigue = "Fatigue level:",
+
+	skills = {
+		_overview = { "passive", "attack", "channeling", "mark" },
+		attack = {
+			name = "Basic attack",
+			dsc = "Perform basic attack. You can only attack players with at least 10 fatigue stacks. Attacked players loses some of fatigue stacks. Effects of this attack are affected by skill tree",
+		},
+		channeling = {
+			name = "Channeling",
+			dsc = "Channel ability selected in skill tree",
+		},
+		mark = {
+			name = "Death Mark",
+			dsc = "Mark player. Marked players will transfer fatigue stacks from other nearby players to themselves",
+		},
+		passive = {
+			name = "Fatigue",
+			dsc = "Once in a while you apply fatigue stacks to nearby players. You also gain passive stack for each applied fatigue stack",
+		},
+		channeling_bar = {
+			name = "Channeling",
+			dsc = "Remaining time of channeling ability",
+		},
+		mark_bar = {
+			name = "Death Mark",
+			dsc = "Remaining time of mark on marked player",
+		},
+	},
+
 	upgrades = {
-		lockon1 = {
-			name = "Frenzy I",
-			info = "Time required to attack is reduced to 2.5s"
+		parse_description = true,
+
+		passive1 = {
+			name = "Fatigue I",
+			info = "Upgrades your passive ability\n\t• Passive rate increased by [/passive_rate]",
 		},
-		lockon2 = {
-			name = "Frenzy II",
-			info = "Time required to attack is reduced to 2s"
+		passive2 = {
+			name = "Fatigue II",
+			info = "Upgrades your passive ability\n\t• Passive rate increased by [/passive_rate]\n\t• Passive range increased by [+passive_radius]",
 		},
-		dist1 = {
-			name = "Call of the Hunter I",
-			info = "Attack range is increased by 15"
-		},
-		dist2 = {
-			name = "Call of the Hunter II",
-			info = "Attack range is increased by 15\n\t• Total range increase: 30"
-		},
-		dist3 = {
-			name = "Call of the Hunter III",
-			info = "Attack range is increased by 15\n\t• Total range increase: 45"
-		},
-		dmg1 = {
+		basic1 = {
 			name = "Sharp Claws I",
-			info = "Attack damage is increased by 5"
+			info = "Upgrades your basic attack increasing damage by [%basic_dmg] for each [basic_stacks] passive stacks. Also gaining passive stacks unlock:\n\t• [bleed1_thr] stacks: Apply bleeding if target is not bleeding\n\t• [drop1_thr] stacks: Target loss of fatigue stacks decreased to [%drop1]\n\t• [slow_thr] stacks: Target is slowed by [-slow_power] for [slow_dur] seconds",
 		},
-		dmg2 = {
+		basic2 = {
 			name = "Sharp Claws II",
-			info = "Attack damage is increased by 5\n\t• Total damage increase: 10"
+			info = "Upgrades your basic attack increasing damage by [%basic_dmg] for each [basic_stacks] passive stacks. Also gaining passive stacks unlock:\n\t• [bleed2_thr] stacks: Apply bleeding on hit\n\t• [drop2_thr] stacks: Target loss of fatigue stacks decreased to [%drop2]\n\t• [hb_thr] stacks: Apply heavy bleeding instead of bleeding on hit",
 		},
-		bleed1 = {
-			name = "Deep Wounds I",
-			info = "Your attacks have 25% chance of inflicting higher tier bleeding"
+		heal = {
+			name = "Blood Drain",
+			info = "Heal [%heal_rate] per passive stack per target fatigue stack on hit",
 		},
-		bleed2 = {
-			name = "Deep Wounds II",
-			info = "Your attacks have 50% chance of inflicting higher tier bleeding"
+		channeling_a = {
+			name = "Endless Fatigue",
+			info = "Unlocks channeling ability that will allow you to focus on single target\n\t• Passive is disabled during channeling\n\t• Cooldown [channeling_cd] seconds\n\t• Maximum duration [channeling_time] seconds\n\t• Target will gain fatigue stack once every [channeling_rate] second",
+		},
+		channeling_b = {
+			name = "Energy Drain",
+			info = "Unlocks channeling ability that will allow you to drain fatigue charges from nearby players\n\t• Passive is disabled during channeling\n\t• Cooldown [channeling_cd] seconds\n\t• Maximum duration [channeling_time] seconds\n\t• Each [channeling_rate] second, transfer 1 fatigue charge from all nearby players to passive stacks",
+		},
+		channeling = {
+			name = "Empowered Channeling",
+			info = "Upgrades your channeling ability\n\t• Channeling range increased by [+channeling_range_mul]\n\t• Channeling duration increased by [+channeling_time_mul]",
+		},
+		mark1 = {
+			name = "Lethal Mark I",
+			info = "Upgrades mark ability:\n\t• Stacks transfer rate increased by [/mark_rate]",
+		},
+		mark2 = {
+			name = "Lethal Mark II",
+			info = "Upgrades mark ability:\n\t• Stacks transfer rate increased by [/mark_rate]\n\t• Stacks transfer range increased by [+mark_range]",
 		},
 	}
 }
 
 wep.SCP24273 = {
-	mind_control = "Mind Control is ready! Press RMB",
-	mind_control_cd = "Mind Control is on cooldown! Wait: %is",
-	dash = "Attack is ready!",
-	dash_cd = "Attack is on cooldown! Wait: %is",
+	skills = {
+		_overview = { "change", "primary", "secondary", "special" },
+		primary = {
+			name = "Dash / Camouflage",
+			dsc = "\nJudge:\nDash forward dealing damage to everyone on your path\n\nProsecutor:\nEnable camouflage. During camouflage you are less visible. Using skills, moving or receiving damage interrupts it",
+		},
+		secondary = {
+			name = "Examination / Surveillance",
+			dsc = "\nJudge:\nStart focusing on targeted player for some time. When fully casted, slow target and deal damage. If line of sight is lost, skill is interrupted and you are slowed instead\n\nProsecutor:\nLeave your body and look from a perspective of random player nerby. Your passive also works from that player's perspective",
+		},
+		special = {
+			name = "Judgement / Ghost",
+			dsc = "\nJudge:\nStay in place and force everyone nearby to walk to you. When finished, players in close proximity receive damage and are knocked back\n\nProsecutor:\nEnter ghost form. While in ghost form, you are immune to any damage (except explosions and direct damage)",
+		},
+		change = {
+			name = "Judge / Prosecutor",
+			dsc = "\nChange between Judge and Prosecutor mode\n\nJudge:\nDamage you deal is increased by evidence cumulated on target. Attacking target reduces evidence level. Attacking players with full evidence, instantly kills them\n\nProsecutor:\nYou are slowed and you receive bullet damage protection. Looking at players gathers evidence against them",
+		},
+		camo_bar = {
+			name = "Camouflage",
+			dsc = "Remaining camouflage time",
+		},
+		spectate_bar = {
+			name = "Surveillance",
+			dsc = "Remaining surveillance time",
+		},
+		drain_bar = {
+			name = "Examination",
+			dsc = "Remaining examination time",
+		},
+		ghost_bar = {
+			name = "Ghost",
+			dsc = "Remaining ghost time",
+		},
+		special_bar = {
+			name = "Judgement",
+			dsc = "Remaining judgement time",
+		},
+	},
+
 	upgrades = {
+		parse_description = true,
+
+		j_passive1 = {
+			name = "Strict Judge I",
+			info = "Upgrades your judge passive ability\n\t• Evidence increases damage up to additional [%j_mult]\n\t• Evidence loss on attack reduced to [%j_loss]",
+		},
+		j_passive2 = {
+			name = "Strict Judge II",
+			info = "Upgrades your judge passive ability\n\t• Evidence increases damage up to additional [%j_mult]\n\t• Evidence loss on attack reduced to [%j_loss]",
+		},
+		p_passive1 = {
+			name = "District Attorney I",
+			info = "Upgrades your prosecutor passive ability\n\t• Bullet protection increased to [%p_prot]\n\t• Slow increased to [%p_slow]\n\t• Evidence gathering rate increased to [%p_rate] pre second",
+		},
+		p_passive2 = {
+			name = "District Attorney II",
+			info = "Upgrades your prosecutor passive ability\n\t• Bullet protection increased to [%p_prot]\n\t• Slow increased to [%p_slow]\n\t• Evidence gathering rate increased to [%p_rate] pre second",
+		},
 		dash1 = {
-			name = "Ruthless Charge I",
-			info = "Your attack cooldown is reduced by 1 second and its power is increased by 15%"
+			name = "Dash I",
+			info = "Upgrades your dash ability\n\t• Cooldown reduced by [-dash_cd]\n\t• Damage increased by [+dash_dmg]",
 		},
 		dash2 = {
-			name = "Ruthless Charge II",
-			info = "Penalty time after attack is reduced by 0.5 second and speed penalty is reduced from 50% to 35%"
+			name = "Dash II",
+			info = "Upgrades your dash ability\n\t• Cooldown reduced by [-dash_cd]\n\t• Damage increased by [+dash_dmg]",
 		},
-		dash3 = {
-			name = "Ruthless Charge III",
-			info = "Your attack damage is increased by 50"
+		camo1 = {
+			name = "Camouflage I",
+			info = "Upgrades your camouflage ability\n\t• Cooldown reduced by [-camo_cd]\n\t• Duration increased by [+camo_dur]\n\t• You can move [camo_limit] units without interrupting this ability",
 		},
-		mc11 = {
-			name = "Persistent Hunter I",
-			info = "Your Mind Control duration is increased by 10s, but cooldown is increased by 20s"
+		camo2 = {
+			name = "Camouflage II",
+			info = "Upgrades your camouflage ability\n\t• Cooldown reduced by [-camo_cd]\n\t• Duration increased by [+camo_dur]\n\t• You can move [camo_limit] units without interrupting this ability",
 		},
-		mc12 = {
-			name = "Persistent Hunter II",
-			info = "Your Mind Control duration is increased by 10s, but cooldown is increased by 25s\n\t• Total duration increase: 20s\n\t• Total cooldown increase: 45s"
+		drain1 = {
+			name = "Examination I",
+			info = "Upgrades your prosecutor passive ability\n\t• Cooldown reduced by [-drain_cd]\n\t• Duration reduced by [-drain_dur]",
 		},
-		mc21 = {
-			name = "Impatient Hunter I",
-			info = "Your Mind Control duration is reduced by 5s and cooldown is reduced by 10s"
+		drain2 = {
+			name = "Examination II",
+			info = "Upgrades your prosecutor passive ability\n\t• Cooldown reduced by [-drain_cd]\n\t• Duration reduced by [-drain_dur]",
 		},
-		mc22 = {
-			name = "Impatient Hunter II",
-			info = "Your Mind Control duration is reduced by 10s and cooldown is reduced by 15s"
+		spect1 = {
+			name = "Surveillance I",
+			info = "Upgrades your prosecutor passive ability\n\t• Cooldown reduced by [-spect_cd]\n\t• Duration increased by [+spect_dur]\n\t• Bullet damage protection increased to [%spect_prot]",
 		},
-		mc3 = {
-			name = "Unbroken Hunter",
-			info = "During Mind Control gain 50% reduction for all types of damage"
+		spect2 = {
+			name = "Surveillance II",
+			info = "Upgrades your prosecutor passive ability\n\t• Cooldown reduced by [-spect_cd]\n\t• Duration increased by [+spect_dur]\n\t• Bullet damage protection increased to [%spect_prot]",
 		},
-		mc13 = {
-			name = "Strict Judge",
-			info = "Killing your prey during Mind Control, reduces its cooldown by 40%. Mind Control range is increased by 1000 units"
+		combo = {
+			name = "Supreme Court",
+			info = "Upgrades your judgement and ghost ability\n\t• Judgement protection increased to [%special_prot]\n\t• Ghost duration increased by [+ghost_dur]",
 		},
-		mc23 = {
-			name = "Crimson Judge",
-			info = "Killing your prey during Mind Control, heals you by 400 HP. Mind Control range is increased by 500 units"
+		spec = {
+			name = "Judgement",
+			info = "Upgrades your judgement ability\n\t• Cooldown reduced by [-special_cd]\n\t• Duration increased by [+special_dur]\n\t• Protection increased to [%special_prot]",
+		},
+		ghost1 = {
+			name = "Ghost I",
+			info = "Upgrades your ghost ability\n\t• Cooldown reduced by [-ghost_cd]\n\t• Duration increased by [+ghost_dur]\n\t• Heal increased to [ghost_hel] per 1 consumed evidence",
+		},
+		ghost2 = {
+			name = "Ghost II",
+			info = "Upgrades your ghost ability\n\t• Cooldown reduced by [-ghost_cd]\n\t• Duration increased by [+ghost_dur]\n\t• Heal increased to [ghost_hel] per 1 consumed evidence",
+		},
+		change1 = {
+			name = "Swap I",
+			info = "Swap cooldown reduced by [-change_cd]",
+		},
+		change2 = {
+			name = "Swap II",
+			info = "Swap cooldown reduced by [-change_cd]. Additionally, changing mode no longer interrupts camouflage ability",
 		},
 	}
 }
 
 wep.SCP3199 = {
-	special = "Special attack is ready! Press RMB",
+	skills = {
+		_overview = { "passive", "primary", "special", "egg" },
+		eggs_max = "You already have maximum eggs!",
+
+		primary = {
+			name = "Attack",
+			dsc = "Perform basic attack. Hitting target activates (or refreshes) frenzy, applies deep wounds effect and grants passive stack and frenzy stack.\nAttacks deal reduced damage to targets with deep wounds. Missing the attack stops frenzy. Hitting only the target with deep wounds stops frenzy and applies tokens penalty",
+		},
+		special = {
+			name = "Attack from Beyond",
+			dsc = "Activates after [tokens] successful attacks in a row. Use to instantly end frenzy and damage all players who have deep wounds. Affected players are also slowed",
+		},
+		egg = {
+			name = "Eggs",
+			dsc = "After killing player you can spawn egg. When you receive lethal damage, you will respawn at the random egg. Respawning consumes egg. Additionally, each egg grants [prot] bullet protection (capped at [cap])\n\nCurrent eggs: [eggs] / [max]",
+		},
+		passive = {
+			name = "Passive",
+			dsc = "While in frenzy see location of nearby players without deep wounds. Gaining frenzy tokens also grant passive tokens. If your attack hits only player with deep wounds, you will lose [penalty] stacks. Passive tokens upgrade your other abilities\n\nRegenerate [heal] HP per second in frenzy\nAttack damage bonus: [dmg]\nFrenzy speed bonus: [speed]\nSpecial attack additional slow: [slow]\nSpecial attacks inflict [bleed] bleed level(s)",
+		},
+		frenzy_bar = {
+			name = "Frenzy",
+			dsc = "Remaining frenzy time",
+		},
+		egg_bar = {
+			name = "Egg",
+			dsc = "Remaining egg spawn time",
+		},
+	},
+
 	upgrades = {
-		regen1 = {
-			name = "Taste of Blood I",
-			info = "Regenerate 2 HP per second while in Frenzy"
-		},
-		regen2 = {
-			name = "Taste of Blood II",
-			info = "Health regeneration ratio is increased by 10% for each Frenzy token"
-		},
+		parse_description = true,
+
 		frenzy1 = {
-			name = "Hunter's Game I",
-			info = "Your maximum Frenzy tokens are increased by 1\nYour Frenzy duration is increased by 20%"
+			name = "Frenzy I",
+			info = "Upgrades your frenzy ability\n\t• Duration increased by [+frenzy_duration]\n\t• Maximum stacks increased by [frenzy_max]",
 		},
 		frenzy2 = {
-			name = "Hunter's Game II",
-			info = "Your maximum Frenzy tokens are increased by 1\nYour Frenzy duration is increased by 30%\nYour special attack is disabled\n\t• Total Frenzy tokens increase: 2\n\t• Total duration increase: 50%"
+			name = "Frenzy II",
+			info = "Upgrades your frenzy ability\n\t• Maximum stacks increased by [frenzy_max]\n\t• Frenzy speed increased by [%frenzy_speed_stacks] per passive stack",
 		},
-		ch = {
-			name = "Blind Fury",
-			info = "Your speed is increased by 25%\nYou can no longer detect heartbeat of nearby humans"
+		frenzy3 = {
+			name = "Frenzy III",
+			info = "Upgrades your frenzy ability\n\t• Duration increased by [+frenzy_duration]\n\t• Frenzy speed increased by [%frenzy_speed_stacks] per passive stack",
 		},
-		egg1 = {
-			name = "Another One",
-			info = "You create 1 new inactive egg upon buying this upgrade\n\t• Egg will not be created if there is no empty spot for egg in map"
+		attack1 = {
+			name = "Sharp Claws I",
+			info = "Upgrades your attack ability\n\t• Cooldown reduced by [-attack_cd]\n\t• Damage increased by [+attack_dmg]",
 		},
-		egg2 = {
-			name = "Legacy",
-			info = "One of inactive eggs will be activated once this upgrade is bought\n\t• This won't have effect is there is no inactive egg on map"
+		attack2 = {
+			name = "Sharp Claws II",
+			info = "Upgrades your attack ability\n\t• Cooldown reduced by [-attack_cd]\n\t• Damage increased by [%attack_dmg_stacks] per passive stack",
 		},
-		egg3 = {
+		attack3 = {
+			name = "Sharp Claws III",
+			info = "Upgrades your attack ability\n\t• Damage increased by [+attack_dmg]\n\t• Damage increased by [%attack_dmg_stacks] per passive stack",
+		},
+		special1 = {
+			name = "Attack from Beyond I",
+			info = "Upgrades your special ability\n\t• Damage increased by [+special_dmg]\n\t• Slow increased by [%special_slow] per passive stack\n\t• Slow duration increased by [+special_slow_duration]",
+		},
+		special2 = {
+			name = "Attack from Beyond II",
+			info = "Upgrades your special ability\n\t• Damage increased by [+special_dmg]\n\t• Slow increased by [%special_slow] per passive stack\n\t• Slow duration increased by [+special_slow_duration]",
+		},
+		passive = {
+			name = "Blood Sense",
+			info = "Passive detection radius increased by [+passive_radius]",
+		},
+		egg = {
 			name = "Easter Egg",
-			info = "Your respawn time is decreased to 20 seconds"
+			info = "Instantly spawn new egg. This ability can exceed eggs limit",
 		},
 	}
 }
 
+wep.SCP009 = {
+	name = "SCP-009",
+}
+
 wep.SCP500 = {
-	name = "SCP 500",
-	death_info = "You choked on that SCP 500",
+	name = "SCP-500",
+	death_info = "You choked on that SCP-500",
 	text_used = "You soon as you swallowed this pill, you felt better",
 }
 
 wep.SCP714 = {
-	name = "SCP 714"
+	name = "SCP-714"
 }
 
 wep.SCP1025 = {
-	name = "SCP 1025",
+	name = "SCP-1025",
 	diseases = {
 		arrest = "Cardiac arrest",
 		mental = "Mental Illness",
@@ -2175,7 +2888,7 @@ wep.SCP1025 = {
 		blindness = "Visual impairment, also known as vision impairment or vision loss, is a decreased ability to see to a degree that causes problems not fixable by usual means, such as glasses. Some also include those who have a decreased ability to see because they do not have access to glasses or contact lenses. The term blindness is used for complete or nearly complete vision loss.",
 		hemo = "Haemophilia (also spelled hemophilia) is a mostly inherited genetic disorder that impairs the body's ability to make blood clots, a process needed to stop bleeding. This results in people bleeding for a longer time after an injury, easy bruising, and an increased risk of bleeding inside joints or the brain. Characteristic symptoms vary with severity. In general symptoms are internal or external bleeding episodes.",
 		oste = "Osteoporosis is a systemic skeletal disorder characterized by low bone mass, micro-architectural deterioration of bone tissue leading to bone fragility, and consequent increase in fracture risk. It is the most common reason for a broken bone among the elderly. Bones that commonly break include the vertebrae in the spine, the bones of the forearm, and the hip. Until a broken bone occurs there are typically no symptoms.",
-		
+
 		adhd = "Attention-deficit/hyperactivity disorder (ADHD) is a neurodevelopmental disorder characterized by inattention, bouts of excessive energy, hyper-fixation, and impulsivity, which are otherwise not appropriate for a person's age. Some individuals with ADHD also display difficulty regulating emotions or problems with executive function. Additionally, it is associated with other mental disorders.",
 		throm = "Thrombocythemia is a condition of high platelet (thrombocyte) count in the blood. High platelet counts do not necessarily signal any clinical problems, and can be picked up on a routine full blood count. However, it is important that a full medical history be elicited to ensure that the increased platelet count is not due to a secondary process.",
 		urbach = "Urbach–Wiethe disease is a very rare recessive genetic disorder. The symptoms of the disease vary greatly from individual to individual. Urbach–Wiethe disease show bilateral symmetrical calcifications on the medial temporal lobes. These calcifications often affect the amygdala. The amygdala is thought to be involved in processing biologically relevant stimuli and in emotional long-term memory, particularly those associated with fear.",
@@ -2185,6 +2898,7 @@ wep.SCP1025 = {
 
 wep.HOLSTER = {
 	name = "Holster",
+	info = "Use to hide currently equipped item"
 }
 
 wep.ID = {
@@ -2195,7 +2909,7 @@ wep.ID = {
 
 wep.CAMERA = {
 	name = "Surveillance System",
-	showname = "Cameras",
+	showname = "CCTV",
 	info = "Cameras allow you to see what is happening in the facility.\nThey also provide you an ability to scan SCPs and transmit this information to your current radio channel",
 	scanning = "Scanning...",
 	scan_info = "Press [%s] to scan SCPs",
@@ -2227,6 +2941,7 @@ wep.ACCESS_CHIP = {
 	showname = "CHIP",
 	pickupname = "CHIP",
 	clearance = "Clearance level: %i",
+	clearance2 = "Clearance level: ",
 	hasaccess = "Grants access to:",
 	NAMES = {
 		general = "General",
@@ -2301,7 +3016,9 @@ wep.OMNITOOL = {
 	pickupname = "Omnitool",
 	none = "NONE",
 	chip = "Installed Chip: %s",
+	chip2 = "Installed Chip: ",
 	clearance = "Clearance level: %i",
+	clearance2 = "Clearance level: ",
 	SCREEN = {
 		loading = "Loading",
 		name = "Omnitool v4.78",
@@ -2349,6 +3066,7 @@ wep.FUSE = {
 wep.TURRET = {
 	name = "Turret",
 	placing_turret = "Placing turret",
+	pickup_turret = "Picking up turret",
 	pickup = "Pick up",
 	MODES = {
 		off = "Disable",
@@ -2416,6 +3134,18 @@ wep.DOCUMENT = {
 	}
 }
 
+wep.BACKPACK = {
+	name = "Backpack",
+	info = "Allows you to store more items",
+	size = "Size: ",
+	NAMES = {
+		small = "Small Backpack",
+		medium = "Medium Backpack",
+		large = "Large Backpack",
+		huge = "Huge Backpack",
+	}
+}
+
 wep.ADRENALINE = {
 	name = "Adrenaline",
 	info = "Provides momentary boost to stamina for a short time",
@@ -2448,9 +3178,57 @@ wep.GLASS_KNIFE = {
 	name = "Glass knife"
 }
 
+wep.CLOTHES_CHANGER = {
+	name = "Clothes Changer (Holster)",
+	info = "Works like regular holster. Additionally allows you to steal clothes from dead bodies. Look at dead body and hold LMB to use",
+	skill = "Clothes Changer",
+	wait = "Wait",
+	ready = "Ready",
+	progress = "Changing clothes",
+	vest = "Remove your vest in order to change clothes"
+}
+
+wep.DOOR_BLOCKER = {
+	name = "Door Blocker",
+	info = "Aim at button and hold LMB to charge. Release LMB to discharge and temporarily block door usage",
+	skill = "Door Blocker",
+	wait = "Wait",
+	ready = "Ready",
+	progress = "Charging"
+}
+
 wep.__slc_ammo = "Ammo"
 
 wep.weapon_stunstick = "Stunstick"
 wep.weapon_crowbar = "Crowbar"
 
-registerLanguage( lang, "english", "en", "default" )
+--[[-------------------------------------------------------------------------
+Minigames
+---------------------------------------------------------------------------]]
+local minigames = {}
+lang.minigames = minigames
+
+--[[-------------------------------------------------------------------------
+Snake
+---------------------------------------------------------------------------]]
+local snake = {}
+minigames.snake = snake
+
+snake.score = "Score"
+snake.high_score = "High Score"
+snake.game_over = "Game Over!"
+snake.paused = "Get Ready!"
+snake.info = "Press W, A, S or D to start"
+snake.restart = "Press space to restart"
+
+--[[-------------------------------------------------------------------------
+Data binds - DO NOT EDIT!
+---------------------------------------------------------------------------]]
+lang.__binds = {
+	["badges"] = "ranks",
+}
+
+--[[-------------------------------------------------------------------------
+Register language
+---------------------------------------------------------------------------]]
+RegisterLanguage( lang, "english", "en", "default" )

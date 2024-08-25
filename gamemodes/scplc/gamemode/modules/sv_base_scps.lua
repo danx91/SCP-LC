@@ -97,8 +97,8 @@ hook.Add( "RegisterSCP", "RegisterBaseSCPs", function()
 		prep_freeze = true,
 		no_chase = true,
 	}, {
-		base_health = 1950,
-		max_health = 1950,
+		base_health = 2150,
+		max_health = 2150,
 		base_speed = 175,
 	}, nil, function( ply )
 		ply:SetRenderMode( RENDERMODE_TRANSCOLOR )
@@ -113,35 +113,30 @@ hook.Add( "RegisterSCP", "RegisterBaseSCPs", function()
 	}, {
 		base_health = 2000,
 		max_health = 2000,
-		base_speed = 185,
+		base_speed = 180,
 	} )
 
 	RegisterSCP( "SCP0492", "models/player/zombie_classic.mdl", "weapon_scp_0492", {
 		jump_power = 200,
-		//no_spawn = true,
 		dynamic_spawn = true,
 		no_select = true,
-		//no_model = true,
 		no_chase = true,
-		//disable_overload = true,
 		reward_override = 3,
 	}, {
-		base_health = 800,
-		max_health = 800,
+		base_health = 400,
+		max_health = 400,
 		base_speed = 165,
-	}, function( ply, basestats, pos, scp049, hp, speed, damage, ls, model, skin )
-		if hp and speed and damage then
-			basestats.base_health = math.floor( basestats.base_health * hp )
-			basestats.max_health = math.floor( basestats.max_health * hp )
-
-			basestats.base_speed = math.floor( basestats.base_speed * speed )
-		end
-	end, function( ply, pos, scp049, hp, speed, damage, ls, model, skin )
-		local wep = ply:GetWeapon( "weapon_scp_0492" )
+	}, function( ply, basestats, pos, scp049, zombie_type, hp, speed, dmg, ls, model, skin )
+		basestats.base_health = math.Round( basestats.base_health * hp )
+		basestats.max_health = math.Round( basestats.max_health * hp )
+		basestats.base_speed = math.Round( basestats.base_speed * speed )
+	end, function( ply, pos, scp049, zombie_type, hp, speed, dmg, ls, model, skin )
+		local wep = ply:GetSCPWeapon()
 		if IsValid( wep ) then
-			wep.DamageMult = damage
-			wep.LifeSteal = ls
 			wep:SetSCP049( scp049 )
+			wep:SetZombieType( zombie_type )
+			wep.DamageMultiplier = dmg or 1
+			wep.LifeSteal = ls or 0
 		end
 
 		if model then
@@ -151,8 +146,6 @@ hook.Add( "RegisterSCP", "RegisterBaseSCPs", function()
 		if skin then
 			ply:SetSkin( skin )
 		end
-
-		CheckRoundEnd()
 	end )
 
 	RegisterSCP( "SCP058", "models/player/alski/scp/scp_058.mdl", "weapon_scp_058", {
@@ -164,14 +157,15 @@ hook.Add( "RegisterSCP", "RegisterBaseSCPs", function()
 		base_speed = 175,
 	} )
 
-	RegisterSCP( "SCP066", "models/player/mrsilver/scp_066pm/scp_066_pm.mdl", "weapon_scp_066", {
+	//RegisterSCP( "SCP066", "models/player/mrsilver/scp_066pm/scp_066_pm.mdl", "weapon_scp_066", {
+	RegisterSCP( "SCP066", "models/cpthazama/scp/066.mdl", "weapon_scp_066", {
 		jump_power = 200,
 		no_ragdoll = true,
 		prep_freeze = true,
 		no_chase = true,
 	}, {
-		base_health = 2700,
-		max_health = 2700,
+		base_health = 2600,
+		max_health = 2600,
 		base_speed = 165,
 	} )
 
@@ -179,19 +173,20 @@ hook.Add( "RegisterSCP", "RegisterBaseSCPs", function()
 		jump_power = 200,
 		no_damage_forces = true,
 		no_chase = true,
+		avoid = { "SCP173" },
 	}, {
-		base_health = 2800,
-		max_health = 2800,
+		base_health = 1900,
+		max_health = 1900,
 		base_speed = 125,
 	} )
 
-	RegisterSCP( "SCP106", "models/scp/106/unity/unity_scp_106_player.mdl", "weapon_scp_106", {
+	RegisterSCP( "SCP106", "models/danx91/scp/scp_106.mdl", "weapon_scp_106", {
 		jump_power = 200,
 		no_damage_forces = true,
 	}, {
-		base_health = 2450,
-		max_health = 2450,
-		base_speed = 155,
+		base_health = 1000,
+		max_health = 1000,
+		base_speed = 150,
 	}, nil, function( ply )
 		ply:SetCustomCollisionCheck( true )
 	end )
@@ -200,29 +195,28 @@ hook.Add( "RegisterSCP", "RegisterBaseSCPs", function()
 		jump_power = 200,
 		no_damage_forces = true,
 		no_chase = true,
+		avoid = { "SCP096" },
 	}, {
-		base_health = 6000,
-		max_health = 6000,
-		base_speed = 550,
+		base_health = 4000,
+		max_health = 4000,
+		base_speed = 500,
 	} )
 
-	RegisterSCP( "SCP457", "models/player/corpse1.mdl", "weapon_scp_457", {
+	RegisterSCP( "SCP457", "models/cultist/scp/scp_457.mdl", "weapon_scp_457", {
 		jump_power = 200,
 		no_ragdoll = true,
-		//no_draw = true,
 	}, {
 		base_health = 2300,
 		max_health = 2300,
 		base_speed = 165,
 	} )
 
-	RegisterSCP( "SCP682", "models/scp_682/scp_682.mdl", "weapon_scp_682", {
+	RegisterSCP( "SCP682", "models/danx91/scp/scp_682.mdl", "weapon_scp_682", {
 		jump_power = 200,
-		no_ragdoll = true,
 		no_damage_forces = true,
 	}, {
-		base_health = 6000,
-		max_health = 6000,
+		base_health = 2900,
+		max_health = 2900,
 		base_speed = 160,
 	} )
 
@@ -230,8 +224,8 @@ hook.Add( "RegisterSCP", "RegisterBaseSCPs", function()
 		jump_power = 200,
 		prep_freeze = true,
 	}, {
-		base_health = 4200,
-		max_health = 4200,
+		base_health = 4400,
+		max_health = 4400,
 		base_speed = 170,
 	} )
 
@@ -241,8 +235,8 @@ hook.Add( "RegisterSCP", "RegisterBaseSCPs", function()
 		allow_chat = true,
 		no_damage_forces = true,
 	}, {
-		base_health = 2600,
-		max_health = 2600,
+		base_health = 3100,
+		max_health = 3100,
 		base_speed = 175,
 	} )
 
@@ -252,7 +246,7 @@ hook.Add( "RegisterSCP", "RegisterBaseSCPs", function()
 	}, {
 		base_health = 1750,
 		max_health = 1750,
-		base_speed = 185,
+		base_speed = 190,
 	} )
 
 	RegisterSCP( "SCP24273", "models/player/alski/scp2427-3.mdl", "weapon_scp_24273", {
@@ -260,8 +254,8 @@ hook.Add( "RegisterSCP", "RegisterBaseSCPs", function()
 		prep_freeze = true,
 		no_ragdoll = true,
 	}, {
-		base_health = 3100,
-		max_health = 3100,
+		base_health = 3000,
+		max_health = 3000,
 		base_speed = 160,
 	} )
 
@@ -269,10 +263,8 @@ hook.Add( "RegisterSCP", "RegisterBaseSCPs", function()
 		jump_power = 200,
 		prep_freeze = true
 	}, {
-		base_health = 1800,
-		max_health = 1800,
-		base_speed = 225,
-	}, nil, function( ply )
-		SpawnSCP3199Eggs()
-	end )
+		base_health = 1450,
+		max_health = 1450,
+		base_speed = 215,
+	} )
 end )

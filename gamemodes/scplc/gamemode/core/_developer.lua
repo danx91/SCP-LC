@@ -26,7 +26,7 @@ if SERVER then
 
 			debugoverlay.Axis( v, a_zero, 5, 0.51, true )
 			debugoverlay.Text( v, tostring( v ), 0.51, false )
-			debugoverlay.Text( v + v_off, dk_str, 0.51, false )
+			debugoverlay.Text( v + v_off, dk_str.." ("..tostring( v )..")", 0.51, false )
 		end
 		
 	end )
@@ -57,9 +57,36 @@ if SERVER then
 		for i, v in ipairs( dev_item_draw_em ) do
 			if filter and v[2] != filter then continue end
 			debugoverlay.Axis( v[1], a_zero, 5, 0.51, true )
-			debugoverlay.Text( v[1] + v_off, v[2], 0.51, false )
+			debugoverlay.Text( v[1] + v_off, v[2].." ("..tostring( v[1] )..")", 0.51, false )
 		end
 		
+	end )
+end
+
+--[[-------------------------------------------------------------------------
+Draw zones
+---------------------------------------------------------------------------]]
+if SERVER then	
+	concommand.Add( "draw_zones", function( ply, cmd, args )
+		if !args[1] or args[1] == "" then draw_zones = nil return end
+		draw_zones = args[1]
+	end )
+
+	timer.Create( "slcdrawzones", 0.5, 0, function()
+		if !draw_zones then return end
+
+		local zone = MAP_ZONES[draw_zones]
+		if !zone or !istable( zone ) then return end
+
+		for i, v in ipairs( zone ) do
+			local orig = ( v[1] + v[2] ) / 2
+			local mins = v[1] - orig
+			local maxs = v[2] - orig
+
+			debugoverlay.Box( orig, mins, maxs, 0.51, Color( 255, 255, 255, 0 ) )
+			debugoverlay.Axis( v[1], Angle( 0 ), 10, 0.51 )
+			debugoverlay.Axis( v[2], Angle( 0 ), 10, 0.51 )
+		end
 	end )
 end
 
@@ -141,9 +168,189 @@ if SERVER then
 end
 
 --[[-------------------------------------------------------------------------
+More drawing
+---------------------------------------------------------------------------]]
+hook.Add( "Think", "gastest", function()
+	local poslol = {
+		/*{ Vector( 2816, 1440, 500 ), Vector( -2600, -500, -1000 ), Color( 255, 255, 255 ) },
+		{ Vector( 3250, -2500, 500 ), Vector( -2600, -500, -1000 ), Color( 255, 255, 255 ) },
+		{ Vector( 1000, 1440, 500 ), Vector( 1400, 1900, -1000 ), Color( 255, 255, 255 ) },
+		{ Vector( 1000, 1440, 500 ), Vector( -2600, 2100, -1000 ), Color( 255, 255, 255 ) },
+		{ Vector( 2816, 72, 500 ), Vector( 3250, 824, -1000 ), Color( 255, 255, 255 ) },*/
+
+		/*{ Vector( 3250, -3000, 500 ), Vector( 6500, 1440, -1000 ), Color( 0, 255, 255 ) },
+		{ Vector( 1900, 2100, 500 ), Vector( 5500, 1440, -1000 ), Color( 0, 255, 255 ) },
+		{ Vector( 2176, 2100, 500 ), Vector( 5500, 2650, -500 ), Color( 0, 255, 255 ) },
+		{ Vector( 1536, 3912, 500 ), Vector( 5500, 2650, -500 ), Color( 0, 255, 255 ) },
+		{ Vector( 1850, 3912, 500 ), Vector( 3000, 4500, -500 ), Color( 0, 255, 255 ) },
+		{ Vector( 1750, 4500, 500 ), Vector( 3000, 5300, -500 ), Color( 0, 255, 255 ) },
+		{ Vector( 2816, -500, 500 ), Vector( 3250, 72, -1000 ), Color( 0, 255, 255 ) },
+		{ Vector( 2816, 824, 500 ), Vector( 3250, 1440, -1000 ), Color( 0, 255, 255 ) },*/
+
+		/*{ Vector( -3250, 5500, 500 ), Vector( 1536, 2100, -250 ), Color( 255, 0, 255 ) },
+		{ Vector( -3250, 3500, 500 ), Vector( -4000, 1700, -250 ), Color( 255, 0, 255 ) },
+		{ Vector( 1536, 2100, 500 ), Vector( 2176, 2650, -250 ), Color( 255, 0, 255 ) },
+		{ Vector( 1000, 2100, 500 ), Vector( 1900, 1900, -250 ), Color( 255, 0, 255 ) },
+		{ Vector( 1536, 3912, 500 ), Vector( 1850, 4500, -250 ), Color( 255, 0, 255 ) },
+		{ Vector( 8750, 2300, -600 ), Vector( 3200, 6750, -1500 ), Color( 255, 0, 255 ) },*/
+		
+		/*{ Vector( 1500, 3760, 500 ), Vector( 4350, 5390, 1200 ), Color( 255, 0, 0 ) },
+		{ Vector( 1500, 6500, -250 ), Vector( 4350, 5390, 1200 ), Color( 255, 0, 0 ) },*/
+	}
+
+	--[[for k, v in pairs( poslol ) do
+		OrderVectors( v[1], v[2] )
+		print( string.format( "{ Vector( %i, %i, %i ), Vector( %i, %i, %i ) },", v[1].x, v[1].y, v[1].z, v[2].x, v[2].y, v[2].z ) )
+	end
+	print( "-----" )]]
+
+	for k, v in pairs( poslol ) do
+		local pos1, pos2, col = v[1], v[2], v[3]
+
+		debugoverlay.Axis( pos1, Angle( 0 ), 10, 0.1, true )
+		debugoverlay.Axis( pos2, Angle( 0 ), 20, 0.1, true )
+
+		local iz = false
+		debugoverlay.Line( Vector( pos1.x, pos1.y, pos1.z ), Vector( pos2.x, pos1.y, pos1.z ), 0.1, col, iz )
+		debugoverlay.Line( Vector( pos2.x, pos1.y, pos1.z ), Vector( pos2.x, pos2.y, pos1.z ), 0.1, col, iz )
+		debugoverlay.Line( Vector( pos2.x, pos2.y, pos1.z ), Vector( pos1.x, pos2.y, pos1.z ), 0.1, col, iz )
+		debugoverlay.Line( Vector( pos1.x, pos2.y, pos1.z ), Vector( pos1.x, pos1.y, pos1.z ), 0.1, col, iz )
+
+		debugoverlay.Line( Vector( pos1.x, pos1.y, pos2.z ), Vector( pos2.x, pos1.y, pos2.z ), 0.1, col, iz )
+		debugoverlay.Line( Vector( pos2.x, pos1.y, pos2.z ), Vector( pos2.x, pos2.y, pos2.z ), 0.1, col, iz )
+		debugoverlay.Line( Vector( pos2.x, pos2.y, pos2.z ), Vector( pos1.x, pos2.y, pos2.z ), 0.1, col, iz )
+		debugoverlay.Line( Vector( pos1.x, pos2.y, pos2.z ), Vector( pos1.x, pos1.y, pos2.z ), 0.1, col, iz )
+
+		debugoverlay.Line( Vector( pos1.x, pos1.y, pos1.z ), Vector( pos1.x, pos1.y, pos2.z ), 0.1, col, iz )
+		debugoverlay.Line( Vector( pos1.x, pos2.y, pos1.z ), Vector( pos1.x, pos2.y, pos2.z ), 0.1, col, iz )
+		debugoverlay.Line( Vector( pos2.x, pos1.y, pos1.z ), Vector( pos2.x, pos1.y, pos2.z ), 0.1, col, iz )
+		debugoverlay.Line( Vector( pos2.x, pos2.y, pos1.z ), Vector( pos2.x, pos2.y, pos2.z ), 0.1, col, iz )
+	end
+end )
+
+--[[-------------------------------------------------------------------------
+(I) Show Speed
+---------------------------------------------------------------------------]]
+local show_speed = false
+local text_color = Color( 255, 255, 255 )
+hook.Add( "HUDPaint", "SpeedHUD", function()
+	if !show_speed then return end
+
+	local ply = LocalPlayer()
+	local speed = ply:GetVelocity()
+
+	local x = ScrW() * 0.5
+	local y = ScrH() * 0.75
+	local _, h
+
+	_, h = draw.SimpleText( "Speed: "..math.Round( speed:Length(), 1 ), "SCPHUDSmall", x, y, text_color, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+	y = y + h
+
+	draw.SimpleText( "Speed 2D: "..math.Round( speed:Length2D(), 1 ), "SCPHUDSmall", x, y, text_color, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+end )
+
+if CLIENT then
+	concommand.Add( "show_speed", function()
+		show_speed = !show_speed
+	end )
+end
+
+--[[-------------------------------------------------------------------------
+Dump loadouts
+---------------------------------------------------------------------------]]
+concommand.Add( "loadout_dump", function()
+	for name, loadout in pairs( SLC_LOADOUTS ) do
+		local txt = name..":"
+
+		for i, v in ipairs( loadout ) do
+			txt = txt.." "..v.class..","
+		end
+
+		print( txt )
+	end
+end )
+
+--[[-------------------------------------------------------------------------
 Trace stuff
 ---------------------------------------------------------------------------]]
-/*local MASKS = {
+//268435464
+
+local CONTENTS = {
+	"SOLID",-- = 1 << 0,
+	"WINDOW",-- = 1 << 1,
+	"AUX",-- = 1 << 2,
+	"GRATE",-- = 1 << 3,
+	"SLIME",-- = 1 << 4,
+	"WATER",-- = 1 << 5,
+	"BLOCKLOS",-- = 1 << 6,
+	"OPAQUE",-- = 1 << 7,
+	"TESTFOGVOLUME",-- = 1 << 8,
+	"TEAM4",-- = 1 << 9,
+	"TEAM3",-- = 1 << 10,
+	"TEAM1",-- = 1 << 11,
+	"TEAM2",-- = 1 << 12,
+	"IGNORE_NODRAW_OPAQUE",-- = 1 << 13,
+	"MOVEABLE",-- = 1 << 14,
+	"AREAPORTAL",-- = 1 << 15,
+	"PLAYERCLIP",-- = 1 << 16,
+	"MONSTERCLIP",-- = 1 << 17,
+	"CURRENT_0",-- = 1 << 18,
+	"CURRENT_90",-- = 1 << 19,
+	"CURRENT_180",-- = 1 << 20,
+	"CURRENT_270",-- = 1 << 21,
+	"CURRENT_UP",-- = 1 << 22,
+	"CURRENT_DOWN",-- = 1 << 23,
+	"ORIGIN",-- = 1 << 24,
+	"MONSTER",-- = 1 << 25,
+	"DEBRIS",-- = 1 << 26,
+	"DETAIL",-- = 1 << 27,
+	"TRANSLUCENT",-- = 1 << 28,
+	"LADDER",-- = 1 << 29,
+	"HITBOX",-- = 1 << 30,
+}
+
+concommand.Add( "trace_contents", function( ply )
+	local start = ply:GetShootPos()
+
+	local tr = util.TraceLine( {
+		start = start,
+		endpos = start + ply:GetAimVector() * 60,
+		filter = ply,
+		mask = MASK_ALL,
+	} )
+
+	print( "Trace resuls", tr.Entity, tr.Contents )
+
+	local mask = tr.Contents
+	local i = 1
+	local n = 1
+
+	while i <= mask do
+		if bit.band( mask, i ) == i then
+			print( "\t"..CONTENTS[n] )
+		end
+
+		n = n + 1
+		i = bit.lshift( i, 1 )
+	end
+end )
+
+concommand.Add( "split_contents", function( ply, cmd, args )
+	local mask = tonumber( args[1] )
+	local i = 1
+	local n = 1
+
+	while i <= mask do
+		if bit.band( mask, i ) == i then
+			print( "\t"..CONTENTS[n] )
+		end
+
+		n = n + 1
+		i = bit.lshift( i, 1 )
+	end
+end )
+
+/*local CONTENTS = {
 	CONTENTS_SOLID = 1,
 	CONTENTS_WINDOW = 2,
 	CONTENTS_AUX = 4,
@@ -177,7 +384,7 @@ Trace stuff
 	CONTENTS_HITBOX = 1073741824,
 }
 
-local MASKS2 = {
+local MASKS = {
 	MASK_SPLITAREAPORTAL = 48,
 	MASK_SOLID_BRUSHONLY = 16395,
 	MASK_WATER = 16432,
@@ -201,7 +408,6 @@ local MASKS2 = {
 	MASK_ALL = 4294967295,
 	MASK_USE = MASK_USE
 }
-
 
 local LOOKUP = CreateLookupTable( MASKS, true )
 local LOOKUP2 = CreateLookupTable( MASKS2, true )

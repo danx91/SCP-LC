@@ -1,12 +1,12 @@
 AddCSLuaFile()
 
 ENT.Type = "anim"
+
 ENT.DieTime = 0
-ENT.HP = 100
 ENT.Used = false
 
-ENT.BurnTime = 1.5
-ENT.Damage = 5
+ENT.BurnTime = 2
+ENT.Damage = 3
 
 function ENT:Initialize()
 	self:DrawShadow( false )
@@ -17,6 +17,9 @@ function ENT:Initialize()
 		self:PhysicsInit( SOLID_NONE )
 
 		self:SetTrigger( true )
+		
+		self:SetMaxHealth( 100 )
+		self:SetHealth( 100 )
 
 		self.ArmTime = CurTime() + 3
 	end
@@ -30,6 +33,7 @@ function ENT:Initialize()
 
 		self.RenderPos = tr.HitPos
 		self.RenderAng = tr.HitNormal:Angle()
+		self.RenderAng.p = self.RenderAng.p + 90
 	end
 
 	self:SetCollisionBounds( Vector( -16, -16, 0 ), Vector( 16, 16, 32 ) )
@@ -37,32 +41,30 @@ function ENT:Initialize()
 end
 
 function ENT:Think()
-	if SERVER then
-		if self.DieTime != -1 and self.DieTime <= CurTime() then
-			self:Remove()
-		end
+	if CLIENT then return end
 
-		if self.ArmTime and self.ArmTime < CurTime() then
-			self.Armed = true
-		end
+	if self.DieTime != -1 and self.DieTime <= CurTime() then
+		self:TriggerIgnite()
 	end
 end
 
 function ENT:StartTouch( ent )
-	if self.Armed and ent:IsPlayer() then
-		local t = ent:SCPTeam()
-		if t == TEAM_SPEC or t == TEAM_SCP then return end
+	if self.ArmTime >= CurTime() or !ent:IsPlayer() then return end
 
-		self:TriggerIgnite()
-	end
+	local t = ent:SCPTeam()
+	if SCPTeams.IsAlly( TEAM_SCP, t ) then return end
+
+	self:TriggerIgnite()
 end
 
 function ENT:OnTakeDamage( dmg )
-	self.HP = self.HP - dmg:GetDamage()
-
-	if self.HP <= 0 then
-		self:TriggerIgnite()
-	end
+	local att = dmg:GetAttacker()
+	if !IsValid( att ) or !att:IsPlayer() or SCPTeams.IsAlly( att:SCPTeam(), TEAM_SCP ) then return end
+	
+	self:SetHealth( self:Health() - dmg:GetDamage() )
+	if self:Health() > 0 then return end
+	
+	self:TriggerIgnite()
 end
 
 function ENT:TriggerIgnite()
@@ -90,7 +92,7 @@ local mat = Material( "slc/scp/457trap" )
 function ENT:Draw()
 	--self:DrawModel()
 
-	cam.Start3D2D( self.RenderPos, self.RenderAng + Angle( 90, 0, 0 ), 0.4 )
+	cam.Start3D2D( self.RenderPos, self.RenderAng, 0.4 )
 		surface.SetDrawColor( 255, 255, 255 )
 		surface.SetMaterial( mat )
 		surface.DrawTexturedRect( -64, -64, 128, 128 )
