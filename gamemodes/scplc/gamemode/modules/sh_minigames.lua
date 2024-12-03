@@ -15,7 +15,7 @@ if CLIENT then
 	end )
 end
 
-local handler = SLCFrameHandler( "minigames" )
+/*local handler = SLCFrameHandler( "minigames" )
 
 hook.Add( "SLCCloseMinigames", "CloseMinigamesFrame", function()
 	handler:CloseFrame()
@@ -24,4 +24,4 @@ end )
 AddChatCommand( "minigames", function( ply )
 	if !CanOpenMinigame( ply ) then return end
 	handler:OpenFrame()
-end, CLIENT, true )
+end, CLIENT, true )*/
