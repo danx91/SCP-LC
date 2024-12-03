@@ -23,7 +23,7 @@ SWEP.PrepareSpeed = 0.3
 SWEP.ChargeCooldown = 110
 
 SWEP.DefaultShield = 800
-SWEP.ShieldCooldown = 70
+SWEP.ShieldCooldown = 60
 
 local STATE_NONE = 0
 local STATE_STUNNED = 1
@@ -716,7 +716,7 @@ DefineUpgradeSystem( "scp682", {
 			mod = { shield_speed_pow = 1.2, shield_speed_dur = 15 }, icon = icons.shield, active = false },
 		{ name = "shield_2", cost = 2, req = { "shield_1" }, reqany = false, pos = { 2, 2 }, icon = icons.shield,
 			mod = { shield_speed_pow = 1.4, shield_speed_dur = 25, shield_cdr = 0.02 }, active = false },
-		
+
 		{ name = "attack_1", cost = 1, req = {}, reqany = false, pos = { 3, 1 },
 			mod = { prim_cd = 0.6, prim_dmg = 10 }, icon = icons.attack1, active = false },
 		{ name = "attack_2", cost = 2, req = {}, reqany = false, pos = { 4, 1 },
@@ -724,14 +724,14 @@ DefineUpgradeSystem( "scp682", {
 		{ name = "attack_3", cost = 3, req = { "attack_1", "attack_2" }, reqany = false, pos = { 3.5, 2 },
 			mod = {}, icon = icons.attack3, active = false },
 
-		{ name = "charge_1", cost = 2, req = {}, reqany = false, pos = { 3, 3 },
+		{ name = "charge_1", cost = 1, req = {}, reqany = false, pos = { 3, 3 },
 			mod = {}, icon = icons.charge, active = false },
-		{ name = "charge_2", cost = 3, req = { "charge_1" }, reqany = false, pos = { 3, 4 }, icon = icons.charge,
+		{ name = "charge_2", cost = 1, req = { "charge_1" }, reqany = false, pos = { 3, 4 }, icon = icons.charge,
 			mod = { charge_cd = 0.85, charge_stun = 0.6 }, active = false },
 
 		{ name = "outside_buff", cost = 1, req = {}, reqany = false, pos = { 4, 4 }, mod = {}, active = false },
 	},
-	rewards = { --16 + 1 points -> 60% = 11 (-1 base) = 10 points
+	rewards = { --13 + 1 points -> 60% = 10 (-1 base) = 9 points
 		{ 75, 1 },
 		{ 150, 1 },
 		{ 250, 1 },
@@ -741,7 +741,6 @@ DefineUpgradeSystem( "scp682", {
 		{ 700, 1 },
 		{ 850, 1 },
 		{ 1050, 1 },
-		{ 1300, 1 }
 	}
 }, SWEP )
 
@@ -811,7 +810,7 @@ controller.Register( "scp682_charge", {
 		diff:Normalize()
 
 		local abs_diff = math.sqrt( diff.y * diff.y + diff.p * diff.p )
-		local max_diff = 15 * FrameTime()
+		local max_diff = 18 * FrameTime()
 
 		if abs_diff > max_diff then
 			diff:Div( abs_diff / max_diff, max_diff )
@@ -833,11 +832,11 @@ controller.Register( "scp682_charge", {
 			self.Speed = 0
 		end
 
-		local max_speed = 500
+		local max_speed = 600
 		local charging = wep:GetCharging()
 
 		if charging and self.Speed < max_speed then
-			self.Speed = self.Speed + 225 * FrameTime()
+			self.Speed = self.Speed + 325 * FrameTime()
 			self.FullSpeed = false
 
 			if self.Speed > max_speed then
@@ -845,7 +844,7 @@ controller.Register( "scp682_charge", {
 				wep.FullSpeed = true
 			end
 		elseif !charging then
-			self.Speed = self.Speed - 300 * FrameTime()
+			self.Speed = self.Speed - 400 * FrameTime()
 			self.FullSpeed = false
 
 			if self.Speed < 0 then

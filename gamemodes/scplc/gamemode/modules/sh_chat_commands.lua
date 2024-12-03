@@ -1,4 +1,5 @@
 local commands_registry = {}
+local commands_aliases = {}
 
 function AddChatCommand( cmd, callback, realm, hide )
 	cmd = string.lower( cmd )
@@ -26,6 +27,14 @@ if SERVER then
 		end
 
 		local tab = commands_registry[cmd]
+
+		if !tab then
+			local alias = commands_aliases[cmd]
+			if alias then
+				tab = commands_registry[alias]
+			end
+		end
+
 		if !tab or !tab.realm then
 			net.Ping( "SCLChatCommand", msg, ply )
 
@@ -51,8 +60,11 @@ else
 
 		local tab = commands_registry[cmd]
 		if !tab then
-			//PlayerMessage( "unknown_cmd$"..cmd )
-			return
+			local alias = commands_aliases[cmd]
+			if !alias then return end
+
+			tab = commands_registry[alias]
+			if !tab then return end
 		end
 
 		if tab.callback then
@@ -61,6 +73,30 @@ else
 	end )
 end
 
+--[[-------------------------------------------------------------------------
+Aliases
+---------------------------------------------------------------------------]]
+hook.Add( "SLCFullyLoaded", "SLCChatCommandsAliases", function()
+	for _, lang in pairs( _LANG ) do
+		if !lang.MISC.commands_aliases then continue end
+
+		for alias, cmd in pairs( lang.MISC.commands_aliases ) do
+			if !string.StartsWith( alias, "!" ) then
+				alias = "!"..alias
+			end
+
+			if !string.StartsWith( cmd, "!" ) then
+				cmd = "!"..cmd
+			end
+
+			commands_aliases[alias] = cmd
+		end
+	end
+end )
+
+--[[-------------------------------------------------------------------------
+Base chat commands
+---------------------------------------------------------------------------]]
 AddChatCommand( "scp", function( ply )
 	if ply.ncmdcheck and ply.ncmdcheck > CurTime() then return end
 	ply.ncmdcheck = CurTime() + 2
@@ -69,10 +105,10 @@ AddChatCommand( "scp", function( ply )
 end, SERVER, false )
 
 AddChatCommand( "afk", function( ply )
-	if ply.ncmdcheck and ply.ncmdcheck > CurTime() then return end
+	if ply.ncmdcheck and ply.ncmdcheck > CurTime() or !ply:IsValidSpectator() then return end
 	ply.ncmdcheck = CurTime() + 2
 
-	ply:MakeAFK()
+	ply:MakeAFK( 30 )
 end, SERVER, false )
 
 AddChatCommand( "bonus", function( ply )

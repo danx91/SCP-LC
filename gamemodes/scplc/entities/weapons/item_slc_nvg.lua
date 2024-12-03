@@ -16,7 +16,7 @@ SWEP.DrawCrosshair = false
 SWEP.Group = "nvg"
 SWEP.UseGroup = "vision"
 
-SWEP.scp914upgrade = "item_slc_nvgplus"
+SWEP.SCP914Upgrade = "item_slc_nvgplus"
 
 function SWEP:Initialize()
 	self:SetHoldType( self.HoldType )

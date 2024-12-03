@@ -54,7 +54,12 @@ function SWEP:RestoreWeapon( data )
 	self:SetRating( data.rating )
 end
 
-function SWEP:HandleUpgrade( mode, num_mode, pos )
-	self:SetPos( pos )
-	self:SetRating( math.Clamp( math.floor( self:GetRating() * upgrade_mul[num_mode] ), 1, 5000 ) )
+function SWEP:HandleUpgrade( mode, exit, ply )
+	self:SetPos( exit )
+	self:SetRating( math.Clamp( math.floor( self:GetRating() * upgrade_mul[mode] ), 1, 5000 ) )
+
+	if self.PickupPriority then
+		self.Dropped = CurTime()
+		self.PickupPriorityTime = CurTime() + 10
+	end
 end

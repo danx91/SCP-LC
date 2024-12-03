@@ -546,7 +546,7 @@ local function openViewer()
 	end
 
 	prestige_b.DoClick = function( self )
-		SLCPopup( LANG.prestige, LANG.prestige_warn, false, function( i )
+		SLCLegacyPopup( LANG.prestige, LANG.prestige_warn, false, function( i )
 			if i == 1 then
 				ply:PerformPrestige()
 
@@ -916,7 +916,7 @@ net.ReceivePing( "SLCrefundClasses", function( data )
 	local pp = tonumber( points[2] or 0 )
 
 	if sp > 0 or pp > 0 then
-		SLCPopup( LANG.classviewer, string.format( LANG.refunded, sp, pp ) )
+		SLCLegacyPopup( LANG.classviewer, string.format( LANG.refunded, sp, pp ) )
 	end
 end )
 

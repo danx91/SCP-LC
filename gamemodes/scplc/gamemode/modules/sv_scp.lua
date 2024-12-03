@@ -28,6 +28,7 @@ local SCP_VALID_ENTRIES = {
 	no_chase = true,
 	hide = true,
 	avoid = true,
+	buff_scale = true,
 }
 
 local SCP_DYNAMIC_VARS = {}
@@ -77,7 +78,8 @@ function SendSCPList( ply )
 			hp = obj.basestats.base_health,
 			speed = obj.basestats.base_speed,
 			no_select = obj.basestats.no_select,
-			hide = obj.basestats.hide
+			hide = obj.basestats.hide,
+			buff_scale = obj.basestats.buff_scale,
 		} )
 	end
 
@@ -230,13 +232,6 @@ local function setup_scp_internal( self, ply, ... )
 	ply:UnSpectate()
 	ply:Cleanup( basestats.no_strip == true )
 
-	/*if !self.basestats.no_strip then
-		ply:SetVest( 0 )
-		ply:RemoveAllItems()
-		//ply:StripWeapons()
-		//ply:RemoveAllAmmo()
-	end*/
-
 	local pos = self.spawnpos
 	if pos and !basestats.no_spawn then
 		if istable( pos ) then
@@ -252,9 +247,6 @@ local function setup_scp_internal( self, ply, ... )
 
 	ply:SetSCPTeam( TEAM_SCP )
 	ply:SetSCPClass( CLASSES[self.name] )
-
-	//ply.SCPHuman = basestats.is_human == true
-	//ply.SCPChat = basestats.allow_chat == true
 
 	ply:SetSCPHuman( basestats.scp_human == true )
 	ply:SetSCPChat( basestats.allow_chat == true )
@@ -294,7 +286,6 @@ local function setup_scp_internal( self, ply, ... )
 		ply:AddEFlags( EFL_NO_DAMAGE_FORCES )
 	//end
 
-	//ply.noragdoll = basestats.no_ragdoll == true
 	ply:SetSCPNoRagdoll( basestats.no_ragdoll == true )
 
 	if isnumber( basestats.reward_override ) then
@@ -303,6 +294,8 @@ local function setup_scp_internal( self, ply, ... )
 
 	//ply.handsmodel = basestats.hands_model
 	ply:SetupHands()
+
+	ply.SCPData = basestats
 
 	hook.Run( "SLCSCPSetup", ply, self.name )
 	

@@ -10,6 +10,8 @@ ROUND = {
 	active = false,
 }
 
+SCPStats = {}
+
 --[[-------------------------------------------------------------------------
 Language system
 ---------------------------------------------------------------------------]]
@@ -112,9 +114,9 @@ function ChangeLang( lang, force )
 		CheckTable( tmp, _LANG[_LANG_ALIASES.default] )
 	end
 
-	for k, v in pairs( tmp.__binds ) do --TEST
-		local to = string.Explode( k, "." )
-		local from = string.Explode( v, "." )
+	for k, v in pairs( tmp.__binds ) do
+		local to = string.Explode( ".", k )
+		local from = string.Explode( ".", v )
 
 		local val = tmp
 		local to_val = tmp
@@ -328,12 +330,16 @@ concommand.Add( "slc_hash_lang_check", function( ply, cmd, args )
 end )
 
 --[[-------------------------------------------------------------------------
-Support opt-out
+Support opt-out, Class D preparing spawn
 ---------------------------------------------------------------------------]]
 CreateClientConVar( "cvar_slc_support_optout", 0, true, true )
+CreateClientConVar( "cvar_slc_zombie_optout", 0, true, true )
+CreateClientConVar( "cvar_slc_preparing_classd", 1, true, true )
 
 hook.Add( "SLCRegisterSettings", "SLCSupportOptOut", function()
 	RegisterSettingsEntry( "cvar_slc_support_optout", "switch", "!CVAR" )
+	RegisterSettingsEntry( "cvar_slc_zombie_optout", "switch", "!CVAR", nil, "scp_config" )
+	RegisterSettingsEntry( "cvar_slc_preparing_classd", "switch", "!CVAR" )
 end )
 
 --[[-------------------------------------------------------------------------

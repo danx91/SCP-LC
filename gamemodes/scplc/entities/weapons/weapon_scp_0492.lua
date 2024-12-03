@@ -160,7 +160,9 @@ function SWEP:SecondaryAttack()
 			self:SetNextPrimaryFire( primary_cd )
 		end
 	elseif secondary == "explode" then
-		self:TriggerExplosion()
+		if !self:TriggerExplosion() then
+			return
+		end
 	elseif secondary == "shot" then
 		self:Shoot()
 	end
@@ -391,18 +393,23 @@ function SWEP:Shoot()
 	end
 end
 
-function SWEP:TriggerExplosion()
+function SWEP:TriggerExplosion( ignore_hp )
+	if self.ExplosionTriggered then return false end
+
 	local owner = self:GetOwner()
-	if owner:Health() > 50 then return end
+	if !ignore_hp and owner:Health() > 50 then return false end
 
 	local ct = CurTime()
 	self:SetNextPrimaryFire( ct + 999 )
 	self:SetNextSecondaryFire( ct + 999 )
 	self:SetExplode( ct + self.ExplosionTime )
+	self.ExplosionTriggered = true
 
 	if SERVER then
 		owner:PushSpeed( self.ExplosionSpeed, self.ExplosionSpeed, -1, "SLC_SCP0492Explosion" )
 	end
+
+	return true
 end
 
 local explosion_trace = {}
@@ -447,11 +454,12 @@ function SWEP:Explode()
 	dmg:SetDamageType( DMG_DIRECT )
 	dmg:SetDamage( owner:Health() )
 
-	if IsValid( self.LastAttacker ) then
-		dmg:SetAttacker( self.LastAttacker )
-	end
-
 	owner:TakeDamageInfo( dmg )
+
+	if IsValid( self.LastAttacker ) then
+		print( "Explo kaboom! Killer team: ", self.LastAttacker:SCPClass(), self.LastAttacker:SCPTeam() )
+		//dmg:SetAttacker( self.LastAttacker )
+	end
 end
 
 function SWEP:EnableProtection()
@@ -590,7 +598,7 @@ SCPHook( "SCP0492", "SLCPostScaleDamage", function( ent, dmg )
 		wep.LastAttacker = attacker
 	end
 
-	wep:TriggerExplosion()
+	wep:TriggerExplosion( true )
 
 	return true
 end )

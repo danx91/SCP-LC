@@ -232,3 +232,14 @@ function StringTable:Print()
 end
 
 setmetatable( StringTable, { __call = StringTable.New } )
+
+--[[-------------------------------------------------------------------------
+Thousands
+---------------------------------------------------------------------------]]
+function string.SplitThousands( number, separator )
+	local format = "%1"..( separator or " " )
+
+	local left, num, right = string.match( number, "^([^%d]*%d)(%d*)(.-)$" )
+	return left..num:reverse():gsub( "(%d%d%d)", format ):reverse()..right
+	//return left..string.reverse( string.gsub( string.reverse( num ), "(%d%d%d)", format ) )..right
+end

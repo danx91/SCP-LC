@@ -56,7 +56,7 @@ function SWEP:Think()
 	end
 
 	local ent = owner:GetEyeTraceNoCursor().Entity
-	if IsValid( ent ) and ent:IsPlayer() then
+	if IsValid( ent ) and ent:IsPlayer() and self:CanTargetPlayer( ent ) and !ent:GetNoDraw() and hook.Run( "CanPlayerSeePlayer", owner, ent ) != false  then
 		self:SetLookingAtStacks( ent:GetEffectTier( "scp966_effect" ) )
 	else
 		self:SetLookingAtStacks( -1 )
@@ -83,7 +83,10 @@ function SWEP:Think()
 		passive_radius = passive_radius * passive_radius
 
 		for i, v in ipairs( player.GetAll() ) do
-			if !self:CanTargetPlayer( v ) or v:GetPos():DistToSqr( owner_pos ) > passive_radius or v:IsInSafeSpot() then continue end
+			if !self:CanTargetPlayer( v ) or v:GetPos():DistToSqr( owner_pos ) > passive_radius then continue end
+
+			local is_safe, safe_pos = v:IsInSafeSpot()
+			if is_safe and !owner_pos:WithinAABox( safe_pos.mins, safe_pos.maxs ) then return end
 
 			if v:ApplyEffect( "scp966_effect", owner ) then
 				stacks = stacks + 1

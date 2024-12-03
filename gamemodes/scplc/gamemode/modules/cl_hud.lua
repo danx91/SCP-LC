@@ -294,13 +294,9 @@ function GM:HUDPaint()
 	hook.Run( "SLCPreDrawHUD" )
 	hook.Run( "SLCDrawHUD" )
 
-	if ply:SCPTeam() == TEAM_SPEC then
+	local admin_mode = ply:GetAdminMode()
+	if ply:SCPTeam() == TEAM_SPEC and !admin_mode then
 		hook.Run( "SLCPostDrawHUD" )
-
-		if ply:GetAdminMode() then
-			DrawSLCCrossHair( w / 2, h / 2 )
-		end
-
 		return
 	end
 
@@ -392,7 +388,7 @@ function GM:HUDPaint()
 	if GetSettingsValue( "hud_hl2_crosshair" ) then return end
 
 	local wep = ply:GetActiveWeapon()
-	if IsValid( wep ) and ( !wep:IsScripted() or wep.DrawCrosshair == true and ( !wep.DoDrawCrosshair or wep:DoDrawCrosshair() != true ) ) then
+	if admin_mode or IsValid( wep ) and ( !wep:IsScripted() or wep.DrawCrosshair == true and ( !wep.DoDrawCrosshair or wep:DoDrawCrosshair() != true ) ) then
 		DrawSLCCrossHair( w / 2, h / 2 )
 	end
 end

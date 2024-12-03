@@ -284,3 +284,18 @@ function ENTITY:FullSwapModels( other )
 		self:SetSubMaterial( i, other_data.materials[i] )
 	end
 end
+
+--[[-------------------------------------------------------------------------
+Recreate CBaseEntity::ImpactTrace
+https://github.com/ValveSoftware/source-sdk-2013/blob/master/sp/src/game/shared/baseentity_shared.cpp#L665-L695
+---------------------------------------------------------------------------]]
+function ENTITY:DispatchImpactTrace( tr, dmg )
+	local data = EffectData()
+	data:SetOrigin( tr.HitPos )
+	data:SetStart( tr.StartPos )
+	data:SetSurfaceProp( tr.SurfaceProps )
+	data:SetDamageType( dmg )
+	data:SetHitBox( tr.HitBox )
+
+	util.Effect( "Impact", data, false, true )
+end

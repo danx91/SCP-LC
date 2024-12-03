@@ -24,7 +24,7 @@ function BACKPACK.GetID( name )
 	return BACKPACK.lookup[name]
 end
 
-function BACKPACK.Create( name )
+function BACKPACK.Create( name, pos )
 	local id = BACKPACK.GetID( name )
 	if id <= 0 then return end
 
@@ -36,7 +36,10 @@ function BACKPACK.Create( name )
 	bp.WorldModel = data.model
 	bp:SetBackpack( id )
 
-	//bp:SetPos( pos )
+	if pos then
+		bp:SetPos( pos )
+	end
+
 	bp:Spawn()
 
 	return bp

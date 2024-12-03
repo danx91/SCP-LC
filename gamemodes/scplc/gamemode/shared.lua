@@ -40,6 +40,8 @@ end
 --[[-------------------------------------------------------------------------
 Load folder
 ---------------------------------------------------------------------------]]
+file.CreateDir( "slc/" )
+
 local skipped = 0
 
 function LoadFolder( path, t, realm )
@@ -116,7 +118,7 @@ if DEVELOPER_MODE then
 end
 
 --[[-------------------------------------------------------------------------
-Load language
+Load languages
 ---------------------------------------------------------------------------]]
 print( "----------------Loading Languages----------------" )
 for k, f in pairs( file.Find( LANGUAGES_PATH.."/*.lua", "LUA" ) ) do

@@ -25,25 +25,40 @@ function SWEP:UsedOn( target, owner )
 	target:SetProperty( "extra_hp_think", CurTime() + 1 )
 end
 
-function SWEP:HandleUpgrade( mode, num_mode, exit, ply )
+function SWEP:HandleUpgrade( mode, exit, ply )
 	local new_ent
 
-	if num_mode < 2 then
+	if mode < 2 then
 		self:Remove()
-	elseif num_mode == 2 then
+	elseif mode == 2 then
 		new_ent = "item_slc_adrenaline"
-	elseif num_mode == 3 then
+	elseif mode == 3 then
 		new_ent = "item_slc_morphine_big"
 	else
 		new_ent = math.random( 2 ) == 1 and "item_slc_morphine_big" or "item_slc_adrenaline_big"
 	end
 
-	if !new_ent then return end
+	if !new_ent then
+		self:SetPos( exit )
+
+		if self.PickupPriority then
+			self.Dropped = CurTime()
+			self.PickupPriorityTime = CurTime() + 10
+		end
+
+		return
+	end
 
 	local new = ents.Create( new_ent )
 	if IsValid( new ) then
-		self:Remove()
 		new:SetPos( exit )
 		new:Spawn()
+
+		if self.PickupPriority then
+			new.PickupPriority = self.PickupPriority
+			new.PickupPriorityTime = CurTime() + 10
+		end
+
+		self:Remove()
 	end
 end

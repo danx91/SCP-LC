@@ -1,5 +1,4 @@
 local color_white = Color( 255, 255, 255 )
-local color_grey = Color( 155, 155, 155 )
 --[[-------------------------------------------------------------------------
 Player message
 ---------------------------------------------------------------------------]]
@@ -256,7 +255,7 @@ function CenterMessage( msg, ply )
 			end
 
 			if f and f != "" then
-				line.font = f or font
+				line.font = f or gfont
 			end
 
 			s = nmsg
@@ -969,18 +968,64 @@ end )
 --[[-------------------------------------------------------------------------
 SLC Popup
 ---------------------------------------------------------------------------]]
-SLC_POPUP = SLC_POPUP or nil
 SLC_POPUP_QUEUE = {}
-local queueNext = 0
 
-local blur = Material( "pp/blurscreen" )
-local recomputed = false
+--[[---------------------------------------------------------------------------
+SLCPopup( name, text, keep, options, callback )
+
+Opens popup with given title, text and buttons
+
+@param		[type]			name				Name of popup
+@param		[type]			text				Text if popup
+@param		[type]			keep				Keep popup open, if not set, clicking outside of popup will close it
+@param		[table]			options
+{
+	@param		[string]	[sequential]		Button text
+	...
+
+	<OR>
+
+	@param		[table]		[sequential]
+	{
+		@param		[string]		[1]		Button text
+		@param		[Color]			color	Button color
+		@param		[boolean]		warn	Warning button (if true, player will have to wait 5 seconds before pressing it)
+	}
+	...
+}
+@param		[type]			callback			Called when specified event happens. 3 arguments are passed: number (see next line), popup panel and button
+												Passed numbers: -1: when popup is opened, 0: when exited by clicking outside, other: pressed button id
+												return true to prevent popup close
+
+@return		[nil]			-					-
+---------------------------------------------------------------------------]]--
+function SLCPopup( name, text, keep, options, callback, font )
+	if font then
+		text = "<font="..font..">"..text.."</font>"
+	end
+
+	local data = {
+		name = name,
+		text = text,
+		keep = keep,
+		options = options or { "OK" },
+		callback = callback,
+	}
+
+	if IsValid( SLC_POPUP ) then
+		return table.insert( SLC_POPUP_QUEUE, data )
+	end
+
+	SLC_POPUP = vgui.Create( "SLCPopup" )
+	SLC_POPUP:SetData( data )
+
+	return 0
+end
 
 /*---------------------------------------------------------------------------
-SLCPopup( name, text, keep, callback, ... )
+SLCLegacyPopup( name, text, keep, callback, ... )
 
-Creates clientside sound handler attached to specified entity. Created sounds are precached.
-This function is meant to be accesed by 'PlaySound' net message.
+Legacy function. Internally calls new one
 
 @param 		[string] 		name 		Name of popup
 @param 		[string] 		text 		Popup content, obeys line ends and tabs
@@ -991,173 +1036,15 @@ This function is meant to be accesed by 'PlaySound' net message.
 
 @return 	[nil] 			- 			-
 ---------------------------------------------------------------------------*/
-function SLCPopupIfEmpty( ... )
+function SLCLegacyPopupIfEmpty( ... )
 	if !IsValid( SLC_POPUP ) then
-		SLCPopup( ... )
+		SLCLegacyPopup( ... )
 	end
 end
 
-function SLCPopup( name, text, keep, callback, ... )
-	if IsValid( SLC_POPUP ) then
-		table.insert( SLC_POPUP_QUEUE, { name, text, keep, callback, {...} } )
-		return
-	end
-
-	if isfunction( callback ) then
-		callback( -1 )
-	end
-
-	local w, h = ScrW(), ScrH()
-	local maxH = draw.SimulateMultilineText( text, "SCPHUDSmall", w * 0.5, 10, 0 )
-
-	local popup = vgui.Create( "DFrame" )
-	SLC_POPUP = popup
-	popup.text = text
-	popup:SetDeleteOnClose( true )
-	popup:ShowCloseButton( false )
-	popup:SetDraggable( false )
-	popup:SetSizable( false )
-	//popup:SetBackgroundBlur( false )
-	//popup:SetDrawOnTop( keep )
-	popup:SetTitle( "" )
-	popup:SetSize( w * 0.5, maxH + h * 0.03 + h * 0.07 )
-	popup:Center()
-	popup:DockPadding( 0, 0, 0, 0 )
-	popup:MakePopup()
-	popup.Think = function( self )
-		if self:HasFocus() then
-			self.WasFocused = true
-		elseif self.WasFocused then
-			if keep then
-				self:MakePopup()
-			else
-				self:Close()
-
-				if isfunction( callback ) then
-					callback( 0 )
-				end
-			end
-		end
-	end
-
-	popup.Paint = function( self, pw, ph )
-		render.UpdateScreenEffectTexture()
-		blur:SetFloat( "$blur", 8 )
-
-		if !recomputed then
-			recomputed = true
-			blur:Recompute()
-		end
-
-		surface.SetDrawColor( 255, 255, 255, 255 )
-		surface.SetMaterial( blur )
-
-		local x, y = self:GetPos()
-		surface.DrawTexturedRect( -x, -y, w, h )
-
-		surface.SetDrawColor( 10, 10, 10, 225 )
-		surface.DrawRect( 0, 0, pw, ph )
-
-		surface.SetDrawColor( 0, 0, 0, 150 )
-		surface.DrawRect( 0, 0, pw, h * 0.03 )
-
-		draw.Text{
-			text = name or "Information",
-			pos = { pw * 0.01, h * 0.015 },
-			font = "SCPHUDSmall",
-			color = color_white,
-			xalign = TEXT_ALIGN_LEFT,
-			yalign = TEXT_ALIGN_CENTER,
-		}
-
-		draw.MultilineText( 0, h * 0.03, popup.text, "SCPHUDSmall", color_white, w * 0.5, 10, 0, TEXT_ALIGN_LEFT )
-	end
-
-	local cont = vgui.Create( "DPanel", popup )
-	cont:Dock( BOTTOM )
-	cont:SetTall( h * 0.05 )
-	cont.Paint = function( self, pw, ph )
-		surface.SetDrawColor( 150, 150, 150, 255 )
-		surface.DrawLine( 10, 0, pw - 20, 0 )
-	end
-
-	local options = {...}
-	local len = #options
-
-	if len == 0 then
-		options[1] = "OK"
-	end
-
-	for i = 1, #options do
-		local option = options[i]
-		local b_text = "?"
-		local b_critical = false
-
-		if istable( option ) then
-			b_text = option[1]
-			b_critical = option[2]
-		else
-			b_text = option
-		end
-
-		local width = draw.TextSize( b_text, "SCPHUDMedium" ) + w * 0.01
-
-		if width < w * 0.08 then
-			width = w * 0.08
-		elseif width > w * 0.15 then
-			width = w * 0.15
-		end
-
-		local btn = vgui.Create( "DButton", cont )
-		btn:Dock( RIGHT )
-		btn:DockMargin( 5, 5, 5, 5 )
-		btn:SetWide( width )
-		btn:SetText( "" )
-
-		if b_critical then
-			btn.critical = RealTime() + 5
-		end
-
-		btn.Paint = function( self, pw, ph )
-			local lock = self.critical and self.critical > RealTime()
-
-			surface.SetDrawColor( lock and color_grey or color_white )
-			surface.DrawOutlinedRect( 0, 0, pw, ph )
-
-			draw.Text{
-				text = lock and math.ceil( self.critical - RealTime() ) or b_text,
-				pos = { pw * 0.5, ph * 0.5 },
-				font = "SCPHUDSmall",
-				color = lock and color_grey or color_white,
-				xalign = TEXT_ALIGN_CENTER,
-				yalign = TEXT_ALIGN_CENTER,
-			}
-		end
-
-		btn.DoClick = function( self )
-			if self.critical and self.critical > RealTime() then return end
-
-			popup:Close()
-
-			if isfunction( callback ) then
-				callback( i )
-			end
-		end
-	end
+function SLCLegacyPopup( name, text, keep, callback, ... )
+	SLCPopup( name, text, keep, { ... }, callback, "SCPHUDVSmall" )
 end
-
-hook.Add( "Think", "SLCPopupThink", function()
-	if !IsValid( SLC_POPUP ) and #SLC_POPUP_QUEUE > 0 then
-		if queueNext == 0 then
-			queueNext = RealTime() + 0.75
-		elseif queueNext < RealTime() then
-			queueNext = 0
-
-			local data = table.remove( SLC_POPUP_QUEUE, 1 )
-			SLCPopup( data[1], data[2], data[3], data[4], unpack( data[5] ) )
-		end
-	end
-end )
 
 --[[-------------------------------------------------------------------------
 Tooltip

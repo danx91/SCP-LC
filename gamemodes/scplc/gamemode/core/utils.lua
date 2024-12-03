@@ -28,11 +28,11 @@ end
 --[[-------------------------------------------------------------------------
 Tables
 ---------------------------------------------------------------------------]]
-function PopulateTable( num )
+function PopulateTable( num, fill )
 	local tab = {}
 
 	for i = 1, num do
-		tab[i] = i
+		tab[i] = fill or i
 	end
 
 	return tab

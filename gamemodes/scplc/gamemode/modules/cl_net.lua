@@ -24,13 +24,16 @@ net.Receive( "SCPList", function( len )
 
 	SCPS = {}
 	ShowSCPs = {}
+	SCPStats = {}
 
 	local lang = _LANG.english.CLASSES
 	local numbers = {}
 
 	for i, v in ipairs( data ) do
 		local name = v.name
+		
 		CLASSES[name] = name
+		SCPStats[name] = v
 
 		if !v.hide then
 			table.insert( ShowSCPs, v )
@@ -57,7 +60,6 @@ net.Receive( "SCPList", function( len )
 		return numbers[a.name][1] < numbers[b.name][1]
 	end )
 
-	//if SetupForceSCP then SetupForceSCP() end
 	hook.Run( "SetupForceSCP" )
 end )
 

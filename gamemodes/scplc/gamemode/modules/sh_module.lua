@@ -7,8 +7,8 @@ GM.Website 	= ""
 --[[-------------------------------------------------------------------------
 Global values
 ---------------------------------------------------------------------------]]
-DATE = "15/08/2024"
-SIGNATURE = "b001000r7"
+DATE = "03/12/2024"
+SIGNATURE = "b001002r0"
 VERSION = SLCVersion().name
 
 SCPS = {}
@@ -68,7 +68,6 @@ SLCCVar( "slc_time_swapping", { "general", "time" }, 1.5, { FCVAR_NOTIFY, FCVAR_
 SLCCVar( "slc_blink_delay", "general", 5, { FCVAR_NOTIFY, FCVAR_ARCHIVE }, "The delay between eye blinks", 1, nil, tonumber )
 
 //FEATURES
-SLCCVar( "slc_scp914_kill", { "feature", "scp" }, 0, { FCVAR_ARCHIVE }, "If set to 1, SCP 914 will kill anyone inside its input and/or output", nil, nil, tonumber )
 SLCCVar( "slc_door_unblocker", "feature", 1, { FCVAR_ARCHIVE }, "EXPERIMENTAL! This feature will try to move away any potential items that may get stuck between doors. Set to 1 to enable", nil, nil, tonumber )
 SLCCVar( "slc_disable_fuseboxes", "feature", 0, { FCVAR_ARCHIVE }, "If other than 0, completely disable fuse boxes. Fuses can still spawn, however they will be unusable" )
 SLCCVar( "slc_intercom_cooldown", { "feature", "time" }, 180, { FCVAR_ARCHIVE }, "Intercom cooldown", 1, nil, tonumber )
@@ -128,6 +127,8 @@ SLCCVar( "slc_scp_min_players", { "scp" }, 4, { FCVAR_ARCHIVE }, "Minimum number
 SLCCVar( "slc_scp_penalty", { "general", "scp" }, 4, { FCVAR_ARCHIVE }, "The number of rounds of low SCP priority for players that just played as SCP", 0, nil, tonumber )
 SLCCVar( "slc_allow_scp_spectate", { "general" }, 0, { FCVAR_NOTIFY, FCVAR_ARCHIVE }, "If 1, all players will be able to spectate SCPs", nil, nil, tonumber )
 SLCCVar( "slc_689_min_players", { "scp" }, 1, { FCVAR_ARCHIVE }, "Minimum number of players for SCP-689 to spawn. 0 to disable this SCP", 0, nil, tonumber )
+SLCCVar( "slc_scp_buff_pct_regen", { "scp" }, 0.4, { FCVAR_ARCHIVE, FCVAR_NOTIFY, FCVAR_REPLICATED }, "TODO", 0, 1, tonumber )
+SLCCVar( "slc_scp_buff_max_regen", { "scp" }, 1000, { FCVAR_ARCHIVE, FCVAR_NOTIFY, FCVAR_REPLICATED }, "TODO", 0, nil, tonumber )
 
 //GAS
 SLCCVar( "slc_gas_lcz", { "gas" }, 450, { FCVAR_NOTIFY, FCVAR_ARCHIVE }, "The time after which gas will be released in LCZ (seconds)", 0, nil, tonumber )
@@ -138,7 +139,7 @@ SLCCVar( "slc_gas_hcz_time", { "gas" }, 120, { FCVAR_ARCHIVE }, "How long it tak
 SLCCVar( "slc_gas_ez_time", { "gas" }, 60, { FCVAR_ARCHIVE }, "How long it takes for gas to have its maximum power in EZ (seconds)", 0, nil, tonumber )
 
 //MINIGAMES
-SLCCVar( "slc_spectator_points_xp", { "minigames" }, 10, { FCVAR_ARCHIVE }, "For each X xp player will get 1 spectator point. Calculation are rounded down and don't carry over!", 1, nil, tonumber )
+SLCCVar( "slc_spectator_points_xp", { "minigames" }, 10, { FCVAR_ARCHIVE, FCVAR_REPLICATED }, "For each X xp player will get 1 spectator point. Calculation are rounded down and don't carry over!", 1, nil, tonumber )
 
 --[[-------------------------------------------------------------------------
 Global functions
@@ -205,47 +206,92 @@ function GM:ScalePlayerDamage( ply, hitgroup, info )
 	end*/
 end
 
-function GetSCPDamageScale( ply )
-	local buff = ply:GetProperty( "scp_buff" )
-	if buff then
-		if ROUND.aftermatch then
-			return 0.1
-		end
+function GetSCPModifiers( ply )
+	local mods = {
+		def = 1,
+		flat = 0,
+		heal_scale = 1,
+		regen_scale = 0.75,
+	}
 
-		if ESCAPE_STATUS == ESCAPE_ACTIVE and ply:IsInEscape() then
-			return 0.2
-		end
+	if ROUND.aftermatch then
+		mods.def = 0.1
+		mods.flat = 0
+	elseif ESCAPE_STATUS == ESCAPE_ACTIVE and ply:IsInEscape() then
+		mods.def = 0.25
+		mods.flat = 0
 	end
 
-	if IsRoundLive() then
-		local calc = math.Map( RemainingRoundTime(), 0, RoundDuration(), 0.5, 1.5 )
-		if calc < 0.75 then
-			calc = 0.75
-		end
-
-		if buff and ply:IsInZone( ZONE_SURFACE ) then
-			calc = calc - 0.25
-		end
-
-		return calc
+	if !IsRoundLive() then
+		return mods
 	end
 
-	return 1
+	local round_pct = math.Clamp( 1 - RemainingRoundTime() / RoundDuration(), 0, 1 )
+
+	mods.def = math.Map( round_pct, 0, 1, 1.33, 0.5 )
+	mods.flat = math.Map( round_pct, 0, 1, 0, -3 )
+	mods.heal_scale = math.Clamp( math.Map( round_pct, 0.1, 0.9, SCP_BUFF_HEAL_MIN, SCP_BUFF_HEAL_MAX ), SCP_BUFF_HEAL_MIN, SCP_BUFF_HEAL_MAX )
+	mods.regen_scale = math.Clamp( math.Map( round_pct, 0.1, 0.9, SCP_BUFF_REGEN_MIN, SCP_BUFF_REGEN_MAX ), SCP_BUFF_REGEN_MIN, SCP_BUFF_REGEN_MAX )
+
+	if mods.def < 0.75 then
+		mods.def = 0.75
+	end
+
+	if mods.flat < -2 then
+		mods.flat = -2
+	end
+
+	if ply:GetProperty( "scp_buff" ) and ply:IsInZone( ZONE_SURFACE ) then
+		mods.def = mods.def - SCP_BUFF_DEF
+		mods.flat = mods.flat - SCP_BUFF_FLAT
+	end
+
+	return mods
 end
 
 hook.Add( "SLCRound", "SCPSurfaceCheck", function( time )
-	AddTimer( "SLCSurfaceCheck", 5, 0, function()
-		local hp = IsRoundLive() and math.ceil( math.Map( RemainingRoundTime(), 0, RoundDuration(), 50, 0 ) ) or 0
-
+	AddTimer( "SLCSurfaceCheck", 3, 0, function()
 		for i, v in ipairs( player.GetAll() ) do
 			if v:SCPTeam() != TEAM_SCP or v:GetSCPHuman() then continue end
+			if v:GetProperty( "scp_buff_applied" ) or !v:GetProperty( "scp_buff" ) or !v:IsInZone( ZONE_SURFACE ) then continue end
 
-			local surf = v:IsInZone( ZONE_SURFACE )
-			//v:SetProperty( "scp_on_surface", surf )
+			local buff_scale = v.SCPData and v.SCPData.buff_scale or 1
 
-			if surf and hp > 0 and v:GetProperty( "scp_buff" ) then
-				v:AddHealth( hp )
-			end
+			v:SetProperty( "scp_buff_applied", true )
+			v:SetProperty( "scp_buff_heal", math.min( CVAR.slc_scp_buff_pct_regen:GetFloat() * v:GetMaxHealth(), CVAR.slc_scp_buff_max_regen:GetInt() ) * buff_scale )
+
+			v:AddTimer( "SCPOutsideBuff", SCP_BUFF_TICK, 0, function( this )
+				if !IsValid( v ) then return end
+
+				if !v:IsInZone( ZONE_SURFACE ) then
+					v:SetProperty( "scp_buff_regen", 0 )
+					v:SetProperty( "scp_buff_heal", 0 )
+				end
+
+				local buff_heal = v:GetProperty( "scp_buff_heal", 0 )
+				if buff_heal > 0 then
+					local to_heal = SCP_BUFF_HEAL_RATE
+
+					if to_heal > buff_heal then
+						to_heal = buff_heal
+					end
+
+					v:AddHealth( to_heal )
+					v:SetProperty( "scp_buff_heal", buff_heal - to_heal )
+				end
+
+				local buff_regen = v:GetProperty( "scp_buff_regen", 0 )
+				if buff_regen > 0 and v:GetProperty( "scp_buff_regen_time", 0 ) <= CurTime() then
+					local to_regen = SCP_BUFF_REGEN_RATE
+
+					if to_regen > buff_regen then
+						to_regen = buff_regen
+					end
+
+					v:AddHealth( to_regen )
+					v:SetProperty( "scp_buff_regen", buff_regen - to_regen )
+				end
+			end )
 		end
 	end )
 end )
@@ -292,20 +338,6 @@ function GM:EntityTakeDamage( target, info )
 	if !info:IsDamageType( DMG_DIRECT ) and target:IsPlayer() then
 		local t_trg = target:SCPTeam()
 		local attacker = info:GetAttacker()
-
-		if IsValid( attacker ) and attacker:IsPlayer() then
-			local wep = info:GetInflictor()
-			if IsValid( wep ) then
-				local class = wep:GetClass()
-
-				if class == "weapon_crowbar" then
-					info:SetDamage( 12 )
-				elseif class == "weapon_stunstick" then
-					info:SetDamageType( bit.bor( info:GetDamageType(), DMG_SHOCK ) )
-					info:SetDamage( 10 )
-				end
-			end
-		end
 		
 		--vest
 		local bleed_prot, shock_prot = false, false
@@ -316,6 +348,7 @@ function GM:EntityTakeDamage( target, info )
 
 			if data and ( data.durability == -1 or dur > 0 ) then
 				local pre_scaled = info:GetDamage()
+				local wep = IsValid( attacker ) and attacker:IsPlayer() and attacker:GetActiveWeapon()
 
 				for k, v in pairs( data.damage ) do
 					if info:IsDamageType( k ) then
@@ -327,6 +360,10 @@ function GM:EntityTakeDamage( target, info )
 							shock_prot = true
 						end
 						
+						if IsValid( wep ) and wep.ArmorPenetration and v < 1 then
+							v = 1 - ( 1 - v ) * ( 1 - wep.ArmorPenetration )
+						end
+
 						info:ScaleDamage( v )
 					end
 				end
@@ -352,7 +389,15 @@ function GM:EntityTakeDamage( target, info )
 						if t_att == TEAM_SCP then
 							return true
 						elseif !target:GetSCPHuman() then
-							info:ScaleDamage( GetSCPDamageScale( target ) )
+							local mods = GetSCPModifiers( target )
+							
+							local dmg = info:GetDamage() + mods.flat
+							if dmg < 0 then
+								dmg = 0
+							end
+							
+							info:SetDamage( dmg )
+							info:ScaleDamage( mods.def )
 						end
 					end
 
@@ -414,7 +459,8 @@ function GM:EntityTakeDamage( target, info )
 		end
 	end
 
-	if !info:IsDamageType( DMG_DIRECT ) and hook.Run( "SLCPostScaleDamage", target, info ) == true then return true end
+	local prevent, direct = hook.Run( "SLCPostScaleDamage", target, info )
+	if prevent == true and ( direct == true or !info:IsDamageType( DMG_DIRECT ) ) then return true end
 
 	local dmgtype = info:GetDamageType()
 	if bit.band( dmgtype, DMG_POISON ) == DMG_POISON then
@@ -422,10 +468,27 @@ function GM:EntityTakeDamage( target, info )
 	end
 end
 
-function GM:PostEntityTakeDamage( ent, dmg, took )
-	if !ent:IsPlayer() then return end
+function GM:SLCPostScaleDamage( target, info )
+	if !IsValid( target ) or !target:IsPlayer() then return end
 
-	if !ent.slc_dmg_ind then ent.slc_dmg_ind = {} end
+	local att = info:GetAttacker()
+	if target == att or !IsValid( att ) or !att:IsPlayer() or SCPTeams.IsAlly( att:SCPTeam(), target:SCPTeam() ) then return end
+
+	if target:SCPTeam() == TEAM_SCP and target:GetProperty( "scp_buff" ) and target:IsInZone( ZONE_SURFACE ) then
+		if  info:IsDamageType( DMG_DIRECT ) or !info:IsDamageType( DMG_BULLET ) then return end
+
+		local buff_scale = target.SCPData and target.SCPData.buff_scale or 1
+		target:SetProperty( "scp_buff_regen", target:GetProperty( "scp_buff_regen", 0 ) + info:GetDamage() * GetSCPModifiers( target ).regen_scale * buff_scale )
+		target:SetProperty( "scp_buff_regen_time", CurTime() + SCP_BUFF_REGEN_TIME )
+	elseif att:SCPTeam() == TEAM_SCP and att:GetProperty( "scp_buff" ) and att:IsInZone( ZONE_SURFACE ) then
+		local buff_scale = att.SCPData and att.SCPData.buff_scale or 1
+		att:SetProperty( "scp_buff_heal", att:GetProperty( "scp_buff_heal", 0 ) + info:GetDamage() * GetSCPModifiers( att ).heal_scale * buff_scale )
+	end
+end
+
+function ApplyDamageHUDEvents( target, dmg )
+	local target_valid = IsValid( target ) and target:IsPlayer()
+	if !target.slc_dmg_ind and target_valid then target.slc_dmg_ind = {} end
 
 	local att = dmg:GetInflictor()
 	if IsValid( att ) then
@@ -437,21 +500,28 @@ function GM:PostEntityTakeDamage( ent, dmg, took )
 		att = dmg:GetAttacker()
 	end
 
-	if IsValid( att ) and att != ent and dmg:IsBulletDamage() then
-		if !ent.slc_dmg_ind[att] and att:IsPlayer() then
+	if IsValid( att ) and att != target and dmg:IsBulletDamage() then
+		if ( !target_valid or !target.slc_dmg_ind[att] ) and att:IsPlayer() then
 			net.Start( "SLCHitMarker" )
 			net.Send( att )
 		end
 
-		ent.slc_dmg_ind[att] = ( ent.slc_dmg_ind[att] or 0 ) + dmg:GetDamage()
-	else
+		if target_valid then
+			target.slc_dmg_ind[att] = ( target.slc_dmg_ind[att] or 0 ) + dmg:GetDamage()
+		end
+	elseif target_valid then
 		net.Start( "SLCDamageIndicator" )
 			net.WriteUInt( math.Clamp( math.ceil( dmg:GetDamage() ), 0, 1023 ), 10 )
 
 			net.WriteFloat( 0 )
 			net.WriteFloat( 0 )
-		net.Send( ent )
+		net.Send( target )
 	end
+end
+
+function GM:PostEntityTakeDamage( ent, dmg, took )
+	if !ent:IsPlayer() then return end
+	ApplyDamageHUDEvents( ent, dmg )
 end
 
 hook.Add( "PlayerPostThink", "SLCDamageIndicator", function( ply )
@@ -460,6 +530,7 @@ hook.Add( "PlayerPostThink", "SLCDamageIndicator", function( ply )
 
 	for att, dmg in pairs( tab ) do
 		tab[att] = nil
+		if !IsValid( att ) then continue end
 
 		net.Start( "SLCDamageIndicator" )
 			net.WriteUInt( math.Clamp( math.ceil( dmg ), 0, 1023 ), 10 )
@@ -474,7 +545,6 @@ end )
 --[[-------------------------------------------------------------------------
 Move functions
 ---------------------------------------------------------------------------]]
-
 function GM:SetupMove( ply, mv, cmd )
 	if controller.SetupMove( ply, mv, cmd ) then return true end
 end
@@ -483,11 +553,21 @@ function GM:Move( ply, mv )
 	if controller.Move( ply, mv ) then return true end
 
 	local speed_mod = { 1 }
-
 	hook.Run( "SLCScaleSpeed", ply, speed_mod )
 
-	if speed_mod[1] != 1 then
-		local speed = ( mv:KeyDown( IN_SPEED ) and ply:GetRunSpeed() or ply:GetWalkSpeed() ) * speed_mod[1]
+	local mod = speed_mod[1]
+
+	if ply:SCPTeam() == TEAM_SCP and ply:GetProperty( "scp_buff" ) and ply:IsInZone( ZONE_SURFACE ) then
+		mod = mod * 1.1
+	end
+
+	if mod != 1 then
+		local speed = ( mv:KeyDown( IN_SPEED ) and ply:GetRunSpeed() or ply:GetWalkSpeed() ) * mod
+
+		if ply:Crouching() then
+			speed = speed * ply:GetCrouchedWalkSpeed()
+		end
+
 		mv:SetMaxSpeed( speed )
 		mv:SetMaxClientSpeed( speed )
 	end

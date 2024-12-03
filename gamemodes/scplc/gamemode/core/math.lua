@@ -193,8 +193,14 @@ function math.Map( num, min, max, newmin, newmax )
 	return newmin + ( num - min ) / ( max - min ) * ( newmax - newmin )
 end
 
-function math.TrueFOV( fov )
-	return 2 * math.deg( math.atan( math.tan( foc / 2 ) * 1.77777 ) )
+function math.TrueFOV( fov, aspect )
+	if !aspect and CLIENT then
+		aspect = ScrW() / ScrH()
+	end
+
+	local ratio = ( aspect or 16 / 9 ) / ( 4 / 3 )
+
+	return 2 * math.deg( math.atan( math.tan( math.rad( fov ) / 2 ) * ratio ) )
 end
 
 local po2 = setmetatable( {}, {
@@ -484,3 +490,10 @@ function math.CubicBezierXFromY( x1, y1, x2, y2, precision )
 		return x
 	end
 end
+
+SLCEase = {
+	ease = math.CubicBezierYFromX( 0.25, 0.1, 0.25, 1 ),
+	ease_in = math.CubicBezierYFromX( 0.42, 0, 1, 1 ),
+	ease_out = math.CubicBezierYFromX( 0, 0, 0.58, 1 ),
+	ease_in_out = math.CubicBezierYFromX( 0.42, 0, 0.58, 1 ),
+}

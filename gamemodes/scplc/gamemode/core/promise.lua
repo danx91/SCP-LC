@@ -226,7 +226,11 @@ function SLCPromisify( func )
 		local tab = { ... }
 		return SLCPromise( function( resolve )
 			func( tab[1], function( ... )
-				resolve( { ... } )
+				if select( "#", ... ) <= 1 then
+					resolve( ... )
+				else
+					resolve( { ... } )
+				end
 			end, unpack( tab, 2 ) )
 		end )
 	end

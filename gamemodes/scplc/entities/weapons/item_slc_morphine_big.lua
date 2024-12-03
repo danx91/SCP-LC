@@ -10,17 +10,28 @@ if CLIENT then
 	SWEP.SelectColor = Color( 0, 123, 255, 255 )
 end
 
-function SWEP:HandleUpgrade( mode, num_mode, exit, ply )
-	if num_mode < 2 then
+function SWEP:HandleUpgrade( mode, exit, ply )
+	if mode < 2 then
 		self:Remove()
-	elseif num_mode == 2 then
+	elseif mode == 2 then
 		local new = ents.Create( "item_slc_adrenaline_big" )
 		if IsValid( new ) then
-			self:Remove()
 			new:SetPos( exit )
 			new:Spawn()
+			
+			if self.PickupPriority then
+				new.PickupPriority = self.PickupPriority
+				new.PickupPriorityTime = CurTime() + 10
+			end
+			
+			self:Remove()
 		end
 	else
+		if self.PickupPriority then
+			self.Dropped = CurTime()
+			self.PickupPriorityTime = CurTime() + 10
+		end
+
 		self:SetPos( exit )
 	end
 end

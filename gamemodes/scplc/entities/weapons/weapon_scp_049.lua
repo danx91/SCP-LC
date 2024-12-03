@@ -228,7 +228,7 @@ function SWEP:Reload()
 		mask = MASK_SHOT
 	} ).Entity
 
-	if !IsValid( ent ) or ent:GetClass() != "prop_ragdoll" or ent:GetNWInt( "team", TEAM_SCP ) == TEAM_SCP then return end
+	if !IsValid( ent ) or ent:GetClass() != "prop_ragdoll" or ent:GetNWInt( "team", TEAM_SCP ) == TEAM_SCP or ent:GetNWBool( "invalid_ragdoll", false ) then return end
 
 	owner:StartHold( self, "scp049_surgery", IN_RELOAD, 0, function()
 		CloseWheelMenu()
@@ -344,7 +344,7 @@ function SWEP:StartSurgery( option )
 		mask = MASK_SHOT
 	} ).Entity
 
-	if !IsValid( ent ) or ent:GetClass() != "prop_ragdoll" or ent:GetNWInt( "team", TEAM_SCP ) == TEAM_SCP then return end
+	if !IsValid( ent ) or ent:GetClass() != "prop_ragdoll" or !ent.Data or ent.Data.team == TEAM_SCP or ent.Data.invalid then return end
 
 	self.SurgeryType = option
 	self.SurgeryTarget = ent
@@ -356,7 +356,6 @@ function SWEP:StopSurgery()
 	self.SurgeryTarget = nil
 	self:SetSurgery( 0 )
 	self:HUDNotify( "surgery_failed" )
-	//CenterMessage( "@WEAPONS.SCP049.surgery_failed;time:5", self:GetOwner() )
 end
 
 function SWEP:FinishSurgery()
@@ -369,15 +368,36 @@ function SWEP:FinishSurgery()
 	end
 
 	local stats = SCP049_ZOMBIE_TYPES[self.SurgeryType]
-	if !stats or !ent.Data or ent.Data.team == TEAM_SCP then
+	if !stats or !ent.Data or ent.Data.team == TEAM_SCP or ent.Data.invalid then
 		self:StopSurgery()
 		return
 	end
 
 	local ply = ent:GetOwner()
+	local low = false
 
-	if !IsValid( ply ) or !ply:IsValidSpectator() then
-		ply = QueueRemove( true )
+	if !IsValid( ply ) or !ply:IsValidSpectator( true, true ) or ply:GetInfoNum( "cvar_slc_zombie_optout", 0 ) == 1 then
+		local unused = {}
+		local unused_low = {}
+
+		repeat
+			ply, low = QueueRemove( true )
+			if IsValid( ply ) then
+				if ply:GetInfoNum( "cvar_slc_zombie_optout", 0 ) == 0 then
+					break
+				end
+
+				table.insert( low and unused_low or unused, ply )
+			end
+		until ply == NULL
+
+		for i, v in ipairs( unused ) do
+			QueueInsert( v, true )
+		end
+
+		for i, v in ipairs( unused_low ) do
+			QueueInsertSuicide( v, true )
+		end
 	end
 
 	if !IsValid( ply ) then

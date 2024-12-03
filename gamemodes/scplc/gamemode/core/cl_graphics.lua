@@ -284,18 +284,83 @@ function surface.PolyRoundedRect( x, y, w, h, r, output )
 		end
 	end
 
-	if output then return end
+	if output then return output end
 
 	surface.DrawPoly( verts )
 end
 
-function surface.OutlinedRoundedRect( x, y, w, h, r, t )
+function surface.OutlinedRoundedRect( x, y, w, h, r, t, output )
 	local v1, v2 = {}, {}
 	surface.PolyRoundedRect( x, x, w, h, r, v1 )
 	surface.PolyRoundedRect( x + t, x + t, w - t * 2, h - t * 2, r - t, v2 )
 	
+	if output then
+		output[1] = v1
+		output[2] = v2
+		
+		return output
+	end
+
 	draw.NoTexture()
 	surface.DrawDifference( v1, v2 )
+end
+
+--[[---------------------------------------------------------------------------
+surface.DrawTexturedRectKeepRatio( x, y, w, h, mat )
+
+Draw textured rect while maintaining aspect ratio of texture
+
+@param		[number]			x					X of rect
+@param		[number]			y					Y of rect
+@param		[number]			w					Width of rect
+@param		[number]			h					Height of rect
+@param		[IMaterial]			mat					Material to use
+
+@return		[nil]				-					-
+---------------------------------------------------------------------------]]--
+function surface.DrawTexturedRectKeepRatio( x, y, w, h, mat )
+	local mw, mh = mat:Width(), mat:Height()
+	local sr, mr = w / h, mw / mh 
+	local dw, dh
+
+	if mr > sr then
+		dh = h
+		dw = mw / mh * h
+	else
+		dw = w
+		dh = mh / mw * w
+	end
+
+	surface.SetMaterial( mat )
+	surface.DrawTexturedRect( x + w / 2 - dw / 2,  y + h / 2 - dh / 2, dw, dh )
+end
+
+
+--[[---------------------------------------------------------------------------
+surface.DrawLoading( x, y, radius, thick )
+
+Description
+
+@param		[number]			x					X position
+@param		[number]			y					Y position
+@param		[number]			radius				Radius
+@param		[number]			thick				Thickness
+
+@return		[nil]				-					-
+---------------------------------------------------------------------------]]--
+function surface.DrawLoading( x, y, radius, thick )
+	draw.NoTexture()
+
+	local rt = RealTime()
+	local p = ( rt * 7.5 ) % 20
+	local ang = p / 10 * 360
+	local rot = math.max( p / 10, 1 ) * 360 + ( rt * 0.5 ) % 1 * 360
+
+	if ang > 360 then
+		ang = 720 - ang
+	end
+
+	surface.DrawRing( x, y, radius, thick, ang, 40, 1, rot )
 end
 
 /*-------------------------------------------------------------------------
@@ -1025,18 +1090,36 @@ function draw.WepSelectIcon( ico, cx, cy, size, color )
 	PopFilters()
 end
 
-/*-------------------------------------------------------------------------
-draw.BlurOutlinedText( table )
 
+--[[---------------------------------------------------------------------------
+draw.OutlinedText( text, font, x, y, color, xalign, yalign, outline_color, fallback_width, strength )
 
+Description
 
-@param  	[table] 		data 		Text data to draw
+@param		[type]			text				Text
+@param		[type]			font				Font
+@param		[type]			x					X position
+@param		[type]			y					Y position
+@param		[type]			color				Color of text
+@param		[type]			xalign				Text alignment in horizontal axis
+@param		[type]			yalign				Text alignment in vertical axis
+@param		[type]			outline_color		Color of outline
+@param		[type]			fallback_width		Width of fallback gmod outline
+@param		[type]			strength			Strength of outline
 
-@return 	[number] 		width 		
-			[number]		height 		
----------------------------------------------------------------------------*/
-function draw.BlurOutlinedText( tab )
+@return		[nil]			-					-
+---------------------------------------------------------------------------]]--
+function draw.OutlinedText( text, font, x, y, color, xalign, yalign, outline_color, fallback_width, strength )
+	local of = BlurOutlineFonts[font]
+	if !of then
+		return draw.SimpleTextOutlined( text, font, x, y, color, xalign, yalign, fallback_width or 3, outline_color )
+	end
 
+	for i = 1, strength or 1 do
+		draw.SimpleText( text, of, x, y, outline_color, xalign, yalign )
+	end
+
+	return draw.SimpleText( text, font, x, y, color, xalign, yalign )
 end
 
 /*-------------------------------------------------------------------------

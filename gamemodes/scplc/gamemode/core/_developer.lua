@@ -10,6 +10,13 @@ if SERVER then
 		if !args[1] or args[1] == "" then draw_key = nil return end
 		dk_str = args[1]
 		draw_key = string.Explode( ".", args[1] )
+
+		for i, v in ipairs( draw_key ) do
+			local num = string.match( v, "^!(%d+)$" )
+			if num then
+				draw_key[i] = tonumber( num )
+			end
+		end
 	end )
 
 	timer.Create( "slcdrawvectors", 0.5, 0, function()
@@ -93,7 +100,6 @@ end
 --[[-------------------------------------------------------------------------
 Traces
 ---------------------------------------------------------------------------]]
-local life = 3
 _TraceLine = _TraceLine or util.TraceLine
 _TraceHull = _TraceHull or util.TraceHull
 
@@ -106,7 +112,9 @@ function util.TraceLine( tr )
 
 	
 	if _DrawNextTrace then
+		local life = isnumber( _DrawNextTrace ) and _DrawNextTrace or 3
 		_DrawNextTrace = false
+
 		debugoverlay.Line( tr.start, tr.endpos, life, Color( 255, 0, 0 ), false )
 		debugoverlay.Line( tr.start, res.HitPos, life, Color( 0, 255, 0 ), false )
 
@@ -128,7 +136,9 @@ function util.TraceHull( tr )
 	end
 
 	if _DrawNextTrace then
+		local life = isnumber( _DrawNextTrace ) and _DrawNextTrace or 3
 		_DrawNextTrace = false
+		
 		debugoverlay.SweptBox( tr.start, tr.endpos, tr.mins, tr.maxs, Angle( 0 ), life, Color( 255, 0, 0 ) )
 		debugoverlay.SweptBox( tr.start, res.HitPos, tr.mins, tr.maxs, Angle( 0 ), life, Color( 0, 255, 0 ) )
 
@@ -171,7 +181,7 @@ end
 More drawing
 ---------------------------------------------------------------------------]]
 hook.Add( "Think", "gastest", function()
-	local poslol = {
+	local pos = {
 		/*{ Vector( 2816, 1440, 500 ), Vector( -2600, -500, -1000 ), Color( 255, 255, 255 ) },
 		{ Vector( 3250, -2500, 500 ), Vector( -2600, -500, -1000 ), Color( 255, 255, 255 ) },
 		{ Vector( 1000, 1440, 500 ), Vector( 1400, 1900, -1000 ), Color( 255, 255, 255 ) },
@@ -198,13 +208,13 @@ hook.Add( "Think", "gastest", function()
 		{ Vector( 1500, 6500, -250 ), Vector( 4350, 5390, 1200 ), Color( 255, 0, 0 ) },*/
 	}
 
-	--[[for k, v in pairs( poslol ) do
+	--[[for k, v in pairs( pos ) do
 		OrderVectors( v[1], v[2] )
 		print( string.format( "{ Vector( %i, %i, %i ), Vector( %i, %i, %i ) },", v[1].x, v[1].y, v[1].z, v[2].x, v[2].y, v[2].z ) )
 	end
 	print( "-----" )]]
 
-	for k, v in pairs( poslol ) do
+	for k, v in pairs( pos ) do
 		local pos1, pos2, col = v[1], v[2], v[3]
 
 		debugoverlay.Axis( pos1, Angle( 0 ), 10, 0.1, true )
@@ -227,6 +237,41 @@ hook.Add( "Think", "gastest", function()
 		debugoverlay.Line( Vector( pos2.x, pos2.y, pos1.z ), Vector( pos2.x, pos2.y, pos2.z ), 0.1, col, iz )
 	end
 end )
+
+--[[-------------------------------------------------------------------------
+Draw blockers
+---------------------------------------------------------------------------]]
+slc_dev_blockers = slc_dev_blockers or false
+
+concommand.Add( "draw_blockers", function()
+	slc_dev_blockers = !slc_dev_blockers
+end )
+
+hook.Add( "Think", "blockersdev", function()
+	if !slc_dev_blockers then return end
+
+	for i = 1, #BLOCKERS do
+		debugoverlay.Axis( BLOCKERS[i].pos, Angle( 0 ), 5, 0.1, true )
+		debugoverlay.BoxAngles(BLOCKERS[i].pos, BLOCKERS[i].bounds[1], BLOCKERS[i].bounds[2], Angle( 0 ), 0.1, Color( 255, 255, 255, 0 ), true )
+	end
+end )
+
+--[[-------------------------------------------------------------------------
+Camera
+---------------------------------------------------------------------------]]
+if CLIENT then
+	concommand.Add( "cctv", function( ply )
+		local pos = ply:EyePos()
+		local ang = ply:EyeAngles()
+
+		SetClipboardText(string.format( [[{
+	name = "Test",
+	pos = Vector( %i.00, %i.00, %i.00 ),
+	ang = Angle( %i.00, %i.00, %i.00 ),
+	%s = true,
+},]], pos.x, pos.y, pos.z, ang.p, ang.y, ang.r, ply:IsInZone( ZONE_SURFACE ) and "destroy_alpha" or "destroy_omega" ))
+	end )
+end
 
 --[[-------------------------------------------------------------------------
 (I) Show Speed
@@ -327,11 +372,12 @@ concommand.Add( "trace_contents", function( ply )
 
 	while i <= mask do
 		if bit.band( mask, i ) == i then
-			print( "\t"..CONTENTS[n] )
+			print( "\t"..( CONTENTS[n] or "???" ) )
 		end
 
 		n = n + 1
-		i = bit.lshift( i, 1 )
+		if n > 64 then print( "OVERFLOW" ) break end
+		i = i * 2
 	end
 end )
 
@@ -342,11 +388,12 @@ concommand.Add( "split_contents", function( ply, cmd, args )
 
 	while i <= mask do
 		if bit.band( mask, i ) == i then
-			print( "\t"..CONTENTS[n] )
+			print( "\t"..( CONTENTS[n] or "???" ) )
 		end
 
 		n = n + 1
-		i = bit.lshift( i, 1 )
+		if n > 64 then print( "OVERFLOW" ) break end
+		i = i * 2
 	end
 end )
 
@@ -436,5 +483,165 @@ function ENT:TestCollision( pos, delta, box, size, mask )
 
 	print()
 end*/
+
+--[[-------------------------------------------------------------------------
+SNAV
+---------------------------------------------------------------------------]]
+if CLIENT then
+	local rt = GetRenderTarget( "snav_map", 2048, 2048 )
+	local mat = CreateMaterial( "snav_map", "UnlitGeneric", {
+		["$basetexture"] = rt:GetName()
+	} )
+
+	local function draw_rt()
+		local h = ScrH()
+
+		surface.SetDrawColor( 255, 255, 255 )
+		surface.SetMaterial( mat )
+		surface.DrawTexturedRect( 0, 0, h, h )
+		surface.DrawOutlinedRect( 0, 0, h, h, 1 )
+	end
+
+	local z = 0
+	local near = 0
+	local far = 0
+	local enabled = false
+	local stencil = false
+
+	local origin
+	local size
+
+	local function update_rt( capture )
+		render.PushRenderTarget( rt )
+		cam.Start2D()
+
+		render.Clear( 0, 0, 0, 255, true, true )
+
+		if stencil then
+			render.SetStencilTestMask( 0xFF )
+			render.SetStencilWriteMask( 0xFF )
+			render.SetStencilPassOperation( STENCIL_KEEP )
+			render.SetStencilZFailOperation( STENCIL_KEEP )
+			render.SetStencilFailOperation( STENCIL_REPLACE )
+			render.SetStencilCompareFunction( STENCIL_NEVER )
+			render.SetStencilReferenceValue( 1 )
+			render.SetStencilEnable( true )
+		end
+
+		render.RenderView( {
+			origin = Vector( origin.x, origin.y, z ),
+			angles = Angle( 90, 0, 0 ),
+			aspect = 1,
+			x = 0, y = 0, w = 2048, h = 2048,
+			drawviewmodel = false,
+			znear = near,
+			zfar = far,
+			ortho = {
+				left = -size,
+				right = size,
+				top = -size,
+				bottom = size,
+			}
+		} )
+
+		if stencil then
+			render.SetStencilFailOperation( STENCIL_KEEP )
+			render.SetStencilCompareFunction( STENCIL_EQUAL )
+
+			render.SetColorMaterial()
+			render.DrawScreenQuad()
+
+			render.SetStencilEnable( false )
+		end
+
+		if capture then
+			file.Write( "snav_capture.png", render.Capture( {
+				x = 0, y = 0,
+				w = 2048, h = 2048,
+				format = "png",
+				alpha = false,
+			} ) )
+		end
+
+		cam.End2D()
+
+		render.PopRenderTarget()
+	end
+
+	concommand.Add( "slc_snav", function()
+		if enabled then
+			return SNAV_GEN:Remove()
+		end
+
+		enabled = true
+		hook.Add( "HUDPaint", "SNAV", draw_rt )
+		gui.EnableScreenClicker( true )
+
+		local panel = vgui.Create( "DFrame" )
+		SNAV_GEN = panel
+
+		panel.OnClose = function( this )
+			enabled = false
+			hook.Remove( "HUDPaint", "SNAV" )
+			gui.EnableScreenClicker( false )
+		end
+		
+		local slider_z = vgui.Create( "DNumSlider", panel )
+		slider_z:Dock( TOP )
+		slider_z:SetText( "Z" )
+		slider_z:SetMinMax( 0, 5000 )
+		slider_z.OnValueChanged = function( this, val )
+			z = val
+			update_rt()
+		end
+
+		local slider_near = vgui.Create( "DNumSlider", panel )
+		slider_near:Dock( TOP )
+		slider_near:SetText( "NEAR" )
+		slider_near:SetMinMax( 0, 5000 )
+		slider_near.OnValueChanged = function( this, val )
+			near = val
+			update_rt()
+		end
+
+		local slider_far = vgui.Create( "DNumSlider", panel )
+		slider_far:Dock( TOP )
+		slider_far:SetText( "FAR" )
+		slider_far:SetMinMax( 0, 5000 )
+		slider_far.OnValueChanged = function( this, val )
+			far = val
+			update_rt()
+		end
+
+		local stn = vgui.Create( "DButton", panel )
+		stn:Dock( TOP )
+		stn:SetText( "STENCIL" )
+		stn.DoClick = function( this )
+			stencil = !stencil
+			update_rt()
+		end
+
+		local btn = vgui.Create( "DButton", panel )
+		btn:Dock( TOP )
+		btn:SetText( "SAVE" )
+		btn.DoClick = function( this )
+			update_rt( true )
+		end
+		
+		panel:SetWide( 800 )
+		panel:InvalidateLayout( true )
+		panel:SizeToChildren( false, true )
+
+		panel:SetPos( 1100, ScrH() * 0.5 - panel:GetTall() )
+
+		local mins, maxs = game.GetWorld():GetModelBounds()
+		origin = ( mins + maxs ) / 2
+
+		local diff = origin - mins
+		size = math.max( diff.x, diff.y )
+
+		update_rt()
+	end )
+end
 
 MsgC( Color( 230, 20, 20 ), "# _developer.lua loaded!\n" )

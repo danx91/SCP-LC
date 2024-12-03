@@ -21,12 +21,12 @@ SWEP.DefenseRange = 250
 SWEP.DefenseWidth = 75
 SWEP.DefenseDamageMultiplier = 0.15
 
-SWEP.ChargeTime = 10
+SWEP.ChargeTime = 12
 SWEP.ChargeCooldown = 45
-SWEP.ChargeSpeed = 2
-SWEP.ChargeDamage = 20
-SWEP.ChargePinDamage = 50
-SWEP.ChargePinRange = 125
+SWEP.ChargeSpeed = 2.2
+SWEP.ChargeDamage = 18
+SWEP.ChargePinDamage = 60
+SWEP.ChargePinRange = 140
 
 function SWEP:SetupDataTables()
 	self:CallBaseClass( "SetupDataTables" )
@@ -159,26 +159,29 @@ function SWEP:Think()
 
 		local ent = charge_trace.Entity
 		if charge_trace.Hit and IsValid( ent ) and ent:IsPlayer() and self:CanTargetPlayer( ent ) then
+			self:SetCharge( 0 )
+			self:SetNextSpecialAttack( ct + self.ChargeCooldown * self:GetUpgradeMod( "charge_cd", 1 ) )
+
 			local range = self.ChargePinRange * self:GetUpgradeMod( "charge_range", 1 )
 			local pct = 1 - ( charge - ct ) / ( self.ChargeTime * self:GetUpgradeMod( "charge_time", 1 ) )
 
 			local wall_trace = util.TraceLine( {
 				start = charge_trace.HitPos,
-				endpos = charge_trace.HitPos + dir * ( 16 + range * pct ),
+				endpos = charge_trace.HitPos + dir * ( 24 + range * pct ),
 				mask = MASK_SOLID_BRUSHONLY,
 			} )
 
-			self:SetCharge( 0 )
-			self:SetNextSpecialAttack( ct + self.ChargeCooldown * self:GetUpgradeMod( "charge_cd", 1 ) )
+			local hit_wall = wall_trace.Hit and math.abs( wall_trace.HitNormal.z ) < 0.5
+			local has_upgrade = self:HasUpgrade( "charge3" )
 
-			if wall_trace.Hit and math.abs( wall_trace.HitNormal.z ) < 0.5 then
+			if hit_wall or has_upgrade and pct >= 0.8 then
 				owner:EmitSound( "SCP8602.ImpactHard" )
 				ent:TakeDamage( self.ChargePinDamage * self:GetUpgradeMod( "charge_pin_dmg", 1 ), owner, owner )
 
 				owner:SetVelocity( dir * 800 )
 				ent:SetVelocity( dir * 800 )
 
-				if self:HasUpgrade( "charge3" ) then
+				if has_upgrade and hit_wall then
 					ent:ApplyEffect( "fracture" )
 				end
 			else
@@ -404,7 +407,10 @@ SCPHook( "SCP8602", "SLCPostScaleDamage", function( target, dmg )
 	wep:SetOverheal( overheal )
 	dmg:SetDamage( dmg_num )
 
-	if dmg_num <= 0 then return true end
+	if dmg_num <= 0 then
+		ApplyDamageHUDEvents( target, dmg )
+		return true
+	end
 end )
 
 SCPHook( "SCP8602", "StartCommand", function( ply, cmd )
@@ -504,11 +510,11 @@ DefineUpgradeSystem( "scp8602", {
 			mod = { def_mult = 1.5 }, icon = icons.def },
 		
 		{ name = "charge1", cost = 1, req = {}, reqany = false, pos = { 4, 1 },
-			mod = { charge_cd = 0.8, charge_time = 1.4, charge_dmg = 1.25 }, icon = icons.charge },
+			mod = { charge_cd = 0.8, charge_time = 1.4, charge_dmg = 1.3 }, icon = icons.charge },
 		{ name = "charge2", cost = 2, req = { "charge1" }, reqany = false, pos = { 4, 2 },
-			mod = { charge_range = 1.4, charge_time = 2, charge_pin_dmg = 1.3 }, icon = icons.charge },
+			mod = { charge_range = 1.4, charge_time = 2, charge_pin_dmg = 1.4 }, icon = icons.charge },
 		{ name = "charge3", cost = 2, req = { "charge2" }, reqany = false, pos = { 4, 3 },
-			mod = { charge_speed = 1.25, charge_dmg = 1.5 }, icon = icons.charge },
+			mod = { charge_speed = 1.25 }, icon = icons.charge },
 
 		{ name = "outside_buff", cost = 1, req = {}, reqany = false, pos = { 4, 4 }, mod = {}, active = false },
 	},

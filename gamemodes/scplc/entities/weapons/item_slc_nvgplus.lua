@@ -15,7 +15,10 @@ SWEP.HasBattery 	= true
 SWEP.HolsterBatteryUsage = true
 SWEP.BatteryUsage 	= 0.1
 
-SWEP.scp914upgrade = "item_slc_thermal"
+SWEP.SCP914Upgrade = {
+	[UPGRADE_MODE.ONE_ONE] = "item_slc_thermal"
+}
+
 SWEP.Group = "nvg"
 SWEP.UseGroup = "vision"
 

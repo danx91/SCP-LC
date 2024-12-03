@@ -22,6 +22,7 @@ function PLAYER:Cleanup( norem )
 	self.SetupAsSpectator = nil //TODO move to properties
 	self.DeathScreen = nil //TODO move to properties
 	self.ClassData = nil
+	self.SCPData = nil
 
 	self:ResetProperties()
 	self:ClearSpeedStack()
@@ -72,6 +73,11 @@ function PLAYER:Cleanup( norem )
 
 	self:StopAmbient()
 
+	local holster = self:GetWeaponByBase( "item_slc_holster" )
+	if IsValid( holster ) then
+		self:SetActiveWeapon( holster )
+	end
+
 	if !norem then
 		self:SetVest( 0 )
 		self:RemoveAllItems()
@@ -98,16 +104,16 @@ function PLAYER:Despawn()
 	self:InvalidatePlayerForSpectate()
 end
 
-/*function PLAYER:PrepareForSpawn()
-	self:UnSpectate()
-	//self:InvalidatePlayerForSpectate()
-
-end*/
-
 function PLAYER:DropEQ()
 	self:DropVest( true )
 
 	local wep = self:GetActiveWeapon()
+
+	local holster = self:GetWeaponByBase( "item_slc_holster" )
+	if IsValid( holster ) and holster != wep then
+		self:SetActiveWeapon( holster )
+	end
+
 	if IsValid( wep ) then
 		self:PlayerDropWeapon( wep:GetClass(), true, true )
 	end
@@ -430,7 +436,7 @@ end
 
 function PLAYER:CreatePlayerRagdoll( disable_loot )
 	if self:GetSCPNoRagdoll() then return end
-	if self:GetNoDraw() then return end
+	//if self:GetNoDraw() then return end
 
 	local rag = ents.Create( "prop_ragdoll" )
 	rag:SetPos( self:GetPos() )
@@ -475,15 +481,17 @@ function PLAYER:CreatePlayerRagdoll( disable_loot )
 		end
 	end
 
+	local t = self:SCPTeam()
+
 	rag:SetNWString( "nick", string.sub( self:Nick(), 1, 32 ) )
-	rag:SetNWInt( "team", self:SCPTeam() )
+	rag:SetNWInt( "team", t )
 	rag:SetNWFloat( "time", CurTime() )
 
 	//rag:ResetSequence( "0_Death_64" )
 
 	rag.Data = {
 		time = CurTime(),
-		team = self:SCPTeam(),
+		team = t,
 		class = self:SCPClass(),
 		persona = { self:SCPPersona() },
 	}
@@ -497,7 +505,7 @@ function PLAYER:CreatePlayerRagdoll( disable_loot )
 		local loot = {}
 
 		for i, v in pairs( self:GetWeapons() ) do
-			if !IsValid( v ) or v.Droppable == false or v.SCP then continue end
+			if !IsValid( v ) or v.Droppable == false or v.DespawnDrop or v.SCP then continue end
 
 			local stored = self:StoreWeapon( v:GetClass(), true )
 
@@ -574,7 +582,10 @@ function PLAYER:CreatePlayerRagdoll( disable_loot )
 		end
 	end
 
-	self._RagEntity = rag
+	if t != TEAM_SCP then
+		self._RagEntity = rag
+	end
+	
 	return rag
 end
 
@@ -859,6 +870,7 @@ function PLAYER:PlayerDropWeapon( class, all, force )
 					new:SetAngles( self:GetAngles() )
 					new:Spawn()
 
+					new.PickupPriority = self
 					new.Dropped = CurTime()
 
 					local phys = new:GetPhysicsObject()
@@ -874,16 +886,14 @@ function PLAYER:PlayerDropWeapon( class, all, force )
 		end
 	end
 
-	//print( wep:Clip1(), self:GetAmmoCount( wep:GetPrimaryAmmoType() ) )
 	if wep.SLCPreDrop then
 		wep:SLCPreDrop( force, all )
 	end
 
 	self:DropWeapon( wep )
+
+	wep.PickupPriority = self
 	wep.Dropped = CurTime()
-	/*if wep.OnDrop then
-		wep:OnDrop()
-	end*/
 
 	self:UpdateEQ()
 end
@@ -898,6 +908,10 @@ function PLAYER:StoreWeapon( class, norem )
 			clip1 = wep:Clip1(),
 			clip2 = wep:Clip2(),
 		}
+
+		if wep.GetCustomClip then
+			data.clip_custom = wep:GetCustomClip()
+		end
 
 		if wep.StoreWeapon then
 			wep:StoreWeapon( data, self )
@@ -934,6 +948,10 @@ function PLAYER:RestoreWeapon( data, wep )
 	if IsValid( wep ) then
 		wep:SetClip1( data.clip1 )
 		wep:SetClip2( data.clip2 )
+
+		if data.clip_custom and wep.SetCustomClip then
+			wep:SetCustomClip( data.clip_custom )
+		end
 
 		if wep.RestoreWeapon then
 			wep:RestoreWeapon( data, self )
@@ -1162,15 +1180,19 @@ end
 --[[-------------------------------------------------------------------------
 AFK
 ---------------------------------------------------------------------------]]
-function PLAYER:MakeAFK()
-	if !self:IsAFK() then
-		self.SLCAFKTimer = RealTime() + 10
-		self:Set_SCPAFK( true )
-		PlayerMessage( "afk", self )
+function PLAYER:MakeAFK( timeout )
+	if self:IsAFK() then return end
+
+	local rt = RealTime()
+	self.SLCAFKTimer = rt + 10
+	self:Set_SCPAFK( true )
+	PlayerMessage( "afk", self )
+	
+	if timeout then
+		self.SoftAFK = rt + timeout
 	end
 end
 
-//local nafk = 0
 Timer( "SLCAFKCheck", 10, 0, function( self, n )
 	local rt = RealTime()
 	local afk_time = CVAR.slc_afk_time:GetInt() or 60
@@ -1216,6 +1238,22 @@ Timer( "SLCAFKCheck", 10, 0, function( self, n )
 			end
 		end
 	end
+end )
+
+hook.Add( "SLCRound", "SLCAFK", function()
+	local rt = RealTime()
+
+	for i, v in ipairs( player.GetAll() ) do
+		if v:IsAFK() then continue end
+
+		v.SLCAFKTimer = rt
+		v.AFKWarned = false
+	end
+end )
+
+hook.Add( "PlayerSpawn", "SLCAFK", function( ply )
+	ply.SLCAFKTimer = RealTime()
+	ply.AFKWarned = false
 end )
 
 --[[-------------------------------------------------------------------------
@@ -1604,8 +1642,10 @@ function PLAYER:IsAboutToSpawn()
 	return !!self:GetProperty( "spawning" ) or !!self:GetProperty( "spawning_scp" )
 end
 
-function PLAYER:IsValidSpectator()
-	return !self:Alive() and self:IsActive() and !self:IsAFK() and self:SCPTeam() == TEAM_SPEC and !self:IsAboutToSpawn() and !self.SetupAsSpectator and !self.DeathScreen
+function PLAYER:IsValidSpectator( ignore_death_screen, softafk )
+	return !self:Alive() and self:IsActive() and self:SCPTeam() == TEAM_SPEC and!self:IsAboutToSpawn()
+		and ( !self:IsAFK() or softafk and self.SoftAFK and self.SoftAFK >= RealTime() )
+		and ( ignore_death_screen or !self.SetupAsSpectator and !self.DeathScreen )
 end
 
 function PLAYER:SCPCanInteract()

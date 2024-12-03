@@ -189,15 +189,16 @@ function SWEP:Think()
 		for i, v in ipairs( player.GetAll() ) do
 			if istable( self.Targets[v] ) or !self:CanTargetPlayer( v ) then continue end
 
-			if owner:TestVisibility( v, nil, true, 36 ) then
+			if IsBlockingEscape( owner, v ) then
+				self:AddTarget( v )
+			elseif owner:TestVisibility( v, nil, true, 36 ) then
 				self.Targets[v] = ( self.Targets[v] or 0 ) + 1
+				if self.Targets[v] < 3 then continue end
+
+				self:AddTarget( v )
 			else
 				self.Targets[v] = nil
 				continue
-			end
-
-			if self.Targets[v] >= 3 then
-				self:AddTarget( v )
 			end
 		end
 	end
@@ -775,9 +776,9 @@ DefineUpgradeSystem( "scp096", {
 			mod = { rage_dmg = 100, rage_time = 10 }, icon = icons.passive, active = false },
 
 		{ name = "heal1", cost = 1, req = { "rage" }, block = { "multi1" }, reqany = false, pos = { 1, 2 },
-			mod = { heal = 130, heal_ticks = 3, prot = 0.7 }, icon = icons.heal, active = false },
+			mod = { heal = 110, heal_ticks = 3, prot = 0.7 }, icon = icons.heal, active = false },
 		{ name = "heal2", cost = 2, req = { "heal1" }, reqany = false, pos = { 1, 3 },
-			mod = { heal = 120, heal_ticks = 5, prot = 0.35 }, icon = icons.heal, active = false },
+			mod = { heal = 100, heal_ticks = 5, prot = 0.35 }, icon = icons.heal, active = false },
 
 		{ name = "multi1", cost = 2, req = { "rage" }, block = { "heal1" }, reqany = false, pos = { 2, 2 },
 			mod = { multi = 2, multi_time = 5, prot = 1.4 }, icon = icons.passive, active = false },

@@ -75,13 +75,16 @@ end
 
 function FilterGroup:AddClass( class )
 	self.classes[class] = true
-
 	return self
 end
 
 function FilterGroup:AddFunction( func )
 	table.insert( self.functions, func )
+	return self
+end
 
+function FilterGroup:AddCustomCheck( func )
+	table.insert( self.custom, func )
 	return self
 end
 
@@ -91,6 +94,7 @@ function AddFilterGroup( name, base )
 		teams = {},
 		classes = {},
 		functions = {},
+		custom = {},
 	}, { __index = FilterGroup } )
 
 	SLC_FILTER_GROUPS[name] = tab
@@ -108,6 +112,7 @@ function GetFilterGroupData( name )
 			teams = filter.teams,
 			classes = filter.classes,
 			players = {},
+			custom = filter.custom,
 		}
 
 		for k, func in pairs( filter.functions ) do

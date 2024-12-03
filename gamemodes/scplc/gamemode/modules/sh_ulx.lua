@@ -93,6 +93,15 @@ function InitializeSCPULX()
 		if !class or !spawn then return end
 
 		local pos = table.Random( spawn )
+
+		if class.spawn then
+			if istable( class.spawn ) then
+				pos = class.spawn[math.random( #class.spawn )]
+			else
+				pos = class.spawn
+			end
+		end
+
 		plyt:SetupPlayer( class, pos, true )
 
 		if silent then
@@ -359,7 +368,7 @@ function InitializeSCPULX()
 			return
 		end
 
-		if target:Alive() then
+		if target:Alive() or !target:IsValidSpectator() then
 			ULib.tsayError( ply, "Player "..target:Nick().." is already alive! Force spawn failed", true )
 			return
 		end

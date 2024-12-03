@@ -16,8 +16,13 @@ end
 
 SWEP.ChipName = ""
 
-function SWEP:HandleUpgrade( mode, num_mode, exit, ply )
+function SWEP:HandleUpgrade( mode, exit, ply )
 	local new, override = SelectUpgrade( self.ChipName, mode )
+
+	if self.PickupPriority then
+		self.Dropped = CurTime()
+		self.PickupPriorityTime = CurTime() + 10
+	end
 
 	hook.Run( "SLCChipUpgraded", self.ChipName, new, ply, self.PickupPriority )
 
@@ -38,9 +43,6 @@ function SWEP:HandleUpgrade( mode, num_mode, exit, ply )
 		end
 
 		self:SetPos( exit )
-		
-		self.Dropped = nil
-		self.PriorityTime = CurTime() + 10
 	end
 end
 
@@ -60,16 +62,8 @@ function SWEP:Initialize()
 	end
 end
 
-function SWEP:HolsterThink()
-	if SERVER and !self.PickupPriority then
-		--print( "setting pickup priority to", self.Owner )
-		self.PickupPriority = self:GetOwner()
-	end
-end
-
 function SWEP:Equip()
 	self:CallBaseClass( "Equip" )
-	self.PickupPriority = nil
 
 	if CLIENT then
 		self:UpdateDescription()

@@ -46,6 +46,7 @@ function SWEP:Think()
 				turret:SetAngles( self.LastAng )
 				turret:SetTurretOwner( owner )
 				turret:SetOwnerSignature( owner:TimeSignature() )
+				turret.OwnerTeam = owner:SCPTeam()
 			end
 
 			owner:ForceHolster()

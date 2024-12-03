@@ -43,6 +43,7 @@ function SWEP:PrimaryAttack()
 
 	self:GetOwner():LagCompensation( true )
 	local trace = self:GetOwner():GetEyeTrace()
+	self:GetOwner():LagCompensation( false )
 
 	local fxdata = EffectData()
 	fxdata:SetEntity( self )
@@ -91,7 +92,6 @@ function SWEP:PrimaryAttack()
 
 
 	self:SetNextPrimaryFire( CurTime() + self.Primary.Delay )
-	self:GetOwner():LagCompensation( false )
 end
 
 function SWEP:MakeImpactEffect( fxdata )

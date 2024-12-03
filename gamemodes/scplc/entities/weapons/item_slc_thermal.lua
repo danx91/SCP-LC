@@ -13,9 +13,13 @@ SWEP.Toggleable 			= true
 SWEP.EnableHolsterThink		= true
 SWEP.HasBattery 			= true
 SWEP.HolsterBatteryUsage	= true
-SWEP.BatteryUsage 			= 0.45
+SWEP.BatteryUsage 			= 0.4
 
 SWEP.DrawCrosshair = false
+
+SWEP.SCP914Upgrade = {
+	[UPGRADE_MODE.ONE_ONE] = "item_slc_nvgplus"
+}
 
 SWEP.Group = "nvg"
 SWEP.UseGroup = "vision"
@@ -32,6 +36,8 @@ function SWEP:OnSelect()
 end
 
 if CLIENT then
+	SWEP.NextFrame = 0
+
 	SLC_THERMAL_FILTER = {}
 	SLC_THERMAL_CLASSES = {}
 
@@ -127,7 +133,7 @@ if CLIENT then
 		end
 
 		render.SetStencilEnable( false )
-		
+
 		render.UpdateScreenEffectTexture()
 
 		render.PushRenderTarget( thermal_rt )
@@ -153,8 +159,13 @@ if CLIENT then
 		if !IsValid( wep ) or !wep:GetEnabled() then return end
 
 		local ct = CurTime()
-		if !wep.NextFrame or wep.NextFrame <= ct then
-			wep.NextFrame = ct + 1 / wep.FrameRate
+		if wep.NextFrame <= ct then
+			wep.NextFrame = wep.NextFrame + 1 / wep.FrameRate
+
+			if wep.NextFrame <= ct then
+				wep.NextFrame = ct + 1 / wep.FrameRate
+			end
+
 			update_thermal()
 		end
 	end )

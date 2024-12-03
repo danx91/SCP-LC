@@ -7,16 +7,16 @@ SWEP.ScoreOnDamage	= true
 
 SWEP.PassiveCooldown = 10
 SWEP.PassiveRadius = 40 ^ 2
-SWEP.PassiveDamage = 1.5
+SWEP.PassiveDamage = 2
 
 SWEP.DrainCooldown = 45
 SWEP.DrainDuration = 10
-SWEP.DrainRadius = 210
-SWEP.DrainRate = 0.75
+SWEP.DrainRadius = 300
+SWEP.DrainRate = 0.66
 
 SWEP.CloneCooldown = 180
 
-SWEP.HuntCooldown = 125
+SWEP.HuntCooldown = 130
 SWEP.HuntRandomRadius = 750
 
 function SWEP:SetupDataTables()
@@ -102,12 +102,16 @@ function SWEP:Think()
 
 			any = true
 
-			local stamina = v:GetStamina()
-			if stamina <= 0 then continue end
-
-			v.StaminaRegen = ct + 1.5
-			v:SetStamina( stamina - 3 )
+			local stamina = v:GetStamina() - 3
 			drained = drained + 3
+
+			if stamina <= 0 then
+				drained = drained + stamina
+				stamina = 0
+			end
+
+			v:SetStamina( stamina )
+			v.StaminaRegen = ct + 1.5
 		end
 
 		if !any then
@@ -339,7 +343,7 @@ DefineUpgradeSystem( "scp023", {
 	grid_y = 4,
 	upgrades = {
 		{ name = "passive", cost = 1, req = {}, reqany = false, pos = { 1.5, 1 },
-			mod = { burn_power = 1.2 }, icon = icons.passive, active = false },
+			mod = { burn_power = 1.5 }, icon = icons.passive, active = false },
 
 		{ name = "invis1", cost = 1, req = { "passive" }, block = { "prot1" }, reqany = false, pos = { 1, 2 },
 			mod = { invis_range = 800 }, icon = icons.invis, active = true },
@@ -352,13 +356,13 @@ DefineUpgradeSystem( "scp023", {
 			mod = { prot = 0.6 }, icon = icons.prot, active = false },
 
 		{ name = "drain1", cost = 1, req = {}, reqany = false, pos = { 3, 1 },
-			mod = { drain_dur = 1.2, drain_dist = 1.1 }, icon = icons.drain, active = false },
+			mod = { drain_dur = 1.25, drain_dist = 1.15 }, icon = icons.drain, active = false },
 		{ name = "drain2", cost = 2, req = { "drain1" }, reqany = false, pos = { 3, 2 },
-			mod = { drain_rate = 0.85, drain_heal = 0.3 }, icon = icons.drain, active = false },
+			mod = { drain_rate = 0.8, drain_heal = 0.8 }, icon = icons.drain, active = false },
 		{ name = "drain3", cost = 2, req = { "drain2" }, reqany = false, pos = { 3, 3 },
-			mod = { drain_dur = 1.5, drain_dist = 1.3 }, icon = icons.drain, active = false },
+			mod = { drain_dur = 1.6, drain_dist = 1.4 }, icon = icons.drain, active = false },
 		{ name = "drain4", cost = 2, req = { "drain3" }, reqany = false, pos = { 3, 4 },
-			mod = { drain_rate = 0.6, drain_heal = 0.75 }, icon = icons.drain, active = false },
+			mod = { drain_rate = 0.5, drain_heal = 1.75 }, icon = icons.drain, active = false },
 
 		{ name = "hunt1", cost = 2, req = {}, reqany = false, pos = { 4, 1 },
 			mod = { hunt_cd = 0.9 }, icon = icons.hunt, active = false },
@@ -368,16 +372,16 @@ DefineUpgradeSystem( "scp023", {
 		{ name = "outside_buff", cost = 1, req = {}, reqany = false, pos = { 4, 4 }, mod = {}, active = false },
 	},
 	rewards = { --16 + 1 points -> ~60% = 11 (-1 base) = 10 points
+		{ 50, 1 },
 		{ 100, 1 },
-		{ 200, 1 },
-		{ 300, 1 },
-		{ 400, 1 },
-		{ 500, 1 },
-		{ 650, 1 },
-		{ 800, 1 },
+		{ 175, 1 },
+		{ 250, 1 },
+		{ 350, 1 },
+		{ 450, 1 },
+		{ 600, 1 },
+		{ 750, 1 },
 		{ 950, 1 },
-		{ 1100, 1 },
-		{ 1300, 1 },
+		{ 1200, 1 },
 	}
 }, SWEP )
 

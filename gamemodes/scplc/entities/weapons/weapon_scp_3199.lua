@@ -7,25 +7,24 @@ SWEP.ShouldDrawViewModel = true
 SWEP.HoldType 			= "melee"
 
 SWEP.DisableDamageEvent = true
-SWEP.ScoreOnDamage 	= true
 
-SWEP.AttackCooldown = 2
-SWEP.AttackDamage = 10
+SWEP.AttackCooldown = 1.8
+SWEP.AttackDamage = 12
 SWEP.AttackDamageMultiplier = 0.06
 
-SWEP.FrenzyDuration = 20
+SWEP.FrenzyDuration = 22
 SWEP.FrenzySpeed = 1.05
 SWEP.FrenzySpeedMultiplier = 0.001
 SWEP.FrenzyPenalty = 0.2
 SWEP.FrenzyPenaltyStacks = 0.25
-SWEP.FrenzyDetect = 1600
+SWEP.FrenzyDetect = 1700
 
 SWEP.SpecialCooldown = 30
-SWEP.SpecialDamage = 15
+SWEP.SpecialDamage = 20
 SWEP.SpecialBaseSlow = 0.2
 SWEP.SpecialSlowCap = 0.1
 SWEP.SpecialSlow = 0.015
-SWEP.SpecialSlowDuration = 5
+SWEP.SpecialSlowDuration = 6
 SWEP.SpecialThreshold = 5
 SWEP.SpecialBleed = 12
 
@@ -251,6 +250,7 @@ function SWEP:PrimaryAttack()
 				self:SetFrenzyStacks( frenzy_stacks )
 				self:SetTotalStacks( total_stacks + 1 )
 				self:SetFrenzy( CurTime() + self.FrenzyDuration * self:GetUpgradeMod( "frenzy_duration", 1 ) )
+				self:AddScore( 1 )
 			elseif frenzy > 0 and has_deep_wounds then
 				hit_wounded = true
 			end
@@ -604,16 +604,16 @@ DefineUpgradeSystem( "scp3199", {
 		{ name = "outside_buff", cost = 1, req = {}, reqany = false, pos = { 4, 4 }, mod = {}, active = false },
 	},
 	rewards = { --18 + 1 points -> 60% = 11 (-1 base) = 10 points
-		{ 75, 1 },
-		{ 150, 1 },
-		{ 250, 1 },
-		{ 350, 1 },
-		{ 450, 1 },
-		{ 600, 1 },
-		{ 750, 1 },
-		{ 900, 1 },
-		{ 1050, 1 },
-		{ 1200, 1 },
+		{ 2, 1 },
+		{ 4, 1 },
+		{ 6, 1 },
+		{ 9, 1 },
+		{ 12, 1 },
+		{ 15, 1 },
+		{ 18, 1 },
+		{ 22, 1 },
+		{ 26, 1 },
+		{ 31, 1 },
 	}
 }, SWEP )
 

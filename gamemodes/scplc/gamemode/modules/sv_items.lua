@@ -130,6 +130,7 @@ function ItemSpawnRule( name, data, auto )
 		if tab and tab.spawns then
 			SLC_ITEMS_DATA[name] = {
 				items = { tab },
+				condition = data.condition,
 			}
 
 			if auto then
@@ -139,7 +140,7 @@ function ItemSpawnRule( name, data, auto )
 
 		if DEVELOPER_MODE then
 			for i, v in ipairs( data.spawns ) do
-				table.insert( dev_item_draw_em, { v, name } )
+				table.insert( dev_item_draw_em, { istable( v ) and v[1] or v, name } )
 			end
 		end
 	elseif data.item_set then
@@ -162,6 +163,7 @@ function ItemSpawnRule( name, data, auto )
 			weight_data = calc_weight( tmp ),
 			post_tab = data.post_tab,
 			post_func = data.post_func,
+			condition = data.condition,
 		}
 
 		if auto then
@@ -216,103 +218,127 @@ end
 
 function SpawnUsingRule( name )
 	local rule = SLC_ITEMS_DATA[name]
-	if rule then
-		local tab = table.Copy( select_item( rule ) )
-		if tab then
-			local amount = tab.amount or tab.rand_amount and math.random( tab.rand_amount[1], tab.rand_amount[2] ) or #tab.spawns
-			local counter = {}
+	if !rule then return end
 
-			for i = 1, amount do
-				local slen = #tab.spawns
+	if rule.condition and rule.condition() == false then return end
 
-				local post_tab = tab.post_tab or rule.post_tab
-				local post_func = tab.post_func or rule.post_func
+	local tab = table.Copy( select_item( rule ) )
+	if !tab then return end
 
-				if slen == 0 then
-					break
+	local amount = tab.amount or tab.rand_amount and math.random( tab.rand_amount[1], tab.rand_amount[2] ) or #tab.spawns
+	local counter = {}
+
+	for i = 1, amount do
+		local slen = #tab.spawns
+
+		local post_tab = tab.post_tab or rule.post_tab
+		local post_func = tab.post_func or rule.post_func
+
+		if slen == 0 then
+			break
+		end
+
+		local ent_class
+
+		if tab.item then
+			ent_class = tab.item
+		else
+			local item, num = select_item( tab )
+
+			if !item then
+				break
+			end
+
+			post_tab = item.post_tab or post_tab
+			post_func = item.post_func or post_func
+
+			local class = item.class
+			ent_class = class
+
+			if item.max then
+				counter[class] = counter[class] and counter[class] + 1 or 1
+
+				if counter[class] >= item.max then
+					table.remove( tab.items, num )
+					tab.weight_data = tab.weight_data - item.weight
+				end
+			end
+		end
+
+		local args = string.Explode( ":", ent_class )
+		local key = table.remove( args, 1 )
+		local fn_name = table.remove( args, 1 )
+
+		if key == "loadout" and fn_name then
+			ent_class = GetLoadoutWeapon( fn_name )
+		end
+
+		if ent_class == "_none" then
+			if post_func then
+				post_func( nil, i )
+			end
+		elseif key == "func" and fn_name then
+			if !SLC_ITEMS_FUNCTION[fn_name] then
+				print( "Unknown custom spawn function!", fn_name )
+				continue
+			end
+
+			local data = {}
+			local ent = SLC_ITEMS_FUNCTION[fn_name]( args, data )
+			if IsValid( ent ) then
+				local pos = table.remove( tab.spawns, math.random( slen ) )
+				local ang
+
+				if istable( pos ) then
+					pos = pos[1]
+					ang = pos[2]
 				end
 
-				local ent_class
-
-				if tab.item then
-					ent_class = tab.item
-				else
-					local item, num = select_item( tab )
-
-					if !item then
-						break
-					end
-
-					post_tab = item.post_tab or post_tab
-					post_func = item.post_func or post_func
-
-					local class = item.class
-					ent_class = class
-
-					if item.max then
-						counter[class] = counter[class] and counter[class] + 1 or 1
-
-						if counter[class] >= item.max then
-							table.remove( tab.items, num )
-							tab.weight_data = tab.weight_data - item.weight
-						end
-					end
+				if data.offset then
+					pos = pos + data.offset
 				end
 
-				local args = string.Explode( ":", ent_class )
-				local key = table.remove( args, 1 )
-				local fn_name = table.remove( args, 1 )
+				ent:SetPos( pos )
 
-				if key == "loadout" and fn_name then
-					ent_class = GetLoadoutWeapon( fn_name )
+				if ang then
+					ent:SetAngles( ang )
 				end
 
-				if ent_class == "_none" then
-					if post_func then
-						post_func( nil, i )
-					end
-				elseif key == "func" and fn_name then
-					if !SLC_ITEMS_FUNCTION[fn_name] then
-						print( "Unknown custom spawn function!", fn_name )
-						continue
-					end
+				if post_tab then
+					apply_table( ent, post_tab )
+				end
 
-					local data = {}
-					local ent = SLC_ITEMS_FUNCTION[fn_name]( args, data )
-					if IsValid( ent ) then
-						local pos = table.remove( tab.spawns, math.random( slen ) )
+				ent:Spawn()
 
-						if data.offset then
-							pos = pos + data.offset
-						end
+				if post_func then
+					post_func( ent, i )
+				end
+			end
+		elseif ent_class then
+			local ent = ents.Create( ent_class )
+			if IsValid( ent ) then
+				local pos = table.remove( tab.spawns, math.random( slen ) )
+				local ang
 
-						ent:SetPos( pos )
+				if istable( pos ) then
+					ang = pos[2]
+					pos = pos[1]
+				end
 
-						if post_tab then
-							apply_table( ent, post_tab )
-						end
+				ent:SetPos( pos )
 
-						ent:Spawn()
+				if ang then
+					ent:SetAngles( ang )
+				end
 
-						if post_func then
-							post_func( ent, i )
-						end
-					end
-				elseif ent_class then
-					local ent = ents.Create( ent_class )
-					if IsValid( ent ) then
-						ent:SetPos( table.remove( tab.spawns, math.random( slen ) ) )
+				if post_tab then
+					apply_table( ent, post_tab )
+				end
 
-						if post_tab then
-							apply_table( ent, post_tab )
-						end
+				ent:Spawn()
 
-						ent:Spawn()
-
-						if post_func then
-							post_func( ent, i )
-						end
-					end
+				if post_func then
+					post_func( ent, i )
 				end
 			end
 		end
@@ -407,7 +433,7 @@ function GM:SpawnItems()
 		SpawnItemGeneric( { "cw_shorty", "cw_m3super90", "cw_xm1014_official", "cw_saiga12k_official" }, SPAWN_PUMP, -1, post )
 		SpawnItemGeneric( "cw_svd_official", SPAWN_SNIPER, -1, post )
 
-		SpawnItemGeneric( "weapon_crowbar", SPAWN_MELEE, 3, post )
+		SpawnItemGeneric( "weapon_slc_crowbar", SPAWN_MELEE, 3, post )
 
 		SpawnItemGeneric( "cw_ammo_kit_regular", SPAWN_AMMO_CW, -1, { AmmoCapacity = 20 } )
 
@@ -524,10 +550,10 @@ function GM:SpawnItems()
 		local cctv = ents.Create( "slc_cctv" )
 
 		if IsValid( cctv ) then
-			cctv:Spawn()
 			cctv:SetPos( v.pos )
+			cctv:SetCameraID( i )
 
-			cctv:SetCam( i )
+			cctv:Spawn()
 
 			if v.destroy_alpha or v.destroy_omega then
 				DestroyOnWarhead( cctv, v.destroy_alpha, v.destroy_omega )
@@ -552,7 +578,6 @@ end
 ItemSpawnFunction( "omnitool", function( args )
 	local omnitool = ents.Create( "item_slc_omnitool" )
 	if IsValid( omnitool ) then
-
 		local chip
 		local rng = math.random()
 

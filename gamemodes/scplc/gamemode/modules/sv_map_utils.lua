@@ -101,9 +101,9 @@ Door destroyer
 SLC_DESTROYED_DOORS_LOOKUP = SLC_DESTROYED_DOORS_LOOKUP or {}
 SLC_DESTROYED_DOORS = SLC_DESTROYED_DOORS or {}
 
-function DestroyDoor( ent, breach_ang )
+function DestroyDoor( ent, breach_ang, ignore_moving )
 	if SLC_DESTROYED_DOORS_LOOKUP[ent:EntIndex()] then return true end
-	if !CanDestroyDoor( ent ) then return false end
+	if !CanDestroyDoor( ent, ignore_moving ) then return false end
 
 	local ent_list = GetDoorEnts( ent )
 	if #ent_list == 0 then return false end

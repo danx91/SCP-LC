@@ -38,6 +38,18 @@ function SetupPlayers()
 		end
 	end
 
+	if ROUND.LastRoundSCPs then
+		for i, v in rpairs( scp_list ) do
+			if ROUND.LastRoundSCPs[v] then
+				table.remove( scp_list, i )
+			end
+		end
+
+		if #scp_list < scp_num then
+			scp_list = table.Copy( SCPS )
+		end
+	end
+
 	for k, v in ipairs( plys ) do
 		local p = v:GetSCPPenalty()
 		if p <= 0 then
@@ -108,7 +120,7 @@ function SetupPlayers()
 	//Build list of players
 	local groups = GetClassGroups()
 	local available_classes = {}
-	
+
 	for _, ply in ipairs( plys ) do
 		local p_tab = {}
 		available_classes[ply] = p_tab
@@ -302,6 +314,17 @@ function SetupPlayers()
 	end )
 end
 
+hook.Add( "SLCRound", "SLCSCPLastRound", function()
+	local tab = {}
+	ROUND.LastRoundSCPs = tab
+
+	for i, v in ipairs( player.GetAll() ) do
+		if v:SCPTeam() == TEAM_SCP then
+			tab[v:SCPClass()] = true
+		end
+	end
+end )
+
 --[[-------------------------------------------------------------------------
 Support Queue
 ---------------------------------------------------------------------------]]
@@ -414,12 +437,17 @@ function QueueInsert( ply, front )
 	queue_lookup[ply] = true
 end
 
-function QueueInsertSuicide( ply )
+function QueueInsertSuicide( ply, front )
 	if !ply:IsValidSpectator() or queue_lookup[ply] then return end
 
 	queue_lookup[ply] = true
 	suicide_queue_sid[ply:SteamID64()] = true
-	table.insert( suicide_queue, ply )
+
+	if front then
+		table.insert( suicide_queue, 1, ply )
+	else
+		table.insert( suicide_queue, ply )
+	end
 
 	ply:SetQueuePosition( -1 )
 end
@@ -429,7 +457,7 @@ function QueueRemove( low )
 
 	repeat
 		if #queue == 0 then
-			if !low then return NULL end
+			if !low then return NULL, false end
 
 			ply = nil
 			break
@@ -439,10 +467,10 @@ function QueueRemove( low )
 		queue_lookup[ply] = nil
 	until IsValid( ply ) and ply:IsValidSpectator()
 
-	if ply then return ply end
+	if ply then return ply, false end
 
 	repeat
-		if #suicide_queue == 0 then return NULL end
+		if #suicide_queue == 0 then return NULL, true end
 
 		ply = table.remove( suicide_queue, 1 )
 		queue_lookup[ply] = nil
@@ -452,7 +480,7 @@ function QueueRemove( low )
 		end
 	until IsValid( ply ) and ply:IsValidSpectator()
 
-	return ply
+	return ply, true
 end
 
 --[[-------------------------------------------------------------------------
@@ -809,7 +837,9 @@ hook.Add( "Tick", "SLCEscapeCheck", function()
 
 		ESCAPE_STATUS = 0
 		ESCAPE_TIMER = 0
-
+		LAST_ESCAPE = {}
+		LAST_ESCAPE_LOOKUP = {}
+		
 		TransmitEscapeInfo( tab )
 
 		if GetRoundStat( "alpha_warhead" ) then
@@ -925,6 +955,29 @@ hook.Add( "Tick", "SLCEscapeCheck", function()
 	end
 end )
 
+function GetEscapeBlockingPlayers( ply )
+	local our_team = ply:SCPTeam()
+	local blocking = {}
+
+	for i, v in ipairs( LAST_ESCAPE ) do
+		if v == ply then continue end
+
+		local t = v:SCPTeam()
+		if !SCPTeams.IsEnemy( our_team, t ) and !SCPTeams.IsEnemy( t, our_team ) then continue end
+
+		table.insert( blocking, v )
+	end
+
+	return blocking
+end
+
+function IsBlockingEscape( ply1, ply2 )
+	if !LAST_ESCAPE_LOOKUP[ply1] or !LAST_ESCAPE_LOOKUP[ply2] then return false end
+
+	local ply1_team = ply1:SCPTeam()
+	local ply2_team = ply2:SCPTeam()
+	return SCPTeams.IsEnemy( ply1_team, ply2_team ) or SCPTeams.IsEnemy( ply2_team, ply1_team )
+end
 --[[-------------------------------------------------------------------------
 Round aftermatch
 ---------------------------------------------------------------------------]]

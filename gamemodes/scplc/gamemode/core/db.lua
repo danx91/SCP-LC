@@ -24,6 +24,15 @@ function RemoveSCPData( steamid, name )
 end
 
 --[[-------------------------------------------------------------------------
+Helper functions
+---------------------------------------------------------------------------]]
+function SCPDataNumericAdd( steamid, name, num )
+	return GetSCPData( steamid, name ):Then( function( res )
+		return SetSCPData( steamid, name, ( tonumber( res or 0 ) or 0 ) + num )
+	end )
+end
+
+--[[-------------------------------------------------------------------------
 Player Bindings
 ---------------------------------------------------------------------------]]
 local PLAYER = FindMetaTable( "Player" )
@@ -311,6 +320,8 @@ hook.Add( "SLCFullyLoaded", "SetupDatabase", function()
 			PRIMARY KEY(sid, datakey)
 		);
 	]] )
+
+	hook.Run( "SLCDatabaseInit", SLCDatabase )
 end )
 
 --[[-------------------------------------------------------------------------

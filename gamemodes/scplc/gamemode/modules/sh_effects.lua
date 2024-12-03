@@ -467,6 +467,10 @@ EFFECTS.RegisterEffect( "heavy_bleeding", {
 		return team != TEAM_SPEC and team != TEAM_SCP
 	end,
 	begin = function( self, ply, tier, args, refresh )
+		if !args[2] then
+			args[2] = 1
+		end
+
 		if refresh then
 			self.args[2] = 1
 		end
@@ -828,14 +832,14 @@ EFFECTS.RegisterEffect( "fracture", {
 
 local fcv = 0
 hook.Add( "SLCCalcView", "SLCFracture", function( ply, view )
-	if ply:OnGround() and ply.HasEffect and ply:HasEffect( "fracture" ) then
-		if !view.vm and ply:GetVelocity():LengthSqr() > 900 then
-			fcv = fcv + FrameTime() * 3
-		end
-
-		view.origin.z = view.origin.z + math.sin( fcv * 2 ) * 3
-		view.origin = view.origin + view.angles:Right() * math.sin( fcv ) * 6
+	if !ply:OnGround() or !ply.HasEffect or !ply:HasEffect( "fracture" ) then return end
+	
+	if !view.vm and ply:GetVelocity():LengthSqr() > 900 then
+		fcv = fcv + FrameTime() * 3
 	end
+
+	view.origin.z = view.origin.z + math.sin( fcv * 2 ) * 3
+	view.origin = view.origin + view.angles:Right() * math.sin( fcv ) * 6
 end )
 
 --[[-------------------------------------------------------------------------
@@ -909,16 +913,16 @@ end )
 
 local dcv = 0
 hook.Add( "SLCCalcView", "SLCDecay", function( ply, view )
-	if ply:OnGround() and ply.HasEffect and ply:HasEffect( "decay" ) then
-		if !view.vm then
-			local len = ply:GetVelocity():Length()
-			if len > 30 then
-				dcv = dcv + FrameTime() * 0.06 * len
-			end
-		end
+	if !ply:OnGround() or !ply.HasEffect or !ply:HasEffect( "decay" ) then return end
 
-		view.angles.roll = math.sin( dcv * 0.6 ) * 3
+	if !view.vm then
+		local len = ply:GetVelocity():Length()
+		if len > 30 then
+			dcv = dcv + FrameTime() * 0.06 * len
+		end
 	end
+
+	view.angles.roll = math.sin( dcv * 0.6 ) * 3
 end )
 
 AddSounds( "SLCEffects.DecayStep", "#scp_lc/effects/decay/step%i.ogg", 80, 1, { 90, 110 }, CHAN_BODY, 1, 3 )
@@ -1035,7 +1039,7 @@ EFFECTS.RegisterEffect( "scp009", {
 	begin = function( self, ply, tier, args, refresh, decrease )
 		if IsValid( args[1] ) then
 			self.attacker = args[1]
-			self.signature = args[1]:TimeSignature()
+			self.team = args[2] or args[1]:SCPTeam()
 		end
 
 		if SERVER then
@@ -1057,11 +1061,16 @@ EFFECTS.RegisterEffect( "scp009", {
 			end
 		end
 
+		rag:SetNWBool( "invalid_ragdoll", true )
+		rag.Data.invalid = true
+		rag.Data.scp009 = true
+
 		local dmg = DamageInfo()
 		dmg:SetDamage( ply:Health() )
 		dmg:SetDamageType( DMG_DIRECT )
 
-		if IsValid( self.attacker ) and self.attacker:CheckSignature( self.signature ) then
+		if IsValid( self.attacker ) then
+			self.attacker:SetProperty( "kill_team_override", self.team )
 			dmg:SetAttacker( self.attacker )
 		else
 			ply:SkipNextSuicide()
@@ -1070,6 +1079,10 @@ EFFECTS.RegisterEffect( "scp009", {
 		ply:SkipNextRagdoll()
 		ply:TakeDamageInfo( dmg )
 		ply._RagEntity = nil
+
+		if IsValid( self.attacker ) then
+			self.attacker:SetProperty( "kill_team_override", nil )
+		end
 	end,
 	think = function( self, ply, tier, args )
 		if CLIENT then return end
@@ -1079,7 +1092,7 @@ EFFECTS.RegisterEffect( "scp009", {
 
 		for i, v in ipairs( player.GetAll() ) do
 			if math.random( 4 ) < 4 and !v:HasEffect( "scp009" ) and v:GetPos():DistToSqr( pos ) <= radius then
-				v:ApplyEffect( "scp009", args[1] )
+				v:ApplyEffect( "scp009", self.attacker, self.team )
 			end
 		end
 	end,
@@ -1096,7 +1109,7 @@ EFFECTS.RegisterEffect( "electrical_shock", {
 		{ icon = Material( "slc/hud/effects/electrical_shock.png" ) },
 	},
 	cantarget = function( ply )
-		if !scp_spec_filter( ply ) or ply:HasEffect( "electrical_shock" ) then return false end
+		if !scp_spec_filter( ply ) then return false end
 	end,
 	begin = function( self, ply, tier, args, refresh )
 		if SERVER then
@@ -1104,6 +1117,7 @@ EFFECTS.RegisterEffect( "electrical_shock", {
 			ply:SelectWeaponByBase( "item_slc_holster" )
 		end
 
+		ply:SetProperty( "prevent_weapon_switch", CurTime() + 0.5 )
 	end,
 	finish = function( self, ply, tier, args, interrupt )
 		if SERVER then
@@ -1118,6 +1132,7 @@ Experimental D
 EFFECTS.RegisterEffect( "expd_rubber_bones", {
 	duration = -1,
 	stacks = 0,
+	lang = "expd_all",
 	tiers = {
 		{ icon = Material( "slc/hud/effects/expd.png" ) },
 	},
@@ -1131,7 +1146,7 @@ EFFECTS.RegisterEffect( "expd_rubber_bones", {
 		local id = pl:SteamID64()
 
 		AddRoundHook( "OnPlayerHitGround", "expd_effect"..id, function( ply, water, floater, speed )
-			if ply:SCPClass() != CLASSES.EXPD then return end
+			if ply != pl then return end
 			if CLIENT then return true end
 
 			local mj = ply:GetProperty( "expd_rubber_bones", 0 )
@@ -1169,6 +1184,7 @@ AddSounds( "SLCEffects.EXPD.Bounce", "scp_lc/effects/expd/expd_jump_%i.ogg", 75,
 EFFECTS.RegisterEffect( "expd_stamina_tweaks", {
 	duration = -1,
 	stacks = 0,
+	lang = "expd_all",
 	tiers = {
 		{ icon = Material( "slc/hud/effects/expd.png" ) },
 	},
@@ -1187,12 +1203,12 @@ EFFECTS.RegisterEffect( "expd_stamina_tweaks", {
 		local id = pl:SteamID64()
 
 		AddRoundHook( "FinishMove", "expd_effect"..id, function( ply, mv )
-			if ply:SCPClass() != CLASSES.EXPD then return end
+			if ply != pl then return end
 			ply:SetHealth( ply:GetStamina() / ply:GetMaxStamina() * ply:GetMaxHealth() )
 		end )
 
 		AddRoundHook( "SLCPostScaleDamage", "expd_effect"..id, function( ply, dmg )
-			if !IsValid( ply ) or !ply:IsPlayer() or ply:SCPClass() != CLASSES.EXPD then return end
+			if ply != pl then return end
 
 			local new = ply:GetStamina() - dmg:GetDamage()
 			if new < 0 then return end
@@ -1200,12 +1216,14 @@ EFFECTS.RegisterEffect( "expd_stamina_tweaks", {
 			ply:SetStamina( new )
 			ply:SetHealth( new / ply:GetMaxStamina() * ply:GetMaxHealth() )
 
-			ply.StaminaRegen = CurTime() + 1
+			ply.StaminaRegen = CurTime() + 1.5
 
 			return SERVER
 		end )
 
 		AddRoundHook( "SLCHealed", "expd_effect"..id, function( target, healer, heal )
+			if target != pl then return end
+
 			local max = target:GetMaxStamina()
 			local new = target:GetStamina() + heal / target:GetMaxHealth() * max
 
@@ -1228,6 +1246,7 @@ EFFECTS.RegisterEffect( "expd_stamina_tweaks", {
 EFFECTS.RegisterEffect( "expd_revive", {
 	duration = -1,
 	stacks = 0,
+	lang = "expd_all",
 	tiers = {
 		{ icon = Material( "slc/hud/effects/expd.png" ) },
 	},
@@ -1238,7 +1257,7 @@ EFFECTS.RegisterEffect( "expd_revive", {
 		local id = pl:SteamID64()
 
 		AddRoundHook( "SLCPostScaleDamage", "expd_effect"..id, function( ply, dmg )
-			if CLIENT or !ply:IsPlayer() or ply:SCPClass() != CLASSES.EXPD or dmg:IsDamageType( DMG_DIRECT ) then return end
+			if CLIENT or ply != pl or dmg:IsDamageType( DMG_DIRECT ) then return end
 
 			if dmg:GetDamage() >= ply:Health() then
 				local rag = ply:CreatePlayerRagdoll( true )
@@ -1301,10 +1320,6 @@ EFFECTS.RegisterEffect( "expd_recovery", {
 		AddRoundHook( "SLCPlayerFootstep", "expd_effect"..id, function( ply )
 			if ply == pl then return true end
 		end )
-
-		/*AddRoundHook( "CanPlayerSeePlayer", "expd_effect"..id, function( lp, ply )
-			if ply == 
-		end )*/
 	end,
 	finish = function( self, pl )
 		if SERVER then
@@ -1316,7 +1331,6 @@ EFFECTS.RegisterEffect( "expd_recovery", {
 		RemoveRoundHook( "EntityTakeDamage", "expd_effect"..id )
 		RemoveRoundHook( "PlayerSwitchWeapon", "expd_effect"..id )
 		RemoveRoundHook( "SLCPlayerFootstep", "expd_effect"..id )
-		//RemoveRoundHook( "CanPlayerSeePlayer", "expd_effect"..id )
 	end,
 	think = function( self, ply )
 		if CLIENT then return end
@@ -1327,6 +1341,289 @@ EFFECTS.RegisterEffect( "expd_recovery", {
 	wait = 0.3,
 	ignore500 = true,
 } )
+
+EFFECTS.RegisterEffect( "expd_lifesteal", {
+	duration = -1,
+	stacks = 0,
+	lang = "expd_all",
+	tiers = {
+		{ icon = Material( "slc/hud/effects/expd.png" ) },
+	},
+	cantarget = function( ply )
+		return ply:SCPClass() == CLASSES.EXPD
+	end,
+	begin = function( self, pl )
+		local id = pl:SteamID64()
+
+		AddRoundHook( "SLCPostScaleDamage", "expd_effect"..id, function( ply, dmg )
+			if !IsValid( ply ) or !ply:IsPlayer() or dmg:IsDamageType( DMG_DIRECT ) then return end
+
+			local attacker = dmg:GetAttacker()
+			if attacker != pl or SCPTeams.IsAlly( attacker:SCPTeam(), ply:SCPTeam() ) then return end
+			
+			attacker:AddHealth( dmg:GetDamage() * 0.25 )
+		end )
+
+		AddRoundHook( "SLCCanHeal", "expd_effect"..id, function( target, healer, heal_type )
+			if target == pl then return false end
+		end )
+	end,
+	finish = function( self, pl )
+		local id = pl:SteamID64()
+		RemoveRoundHook( "SLCPostScaleDamage", "expd_effect"..id )
+		RemoveRoundHook( "SLCCanHeal", "expd_effect"..id )
+	end,
+	ignore500 = true,
+} )
+
+EFFECTS.RegisterEffect( "expd_glass_cannon", {
+	duration = -1,
+	stacks = 0,
+	lang = "expd_all",
+	tiers = {
+		{ icon = Material( "slc/hud/effects/expd.png" ) },
+	},
+	cantarget = function( ply )
+		return ply:SCPClass() == CLASSES.EXPD
+	end,
+	begin = function( self, pl )
+		local id = pl:SteamID64()
+
+		AddRoundHook( "SLCPlayerDeath", "expd_effect"..id, function( victim, attacker )
+			if attacker != pl or !IsValid( victim ) or !victim:IsPlayer() or !IsValid( attacker ) or !attacker:IsPlayer() then return end
+			if SCPTeams.IsAlly( attacker:SCPTeam(), victim:SCPTeam() ) then return end
+
+			attacker:SetProperty( "expd_glass_cannon", attacker:GetProperty( "expd_glass_cannon", 0 ) + 1 )
+		end )
+
+		AddRoundHook( "EntityTakeDamage", "expd_effect"..id, function( ply, dmg )
+			if ply != pl then
+				local attacker = dmg:GetAttacker()
+				if attacker != pl then return end
+
+				ply = attacker
+			end
+
+			local num = ply:GetProperty( "expd_glass_cannon", 0 )
+			if num <= 0 then return end
+
+			dmg:ScaleDamage( 1 + 0.25 * num )
+		end )
+	end,
+	finish = function( self, pl )
+		local id = pl:SteamID64()
+		RemoveRoundHook( "SLCPLayerDeath", "expd_effect"..id )
+		RemoveRoundHook( "EntityTakeDamage", "expd_effect"..id )
+	end,
+	ignore500 = true,
+} )
+
+EFFECTS.RegisterEffect( "expd_speedy_gonzales", {
+	duration = -1,
+	stacks = 0,
+	lang = "expd_all",
+	tiers = {
+		{ icon = Material( "slc/hud/effects/expd.png" ) },
+	},
+	cantarget = function( ply )
+		return ply:SCPClass() == CLASSES.EXPD
+	end,
+	begin = function( self, pl )
+		local id = pl:SteamID64()
+
+		AddRoundHook( "SLCScaleSpeed", "expd_effect"..id, function( ply, mod )
+			if ply != pl then return end
+
+			local stamina = ply:GetStamina() / ply:GetMaxStamina()
+			if stamina > 0.5 then
+				mod[1] = mod[1] * ( 1.5 - stamina )
+			elseif stamina < 0.5 then
+				mod[1] = mod[1] * ( 1 - stamina ) * 2
+			end
+		end )
+	end,
+	finish = function( self, pl )
+		local id = pl:SteamID64()
+		RemoveRoundHook( "SLCScaleSpeed", "expd_effect"..id )
+	end,
+	ignore500 = true,
+} )
+
+EFFECTS.RegisterEffect( "expd_reflect", {
+	duration = -1,
+	stacks = 0,
+	lang = "expd_all",
+	tiers = {
+		{ icon = Material( "slc/hud/effects/expd.png" ) },
+	},
+	cantarget = function( ply )
+		return ply:SCPClass() == CLASSES.EXPD
+	end,
+	begin = function( self, pl )
+		local id = pl:SteamID64()
+
+		AddRoundHook( "SLCPostScaleDamage", "expd_effect"..id, function( ply, dmg )
+			if !IsValid( ply ) or !ply:IsPlayer() or dmg:IsDamageType( DMG_DIRECT ) or ply:GetProperty( "expd_reflected" ) then return end
+
+			if ply == pl then
+				local attacker = dmg:GetAttacker()
+				if !IsValid( attacker ) or !attacker:IsPlayer() or attacker == ply then return end
+
+				attacker:SetProperty( "expd_reflected", true )
+				ply:SetProperty( "prevent_rdm", true )
+
+				attacker:TakeDamage( dmg:GetDamage(), ply, ply )
+
+				attacker:SetProperty( "expd_reflected", false )
+				ply:SetProperty( "prevent_rdm", false )
+			else
+				local attacker = dmg:GetAttacker()
+				if attacker != pl or attacker == ply then return end
+
+				attacker:SetProperty( "expd_reflected", true )
+				attacker:TakeDamage( dmg:GetDamage() / 3, attacker, attacker )
+				attacker:SetProperty( "expd_reflected", false )
+			end
+		end )
+	end,
+	finish = function( self, pl )
+		local id = pl:SteamID64()
+		RemoveRoundHook( "SLCPostScaleDamage", "expd_effect"..id )
+	end,
+	ignore500 = true,
+} )
+
+EFFECTS.RegisterEffect( "expd_invis", {
+	duration = -1,
+	stacks = 0,
+	lang = "expd_all",
+	tiers = {
+		{ icon = Material( "slc/hud/effects/expd.png" ) },
+	},
+	cantarget = function( ply )
+		return ply:SCPClass() == CLASSES.EXPD
+	end,
+	begin = function( self, pl )
+		local id = pl:SteamID64()
+
+		AddRoundHook( "PlayerPostThink", "expd_effect"..id, function( ply )
+			if CLIENT or ply != pl then return end
+
+			local is_crouching = ply:Crouching()
+			ply:SetNoDraw( is_crouching )
+
+			local snd = ply:GetProperty( "expd_clown_sound", 0 )
+			if !is_crouching then
+				ply:SetProperty( "expd_clown_sound", 0 )
+			elseif snd == 0 then
+				ply:SetProperty( "expd_clown_sound", CurTime() + 4 + math.random() * 6 )
+			elseif snd < CurTime() then
+				ply:SetProperty( "expd_clown_sound", 0 )
+				ply:EmitSound( "SLCEffects.EXPD.Clown" )
+			end
+
+			if !is_crouching then return end
+
+			local stamina = ply:GetStamina() - FrameTime() * ( ply:GetVelocity():Length2DSqr() > 25 and 4 or 2 )
+			if stamina <= 0 then
+				ply:TakeDamage( 5, ply, ply )
+				stamina = 5
+			end
+
+			ply:SetStamina( stamina )
+			ply.StaminaRegen = CurTime() + 1.5
+		end )
+	end,
+	finish = function( self, pl )
+		local id = pl:SteamID64()
+		RemoveRoundHook( "PlayerPostThink", "expd_effect"..id )
+	end,
+	ignore500 = true,
+} )
+
+AddSounds( "SLCEffects.EXPD.Clown", "scp_lc/effects/expd/expd_clown_%i.ogg", 70, 0.5, { 90, 110 }, CHAN_BODY, 1, 2 )
+
+local expd_enderman_trace = {}
+expd_enderman_trace.mask = MASK_ALL
+expd_enderman_trace.output = expd_enderman_trace
+
+EFFECTS.RegisterEffect( "expd_enderman", {
+	duration = -1,
+	stacks = 0,
+	lang = "expd_all",
+	tiers = {
+		{ icon = Material( "slc/hud/effects/expd.png" ) },
+	},
+	cantarget = function( ply )
+		return ply:SCPClass() == CLASSES.EXPD
+	end,
+	begin = function( self, pl )
+		local id = pl:SteamID64()
+
+		AddRoundHook( "PostEntityTakeDamage", "expd_effect"..id, function( ply, dmg )
+			if ply != pl or dmg:GetDamage() >= ply:Health() or ply:IsInZone( ZONE_PD ) then return end
+
+			local n = 0
+			local nav_list = {}
+
+			for i, v in ipairs( navmesh.Find( ply:GetPos(), 1500, 256, 256 ) ) do
+				if v:GetSizeX() >= 100 and v:GetSizeY() >= 100 then
+					n = n + 1
+					nav_list[n] = v
+				end
+			end
+
+			if n <= 0 then return end
+
+			for i = 1, n > 5 and 5 or n do
+				local nav = table.remove( nav_list, math.random( n ) )
+				n = n - 1
+
+				for j = 1, 5 do
+					local pos = j < 5 and nav:GetRandomPoint() or nav:GetCenter()
+
+					local mins, maxs = ply:GetCollisionBounds()
+					mins.x = mins.x * 1.1
+					mins.y = mins.y * 1.1
+					maxs.x = maxs.x * 1.1
+					maxs.y = maxs.y * 1.1
+
+					expd_enderman_trace.start = pos + Vector( 0, 0, 8 )
+					expd_enderman_trace.endpos = pos - Vector( 0, 0, 8 )
+					expd_enderman_trace.mins = mins
+					expd_enderman_trace.maxs = maxs
+
+					util.TraceHull( expd_enderman_trace )
+					if expd_enderman_trace.Fraction == 0 then continue end
+
+					ply:EmitSound( "SLCEffects.EXPD.Enderman" )
+					ply:SetProperty( "expd_enderman_pos", expd_enderman_trace.HitPos )
+					//ply:SetPos( expd_enderman_trace.HitPos )
+
+					return
+				end
+			end
+		end )
+
+		AddRoundHook( "PlayerPostThink", "expd_effect"..id, function( ply )
+			if ply != pl then return end
+
+			local pos = ply:GetProperty( "expd_enderman_pos" )
+			if !pos then return end
+
+			ply:SetPos( pos )
+			ply:SetProperty( "expd_enderman_pos", nil )
+		end )
+	end,
+	finish = function( self, pl )
+		local id = pl:SteamID64()
+		RemoveRoundHook( "PostEntityTakeDamage", "expd_effect"..id )
+		RemoveRoundHook( "PlayerPostThink", "expd_effect"..id )
+	end,
+	ignore500 = true,
+} )
+
+AddSounds( "SLCEffects.EXPD.Enderman", "scp_lc/effects/expd/expd_enderman_%i.ogg", 75, 0.75, { 95, 105 }, CHAN_BODY, 1, 4 )
 
 --[[-------------------------------------------------------------------------
 Healing Hooks

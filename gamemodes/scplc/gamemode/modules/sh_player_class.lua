@@ -16,11 +16,11 @@ function PLAYER:SetupDataTables()
 	ply:NetworkVar( "Int", 3, "_SCPExp" )
 	ply:NetworkVar( "Int", 4, "_SCPClassPoints" )
 	ply:NetworkVar( "Int", 5, "TimeSignature" )
-	ply:NetworkVar( "Int", 6, "Stamina" ) --although this could be SLCVar, NetworkVar is more reliable and has prediction error correction
-	ply:NetworkVar( "Int", 7, "PrestigeLevel" )
-
-	ply:NetworkVar( "Float", 0, "ExtraHealth" )
-	ply:NetworkVar( "Float", 1, "MaxExtraHealth" )
+	ply:NetworkVar( "Int", 6, "PrestigeLevel" )
+	
+	ply:NetworkVar( "Float", 0, "Stamina" )
+	ply:NetworkVar( "Float", 1, "ExtraHealth" )
+	ply:NetworkVar( "Float", 2, "MaxExtraHealth" )
 
 	ply:NetworkVar( "String", 0, "_SCPClass" )
 	ply:NetworkVar( "String", 1, "_SCPPersonaC" )
@@ -35,7 +35,7 @@ function PLAYER:SetupDataTables()
 	ply:AddSLCVar( "_DailyBonus", 6, "INT" )
 	ply:AddSLCVar( "QueuePosition", 7, "INT" )
 	ply:AddSLCVar( "_PrestigePoints", 8, "INT" )
-	ply:AddSLCVar( "SpectatorPoints", 9, "INT" )
+	ply:AddSLCVar( "_SpectatorPoints", 9, "INT" )
 
 	ply:AddSLCVar( "VestDurability", 0, "FLOAT" )
 	ply:AddSLCVar( "StaminaBoost", 1, "FLOAT" )
@@ -83,7 +83,7 @@ function PLAYER:SetupDataTables()
 			ply:GetSCPData( "daily_bonus", 0 ),
 			ply:GetSCPData( "prestige_points", 0 ),
 			ply:GetSCPData( "prestige_level", 0 ),
-			ply:GetSCPData( "spectator_points", 0 )
+			ply:GetSCPData( "spectator_points", -1 )
 		):Then( function( data )
 			ply:Set_SCPLevel( tonumber( data[1] ) )
 			ply:Set_SCPExp( tonumber( data[2] ) )
@@ -92,6 +92,11 @@ function PLAYER:SetupDataTables()
 			ply:SetPrestigePoints( tonumber( data[5] ) )
 			ply:SetPrestigeLevel( tonumber( data[6] ) )
 			ply:SetSpectatorPoints( tonumber( data[7] ) )
+
+			--REMOVE
+			if tonumber( data[7] ) == -1 then
+				ply:SetSpectatorPoints( ( tonumber( data[6] ) * 35 + tonumber( data[1] ) ) * 3550 )
+			end
 		end )
 	end
 

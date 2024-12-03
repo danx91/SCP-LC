@@ -29,9 +29,11 @@ local header_items = {
 			plvl = 10
 		end
 
-		this:NoClipping( false )
-		draw.SimpleText( string.rep( "★", plvl ), "SCPHUDESmall", pw * 0.5, ph * 0.9, HSVToColor( CurTime() * 90 % 360, 1, 1 ), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
-		this:NoClipping( true )
+		this:SetTextInset( 0, -ph * 0.2 )
+
+		//this:NoClipping( false )
+		draw.SimpleText( string.rep( "★", plvl ), "SCPHUDESmall", pw * 0.5, ph, HSVToColor( CurTime() * 90 % 360, 1, 1 ), TEXT_ALIGN_CENTER, TEXT_ALIGN_BOTTOM )
+		//this:NoClipping( true )
 	end },
 	{ text = "badges", size = -1, font = "SCPHUDMedium" }, --fill, docking order is reversed after this!
 	{ text = "ping", size = 0.09, font = "SCPNumbersMedium", func = function( ply ) return ply:Ping() end },
@@ -102,7 +104,7 @@ local function create_player( ply, parent, marg )
 	item.Update = function( this )
 		local sorting, color = ScoreboardPlayerData( ply )
 
-		this:SetZPos( sorting * 1500 - ply:Frags() )//- ply:SCPLevel() + ply:EntIndex() )
+		this:SetZPos( sorting * 1500 - ( lp:Alive() and ply:SCPLevel() or ply:Frags() ) )
 		this.Color = color or this._Color
 
 		this.ElementsName.badges:CreateBadges()
@@ -114,6 +116,38 @@ local function create_player( ply, parent, marg )
 	avatar:Dock( LEFT )
 	avatar:DockMargin( 0, 0, marg, 0 )
 	avatar:SetSteamID( ply:SteamID64(), 184 )
+
+	avatar.OnMousePressed = function( this, code )
+		if code == MOUSE_LEFT then
+			ply:ShowProfile()
+		elseif code == MOUSE_RIGHT then
+			local m = DermaMenu()
+
+			m:AddOption( LANG.scoreboard_actions.copy_name, function()
+				local nick = ply:Nick()
+				SetClipboardText( nick )
+				print( nick )
+			end )
+
+			m:AddOption( LANG.scoreboard_actions.copy_sid, function()
+				local sid = ply:SteamID()
+				SetClipboardText( sid )
+				print( sid )
+			end )
+
+			m:AddOption( LANG.scoreboard_actions.copy_sid64, function()
+				local sid = ply:SteamID64()
+				SetClipboardText( sid )
+				print( sid )
+			end )
+
+			m:AddOption( LANG.scoreboard_actions.open_profile, function()
+				ply:ShowProfile()
+			end )
+
+			m:Open()
+		end
+	end
 
 	local volume = vgui.Create( "DButton", item )
 	item.Volume = volume
@@ -304,13 +338,13 @@ local function create_scoreboard()
 		surface.SetMaterial( mat_list )
 		surface.DrawTexturedRect( 0, 0, pw, ph )
 
-		local x, y = this:LocalToScreen( 0, 0 )
-		render.SetScissorRect( x, y, x + pw, y + ph, true )
+		//local x, y = this:LocalToScreen( 0, 0 )
+		//render.SetScissorRect( x, y, x + pw, y + ph - 8, true )
 	end
 
-	panel.PaintOver = function( this, pw, ph )
-		render.SetScissorRect( 0, 0, 0, 0, false )
-	end
+	//panel.PaintOver = function( this, pw, ph )
+		//render.SetScissorRect( 0, 0, 0, 0, false )
+	//end
 
 	local header = vgui.Create( "DPanel", panel )
 	header:Dock( TOP )

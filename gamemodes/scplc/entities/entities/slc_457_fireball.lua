@@ -49,7 +49,11 @@ function ENT:Think()
 		movement_trace.start = pos
 		movement_trace.endpos = new_pos
 
-		util.TraceHull( movement_trace )
+		if self.NoHull then
+			util.TraceLine( movement_trace )
+		else
+			util.TraceHull( movement_trace )
+		end
 
 		if movement_trace.Hit then
 			self:Remove()

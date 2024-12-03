@@ -50,7 +50,14 @@ function GM:PlayerReady( ply )
 	gamerule.SendAll( ply )
 
 	ply:SetActive( true )
-	QueueInsert( ply )
+
+	if !ROUND.preparing or ply:GetInfoNum( "cvar_slc_preparing_classd", 0 ) == 0 then
+		QueueInsert( ply )
+	else
+		local _, spawn = GetClassGroup( "classd" )
+		ply:SetupPlayer( GetClassData( CLASSES.CLASSD ), spawn[math.random( #spawn )] )
+		PlayerMessage( "preparing_classd", ply )
+	end
 
 	CheckRoundStart()
 end
@@ -94,7 +101,7 @@ function GM:PlayerShouldTakeDamage( ply, attacker )
 	if ROUND.preparing then return false end
 	
 	local t_vic = ply:SCPTeam()
-	local t_att = attacker:SCPTeam()
+	local t_att = attacker:GetProperty( "kill_team_override" ) or attacker:SCPTeam()
 
 	if  t_att == TEAM_SPEC or t_vic == TEAM_SPEC then return false end
 	if  ply != attacker and t_att == TEAM_SCP and t_vic == TEAM_SCP then return false end
@@ -177,12 +184,10 @@ function GM:PlayerDeath( victim, inflictor, attacker )
 
 		if !victim._SkipNextKillRewards then
 			if IsValid( attacker ) and attacker:IsPlayer() and victim != attacker then
-				//local ivp = IsValid( attacker ) and attacker:IsPlayer() and victim != attacker
-
 				local t_vic = victim:SCPTeam()
-				local t_att = attacker:SCPTeam()
+				local t_att = attacker:GetProperty( "kill_team_override" ) or attacker:SCPTeam()
 
-				local rdm = !preventrdm and SCPTeams.IsAlly( t_att, t_vic )
+				local rdm = !preventrdm and !attacker:GetProperty( "prevent_rdm" ) and SCPTeams.IsAlly( t_att, t_vic )
 				local reward = isnumber( pprop.reward_override ) and pprop.reward_override or SCPTeams.GetReward( t_vic )
 				local tname = SCPTeams.GetName( t_vic )
 
@@ -535,7 +540,7 @@ function GM:PlayerUse( ply, ent )
 end
 
 function GM:AcceptInput( ent, input, activator, caller, data )
-	//print( "INPUT", ent, ent:GetName(), input, activator, caller, data )
+	//print( "INPUT", ent, ent:GetName(), input, activator, caller, IsValid( caller ) and caller:GetName() or "-", data )
 
 	local catch = SLC_CATCH_INPUT[ent]
 	if catch and catch( ent, input, activator, caller, data ) == true then
@@ -572,9 +577,14 @@ function GM:PlayerCanSeePlayersChat( text, team, listener, speaker )
 end
 
 function GM:PlayerCanHearPlayersVoice( listener, talker )
-	if ROUND.infoscreen then return false end
+	if ROUND.infoscreen or listener:IsAboutToSpawn() or talker:IsAboutToSpawn() then return false end
 	if listener:GetAdminMode() or talker:GetAdminMode() then return true end
 	if !listener:IsActive() then return false end
+
+	local override, ret2 = hook.Run( "PlayerSpeakOverride", talker, listener )
+	if override != nil then
+		return override, ret2
+	end
 
 	local t_lis = listener:SCPTeam()
 	local t_tal = talker:SCPTeam()

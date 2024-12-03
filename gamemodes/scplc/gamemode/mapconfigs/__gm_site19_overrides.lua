@@ -147,6 +147,7 @@ Must implement:
 	- TranslateDoorModel( ent )
 ---------------------------------------------------------------------------]]
 
+MAP_DOOR_POS = MAP_DOOR_POS or {}
 MAP_DOOR_PAIRS = MAP_DOOR_PAIRS or {}
 MAP_DOOR_PROPS = MAP_DOOR_PROPS or {}
 MAP_DOOR_AREAPORTALS = MAP_DOOR_AREAPORTALS or {}
@@ -156,13 +157,12 @@ door_allowed_zones = {
 	ez = true,
 }
 
-function CanDestroyDoor( ent )
-	return IsValid( MAP_DOOR_PAIRS[ent] ) and ent:GetVelocity():LengthSqr() < 1
+function CanDestroyDoor( ent, check_velocity )
+	return IsValid( MAP_DOOR_PAIRS[ent] ) and ( !check_velocity or ent:GetVelocity():LengthSqr() < 1 )
 end
 
 function GetDoorEnts( ent )
 	local other = MAP_DOOR_PAIRS[ent]
-
 	if !other then
 		return {
 			ent,
@@ -214,7 +214,7 @@ function TranslateDoorModel( ent, breach_ang )
 	if !zone then return end
 
 	local prop = MAP_DOOR_PROPS[ent]
-	if !prop then return end
+	if !IsValid( prop ) then return end
 
 	local data = door_data[zone]
 	if !data then return end
@@ -229,29 +229,32 @@ function TranslateDoorModel( ent, breach_ang )
 		ang.y = ang.y + 180
 	end
 
-	local pos = prop:GetPos()
+	local pos = MAP_DOOR_POS[ent] or prop:GetPos()
 
 	local other = MAP_DOOR_PAIRS[ent]
 	if IsValid( other ) then --calculate center based on model bounds of both parts of door
-		local other_pos = other:GetPos()
-		local mins, maxs = prop:GetModelBounds()
-		local other_mins, other_maxs = other:GetModelBounds()
+		local other_prop = MAP_DOOR_PROPS[other]
+		if IsValid( other_prop ) then
+			local other_pos = MAP_DOOR_POS[other] or other_prop:GetPos()
+			local mins, maxs = prop:GetModelBounds()
+			local other_mins, other_maxs = other:GetModelBounds()
 
-		//debugoverlay.Box( pos, mins, maxs, 15, Color( 255, 0, 0, 20 ) )
-		//debugoverlay.Box( other_pos, other_mins, other_maxs, 15, Color( 0, 255, 0, 20 ) )
+			//debugoverlay.Box( pos, mins, maxs, 15, Color( 255, 0, 0, 20 ) )
+			//debugoverlay.Box( other_pos, other_mins, other_maxs, 15, Color( 0, 255, 0, 20 ) )
 
-		mins = pos + mins
-		maxs = pos + maxs
+			mins = pos + mins
+			maxs = pos + maxs
 
-		other_mins = other_pos + other_mins
-		other_maxs = other_pos + other_maxs
+			other_mins = other_pos + other_mins
+			other_maxs = other_pos + other_maxs
 
-		OrderVectors( mins, other_mins )
-		OrderVectors( other_maxs, maxs )
+			OrderVectors( mins, other_mins )
+			OrderVectors( other_maxs, maxs )
 
-		
-		pos = ( mins + maxs ) / 2
-		//debugoverlay.Box( pos, mins - pos, maxs - pos, 15, Color( 0, 0, 255, 20 ) )
+			
+			pos = ( mins + maxs ) / 2
+			//debugoverlay.Box( pos, mins - pos, maxs - pos, 15, Color( 0, 0, 255, 20 ) )
+		end
 	end
 
 	pos = pos + data.offset + ang:Right() * right + ang:Forward() * forward
@@ -304,8 +307,61 @@ local function fix_french_map()
 end
 
 --[[-------------------------------------------------------------------------
+New 914 logic ^^ because old one is dogshit
+Also, fu mapper and release vmf if you don't care about it ffs
+---------------------------------------------------------------------------]]
+local function new_914_logic( ent, input, activator, caller, data )
+	if input != "Use" then return end
+
+	local use = CacheEntity( "bt_914_tirette" )
+	local mode = CacheEntity( "bt_914_selecteur" )
+	local door_input = CacheEntity( "914_door_input" )
+	local door_output = CacheEntity( "914_door_output" )
+
+	mode:Fire( "Lock" )
+	CacheEntity( "machine" ):Fire( "PlaySound" )
+
+	for i = 1, 7 do
+		CacheEntity( "rot_914_"..i ):Fire( "Start" )
+	end
+
+	AddTimer( "Site19SCP914Logic_LockButton", 0.5, 1, function()
+		use:Fire( "Lock" )
+	end )
+
+	AddTimer( "Site19SCP914Logic_CloseDoors", 2, 1, function()
+		door_input:Fire( "Close" )
+		door_output:Fire( "Close" )
+	end )
+
+	AddTimer( "Site19SCP914Logic_StopGears", 10, 1, function()
+		for i = 1, 7 do
+			CacheEntity( "rot_914_"..i ):Fire( "Stop" )
+		end
+	end )
+
+	AddTimer( "Site19SCP914Logic_Finish", 14, 1, function()
+		use:Fire( "Unlock" )
+		mode:Fire( "Unlock" )
+
+		door_input:Fire( "Open" )
+		door_output:Fire( "Open" )
+	end )
+end
+
+--[[-------------------------------------------------------------------------
 Map related hooks
 ---------------------------------------------------------------------------]]
+local remove_name = {
+	//["914_relay"] = true,
+	["4016"] = true, --Explosive melon
+}
+
+local remove_mapid = {
+	[3097] = true, --PD rock
+	[3096] = true, --PD rock
+}
+
 hook.Add( "SLCPreround", "Site19Preround", function()
 	local door_lookup = {}
 	local MAP_DOOR_PAIRS_TMP = {}
@@ -313,6 +369,7 @@ hook.Add( "SLCPreround", "Site19Preround", function()
 	MAP_DOOR_AREAPORTALS = {}
 	MAP_DOOR_PAIRS = {}
 	MAP_DOOR_PROPS = {}
+	MAP_DOOR_POS = {}
 
 	for i, v in ipairs( ents.GetAll() ) do
 		local name = v:GetName()
@@ -327,16 +384,23 @@ hook.Add( "SLCPreround", "Site19Preround", function()
 			v:SetKeyValue( "forceclosed", "1" )
 		elseif name == "049_door" then
 			v:SetKeyValue( "forceclosed", "1" )
-		elseif name == "4016" then --Remove melon
-			v:Remove()
-		elseif mapid == 3097 or mapid == 3096 then --Remove ?
-			v:Remove()
 		elseif mapid == 3240 then --Unlock Gate B
 			v:Fire( "Unlock" )
+		elseif name == "bt_914_tirette" then
+			v:ClearAllOutputs( "OnPressed" )
+			CatchInput( "bt_914_tirette", new_914_logic )
 		end
 		
+		if remove_name[name] or remove_mapid[mapid] then
+			v:Remove()
+		end
+
 		if class == "func_door" and string.match( name, "^elev_" ) then
 			v:SetKeyValue( "dmg", 0 )
+		end
+
+		if class == "func_door" and string.match( name, "_containment_door_" ) then
+			v:SetKeyValue( "dmg", 0.2 )
 		end
 
 		if class == "func_areaportal" then
@@ -356,7 +420,13 @@ hook.Add( "SLCPreround", "Site19Preround", function()
 			end
 
 			table.insert( MAP_DOOR_PAIRS_TMP[door_zone][door_id], v )
-			MAP_DOOR_PROPS[v] = v:GetChildren()[1]
+
+			local prop = v:GetChildren()[1]
+			MAP_DOOR_PROPS[v] = prop
+
+			if IsValid( prop ) then
+				MAP_DOOR_POS[v] = prop:GetPos()
+			end
 		end
 
 		local pos = v:GetPos()

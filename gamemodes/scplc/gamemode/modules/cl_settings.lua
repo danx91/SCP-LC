@@ -301,15 +301,14 @@ function OpenSettingsWindow()
 		draw.RoundedBox( 15, 1, 1, pw - 2, ph - 2, COLOR.vbar_grip )
 	end
 
-	main_panel.Paint = function( self, pw, ph )
-	end
+	main_panel.Paint = function( self, pw, ph ) end
 
 	table.sort( WINDOW_PANELS, function( a, b )
 		return ( a.z or 0 ) > ( b.z or 0 )
 	end )
 
 	for i, v in ipairs( WINDOW_PANELS ) do
-		if v.show == nil or v.show ==true or isfunction( v.show ) and v.show() then
+		if v.show == nil or v.show == true or isfunction( v.show ) and v.show() then
 			local btn = vgui.Create( "DButton", side_menu )
 			btn:SetTall( h * 0.05 )
 			btn:Dock( TOP )
@@ -881,7 +880,7 @@ AddSettingsPanel( "reset", function( parent )
 	end
 
 	client_btn.DoClick = function( self )
-		SLCPopupIfEmpty( LANG.settings.client_reset, LANG.settings.client_reset_desc, true, function( i )
+		SLCLegacyPopupIfEmpty( LANG.settings.client_reset, LANG.settings.client_reset_desc, true, function( i )
 			if i == 1 then
 				SLC_SETTINGS_WINDOW:Close()
 				hook.Run( "SLCFactoryReset" )
@@ -916,7 +915,7 @@ AddSettingsPanel( "reset", function( parent )
 		end
 
 		server_btn.DoClick = function( self )
-			SLCPopupIfEmpty( LANG.settings.server_reset, LANG.settings.server_reset_desc, true, nil, LANG.settings.popup_ok )
+			SLCLegacyPopupIfEmpty( LANG.settings.server_reset, LANG.settings.server_reset_desc, true, nil, LANG.settings.popup_ok )
 		end
 	end
 end, nil, 100 )

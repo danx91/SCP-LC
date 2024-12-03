@@ -77,8 +77,13 @@ lang.NRegistry = {
 	queue_low = "You are in the low priority support queue!",
 	queue_pos = "Your position in the support queue: %i",
 	support_optout = "You didn't spawn as support because you opted out. You can change that in !settings",
+	zombie_optout = "You didn't spawn as SCP-049-2 because you opted out. You can change that in !settings",
+	preparing_classd = "You were spawned as a Class D because you've joined during preparing. You can change that in !settings",
 	property_dmg = "You lost %d points for destroying Foundation property!",
-	unknown_cmd = "Unknown command: %s"
+	unknown_cmd = "Unknown command: %s",
+	tailor_success = "You successfully stole an ID. Be careful, it will expire soon!",
+	tailor_fail = "You wasn't able to find a valid ID on the body!",
+	tailor_end = "Your stolen ID expired!",
 }
 
 lang.NFailed = "Failed to access NRegistry with key: %s"
@@ -283,14 +288,13 @@ effects.radiation = "Radiation"
 effects.deep_wounds = "Deep Wounds"
 effects.poison = "Poison"
 effects.heavy_bleeding = "Heavy Bleeding"
+effects.light_bleeding = "Light Bleeding"
 effects.spawn_protection = "Spawn Protection"
 effects.fracture = "Fracture"
 effects.decay = "Decay"
 effects.scp_chase = "Chase"
 effects.human_chase = "Chase"
-effects.expd_rubber_bones = "Experimental Effect"
-effects.expd_stamina_tweaks = "Experimental Effect"
-effects.expd_revive = "Experimental Effect"
+effects.expd_all = "Experimental Effect"
 effects.expd_recovery = "Recovery"
 effects.electrical_shock = "Electrical Shock"
 effects.scp009 = "SCP-009"
@@ -357,6 +361,7 @@ local l_weps = {
 	smg = "SMG",
 	rifle = "rifle",
 	shotgun = "shotgun",
+	sniper = "sniper",
 }
 
 local l_tiers = {
@@ -397,6 +402,9 @@ lang.settings = {
 	popup_cancel = "CANCEL",
 	popup_continue = "CONTINUE",
 
+	enabled = "Enabled",
+	resource_warn = "Due to how materials work in Garry's Mod, your changes will be applied after you rejoin the server.",
+
 	panels = {
 		binds = "Keybinds",
 		general_config = "General Config",
@@ -404,6 +412,7 @@ lang.settings = {
 		performance_config = "Performance",
 		scp_config = "SCP Config",
 		skins = "GUI Skins",
+		resource_packs = "Resource Packs",
 		reset = "Reset Gamemode",
 		cvars = "ConVars Editor",
 	},
@@ -441,6 +450,8 @@ lang.settings = {
 		scp106_spots = "Always show SCP-106 teleport spots",
 
 		cvar_slc_support_optout = "Support spawn opt-out",
+		cvar_slc_zombie_optout = "SCP-049-2 spawn opt-out",
+		cvar_slc_preparing_classd = "Spawn as Class D if connected during preparing",
 		cvar_slc_language = "Language",
 		cvar_slc_language_options = {
 			default = "Default",
@@ -482,7 +493,8 @@ lang.gamemode_config = {
 		premium = "Premium",
 		scp = "SCP",
 		gas = "Gas",
-		feature = "Features"
+		feature = "Features",
+		minigames = "Minigames",
 	}
 }
 
@@ -499,6 +511,13 @@ lang.scoreboard = {
 	score = "Score",
 	ranks = "Ranks",
 	badges = "Badges",
+}
+
+lang.scoreboard_actions = {
+	copy_name = "Copy name",
+	copy_sid = "Copy SteamID",
+	copy_sid64 = "Copy SteamID64",
+	open_profile = "Open Steam profile",
 }
 
 lang.ranks = {
@@ -554,7 +573,7 @@ lang.info_screen_registry = {
 	escape_time = "You escaped in %s minutes",
 	escape_xp = "You received %s experience",
 	escape1 = "You escaped from facility",
-	escape2 = "You escaped during warhead countdown",
+	escape2 = "You escaped during ALPHA Warhead countdown",
 	escape3 = "You survived in blast shelter",
 	escorted = "You have been escorted",
 	killed_by = "You have been killed by: %s",
@@ -563,6 +582,7 @@ lang.info_screen_registry = {
 	hazard = "You have been killed by hazard",
 	alpha_mia = "Last known location: Surface",
 	omega_mia = "Last known location: Facility",
+	scp914_death = "Your hearth was stopped by SCP-914",
 	killer_t = "Your killer's team: %s"
 }
 
@@ -675,6 +695,16 @@ misc.font = {
 It's gmod issue and I can't fix it. To fix it, you have to manually delete some files.
 Navigate to 'steamapps/common/GarrysMod/garrysmod/cache/workshop/resource/fonts' and delete following files: 'impacted.ttf', 'ds-digital.ttf' and 'unispace.ttf']],
 	ok = "OK"
+}
+
+misc.commands_aliases = {
+	["admin"] = "adminmode",
+	["daily"] = "bonus",
+	["mute"] = "muteall",
+	["unmute"] = "unmuteall",
+	["config"] = "settings",
+	["cfg"] = "settings",
+	["mines"] = "minigames",
 }
 --[[-------------------------------------------------------------------------
 Vests
@@ -1565,7 +1595,7 @@ Weapons
 lang.GenericUpgrades = {
 	outside_buff = {
 		name = "Outside buff",
-		info = "Receive passive healing when on surface (scales with remaining round time) and receive extreme damage protection when on non-blocked escape or during aftermatch"
+		info = "Receive additional bullet protection and enable healing and regeneration when on surface.\n\t• Additional bullet defense: [%def]\n\t• Additional flat bullet defense: [flat] dmg\n\t• Once on surface heal for [buff_hp] HP in a short time\n\t• When out of combat, quickly recover [%regen_min] - [%regen_max] (time scaled) of received bullet damage\n\t• Dealing damage heals you for [%heal_min] - [%heal_max] (time scaled) of dealt damage\n\t• Returning back to the facility voids all active healings"
 	}
 }
 
@@ -1576,7 +1606,11 @@ lang.CommonSkills = {
 	},
 	c_dmg_mod = {
 		name = "Damage protection",
-		dsc = "Current protection: [mod]\n\nThis is the protection against received non-direct damage. It takes into account only modificators of time scaling and outside buff. SCP specific modificators are not included!"
+		dsc = "Current protection: [mod]\nCurrent flat protection: [flat]\n\nThis is the protection against received non-direct damage. It takes into account only modificators of time scaling and outside buff. SCP specific modificators are not included!\n\nOutside buff: [buff]",
+		dmg = "DMG",
+		not_bought = "Not bought",
+		not_surface = "Disabled inside the facility",
+		buff = "\n   • Current recovery: %s of received bullet damage\n   • Current heal: %s of dealt damage",
 	},
 }
 
@@ -1600,7 +1634,7 @@ wep.SCP023 = {
 		},
 		passive = {
 			name = "Passive",
-			dsc = "Colliding with players ignites them",
+			dsc = "Colliding with players ignites them. You also don't collide with doors",
 		},
 		drain_bar = {
 			name = "Drain",
@@ -1741,7 +1775,7 @@ wep.SCP049 = {
 			info = "Upgrades your surgery ability\n\t• After surgery you heal for [surgery_heal] HP\n\t• After surgery all zombies nearby heal for [surgery_zombie_heal] HP",
 		},
 		surgery_dmg = {
-			name = "Unstoppable surgery",
+			name = "Unstoppable Surgery",
 			info = "Receiving damage no longer stops surgery",
 		},
 		surgery_prot = {
@@ -1749,7 +1783,7 @@ wep.SCP049 = {
 			info = "During surgery gain [-surgery_prot] bullet protection",
 		},
 		zombie_prot = {
-			name = "The nurse",
+			name = "The Nurse",
 			info = "Gain bullet damage protection for each SCP-049-2 nearby\n\t• Protection for each zombie nearby: [%zombie_prot]\n\t• Maximum protection: [%zombie_prot_max]",
 		},
 		zombie_lifesteal = {
@@ -1757,7 +1791,7 @@ wep.SCP049 = {
 			info = "Zombies gain [%zombie_ls] life steal on basic attacks",
 		},
 		stacks_hp = {
-			name = "Steroids injection",
+			name = "Steroids Injection",
 			info = "When creating zombie, their health is increased by [%stacks_hp] for each prior surgery",
 		},
 		stacks_dmg = {
@@ -1927,7 +1961,7 @@ wep.SCP066 = {
 		},
 		dash = {
 			name = "Dash",
-			dsc = "Dash forward. If you hit player, you will stick to them for a short time",
+			dsc = "Dash forward. If you hit player, you will stick to them for a short time. Use again to detach",
 		},
 		boost = {
 			name = "Boost",
@@ -1981,15 +2015,15 @@ wep.SCP066 = {
 		},
 		dash1 = {
 			name = "Dash I",
-			info = "Upgrades your dash ability\n\t• Cooldown decreased by [-dash_cd]\n\t• You stay [+detach_time] longer on your target",
+			info = "Upgrades your dash ability\n\t• Cooldown decreased by [-dash_cd]\n\t• You can stay [+detach_time] longer on your target",
 		},
 		dash2 = {
 			name = "Dash II",
-			info = "Upgrades your dash ability\n\t• Cooldown decreased by [-dash_cd]\n\t• You stay [+detach_time] longer on your target",
+			info = "Upgrades your dash ability\n\t• Cooldown decreased by [-dash_cd]\n\t• You can stay [+detach_time] longer on your target",
 		},
 		dash3 = {
 			name = "Dash III",
-			info = "Upgrades your dash ability\n\t• While attached to a target, you can reuse this ability to jump off\n\t• While jumping off, you can attach to another player\n\t• You can't stick to the same player more than once in a single use of this ability",
+			info = "Upgrades your dash ability\n\t• While usning this ability again, you will jump off instead of detaching\n\t• While jumping off, you can attach to another player\n\t• You can't stick to the same player you just jumped off",
 		},
 		boost1 = {
 			name = "Boost I",
@@ -2018,7 +2052,7 @@ wep.SCP096 = {
 			dsc = "Sit in place and convert regeneration stacks to health",
 		},
 		special = {
-			name = "Hunt's over",
+			name = "Hunt's Over",
 			dsc = "Stop rage. Get regeneration stacks for each active target",
 		},
 		passive = {
@@ -2044,11 +2078,11 @@ wep.SCP096 = {
 		},
 		multi1 = {
 			name = "Endless Rage I",
-			info = "Allows you to kill multiple targets while in rage for a limited time after first kill\n\t• Maximum targets: [multi]\n\t• Time limit: [multi_time] seconds\n\t• Bullet damage after killing first target increased by [+prot]",
+			info = "Allows you to kill multiple targets while in rage for a limited time after first kill\n\t• Maximum targets: [multi]\n\t• Time limit: [multi_time] seconds\n\t• Received bullet damage after killing first target increased by [+prot]",
 		},
 		multi2 = {
 			name = "Endless Rage II",
-			info = "Allows you to kill even more targets while in rage\n\t• Maximum targets: [multi]\n\t• Time limit: [multi_time] seconds\n\t• Bullet damage after killing first target increased by [+prot]",
+			info = "Allows you to kill even more targets while in rage\n\t• Maximum targets: [multi]\n\t• Time limit: [multi_time] seconds\n\t• Received bullet damage after killing first target increased by [+prot]",
 		},
 		regen1 = {
 			name = "Cry of Despair I",
@@ -2088,7 +2122,7 @@ wep.SCP106 = {
 		},
 		teleport = {
 			name = "Teleport",
-			dsc = "Use to place teleport spot. When held near existing teleport spot, you can select teleport destination, release to teleport to selected spot",
+			dsc = "Use to place teleport spot. Holding this ability near existing teleport spot, allows you to select teleport destination, release button to teleport to selected spot",
 		},
 		passive = {
 			name = "Teeth Collection",
@@ -2418,7 +2452,7 @@ wep.SCP8602 = {
 		},
 		charge = {
 			name = "Charge",
-			dsc = "Gain speed over time and deal damage to first player in front of you. If attacked player is close enough to wall, pin them to that wall to increase damage",
+			dsc = "Gain speed over time and deal damage to first player in front of you. If attacked player is close enough to wall, pin them to that and perform strong attack",
 		},
 		passive = {
 			name = "Passive",
@@ -2491,7 +2525,7 @@ wep.SCP8602 = {
 		},
 		charge3 = {
 			name = "Charge III",
-			info = "Upgrades your charge ability\n\t• Speed increased by [+charge_speed]\n\t• Basic damage increased by [+charge_dmg]\n\t• Pinning player to wall breaks their bones",
+			info = "Upgrades your charge ability\n\t• Speed increased by [+charge_speed]\n\t• Above 80% of charge progress, any hit counts as strong attack\n\t• Pinning player to wall breaks their bones",
 		},
 	}
 }
@@ -2734,19 +2768,19 @@ wep.SCP24273 = {
 		},
 		drain1 = {
 			name = "Examination I",
-			info = "Upgrades your prosecutor passive ability\n\t• Cooldown reduced by [-drain_cd]\n\t• Duration reduced by [-drain_dur]",
+			info = "Upgrades your examination ability\n\t• Cooldown reduced by [-drain_cd]\n\t• Duration reduced by [-drain_dur]",
 		},
 		drain2 = {
 			name = "Examination II",
-			info = "Upgrades your prosecutor passive ability\n\t• Cooldown reduced by [-drain_cd]\n\t• Duration reduced by [-drain_dur]",
+			info = "Upgrades your examination passive ability\n\t• Cooldown reduced by [-drain_cd]\n\t• Duration reduced by [-drain_dur]",
 		},
 		spect1 = {
 			name = "Surveillance I",
-			info = "Upgrades your prosecutor passive ability\n\t• Cooldown reduced by [-spect_cd]\n\t• Duration increased by [+spect_dur]\n\t• Bullet damage protection increased to [%spect_prot]",
+			info = "Upgrades your surveillance ability\n\t• Cooldown reduced by [-spect_cd]\n\t• Duration increased by [+spect_dur]\n\t• Bullet damage protection increased to [%spect_prot]",
 		},
 		spect2 = {
 			name = "Surveillance II",
-			info = "Upgrades your prosecutor passive ability\n\t• Cooldown reduced by [-spect_cd]\n\t• Duration increased by [+spect_dur]\n\t• Bullet damage protection increased to [%spect_prot]",
+			info = "Upgrades your surveillance ability\n\t• Cooldown reduced by [-spect_cd]\n\t• Duration increased by [+spect_dur]\n\t• Bullet damage protection increased to [%spect_prot]",
 		},
 		combo = {
 			name = "Supreme Court",
@@ -2907,12 +2941,15 @@ wep.ID = {
 	server = "Server:",
 }
 
-wep.CAMERA = {
+wep.CCTV = {
 	name = "Surveillance System",
 	showname = "CCTV",
-	info = "Cameras allow you to see what is happening in the facility.\nThey also provide you an ability to scan SCPs and transmit this information to your current radio channel",
+	info = "CCTV system allows you to see what is happening in the facility.\nIt also provides you an ability to scan SCPs and transmit this information to your current radio channel",
 	scanning = "Scanning...",
 	scan_info = "Press [%s] to scan SCPs",
+	map_info = "Press [%s] to open map",
+	scan_cd = "Wait before next scan...",
+	no_signal = "No signal...",
 }
 
 wep.RADIO = {
@@ -3184,6 +3221,7 @@ wep.CLOTHES_CHANGER = {
 	skill = "Clothes Changer",
 	wait = "Wait",
 	ready = "Ready",
+	id_time = "Remaining stolen ID time",
 	progress = "Changing clothes",
 	vest = "Remove your vest in order to change clothes"
 }
@@ -3197,13 +3235,34 @@ wep.DOOR_BLOCKER = {
 	progress = "Charging"
 }
 
+wep.SNAV = {
+	name = "S-NAV",
+	low_battery = "Low Battery",
+	no_signal = "No Signal",
+}
+
+wep.SNAV_ULT = {
+	name = "S-NAV ULTIMATE",
+	showname = "S-NAV+",
+	low_battery = "Low Battery",
+	no_signal = "No Signal",
+}
+
 wep.__slc_ammo = "Ammo"
 
-wep.weapon_stunstick = "Stunstick"
-wep.weapon_crowbar = "Crowbar"
+wep.CROWBAR = {
+	name = "Crowbar",
+}
+wep.STUNSTICK = {
+	name = "Stunstick",
+}
+
+wep.CANDY = { --REMOVE
+	name = "Cukierek"
+}
 
 --[[-------------------------------------------------------------------------
-Minigames
+Minigames - Global
 ---------------------------------------------------------------------------]]
 local minigames = {}
 lang.minigames = minigames

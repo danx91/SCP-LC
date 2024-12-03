@@ -160,8 +160,10 @@ function ENT:Think()
 				if self.NFireBullets <= ct then
 					if 2 * math.pi * line:Length2D() * math.abs( ang.y - self.PredictedAngle.y ) / 360 < 5 then
 						local attacker = self:GetTurretOwner() //self.LastUser
-						if !IsValid( attacker ) or !attacker:CheckSignature( self:GetOwnerSignature() )  then
+						if !IsValid( attacker ) then
 							attacker = self
+						elseif !attacker:CheckSignature( self:GetOwnerSignature() ) then
+							attacker:SetProperty( "kill_team_override", self.OwnerTeam )
 						end
 
 						self:FireBullets{
@@ -179,6 +181,10 @@ function ENT:Think()
 							Spread = mode == 6 and Vector( 0.07, 0.07, 0 ) or Vector( 0.011, 0.011, 0 ),
 							IgnoreEntity = self
 						}
+
+						if attacker:IsPlayer() then
+							attacker:SetProperty( "kill_team_override", nil )
+						end
 
 						self:EmitSound( "Turret.Shot" )
 
@@ -287,7 +293,11 @@ end
 
 ENT.LCSUse =  0
 function ENT:CSUse( ply )
-	if ply != self:GetTurretOwner() or !ply:CheckSignature( self:GetOwnerSignature() ) then return end
+	local owner = self:GetTurretOwner()
+	if ply != owner and owner:CheckSignature( self:GetOwnerSignature() ) then return end
+
+	local t = ply:SCPTeam()
+	if t == TEAM_SPEC or t == TEAM_SCP then return end
 
 	if self:GetStatus() != STATUS_IDLE then return end
 	if ply:IsHolding( self, "slc_turret_mode" ) then return end
@@ -356,7 +366,18 @@ function ENT:OnTakeDamage( dmginfo )
 end
 
 function ENT:RequestMode( ply, mode )
-	if ply != self:GetTurretOwner() or !ply:CheckSignature( self:GetOwnerSignature() ) then return end
+	local owner = self:GetTurretOwner()
+	if ply != owner then
+		if owner:CheckSignature( self:GetOwnerSignature() ) then return end
+
+		local t = ply:SCPTeam()
+		if t == TEAM_SPEC or t == TEAM_SCP then return end
+
+		owner = ply
+		self:SetTurretOwner( owner )
+		self:SetOwnerSignature( owner:TimeSignature() )
+		self.OwnerTeam = owner:SCPTeam()
+	end
 
 	local status = self:GetStatus()
 	if status != STATUS_IDLE then return end
@@ -463,8 +484,13 @@ if SERVER then
 	AddTurretFilterModels( SCI_MODELS_2 )
 	AddTurretFilterModels( MTF_MODELS )
 	AddTurretFilterModels( GUARD_MODELS )
-	AddTurretFilterModels( { "models/scp/guard_med.mdl", "models/alski/mtfsupport/mtf1.mdl", "models/alski/mtfsupport/mtf_medyk.mdl", "models/scp/captain.mdl",
-		"models/alski/mtfsupport/saper_mtf.mdl" } )
+	AddTurretFilterModels( {
+		"models/scp/guard_med.mdl",
+		"models/alski/mtfsupport/mtf1.mdl",
+		"models/alski/mtfsupport/mtf_medyk.mdl",
+		"models/scp/captain.mdl",
+		"models/alski/mtfsupport/saper_mtf.mdl"
+	} )
 
 	net.ReceivePing( "SLCTurretMode", function( data, ply )
 		local ent = ply:GetEyeTrace().Entity

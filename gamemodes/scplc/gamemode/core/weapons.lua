@@ -3,10 +3,7 @@ local WEAPON = FindMetaTable( "Weapon" )
 --[[-------------------------------------------------------------------------
 Weapon Groups
 ---------------------------------------------------------------------------]]
-SLC_WEAPON_GROUP_OVERRIDE = {
-	weapon_crowbar = "melee",
-	weapon_stunstick = "melee",
-}
+SLC_WEAPON_GROUP_OVERRIDE = {}
 
 function WEAPON:GetGroup()
 	return SLC_WEAPON_GROUP_OVERRIDE[self:GetClass()] or self.Group
@@ -30,23 +27,17 @@ function WEAPON:IsAttackWeapon()
 	return false
 end
 
-
-MarkAsWeapon( "weapon_crowbar" )
-MarkAsWeapon( "weapon_stunstick" )
 --[[-------------------------------------------------------------------------
 ResetViewModelBones
 ---------------------------------------------------------------------------]]
 function WEAPON:ResetViewModelBones()
-	if CLIENT then
-		local owner = self:GetOwner()
+	local owner = self:GetOwner()
+	if !IsValid( owner ) then return end
 
-		if IsValid( owner ) then
-			local vm = owner:GetViewModel()
-			if IsValid( vm ) then
-				vm:ResetBones()
-			end
-		end
-	end
+	local vm = owner:GetViewModel()
+	if !IsValid( vm ) then return end
+	
+	vm:ResetBones()
 end
 
 --[[-------------------------------------------------------------------------
@@ -90,10 +81,10 @@ function WEAPON:SwingThink()
 	local delay_time = data.duration / ( data.num - 1 )
 	local id = math.ceil( dt / delay_time )
 
-	if id != data.last_id then
-		data.last_id = id
+	if id > data.last_id then
+		data.last_id = data.last_id + 1
 
-		if id == 1 and data.on_start then
+		if data.last_id == 1 and data.on_start then
 			data.on_start()
 		end
 
@@ -103,9 +94,9 @@ function WEAPON:SwingThink()
 		local aimang = aimvec:Angle()
 		local plyang = owner:GetAngles()
 		
-		local df = ( data.fov_end - data.fov_start ) * ( id - 1 ) / ( data.num - 1 )
-		local ds = ( data.path_end - data.path_start ) * ( id - 1 ) / ( data.num - 1 )
-		local dd = ( data.dist_end - data.dist_start ) * ( id - 1 ) / ( data.num - 1 )
+		local df = ( data.fov_end - data.fov_start ) * ( data.last_id - 1 ) / ( data.num - 1 )
+		local ds = ( data.path_end - data.path_start ) * ( data.last_id - 1 ) / ( data.num - 1 )
+		local dd = ( data.dist_end - data.dist_start ) * ( data.last_id - 1 ) / ( data.num - 1 )
 		
 		local pos = owner:GetShootPos() + aimang:Forward() * ( ds.x + data.path_start.x ) + aimang:Right() * ( ds.y + data.path_start.y ) + aimang:Up() * ( ds.z + data.path_start.z )
 		aimang:RotateAroundAxis( aimang:Up(), data.fov_start + df )
@@ -170,19 +161,64 @@ function WEAPON:SwingThink()
 				end
 
 				if data.cb_end then
-					data.cb_end()
+					data.cb_end( trace_tbl )
 				end
 
 				self.SwingAttackData = nil
+
+				return
 			end
 		end
 	end
 	
 	if id >= data.num then
 		if data.cb_end then
-			data.cb_end()
+			data.cb_end( trace_tbl )
 		end
 
 		self.SwingAttackData = nil
+		return
 	end
+
+	if id > data.last_id then
+		self:SwingThink()
+	end
+end
+
+--[[-------------------------------------------------------------------------
+
+---------------------------------------------------------------------------]]
+function WEAPON:TranslateViewModelAttachment( orig, inverse )
+	local view = render.GetViewSetup()
+	local vec = view.origin
+	local ang = view.angles
+	
+	local worldx = math.tan( view.fov * math.pi / 360 )
+	local viewx = math.tan( view.fovviewmodel * math.pi / 360 )
+
+	local diff = orig - vec
+	local factor = worldx / viewx
+
+	local right = ang:Right()
+	local up = ang:Up()
+	local forward = ang:Forward()
+
+	if !inverse then
+		right:Mul( right:Dot( diff ) * factor )
+		up:Mul( up:Dot( diff ) * factor )
+	elseif factor != 0 then
+		right:Mul( right:Dot( diff ) / factor )
+		up:Mul( up:Dot( diff ) / factor )
+	else
+		right = 0
+		up = 0
+	end
+
+	forward:Mul( forward:Dot( diff ) )
+
+	vec:Add( right )
+	vec:Add( up )
+	vec:Add( forward )
+
+	return vec
 end

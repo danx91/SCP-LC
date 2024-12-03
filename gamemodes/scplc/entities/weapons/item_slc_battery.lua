@@ -6,6 +6,7 @@ SWEP.WorldModel 			= "models/mishka/models/battery.mdl"
 SWEP.ShouldDrawViewModel 	= false
 SWEP.ShouldDrawWorldModel 	= false
 
+SWEP.Power 		= 100
 SWEP.Stacks 	= 3
 SWEP.Selectable = false
 

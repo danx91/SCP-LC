@@ -5,6 +5,27 @@ local generic_skill_icons = {
 	outside_buff = "slc/hud/upgrades/outside_buff.png",
 }
 
+//%def, flat, buff_hp, %regen_min, %regen_max, %heal_min, %heal_max
+local custom_skill_parsers = {
+	outside_buff = function( wep, lang, info )
+		local scp = SCPStats[wep:GetOwner():SCPClass()]
+		local scale = scp and scp.buff_scale or 1
+
+		local heal_pct = CVAR.slc_scp_buff_pct_regen:GetFloat()
+		local heal_cap = CVAR.slc_scp_buff_max_regen:GetInt()
+
+		return {
+			def = SCP_BUFF_DEF,
+			flat = SCP_BUFF_FLAT,
+			buff_hp = math.Round( ( scp and math.min( heal_pct * scp.hp, heal_cap ) or heal_cap ) * scale ),
+			regen_min = math.Round( SCP_BUFF_REGEN_MIN * scale, 3 ),
+			regen_max = math.Round( SCP_BUFF_REGEN_MAX * scale, 3 ),
+			heal_min = math.Round( SCP_BUFF_HEAL_MIN * scale, 3 ),
+			heal_max = math.Round( SCP_BUFF_HEAL_MAX * scale, 3 ),
+		}
+	end,
+}
+
 --[[
 	data = {
 		grid_x = 3, --X size of grid (width)
@@ -579,20 +600,7 @@ if CLIENT then
 				cx = w - width
 			end
 
-			/*render.SetStencilTestMask( 0xFF )
-			render.SetStencilWriteMask( 0xFF )
-			render.SetStencilPassOperation( STENCIL_REPLACE )
-			render.SetStencilFailOperation( STENCIL_KEEP )
-			render.SetStencilZFailOperation( STENCIL_KEEP )
-
-			render.SetStencilCompareFunction( STENCIL_ALWAYS )
-			render.SetStencilReferenceValue( 1 )
-
-			render.ClearStencil()
-			render.SetStencilEnable( true )*/
-
 			surface.SetDrawColor( 0, 0, 0, 240 )
-
 			surface.DrawRect( cx, cy, width, math.ceil( h * 0.04 ) )
 			local cur_y = cy + math.ceil( h * 0.04 )
 
@@ -626,27 +634,31 @@ if CLIENT then
 						wep.cached_description = {}
 					end
 
+					
 					if !wep.cached_description[info.name] then
+						local parser_data = custom_skill_parsers[info.name] and custom_skill_parsers[info.name]( wep, clang, info )
+						
 						wep.cached_description[info.name] = string.gsub( dsc, "%[([%/%+%-%%]?)(%+?)([%w_]+)%]", function( prefix, plus, name )
-							if !info.mod[name] then
+							local value = parser_data and parser_data[name] or info.mod[name]
+
+							if !value then
 								return "?"..name
 							end
 
 							if prefix == "-" then
-								local num = 1 - info.mod[name]
+								local num = 1 - value
 								return ( num > 0 and plus or "" )..( num * 100 ).."%"
 							elseif prefix == "+" then
-								local num = info.mod[name] - 1
+								local num = value - 1
 								return ( num > 0 and plus or "" )..( num * 100 ).."%"
 							elseif prefix == "/" then
-								local num = 1 / info.mod[name] - 1
+								local num = 1 / value - 1
 								return ( num > 0 and plus or "" )..math.Round( num * 100 ).."%"
 							elseif prefix == "%" then
-								local num = info.mod[name]
-								return ( num > 0 and plus or "" )..( info.mod[name] * 100 ).."%"
+								return ( value > 0 and plus or "" )..( value * 100 ).."%"
 							end
 
-							return info.mod[name]
+							return value
 						end )
 					end
 
@@ -725,9 +737,6 @@ if CLIENT then
 				end
 			end
 
-			//render.SetStencilCompareFunction( STENCIL_NOTEQUAL )
-			//render.SetStencilPassOperation( STENCIL_KEEP )
-
 			surface.SetDrawColor( 150, 150, 150, 50 )
 			surface.DrawOutlinedRect( cx - 2, cy - 2, width + 4, math.ceil( cur_y - cy + 4 ), 2 )
 
@@ -738,15 +747,13 @@ if CLIENT then
 			else
 				nf_yoffset = 0
 			end
-
-			//render.SetStencilEnable( false )
 		end
 	end
 
 	hook.Add( "DrawOverlay", "SCPUpgradesOverlay", drawUpgrades )
 
 	function ShowSCPUpgrades()
-		local wep = LocalPlayer():GetSCPWeapon()//GetActiveWeapon()
+		local wep = LocalPlayer():GetSCPWeapon()
 		if wep.UpgradeSystemMounted then
 			HUDSCPUpgradesOpen = true
 			gui.EnableScreenClicker( true )

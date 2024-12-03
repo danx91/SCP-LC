@@ -111,6 +111,7 @@ if CLIENT then
 end
 
 CAMERA_MASK = bit.lshift( 1, 31 )
+MOVEMENT_MASK = bit.lshift( 1, 30 )
 
 function GM:StartCommand( ply, cmd )
 	if controller.StartCommand( ply, cmd ) then return true end
@@ -123,8 +124,6 @@ function GM:StartCommand( ply, cmd )
 	end
 
 	if ply.GetDisableControls and ply:GetDisableControls() then
-		cmd:ClearMovement()
-
 		local mask = ply:GetDisableControlsMask()
 		if mask == 0 then
 			cmd:ClearButtons()
@@ -139,6 +138,10 @@ function GM:StartCommand( ply, cmd )
 
 			cmd:SetViewAngles( ply.DisableControlsAngle )
 		end
+
+		if bit.band( mask, MOVEMENT_MASK ) == 0 then
+			cmd:ClearMovement()
+		end
 	elseif ply.DisableControlsAngle then
 		ply.DisableControlsAngle = nil
 	end
@@ -152,17 +155,14 @@ function GM:StartCommand( ply, cmd )
 end
 
 function GM:PlayerSwitchWeapon( ply, old, new )
-	if IsValid( new ) then
-		if new.eq_slot and new.eq_slot > 6 then return true end
+	if !IsValid( new ) then return end
 
-		if new.OnSelect and new:OnSelect() == true then
-			return true
-		end
+	if new.eq_slot and new.eq_slot > 6 then return true end
+	if new.OnSelect and new:OnSelect() == true then return true end
+	if new.Selectable == false then return true end
+	if ply:GetProperty( "prevent_weapon_switch", 0 ) >= CurTime() then return true end
 
-		if new.Selectable == false then
-			return true
-		end
-	end
+	//new:ResetViewModelBones()
 end
 
 local admin_weapons = {
@@ -235,9 +235,12 @@ function GM:PlayerCanPickupWeapon( ply, wep )
 
 	if CLIENT then return true end
 
-	if !wep.Dropped then
-		return !wep.PickupPriority or !wep.PriorityTime or wep.PickupPriority == ply or wep.PriorityTime < CurTime()
-	elseif wep.Dropped > CurTime() - 1 then
+	local ct = CurTime()
+	if wep.PickupPriority and wep.PickupPriorityTime and wep.PickupPriorityTime >= ct then
+		return wep.PickupPriority == ply
+	elseif !wep.Dropped then
+		return true
+	elseif wep.Dropped + 1 >= ct then
 		return false
 	end
 
@@ -256,14 +259,13 @@ end
 
 function GM:SLCCanPickupWeaponClass( ply, class )
 	local tab = weapons.Get( class )
-	if !tab then return end
-
-	local group = SLC_WEAPON_GROUP_OVERRIDE[class] or tab.Group
+	local group = SLC_WEAPON_GROUP_OVERRIDE[class] or tab and tab.Group
+	
 	if !group then return end
 
 	for k, v in pairs( ply:GetWeapons() ) do
 		if v:GetGroup() == group then
-			//return false, "same_type"
+			return false, "same_type"
 		end
 	end
 end
@@ -276,23 +278,19 @@ end
 function GM:UpdateAnimation( ply, velocity, maxseqgroundspeed )
 
 	local len = velocity:Length()
-	local movement = 1.0
+	local rate = 1
 
 	if ( len > 0.2 ) then
-		movement = ( len / maxseqgroundspeed )
+		rate = ( len / maxseqgroundspeed )
 	end
 
-	local n_movement, noclamp = hook.Run( "SLCMovementAnimSpeed", ply, velocity, maxseqgroundspeed, len, movement )
-	if isnumber( n_movement ) then
-		movement = n_movement
+	local n_rate, noclamp = hook.Run( "SLCMovementAnimSpeed", ply, velocity, maxseqgroundspeed, len, rate )
+	if isnumber( n_rate ) then
+		rate = n_rate
 	end
 
-	local rate = movement
-
-	if !noclamp then
-		if rate > 2 then
-			rate = 2
-		end
+	if !noclamp and rate > 2 then
+		rate = 2
 	end
 
 	-- if we're under water we want to constantly be swimming..
@@ -324,6 +322,7 @@ function GM:UpdateAnimation( ply, velocity, maxseqgroundspeed )
 			ply:SetPoseParameter( "vehicle_steer", steer )
 
 		end
+
 		GAMEMODE:GrabEarAnimation( ply )
 		GAMEMODE:MouthMoveAnimation( ply )
 	end
@@ -504,6 +503,20 @@ local function accessor( func, var )
 	end
 end
 
+local function db_functions( func, db )
+	local getter = "Get_"..func
+	local setter = "Set_"..func
+
+	PLAYER["Get"..func] = function( self )
+		return self[getter]( self )
+	end
+
+	PLAYER["Set"..func] = function( self, val )
+		self[setter]( self, val )
+		self:SetSCPData( db, val )
+	end
+end
+
 accessor( "IsActive", "_SCPActive" )
 accessor( "IsPremium", "_SCPPremium" )
 accessor( "IsAFK", "_SCPAFK" )
@@ -511,6 +524,8 @@ accessor( "SCPLevel" )
 accessor( "SCPExp" )
 accessor( "SCPClassPoints" )
 accessor( "DailyBonus" )
+
+db_functions( "SpectatorPoints", "spectator_points" )
 
 function PLAYER:GetPrestigePoints()
 	return self:Get_PrestigePoints()
@@ -645,12 +660,24 @@ function PLAYER:GetWeaponByGroup( group )
 	end
 end
 
-function PLAYER:GetWeaponByBase( base )
+function PLAYER:GetWeaponByBase( base, all )
+	local tab
+
+	if all then
+		tab = {}
+	end
+
 	for i, v in ipairs( self:GetWeapons() ) do
 		if v:IsDerived( base ) then
-			return v
+			if !all then
+				return v
+			end
+
+			table.insert( tab, v )
 		end
 	end
+
+	return tab
 end
 
 function PLAYER:GetMainWeapon()

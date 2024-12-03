@@ -19,8 +19,6 @@ if CLIENT then
 	SWEP.SelectColor = Color( 255, 210, 0, 255 )
 end
 
-SWEP.NextUse 		= 0
-
 function SWEP:SetupDataTables()
 	self:CallBaseClass( "SetupDataTables" )
 
@@ -40,9 +38,8 @@ function SWEP:OnDrop()
 end
 
 function SWEP:PrimaryAttack()
-	if self.NextUse > CurTime() then return end
+	self:SetNextPrimaryFire( CurTime() + 0.5 )
 	if self:GetBattery() <= 0 then return end
-	self.NextUse = CurTime() + 0.25
 
 	local enabled = !self:GetEnabled()
 	self:SetEnabled( enabled )
@@ -54,8 +51,7 @@ end
 
 function SWEP:SecondaryAttack()
 	if !self:GetEnabled() then return end
-	if self.NextUse > CurTime() then return end
-	self.NextUse = CurTime() + 0.25
+	self:SetNextSecondaryFire( CurTime() + 0.25 )
 
 	local ch = self:GetChannel() + 1
 

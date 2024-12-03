@@ -16,7 +16,7 @@ if CLIENT then
 end
 
 SWEP.IS_DOCUMENT = true
-SWEP.Reward = 10
+SWEP.Reward = 20
 
 function SWEP:Initialize()
 	if SERVER then return end

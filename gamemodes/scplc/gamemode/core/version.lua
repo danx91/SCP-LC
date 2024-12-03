@@ -19,7 +19,7 @@ local op_mt = {
 			return this.major < other.major
 		end
 	end,
-	__le = function()
+	__le = function( this, other )
 		if this.realm == "i" or other.realm == "i" then return false end
 		if this.major == other.major then
 			if this.minor == other.minor then
@@ -35,6 +35,9 @@ local op_mt = {
 			return this.major < other.major
 		end
 	end,
+	__tostring = function( this )
+		return this.name
+	end
 }
 
 local realms = {

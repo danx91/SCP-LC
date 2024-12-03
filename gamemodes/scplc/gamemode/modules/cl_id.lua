@@ -23,13 +23,13 @@ function UpdatePlayerID( ply )
 		tt = TEAM_SCP
 	end
 
-	if tc and tt then
-		local saved = IDs[ply]
-		if !saved or saved.class != tc or saved.team != tt then
-			print( "Updating ID:", ply, tc )
-			IDs[ply] = { class = tc, team = tt }
-		end
-	end
+	if !tc or !tt then return end
+
+	local saved = IDs[ply]
+	if saved and saved.class == tc and saved.team == tt then return end
+
+	print( "Updating ID:", ply, tc )
+	IDs[ply] = { class = tc, team = tt }
 end
 
 function SetupInitialIDs( tab )
@@ -59,20 +59,15 @@ function ClearPlayerIDs()
 end
 
 function GM:HUDDrawTargetID()
-	if hud_disabled then return end
+	if hud_disabled or ROUND.infoscreen then return end
 
 	local lp = LocalPlayer()
-	if lp:SCPTeam() == TEAM_SPEC then return end
+	if lp:SCPTeam() == TEAM_SPEC and !lp:GetAdminMode() then return end
 
 	local ply = lp:GetEyeTrace().Entity
-
-	if !IsValid( ply ) then return end
-	if !ply.IsPlayer or !ply:IsPlayer() then return end
-	if !ply:Alive() then return end
-	if ROUND.infoscreen then return end
-	if ply:GetPos():DistToSqr( lp:GetPos() ) > 90000 then return end
-	if ply:SCPTeam() == TEAM_SPEC then return end
-	if ply:GetNoDraw() or hook.Run( "CanPlayerSeePlayer", lp, ply ) == false then return end
+	
+	if !IsValid( ply ) or !ply.IsPlayer or !ply:IsPlayer() or !ply:Alive() or ply:SCPTeam() == TEAM_SPEC then return end
+	if ply:GetPos():DistToSqr( lp:GetPos() ) > 90000 or ply:GetNoDraw() or hook.Run( "CanPlayerSeePlayer", lp, ply ) == false then return end
 
 	if !ply.updated_id then
 		ply.update_id = 0

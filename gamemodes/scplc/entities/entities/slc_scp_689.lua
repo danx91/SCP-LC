@@ -18,15 +18,6 @@ function ENT:Initialize()
 	self:DoRandom()
 
 	self.Targets = {}
-
-	timer.Simple( 5, function()
-		if !IsValid( self ) then return end
-
-		local min = CVAR.slc_689_min_players:GetInt()
-		if min <= 0 or player.GetCount() < min then
-			self:Remove()
-		end
-	end )
 end
 
 local light_offset = Vector( 0, 0, 64 )

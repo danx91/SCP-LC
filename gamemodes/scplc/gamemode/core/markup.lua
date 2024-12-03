@@ -1,14 +1,18 @@
 --[[-------------------------------------------------------------------------
 Markup Builder
 ---------------------------------------------------------------------------]]
+local function color_fallback( clr )
+	return clr.r..","..clr.g..","..clr.b..( clr.a == 255 and "" or ","..col.a )
+end
+
 MarkupBuilder = {}
 
-function MarkupBuilder:New()
+function MarkupBuilder:New( font )
 	if self != MarkupBuilder then
 		return self
 	end
 
-	return setmetatable( {
+	local builder = setmetatable( {
 		text = "",
 		font_stack = 0,
 		color_stack = 0,
@@ -16,6 +20,12 @@ function MarkupBuilder:New()
 		__index = MarkupBuilder,
 		__tostring = MarkupBuilder.ToString
 	} )
+
+	if font then
+		builder:PushFont( font )
+	end
+
+	return builder
 end
 
 function MarkupBuilder:PushFont( font )
@@ -36,7 +46,7 @@ function MarkupBuilder:PushColor( r, g, b )
 	local clr
 
 	if IsColor( r ) then
-		clr = markup.Color( r )
+		clr = markup and markup.Color( r ) or color_fallback( r )
 	else
 		clr = r..","..( g or r )..","..( b or r )
 	end
@@ -55,8 +65,13 @@ function MarkupBuilder:PopColor()
 end
 
 function MarkupBuilder:Print( txt, clr, font )
+	if isstring( clr ) then
+		font = clr
+		clr = nil
+	end
+
 	if font then self.text = self.text.."<font="..font..">" end
-	if clr then self.text = self.text.."<color="..markup.Color( clr )..">" end
+	if clr then self.text = self.text.."<color="..( markup and markup.Color( clr ) or color_fallback( clr ) )..">" end
 
 	self.text = self.text..txt
 
@@ -67,9 +82,14 @@ function MarkupBuilder:Print( txt, clr, font )
 end
 
 function MarkupBuilder.StaticPrint( txt, clr, font )
+	if isstring( clr ) then
+		font = clr
+		clr = nil
+	end
+
 	local text = ""
 	if font then text = text.."<font="..font..">" end
-	if clr then text = text.."<color="..markup.Color( clr )..">" end
+	if clr then text = text.."<color="..( markup and markup.Color( clr ) or color_fallback( clr ) )..">" end
 
 	text = text..txt
 

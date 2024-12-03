@@ -97,9 +97,10 @@ hook.Add( "RegisterSCP", "RegisterBaseSCPs", function()
 		prep_freeze = true,
 		no_chase = true,
 	}, {
-		base_health = 2150,
-		max_health = 2150,
-		base_speed = 175,
+		base_health = 2550,
+		max_health = 2550,
+		base_speed = 180,
+		buff_scale = 0.9,
 	}, nil, function( ply )
 		ply:SetRenderMode( RENDERMODE_TRANSCOLOR )
 		ply:SetCustomCollisionCheck( true )
@@ -114,6 +115,7 @@ hook.Add( "RegisterSCP", "RegisterBaseSCPs", function()
 		base_health = 2000,
 		max_health = 2000,
 		base_speed = 180,
+		buff_scale = 0.9,
 	} )
 
 	RegisterSCP( "SCP0492", "models/player/zombie_classic.mdl", "weapon_scp_0492", {
@@ -167,6 +169,7 @@ hook.Add( "RegisterSCP", "RegisterBaseSCPs", function()
 		base_health = 2600,
 		max_health = 2600,
 		base_speed = 165,
+		buff_scale = 0.85,
 	} )
 
 	RegisterSCP( "SCP096", "models/shaklin/scp/096/scp_096.mdl", "weapon_scp_096", {
@@ -178,6 +181,7 @@ hook.Add( "RegisterSCP", "RegisterBaseSCPs", function()
 		base_health = 1900,
 		max_health = 1900,
 		base_speed = 125,
+		buff_scale = 0.5,
 	} )
 
 	RegisterSCP( "SCP106", "models/danx91/scp/scp_106.mdl", "weapon_scp_106", {
@@ -187,6 +191,7 @@ hook.Add( "RegisterSCP", "RegisterBaseSCPs", function()
 		base_health = 1000,
 		max_health = 1000,
 		base_speed = 150,
+		buff_scale = 0.1,
 	}, nil, function( ply )
 		ply:SetCustomCollisionCheck( true )
 	end )
@@ -209,6 +214,7 @@ hook.Add( "RegisterSCP", "RegisterBaseSCPs", function()
 		base_health = 2300,
 		max_health = 2300,
 		base_speed = 165,
+		buff_scale = 0.75,
 	} )
 
 	RegisterSCP( "SCP682", "models/danx91/scp/scp_682.mdl", "weapon_scp_682", {
@@ -247,6 +253,7 @@ hook.Add( "RegisterSCP", "RegisterBaseSCPs", function()
 		base_health = 1750,
 		max_health = 1750,
 		base_speed = 190,
+		buff_scale = 0.75,
 	} )
 
 	RegisterSCP( "SCP24273", "models/player/alski/scp2427-3.mdl", "weapon_scp_24273", {
@@ -266,5 +273,6 @@ hook.Add( "RegisterSCP", "RegisterBaseSCPs", function()
 		base_health = 1450,
 		max_health = 1450,
 		base_speed = 215,
+		buff_scale = 0.85,
 	} )
 end )

@@ -212,7 +212,7 @@ EFFECTS.RegisterEffect( "asthma", {
 	hide = true,
 } )
 
-AddSounds( "SLCEffects.Asthma", "scp_lc/effects/choke/cough%i.ogg", 90, 1, { 90, 110 }, CHAN_STATIC, 1, 3 )
+AddSounds( "SLCEffects.Asthma", "scp_lc/effects/choke/cough%i.ogg", 75, 0.9, { 90, 110 }, CHAN_STATIC, 1, 3 )
 
 EFFECTS.RegisterEffect( "blindness", {
 	duration = -1,
@@ -263,6 +263,7 @@ EFFECTS.RegisterEffect( "throm", {
 	cantarget = can_target,
 	hide = true,
 } )
+
 EFFECTS.RegisterEffect( "light_bleeding", {
 	duration = 10,
 	stacks = 0,
@@ -309,6 +310,7 @@ EFFECTS.RegisterEffect( "light_bleeding", {
 	end,
 	wait = 2,
 } )
+
 EFFECTS.RegisterEffect( "urbach", {
 	duration = -1,
 	stacks = 0,

@@ -72,7 +72,7 @@ function ENT:StopTransmit()
 	UnPausePA()
 end
 
-hook.Add( "PlayerCanHearPlayersVoice", "SLCIntercom", function( listener, talker )
+hook.Add( "PlayerSpeakOverride", "SLCIntercom", function( talker )
 	if !IsValid( INTERCOM_SCREEN ) or !IsValid( INTERCOM_SCREEN.ActivePlayer ) then return end
 	if talker == INTERCOM_SCREEN.ActivePlayer then
 		return true

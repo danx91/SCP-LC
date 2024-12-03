@@ -97,25 +97,23 @@ function SWEP:Think()
 						maxs = Vector( 3, 3, 3 )
 					} )
 
-					local vic = tr.Entity
-					if IsValid( vic ) and vic:IsPlayer() then
-						if vic:SCPTeam() != TEAM_SPEC then
-							local dmg = take
-							if dmg > charges then
-								dmg = charges
-							end
-
-							dmg = dmg * self.DamagePerCharge
-
-							local info = DamageInfo()
-							info:SetInflictor( self )
-							info:SetAttacker( owner )
-							info:SetDamage( dmg )
-							info:SetDamageType( self.DMGType )
-							info:SetDamageForce( Vector( 0, 0, 0 ) )
-
-							vic:TakeDamageInfo( info )
+					local target = tr.Entity
+					if IsValid( target ) and ( !target:IsPlayer() or target:SCPTeam() != TEAM_SPEC ) then
+						local dmg = take
+						if dmg > charges then
+							dmg = charges
 						end
+
+						dmg = dmg * self.DamagePerCharge
+
+						local info = DamageInfo()
+						info:SetInflictor( self )
+						info:SetAttacker( owner )
+						info:SetDamage( dmg )
+						info:SetDamageType( self.DMGType )
+						info:SetDamageForce( Vector( 0, 0, 0 ) )
+
+						target:TakeDamageInfo( info )
 					end
 
 					for k, v in pairs( FindInCylinder( start, 256, -64, 256, nil, MASK_SOLID_BRUSHONLY, player.GetAll() ) ) do
@@ -156,6 +154,8 @@ function SWEP:Deploy()
 			owner:PushSpeed( 0.75, 0.75, -1, "particle_cannon", 1 )
 		end
 	end
+
+	self:ResetViewModelBones()
 end
 
 function SWEP:Holster()
@@ -165,6 +165,8 @@ function SWEP:Holster()
 		self:PopSpeed()
 	end
 
+	self:ResetViewModelBones()
+
 	return true
 end
 
@@ -172,6 +174,8 @@ function SWEP:SLCPreDrop()
 	if SERVER then
 		self:PopSpeed()
 	end
+
+	self:ResetViewModelBones()
 end
 
 function SWEP:CanDrop()
@@ -187,6 +191,8 @@ end
 function SWEP:OnRemove()
 	self:StopSound( "particle_cannon.shot" )
 	self:StopSound( "particle_cannon.windup1" )
+
+	self:ResetViewModelBones()
 end
 
 function SWEP:OnDrop()
@@ -207,6 +213,10 @@ end
 
 function SWEP:GetCustomClip()
 	return self:GetCharges()
+end
+
+function SWEP:SetCustomClip( num )
+	self:SetCharges( num )
 end
 
 function SWEP:StartSequence()

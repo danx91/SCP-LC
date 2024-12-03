@@ -675,14 +675,15 @@ SCP Hooks
 //lua_run ClearSCPHooks() EnableSCPHook("SCP106") TransmitSCPHooks()
 SCPHook( "SCP106", "SLCPostScaleDamage", function( target, dmg )
 	if dmg:IsDamageType( DMG_DIRECT ) or !IsValid( target ) or !target:IsPlayer() or target:SCPClass() != CLASSES.SCP106 then return end
-	if !dmg:IsDamageType( DMG_RADIATION ) and !dmg:IsDamageType( DMG_POISON ) and !dmg:IsDamageType( DMG_BLAST ) and !dmg:IsDamageType( DMG_FALL ) then
-		local wep = target:GetSCPWeapon()
-		if !IsValid( wep ) then return true end
-	
-		wep:DamagePassive( dmg:GetDamage() )
+	if dmg:IsDamageType( DMG_RADIATION ) or dmg:IsDamageType( DMG_POISON ) or dmg:IsDamageType( DMG_BLAST ) or dmg:IsDamageType( DMG_FALL ) then return end
 
-		return true
-	end
+	local wep = target:GetSCPWeapon()
+	if !IsValid( wep ) then return end
+
+	wep:DamagePassive( dmg:GetDamage() )
+	ApplyDamageHUDEvents( target, dmg )
+
+	return true
 end )
 
 if CLIENT then
@@ -874,7 +875,7 @@ if CLIENT then
 			return math.Round( hp )
 		end )
 		:SetProgressFunction( function( swep )
-			return swep:GetPassiveDamage() / wep.PassiveDamage
+			return swep:GetPassiveDamage() / ( wep.PassiveDamage  * swep:GetUpgradeMod( "passive_dmg", 1 ) )
 		end )
 		:SetVisibleFunction( function( swep )
 			return swep:GetPassiveDamage() > 0

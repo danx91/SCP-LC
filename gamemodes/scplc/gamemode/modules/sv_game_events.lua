@@ -1,77 +1,96 @@
 --[[-------------------------------------------------------------------------
 SCP 914
 ---------------------------------------------------------------------------]]
-function Use914( ent, ply )
-	if GetRoundProperty( "914use" ) then return false end
-	SetRoundProperty( "914use", true )
+function SCP914Use( ply )
+	if GetRoundProperty( "scp914_in_use" ) then return false end
+	SetRoundProperty( "scp914_in_use", true )
 
-	local button = CacheEntity( SCP_914_STATUS )
-	if !IsValid( button ) then return end
-
-	local angle = math.Round( button:GetAngles().roll )
-
-	local nummode = 0
-	local mode = UPGRADE_MODE.ROUGH
-
-	if angle == 45 then
-		mode = UPGRADE_MODE.COARSE
-		nummode = 1
-	elseif	angle == 90 then
-		mode = UPGRADE_MODE.ONE_ONE
-		nummode = 2
-	elseif	angle == 135 then
-		mode = UPGRADE_MODE.FINE
-		nummode = 3
-	elseif	angle == 180 then
-		mode = UPGRADE_MODE.VERY_FINE
-		nummode = 4
-	end
-
-	AddTimer( "SCP914UpgradeEnd", 16, 1, function()
-		SetRoundProperty( "914use", false )
-	end )
-
-	if CVAR.slc_scp914_kill:GetBool() == true then
-		AddTimer( "SCP914KillPlayers", 7.5, 1, function() 
-			for i, v in ipairs( player.GetAll() ) do
-				if v:Alive() then
-					local pos = v:GetPos()
-					--print( "testing!" )
-					if pos:WithinAABox( SCP_914_INTAKE_MINS, SCP_914_INTAKE_MAXS ) or pos:WithinAABox( SCP_914_OUTPUT_MINS, SCP_914_OUTPUT_MAXS ) then
-						v:Kill()
-					end
-				end
-			end
-		end )
-	end
+	local mode = SCP_914_MODE()
 
 	AddTimer( "SCP914Upgrade", 10, 1, function() 
-		InternalUpgrade914( mode, nummode, ply )
+		SCP914Upgrade( mode, ply )
+	end )
+
+	AddTimer( "SCP914UpgradeEnd", 16, 1, function()
+		SetRoundProperty( "scp914_in_use", false )
 	end )
 
 	return true
 end
 
-function InternalUpgrade914( mode, nummode, ply )
+function SCP914Upgrade( mode, ply )
+	local ct = CurTime()
+
 	for i, v in ipairs( ents.FindInBox( SCP_914_INTAKE_MINS, SCP_914_INTAKE_MAXS ) ) do
-		if IsValid( v ) then
-			if v.HandleUpgrade then
-				v:HandleUpgrade( mode, nummode, SCP_914_OUTPUT, ply )
-			elseif v.scp914upgrade then
-				local item_class
+		if !IsValid( v ) then continue end
 
-				if isstring( v.scp914upgrade ) and nummode > 2 then item_class = v.scp914upgrade end
-				if isfunction( v.scp914upgrade ) then item_class = v.scp914upgrade( v, mode, nummode ) end
+		if v.HandleUpgrade then
+			v:HandleUpgrade( mode, SCP_914_OUTPUT, ply )
+		elseif v.SCP914Upgrade then
+			local item_class
 
-				if item_class then
-					local item = ents.Create( item_class )
-					if IsValid( item ) then
-						v:Remove()
-						item:SetPos( SCP_914_OUTPUT )
-						item:Spawn()
-					end
+			if istable( v.SCP914Upgrade ) then
+				item_class = v.SCP914Upgrade[mode]
+			elseif mode >= UPGRADE_MODE.FINE and isstring( v.SCP914Upgrade ) then
+				item_class = v.SCP914Upgrade
+			end
+
+			if !item_class then
+				v:SetPos( SCP_914_OUTPUT )
+
+				if v.PickupPriority then
+					v.Dropped = ct
+					v.PickupPriorityTime = ct + 10
+				end
+
+				continue
+			end
+
+			local item = ents.Create( item_class )
+			if !IsValid( item ) then continue end
+
+			item:SetPos( SCP_914_OUTPUT )
+			item:Spawn()
+			
+			if v.PickupPriority then
+				item.Dropped = ct
+				item.PickupPriority = v.PickupPriority
+				item.PickupPriorityTime = ct + 10
+			end
+
+			v:Remove()
+		elseif v:IsPlayer() then
+			v:SetPos( SCP_914_OUTPUT )
+
+			if mode == UPGRADE_MODE.ROUGH then
+				v:TakeDamage( math.random( 50, 100 ), v, v )
+			elseif mode == UPGRADE_MODE.COARSE then
+				v:TakeDamage( math.random( 5, 50 ), v, v )
+			elseif mode == UPGRADE_MODE.FINE then
+				v:AddHealth( math.random( 5, 25 ) )
+			elseif mode == UPGRADE_MODE.VERY_FINE then
+				local upgrade_num = v:GetProperty( "scp914_veryfine", 0 )
+				v:SetProperty( "scp914_veryfine", upgrade_num + 1 )
+
+				local extra = v:GetExtraHealth() + math.random( 30, 50 ) + 15 * upgrade_num
+				v:SetExtraHealth( extra )
+				v:SetMaxExtraHealth( extra )
+				v:SetProperty( "extra_hp_think", ct + 1 )
+
+				if math.random( 10 ) <= upgrade_num then
+					v:SetProperty( "death_info_override", {
+						type = "dead",
+						args = {
+							"scp914_death"
+						}
+					} )
+
+					v:SkipNextSuicide()
+					v:Kill()
 				end
 			end
+		else
+			//v:SetPos( SCP_914_OUTPUT )
 		end
 	end
 end
@@ -703,7 +722,7 @@ function ALLWarheads( time )
 						v:SetProperty( "death_info_override", {
 							type = "mia",
 							args = {
-								"omega_mia"
+								v:IsInZone( ZONE_SURFACE ) and "alpha_mia" or "omega_mia"
 							}
 						} )
 						

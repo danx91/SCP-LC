@@ -87,7 +87,7 @@ local function DrawEffectsHUD()
 					local n_effect = effects[j]
 					local n_eff = EFFECTS.effects[n_effect.name]
 
-					local name = LANG.EFFECTS[n_effect.name] or n_effect.name
+					local name = LANG.EFFECTS[n_eff.lang or n_effect.name] or n_eff.lang or n_effect.name
 					local tier = n_eff.tiers > 1 and ( use_roman and ToRoman( n_effect.tier ) or n_effect.tier ) or ""
 					local time = n_effect.endtime == -1 and LANG.EFFECTS.permanent or math.floor( n_effect.endtime - CurTime() )
 
@@ -119,7 +119,7 @@ local function DrawEffectsHUD()
 			local btn = button( start_x, start_y + ( size + margin ) * ( i - 1 ), size, size )
 
 			if btn > 0 then
-				local name = LANG.EFFECTS[effect.name] or effect.name
+				local name = LANG.EFFECTS[eff.lang or effect.name] or eff.lang or effect.name
 				local tier = eff.tiers > 1 and ( use_roman and ToRoman( effect.tier ) or effect.tier ) or ""
 				local time = effect.endtime == -1 and LANG.EFFECTS.permanent or math.floor( effect.endtime - CurTime() )
 

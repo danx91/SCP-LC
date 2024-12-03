@@ -5,12 +5,14 @@ SWEP.ViewModel 		= "models/slusher/pipe/c_pipe.mdl"
 SWEP.WorldModel 	= "models/slusher/pipe/w_pipe.mdl"
 SWEP.UseHands 		= true
 
+SWEP.Primary.Automatic = true
+
 SWEP.HoldType 		= "melee"
 
 SWEP.Group			= "melee"
 
-SWEP.AttackSpeed 	= 1.5
-SWEP.AttackDamage 	= { 12, 18 }
+SWEP.AttackSpeed 	= 1.6
+SWEP.AttackDamage 	= { 15, 21 }
 SWEP.HitsPerLevel 	= 3
 
 if CLIENT then

@@ -8,76 +8,83 @@ function RebuildFonts()
 	local size_info = SLC_INFO_FONT_SIZE or 1
 	local w = ScrW()
 
-	CreateFont( "SCPHUDESmall", {
+	SLCCreateFont( "SCPHUDESmall", {
 		font = font,
 		size = w * 0.01 * size_prim,
 		antialias = true,
 		weight = 500,
 		extended = true,
-	} )
+	}, 4 )
 
-	CreateFont( "SCPHUDVSmall", {
+	SLCCreateFont( "SCPHUDVSmall", {
 		font = font,
 		size = w * 0.015 * size_prim,
 		antialias = true,
 		weight = 500,
 		extended = true,
-	} )
+	}, 4 )
 
-	CreateFont( "SCPHUDSmall", {
+	SLCCreateFont( "SCPHUDSmall", {
 		font = font,
 		size = w * 0.0175 * size_prim,
 		antialias = true,
 		weight = 500,
 		extended = true,
-	} )
+	}, 4 )
 
-	CreateFont( "SCPHUDMedium", {
+	SLCCreateFont( "SCPHUDMedium", {
 		font = font,
 		size = w * 0.021 * size_prim,
 		antialias = true,
 		weight = 500,
 		extended = true,
-	} )
+	}, 4 )
 
-	CreateFont( "SCPHUDBig", {
+	SLCCreateFont( "SCPHUDBig", {
 		font = font,
 		size = w * 0.0275 * size_prim,
 		antialias = true,
 		weight = 500,
 		extended = true,
-	} )
+	}, 4 )
 
-	CreateFont( "SCPHUDVBig", {
+	SLCCreateFont( "SCPHUDVBig", {
 		font = font,
 		size = w * 0.035 * size_prim,
 		antialias = true,
 		weight = 500,
 		extended = true
-	} )
+	}, 4 )
 
-	CreateFont( "SCPNumbersBig", {
+	SLCCreateFont( "SCPNumbersBig", {
 		font = font_digit,
 		size = w * 0.02 * size_digit,
 		antialias = true,
 		weight = 500,
 	} )
 
-	CreateFont( "SCPNumbersMedium", {
+	SLCCreateFont( "SCPNumbersMedium", {
 		font = font_digit,
 		size = w * 0.0175 * size_digit,
 		antialias = true,
 		weight = 500,
 	} )
 
-	CreateFont( "SCPNumbersSmall", {
+	SLCCreateFont( "SCPNumbersSmall", {
 		font = font_digit,
 		size = w * 0.015 * size_digit,
 		antialias = true,
 		weight = 500,
 	} )
 
-	CreateFont( "SCPInfoScreenBig", {
+	SLCCreateFont( "SCPNumbersVSmall", {
+		font = font_digit,
+		size = w * 0.012 * size_digit,
+		antialias = true,
+		weight = 500,
+	} )
+
+	SLCCreateFont( "SCPInfoScreenBig", {
 		font = font_info,
 		size = w * 0.04 * size_info,
 		antialias = true,
@@ -85,7 +92,7 @@ function RebuildFonts()
 		extended = true,
 	} )
 
-	CreateFont( "SCPInfoScreenMedium", {
+	SLCCreateFont( "SCPInfoScreenMedium", {
 		font = font_info,
 		size = w * 0.0325 * size_info,
 		antialias = true,
@@ -93,7 +100,7 @@ function RebuildFonts()
 		extended = true,
 	} )
 
-	CreateFont( "SCPInfoScreenSmall", {
+	SLCCreateFont( "SCPInfoScreenSmall", {
 		font = font_info,
 		size = w * 0.015 * size_info,
 		antialias = true,
@@ -101,19 +108,19 @@ function RebuildFonts()
 		extended = true,
 	} )
 
-	CreateFont( "SCPHLIcons", {
+	SLCCreateFont( "SCPHLIcons", {
 		font = "HalfLife2",
 		size = w * 0.04,
 		antialias = true,
 	} )
 
-	CreateFont( "SCPCSSIcons", {
+	SLCCreateFont( "SCPCSSIcons", {
 		font = "csd",
 		size = w * 0.05,
 		antialias = true,
 	} )
 
-	CreateFont( "SCPCSSIconsSmall", {
+	SLCCreateFont( "SCPCSSIconsSmall", {
 		font = "csd",
 		size = w * 0.04,
 		antialias = true,
@@ -132,7 +139,7 @@ function RebuildScaledFonts( scale )
 	local size_digit = SLC_DIGITS_FONT_SIZE or 1
 	local w = ScrW()
 
-	CreateFont( "SCPScaledHUDVSmall", {
+	SLCCreateFont( "SCPScaledHUDVSmall", {
 		font = font,
 		size = w * 0.017 * scale * size_prim,
 		antialias = true,
@@ -140,7 +147,7 @@ function RebuildScaledFonts( scale )
 		extended = true,
 	} )
 
-	CreateFont( "SCPScaledHUDVSmall_Blur", {
+	SLCCreateFont( "SCPScaledHUDVSmall_Blur", {
 		font = font,
 		size = w * 0.017 * scale * size_prim,
 		antialias = true,
@@ -149,7 +156,7 @@ function RebuildScaledFonts( scale )
 		blursize = 4,
 	} )
 
-	CreateFont( "SCPScaledHUDSmall", {
+	SLCCreateFont( "SCPScaledHUDSmall", {
 		font = font,
 		size = w * 0.020 * scale * size_prim,
 		antialias = true,
@@ -157,7 +164,7 @@ function RebuildScaledFonts( scale )
 		extended = true,
 	} )
 
-	CreateFont( "SCPScaledHUDSmall_Blur", {
+	SLCCreateFont( "SCPScaledHUDSmall_Blur", {
 		font = font,
 		size = w * 0.020 * scale * size_prim,
 		antialias = true,
@@ -166,7 +173,7 @@ function RebuildScaledFonts( scale )
 		blursize = 4,
 	} )
 
-	CreateFont( "SCPScaledHUDMedium", {
+	SLCCreateFont( "SCPScaledHUDMedium", {
 		font = font,
 		size = w * 0.025 * scale * size_prim,
 		antialias = true,
@@ -174,7 +181,7 @@ function RebuildScaledFonts( scale )
 		extended = true,
 	} )
 
-	CreateFont( "SCPScaledHUDBig", {
+	SLCCreateFont( "SCPScaledHUDBig", {
 		font = font,
 		size = w * 0.03 * scale * size_prim,
 		antialias = true,
@@ -182,28 +189,28 @@ function RebuildScaledFonts( scale )
 		extended = true,
 	} )
 
-	CreateFont( "SCPScaledNumbersVBig", {
+	SLCCreateFont( "SCPScaledNumbersVBig", {
 		font = font_digit,
 		size = w * 0.028 * scale * size_digit,
 		antialias = true,
 		weight = 500,
 	} )
 
-	CreateFont( "SCPScaledNumbersBig", {
+	SLCCreateFont( "SCPScaledNumbersBig", {
 		font = font_digit,
 		size = w * 0.023 * scale * size_digit,
 		antialias = true,
 		weight = 500,
 	} )
 
-	CreateFont( "SCPScaledNumbersMedium", {
+	SLCCreateFont( "SCPScaledNumbersMedium", {
 		font = font_digit,
 		size = w * 0.02 * scale * size_digit,
 		antialias = true,
 		weight = 500,
 	} )
 
-	CreateFont( "SCPScaledNumbersSmall", {
+	SLCCreateFont( "SCPScaledNumbersSmall", {
 		font = font_digit,
 		size = w * 0.017 * scale * size_digit,
 		antialias = true,
@@ -212,11 +219,15 @@ function RebuildScaledFonts( scale )
 end
 
 BlurOutlineFonts = {}
-function CreateFont( name, tab, bo_size )
+function SLCCreateFont( name, tab, bo_size )
+	if bo_size then
+		tab.blursize = 0
+	end
+
 	surface.CreateFont( name, tab )
 
 	if bo_size then
-		local n = name.."_b"
+		local n = name.."_bo"
 
 		tab.blursize = bo_size
 		surface.CreateFont( n, tab )
@@ -243,6 +254,6 @@ timer.Simple( 1, function()
 		RebuildFonts()
 		RebuildScaledFonts( GetHUDScale() )
 
-		SLCPopup( LANG.MISC.font.name, LANG.MISC.font.content, false, nil, LANG.MISC.font.ok )
+		SLCLegacyPopup( LANG.MISC.font.name, LANG.MISC.font.content, false, nil, LANG.MISC.font.ok )
 	end
 end )

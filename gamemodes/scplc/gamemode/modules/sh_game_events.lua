@@ -4,7 +4,7 @@ Safe spots
 function IsInSafeSpot( pos )
 	for k, v in pairs( SAFE_SPOTS ) do
 		if pos:WithinAABox( v.mins, v.maxs ) then
-			return true
+			return true, v
 		end
 	end
 

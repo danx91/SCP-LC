@@ -7,9 +7,11 @@ SWEP.UseHands 			= true
 
 SWEP.HoldType 			= "knife"
 
+SWEP.Primary.Automatic = true
+
 SWEP.Group				= "melee"
 
-SWEP.AttackSpeed 		= 1
+SWEP.AttackSpeed 		= 1.4
 SWEP.AttackDamage 		= 15
 SWEP.StrongAttackDamage = 25
 SWEP.Hits 				= 9
@@ -122,8 +124,8 @@ function SWEP:PrimaryAttack()
 		path_end = path[2],
 		fov_start = path[3],
 		fov_end = path[4],
-		delay = 0.3,
-		duration = 0.1,
+		delay = dur * 0.3,
+		duration = dur * 0.1,
 		num = 6,
 		distance = strong and 30 or 60,
 		mins = strong and str_mins or mins,

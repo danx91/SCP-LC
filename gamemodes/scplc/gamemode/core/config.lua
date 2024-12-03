@@ -1,8 +1,26 @@
-DEVELOPER_MODE = false --REMOVE!
+DEVELOPER_MODE = false --IMPORTANT: Set to false before publishing or running public server!
 
 INFO_SCREEN_DURATION = 10
-PRE_BREACH_DURATION = 5 --Not used!
 
+--[[-------------------------------------------------------------------------
+SCP Buff
+---------------------------------------------------------------------------]]
+SCP_BUFF_DEF = 0.25
+SCP_BUFF_FLAT = 1
+
+SCP_BUFF_TICK = 0.333
+SCP_BUFF_HEAL_RATE = 25
+SCP_BUFF_REGEN_RATE = 10
+SCP_BUFF_REGEN_TIME = 5
+
+SCP_BUFF_HEAL_MIN = 0.1
+SCP_BUFF_HEAL_MAX = 1
+SCP_BUFF_REGEN_MIN = 0.2
+SCP_BUFF_REGEN_MAX = 0.75
+
+--[[-------------------------------------------------------------------------
+XP Summary
+---------------------------------------------------------------------------]]
 XPSUMMARY_ORDER = {
 	"cmd",
 	"general",

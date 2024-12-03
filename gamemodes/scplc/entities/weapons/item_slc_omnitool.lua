@@ -51,6 +51,9 @@ function SWEP:SetupDataTables()
 		end
 	end )*/
 
+	self:SetChipID( -1 )
+	self:SetAccessOverride( 0 )
+
 	self:ActionQueueSetup( true )
 end
 
@@ -78,8 +81,6 @@ function SWEP:Initialize()
 		end
 	end*/
 
-	self:SetChipID( -1 )
-	self:SetAccessOverride( 0 )
 	self:SetState( STATE.IDLE )
 
 	//self.ActionQueue = {}

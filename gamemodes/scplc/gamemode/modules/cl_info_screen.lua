@@ -18,6 +18,7 @@ local function prepare_text( text_data )
 	//local tab_size = #text_data
 	for i, v in ipairs( text_data ) do
 		for line in string.gmatch( v.text, "[^\n]+" ) do
+			line = utf8.force( line )
 			local len, _ = utf8.len( line )
 			
 			if !len then

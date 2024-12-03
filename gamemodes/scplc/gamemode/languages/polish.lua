@@ -34,15 +34,15 @@ lang.NRegistry = {
 	roundxp = "Otrzymujesz %i doświadczenia za zdobyte punkty",
 	gateexplode = "Czas do wybuchu Gate A: %i",
 	explodeterminated = "Wybuch Gate A zakończony",
-	r106used = "Procedura zabezpieczenia SCP 106 może zostać uruchomiona tylko raz na rundę",
-	r106eloiid = "Wyłącz elektromagnes ELO-IID, aby rozpocząć procedurę zabezpieczania SCP 106",
-	r106sound = "Uruchom transmisję dźwięku, aby rozpocząć procedurę zabezpieczania SCP 106",
-	r106human = "W klatce musi znajdować się żywy człowiek, aby rozpocząć procedurę zabezpieczania SCP 106",
-	r106already = "SCP 106 jest już zabezpieczony",
-	r106success = "Otrzymujesz %i punktów za zabezpieczenie SCP 106!",
+	r106used = "Procedura zabezpieczenia SCP-106 może zostać uruchomiona tylko raz na rundę",
+	r106eloiid = "Wyłącz elektromagnes ELO-IID, aby rozpocząć procedurę zabezpieczania SCP-106",
+	r106sound = "Uruchom transmisję dźwięku, aby rozpocząć procedurę zabezpieczania SCP-106",
+	r106human = "W klatce musi znajdować się żywy człowiek, aby rozpocząć procedurę zabezpieczania SCP-106",
+	r106already = "SCP-106 jest już zabezpieczony",
+	r106success = "Otrzymujesz %i punktów za zabezpieczenie SCP-106!",
 	vestpickup = "Podniosłeś pancerz",
 	vestdrop = "Upuściłeś pancerz",
-	hasvest = "Masz już pancerz na sobie! Użyj swojego EQ, aby ją upuścić",
+	hasvest = "Masz już pancerz na sobie! Użyj swojego EQ, aby go upuścić",
 	escortpoints = "Otrzymujesz %i punktów za eskortę sojuszników",
 	femur_act = "Femur Breaker został aktywowany...",
 	levelup = "Awansowałeś! Twój aktualny poziom: %i",
@@ -55,7 +55,7 @@ lang.NRegistry = {
 	alpha_detonation = "Detonacja głowicy ALPHA za %i sekund. Wejdź do placówki lub natychmiastowo udaj się do ewakuacji!",
 	alpha_card = "Włożyłeś kartę nuklearną głowicy ALPHA",
 	destory_scp = "Otrzymujesz %i punktów za zniszczenie podmiotu SCP!",
-	afk = "Jesteś AFK. Nie będziesz się respił ani otrzymywał expa",
+	afk = "Jesteś AFK. Nie będziesz się odradzał ani otrzymywał expa",
 	afk_end = "Nie jesteś już AFK",
 	overload_cooldown = "Poczekaj %i sekund aby przeciążyć te drzwi!",
 	advanced_overload = "Te drzwi wydają się być za mocne! Spróbuj ponownie za %i sekund",
@@ -78,8 +78,13 @@ lang.NRegistry = {
 	queue_low = "Znajdujesz się w kolejce wsparcia o niskim priorytecie!",
 	queue_pos = "Twoja pozycja w kolejce wsparcia: %i",
 	support_optout = "Nie pojawiłeś się jako wsparcie, ponieważ zrezygnowałeś. Możesz to zmienić w !settings",
+	zombie_optout = "Nie pojawiłeś się jako SCP-049-2, ponieważ zrezygnowałeś. Możesz to zmienić w !settings",
+	preparing_classd = "Zostałeś Klasą D ponieważ dołaczyłeś podczas rozgrzewki. Możesz to zmienić w !settings",
 	property_dmg = "Straciłeś %d punktów za zniszczenie własności Fundacji!",
-	unknown_cmd = "Nieznane polecenie: %s"
+	unknown_cmd = "Nieznane polecenie: %s",
+	tailor_success = "Udało ci się ukraść identyfikator. Uważaj, niedługo straci on swoją ważność!",
+	tailor_fail = "Nie udało ci się znależć identyfikatora tej osoby!",
+	tailor_end = "Ukradziony identyfikator stracił ważność!",
 }
 
 lang.NFailed = "Nie udało się uzyskać dostępu do NRegistry z kluczem: %s"
@@ -106,24 +111,24 @@ lang.NCRegistry = {
 	stat_rdmdmg = "Obrażenia RDM: %i",
 	stat_dmg = "Zadane obrażenia: %i",
 	stat_bleed = "Obrażenia od krwawienia: %i",
-	stat_106recontain = "SCP 106 został zabezpieczony",
+	stat_106recontain = "SCP-106 został zabezpieczony",
 	stat_escapes = "Graczy uciekło: %i",
 	stat_escorts = "Graczy odeskortowano: %i",
-	stat_023 = "Nagłe zgony spowodowane przez SCP 023: %i",
-	stat_049 = "Gracze \"wyleczeni\" przez SCP 049: %i",
+	stat_023 = "Nagłe zgony spowodowane przez SCP-023: %i",
+	stat_049 = "Gracze \"wyleczeni\" przez SCP-049: %i",
 	stat_0492 = "Gracze zmasakrowani przez zombie: %i",
 	stat_058 = "Gracze zabici przez SCP-058: %i",
 	stat_066 = "Gracze zabici przez głośną muzykę: %i",
-	stat_096 = "Gracze zabici przez SCP 096: %i",
+	stat_096 = "Gracze zabici przez SCP-096: %i",
 	stat_106 = "Gracze przeteleportowani do wymiaru łuzowego: %i",
-	stat_173 = "Złamane karki przez SCP 173: %i",
+	stat_173 = "Złamane karki przez SCP-173: %i",
 	stat_457 = "Spaleni gracze: %i",
-	stat_682 = "Gracze zabici przez SCP 682: %i",
-	stat_8602 = "Gracze przybici do ściany przez SCP 860-2: %i",
-	stat_939 = "Ofiary SCP 939: %i",
-	stat_966 = "Gracze rozszarpani przez SCP 966: %i",
-	stat_3199 = "Zabójstwa dokonane przez SCP 3199: %i",
-	stat_24273 = "Osoby osądzone przez SCP 2427-3: %i",
+	stat_682 = "Gracze zabici przez SCP-682: %i",
+	stat_8602 = "Gracze przybici do ściany przez SCP-860-2: %i",
+	stat_939 = "Ofiary SCP-939: %i",
+	stat_966 = "Gracze rozszarpani przez SCP-966: %i",
+	stat_3199 = "Zabójstwa dokonane przez SCP-3199: %i",
+	stat_24273 = "Osoby osądzone przez SCP-2427-3: %i",
 	stat_omega_warhead = "Głowica OMEGA została zdetonowana",
 	stat_alpha_warhead = "Głowica ALPHA została zdetonowana",
 	stat_goc_warhead = "Urządzenie GOC zostało aktywowane",
@@ -146,7 +151,7 @@ main_menu.quit = "Wyjdź"
 main_menu.quit_server = "Wyjść z serwera?"
 main_menu.quit_server_confirmation = "Jesteś pewien?"
 main_menu.model_precache = "Załaduj modele"
-main_menu.model_precache_text = "Modele są wstępnie buforowane automatycznie, gdy jest to wymagane, ale dzieje się to podczas rozgrywki, więc może powodować lekkie ścinki. Aby tego uniknąć, możesz je teraz wstępnie buforować ręcznie.\nTwoja gra może się chwilowo zawiesić podczas tego procesu!"
+main_menu.model_precache_text = "Modele są wstępnie wczytywane automatycznie, gdy jest to wymagane, ale dzieje się to podczas rozgrywki, więc może powodować lekkie ścinki. Aby tego uniknąć, możesz je teraz wstępnie buforować.\nTwoja gra może się chwilowo zawiesić podczas tego procesu!"
 main_menu.yes = "Tak"
 main_menu.no = "Nie"
 main_menu.all = "Załaduj modele"
@@ -276,24 +281,23 @@ lang.EFFECTS = effects
 
 effects.permanent = "perm"
 effects.bleeding = "Krwawienie"
-effects.doorlock = "Blokowanie drzwi"
+effects.doorlock = "Blokowanie Drzwi"
 effects.amnc227 = "AMN-C227"
 effects.insane = "Szaleństwo"
 effects.gas_choke = "Duszenie"
 effects.radiation = "Radiacja"
-effects.deep_wounds = "Głębokie rany"
+effects.deep_wounds = "Głębokie Rany"
 effects.poison = "Trucizna"
-effects.heavy_bleeding = "Silne krwawienie"
-effects.spawn_protection = "Ochrona początkowa"
+effects.heavy_bleeding = "Silne Krwawienie"
+effects.light_bleeding = "Lekkie Krwawienie"
+effects.spawn_protection = "Ochrona Początkowa"
 effects.fracture = "Złamanie"
 effects.decay = "Rozkład"
 effects.scp_chase = "Pościg"
 effects.human_chase = "Ucieczka"
-effects.expd_rubber_bones = "Eksperymentalny Efekt"
-effects.expd_stamina_tweaks = "Eksperymentalny Efekt"
-effects.expd_revive = "Eksperymentalny Efekt"
+effects.expd_all = "Eksperymentalny Efekt"
 effects.expd_recovery = "Regeneracja"
-effects.electrical_shock = "Porażenie prądem"
+effects.electrical_shock = "Porażenie Prądem"
 effects.scp009 = "SCP-009"
 effects.scp106_withering = "Obumieranie"
 effects.scp966_effect = "Wyczerpanie"
@@ -309,9 +313,9 @@ lang.buy = "Kup"
 lang.buy_prestige = "Kup za Prestiż"
 lang.refund = "Zwróć"
 lang.prestige = "Prestiż"
-lang.prestige_warn = "Zaraz osiągniesz prestiż. Ten proces zresetuje Twój poziom, XP, punkty odblokowania klasy i odblokowane klasy, a ty otrzymasz 1 punkt prestiżu.\n\nOSTRZEŻENIE: Tej akcji nie można cofnąć!"
+lang.prestige_warn = "Zaraz osiągniesz prestiż. Ten proces zresetuje Twój poziom, XP, punkty klasy i odblokowane klasy, a ty otrzymasz 1 punkt prestiżu.\n\nOSTRZEŻENIE: Tej akcji nie można cofnąć!"
 lang.none = "Brak"
-lang.refunded = "Wszystkie usunięte klasy zostały zwrócone. Otrzymałeś %d punktów prestiżu."
+lang.refunded = "Wszystkie usunięte klasy zostały zwrócone. Otrzymałeś %d punktów klas."
 lang.tierlocked = "Musisz kupić każdą klasę z poprzedniego tieru, aby odblokować klasy z tego tieru (również klasy z innych kategorii)"
 lang.xp = "XP"
 lang.level = "Poziom"
@@ -358,6 +362,7 @@ local l_weps = {
 	smg = "SMG",
 	rifle = "Karabin",
 	shotgun = "Strzelba",
+	sniper = "Snajperka"
 }
 
 local l_tiers = {
@@ -431,8 +436,8 @@ lang.settings = {
 		dynamic_fov = "Dynamiczny FOV",
 		hud_draw_crosshair = "Pokaż celownik",
 		hud_hl2_crosshair = "Celownik z HL2",
-		hud_lq = "Obrazy i wielokąty o niskiej jakości (jeśli to możliwe)",
-		hud_image_poly = "Obrazy zamiast wielokątów (jeśli to możliwe)",
+		hud_lq = "Obrazy i geometria o niskiej jakości (jeśli to możliwe)",
+		hud_image_poly = "Obrazy zamiast geometrii (jeśli to możliwe)",
 		hud_windowed_mode = "Przesunięcie HUD (dla trybu okienkowego)",
 		hud_avoid_roman = "Unikaj cyfr rzymskich",
 		hud_escort = "Pokaż strefy eskorty",
@@ -442,6 +447,8 @@ lang.settings = {
 		scp106_spots = "Zawsze pokazuj miejsca teleportacji SCP-106",
 
 		cvar_slc_support_optout = "Zrezygnuj z grania jako wsparcie",
+		cvar_slc_zombie_optout = "Zrezygnuj z grania jako SCP-049-2",
+		cvar_slc_preparing_classd = "Zostań Klasą D jeżeli dołączono podczas rozgrzewki",
 		cvar_slc_language = "Język",
 		cvar_slc_language_options = {
 			default = "Domyślny",
@@ -483,7 +490,8 @@ lang.gamemode_config = {
 		premium = "Premium",
 		scp = "SCP",
 		gas = "Gaz",
-		feature = "Dodatki"
+		feature = "Dodatki",
+		minigames = "Minigry",
 	}
 }
 
@@ -500,6 +508,13 @@ lang.scoreboard = {
 	score = "Wynik",
 	ranks = "Rangi",
 	badges = "Odznaki",
+}
+
+lang.scoreboard_actions = {
+	copy_name = "Kopiuj nazwę",
+	copy_sid = "Kopiuj SteamID",
+	copy_sid64 = "Kopiuj SteamID64",
+	open_profile = "Otwórz profil Steam",
 }
 
 lang.ranks = {
@@ -531,7 +546,7 @@ lang.upgrades = {
 SCP HUD
 ---------------------------------------------------------------------------]]
 lang.SCPHUD = {
-	skill_not_ready = "Umiejętność nie jest jeszcze gotowa!",
+	skill_not_ready = "Umiejętność się odnawia!",
 	skill_cant_use = "Umiejętność nie może być teraz użyta!",
 	overload_cd = "Następne przeciążenie: ",
 	overload_ready = "Przeciążenie gotowe!",
@@ -555,7 +570,7 @@ lang.info_screen_registry = {
 	escape_time = "Uciekłeś w %s minut",
 	escape_xp = "Otrzymałeś %s doświadczenia",
 	escape1 = "Uciekłeś z placówki",
-	escape2 = "Uciekłeś podczas odliczania wybuchu Alpha",
+	escape2 = "Uciekłeś podczas odliczania głowicy ALPHA",
 	escape3 = "Przeżyłeś w schronie przeciwwybuchowym",
 	escorted = "Zostałeś odeskortowany",
 	killed_by = "Zostałeś zabity przez: %s",
@@ -564,6 +579,7 @@ lang.info_screen_registry = {
 	hazard = "Zostałeś zabity przez zagrożenie",
 	alpha_mia = "Ostatnia znana lokalizacja: Powierzchnia",
 	omega_mia = "Ostatnia znana lokalizacja: Placówka",
+	scp914_death = "Twoje serce zostało zatrzymane przez SCP-914",
 	killer_t = "Drużyna twojego zabójcy: %s"
 }
 
@@ -677,6 +693,16 @@ To problem z gmodem i nie mogę go naprawić. Aby to naprawić, musisz ręcznie 
 Przejdź do 'steamapps/common/GarrysMod/garrysmod/cache/workshop/resource/fonts' i usuń następujące pliki: 'impacted.ttf', 'ds-digital.ttf' and 'unispace.ttf']],
 	ok = "OK"
 }
+
+misc.commands_aliases = {
+	["wycisz"] = "muteall",
+	["odcisz"] = "unmuteall",
+	["ustawienia"] = "settings",
+	["kolejka"] = "queue",
+	["minigry"] = "minigames",
+	["miny"] = "minigames",
+}
+
 --[[-------------------------------------------------------------------------
 Vests
 ---------------------------------------------------------------------------]]
@@ -745,44 +771,44 @@ lang.CLASSES = classes
 classes.unknown = "Nieznana"
 classes.spectator = "Obserwator"
 
-classes.SCP023 = "SCP 023"
-classes.SCP049 = "SCP 049"
-classes.SCP0492 = "SCP 049-2"
-classes.SCP058 = "SCP 058"
-classes.SCP066 = "SCP 066"
-classes.SCP096 = "SCP 096"
-classes.SCP106 = "SCP 106"
-classes.SCP173 = "SCP 173"
-classes.SCP457 = "SCP 457"
-classes.SCP682 = "SCP 682"
-classes.SCP8602 = "SCP 860-2"
-classes.SCP939 = "SCP 939"
-classes.SCP966 = "SCP 966"
-classes.SCP3199 = "SCP 3199"
-classes.SCP24273 = "SCP 2427-3"
+classes.SCP023 = "SCP-023"
+classes.SCP049 = "SCP-049"
+classes.SCP0492 = "SCP-049-2"
+classes.SCP058 = "SCP-058"
+classes.SCP066 = "SCP-066"
+classes.SCP096 = "SCP-096"
+classes.SCP106 = "SCP-106"
+classes.SCP173 = "SCP-173"
+classes.SCP457 = "SCP-457"
+classes.SCP682 = "SCP-682"
+classes.SCP8602 = "SCP-860-2"
+classes.SCP939 = "SCP-939"
+classes.SCP966 = "SCP-966"
+classes.SCP3199 = "SCP-3199"
+classes.SCP24273 = "SCP-2427-3"
 
 classes.classd = "Klasa D"
 classes.veterand = "Weteran Klasy D"
 classes.kleptod = "Kleptoman Klasy D"
-classes.contrad = "Klasa D z kontrabandą"
+classes.contrad = "Klasa D z Kontrabandą"
 classes.ciagent = "Agent CI"
 classes.expd = "Eksperymentalna Klasa D"
 classes.classd_prestige = "Krawiec Klasy D"
 
-classes.sciassistant = "Asystent naukowca"
+classes.sciassistant = "Asystent Naukowca"
 classes.sci = "Naukowiec"
-classes.seniorsci = "Starszy naukowiec"
-classes.headsci = "Główny naukowiec"
-classes.contspec = "Specjalista zabezpieczeń"
-classes.sci_prestige = "Uciekinier klasy D"
+classes.seniorsci = "Starszy Naukowiec"
+classes.headsci = "Główny Naukowiec"
+classes.contspec = "Specjalista Zabezpieczeń"
+classes.sci_prestige = "Uciekinier Klasy D"
 
 classes.guard = "Ochroniarz"
-classes.chief = "Szef ochrony"
-classes.lightguard = "Lekki ochroniarz"
-classes.heavyguard = "Ciężki ochroniarz"
-classes.specguard = "Specjalista ochrony"
-classes.guardmedic = "Ochroniarz sanitariusz"
-classes.tech = "Technik ochrony"
+classes.chief = "Szef Ochrony"
+classes.lightguard = "Lekki Ochroniarz"
+classes.heavyguard = "Ciężki Ochroniarz"
+classes.specguard = "Specjalista Ochrony"
+classes.guardmedic = "Ochroniarz Sanitariusz"
+classes.tech = "Technik Ochrony"
 classes.cispy = "Szpieg CI"
 classes.lightcispy = "Lekki Szpieg CI"
 classes.heavycispy = "Ciężki Szpieg CI"
@@ -796,14 +822,14 @@ classes.ntfsniper = "Snajper MTF NTF"
 classes.ntfmedic = "Medyk MTF NTF"
 classes.alpha1 = "MTF Alfa-1"
 classes.alpha1sniper = "Strzelec Wyborowy MTF Alfa-1"
-classes.alpha1medic = "Medyk MTF Alpha-1"
-classes.alpha1com = "Dowódca MTF Alpha-1"
+classes.alpha1medic = "Medyk MTF Alfa-1"
+classes.alpha1com = "Dowódca MTF Alfa-1"
 classes.ci = "Chaos Insurgency"
 classes.cisniper = "Snajper Chaos Insurgency"
 classes.cicom = "Dowódca Chaos Insurgency"
 classes.cimedic = "Medyk Chaos Insurgency"
 classes.cispec = "Specjalista Chaos Insurgency"
-classes.ciheavy = "Ciężka jednostka Chaos Insurgency"
+classes.ciheavy = "Ciężka Jednostka Chaos Insurgency"
 classes.goc = "Żołnierz GOC"
 classes.gocmedic = "Medyk GOC"
 classes.goccom = "Dowódca GOC"
@@ -911,7 +937,7 @@ heavycispy = generic_cispy,
 
 guard_prestige = [[- Uratuj naukowców
 - Zlikwiduj wszystkie obiekty Klasy D i SCP
-- Możesz tymczasowo zablokować drzw]],
+- Możesz tymczasowo zablokować drzwi]],
 
 ntf_1 = generic_ntf,
 
@@ -937,11 +963,11 @@ ntf_3 = generic_ntf,
 
 	alpha1medic = [[- Chroń placówkę za wszelką cenę
 - Wspieraj swoją jednostkę leczeniem
-- Jesteś upoważniony do ]].."[REDACTED]",
+- Jesteś upoważniony do ]].."[ZMIENIONO]",
 
 	alpha1com = [[- Chroń placówkę za wszelką cenę
 - Wydawaj rozkazy innym sojusznikom
-- Jesteś upoważniony do ]].."[REDACTED]",
+- Jesteś upoważniony do ]].."[ZMIENIONO]",
 
 	alpha1sniper = [[- Chroń placówkę za wszelką cenę
 - Zatrzymaj obiekty Klasy D i SCP
@@ -1070,7 +1096,7 @@ Wytrzymałość: Bardzo wysoka
 Zwinność: Wysoka
 Potencjał bojowy: Średni
 Czy może uciec: Nie
-Czy może eskortować: Tylko klasę D
+Czy może eskortować: Klasę D
 Eskortowany przez: Nikogo
 
 Przegląd:
@@ -1182,7 +1208,7 @@ Wytrzymałość: Zwykła
 Zwinność: Zwykła
 Potencjał bojowy: Średni
 Czy może uciec: Nie
-Czy może eskortować: Tylko naukowców
+Czy może eskortować: Naukowców
 Eskortowany przez: Nikogo
 
 Przegląd:
@@ -1194,7 +1220,7 @@ Wytrzymałość: Niska
 Zwinność: Bardzo Wysoka
 Potencjał bojowy: Niski
 Czy może uciec: Nie
-Czy może eskortować: Tylko naukowców
+Czy może eskortować: Naukowców
 Eskortowany przez: Nikogo
 
 Przegląd:
@@ -1206,7 +1232,7 @@ Wytrzymałość: Wysoka
 Zwinność: Niska
 Potencjał bojowy: Wysoki
 Czy może uciec: Nie
-Czy może eskortować: Tylko naukowców
+Czy może eskortować: Naukowców
 Eskortowany przez: Nikogo
 
 Przegląd:
@@ -1218,7 +1244,7 @@ Wytrzymałość: Wysoka
 Zwinność: Niska
 Potencjał bojowy: Bardzo Wysoki
 Czy może uciec: Nie
-Czy może eskortować: Tylko naukowców
+Czy może eskortować: Naukowców
 Eskortowany przez: Nikogo
 
 Przegląd:
@@ -1230,7 +1256,7 @@ Wytrzymałość: Zwykła
 Zwinność: Zwykła
 Potencjał bojowy: Średni
 Czy może uciec: Nie
-Czy może eskortować: Tylko naukowców
+Czy może eskortować: Naukowców
 Eskortowany przez: Nikogo
 
 Przegląd:
@@ -1242,7 +1268,7 @@ Wytrzymałość: Wysoka
 Zwinność: Wysoka
 Potencjał bojowy: Niski
 Czy może uciec: Nie
-Czy może eskortować: Tylko naukowców
+Czy może eskortować: Naukowców
 Eskortowany przez: Nikogo
 
 Przegląd:
@@ -1254,7 +1280,7 @@ Wytrzymałość: Zwykła
 Zwinność: Zwykła
 Potencjał bojowy: Wysoki
 Czy może uciec: Nie
-Czy może eskortować: Tylko naukowców
+Czy może eskortować: Naukowców
 Eskortowany przez: Nikogo
 
 Przegląd:
@@ -1266,7 +1292,7 @@ Wytrzymałość: Zwykła
 Zwinność: Wysoka
 Potencjał bojowy: Średni
 Czy może uciec: Nie
-Czy może eskortować: Tylko klasę D
+Czy może eskortować: Klasę D
 Eskortowany przez: Nikogo
 
 Przegląd:
@@ -1278,7 +1304,7 @@ Wytrzymałość: Niska
 Zwinność: Wysoka
 Potencjał bojowy: Niski
 Czy może uciec: Nie
-Czy może eskortować: Tylko klasę D
+Czy może eskortować: Klasę D
 Eskortowany przez: Nikogo
 
 Przegląd:
@@ -1316,7 +1342,7 @@ Wytrzymałość: Zwykła
 Zwinność: Wysoka
 Potencjał bojowy: Średni
 Czy może uciec: Nie
-Czy może eskortować: Tylko naukowców
+Czy może eskortować: Naukowców
 Eskortowany przez: Nikogo
 
 Przegląd:
@@ -1328,7 +1354,7 @@ Wytrzymałość: Zwykła
 Zwinność: Wysoka
 Potencjał bojowy: Średni
 Czy może uciec: Nie
-Czy może eskortować: Tylko naukowców
+Czy może eskortować: Naukowców
 Eskortowany przez: Nikogo
 
 Przegląd:
@@ -1340,7 +1366,7 @@ Wytrzymałość: Zwykła
 Zwinność: Wysoka
 Potencjał bojowy: Średni
 Czy może uciec: Nie
-Czy może eskortować: Tylko naukowców
+Czy może eskortować: Naukowców
 Eskortowany przez: Nikogo
 
 Przegląd:
@@ -1352,7 +1378,7 @@ Wytrzymałość: Wysoka
 Zwinność: Wysoka
 Potencjał bojowy: Niski
 Czy może uciec: Nie
-Czy może eskortować: Tylko naukowców
+Czy może eskortować: Naukowców
 Eskortowany przez: Nikogo
 
 Przegląd:
@@ -1364,7 +1390,7 @@ Wytrzymałość: Wysoka
 Zwinność: Bardzo Wysoka
 Potencjał bojowy: Wysoki
 Czy może uciec: Nie
-Czy może eskortować: Tylko naukowców
+Czy może eskortować: Naukowców
 Eskortowany przez: Nikogo
 
 Przegląd:
@@ -1376,7 +1402,7 @@ Wytrzymałość: Zwykła
 Zwinność: Zwykła
 Potencjał bojowy: Wysoki
 Czy może uciec: Nie
-Czy może eskortować: Tylko naukowców
+Czy może eskortować: Naukowców
 Eskortowany przez: Nikogo
 
 Przegląd:
@@ -1388,7 +1414,7 @@ Wytrzymałość: Ekstremalna
 Zwinność: Bardzo Wysoka
 Potencjał bojowy: Wysoki
 Czy może uciec: Nie
-Czy może eskortować: Tylko naukowców
+Czy może eskortować: Naukowców
 Eskortowany przez: Nikogo
 
 Przegląd:
@@ -1400,11 +1426,11 @@ Wytrzymałość: Bardzo wysoka
 Zwinność: Bardzo Wysoka
 Potencjał bojowy: Bardzo Wysoki
 Czy może uciec: Nie
-Czy może eskortować: Tylko naukowców
+Czy może eskortować: Naukowców
 Eskortowany przez: Nikogo
 
 Przegląd:
-Jednostka MTF Alpha-1. Mocno opancerzona, bardzo użyteczna jednostka, uzbrojona w karabin wyborowy. Wejdź do placówki i zabezpiecz ją. Pomóż personelowi w środku i zneutralizuj SCP i klasę D.
+Jednostka MTF Alfa-1. Mocno opancerzona, bardzo użyteczna jednostka, uzbrojona w karabin wyborowy. Wejdź do placówki i zabezpiecz ją. Pomóż personelowi w środku i zneutralizuj SCP i klasę D.
 ]],
 
 alpha1medic = [[Poziom trudności: Trudny
@@ -1412,11 +1438,11 @@ Wytrzymałość: Bardzo wysoka
 Zwinność: Bardzo Wysoka
 Potencjał bojowy: Bardzo Wysoki
 Czy może uciec: Nie
-Czy może eskortować: Tylko naukowców
+Czy może eskortować: Naukowców
 Eskortowany przez: Nikogo
 
 Przegląd:
-Jednostka MTF Alpha-1.  Mocno opancerzona, bardzo użyteczna jednostka, zapewnia leczenie. Wejdź do placówki i zabezpiecz ją. Pomóż personelowi w środku i zneutralizuj SCP i klasę D.
+Jednostka MTF Alfa-1.  Mocno opancerzona, bardzo użyteczna jednostka, zapewnia leczenie. Wejdź do placówki i zabezpiecz ją. Pomóż personelowi w środku i zneutralizuj SCP i klasę D.
 ]],
 
 	alpha1com = [[Poziom trudności: Trudny
@@ -1424,11 +1450,11 @@ Wytrzymałość: Bardzo wysoka
 Zwinność: Bardzo Wysoka
 Potencjał bojowy: Bardzo Wysoki
 Czy może uciec: Nie
-Czy może eskortować: Tylko naukowców
+Czy może eskortować: Naukowców
 Eskortowany przez: Nikogo
 
 Przegląd:
-Jednostka MTF Alpha-1. Mocno opancerzona, bardzo użyteczna jednostka, wydaje rozkazy. Wejdź do placówki i zabezpiecz ją. Pomóż personelowi w środku i zneutralizuj SCP i klasę D.
+Jednostka MTF Alfa-1. Mocno opancerzona, bardzo użyteczna jednostka, wydaje rozkazy. Wejdź do placówki i zabezpiecz ją. Pomóż personelowi w środku i zneutralizuj SCP i klasę D.
 ]],
 
 	ci = [[Poziom trudności: Średni
@@ -1436,7 +1462,7 @@ Wytrzymałość: Wysoka
 Zwinność: Wysoka
 Potencjał bojowy: Średni
 Czy może uciec: Nie
-Czy może eskortować: Tylko klasę D
+Czy może eskortować: Klasę D
 Eskortowany przez: Nikogo
 
 Przegląd:
@@ -1448,7 +1474,7 @@ Wytrzymałość: Zwykła
 Zwinność: Wysoka
 Potencjał bojowy: Wysoki
 Czy może uciec: Nie
-Czy może eskortować: Tylko klasę D
+Czy może eskortować: Klasę D
 Eskortowany przez: Nikogo
 
 Przegląd:
@@ -1460,7 +1486,7 @@ Wytrzymałość: Bardzo wysoka
 Zwinność: Wysoka
 Potencjał bojowy: Wysoki
 Czy może uciec: Nie
-Czy może eskortować: Tylko klasę D
+Czy może eskortować: Klasę D
 Eskortowany przez: Nikogo
 
 Przegląd:
@@ -1472,7 +1498,7 @@ Wytrzymałość: Wysoka
 Zwinność: Wysoka
 Potencjał bojowy: Normalny
 Czy może uciec: Nie
-Czy może eskortować: Tylko klasę D
+Czy może eskortować: Klasę D
 Eskortowany przez: Nikogo
 
 Przegląd:
@@ -1484,7 +1510,7 @@ Wytrzymałość: Średnio-wysoka
 Zwinność: Średnio-wysoka
 Potencjał bojowy: Wysoki
 Czy może uciec: Nie
-Czy może eskortować: Tylko klasę D
+Czy może eskortować: Klasę D
 Eskortowany przez: Nikogo
 
 Przegląd:
@@ -1496,7 +1522,7 @@ Wytrzymałość: Średnio-wysoka
 Zwinność: Średnio-wysoka
 Potencjał bojowy: Bardzo wysoki
 Czy może uciec: Nie
-Czy może eskortować: Tylko klasę D
+Czy może eskortować: Klasę D
 Eskortowany przez: Nikogo
 
 Przegląd:
@@ -1566,7 +1592,7 @@ Weapons
 lang.GenericUpgrades = {
 	outside_buff = {
 		name = "Wzmocnienie na powierzchni",
-		info = "Otrzymujesz regenerację zdrowia na powierzchni (skaluje się z pozostałym czasem rundy) i uzyskujesz potężną ochronę przed obrażeniami na niezablokowanej ucieczce lub podczas dogrywki"
+		info = "Zyskaj dodatkową orchronę przed pociskami oraz odblokuj leczenie i regenerację, kiedy jesteś na powierzchni\n\t• Dodatkowa ochrona przed pociskami: [%def]\n\t• Dodatkowa ochrona przed pociskami: [flat] dmg\n\t• Po wyjściu na powierzchnię, wylecz [buff_hp] HP w krótkim czasie\n\t• Poza walką, odzyskaj [%regen_min] - [%regen_max] (skalowane z czasem) otrzymanych obrażeń od pocisków\n\t• Zadawnie obrażeń leczy cię za [%heal_min] - [%heal_max] (skalowane z czasem) zadanych obrażeń\n\t• Powrót do placówki całkowicie anuluje wszystkie leczenia"
 	}
 }
 
@@ -1577,7 +1603,11 @@ lang.CommonSkills = {
 	},
 	c_dmg_mod = {
 		name = "Ochrona przed obrażeniami",
-		dsc = "Aktualna ochrona: [mod]\n\nOchrona ta nie dotyczy obrażeń otrzymanych bezpośrednio. Uwzględnia jedynie modyfikatory skalowania czasu i zewnętrzne wzmocnienia. Modyfikatory danych SCP nie są uwzględnione!"
+		dsc = "Aktualna ochrona: [mod]\nDodatkowa ochrona: [flat]\n\nOchrona ta nie dotyczy obrażeń bezpośrednich. Uwzględnia jedynie modyfikatory skalowania czasu i wzmocnienie na powierzchni. Modyfikatory specyficzne dla danego SCP nie są uwzględnione!\n\nWzmocnienie: [buff]",
+		dmg = "DMG",
+		not_bought = "Nie kupione",
+		not_surface = "Wyłączone w placówce",
+		buff = "\n   • Obecna regeneracja: %s otrzymanych obrażeń od pocisków\n   • Obecne leczenie: %s zadanych obrazeń",
 	},
 }
 
@@ -1600,12 +1630,12 @@ wep.SCP023 = {
 			dsc = "Natychmiast zabij jedną z twoich ofiar lub osoby w ich pobliżu i teleportuj się do ich ciała",
 		},
 		passive = {
-			name = "Umiejętność pasywna",
-			dsc = "Kolizja z graczami powoduje ich podpalenie",
+			name = "Umiejętność Pasywna",
+			dsc = "Kontakt z graczami powoduje ich podpalenie. Dodatkowo nie posiadasz kolizji z drzwiami",
 		},
 		drain_bar = {
 			name = "Wysysanie",
-			dsc = "Pozostały czas działania zdolności wysysania",
+			dsc = "Pozostały czas wysysania",
 		},
 	},
 
@@ -1689,7 +1719,7 @@ wep.SCP049 = {
 			dsc = "Zapewnia wzmocnienie tobie i wszystkim pobliskim instancjom SCP-049-2",
 		},
 		passive = {
-			name = "Umiejętność pasywna",
+			name = "Umiejętność Pasywna",
 			dsc = "Zombie znajdujące się w pobliżu zyskują ochronę przed obrażeniami od kul",
 		},
 		choke_bar = {
@@ -1723,18 +1753,18 @@ wep.SCP049 = {
 		},
 		buff1 = {
 			name = "Powstań I",
-			info = "Ulepsza twoją zdolność wzmacniania\n\t• Czas odnowienia skrócony o [-buff_cd]\n\t• Czas trwania wzmocnienia zwiększony o [+buff_dur]",
+			info = "Ulepsza twoją zdolność wzmocnienia\n\t• Czas odnowienia skrócony o [-buff_cd]\n\t• Czas trwania wzmocnienia zwiększony o [+buff_dur]",
 		},
 		buff2 = {
 			name = "Powstań II",
-			info = "Ulepsza twoją zdolność wzmacniania\n\t• Zasięg wzmocnienia zwiększony o [+buff_radius]\n\t• Moc wzmocnienia zwiększona o [+buff_power]",
+			info = "Ulepsza twoją zdolność wzmocnienia\n\t• Zasięg wzmocnienia zwiększony o [+buff_radius]\n\t• Moc wzmocnienia zwiększona o [+buff_power]",
 		},
 		surgery_cd1 = {
-			name = "Precyzja Chirurgiczna I",
+			name = "Chirurgiczna Precyzja I",
 			info = "Skraca czas operacji o [surgery_time]s\n\t• To ulepszenie jest kumulatywne",
 		},
 		surgery_cd2 = {
-			name = "Precyzja Chirurgiczna II",
+			name = "Chirurgiczna Precyzja II",
 			info = "Skraca czas operacji o [surgery_time]s\n\t• To ulepszenie jest kumulatywne",
 		},
 		surgery_heal = {
@@ -1742,7 +1772,7 @@ wep.SCP049 = {
 			info = "Ulepsza twoją zdolność operacji\n\t• Po operacji leczysz się o [surgery_heal] HP\n\t• Po operacji wszystkie pobliskie zombie leczą się o [surgery_zombie_heal] HP",
 		},
 		surgery_dmg = {
-			name = "Niepowstrzymana operacja",
+			name = "Niepowstrzymana Operacja",
 			info = "Otrzymywanie obrażeń nie przerywa już operacji",
 		},
 		surgery_prot = {
@@ -1824,12 +1854,12 @@ wep.SCP0492 = {
 			info = "Ulepsza twój główny atak\n\t• Czas odnowienia skrócony o [-primary_cd]\n\t• Obrażenia zwiększone o [+primary_dmg]",
 		},
 		secondary1 = {
-			name = "Atak Wtórny I",
-			info = "Ulepsza twój atak wtórny\n\t• Obrażenia zwiększone o [+secondary_dmg]",
+			name = "Atak Dodatkowy I",
+			info = "Ulepsza twój atak dodatkowy\n\t• Obrażenia zwiększone o [+secondary_dmg]",
 		},
 		secondary2 = {
-			name = "Atak Wtórny II",
-			info = "Ulepsza twój atak wtórny\n\t• Obrażenia zwiększone o [+secondary_dmg]\n\t• Czas odnowienia skrócony o [-secondary_cd]",
+			name = "Atak Dodatkowy II",
+			info = "Ulepsza twój atak dodatkowy\n\t• Obrażenia zwiększone o [+secondary_dmg]\n\t• Czas odnowienia skrócony o [-secondary_cd]",
 		},
 		overload = {
 			name = "Przeciążenie",
@@ -1928,11 +1958,11 @@ wep.SCP066 = {
 		},
 		dash = {
 			name = "Skok",
-			dsc = "Rzuć się do przodu. Jeśli trafisz gracza, przykleisz się do niego na krótki czas",
+			dsc = "Rzuć się do przodu. Jeśli trafisz gracza, przykleisz się do niego na krótki czas. Użyj ponownie aby się odkleić",
 		},
 		boost = {
 			name = "Dopalacz",
-			dsc = "Zdobądź jeden z 3 dopalaczy, który jest obecnie aktywny. Po użyciu zostanie zastąpiony przez kolejny. Moc wszystkich dopalaczy wzrasta wraz z każdym ładunkiem (ograniczona do [cap] ładunków).\n\nObecny dopalacz: [boost]\n\nDopalacz szybkości: [speed]\nDopalacz obrony przed kulami: [def]\nDopalacz regeneracji: [regen]",
+			dsc = "Zdobądź jeden z 3 dopalaczy, który jest obecnie aktywny. Po użyciu zostanie zastąpiony przez kolejny. Moc wszystkich dopalaczy wzrasta wraz z każdym ładunkiem pasywnym (ograniczona do [cap] ładunków).\n\nObecny dopalacz: [boost]\n\nDopalacz szybkości: [speed]\nDopalacz obrony przed kulami: [def]\nDopalacz regeneracji: [regen]",
 			buffs = {
 				"Szybkość",
 				"Obrona przed kulami",
@@ -1941,7 +1971,7 @@ wep.SCP066 = {
 		},
 		eric = {
 			name = "Eric?",
-			dsc = "Pytasz nieuzbrojonych graczy, czy są Erikiem. Za każdym razem zdobywasz jeden ładunek",
+			dsc = "Pytasz nieuzbrojonych graczy, czy są Erikiem. Za każdym razem zdobywasz jeden ładunek pasywny",
 		},
 		music_bar = {
 			name = "Symfonia nr 2",
@@ -1982,15 +2012,15 @@ wep.SCP066 = {
 		},
 		dash1 = {
 			name = "Skok I",
-			info = "Ulepsza twoją zdolność skakania\n\t• Czas odnowienia zmniejszony o [-dash_cd]\n\t• Pozostajesz [+detach_time] dłużej na swoim celu",
+			info = "Ulepsza twoją zdolność skakania\n\t• Czas odnowienia zmniejszony o [-dash_cd]\n\t• Możesz pozostać [+detach_time] dłużej na swoim celu",
 		},
 		dash2 = {
 			name = "Skok II",
-			info = "Ulepsza twoją zdolność skakania\n\t• Czas odnowienia zmniejszony o [-dash_cd]\n\t• Pozostajesz [+detach_time] dłużej na swoim celu",
+			info = "Ulepsza twoją zdolność skakania\n\t• Czas odnowienia zmniejszony o [-dash_cd]\n\t• Możesz pozostać [+detach_time] dłużej na swoim celu",
 		},
 		dash3 = {
 			name = "Skok III",
-			info = "Ulepsza twoją zdolność skakania\n\t• Gdy jesteś przyczepiony do celu, możesz ponownie użyć tej zdolności, aby się odczepić\n\t• Podczas odczepiania, możesz przyczepić się do innego gracza\n\t• Nie możesz przyczepić się do tego samego gracza więcej niż raz podczas jednego użycia tej zdolności",
+			info = "Ulepsza twoją zdolność skakania\n\t• Użycie tej umiejętności będąc przyczepionym sprawi, że wyskoczysz zamiast się odczepić\n\t• Podczas wyskoku, możesz przyczepić się do innego gracza\n\t• Nie możesz przyczepić się spowrotem do gracza, z którego wyskoczyłeś",
 		},
 		boost1 = {
 			name = "Dopalacz I",
@@ -2012,18 +2042,18 @@ wep.SCP096 = {
 		_overview = { "passive", "lunge", "regen", "special" },
 		lunge = {
 			name = "Szarża",
-			dsc = "Rzuć się do przodu w gniewie. Natychmiast kończy gniew. Nie będziesz jadł ciała po szarży",
+			dsc = "Rzuć się do przodu podczas gniewu. Natychmiast kończy gniew. Nie będziesz jadł ciała po szarży",
 		},
 		regen = {
 			name = "Regeneracja",
 			dsc = "Usiądź w miejscu i zamień ładunki regeneracji na zdrowie",
 		},
 		special = {
-			name = "Koniec polowania",
+			name = "Koniec Polowania",
 			dsc = "Zatrzymaj gniew. Zdobądź ładunki regeneracji za każdy aktywny cel",
 		},
 		passive = {
-			name = "Umiejętność pasywna",
+			name = "Umiejętność Pasywna",
 			dsc = "Jeśli ktoś na ciebie patrzy, wpadasz w gniew. Natychmiast zabijasz graczy, którzy cię rozwścieczyli",
 		},
 	},
@@ -2045,11 +2075,11 @@ wep.SCP096 = {
 		},
 		multi1 = {
 			name = "Niekończący się Gniew I",
-			info = "Pozwala na zabicie wielu celów w gniewie przez ograniczony czas po pierwszym zabiciu\n\t• Maksymalna liczba celów: [multi]\n\t• Limit czasowy: [multi_time] sekund\n\t• Ochrona przed obrażeniami od kul po zabiciu pierwszego celu zwiększona o [+prot]",
+			info = "Pozwala na zabicie wielu celów w gniewie przez ograniczony czas po pierwszym zabiciu\n\t• Maksymalna liczba celów: [multi]\n\t• Limit czasowy: [multi_time] sekund\n\t• Otrzymywane obrażenia od kul, po zabiciu pierwszego celu, zwiększone o [+prot]",
 		},
 		multi2 = {
 			name = "Niekończący się Gniew II",
-			info = "Pozwala na zabicie jeszcze więcej celów w gniewie\n\t• Maksymalna liczba celów: [multi]\n\t• Limit czasowy: [multi_time] sekund\n\t• Ochrona przed obrażeniami od kul po zabiciu pierwszego celu zwiększona o [+prot]",
+			info = "Pozwala na zabicie jeszcze więcej celów w gniewie\n\t• Maksymalna liczba celów: [multi]\n\t• Limit czasowy: [multi_time] sekund\n\t• Otrzymywane obrażenia od kul, po zabiciu pierwszego celu, zwiększone o [+prot]",
 		},
 		regen1 = {
 			name = "Krzyk Rozpaczy I",
@@ -2089,11 +2119,11 @@ wep.SCP106 = {
 		},
 		teleport = {
 			name = "Teleportacja",
-			dsc = "Użyj, aby umieścić punkt teleportacji. Trzymając się blisko istniejącego punktu teleportacji, możesz wybrać miejsce docelowe, zwolnij, aby teleportować się do wybranego miejsca",
+			dsc = "Użyj, aby umieścić punkt teleportacji. Stojąc blisko istniejącego punktu teleportacji, możesz przytrzymać klawisz, aby wybrać miejsce docelowe. Puść klawisz, aby teleportować się do wybranego miejsca",
 		},
 		passive = {
 			name = "Kolekcja Zębów",
-			dsc = "Kule nie mogą cię zabić, ale mogą tymczasowo cię powalić, także możesz przechodzić przez drzwi. Dotknięcie gracza teleportuje go do Kieszonkowego Wymiaru. Każdy gracz teleportowany do Kieszonkowego Wymiaru przyznaje jeden ząb. Zebrane zęby wzmacniają twoją umiejętność zwiędnięcia",
+			dsc = "Kule nie mogą cię zabić, ale mogą tymczasowo cię powalić, możesz także przechodzić przez drzwi. Dotknięcie gracza teleportuje go do Kieszonkowego Wymiaru. Każdy gracz teleportowany do Kieszonkowego Wymiaru przyznaje jeden ząb. Zebrane zęby wzmacniają twoją umiejętność obumierania",
 		},
 		teleport_cd = {
 			name = "Teleportacja",
@@ -2160,7 +2190,7 @@ wep.SCP106 = {
 }
 
 local scp173_prot = {
-	name = "Wzmocniony Beton",
+	name = "Żelbeton",
 	info = "• Zyskujesz redukcję obrażeń od kul o [%prot]\n• Ta umiejętność łączy się z innymi umiejętnościami tego samego typu",
 }
 
@@ -2175,7 +2205,7 @@ wep.SCP173 = {
 		},
 		decoy = {
 			name = "Wabik",
-			dsc = "Umieść wabik, który będzie rozpraszał i wysysał poczytalność graczy",
+			dsc = "Umieść wabik, który będzie rozpraszał i wysysał psychikę graczy",
 		},
 		stealth = {
 			name = "Kamuflaż",
@@ -2204,7 +2234,7 @@ wep.SCP173 = {
 		},
 		horror_b = {
 			name = "Niepokojąca Obecność",
-			info = "Wysysanie poczytalności przez horror jest zwiększone o [+horror_sanity]",
+			info = "Wysysanie psychiki przez horror jest zwiększone o [+horror_sanity]",
 		},
 		attack_a = {
 			name = "Szybki Zabójca",
@@ -2261,7 +2291,7 @@ wep.SCP457 = {
 			dsc = "Koszt paliwa: [cost] za każdą wywołaną falę ognia\nWypuść fale płomieni wokół siebie. Zasięg tej umiejętności jest nieograniczony, a każda kolejna fala ognia zużywa więcej paliwa. Ta umiejętność nie może zostać przerwana",
 		},
 		passive = {
-			name = "Umiejętność pasywna",
+			name = "Umiejętność Pasywna",
 			dsc = "Podpalasz każdego, kogo dotkniesz. Podpalenie gracza dodaje paliwo",
 		},
 	},
@@ -2419,11 +2449,11 @@ wep.SCP8602 = {
 		},
 		charge = {
 			name = "Szarża",
-			dsc = "Zyskuj prędkość z czasem i zadaj obrażenia pierwszemu graczowi przed sobą. Jeśli zaatakowany gracz jest wystarczająco blisko ściany, przypnij go do tej ściany, aby zwiększyć obrażenia",
+			dsc = "Zyskuj prędkość z czasem i zadaj obrażenia pierwszemu graczowi przed sobą. Jeśli zaatakowany gracz jest wystarczająco blisko ściany, przybij go do tej ściany i wykonaj silny atak",
 		},
 		passive = {
-			name = "Umiejętność pasywna",
-			dsc = "Widzisz gracza w swoim lesie i przez jakiś czas po jego opuszczeniu. Gracze w lesie tracą poczytalność, jeśli nie mają poczytalności, tracą zdrowie. Leczenie za przejętą poczytalność/zdrowie od graczy w lesie. To leczenie może przekroczyć twoje maksymalne zdrowie",
+			name = "Umiejętność Pasywna",
+			dsc = "Widzisz gracza w swoim lesie i przez jakiś czas po jego opuszczeniu. Gracze w lesie tracą psychikę, jeśli mają brak psychiki, tracą zdrowie. Leczenie za psycjikę/zdrowie zabrane od graczy w lesie. To leczenie może przekroczyć twoje maksymalne zdrowie",
 		},
 		overheal_bar = {
 			name = "Nadleczenie",
@@ -2443,15 +2473,15 @@ wep.SCP8602 = {
 		parse_description = true,
 
 		passive1 = {
-			name = "Gęste Lasy I",
+			name = "Gęsty Las I",
 			info = "Ulepsza twoją pasywną zdolność\n\t• Maksymalne nadleczenie zwiększone o [+overheal]\n\t• Szybkość pasywna zwiększona o [/passive_rate]\n\t• Czas wykrywania gracza zwiększony o [+detect_time]",
 		},
 		passive2 = {
-			name = "Gęste Lasy II",
+			name = "Gęsty Las II",
 			info = "Ulepsza twoją pasywną zdolność\n\t• Maksymalne nadleczenie zwiększone o [+overheal]\n\t• Szybkość pasywna zwiększona o [/passive_rate]\n\t• Czas wykrywania gracza zwiększony o [+detect_time]",
 		},
 		primary = {
-			name = "Proste ale Niebezpieczne",
+			name = "Prosty ale Niebezpieczny",
 			info = "Ulepsza twój podstawowy atak\n\t• Czas odnowienia skrócony o [-primary_cd]\n\t• Obrażenia zwiększone o [+primary_dmg]",
 		},
 		def1a = {
@@ -2488,11 +2518,11 @@ wep.SCP8602 = {
 		},
 		charge2 = {
 			name = "Szarża II",
-			info = "Ulepsza twoją zdolność szarży\n\t• Zasięg zwiększony o [+charge_range]\n\t• Czas trwania zwiększony o [+charge_time]\n\t• Obrażenia przypięcia zwiększone o [+charge_pin_dmg]",
+			info = "Ulepsza twoją zdolność szarży\n\t• Zasięg zwiększony o [+charge_range]\n\t• Czas trwania zwiększony o [+charge_time]\n\t• Obrażenia przybicia zwiększone o [+charge_pin_dmg]",
 		},
 		charge3 = {
 			name = "Szarża III",
-			info = "Ulepsza twoją zdolność szarży\n\t• Prędkość zwiększona o [+charge_speed]\n\t• Podstawowe obrażenia zwiększone o [+charge_dmg]\n\t• Przypięcie gracza do ściany łamie jego kości",
+			info = "Ulepsza twoją zdolność szarży\n\t• Prędkość zwiększona o [+charge_speed]\n\t• Powyżej 80% trwania szarży, każde trafienie liczy się jako silny atak\n\t• Przybicie gracza do ściany łamie jego kości",
 		},
 	}
 }
@@ -2513,7 +2543,7 @@ wep.SCP939 = {
 			dsc = "Zacznij wykrywać graczy wokół siebie",
 		},
 		passive = {
-			name = "Umiejętność pasywna",
+			name = "Umiejętność Pasywna",
 			dsc = "Nie widzisz graczy, ale widzisz fale dźwiękowe. Masz aurę ANM-C227 wokół siebie",
 		},
 		special_bar = {
@@ -2587,11 +2617,11 @@ wep.SCP966 = {
 		_overview = { "passive", "attack", "channeling", "mark" },
 		attack = {
 			name = "Podstawowy atak",
-			dsc = "Wykonaj podstawowy atak. Możesz atakować tylko graczy z co najmniej 10 ładunkami zmęczenia. Atakowani gracze tracą część ładunków zmęczenia. Efekty tego ataku zależą od drzewa umiejętności",
+			dsc = "Wykonaj podstawowy atak. Możesz atakować tylko graczy z co najmniej 10 ładunkami zmęczenia. Atakowani gracze tracą część ładunków zmęczenia. Efekty tego ataku zależą od drzewka umiejętności",
 		},
 		channeling = {
 			name = "Kanałowanie",
-			dsc = "Kanałuj zdolność wybraną w drzewie umiejętności",
+			dsc = "Kanałuj zdolność wybraną w drzewku umiejętności",
 		},
 		mark = {
 			name = "Znak Śmierci",
@@ -2661,11 +2691,11 @@ wep.SCP24273 = {
 	skills = {
 		_overview = { "change", "primary", "secondary", "special" },
 		primary = {
-			name = "Szarańcza / Kamuflaż",
+			name = "Doskok / Kamuflaż",
 			dsc = "\nSędzia:\nRusz naprzód, zadając obrażenia wszystkim na swojej drodze\n\nProkurator:\nAktywuj kamuflaż. Podczas kamuflażu jesteś mniej widoczny. Używanie umiejętności, poruszanie się lub otrzymywanie obrażeń przerywa go",
 		},
 		secondary = {
-			name = "Egzaminacja / Nadzór",
+			name = "Przesłuchanie / Nadzór",
 			dsc = "\nSędzia:\nSkup się na wybranym graczu przez jakiś czas. Po pełnym wykonaniu, spowolnij cel i zadaj obrażenia. Jeśli utracisz linię wzroku, umiejętność zostaje przerwana, a ty zostajesz spowolniony\n\nProkurator:\nOpuszcz swoje ciało i patrz z perspektywy losowego pobliskiego gracza. Twoja pasywna zdolność również działa z perspektywy tego gracza",
 		},
 		special = {
@@ -2685,8 +2715,8 @@ wep.SCP24273 = {
 			dsc = "Pozostały czas nadzoru",
 		},
 		drain_bar = {
-			name = "Egzaminacja",
-			dsc = "Pozostały czas egzaminacji",
+			name = "Przesłuchanie",
+			dsc = "Pozostały czas przesłuchania",
 		},
 		ghost_bar = {
 			name = "Duch",
@@ -2718,12 +2748,12 @@ wep.SCP24273 = {
 			info = "Ulepsza twoją pasywną zdolność prokuratora\n\t• Ochrona przed kulami zwiększona do [%p_prot]\n\t• Spowolnienie zwiększone do [%p_slow]\n\t• Szybkość gromadzenia dowodów zwiększona do [%p_rate] na sekundę",
 		},
 		dash1 = {
-			name = "Szarańcza I",
-			info = "Ulepsza twoją zdolność szarańczy\n\t• Czas odnowienia zmniejszony o [-dash_cd]\n\t• Obrażenia zwiększone o [+dash_dmg]",
+			name = "Doskok I",
+			info = "Ulepsza twoją zdolność doskoku\n\t• Czas odnowienia zmniejszony o [-dash_cd]\n\t• Obrażenia zwiększone o [+dash_dmg]",
 		},
 		dash2 = {
-			name = "Szarańcza II",
-			info = "Ulepsza twoją zdolność szarańczy\n\t• Czas odnowienia zmniejszony o [-dash_cd]\n\t• Obrażenia zwiększone o [+dash_dmg]",
+			name = "Doskok II",
+			info = "Ulepsza twoją zdolność doskoku\n\t• Czas odnowienia zmniejszony o [-dash_cd]\n\t• Obrażenia zwiększone o [+dash_dmg]",
 		},
 		camo1 = {
 			name = "Kamuflaż I",
@@ -2734,20 +2764,20 @@ wep.SCP24273 = {
 			info = "Ulepsza twoją zdolność kamuflażu\n\t• Czas odnowienia zmniejszony o [-camo_cd]\n\t• Czas trwania zwiększony o [+camo_dur]\n\t• Możesz poruszać się [camo_limit] jednostek bez przerywania tej zdolności",
 		},
 		drain1 = {
-			name = "Egzaminacja I",
-			info = "Ulepsza twoją zdolność pasywną prokuratora\n\t• Czas odnowienia zmniejszony o [-drain_cd]\n\t• Czas trwania zmniejszony o [-drain_dur]",
+			name = "Przesłuchanie I",
+			info = "Ulepsza twoją zdolność przesłuchania\n\t• Czas odnowienia zmniejszony o [-drain_cd]\n\t• Czas trwania zmniejszony o [-drain_dur]",
 		},
 		drain2 = {
-			name = "Egzaminacja II",
-			info = "Ulepsza twoją zdolność pasywną prokuratora\n\t• Czas odnowienia zmniejszony o [-drain_cd]\n\t• Czas trwania zmniejszony o [-drain_dur]",
+			name = "Przesłuchanie II",
+			info = "Ulepsza twoją zdolność przesłuchania\n\t• Czas odnowienia zmniejszony o [-drain_cd]\n\t• Czas trwania zmniejszony o [-drain_dur]",
 		},
 		spect1 = {
 			name = "Nadzór I",
-			info = "Ulepsza twoją zdolność pasywną prokuratora\n\t• Czas odnowienia zmniejszony o [-spect_cd]\n\t• Czas trwania zwiększony o [+spect_dur]\n\t• Ochrona przed obrażeniami od kul zwiększona do [%spect_prot]",
+			info = "Ulepsza twoją zdolność nadzoru\n\t• Czas odnowienia zmniejszony o [-spect_cd]\n\t• Czas trwania zwiększony o [+spect_dur]\n\t• Ochrona przed obrażeniami od kul zwiększona do [%spect_prot]",
 		},
 		spect2 = {
 			name = "Nadzór II",
-			info = "Ulepsza twoją zdolność pasywną prokuratora\n\t• Czas odnowienia zmniejszony o [-spect_cd]\n\t• Czas trwania zwiększony o [+spect_dur]\n\t• Ochrona przed obrażeniami od kul zwiększona do [%spect_prot]",
+			info = "Ulepsza twoją zdolność nadzoru\n\t• Czas odnowienia zmniejszony o [-spect_cd]\n\t• Czas trwania zwiększony o [+spect_dur]\n\t• Ochrona przed obrażeniami od kul zwiększona do [%spect_prot]",
 		},
 		combo = {
 			name = "Sąd Najwyższy",
@@ -2782,7 +2812,7 @@ wep.SCP3199 = {
 		eggs_max = "Masz już maksymalną liczbę jajek!",
 
 		primary = {
-			name = "Attack",
+			name = "Atak",
 			dsc = "Wykonaj podstawowy atak. Trafienie celu aktywuje (lub odnawia) szał, nakłada efekt głębokich ran oraz przyznaje ładunek pasywny i ładunek szału.\nAtaki zadają zmniejszone obrażenia celom z głębokimi ranami. Chybienie ataku przerywa szał. Trafienie tylko celu z głębokimi ranami przerywa szał i nakłada karę w ładunkach",
 		},
 		special = {
@@ -2794,7 +2824,7 @@ wep.SCP3199 = {
 			dsc = "Po zabiciu gracza możesz złożyć jajko. Kiedy otrzymasz śmiertelne obrażenia, odrodzisz się przy losowym jajku. Odrodzenie zużywa jajko. Dodatkowo, każde jajko zapewnia [prot] ochrony przed kulami (z limitem [cap])\n\nObecne jajka: [eggs] / [max]",
 		},
 		passive = {
-			name = "Umiejętność pasywna",
+			name = "Umiejętność Pasywna",
 			dsc = "Podczas szału widzisz lokalizację pobliskich graczy bez głębokich ran. Zdobywanie ładunków szału również przyznaje ładunki pasywne. Jeśli twój atak trafi tylko gracza z głębokimi ranami, stracisz [penalty] ładunków. Ładunki pasywne ulepszają twoje inne umiejętności\n\nRegeneracja [heal] HP na sekundę podczas szału\nBonus do obrażeń ataku: [dmg]\nBonus do prędkości podczas szału: [speed]\nDodatkowe spowolnienie ataku specjalnego: [slow]\nAtaki specjalne zadają [bleed] poziom(y) krwawienia",
 		},
 		frenzy_bar = {
@@ -2824,15 +2854,15 @@ wep.SCP3199 = {
 		},
 		attack1 = {
 			name = "Ostre Pazury I",
-			info = "Ulepsza twoją umiejętność atakuy\n\t• Czas odnowienia skrócony o [-attack_cd]\n\t• Obrażenia zwiększone o [+attack_dmg]",
+			info = "Ulepsza twoją umiejętność ataku\n\t• Czas odnowienia skrócony o [-attack_cd]\n\t• Obrażenia zwiększone o [+attack_dmg]",
 		},
 		attack2 = {
 			name = "Ostre Pazury II",
-			info = "Ulepsza twoją umiejętność atakuy\n\t• Czas odnowienia skrócony o [-attack_cd]\n\t• Obrażenia zwiększone o [%attack_dmg_stacks] za każdy ładunek pasywny",
+			info = "Ulepsza twoją umiejętność ataku\n\t• Czas odnowienia skrócony o [-attack_cd]\n\t• Obrażenia zwiększone o [%attack_dmg_stacks] za każdy ładunek pasywny",
 		},
 		attack3 = {
 			name = "Ostre Pazury III",
-			info = "Ulepsza twoją umiejętność atakuy\n\t• Obrażenia zwiększone o [+attack_dmg]\n\t• Obrażenia zwiększone o [%attack_dmg_stacks] za każdy ładunek pasywny",
+			info = "Ulepsza twoją umiejętność ataku\n\t• Obrażenia zwiększone o [+attack_dmg]\n\t• Obrażenia zwiększone o [%attack_dmg_stacks] za każdy ładunek pasywny",
 		},
 		special1 = {
 			name = "Atak z Zaświatów I",
@@ -2858,17 +2888,17 @@ wep.SCP009 = {
 }
 
 wep.SCP500 = {
-	name = "SCP 500",
-	death_info = "Udławiłeś się SCP 500",
-	text_used = "Jak tylko połknąłeś SCP 500, to poczułeś się lepiej",
+	name = "SCP-500",
+	death_info = "Udławiłeś się SCP-500",
+	text_used = "Jak tylko połknąłeś SCP-500, to poczułeś się lepiej",
 }
 
 wep.SCP714 = {
-	name = "SCP 714"
+	name = "SCP-714"
 }
 
 wep.SCP1025 = {
-	name = "SCP 1025",
+	name = "SCP-1025",
 	diseases = {
 		arrest = "Zatrzymanie akcji serca",
 		mental = "Choroba psychiczna",
@@ -2908,12 +2938,15 @@ wep.ID = {
 	server = "Serwer:",
 }
 
-wep.CAMERA = {
+wep.CCTV = {
 	name = "Monitoring",
 	showname = "Kamery",
 	info = "Kamery pozwalają zobaczyć, co dzieje się w placówce.\nZapewniają również możliwość skanowania obiektów SCP i przesyłania tych informacji na aktualny kanał radiowy",
 	scanning = "Skanowanie...",
 	scan_info = "Przytrzymaj [%s] aby skanować SCP",
+	map_info = "Przytrzymaj [%s] aby otworzyć mapę",
+	scan_cd = "Poczekaj przed kolejnym skanem...",
+	no_signal = "Brak sygnału...",
 }
 
 wep.RADIO = {
@@ -3185,6 +3218,7 @@ wep.CLOTHES_CHANGER = {
 	skill = "Zmieniacz ubrań",
 	wait = "Czekaj",
 	ready = "Gotowy",
+	id_time = "Pozostały czas skradzionego ID",
 	progress = "Zamiana ubrań",
 	vest = "Zdejmij pancerz aby zmienić ubrania"
 }
@@ -3198,13 +3232,30 @@ wep.DOOR_BLOCKER = {
 	progress = "Ładowanie"
 }
 
+wep.SNAV = {
+	name = "S-NAV",
+	low_battery = "Brak Baterii",
+	no_signal = "Brak Komunikacji",
+}
+
+wep.SNAV_ULT = {
+	name = "S-NAV ULTIMATE",
+	showname = "S-NAV+",
+	low_battery = "Brak Baterii",
+	no_signal = "Brak Komunikacji",
+}
+
 wep.__slc_ammo = "Amunicja"
 
-wep.weapon_stunstick = "Pałka"
-wep.weapon_crowbar = "Łom"
+wep.CROWBAR = {
+	name = "Łom",
+}
+wep.STUNSTICK = {
+	name = "Pałka",
+}
 
 --[[-------------------------------------------------------------------------
-Minigames
+Minigames - Global
 ---------------------------------------------------------------------------]]
 local minigames = {}
 lang.minigames = minigames

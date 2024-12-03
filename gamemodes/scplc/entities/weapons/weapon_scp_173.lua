@@ -454,7 +454,13 @@ SCPHook( "SCP173", "Move", function( ply, mv )
 	local statue_pos = statue:GetPos()
 	local dist = ply_pos:Distance( statue_pos )
 
-	if dist >= wep.MoveDist * wep:GetUpgradeMod( "move_dist", 1 ) then
+	local move_dist = wep.MoveDist * wep:GetUpgradeMod( "move_dist", 1 )
+
+	if ply:IsInZone( ZONE_SURFACE ) then
+		move_dist = move_dist * 1.3
+	end
+
+	if dist >= move_dist then
 		local dir = statue_pos - ply_pos
 		dir:Normalize()
 
@@ -516,6 +522,10 @@ if CLIENT then
 
 		local pos = statue:GetPos()
 		local radius = wep.MoveDist * wep:GetUpgradeMod( "move_dist", 1 )
+
+		if ply:IsInZone( ZONE_SURFACE ) then
+			radius = radius * 1.3
+		end
 
 		local prev_s = 0
 		local prev_c = 1
@@ -583,28 +593,28 @@ DefineUpgradeSystem( "scp173", {
 		{ name = "attack_b", cost = 2, req = { "horror_a", "horror_b" }, block = { "attack_a" }, reqany = true, pos = { 2, 2 },
 			mod = { move_dist = 1.2 }, icon = icons.freeze, active = false },
 		{ name = "prot1", cost = 2, req = { "attack_a", "attack_b" }, reqany = true, pos = { 2, 3 },
-			mod = { prot = 0.25 }, icon = icons.prot, active = false, additive = true },
+			mod = { prot = 0.15 }, icon = icons.prot, active = false, additive = true },
 
 		{ name = "gas1", cost = 1, req = {}, reqany = false, pos = { 3, 1 },
 			mod = { gas_dist = 1.15 }, icon = icons.gas, active = false },
 		{ name = "gas2", cost = 2, req = { "gas1" }, reqany = false, pos = { 3, 2 },
 			mod = { gas_dist = 1.4, gas_cd = 0.8 }, icon = icons.gas, active = false },
 		{ name = "prot2", cost = 2, req = { "gas2" }, reqany = false, pos = { 3, 3 },
-			mod = { prot = 0.25 }, icon = icons.prot, active = false, additive = true },
+			mod = { prot = 0.15 }, icon = icons.prot, active = false, additive = true },
 
 		{ name = "decoy1", cost = 1, req = {}, reqany = false, pos = { 4, 1 },
 			mod = { decoy_cd = 0.66 }, icon = icons.decoy, active = false },
 		{ name = "decoy2", cost = 2, req = { "decoy1" }, reqany = false, pos = { 4, 2 },
 			mod = { decoy_max = 2 }, icon = icons.decoy, active = false },
 		{ name = "prot3", cost = 1, req = { "decoy2" }, reqany = false, pos = { 4, 3 },
-			mod = { prot = 0.25 }, icon = icons.prot, active = false, additive = true },
+			mod = { prot = 0.15 }, icon = icons.prot, active = false, additive = true },
 
 		{ name = "stealth1", cost = 2, req = {}, reqany = false, pos = { 5, 1 },
 			mod = { stealth_cd = 0.9 }, icon = icons.stealth, active = false },
 		{ name = "stealth2", cost = 2, req = { "stealth1" }, reqany = false, pos = { 5, 2 },
 			mod = { stealth_cd = 0.8, stealth_dur = 1.5 }, icon = icons.stealth, active = false },
 		{ name = "prot4", cost = 1, req = { "stealth2" }, reqany = false, pos = { 5, 3 },
-			mod = { prot = 0.25 }, icon = icons.prot, active = false, additive = true },
+			mod = { prot = 0.15 }, icon = icons.prot, active = false, additive = true },
 
 		{ name = "outside_buff", cost = 1, req = {}, reqany = false, pos = { 1, 4 }, mod = {}, active = false },
 	},

@@ -294,7 +294,7 @@ hook.Add( "SLCGamemodeLoaded", "SLCRegisterClasses", function()
 end )
 
 hook.Add( "SLCVersionChanged", "ClassesOverride", function( new, old )
-	file.Rename( "slc/classes_data.txt", "slc/classes_data_old.txt" )
+	file.Rename( "slc/classes_data.txt", "slc/classes_data_"..old.signature..".txt" )
 end )
 
 --[[-------------------------------------------------------------------------

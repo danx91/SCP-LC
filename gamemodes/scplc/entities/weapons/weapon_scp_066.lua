@@ -10,7 +10,7 @@ SWEP.MaxEricStacks = 75
 
 SWEP.MusicCooldown = 12
 SWEP.MusicLength = 22
-SWEP.MusicDamage = 4
+SWEP.MusicDamage = 3
 SWEP.MusicRange = 650
 
 SWEP.DashCooldown = 25
@@ -94,7 +94,10 @@ function SWEP:Think()
 		local max_dist = self.MusicRange * self:GetUpgradeMod( "music_range", 1 )
 
 		for i, v in ipairs( player.GetAll() ) do
-			if !self:CanTargetPlayer( v ) or v:IsInSafeSpot() then continue end
+			if !self:CanTargetPlayer( v ) then continue end
+
+			local is_safe, safe_pos = v:IsInSafeSpot()
+			if is_safe and !pos:WithinAABox( safe_pos.mins, safe_pos.maxs ) then continue end
 
 			local dist = v:GetPos():Distance( pos )
 			local pct = 1 - dist / max_dist
@@ -116,12 +119,7 @@ function SWEP:DashThink()
 
 	local detach = self:GetDetachTime()
 	if detach > 0 and detach <= ct then
-		local owner = self:GetOwner()
-
-		if self.CurrentAttach and IsValid( self.CurrentAttach[1] ) and self.CurrentAttach[1]:CheckSignature( self.CurrentAttach[2] ) then
-			owner:SetPos( self.CurrentAttach[1]:GetPos() )
-		end
-
+		self:Detach()
 		self:CleanupDash()
 		self:SetNextDash( ct + self.DashCooldown * self:GetUpgradeMod( "dash_cd", 1 ) )
 		return
@@ -142,14 +140,22 @@ function SWEP:DashThink()
 	util.TraceHull( dash_trace )
 	owner:LagCompensation( false )
 
-	if !dash_trace.Hit then return end
+	if !dash_trace.Hit then
+		owner:LagCompensation( true )
+		util.TraceLine( dash_trace )
+		owner:LagCompensation( false )
+
+		if !dash_trace.Hit then return end
+	end
 
 	local ent = dash_trace.Entity
-	if !IsValid( ent ) or !ent:IsPlayer() or !self:CanTargetPlayer( ent ) then
+	if !IsValid( ent ) or !ent:IsPlayer() then
 		self:CleanupDash()
 		return
 	end
-	
+
+	if !self:CanTargetPlayer( ent ) then return end
+
 	local ent_pos = ent:GetPos() + ent:OBBCenter()
 	local dir = dash_trace.HitPos - ent_pos
 	dir.z = 0
@@ -166,13 +172,11 @@ function SWEP:DashThink()
 	self.DashActive = false
 	self.CurrentAttach = { ent, ent:TimeSignature() }
 	self:SetDetachTime( ct + self.DashDetachTime * self:GetUpgradeMod( "detach_time", 1 ) )
-	table.insert( self.Attached, ent )
+	self:SetNextDash( ct + 1 )
+	self.Attached[2] = ent
+	//table.insert( self.Attached, ent )
 
 	ent:SetProperty( "scp066_attached", owner )
-
-	if self:HasUpgrade( "dash3" ) then
-		self:SetNextDash( ct + 1 )
-	end
 end
 
 function SWEP:TranslateActivity( act )
@@ -195,15 +199,13 @@ function SWEP:PrimaryAttack()
 
 	local ct = CurTime()
 	self:SetNextPrimaryFire( ct + self.MusicLength + self.MusicCooldown * self:GetUpgradeMod( "music_cd", 1 ) )
-	
-	self:EmitSound( math.random( 1000 ) == 666 and "SCP066.IHateMyLife" or "SCP066.Music" )
-	
-	self.MusicAttack = ct + self.MusicLength
 	self:SetNextEric( ct + self.MusicLength + 3 )
+	self.MusicAttack = ct + self.MusicLength
 
-	if SERVER then
-		AddRoundStat( "066" )
-	end
+	if !SERVER then return end
+
+	self:GetOwner():EmitSound( math.random( 1000 ) == 666 and "SCP066.IHateMyLife" or "SCP066.Music" )
+	AddRoundStat( "066" )
 end
 
 local dash_up = Vector( 0, 0, 250 )
@@ -217,12 +219,17 @@ function SWEP:Reload()
 	local owner = self:GetOwner()
 	if !self.Attached and !owner:IsOnGround() then return end
 
-	if self.Attached then
-		if self.CurrentAttach and IsValid( self.CurrentAttach[1] ) and self.CurrentAttach[1]:CheckSignature( self.CurrentAttach[2] ) then
-			self:GetOwner():SetPos( self.CurrentAttach[1]:GetPos() + self.CurrentAttach[1]:OBBCenter() )
-		end
+	self:SetNextDash( ct + self.DashCooldown * self:GetUpgradeMod( "dash_cd", 1 ) )
 
-		self:CleanupDash( true )
+	if self.Attached then
+		self:Detach()
+
+		if self:HasUpgrade( "dash3" ) then
+			self:CleanupDash( true )
+		else
+			self:CleanupDash()
+			return
+		end
 	end
 
 	local ang = owner:EyeAngles()
@@ -243,7 +250,6 @@ function SWEP:Reload()
 		end
 	end )
 
-	self:SetNextDash( ct + self.DashCooldown * self:GetUpgradeMod( "dash_cd", 1 ) )
 	self.DashActive = true
 end
 
@@ -322,6 +328,24 @@ function SWEP:CanAttack()
 	return false, any
 end
 
+local detach_trace = {}
+detach_trace.mask = MASK_SOLID_BRUSHONLY
+detach_trace.output = detach_trace
+
+function SWEP:Detach()
+	if !self.CurrentAttach or !IsValid( self.CurrentAttach[1] ) or !self.CurrentAttach[1]:CheckSignature( self.CurrentAttach[2] ) then return end
+
+	local owner = self:GetOwner()
+
+	detach_trace.start = self.CurrentAttach[1]:GetPos()
+	detach_trace.endpos = detach_trace.start + self.CurrentAttach[1]:OBBCenter()
+	detach_trace.mins, detach_trace.maxs = owner:GetCollisionBounds()
+
+	util.TraceHull( detach_trace )
+
+	owner:SetPos( detach_trace.HitPos )
+end
+
 function SWEP:CleanupDash( soft )
 	if IsValid( self.CurrentAttach ) then
 		self.CurrentAttach:SetProperty( "scp066_attached", nil )
@@ -330,9 +354,9 @@ function SWEP:CleanupDash( soft )
 	self.CurrentAttach = nil
 	self.DashActive = false
 	self:SetDetachTime( 0 )
-	controller.Stop( self:GetOwner() )
-
+	
 	local owner = self:GetOwner()
+	controller.Stop( owner )
 	owner:SetParent( nil )
 	owner:SetMoveType( MOVETYPE_WALK )
 
@@ -387,6 +411,7 @@ local function handle_death( ply )
 	local wep = scp:GetSCPWeapon()
 	if !IsValid( wep ) or !wep.CurrentAttach or wep.CurrentAttach[1] != ply or !ply:CheckSignature( wep.CurrentAttach[2] ) then return end
 
+	wep:Detach()
 	wep:CleanupDash()
 end
 

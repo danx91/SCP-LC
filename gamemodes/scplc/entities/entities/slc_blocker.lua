@@ -25,59 +25,62 @@ function ENT:Initialize()
 		phys:SetMaterial( "gmod_silent" )
 	end
 
+	self.Initialized = true
 	self.TeamFilter = {}
 	self.ClassFilter = {}
 	self.PlayerFilter = {}
 	self.RoundFilter = {}
+	self.CustomChecks = {}
+	self.UseCustomChecks = false
 
 	local data = BLOCKERS[self:GetBlockerID()]
-	if data then
-		self:SetPos( data.pos )
-		self:SetCollisionBounds( data.bounds[1], data.bounds[2] )
+	if !data then return end
 
-		local filter = data.filter
-		if filter then
-			self:EnableBlacklistMode( filter.mode == BLOCKER_BLACKLIST )
+	self:SetPos( data.pos )
+	self:SetCollisionBounds( data.bounds[1], data.bounds[2] )
 
-			--teams
-			if filter.teams then
-				for i = 1, #filter.teams do
-					local team = filter.teams[i]
-					if team then
-						self:AddTeamToFilter( team )
-					end
-				end
-			end
+	local filter = data.filter
+	if !filter then return end
 
-			--classes
-			if filter.classes then
-				for i = 1, #filter.classes do
-					local class = CLASSES[filter.classes[i]]
-					if class then
-						self:AddClassToFilter( class )
-					end
-				end
-			end
+	self:EnableBlacklistMode( filter.mode == BLOCKER_BLACKLIST )
 
-			--group
-			if filter.group then
-				self:LoadFilterGroup( filter.group )
-			end
-
-			if filter.round then
-				self.RoundFilter = {
-					preparing = !!filter.round.preparing,
-					post = !!filter.round.post,
-				}
+	--teams
+	if filter.teams then
+		for i = 1, #filter.teams do
+			local team = filter.teams[i]
+			if team then
+				self:AddTeamToFilter( team )
 			end
 		end
 	end
-end
 
-/*function ENT:Think()
-	local ms, mx = self:GetCollisionBounds()
-	debugoverlay.BoxAngles( self:GetPos(), ms, mx, self:GetAngles(), 0.1, Color( 0, 255, 255, 1 ) )
-end*/
+	--classes
+	if filter.classes then
+		for i = 1, #filter.classes do
+			local class = CLASSES[filter.classes[i]]
+			if class then
+				self:AddClassToFilter( class )
+			end
+		end
+	end
+
+	--group
+	if filter.group then
+		self:LoadFilterGroup( filter.group )
+	end
+
+	--custom check
+	if filter.custom_check then
+		self:AddCustomCheckToFilter( filter.custom_check )
+	end
+
+	if filter.round then
+		self.RoundFilter = {
+			preparing = !!filter.round.preparing,
+			post = !!filter.round.post,
+		}
+	end
+end
 
 function ENT:AddTeamToFilter( team )
 	self.TeamFilter[team] = true
@@ -89,6 +92,11 @@ end
 
 function ENT:AddPlayerToFilter( ply )
 	self.PlayerFilter[ply] = true
+end
+
+function ENT:AddCustomCheckToFilter( fn )
+	table.insert( self.CustomChecks, fn )
+	self.UseCustomChecks = true
 end
 
 function ENT:LoadFilterGroup( group )
@@ -104,6 +112,10 @@ function ENT:LoadFilterGroup( group )
 
 		for ply, _ in pairs( data.players ) do
 			self:AddPlayerToFilter( ply )
+		end
+
+		for _, fn in ipairs( data.custom ) do
+			self:AddCustomCheckToFilter( fn )
 		end
 
 		if data.base then
@@ -127,13 +139,32 @@ hook.Add( "ShouldCollide", "SLCBlocker", function( ent1, ent2 )
 		other = ent1
 	end
 
-	if blocker and other:IsPlayer() then
-		if blocker.RoundFilter.preparing and ROUND.preparing or blocker.RoundFilter.post and ROUND.post then return true end
+	if !blocker or !blocker.Initialized or !other:IsPlayer() then return end
 
-		if blocker.PlayerFilter[other] or blocker.TeamFilter[other:SCPTeam()] or blocker.ClassFilter[other:SCPClass()] then
-			return blocker.Blacklist
-		else
+	if blocker.UseCustomChecks then
+		local all_nil = true
+
+		for i, v in ipairs( blocker.CustomChecks ) do
+			local result = v( other )
+
+			if result == true and !blocker.Blacklist then return false end
+			if result == false and blocker.Blacklist then return true end
+
+			if result != nil then
+				all_nil = false
+			end
+		end
+
+		if !all_nil then
 			return !blocker.Blacklist
 		end
+	end
+
+	if blocker.RoundFilter.preparing and ROUND.preparing or blocker.RoundFilter.post and ROUND.post then return true end
+
+	if blocker.PlayerFilter[other] or blocker.TeamFilter[other:SCPTeam()] or blocker.ClassFilter[other:SCPClass()] then
+		return blocker.Blacklist
+	else
+		return !blocker.Blacklist
 	end
 end )

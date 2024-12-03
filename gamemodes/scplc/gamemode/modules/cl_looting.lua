@@ -158,16 +158,6 @@ net.Receive( "SLCLooting", function( len )
 	end
 end )
 
-AddLootingOverride( "weapon_crowbar", {
-	SelectFont = "SCPHLIcons",
-	IconLetter = "c"
-} )
-
-AddLootingOverride( "weapon_stunstick", {
-	SelectFont = "SCPHLIcons",
-	IconLetter = "n"
-} )
-
 AddLootingOverride( "__slc_ammo", {
 	WepSelectIcon = Material( "slc/items/__slc_ammo.png" ),
 	SelectColor = Color( 255, 210, 0, 255 ),

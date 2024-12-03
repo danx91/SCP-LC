@@ -25,7 +25,7 @@ SWEP.CamouflageDuration = 20
 
 SWEP.DrainCooldown = 50
 SWEP.DrainDamage = 50
-SWEP.DrainTime = 10
+SWEP.DrainTime = 6
 SWEP.DrainSlow = 0.3
 SWEP.DrainSlowTime = 5
 
@@ -76,6 +76,7 @@ function SWEP:SetupDataTables()
 	self:AddNetworkVar( "Special", "Float" )
 	self:AddNetworkVar( "SpectateTime", "Float" )
 	self:AddNetworkVar( "SpectateDuration", "Float" )
+	self:AddNetworkVar( "SpectateYaw", "Float" )
 	self:AddNetworkVar( "SpectateEntity", "Entity" )
 	self:AddNetworkVar( "DrainTarget", "Entity" )
 end
@@ -145,14 +146,20 @@ function SWEP:Think()
 		self:SetSpectateDuration( time )
 		self:SetSpectateEntity( NULL )
 		self:SetNextSecondaryFire( ct + self.SpectateCooldown * self:GetUpgradeMod( "spect_cd", 1 ) )
+
+		owner:DisableControls( "scp24273_spectate_recovery" )
 	elseif spectate < 0 and -spectate < ct then
 		self:RestrictMode( 2 )
 		self:SetSpectateTime( 0 )
 		owner:StopDisableControls( "scp24273_spectate" )
+		owner:StopDisableControls( "scp24273_spectate_recovery" )
 	end
 
 	if self.SpectateFly > 0 and self.SpectateFly <= ct then
 		self.SpectateFly = 0
+		owner:StopDisableControls( "scp24273_spectate_fly" )
+
+		--spawn dummy?
 	end
 
 	if ghost == 0 then
@@ -180,8 +187,9 @@ function SWEP:EvidenceThink()
 		return
 	end
 
+	local owner = self:GetOwner()
 	local pos = ent:EyePos()
-	local ang = ent:EyeAngles()
+	local ang = owner:EyeAngles()
 	local forward = ang:Forward()
 
 	evidence_trace.start = pos
@@ -192,7 +200,7 @@ function SWEP:EvidenceThink()
 	local best_ply = nil
 
 	for i, v in ipairs( player.GetAll() ) do
-		if !self:CanTargetPlayer( v ) then continue end
+		if !self:CanTargetPlayer( v ) or v:GetNoDraw() or hook.Run( "CanPlayerSeePlayer", owner, v ) == false then continue end
 
 		local ply_pos = v:GetPos() + v:OBBCenter()
 		local diff = ply_pos - pos
@@ -517,8 +525,10 @@ function SWEP:SecondaryAttack()
 		self.SpectateActivePath = 1
 		self.SpectatePathTime = path_time
 		self.SpectateFly = ct + fly_time
+		self:SetSpectateYaw( owner:GetAngles().y )
 		
-		owner:DisableControls( "scp24273_spectate", IN_ATTACK2 )
+		owner:DisableControls( "scp24273_spectate", bit.bor( IN_ATTACK2, CAMERA_MASK ) )
+		owner:DisableControls( "scp24273_spectate_fly" )
 
 		net.SendTable( "SCP24273Path", path, owner )
 	else
@@ -698,7 +708,7 @@ function SWEP:DrawSCPHUD()
 end
 
 SWEP.CameraPath = nil
-function SWEP:CalcView( ply, cur_pos, cur_ang )
+function SWEP:CalcView( ply, cur_pos, cur_ang, fov )
 	if self.CameraReset then
 		self.CameraReset = false
 
@@ -714,7 +724,7 @@ function SWEP:CalcView( ply, cur_pos, cur_ang )
 		local target = self:GetSpectateEntity()
 		if !IsValid( target ) then return end
 				
-		return target:EyePos(), target:EyeAngles()
+		return target:EyePos(), cur_ang, fov, true//target:EyeAngles()
 	end
 
 	if !self.CameraPosition then
@@ -819,6 +829,33 @@ SCPHook( "SCP24273", "CalcMainActivity", function( ply, speed )
 
 	ply:SetCycle( f )
 	return ACT_INVALID, seq
+end )
+
+SCPHook( "SCP24273", "UpdateAnimation", function( ply )
+	if ply:SCPClass() != CLASSES.SCP24273 then return end
+
+	local wep = ply:GetSCPWeapon()
+	if !IsValid( wep ) then return end
+
+	local spectate = wep:GetSpectateTime()
+	if spectate == 0 then return end
+
+	ply:SetPoseParameter( "aim_yaw", 0 )
+	ply:SetPoseParameter( "aim_pitch", 0 )
+end )
+
+local tmp_ang = Angle( 0, 0, 0 )
+SCPHook( "SCP24273", "PrePlayerDraw", function( ply )
+	if ply:SCPClass() != CLASSES.SCP24273 then return end
+
+	local wep = ply:GetSCPWeapon()
+	if !IsValid( wep ) then return end
+
+	local spectate = wep:GetSpectateTime()
+	if spectate == 0 then return end
+
+	tmp_ang.y = wep:GetSpectateYaw()
+	ply:SetRenderAngles( tmp_ang )
 end )
 
 SCPHook( "SCP24273", "DoAnimationEvent", function( ply, event, data )

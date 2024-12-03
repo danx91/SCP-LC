@@ -175,15 +175,22 @@ function SWEP:Stack()
 end
 
 function SWEP:RemoveStack()
-	if self.Stacks <= 1 then return end
+	if self.Stacks <= 1 then return false end
 
 	local count = self:GetCount()
 	if count > 0 then
 		self:SetCount( count - 1 )
+		return count > 1
 	end
+
+	return false
 end
 
 function SWEP:BatteryDepleted()
+
+end
+
+function SWEP:BatteryInserted()
 
 end
 
@@ -195,12 +202,13 @@ function SWEP:EquipAmmo( ply )
 end
 
 function SWEP:DragAndDrop( wep, test )
-	if !self.HasBattery or wep:GetClass() != "item_slc_battery" then return false end
+	if !self.HasBattery or !wep:IsDerived( "item_slc_battery" ) then return false end
 	
-	if self:GetBattery() >= 100 then return false end
+	if self:GetBattery() >= ( wep.Power or 100 ) then return false end
 	if !SERVER or test then return true end
 
-	self:SetBattery( 100 )
+	self:SetBattery( wep.Power or 100 )
+	self:BatteryInserted()
 	
 	if wep:GetCount() <= 1 then
 		wep:Remove()

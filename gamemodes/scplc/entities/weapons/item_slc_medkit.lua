@@ -14,7 +14,7 @@ if CLIENT then
 	SWEP.SelectColor = Color( 255, 210, 0, 255 )
 end
 
-SWEP.scp914upgrade = "item_slc_medkitplus"
+SWEP.SCP914Upgrade = "item_slc_medkitplus"
 
 SWEP.HealDmg 	= 40
 SWEP.HealRand 	= 10
@@ -60,6 +60,11 @@ end
 
 function SWEP:OnDrop()
 	self:StopHeal( 0.5 )
+end
+
+function SWEP:Holster()
+	self:StopHeal( 0.5 )
+	return true
 end
 
 function SWEP:Think()

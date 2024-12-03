@@ -308,11 +308,10 @@ local function create_eq()
 		if data.durability < 0 then return end
 
 		local dur = ply:GetVestDurability()
-		if dur < 0 then return end
-
 		if dur <= 0 then
-			surface.SetDrawColor( 255, 0, 0, 10 )
+			surface.SetDrawColor( 200, 0, 0, 45 )
 			surface.DrawRect( 0, 0, pw, ph )
+
 			return
 		end
 
@@ -1236,6 +1235,9 @@ function PANEL:Init()
 	move.FinishMove = function( this )
 		EQ.BPX = self:GetX() + self:GetWide() * 0.5
 		EQ.BPY = self:GetY() + self:GetTall() * 0.5
+
+		cookie.Set( "slc_backpack_x", EQ.BPX )
+		cookie.Set( "slc_backpack_y", EQ.BPY )
 	end
 
 	local header = vgui.Create( "DLabel", self )
@@ -1262,17 +1264,21 @@ function PANEL:Init()
 
 	self:SizeToContents()
 
-	if EQ.BPX and EQ.BPY then
-		local pw, ph = self:GetSize()
-		local pos_x = math.Clamp( EQ.BPX - pw * 0.5, 0, ScrW() - pw )
-		local pos_y = math.Clamp( EQ.BPY - ph * 0.5, 0, ScrH() - ph )
+	if !EQ.PBX or !EQ.BPY then
+		local x = cookie.GetNumber( "slc_backpack_x" ) or ScrW() * 0.5
+		local y = cookie.GetNumber( "slc_backpack_y" ) or ScrH() * 0.5
 
-		self:SetPos( pos_x, pos_y )
-	else
-		self:Center()
+		EQ.BPX = x
+		EQ.BPY = y
 	end
 
+	local pw, ph = self:GetSize()
+	local pos_x = math.Clamp( EQ.BPX - pw * 0.5, 0, ScrW() - pw )
+	local pos_y = math.Clamp( EQ.BPY - ph * 0.5, 0, ScrH() - ph )
+
+	self:SetPos( pos_x, pos_y )
 	self:MakePopup()
+	self:SetKeyboardInputEnabled( false )
 end
 
 function PANEL:Think()

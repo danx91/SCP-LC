@@ -25,8 +25,8 @@ function SWEP:SetupDataTables()
 	self:AddNetworkVar( "Upgraded", "Bool" )
 end
 
-function SWEP:HandleUpgrade( mode, num_mode, pos )
-	self:SetPos( pos )
+function SWEP:HandleUpgrade( mode, exit, ply )
+	self:SetPos( exit )
 	
 	if mode == UPGRADE_MODE.VERY_FINE then
 		self:Refill()
@@ -34,6 +34,11 @@ function SWEP:HandleUpgrade( mode, num_mode, pos )
 		if math.random( 100 ) <= 33 then
 			self:SetUpgraded( true )
 		end
+	end
+
+	if self.PickupPriority then
+		self.Dropped = CurTime()
+		self.PickupPriorityTime = CurTime() + 10
 	end
 end
 

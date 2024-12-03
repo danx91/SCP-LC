@@ -1,13 +1,14 @@
 SWEP.Base 		= "item_slc_base"
 SWEP.Language 	= "BACKPACK"
 
+SWEP.WorldModel = "models/fallout 3/backpack_1.mdl" --fallback model
+
 SWEP.ShouldDrawViewModel 	= false
 SWEP.ShouldDrawWorldModel 	= false
 
 SWEP.Droppable = true
 SWEP.Selectable = false
 SWEP.Toggleable = true
-
 
 //lua_run bp = BACKPACK.Create("small") bp:SetPos(Entity(1):GetEyeTrace().HitPos + Vector(0,0,50)) bp.Dropped = 0
 //lua_run PrintTable(Entity(1):GetProperty("inventory"))
@@ -29,13 +30,13 @@ function SWEP:Initialize()
 	self:InitializeLanguage()
 
 	local bp = self:GetBackpack()
-	//print( "GOTBP", bp )
-	if bp <= 0 then return 0 end
+	if bp <= 0 then return end
 
 	local data = BACKPACK.GetData( bp )
-	if !data then return 0 end
+	if !data then return end
 
 	self.WorldModel = data.model
+	self:SetModel( data.model )
 
 	if CLIENT then
 		self:UpdateDescription()
@@ -47,6 +48,7 @@ function SWEP:Think()
 
 end
 
+local backpack_mask = bit.bnot( IN_SPEED )
 function SWEP:OnSelect()
 	local owner = self:GetOwner()
 	if owner:GetProperty( "inventory_transition", 0 ) > CurTime() then
@@ -57,14 +59,13 @@ function SWEP:OnSelect()
 		return
 	end
 
-	
 	local new = !self:GetEnabled()
 	self:SetEnabled( new )
 	self.PreventDropping = new
 
 	if SERVER then
 		if new then
-			owner:DisableControls( "slc_backpack" )
+			owner:DisableControls( "slc_backpack", backpack_mask )
 		else
 			owner:StopDisableControls( "slc_backpack" )
 		end
@@ -191,3 +192,9 @@ function SWEP:DebugInfo( indent )
 	print( t.."Backpack ->", self:GetBackpack() )
 	print( t.."Enabled ->", self:GetEnabled() )
 end
+
+/*function SWEP:Draw()
+	if IsValid( self:GetOwner() ) then return end
+
+	self:DrawModel()
+end*/

@@ -1,9 +1,9 @@
 UPGRADE_MODE = {
-	ROUGH = bit.lshift( 1, 0 ), --1
-	COARSE = bit.lshift( 1, 1 ), --2
-	ONE_ONE = bit.lshift( 1, 2 ), --4
-	FINE = bit.lshift( 1, 3 ), --8
-	VERY_FINE = bit.lshift( 1, 4 ) --16
+	ROUGH = 0,
+	COARSE = 1,
+	ONE_ONE = 2,
+	FINE = 3,
+	VERY_FINE = 4,
 }
 
 ACC_REGISTRY = {
@@ -186,75 +186,38 @@ function SelectChip( level, blacklist )
 	end
 end
 
-local function translate_upgrademode( mode )
-	if mode == 1 then
-		return 0
-	elseif mode == 2 then
-		return 1
-	elseif mode == 4 then
-		return 2
-	elseif mode == 8 then
-		return 3
-	elseif mode == 16 then
-		return 4
-	end
-end
-
 function SelectUpgrade( name, mode )
-	mode = translate_upgrademode( mode )
+	local upgrades = ACC_REGISTRY.UPGRADES[name]
+	if !upgrades then return false end
 
-	if !mode then
-		print( "Failed to translate upgrade mode", mode )
-		return
+	local weightlist = upgrades[mode]
+	if !weightlist then return false end
+
+	local len = #weightlist
+	local total = weightlist[len][1]
+
+	if total == 0 then
+		local result = weightlist[len][2]
+		if !result or result == true then
+			return result
+		end
+		
+		return result, GenerateAccessOverride( GetChip( result ) )
 	end
 
-	--print( "Mode translated to", mode )
-	local upgrades = ACC_REGISTRY.UPGRADES[name]
-	--print( "chip result", name, upgrades )
-	if upgrades then
-		local weightlist = upgrades[mode]
-		if weightlist then
-			local len = #weightlist
-			local total = weightlist[len][1]
-
-			if total == 0 then
-				local result = weightlist[len][2]
-				--print( "Only one possible", result )
-
-				//if result == true then return end
-				//return result or name
-				local override
-
-				if result and result != true then
-					override = GenerateAccessOverride( GetChip( result ) )
-				end
-
-				return result, override
+	local dice = math.random( total )
+	for i = 1, len do
+		if dice <= weightlist[i][1] then
+			local result = weightlist[i][2]
+			if !result or result == true then
+				return result
 			end
 
-			local dice = math.random( total )
-			for i = 1, len do
-				--print( "check for", weightlist[i][2], weightlist[i][1], dice )
-				if dice <= weightlist[i][1] then
-					local result = weightlist[i][2]
-					--print( "Selected", result )
-
-					//if result == true then return end
-					//return result or name
-					local override
-
-					if result and result != true then
-						override = GenerateAccessOverride( GetChip( result ) )
-					end
-
-					return result, override
-				end
-			end
-
-			print( "Something went wrong while selecting upgraded chip type!", name, mode )
+			return result, GenerateAccessOverride( GetChip( result ) )
 		end
 	end
 
+	print( "Something went wrong while selecting upgraded chip type!", name, mode )
 	return false
 end
 
@@ -609,7 +572,6 @@ if SERVER then
 	end )
 end
 
-//timer.Simple( 0, function()
 hook.Add( "SLCModulesLoaded", "SLCAccessSetup", function()
 	hook.Run( "SLCRegisterAccess" )
 	hook.Run( "SLCRegisterChips" )
@@ -619,45 +581,27 @@ hook.Add( "SLCModulesLoaded", "SLCAccessSetup", function()
 		ACC_REGISTRY.UPGRADES[k] = tab
 
 		local upgrades = v.obj.Upgrades
-		for i = 0, 4 do --swap fors?
-			local target = bit.lshift( 1, i )
+		for mode = 0, 4 do --swap fors?
+			local mode_data = upgrades[mode]
+			if mode_data and #mode_data > 0 then
+				local weights = {}
+				local total = 0
 
-			for k1, v1 in pairs( upgrades ) do --swap fors?
-				if bit.band( k1, target ) == target then
-					if #v1 > 0 then
-						local weights = {}
-						local total = 0
-
-						for j = 1, #v1 do
-							total = total + v1[j][1]
-							table.insert( weights, { total, v1[j][2] } )
-						end
-
-						tab[i] = weights
-					end
-				elseif i == 0 then
-					tab[i] = { { 0, true } }
-				elseif i == 1 then
-					tab[i] = { { 15, true }, { 10, false } }
+				for i, data in ipairs( mode_data ) do
+					total = total + data[1]
+					table.insert( weights, { total, data[2] } )
 				end
 
-				-- if upgrades[i] and #upgrades[i] > 0 then
-				-- 	local weights = {}
-				-- 	local total = 0
-				-- 	for j = 1, #upgrades[i] do
-				-- 		total = total + upgrades[i][j][1]
-				-- 		table.insert( weights, { total, upgrades[i][j][2] } )
-				-- 	end
-
-				-- 	tab[i] = weights
-				-- elseif i < 2 then
-				-- 	tab[i] = { 0, true }
-				-- end
+				tab[mode] = weights
+			elseif mode == 0 then
+				tab[mode] = { { 0, true } }
+			elseif mode == 1 then
+				tab[mode] = { { 15, true }, { 10, false } }
 			end
 		end
 	end
 
-	--PrintTable( ACC_REGISTRY )
+	//PrintTable( ACC_REGISTRY )
 end )
 
 hook.Add( "SLCRegisterAccess", "SCLBaseAccess", function()
@@ -688,7 +632,7 @@ hook.Add( "SLCRegisterChips", "SCLBaseChips", function()
 	:AddUpgrade( UPGRADE_MODE.VERY_FINE, 8, "sci2" )
 	:AddUpgrade( UPGRADE_MODE.VERY_FINE, 12, "spec" )
 
-	RegisterChip( "sci1", 1, { ACCESS_SAFE, ACCESS_GENERAL }, 5 )
+	RegisterChip( "sci1", 1, { ACCESS_SAFE, ACCESS_GENERAL, ACCESS_OFFICE }, 5 )
 	:AddUpgrade( UPGRADE_MODE.FINE, 12, "sci2" )
 	:AddUpgrade( UPGRADE_MODE.FINE, 8, "spec" )
 	:AddUpgrade( UPGRADE_MODE.VERY_FINE, 8, "sci2" )

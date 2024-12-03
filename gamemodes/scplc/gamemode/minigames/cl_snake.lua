@@ -277,7 +277,7 @@ local function snake_update()
 end
 
 local function snake_open()
-	if IsValid( SNAKE_FRAME ) or !CanOpenMinigame() then return end
+	if IsValid( SNAKE_FRAME ) or !CanOpenMinigame( LocalPlayer() ) then return end
 
 	local lang = LANG.minigames.snake
 

@@ -9,7 +9,7 @@ local logo_mat = GetMaterial( "slc/logo.png", "smooth" )
 local logo_ratio = logo_mat:Height() / logo_mat:Width()
 
 local grad = Material( "vgui/gradient-l" )
-local bezier = math.CubicBezierYFromX( 0.42, 0, 0.58, 1, 0.0001 )
+local bezier = SLCEase.ease_in_out
 
 local function add_button( text, func, pnl, dock )
 	local btn = vgui.Create( "DButton", pnl )
@@ -190,7 +190,7 @@ html, body {
 
 	--Precache button
 	local pre_btn = add_button( "precache", function()
-		SLCPopup( lang.model_precache, lang.model_precache_text, false, function( i )
+		SLCLegacyPopup( lang.model_precache, lang.model_precache_text, false, function( i )
 			if i == 1 then
 				local models = {}
 
@@ -311,7 +311,7 @@ html, body {
 
 	--Quit button
 	add_button( "quit", function()
-		SLCPopup( lang.quit_server, lang.quit_server_confirmation, false, function( i )
+		SLCLegacyPopup( lang.quit_server, lang.quit_server_confirmation, false, function( i )
 			if i == 1 then
 				RunConsoleCommand( "disconnect" )
 			end
@@ -406,7 +406,7 @@ html, body {
 	end
 
 	btn_ws.DoClick = function( this )
-		gui.OpenURL( "https://steamcommunity.com/sharedfiles/filedetails/?id=1805981251" )
+		gui.OpenURL( "https://steamcommunity.com/sharedfiles/filedetails/?id="..SLC_CONTENT_WORKSHOP_ID )
 	end
 
 	local cb = vgui.Create( "SLCCheckbox", content )
@@ -506,5 +506,5 @@ concommand.Add( "slc_menu_debug", function()
 	SLCMenuScreen:Remove()
 	MakePlayerReady()
 
-	SLCPopup( "DEBUG", "Debug command has been used!\nMenu has been closed and content downloader has been dsabled!\n\nIf you used this command because you got stuck on menu, pleas report it to the gamemode author providing description what happened." )
+	SLCLegacyPopup( "DEBUG", "Debug command has been used!\nMenu has been closed and content downloader has been dsabled!\n\nIf you used this command because you got stuck on menu, pleas report it to the gamemode author providing description what happened." )
 end )

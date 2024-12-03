@@ -286,6 +286,10 @@ if SERVER then
 	ItemSpawnRule( "scp689", {
 		item = { slc_scp_689 = 10, _none = 70 },
 		amount = 1,
+		condition = function()
+			local min = CVAR.slc_689_min_players:GetInt()
+			return min > 0 and player.GetCount() >= min
+		end,
 		spawns = {
 			Vector( 1237.00, 299.00, 12.00 ),
 			Vector( 2894.00, 450.00, 11.00 ),
@@ -308,7 +312,7 @@ if SERVER then
 	Omnitools
 	---------------------------------------------------------------------------]]
 	ItemSpawnRule( "omnitools_lcz", {
-		item = "func:omnitool:60:20:5",
+		item = "func:omnitool:60:25",
 		amount = { 2, 5 },
 		spawns = {
 			Vector( 387.00, -621.00, 24.00 ),
@@ -321,8 +325,8 @@ if SERVER then
 	}, true )
 
 	ItemSpawnRule( "omnitools_hcz", {
-		item = "func:omnitool:70:30:5",
-		amount = { 2, 5 },
+		item = "func:omnitool:90:30:5",
+		amount = { 1, 3 },
 		spawns = {
 			Vector( 4229.00, -1383.00, -117.00 ),
 			Vector( 4466.00, 525.00, 11.00 ),
@@ -332,7 +336,7 @@ if SERVER then
 	}, true )
 
 	ItemSpawnRule( "omnitools_ez", {
-		item = "func:omnitool:80:40:10",
+		item = "func:omnitool:100:50:10",
 		amount = 1,
 		spawns = {
 			Vector( 436.00, 3346.00, -77.00 ),
@@ -496,8 +500,9 @@ if SERVER then
 	}, true )
 
 	ItemSpawnRule( "loose_lcz", {
-		item = { item_slc_battery = 15, item_slc_camera = 5, item_slc_flashlight = 10, item_slc_gasmask = 5, item_slc_nvg = 10, item_slc_radio = 10 },
-		amount = { 3, 6 },
+		item = { item_slc_battery = 10, item_slc_cctv = 10, item_slc_flashlight = 10, item_slc_gasmask = 10, item_slc_nvg = 10,
+			item_slc_radio = 10, item_slc_snav = 10 },
+		amount = { 6, 12 },
 		spawns = {
 			Vector( -2036.00, 1162.00, 140.00 ),
 			Vector( -377.00, 906.00, 47.00 ),
@@ -507,25 +512,43 @@ if SERVER then
 			Vector( 1422.00, 1140.00, 11.00 ),
 			Vector( 834.00, -306.00, 11.00 ),
 			Vector( 2226.00, -299.00, 11.00 ),
+			Vector( -328.00, 1333.00, 47.00 ),
+			Vector( -597.00, 815.00, 11.00 ),
+			Vector( -32.00, -613.00, 41.00 ),
+			Vector( 450.00, -1300.00, -117.00 ),
+			Vector( 1364.00, -1127.00, 11.00 ),
+			Vector( 2650.00, -1406.00, 11.00 ),
+			Vector( 2566.00, 857.00, 11.00 ),
+			Vector( 1786.00, 153.00, 54.00 ),
+			Vector( 450.00, -77.00, 11.00 ),
+			Vector( -41.00, 1990.00, 139.00 ),
 		},
 		post_tab = post,
 	}, true )
 
 	ItemSpawnRule( "loose_hcz", {
-		item = { item_slc_battery = 5, item_slc_camera = 10, item_slc_flashlight = 5, item_slc_gasmask = 10, item_slc_nvg = 10, item_slc_radio = 10 },
-		amount = { 2, 4 },
+		item = { item_slc_battery = 5, item_slc_cctv = 5, item_slc_flashlight = 10, item_slc_gasmask = 10, item_slc_nvg = 10,
+			item_slc_radio = 5, item_slc_snav = 10 },
+		amount = { 4, 8 },
 		spawns = {
 			Vector( 5139.00, 3502.00, 11.00 ),
 			Vector( 4213.00, 3920.00, 11.00 ),
 			Vector( 4579.00, 27.00, 11.00 ),
 			Vector( 3371.00, 2218.00, 11.00 ),
 			Vector( 2153.00, 3552.00, 12.00 ),
+			Vector( 3936.00, -1233.00, -117.00 ),
+			Vector( 5539.00, -283.00, 12.00 ),
+			Vector( 4797.00, 2330.00, 11.00 ),
+			Vector( 4111.00, 2459.00, 11.00 ),
+			Vector( 2811.00, 1659.00, 11.00 ),
+			Vector( 2918.00, 3252.00, -372.00 ),
 		},
 		post_tab = post,
 	}, true )
 
 	ItemSpawnRule( "loose_ez", {
-		item = { item_slc_battery = 5, item_slc_camera = 5, item_slc_flashlight = 5, item_slc_gasmask = 5, item_slc_nvg = 5, item_slc_radio = 5 },
+		item = { item_slc_battery = 5, item_slc_cctv = 5, item_slc_flashlight = 5, item_slc_gasmask = 5, item_slc_nvg = 5,
+			item_slc_radio = 5, item_slc_snav = 5 },
 		spawns = {
 			Vector( 60.00, 2515.00, 4.00 ),
 			Vector( -1022.00, 3952.00, -53.00 ),
@@ -554,7 +577,7 @@ if SERVER then
 	}, true )
 
 	ItemSpawnRule( "melee_hcz", {
-		item = { weapon_crowbar = 15, weapon_stunstick = 10 },
+		item = { weapon_slc_crowbar = 15, weapon_slc_stunstick = 10 },
 		amount = { 1, 2 },
 		spawns = {
 			Vector( 4686.00, 453.00, 11.00 ),
@@ -564,6 +587,28 @@ if SERVER then
 		post_tab = post,
 	}, true )
 
+	ItemSpawnRule( "forest", {
+		item = { item_slc_medkit = 15, item_slc_medkitplus = 15, item_slc_morphine = 10, item_slc_adrenaline = 10, item_slc_nvgplus = 10, item_slc_thermal = 10,
+			item_slc_snav = 10, item_slc_snav_ultimate = 10, item_slc_morphine_big = 10, item_slc_adrenaline_big = 10, item_scp_500 = 10, item_slc_heavymask = 10,
+			weapon_slc_crowbar = 5, weapon_slc_stunstick = 5, weapon_taser = 5, item_slc_turret = 5, item_slc_commander_tablet = 2, item_slc_battery_x = 1,
+			["func:fuse:4:8"] = 10, ["func:fuse:8:12"] = 5, ["func:chip:3"] = 10, ["func:chip:4"] = 5, ["func:vest:ntf"] = 5, ["func:vest:alpha1"] = 2 },
+		amount = { 4, 8 },
+		spawns = {
+			Vector( 6463.00, 4750.00, -1100.00 ),
+			Vector( 7372.00, 4645.00, -1100.00 ),
+			Vector( 7368.00, 3395.00, -1100.00 ),
+			Vector( 6470.00, 3870.00, -1100.00 ),
+			Vector( 6372.00, 5502.00, -1100.00 ),
+			Vector( 7261.00, 5632.00, -1100.00 ),
+			Vector( 5465.00, 5586.00, -1100.00 ),
+			Vector( 4423.00, 5536.00, -1100.00 ),
+			Vector( 4369.00, 4865.00, -1100.00 ),
+			Vector( 4358.00, 3690.00, -1100.00 ),
+			Vector( 5307.00, 4708.00, -1100.00 ),
+			Vector( 5334.00, 3762.00, -1090.00 ),
+		},
+		post_tab = post,
+	}, true )
 	--[[-------------------------------------------------------------------------
 	Spawn documents
 	---------------------------------------------------------------------------]]
@@ -762,7 +807,7 @@ if SERVER then
 	}, true )
 
 	ItemSpawnRule( "snipers_outside", {
-		item = { cw_svd_official = 10, cw_l115 = 5 },
+		item = { ["loadout:sniper_low"] = 30, ["loadout:sniper_mid"] = 10 },
 		amount = { 0, 5 },
 		spawns = {
 			Vector( -6948.00, -818.00, 2287.00 ),
@@ -776,7 +821,7 @@ if SERVER then
 
 	ItemSpawnRule( "armory_lcz_pistols", {
 		item = { ["loadout:pistol_low"] = 30, ["loadout:pistol_mid"] = 10 },
-		amount = { 4, 10 },
+		amount = { 6, 12 },
 		spawns = {
 			Vector( 1585, -1406, 28 ),
 			Vector( 1520, -1406, 28 ),
@@ -796,7 +841,7 @@ if SERVER then
 
 	ItemSpawnRule( "armory_lcz_heavy", {
 		item = { ["loadout:smg_low"] = 30, ["loadout:smg_mid"] = 10 },
-		amount = { 2, 5 },
+		amount = { 0, 2 },
 		spawns = {
 			Vector( 1585, -1700, 28 ),
 			Vector( 1520, -1700, 28 ),
@@ -814,8 +859,8 @@ if SERVER then
 		post_tab = post,
 	}, true )
 
-	ItemSpawnRule( "armory_sniper", {
-		item = { cw_svd_official = 5, khr_simsks = 5, cw_l115 = 2, khr_delisle = 3 },
+	ItemSpawnRule( "armory_sniper_shotgun", {
+		item = { ["loadout:sniper_low"] = 15, ["loadout:shotgun_low"] = 15 },
 		spawns = {
 			Vector( 1585.00, -1563.00, 11.00 )
 		},
@@ -975,6 +1020,13 @@ FUSE_BOXES = {
 		rating = 16,
 		fuse = 0,
 	},
+	{
+		name = "hcz_682_passage",
+		pos = Vector( 3184.00, 3010.00, -323.00 ),
+		ang = Angle( 0, 180, 0 ),
+		rating = 5,
+		fuse = 0,
+	}
 }
 
 --[[-------------------------------------------------------------------------
@@ -1337,8 +1389,8 @@ PREVENT_BREAK = {
 	Vector( 2816.00, 16.00, 74.00 ),
 	Vector( 2816.00, 880.00, 74.00 ),
 	Vector( 2816.00, 1296.00, 74.00 ),
-	Vector( -6752.00, -512.50, 2308.00 ),
-	Vector( -6880.00, -512.50, 2308.00 ),
+	//Vector( -6752.00, -512.50, 2308.00 ), --escape wiindow
+	//Vector( -6880.00, -512.50, 2308.00 ), --escape wiindow
 }
 
 --[[-------------------------------------------------------------------------
@@ -1358,6 +1410,8 @@ BLOCKERS = {
 				preparing = true/false,
 				post = true/false,
 			},
+			custom_check = function( ply ) end, --custom check function, return true to allow, false to block, nil to allow other filters do the job
+				(In whitelist mode, any function returning true allows. In blacklist mode, any function returning false blocks)
 		}
 	},*/
 	{
@@ -1380,6 +1434,32 @@ BLOCKERS = {
 				preparing = true,
 			},
 		}
+	},
+	{
+		name = "escape_windows",
+		pos = Vector( -6816, -510, 2308 ),
+		bounds = { Vector( -125, -5, -40 ), Vector( 125, 5, 40 ) },
+	},
+	{
+		name = "gatea_elevator",
+		pos = Vector( -190, 5184, 55 ),
+		bounds = { Vector( -5, -35, -60 ), Vector( 5, 35, 60 ) },
+		filter = {
+			mode = BLOCKER_BLACKLIST,
+			custom_check = function( ply )
+				if ply:SCPClass() != CLASSES.SCP173 then return true end
+
+				local wep = ply:GetSCPWeapon()
+				if !IsValid( wep ) then return true end
+
+				return !wep:GetInStealth()
+			end
+		}
+	},
+	{
+		name = "forest_door",
+		pos = Vector( 1472.00, 2272.50, 50.00 ),
+		bounds = { Vector( -0.1, -24, -54 ), Vector( 0.1, 24, 54 ) },
 	},
 }
 
@@ -1482,7 +1562,26 @@ MAP_ZONES = {
 --[[-------------------------------------------------------------------------
 SCP 914
 ---------------------------------------------------------------------------]]
-SCP_914_STATUS = "bt_914_4" --can also be vector
+SCP_914_MODE = function()
+	local button = CacheEntity( "bt_914_4" )
+	if !IsValid( button ) then return end
+
+	local angle = math.Round( button:GetAngles().roll )
+	if angle >= -22.5 and angle < 22.5 then
+		return UPGRADE_MODE.ROUGH
+	elseif angle >= 22.5 and angle < 67.5 then
+		return UPGRADE_MODE.COARSE
+	elseif angle >= 67.5 and angle < 112.5 then
+		return UPGRADE_MODE.ONE_ONE
+	elseif angle >= 112.5 and angle < 157.5 then
+		return UPGRADE_MODE.FINE
+	elseif angle >= 157.5 and angle < 202.5 then
+		return UPGRADE_MODE.VERY_FINE
+	end
+
+	print( "[SCP-914] Error! Failed to select upgrade mode! Defaulting to FINE", angle )
+	return UPGRADE_MODE.FINE
+end
 
 SCP_914_INTAKE_MINS = Vector( 1600.00, -683.00, 0.00 )
 SCP_914_INTAKE_MAXS = Vector( 1677.00, -549.00, 128.00 )
@@ -1491,15 +1590,23 @@ SCP_914_OUTPUT_MINS = Vector( 1618.00, -1116.00, 0.00 )
 SCP_914_OUTPUT_MAXS = Vector( 1675.00, -995.00, 128.00 )
 
 SCP_914_OUTPUT = Vector( 1651.584229, -1052.149902, 7.470211 )
-SCP_914_DOORS = {
-	Vector( 1604.50, -571.00, 55.50 ),
-	Vector( 1604.50, -1019.00, 55.50 )
-}
 
 --[[-------------------------------------------------------------------------
 Intercom
 ---------------------------------------------------------------------------]]
 INTERCOM = { Vector( -2595.00, 4035.00, 310.00 ), Angle( 0, 180, 0 ) }
+
+--[[-------------------------------------------------------------------------
+S-NAV
+---------------------------------------------------------------------------]]
+SNAV = {
+	{ material = Material( "slc/items/snav/gm_site19/gm_site19_layer1.png" ), z = 5000 }, -- z is the upper bound, material = nil displays "no signal"
+	{ material = Material( "slc/items/snav/gm_site19/gm_site19_layer2.png" ), z = 2425 },
+	{ material = nil, z = 1400 },
+	{ material = Material( "slc/items/snav/gm_site19/gm_site19_layer3.png" ), z = 400 },
+	{ material = Material( "slc/items/snav/gm_site19/gm_site19_layer4.png" ), z = -60 },
+	{ material = Material( "slc/items/snav/gm_site19/gm_site19_layer5.png" ), z = -500 },
+}
 
 --[[-------------------------------------------------------------------------
 Alpha Warhead
@@ -1710,22 +1817,25 @@ BUTTONS = {
 		name = "LCZ Underground",
 		pos = Vector( 2313.00, -2072.00, -715.00 ),
 		suppress_texts = true,
-		disable_overload = true,
 		fuse_box = { "lcz_underground_1", "lcz_underground_2" }
 	},
 	{
 		name = "SCP 049 Door",
 		ent_name = "049_hall_button",
 		suppress_texts = true,
-		disable_overload = true,
 		fuse_box = "hcz_049_door"
 	},
 	{
 		name = "EZ Check Point Room",
 		pos = Vector( 792.00, 3977.00, 53.00 ),
 		suppress_texts = true,
-		disable_overload = true,
 		fuse_box = "ez_cp_room"
+	},
+	{
+		name = "HCZ SCP-682 Passage",
+		pos = Vector( 2696.00, 2999.00, 53.00 ),
+		suppress_texts = true,
+		fuse_box = "hcz_682_passage"
 	},
 	{
 		name = "D Cells Control",
@@ -2005,7 +2115,7 @@ BUTTONS = {
 		name = "SCP-914 Upgrade",
 		ent_id = 2197,
 		override = function( ply, ent, data )
-			return Use914( ent, ply )
+			return SCP914Use( ply )
 		end,
 		suppress_texts = true,
 		scp_disallow = true,
@@ -2014,7 +2124,7 @@ BUTTONS = {
 		name = "SCP-914 Mode",
 		pos = Vector( 1563.00, -832.00, 62.00 ),
 		override = function( ply, ent, data )
-			return !GetRoundProperty( "914use" )
+			return !GetRoundProperty( "scp914_in_use" )
 		end,
 		suppress_texts = true,
 		scp_disallow = true,
@@ -2346,126 +2456,362 @@ end
 --[[-------------------------------------------------------------------------
 Cameras
 ---------------------------------------------------------------------------]]
+CCTV_CONFIG = {
+	{
+		name = "LCZ #1",
+		material = Material( "slc/items/cctv/gm_site19/gm_site19_lcz.png" ),
+		u_offset = 1050 / 2048,
+		v_offset = 644 / 2048,
+		u_size = 593 / 2048,
+		v_size = 735 / 2048,
+		assign = function( vec )
+			return vec.z > -500 and SLCZones.IsInZone( vec, ZONE_LCZ )
+		end
+	},
+	{
+		name = "LCZ #2",
+		material = Material( "slc/items/cctv/gm_site19/gm_site19_under.png" ),
+		u_offset = 1175 / 2048,
+		v_offset = 594 / 2048,
+		u_size = 512 / 2048,
+		v_size = 512 / 2048,
+		assign = function( vec )
+			return vec.z <= -500 and SLCZones.IsInZone( vec, ZONE_LCZ )
+		end
+	},
+	{
+		name = "HCZ",
+		material = Material( "slc/items/cctv/gm_site19/gm_site19_hcz.png" ),
+		u_offset = 663 / 2048,
+		v_offset = 251 / 2048,
+		u_size = 1024 / 2048,
+		v_size = 620 / 2048,
+		assign = function( vec )
+			return SLCZones.IsInZone( vec, ZONE_HCZ )
+		end
+	},
+	{
+		name = "EZ",
+		material = Material( "slc/items/cctv/gm_site19/gm_site19_ez.png" ),
+		u_offset = 646 / 2048,
+		v_offset = 767 / 2048,
+		u_size = 475 / 2048,
+		v_size = 786 / 2048,
+		assign = function( vec )
+			return SLCZones.IsInZone( vec, ZONE_EZ )
+		end
+	},
+	{
+		name = "Surface",
+		material = Material( "slc/items/cctv/gm_site19/gm_site19_surf.png" ),
+		u_offset = 371 / 2048,
+		v_offset = 943 / 2048,
+		u_size = 1095 / 2048,
+		v_size = 1041 / 2048,
+		assign = function( vec )
+			return SLCZones.IsInZone( vec, ZONE_SURFACE )
+		end
+	},
+}
+
 CCTV = {
 	{
-		name = "Class D Cells",
-		pos = Vector( -300.880524, -936.250854, 255.968750 ),
-		ang = Angle( 32.125, 137.296, 0.000 ),
+		name = "Class D - Control Room",
+		pos = Vector( -2545.00, 1843.00, 245.00 ),
+		ang = Angle( 29.00, -47.00, 0.00 ),
 		destroy_omega = true,
 	},
 	{
-		name = "LCZ Lock",
-		pos = Vector( 2415.669189, -2415.156250, 127.968750 ),
-		ang = Angle( 21.345, 135.096, 0.000 ),
+		name = "Class D #1",
+		pos = Vector( -648.00, 1847.00, 246.00 ),
+		ang = Angle( 25.00, -162.00, 0.00 ),
+		destroy_omega = true,
+	},
+	{
+		name = "Class D #2",
+		pos = Vector( -655.00, 135.00, 342.00 ),
+		ang = Angle( 28.00, 150.00, 0.00 ),
+		destroy_omega = true,
+	},
+	{
+		name = "SCP-173",
+		pos = Vector( 823.00, 1161.00, 377.00 ),
+		ang = Angle( 39.00, 135.00, 0.00 ),
+		destroy_omega = true,
+	},
+	{
+		name = "LCZ #1",
+		pos = Vector( -443.00, -978.00, 242.00 ),
+		ang = Angle( 48.00, 90.00, 0.00 ),
+		destroy_omega = true,
+	},
+	{
+		name = "Blast Shelter",
+		pos = Vector( 452.00, -1904.00, 22.00 ),
+		ang = Angle( 16.00, 131.00, 0.00 ),
+		destroy_omega = true,
+	},
+	{
+		name = "SCP-914",
+		pos = Vector( 1406.00, -928.00, 219.00 ),
+		ang = Angle( 51.00, 29.00, 0.00 ),
+		destroy_omega = true,
+	},
+	{
+		name = "LCZ - Airlock",
+		pos = Vector( 2407.00, -2413.00, 118.00 ),
+		ang = Angle( 31.00, 134.00, 0.00 ),
 		destroy_omega = true,
 	},
 	{
 		name = "Armory",
-		pos = Vector( 1244.758545, -1546.920898, 127.968750 ),
-		ang = Angle( 13.100, -0.504, 0.000 ),
+		pos = Vector( 1248.00, -1555.00, 118.00 ),
+		ang = Angle( 32.00, -1.00, 0.00 ),
 		destroy_omega = true,
 	},
 	{
-		name = "LCZ Main Hall",
-		pos = Vector( 2407.205078, -124.942398, 255.968750 ),
-		ang = Angle( 39.720, -147.464, 0.000 ),
+		name = "LCZ #2",
+		pos = Vector( 2044.00, 107.00, 247.00 ),
+		ang = Angle( 45.00, -59.00, 0.00 ),
 		destroy_omega = true,
 	},
 	{
-		name = "SCP 079",
-		pos = Vector( 3794.826416, -1125.444580, -0.031250 ),
-		ang = Angle( 23.880, 110.235, 0.000 ),
+		name = "LCZ #3",
+		pos = Vector( 1402.00, 1156.00, 248.00 ),
+		ang = Angle( 47.00, -41.00, 0.00 ),
 		destroy_omega = true,
 	},
 	{
-		name = "Omega Warhead",
-		pos = Vector( 4069.712402, 169.602386, -256.031250 ),
-		ang = Angle( 39.720, 127.464, 0.000 ),
+		name = "Basement #1",
+		pos = Vector( 528.00, 238.00, -646.00 ),
+		ang = Angle( 22.00, -44.00, 0.00 ),
 		destroy_omega = true,
 	},
 	{
-		name = "HCZ Tesla Gate",
-		pos = Vector( 4155.907715, 1428.488037, 255.968750 ),
-		ang = Angle( 31.360, 91.075, 0.000 ),
+		name = "Basement #2",
+		pos = Vector( 909.00, -1073.00, -644.00 ),
+		ang = Angle( 14.00, 53.00, 0.00 ),
 		destroy_omega = true,
 	},
 	{
-		name = "SCP 106",
-		pos = Vector( 2302.043213, 5010.212891, -128.031250 ),
-		ang = Angle( 20.780, 136.395, 0.000 ),
+		name = "Basement #3",
+		pos = Vector( 1795.00, -2126.00, -657.00 ),
+		ang = Angle( 20.00, 45.00, 0.00 ),
 		destroy_omega = true,
 	},
 	{
-		name = "EZ Checkpoint Exit 1",
-		pos = Vector( 1135.397461, 3720.185059, 127.968750 ),
-		ang = Angle( 14.400, -149.886, 0.000 ),
+		name = "Basement #4",
+		pos = Vector( 2529.00, -1081.00, -650.00 ),
+		ang = Angle( 26.00, 132.00, 0.00 ),
 		destroy_omega = true,
 	},
 	{
-		name = "EZ Checkpoint Exit 2",
-		pos = Vector( 709.690918, 2182.443359, 127.968750 ),
-		ang = Angle( 16.820, 53.175, 0.000 ),
+		name = "LCZ-HCZ #1",
+		pos = Vector( 3180.00, -193.00, 242.00 ),
+		ang = Angle( 45.00, -180.00, 0.00 ),
 		destroy_omega = true,
 	},
 	{
-		name = "Electrical Center Outside",
-		pos = Vector( -2457.775635, 3769.280029, 127.968750 ),
-		ang = Angle( 15.060, -35.784, 0.000 ),
+		name = "LCZ-HCZ #2",
+		pos = Vector( 3180.00, 1087.00, 242.00 ),
+		ang = Angle( 45.00, -180.00, 0.00 ),
 		destroy_omega = true,
 	},
 	{
-		name = "Electrical Center Inside",
-		pos = Vector( -2574.805908, 3729.778320, 383.402356 ),
-		ang = Angle( 26.079992, 67.540260, 0.000000 ),
+		name = "SCP-079",
+		pos = Vector( 3799.00, -1139.00, -5.00 ),
+		ang = Angle( 31.00, 116.00, 0.00 ),
 		destroy_omega = true,
 	},
 	{
-		name = "Gate B Fuse",
-		pos = Vector( -3593.38, 3181.59, 127.97 ),
-		ang = Angle( 25.300192, -129.536163, 0.000000	),
+		name = "HCZ #1",
+		pos = Vector( 5555.00, -79.00, 252.00 ),
+		ang = Angle( 53.00, -132.00, 0.00 ),
+		destroy_omega = true,
+	},
+	{
+		name = "Warhead",
+		pos = Vector( 4068.00, 173.00, -268.00 ),
+		ang = Angle( 30.00, 115.00, 0.00 ),
+		destroy_omega = true,
+	},
+	{
+		name = "HCZ #2",
+		pos = Vector( 4160.00, 1087.00, 244.00 ),
+		ang = Angle( 89.00, 90.00, 0.00 ),
+		destroy_omega = true,
+	},
+	{
+		name = "SCP-966",
+		pos = Vector( 4273.00, 2481.00, 151.00 ),
+		ang = Angle( 47.00, -138.00, 0.00 ),
+		destroy_omega = true,
+	},
+	{
+		name = "HCZ #3",
+		pos = Vector( 4503.00, 3305.00, 123.00 ),
+		ang = Angle( 29.00, -44.00, 0.00 ),
+		destroy_omega = true,
+	},
+	{
+		name = "CCTV #4",
+		pos = Vector( 3176.00, 2073.00, 121.00 ),
+		ang = Angle( 16.00, 140.00, 0.00 ),
+		destroy_omega = true,
+	},
+	{
+		name = "SCP-106 #1",
+		pos = Vector( 2879.00, 4035.00, 232.00 ),
+		ang = Angle( 38.00, 131.00, 0.00 ),
+		destroy_omega = true,
+	},
+	{
+		name = "SCP-106 #2",
+		pos = Vector( 2299.00, 5012.00, -144.00 ),
+		ang = Angle( 28.00, 137.00, 0.00 ),
+		destroy_omega = true,
+	},
+	{
+		name = "SCP-682",
+		pos = Vector( 2310.00, 3609.00, -136.00 ),
+		ang = Angle( 28.00, -129.00, 0.00 ),
+		destroy_omega = true,
+	},
+	{
+		name = "SCP-049",
+		pos = Vector( 4559.00, -2365.00, 155.00 ),
+		ang = Angle( 33.00, 40.00, 0.00 ),
+		destroy_omega = true,
+	},
+	{
+		name = "EZ-HCZ #1",
+		pos = Vector( 1898.00, 3648.00, 242.00 ),
+		ang = Angle( 45.00, 180.00, 0.00 ),
+		destroy_omega = true,
+	},
+	{
+		name = "EZ-HCZ #2",
+		pos = Vector( 2538.00, 2368.00, 242.00 ),
+		ang = Angle( 45.00, 180.00, 0.00 ),
+		destroy_omega = true,
+	},
+	{
+		name = "EZ #1",
+		pos = Vector( 947.00, 2189.00, 120.00 ),
+		ang = Angle( 26.00, 132.00, 0.00 ),
+		destroy_omega = true,
+	},
+	{
+		name = "Cafeteria",
+		pos = Vector( -97.00, 3101.00, 123.00 ),
+		ang = Angle( 30.00, 47.00, 0.00 ),
+		destroy_omega = true,
+	},
+	{
+		name = "EZ #2",
+		pos = Vector( -793.00, 3951.00, 112.00 ),
+		ang = Angle( 24.00, -135.00, 0.00 ),
 		destroy_omega = true,
 	},
 	{
 		name = "Gate A",
-		pos = Vector( -698.344604, 5353.954590, 260.359039 ),
-		ang = Angle( 27.820, -43.104, 0.000 ),
+		pos = Vector( -692.00, 5349.00, 247.00 ),
+		ang = Angle( 37.00, -44.00, 0.00 ),
 		destroy_omega = true,
 		destroy_gatea = true,
 	},
 	{
-		name = "Gate B",
-		pos = Vector( -3959.009521, 2423.581055, 255.968750 ),
-		ang = Angle( 27.160, -43.485, 0.000 ),
+		name = "EZ #3",
+		pos = Vector( -1439.00, 2853.00, 232.00 ),
+		ang = Angle( 34.00, -133.00, 0.00 ),
 		destroy_omega = true,
 	},
 	{
-		name = "Gate A - Surface",
-		pos = Vector( -1081.659912, 5891.317383, 2815.968750 ),
-		ang = Angle( 23.640, -35.406, 0.000 ),
+		name = "EZ #4",
+		pos = Vector( -2284.00, 3348.00, 113.00 ),
+		ang = Angle( 31.00, 133.00, 0.00 ),
+		destroy_omega = true,
+	},
+	{
+		name = "Electrical Center",
+		pos = Vector( -2576.00, 3966.00, 375.00 ),
+		ang = Angle( 30.00, 8.00, 0.00 ),
+		destroy_omega = true,
+	},
+	{
+		name = "EZ #5",
+		pos = Vector( -3750.00, 3115.00, 115.00 ),
+		ang = Angle( 28.00, -56.00, 0.00 ),
+		destroy_omega = true,
+	},
+	{
+		name = "Gate B",
+		pos = Vector( -3952.00, 2293.00, 238.00 ),
+		ang = Angle( 36.00, -27.00, 0.00 ),
+		destroy_omega = true,
+	},
+	{
+		name = "Gate A",
+		pos = Vector( -1076.00, 5068.00, 2798.00 ),
+		ang = Angle( 27.00, 45.00, 0.00 ),
 		destroy_alpha = true,
 	},
 	{
-		name = "Surface",
-		pos = Vector( -800.234619, 6919.050781, 2535.238770 ),
-		ang = Angle( 14.840, 178.874, 0.000 ),
+		name = "Surface #1",
+		pos = Vector( -777.00, 6911.00, 2523.00 ),
+		ang = Angle( 20.00, 179.00, 0.00 ),
 		destroy_alpha = true,
 	},
 	{
-		name = "Tunnel",
-		pos = Vector( -2666.820068, 1632.292480, 2769.426270 ),
-		ang = Angle( 16.380, 120.354, 0.000 ),
+		name = "Surface #2",
+		pos = Vector( -2514.00, 7144.00, 3232.00 ),
+		ang = Angle( 36.00, -33.00, 0.00 ),
 		destroy_alpha = true,
 	},
 	{
-		name = "Gate B - Surface",
-		pos = Vector( -3725.372803, 2067.642578, 2703.968750 ),
-		ang = Angle( 13.980, 168.314, 0.000 ),
+		name = "Tunnel #1",
+		pos = Vector( -2974.00, 5091.00, 2458.00 ),
+		ang = Angle( 20.00, -80.00, 0.00 ),
 		destroy_alpha = true,
 	},
 	{
-		name = "Facility Exit",
-		pos = Vector( -7405.223633, 1867.927856, 3017.297119 ),
-		ang = Angle( 36.500242, 28.759499, 0.000000 ),
+		name = "Tunnel #2",
+		pos = Vector( -2658.00, 1968.00, 2724.00 ),
+		ang = Angle( 30.00, 133.00, 0.00 ),
+		destroy_alpha = true,
+	},
+	{
+		name = "Tunnel #3",
+		pos = Vector( -3722.00, 2521.00, 2766.00 ),
+		ang = Angle( 25.00, -142.00, 0.00 ),
+		destroy_alpha = true,
+	},
+	{
+		name = "Surface #3",
+		pos = Vector( -7403.00, 1860.00, 3001.00 ),
+		ang = Angle( 34.00, 32.00, 0.00 ),
+		destroy_alpha = true,
+	},
+	{
+		name = "Exit #1",
+		pos = Vector( -6527.00, -69.00, 2453.00 ),
+		ang = Angle( 37.00, -128.00, 0.00 ),
+		destroy_alpha = true,
+	},
+	{
+		name = "Exit #2",
+		pos = Vector( -6968.00, -536.00, 2361.00 ),
+		ang = Angle( 29.00, -43.00, 0.00 ),
 		destroy_alpha = true,
 	},
 }
+
+for i, v in ipairs( CCTV_CONFIG ) do
+	v.cams = {}
+
+	for id, tab in ipairs( CCTV ) do
+		if v.assign( tab.pos ) then
+			table.insert( v.cams, id )
+		end
+	end
+end

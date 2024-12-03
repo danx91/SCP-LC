@@ -113,11 +113,11 @@ function SWEP:TestIndicator()
 	return valid, pos, Angle( 0, ( owner:GetPos() - pos ):Angle().y + 90, 0 )
 end
 
-function SWEP:CanPickUp( ply )
-	if ply:SCPTeam() != TEAM_GOC then
+hook.Add( "SLCCanPickupWeaponClass", "SLCGOCDevicePickup", function( ply, class )
+	if class == "item_slc_goc_device" and ply:SCPTeam() != TEAM_GOC then
 		return false, "goc_only"
 	end
-end
+end )
 
 hook.Add( "StartCommand", "SLCGOCDeviceCMD", function( ply, cmd )
 	local wep = ply:GetWeapon( "item_slc_goc_device" )
