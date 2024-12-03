@@ -255,7 +255,7 @@ if manifest then
 	resource_manifest = util.JSONToTable( manifest ) or {}
 end
 
-local path = "data/slc/resource_packs/"
+local path = "data_static/slc/resource_packs/"
 
 print( "  > Loading Resource Packs" )
 

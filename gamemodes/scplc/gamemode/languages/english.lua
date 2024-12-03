@@ -939,8 +939,8 @@ lang.CLASS_OBJECTIVES = {
 	heavycispy = generic_cispy,
 
 	guard_prestige = [[- Rescue scientists
-	- Terminate all Class D and SCPs
-	- You can temporarily block doors]],
+- Terminate all Class D and SCPs
+- You can temporarily block doors]],
 
 	ntf_1 = generic_ntf,
 
