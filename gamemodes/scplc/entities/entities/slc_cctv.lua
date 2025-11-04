@@ -4,7 +4,7 @@ ENT.Base = "base_entity"
 ENT.Type = "anim"
 
 function ENT:SetupDataTables()
-	self:AddNetworkVar( "CameraID", "Int" )
+	self:NetworkVar( "Int", "CameraID" )
 end
 
 function ENT:Initialize()

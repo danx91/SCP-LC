@@ -7,7 +7,7 @@ SWEP.IDDuration = 180
 function SWEP:SetupDataTables()
 	self:CallBaseClass( "SetupDataTables" )
 
-	self:AddNetworkVar( "IDTime", "Float" )
+	self:NetworkVar( "Float", "IDTime" )
 end
 
 function SWEP:PrimaryAttack()

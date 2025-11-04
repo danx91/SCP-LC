@@ -30,9 +30,9 @@ SWEP.SpecialTimes = 8
 function SWEP:SetupDataTables()
 	self:CallBaseClass( "SetupDataTables" )
 
-	self:AddNetworkVar( "PassiveStacks", "Int" )
-	self:AddNetworkVar( "NextPassive", "Float" )
-	self:AddNetworkVar( "Reveal", "Float" )
+	self:NetworkVar( "Int", "PassiveStacks" )
+	self:NetworkVar( "Float", "NextPassive" )
+	self:NetworkVar( "Float", "Reveal" )
 
 end
 
@@ -47,8 +47,6 @@ end
 SWEP.NextPassiveAMN = 0
 function SWEP:Think()
 	if CLIENT then return end
-
-	self:PlayerFreeze()
 
 	local ct = CurTime()
 	local owner = self:GetOwner()

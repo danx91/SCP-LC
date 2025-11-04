@@ -690,15 +690,6 @@ misc.font = {
 	ok = "ОК"
 }
 
-misc.commands_aliases = {
-	["admin"] = "adminmode",
-	["daily"] = "bonus",
-	["mute"] = "muteall",
-	["unmute"] = "unmuteall",
-	["config"] = "settings",
-	["cfg"] = "settings",
-	["mines"] = "minigames",
-}
 --[[-------------------------------------------------------------------------
 Vests
 ---------------------------------------------------------------------------]]

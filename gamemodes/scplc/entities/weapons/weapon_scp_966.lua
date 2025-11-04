@@ -21,12 +21,12 @@ SWEP.MarkRadius = 850
 function SWEP:SetupDataTables()
 	self:CallBaseClass( "SetupDataTables" )
 	
-	self:AddNetworkVar( "LookingAtStacks", "Int" )
-	self:AddNetworkVar( "Stacks", "Int" )
-	self:AddNetworkVar( "NextPassive", "Float" )
-	self:AddNetworkVar( "Channeling", "Float" )
-	self:AddNetworkVar( "MarkTime", "Float" )
-	self:AddNetworkVar( "ChannelingTarget", "Entity" )
+	self:NetworkVar( "Int", "LookingAtStacks" )
+	self:NetworkVar( "Int", "Stacks" )
+	self:NetworkVar( "Float", "NextPassive" )
+	self:NetworkVar( "Float", "Channeling" )
+	self:NetworkVar( "Float", "MarkTime" )
+	self:NetworkVar( "Entity", "ChannelingTarget" )
 end
 
 function SWEP:Initialize()

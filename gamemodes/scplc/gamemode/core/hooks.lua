@@ -12,6 +12,13 @@ function SCPHook( scp, name, func )
 	end
 
 	SCPHooks[scp][name] = func
+
+	if !SCPHooks.__ActiveSCPs[scp] then return end
+
+	hook.Add( name, scp, func )
+
+	if !DEVELOPER_MODE then return end
+	print( "Refreshing SCP hook", scp, name )
 end
 
 function EnableSCPHook( scp )
@@ -104,3 +111,47 @@ function ClearRoundHooks()
 end
 
 hook.Add( "SLCRoundCleanup", "ClearRoundHooks", ClearRoundHooks )
+
+--[[-------------------------------------------------------------------------
+Player Hooks
+---------------------------------------------------------------------------]]
+local PLAYER = FindMetaTable( "Player" )
+
+function PLAYER:AddHook( name, identifier, func )
+	if !self._PlayerHooks then
+		self._PlayerHooks = {}
+	end
+
+	if !self._PlayerHooks[name] then
+		self._PlayerHooks[name] = {}
+	end
+
+	local hook_id = identifier..self:SteamID64()
+	self._PlayerHooks[name][hook_id] = true
+	hook.Add( name, hook_id, func )
+end
+
+function PLAYER:RemoveHook( name, identifier )
+	if !self._PlayerHooks or !self._PlayerHooks[name] then return end
+
+	local hook_id = identifier..self:SteamID64()
+	if !self._PlayerHooks[name][hook_id] then return end
+
+	hook.Remove( name, hook_id )
+end
+
+function PLAYER:ClearHooks()
+	if !self._PlayerHooks then return end
+
+	for name, tab in pairs( self._PlayerHooks ) do
+		for id in pairs( tab ) do
+			hook.Remove( name, id )
+		end
+	end
+
+	self._PlayerHooks = {}
+end
+
+hook.Add( "SLCPlayerCleanup", "ClearPlayerHooks", function( ply )
+	ply:ClearHooks()
+end )

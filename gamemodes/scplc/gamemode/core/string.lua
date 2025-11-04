@@ -243,3 +243,12 @@ function string.SplitThousands( number, separator )
 	return left..num:reverse():gsub( "(%d%d%d)", format ):reverse()..right
 	//return left..string.reverse( string.gsub( string.reverse( num ), "(%d%d%d)", format ) )..right
 end
+
+--[[-------------------------------------------------------------------------
+UUID
+---------------------------------------------------------------------------]]
+function string.UUID()
+	return string.gsub( "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx", "[xy]", function( c )
+		return string.format( "%x", c == "x" and SLCRandom( 0x00, 0x0f ) or SLCRandom( 0x08, 0x0b ) )
+	end )
+end

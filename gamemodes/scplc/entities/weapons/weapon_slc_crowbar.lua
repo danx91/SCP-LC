@@ -21,7 +21,7 @@ if CLIENT then
 end
 
 function SWEP:SetupDataTables()
-	self:AddNetworkVar( "NextIdle", "Float" )
+	self:NetworkVar( "Float", "NextIdle" )
 end
 
 function SWEP:Initialize()
@@ -169,5 +169,5 @@ function SWEP:PlayActivity( act, speed )
 	return dur
 end
 
-AddLoadout( "weapon_slc_crowbar", nil, "melee_mid" )
+AddWeaponLoadout( "weapon_slc_crowbar", nil, "melee_mid" )
 MarkAsWeapon( "weapon_slc_crowbar" )

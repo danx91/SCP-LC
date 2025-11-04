@@ -96,7 +96,7 @@ function InitializeSCPULX()
 
 		if class.spawn then
 			if istable( class.spawn ) then
-				pos = class.spawn[math.random( #class.spawn )]
+				pos = class.spawn[SLCRandom( #class.spawn )]
 			else
 				pos = class.spawn
 			end

@@ -14,7 +14,7 @@ SWEP.Group 		= "fuse"
 function SWEP:SetupDataTables()
 	self:CallBaseClass( "SetupDataTables" )
 
-	self:AddNetworkVar( "Rating", "Int" )
+	self:NetworkVar( "Int", "Rating" )
 
 	self:NetworkVarNotify( "Rating", function( ent, name, old, new )
 		if CLIENT then

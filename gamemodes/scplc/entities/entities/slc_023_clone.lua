@@ -6,7 +6,7 @@ ENT.RenderGroup = RENDERGROUP_TRANSLUCENT
 ENT.HP = 500
 
 function ENT:SetupDataTables()
-	self:AddNetworkVar( "InvisRadius", "Int" )
+	self:NetworkVar( "Int", "InvisRadius" )
 end
 
 function ENT:Initialize()
@@ -114,7 +114,7 @@ end
 
 function ENT:SelectRandomSpot()
 	local navs = navmesh.Find( self:GetPos(), 2000, 256, 256 )
-	local nav = navs[math.random( #navs )]
+	local nav = navs[SLCRandom( #navs )]
 	if !nav then return end
 
 	return nav:GetCenter()

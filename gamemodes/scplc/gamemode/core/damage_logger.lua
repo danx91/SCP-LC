@@ -44,6 +44,20 @@ function DamageLogger:DamageTaken( dmg, attacker, data )
 	local rdm = ivp and SCPTeams.IsAlly( attacker:SCPTeam(), self.Player:SCPTeam() )
 	local enemy = ivp and SCPTeams.IsEnemy( attacker:SCPTeam(), self.Player:SCPTeam() )
 
+	local custom = ivp and attacker:GetProperty( "rdm_override" )
+	if custom then
+		local ovr, result = custom( attacker, self.Player )
+		if ovr then
+			if result == true then
+				rdm = true
+				enemy = false
+			elseif result == false then
+				rdm = false
+				enemy = true
+			end
+		end
+	end
+
 	table.insert( self.TakenLog, { attacker = attacker, attackername = ivp and attacker:GetName() or "NULL", attackerid = ivp and attacker:SteamID64() or "NULL", damage = dmg, data = data, rdm = rdm } )
 
 	if !self.TakenSourceLog[attacker] then
@@ -69,6 +83,20 @@ function DamageLogger:DamageDealt( dmg, target, data )
 	local ivp = IsValid( target ) and target:IsPlayer()
 	local rdm = ivp and SCPTeams.IsAlly( self.Player:SCPTeam(), target:SCPTeam() )
 	local enemy = ivp and SCPTeams.IsEnemy( self.Player:SCPTeam(), target:SCPTeam() )
+
+	local custom = ivp and self.Player:GetProperty( "rdm_override" )
+	if custom then
+		local ovr, result = custom( self.Player, target )
+		if ovr then
+			if result == true then
+				rdm = true
+				enemy = false
+			elseif result == false then
+				rdm = false
+				enemy = true
+			end
+		end
+	end
 
 	table.insert( self.DealtLog, { target = target, targetname = ivp and target:GetName() or "NULL", targetid = ivp and target:SteamID64() or "NULL", damage = dmg, data = data, rdm = rdm } )
 
@@ -103,13 +131,11 @@ function DamageLogger:Dump( killer, inflictor )
 
 	local data = {
 		Killer = killer,
-		Weapon = inflictor,
+		Weapon = IsValid( inflictor ) and inflictor:GetClass() or "unknown",
 		Dealt = self.Dealt,
 		Taken = self.Taken,
 		DealtLog = self.DealtLog,
 		TakenLog = self.TakenLog,
-		//DealtTargetLog = self.DealtTargetLog,
-		//TakenSourceLog = self.TakenSourceLog,
 		DealtTargetLog = {},
 		TakenSourceLog = {},
 	}
@@ -187,55 +213,54 @@ function DamageLogger:GetDeathDetails( deathid )
 		deathid = #self.LastRound
 	end
 
-	if deathid > 0 then
-		local log = self.LastRound[deathid]
+	if deathid <= 0 then return end
+	local log = self.LastRound[deathid]
 
-		if log then
-			tab.killer = log.Killer
-			tab.weapon = log.Weapon
+	if !log then return end
 
-			/*local ivp = IsValid( log.Killer ) and log.Killer:IsPlayer()
-			local t_att
+	tab.killer = log.Killer
+	tab.weapon = log.Weapon
 
-			if ivp then
-				t_att = log.Killer:SCPTeam()
-			end*/
+	/*local ivp = IsValid( log.Killer ) and log.Killer:IsPlayer()
+	local t_att
 
-			local assists = {}
+	if ivp then
+		t_att = log.Killer:SCPTeam()
+	end*/
 
-			local total = 0
-			local kdmg = 0
-			for k, v in pairs( log.TakenSourceLog ) do
-				if IsValid( v[1] ) and v[1]:IsPlayer() then
-					if v[1] != log.Killer then
-						if v[2].nrdm > 0 then
-							table.insert( assists, { v[1], v[2].nrdm } )
-						end
-					else
-						kdmg = v[2].nrdm
-					end
+	local assists = {}
 
-					total = total + v[2].nrdm
+	local total = 0
+	local kdmg = 0
+	for k, v in pairs( log.TakenSourceLog ) do
+		if IsValid( v[1] ) and v[1]:IsPlayer() then
+			if v[1] != log.Killer then
+				if v[2].nrdm > 0 then
+					table.insert( assists, { v[1], v[2].nrdm } )
 				end
+			else
+				kdmg = v[2].nrdm
 			end
 
-			local len = #assists
-
-			if len > 0 then
-				table.sort( assists, assistsSort )
-				//table.insert( assists, 1, { log.killer, kdmg } )
-
-				for i = 1, len do
-					assists[i][2] = assists[i][2] / total
-				end
-			end
-
-			tab.assists = assists
-			tab.killer_pct = kdmg / total
+			total = total + v[2].nrdm
 		end
-
-		return tab
 	end
+
+	local len = #assists
+
+	if len > 0 then
+		table.sort( assists, assistsSort )
+		//table.insert( assists, 1, { log.killer, kdmg } )
+
+		for i = 1, len do
+			assists[i][2] = assists[i][2] / total
+		end
+	end
+
+	tab.assists = assists
+	tab.killer_pct = kdmg / total
+
+	return tab
 end
 
 function DamageLogger:Reset( round )

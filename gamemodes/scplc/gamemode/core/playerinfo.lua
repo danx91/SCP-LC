@@ -4,7 +4,7 @@ hook.Add( "SLCGamemodeLoaded",  "SLCPlayerInfo", function()
 	end
 end )
 
-hook.Add( "SCLFactoryReset", "SLCGameruleReset", function()
+hook.Add( "SLCFactoryReset", "SLCGameruleReset", function()
 	local files = file.Find( "slc/playerinfo/*.dat", "DATA" )
 	print( "Deleting "..#files.." playerinfo objects..." )
 

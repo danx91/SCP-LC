@@ -31,19 +31,22 @@ ENT.AutomaticFrameAdvance = true
 ENT.VerticalRange = 10
 ENT.HorizontalRange = 30
 
+ENT.SCPBreakable = true
+ENT.HP = 250
+
 local laser_draw = {}
 
 function ENT:SetupDataTables()
-	self:AddNetworkVar( "Mode", "Int" )
-	self:AddNetworkVar( "Status", "Int" )
+	self:NetworkVar( "Int", "Mode" )
+	self:NetworkVar( "Int", "Status" )
 
-	self:AddNetworkVar( "StatusTime", "Float" )
-	self:AddNetworkVar( "DesiredAngleY", "Float" )
-	self:AddNetworkVar( "DesiredAngleP", "Float" )
-	self:AddNetworkVar( "AnimSpeed", "Float" )
+	self:NetworkVar( "Float", "StatusTime" )
+	self:NetworkVar( "Float", "DesiredAngleY" )
+	self:NetworkVar( "Float", "DesiredAngleP" )
+	self:NetworkVar( "Float", "AnimSpeed" )
 
-	self:AddNetworkVar( "TurretOwner", "Entity" )
-	self:AddNetworkVar( "OwnerSignature", "Int" )
+	self:NetworkVar( "Entity", "TurretOwner" )
+	self:NetworkVar( "Int", "OwnerSignature" )
 
 	self:SetMode( 1 )
 end
@@ -70,6 +73,7 @@ function ENT:Initialize()
 	self:SetStatusTime( CurTime() + 3 )
 
 	self:SetAutomaticFrameAdvance( true )
+	self:SetHealth( self.HP )
 
 	self.LastAngle = Angle( 0, 0, 0 )
 	self.PredictedAngle = Angle( 0, 0, 0 )
@@ -335,11 +339,12 @@ function ENT:CSUse( ply )
 	end, "slc/misc/turret/exit.png" )
 end
 
-ENT.HP = 250
-function ENT:OnTakeDamage( dmginfo )
-	self.HP = self.HP - dmginfo:GetDamage()
 
-	if self.HP <= 0 then
+function ENT:OnTakeDamage( dmginfo )
+	local hp = self:Health() - dmginfo:GetDamage()
+	self:SetHealth( hp )
+
+	if hp <= 0 then
 		local pos = self:GetPos()
 
 		local explosion = ents.Create( "env_explosion" )

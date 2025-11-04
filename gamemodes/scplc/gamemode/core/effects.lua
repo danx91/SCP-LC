@@ -8,7 +8,7 @@ local function beam_noise( noise, scale, divs, offset )
 	offset = offset or 0
 
 	local div = math.ceil( divs / 2 )
-	noise[div + 1 + offset] = ( noise[1 + offset] + noise[divs + 1 + offset] ) * 0.5 + scale * ( math.random() * 2 - 1 )
+	noise[div + 1 + offset] = ( noise[1 + offset] + noise[divs + 1 + offset] ) * 0.5 + scale * ( SLCRandom() * 2 - 1 )
 
 	if div <= 1 then return end
 
@@ -99,7 +99,7 @@ function UpdateBeam( beam, dt )
 		end
 	end
 
-	beam.freq = beam.freq + dt * ( math.random() + 1 )
+	beam.freq = beam.freq + dt * ( SLCRandom() + 1 )
 
 	beam_noise( beam.noise, 1 )
 

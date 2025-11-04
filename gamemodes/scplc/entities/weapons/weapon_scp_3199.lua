@@ -37,13 +37,13 @@ SWEP.RespawnTime = 45
 function SWEP:SetupDataTables()
 	self:CallBaseClass( "SetupDataTables" )
 
-	self:AddNetworkVar( "EggReady", "Bool" )
-	self:AddNetworkVar( "TotalStacks", "Int" )
-	self:AddNetworkVar( "FrenzyStacks", "Int" )
-	self:AddNetworkVar( "TotalEggs", "Int" )
-	self:AddNetworkVar( "Frenzy", "Float" )
-	self:AddNetworkVar( "EggTime", "Float" )
-	self:AddNetworkVar( "RespawnTime", "Float" )
+	self:NetworkVar( "Bool", "EggReady" )
+	self:NetworkVar( "Int", "TotalStacks" )
+	self:NetworkVar( "Int", "FrenzyStacks" )
+	self:NetworkVar( "Int", "TotalEggs" )
+	self:NetworkVar( "Float", "Frenzy" )
+	self:NetworkVar( "Float", "EggTime" )
+	self:NetworkVar( "Float", "RespawnTime" )
 end
 
 function SWEP:Initialize()
@@ -59,7 +59,6 @@ SWEP.NextFrenzyRegen = 0
 SWEP.NextTransmit = 0
 SWEP.NextEggCheck = 0
 function SWEP:Think()
-	self:PlayerFreeze()
 	self:SwingThink()
 
 	local ct = CurTime()
@@ -397,7 +396,7 @@ function SWEP:EggRespawn()
 	if total <= 0 then return end
 
 	local owner = self:GetOwner()
-	local egg = self.Eggs[math.random( total )]
+	local egg = self.Eggs[SLCRandom( total )]
 	
 	self:StopFrenzy( false )
 	self:SetRespawnTime( CurTime() + self.RespawnTime )

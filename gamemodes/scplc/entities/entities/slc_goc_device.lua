@@ -6,10 +6,10 @@ ENT.Type = "anim"
 ENT.Destroyed = false
 
 function ENT:SetupDataTables()
-	self:AddNetworkVar( "StartTime", "Float" )
-	self:AddNetworkVar( "FinishTime", "Float" )
+	self:NetworkVar( "Float", "StartTime" )
+	self:NetworkVar( "Float", "FinishTime" )
 
-	self:AddNetworkVar( "Destroyed", "Bool" )
+	self:NetworkVar( "Bool", "Destroyed" )
 end
 
 function ENT:Initialize()
@@ -32,7 +32,6 @@ function ENT:Initialize()
 			SetRoundStat( "goc_countdown", true )
 			EnableZoneVentilation( ZONE_WARHEAD )
 		end
-		
 	end
 
 	local phys = self:GetPhysicsObject()
@@ -47,16 +46,16 @@ function ENT:Think()
 
 	local ct = CurTime()
 	if self:GetDestroyed() and self.NEffectTime <= ct then
-		self.NEffectTime = ct + 0.5 + math.random() * 2
+		self.NEffectTime = ct + 0.5 + SLCRandom() * 2
 
 		local effect = EffectData()
-	
+
 		effect:SetOrigin( self:GetPos() + Vector( 0, 0, 5 ) )
 		effect:SetNormal( Vector( 0, 0, 1 ) )
 		effect:SetRadius( 1 )
 		effect:SetMagnitude( 2 )
 		effect:SetScale( 3 )
-	
+
 		util.Effect( "ElectricSpark", effect, false, true )
 		self:EmitSound( "SLC.GOCDestroyed" )
 	end
@@ -66,11 +65,11 @@ function ENT:Think()
 
 		ALLWarheads( CVAR.slc_time_goc_warheads:GetInt() )
 
-		local pos = self:GetPos()
 		local xp = CVAR.slc_xp_goc_device:GetInt()
+
 		for k, v in pairs( SCPTeams.GetPlayersByTeam( TEAM_GOC ) ) do
-			if v:GetPos():DistToSqr( pos ) > 1000000 then continue end
-			
+			if !v:IsInZone( ZONE_WARHEAD ) then continue end
+
 			v:AddXP( xp )
 			PlayerMessage( "xp_goc_device$"..xp, v )
 
@@ -132,13 +131,13 @@ if CLIENT then
 
 			if self:GetDestroyed() then
 				if glitch_time <= ct then
-					glitch_time = ct + math.random() * 0.1 + 0.01
+					glitch_time = ct + SLCRandom() * 0.1 + 0.01
 
-					glitch_mode = math.random( 0, 1 )
-					glitch_data = util.GlitchData( math.random( 8, 16 ), 0.05 + math.random() * 0.05, 150 )
+					glitch_mode = SLCRandom( 0, 1 )
+					glitch_data = util.GlitchData( SLCRandom( 8, 16 ), 0.05 + SLCRandom() * 0.05, 150 )
 				end
 
-				if math.random() < 0.33 then
+				if SLCRandom() < 0.33 then
 					surface.SetDrawColor( 255, 255, 255 )
 					surface.SetMaterial( goc_logo )
 					//surface.DrawTexturedRect( -48, -48, 96, 96 )

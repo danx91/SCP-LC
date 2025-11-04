@@ -22,11 +22,11 @@ if CLIENT then
 end
 
 function SWEP:SetupDataTables()	
-	self:AddNetworkVar( "NextIdle", "Float" )
-	self:AddNetworkVar( "ComboTime", "Float" )
+	self:NetworkVar( "Float", "NextIdle" )
+	self:NetworkVar( "Float", "ComboTime" )
 
-	self:AddNetworkVar( "Hits", "Int" )
-	self:AddNetworkVar( "Combo", "Int" )
+	self:NetworkVar( "Int", "Hits" )
+	self:NetworkVar( "Int", "Combo" )
 
 end
 
@@ -40,7 +40,10 @@ end
 function SWEP:Think()
 	self:SwingThink()
 
-	local vm = self:GetOwner():GetViewModel()
+	local owner = self:GetOwner()
+	if !IsValid( owner ) then return end
+
+	local vm = owner:GetViewModel()
 	local ct = CurTime()
 	local idle = self:GetNextIdle()
 
@@ -216,5 +219,5 @@ function SWEP:DestroyWeapon( pos )
 	end
 end
 
-AddLoadout( "weapon_slc_glass_knife", nil, "melee_low" )
+AddWeaponLoadout( "weapon_slc_glass_knife", nil, "melee_low" )
 MarkAsWeapon( "weapon_slc_glass_knife" )

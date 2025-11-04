@@ -184,9 +184,9 @@ local function select_item( tab )
 	end
 
 	if !tab.weight_data then
-		return tab.items[math.random( len )]
+		return tab.items[SLCRandom( len )]
 	else
-		local dice = math.random( tab.weight_data )
+		local dice = SLCRandom( tab.weight_data )
 		local total = 0
 
 		for i = 1, len do
@@ -225,7 +225,7 @@ function SpawnUsingRule( name )
 	local tab = table.Copy( select_item( rule ) )
 	if !tab then return end
 
-	local amount = tab.amount or tab.rand_amount and math.random( tab.rand_amount[1], tab.rand_amount[2] ) or #tab.spawns
+	local amount = tab.amount or tab.rand_amount and SLCRandom( tab.rand_amount[1], tab.rand_amount[2] ) or #tab.spawns
 	local counter = {}
 
 	for i = 1, amount do
@@ -270,7 +270,7 @@ function SpawnUsingRule( name )
 		local fn_name = table.remove( args, 1 )
 
 		if key == "loadout" and fn_name then
-			ent_class = GetLoadoutWeapon( fn_name )
+			ent_class = GetLoadoutWeapon( fn_name, true )
 		end
 
 		if ent_class == "_none" then
@@ -286,7 +286,7 @@ function SpawnUsingRule( name )
 			local data = {}
 			local ent = SLC_ITEMS_FUNCTION[fn_name]( args, data )
 			if IsValid( ent ) then
-				local pos = table.remove( tab.spawns, math.random( slen ) )
+				local pos = table.remove( tab.spawns, SLCRandom( slen ) )
 				local ang
 
 				if istable( pos ) then
@@ -317,7 +317,7 @@ function SpawnUsingRule( name )
 		elseif ent_class then
 			local ent = ents.Create( ent_class )
 			if IsValid( ent ) then
-				local pos = table.remove( tab.spawns, math.random( slen ) )
+				local pos = table.remove( tab.spawns, SLCRandom( slen ) )
 				local ang
 
 				if istable( pos ) then
@@ -367,9 +367,9 @@ function SpawnItemGeneric( class, pos, num, post_tab, post_func )
 	end
 
 	for i = 1, num do
-		local item = ents.Create( istable( class ) and class[math.random( #class )] or class )
+		local item = ents.Create( istable( class ) and class[SLCRandom( #class )] or class )
 		if IsValid( item ) then
-			item:SetPos( seq and pos[i] or table.remove( pos, math.random( #pos ) ) )
+			item:SetPos( seq and pos[i] or table.remove( pos, SLCRandom( #pos ) ) )
 
 			if post_tab then
 				apply_table( item, post_tab )
@@ -458,7 +458,7 @@ function GM:SpawnItems()
 		for k, v in pairs( OMNITOOLS ) do
 			local spawns = table.Copy( v.spawns )
 
-			local amt = istable( v.amount ) and math.random( v.amount[1], v.amount[2] ) or v.amount
+			local amt = istable( v.amount ) and SLCRandom( v.amount[1], v.amount[2] ) or v.amount
 			for i = 1, amt do
 				local len = #spawns
 
@@ -468,12 +468,12 @@ function GM:SpawnItems()
 
 				local omnitool = ents.Create( "item_slc_omnitool" )
 				if IsValid( omnitool ) then
-					omnitool:SetPos( table.remove( spawns, math.random( len ) ) )
+					omnitool:SetPos( table.remove( spawns, SLCRandom( len ) ) )
 					omnitool:Spawn()
 					omnitool.Dropped = 0
 
 					local chip
-					local rng = math.random()
+					local rng = SLCRandom()
 					if rng < 0.05 then --5%
 						chip = SelectChip( 3 )
 					elseif rng < 0.2 then --15%
@@ -498,7 +498,7 @@ function GM:SpawnItems()
 			local amount = v.amount
 
 			if istable( amount ) then
-				amount = math.random( amount[1], amount[2] )
+				amount = SLCRandom( amount[1], amount[2] )
 			end
 
 			for i = 1, amount do
@@ -510,7 +510,7 @@ function GM:SpawnItems()
 
 				local chip = CreateChip( SelectChip( v.level ) )
 				if IsValid( chip ) then
-					chip:SetPos( table.remove( spawns, math.random( len ) ) )
+					chip:SetPos( table.remove( spawns, SLCRandom( len ) ) )
 					chip:Spawn()
 					chip.Dropped = 0
 				end
@@ -579,7 +579,7 @@ ItemSpawnFunction( "omnitool", function( args )
 	local omnitool = ents.Create( "item_slc_omnitool" )
 	if IsValid( omnitool ) then
 		local chip
-		local rng = math.random()
+		local rng = SLCRandom()
 
 		for i = #args, 1, -1 do
 			if rng < tonumber( args[i] ) / 100 then
@@ -609,7 +609,7 @@ end )
 ItemSpawnFunction( "fuse", function( args, data )
 	local fuse = ents.Create( "item_slc_fuse" )
 	if IsValid( fuse ) then
-		fuse:SetRating( args[2] and math.random( args[1], args[2] ) or args[1] or 5 )
+		fuse:SetRating( args[2] and SLCRandom( tonumber( args[1] ), tonumber( args[2] ) ) or tonumber( args[1] ) or 5 )
 		return fuse
 	end
 end )

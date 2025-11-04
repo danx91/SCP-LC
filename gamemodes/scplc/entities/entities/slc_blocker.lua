@@ -1,31 +1,16 @@
 AddCSLuaFile()
 
 ENT.Type = "anim"
-//ENT.Blacklist = false
 
 function ENT:SetupDataTables()
-	self:AddNetworkVar( "BlockerID", "Int" )
+	self:NetworkVar( "Int", "BlockerID" )
 end
 
 function ENT:Initialize()
-	self:DrawShadow( false )
 	self:SetModel( "models/hunter/plates/plate05x05.mdl" )
+	self:DrawShadow( false )
 	self:SetNoDraw( true )
 
-	if SERVER then
-		self:PhysicsInit( SOLID_BBOX )
-		self:SetMoveType( MOVETYPE_NONE )
-	end
-
-	self:SetCustomCollisionCheck( true )
-	self:SetCollisionGroup( COLLISION_GROUP_PLAYER )
-
-	local phys = self:GetPhysicsObject()
-	if IsValid( phys ) then
-		phys:SetMaterial( "gmod_silent" )
-	end
-
-	self.Initialized = true
 	self.TeamFilter = {}
 	self.ClassFilter = {}
 	self.PlayerFilter = {}
@@ -36,13 +21,45 @@ function ENT:Initialize()
 	local data = BLOCKERS[self:GetBlockerID()]
 	if !data then return end
 
+	if SERVER then
+		/*self:PhysicsInitConvex( {
+			Vector( data.bounds[1].x, data.bounds[1].y, data.bounds[1].z ),
+			Vector( data.bounds[1].x, data.bounds[1].y, data.bounds[2].z ),
+			Vector( data.bounds[1].x, data.bounds[2].y, data.bounds[1].z ),
+			Vector( data.bounds[1].x, data.bounds[2].y, data.bounds[2].z ),
+			Vector( data.bounds[2].x, data.bounds[1].y, data.bounds[1].z ),
+			Vector( data.bounds[2].x, data.bounds[1].y, data.bounds[2].z ),
+			Vector( data.bounds[2].x, data.bounds[2].y, data.bounds[1].z ),
+			Vector( data.bounds[2].x, data.bounds[2].y, data.bounds[2].z ),
+		}, "gmod_silent" )
+
+		self:SetSolid( SOLID_VPHYSICS )*/
+
+		self:PhysicsInit( SOLID_BBOX )
+		self:SetMoveType( MOVETYPE_NONE )
+	end
+
+	self:SetCollisionGroup( COLLISION_GROUP_PLAYER_MOVEMENT )
+	self:SetCustomCollisionCheck( true )
+	self:EnableCustomCollisions()
+
+	local phys = self:GetPhysicsObject()
+	if IsValid( phys ) then
+		phys:SetMaterial( "gmod_silent" )
+	end
+
+	self.Initialized = true
+
 	self:SetPos( data.pos )
 	self:SetCollisionBounds( data.bounds[1], data.bounds[2] )
+
+	self:CollisionRulesChanged()
 
 	local filter = data.filter
 	if !filter then return end
 
 	self:EnableBlacklistMode( filter.mode == BLOCKER_BLACKLIST )
+	self:AllowUse( filter.allow_use )
 
 	--teams
 	if filter.teams then
@@ -126,6 +143,22 @@ end
 
 function ENT:EnableBlacklistMode( enable )
 	self.Blacklist = !!enable
+end
+
+function ENT:AllowUse( allow )
+	self.UseAllowed = !!allow
+end
+
+function ENT:TestCollision( startpos, delta, isbox, extents, mask )
+	if self.UseAllowed and mask == MASK_USE then return end
+	if bit.band( mask, MASK_PLAYERSOLID ) != MASK_PLAYERSOLID then return end
+
+	return {
+		HitPos = startpos,
+		Fraction = 0,
+		Normal = -delta:GetNormalized()
+	}
+	//return true
 end
 
 hook.Add( "ShouldCollide", "SLCBlocker", function( ent1, ent2 )

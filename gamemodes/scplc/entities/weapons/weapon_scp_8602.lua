@@ -6,33 +6,33 @@ SWEP.HoldType		= "normal"
 SWEP.DisableDamageEvent = true
 SWEP.ScoreOnDamage 	= true
 
-SWEP.PassiveCooldown = 1.5
-SWEP.MaxOverheal = 1000
-SWEP.DetectDuration = 90
+SWEP.PassiveCooldown = 1
+SWEP.MaxOverheal = 1200
+SWEP.DetectDuration = 180
 
 SWEP.PrimaryCooldown = 4
-SWEP.PrimaryDamage = 20
+SWEP.PrimaryDamage = 25
 
 SWEP.DefenseTime = 8
 SWEP.DefenseCooldown = 20
 SWEP.DefenseReduction = 0.6
 SWEP.DefenseSlow = 0.65
-SWEP.DefenseRange = 250
-SWEP.DefenseWidth = 75
-SWEP.DefenseDamageMultiplier = 0.15
+SWEP.DefenseRange = 300
+SWEP.DefenseWidth = 90
+SWEP.DefenseDamageMultiplier = 0.2
 
-SWEP.ChargeTime = 12
-SWEP.ChargeCooldown = 45
+SWEP.ChargeTime = 15
+SWEP.ChargeCooldown = 30
 SWEP.ChargeSpeed = 2.2
 SWEP.ChargeDamage = 18
-SWEP.ChargePinDamage = 60
-SWEP.ChargePinRange = 140
+SWEP.ChargePinDamage = 70
+SWEP.ChargePinRange = 190
 
 function SWEP:SetupDataTables()
 	self:CallBaseClass( "SetupDataTables" )
 
-	self:AddNetworkVar( "Charge", "Float" )
-	self:AddNetworkVar( "Overheal", "Float" )
+	self:NetworkVar( "Float", "Charge" )
+	self:NetworkVar( "Float", "Overheal" )
 end
 
 function SWEP:Initialize()
@@ -57,8 +57,6 @@ local charge_trace_offset = Vector( 0, 0, 48 )
 SWEP.NextPassive = 0
 SWEP.DefenseDashTime = 0
 function SWEP:Think()
-	self:PlayerFreeze()
-
 	local owner = self:GetOwner()
 	owner:UpdateHold( self, "scp8602_def" )
 
@@ -94,7 +92,7 @@ function SWEP:Think()
 			self:AddScore( affected * 3 )
 
 			local max_hp = owner:GetMaxHealth()
-			local hp = owner:Health() + affected * 8
+			local hp = owner:Health() + affected * 12
 
 			if hp > max_hp then
 				local overheal = self:GetOverheal() + hp - max_hp
@@ -186,7 +184,7 @@ function SWEP:Think()
 				end
 			else
 				owner:EmitSound( "SCP8602.ImpactSoft" )
-				owner:ViewPunch( punch_angles[math.random( punch_angles_len )] )
+				owner:ViewPunch( punch_angles[SLCRandom( punch_angles_len )] )
 
 				ent:TakeDamage( self.ChargeDamage * self:GetUpgradeMod( "charge_dmg", 1 ), owner, owner )
 			end
@@ -225,13 +223,13 @@ function SWEP:PrimaryAttack()
 	self:SetNextPrimaryFire( CurTime() + self.PrimaryCooldown * self:GetUpgradeMod( "primary_cd", 1 ) )
 
 	self:EmitSound( "SCP8602.ImpactSoft" )
-	owner:ViewPunch( punch_angles[math.random( punch_angles_len )] )
+	owner:ViewPunch( punch_angles[SLCRandom( punch_angles_len )] )
 
 	if CLIENT then return end
 
 	if ent:IsPlayer() then
 		local dmg = self.PrimaryDamage * self:GetUpgradeMod( "primary_dmg", 1 )
-		ent:TakeDamage( math.random( dmg - 5, dmg + 5 ), owner, owner )
+		ent:TakeDamage( SLCRandom( dmg - 5, dmg + 5 ), owner, owner )
 	else
 		self:SCPDamageEvent( ent, 50 )
 	end

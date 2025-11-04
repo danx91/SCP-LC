@@ -3,7 +3,7 @@ AddCSLuaFile()
 ENT.Type = "anim"
 
 function ENT:SetupDataTables()
-	self:AddNetworkVar( "ShouldRender", "Bool" )
+	self:NetworkVar( "Bool", "ShouldRender" )
 end
 
 function ENT:Initialize()

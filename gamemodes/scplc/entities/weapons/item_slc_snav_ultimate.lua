@@ -26,7 +26,7 @@ end
 /*function SWEP:SetupDataTables()
 	self:CallBaseClass( "SetupDataTables" )
 
-	self:AddNetworkVar( "NextScan", "Float" )
+	self:NetworkVar( "Float", "NextScan" )
 end*/
 
 function SWEP:Initialize()
@@ -34,9 +34,9 @@ function SWEP:Initialize()
 	self:InitializeLanguage()
 
 	if SERVER then
-		self.BatteryUsage = math.Rand( self.BatteryUsageRange[1], self.BatteryUsageRange[2] )
-		self:SetRadius( math.random( self.RadiusRange[1], self.RadiusRange[2]) )
-		self:SetScanTime( math.Rand( self.ScanTimeRange[1], self.ScanTimeRange[2] ) )
+		self.BatteryUsage = SLCRandom:NextFloat( self.BatteryUsageRange[1], self.BatteryUsageRange[2] )
+		self:SetRadius( SLCRandom( self.RadiusRange[1], self.RadiusRange[2]) )
+		self:SetScanTime( SLCRandom:NextFloat( self.ScanTimeRange[1], self.ScanTimeRange[2] ) )
 	end
 end
 
@@ -51,9 +51,9 @@ function SWEP:HandleUpgrade( mode, exit, ply )
 
 	if mode != UPGRADE_MODE.ONE_ONE then return end
 
-	self.BatteryUsage = math.Rand( self.BatteryUsageRange[1], self.BatteryUsageRange[2] )
-	self:SetRadius( math.random( self.RadiusRange[1], self.RadiusRange[2]) )
-	self:SetScanTime( math.Rand( self.ScanTimeRange[1], self.ScanTimeRange[2] ) )
+	self.BatteryUsage = SLCRandom:NextFloat( self.BatteryUsageRange[1], self.BatteryUsageRange[2] )
+	self:SetRadius( SLCRandom( self.RadiusRange[1], self.RadiusRange[2]) )
+	self:SetScanTime( SLCRandom:NextFloat( self.ScanTimeRange[1], self.ScanTimeRange[2] ) )
 end
 
 --[[-------------------------------------------------------------------------

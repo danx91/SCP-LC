@@ -65,10 +65,10 @@ function GenerateLootTable( name, num )
 	local value = 0
 	local all = {}
 	for i = 1, num do
-		if math.random() >= tab.chance then continue end
+		if SLCRandom() >= tab.chance then continue end
 		total = total + 1
 
-		local rng = math.random( total_weight )
+		local rng = SLCRandom( total_weight )
 		local cur = 0
 
 		for n, v in ipairs( tab.items ) do
@@ -78,11 +78,11 @@ function GenerateLootTable( name, num )
 			local class
 
 			if istable( v.class ) then
-				class = v.class[math.random( #v.class )]
+				class = v.class[SLCRandom( #v.class )]
 			else
 				local loadout = string.match( v.class, "^loadout:(.+)$" )
 				if loadout then
-					class = GetLoadoutWeapon( loadout )
+					class = GetLoadoutWeapon( loadout, true )
 				else
 					class = v.class
 				end
@@ -311,16 +311,16 @@ local function chip_roll( data )
 	if !data.ntd then return end
 
 	if data.ntd.chip_chance then
-		if math.random() >= data.ntd.chip_chance then return end
+		if SLCRandom() >= data.ntd.chip_chance then return end
 	end
 
 	if data.ntd.chip_max then
 		local rng
 
 		if data.ntd.chip_min then
-			rng = math.random( data.ntd.chip_min, data.ntd.chip_max )
+			rng = SLCRandom( data.ntd.chip_min, data.ntd.chip_max )
 		else
-			rng = math.random( data.ntd.chip_max )
+			rng = SLCRandom( data.ntd.chip_max )
 		end
 
 		local chip = SelectChip( rng, data.ntd.blacklist )
@@ -340,9 +340,9 @@ local function ammo_roll( data )
 		local rng
 
 		if data.ntd.min then
-			rng = math.random( data.ntd.min, data.ntd.max )
+			rng = SLCRandom( data.ntd.min, data.ntd.max )
 		else
-			rng = math.random( data.ntd.max )
+			rng = SLCRandom( data.ntd.max )
 		end
 
 		data.info.data = data.info.data or {}
@@ -370,7 +370,7 @@ SLCLootFunctions.ammo = ammo_func
 
 local function fuse_roll( data )
 	if !data.ntd then return end
-	data.ntd.rating = math.random( data.ntd.min, data.ntd.max )
+	data.ntd.rating = SLCRandom( data.ntd.min, data.ntd.max )
 end
 
 local function fuse_post( ply, item, data, ntd )
@@ -427,6 +427,8 @@ AddLootPool( "lcz_rare_loot", {
 		{ class = "item_slc_medkit", weight = 5, max = 1 },
 		{ class = "item_slc_morphine", weight = 1, max = 1 },
 		{ class = "item_slc_adrenaline", weight = 1, max = 1 },
+		{ class = "item_slc_ephedrine", weight = 1, max = 1 },
+		{ class = "item_slc_hemostatic", weight = 1, max = 1 },
 		{ class = "item_slc_omnitool", weight = 5, max = 1, ntd = { chip_chance = 1, chip_max = 2 }, post = chip_post, roll = chip_roll },
 		{ class = "item_slc_access_chip", weight = 5, max = 1, ntd = { chip_max = 2 }, post = chip_post, roll = chip_roll },
 		{ class = "item_slc_fuse", weight = 3, max = 1, ntd = { min = 2, max = 5 }, post = fuse_post, roll = fuse_roll },
@@ -448,6 +450,8 @@ AddLootPool( "lcz_toilet", {
 		{ class = "item_slc_medkit", weight = 5, max = 1 },
 		{ class = "item_slc_morphine", weight = 1, max = 1 },
 		{ class = "item_slc_adrenaline", weight = 1, max = 1 },
+		{ class = "item_slc_ephedrine", weight = 1, max = 1 },
+		{ class = "item_slc_hemostatic", weight = 1, max = 1 },
 		{ class = "item_slc_omnitool", weight = 5, max = 1, ntd = { chip_chance = 1, chip_max = 2 }, post = chip_post, roll = chip_roll },
 		{ class = "item_slc_access_chip", weight = 5, max = 1, ntd = { chip_max = 2 }, post = chip_post, roll = chip_roll },
 		{ class = "item_slc_fuse", weight = 3, max = 1, ntd = { min = 2, max = 5 }, post = fuse_post, roll = fuse_roll },
@@ -470,6 +474,10 @@ AddLootPool( "lcz_valuable_loot", {
 		{ class = "item_slc_medkitplus", weight = 1, value = 200 },
 		{ class = "item_slc_morphine", weight = 2, value = 165 },
 		{ class = "item_slc_adrenaline", weight = 2, value = 165 },
+		{ class = "item_slc_ephedrine", weight = 2, value = 165 },
+		{ class = "item_slc_hemostatic", weight = 2, value = 165 },
+		{ class = "item_slc_antidote", weight = 2, value = 165 },
+		{ class = "item_slc_poison", weight = 1, value = 225 },
 		{ class = "item_slc_omnitool", weight = 6, value = 100, ntd = { chip_chance = 1, chip_max = 2 }, post = chip_post, roll = chip_roll },
 		{ class = "item_slc_access_chip", weight = 6, value = 75, ntd = { chip_max = 2 }, post = chip_post, roll = chip_roll },
 		{ class = "weapon_taser", weight = 3, value = 175 },
@@ -487,8 +495,9 @@ AddLootPool( "lcz_military_crate", {
 		{ class = "loadout:pistol_low", weight = 5 },
 		{ class = "weapon_taser", weight = 3, max = 1 },
 		{ class = "__slc_ammo", weight = 15, max = 1, ntd = { min = 5, max = 15 }, roll = ammo_roll, func = ammo_func },
-		{ class = "cw_flash_grenade", weight = 3, max = 1 },
-		{ class = "cw_smoke_grenade", weight = 3, max = 1 },
+		{ class = "cw_kk_ins2_nade_m84", weight = 3, max = 1 },
+		{ class = "cw_kk_ins2_nade_m18", weight = 3, max = 1 },
+		{ class = "cw_kk_ins2_nade_anm14", weight = 2, max = 1 },
 		{ class = "loadout:melee_mid", weight = 3, max = 1 },
 		{ class = "item_slc_thermal", weight = 2, max = 1 },
 	}
@@ -510,6 +519,9 @@ AddLootPool( "hcz_large_loot", {
 		{ class = "item_slc_medkit", weight = 5, value = 100, max = 2 },
 		{ class = "item_slc_morphine", weight = 2, value = 75, max = 1 },
 		{ class = "item_slc_adrenaline", weight = 2, value = 75, max = 1 },
+		{ class = "item_slc_ephedrine", weight = 2, value = 75, max = 1 },
+		{ class = "item_slc_hemostatic", weight = 2, value = 75, max = 1 },
+		{ class = "item_slc_antidote", weight = 2, value = 75, max = 1 },
 		{ class = "item_slc_omnitool", weight = 5, value = 100, max = 1, ntd = { chip_chance = 1, chip_min = 2, chip_max = 2 }, post = chip_post, roll = chip_roll },
 		{ class = "item_slc_access_chip", weight = 5, value = 150, max = 2, ntd = { chip_min = 2, chip_max = 3 }, post = chip_post, roll = chip_roll },
 		{ class = "__slc_ammo", weight = 3, value = 75, max = 2, ntd = { min = 6, max = 18 }, roll = ammo_roll, func = ammo_func },
@@ -529,6 +541,10 @@ AddLootPool( "hcz_valuable_loot", {
 		{ class = "item_slc_medkitplus", weight = 2, value = 100, max = 1 },
 		{ class = "item_slc_morphine", weight = 3, value = 75, max = 1 },
 		{ class = "item_slc_adrenaline", weight = 3, value = 75, max = 1 },
+		{ class = "item_slc_ephedrine", weight = 3, value = 75, max = 1 },
+		{ class = "item_slc_hemostatic", weight = 3, value = 75, max = 1 },
+		{ class = "item_slc_antidote", weight = 3, value = 75, max = 1 },
+		{ class = "item_slc_poison", weight = 2, value = 125, max = 1 },
 		{ class = "loadout:pistol_mid", weight = 5, value = 225, max = 1 },
 		{ class = "item_slc_omnitool", weight = 4, value = 125, max = 1, ntd = { chip_chance = 1, chip_min = 2, chip_max = 3 }, post = chip_post, roll = chip_roll },
 		{ class = "item_slc_access_chip", weight = 4, value = 125, max = 2, ntd = { chip_min = 2, chip_max = 3 }, post = chip_post, roll = chip_roll },
@@ -560,12 +576,17 @@ AddLootPool( "hcz_035", {
 		{ class = "item_slc_medkitplus", weight = 5, value = 201 },
 		{ class = "item_slc_morphine", weight = 4, value = 150 },
 		{ class = "item_slc_adrenaline", weight = 4, value = 150 },
+		{ class = "item_slc_ephedrine", weight = 4, value = 150 },
+		{ class = "item_slc_hemostatic", weight = 4, value = 150 },
+		{ class = "item_slc_antidote", weight = 4, value = 150 },
+		{ class = "item_slc_poison", weight = 4, value = 175 },
 		{ class = "item_slc_omnitool", weight = 9, value = 125, max = 1, ntd = { chip_chance = 0.9, chip_min = 2, chip_max = 2 }, post = chip_post, roll = chip_roll },
 		{ class = "item_slc_access_chip", weight = 7, value = 175, max = 2, ntd = { chip_min = 2, chip_max = 3 }, post = chip_post, roll = chip_roll },
 		{ class = "__slc_ammo", weight = 5, value = 75, max = 3, ntd = { min = 10, max = 25 }, roll = ammo_roll, func = ammo_func },
-		{ class = "cw_flash_grenade", weight = 4, value = 200, max = 1 },
-		{ class = "cw_smoke_grenade", weight = 4, value = 200, max = 1 },
-		{ class = "cw_frag_grenade", weight = 4, value = 200, max = 1 },
+		{ class = "cw_kk_ins2_nade_m84", weight = 4, value = 200, max = 1 },
+		{ class = "cw_kk_ins2_nade_m18", weight = 4, value = 200, max = 1 },
+		{ class = "cw_kk_ins2_nade_m67", weight = 4, value = 200, max = 1 },
+		{ class = "cw_kk_ins2_nade_molotov", weight = 3, value = 200, max = 1 },
 		{ class = "loadout:melee_mid", weight = 3, value = 100, max = 1 },
 	}
 } )
@@ -602,13 +623,18 @@ AddLootPool( "ez_large_loot", {
 		{ class = "item_slc_medkitplus", weight = 2, value = 225 },
 		{ class = "item_slc_morphine", weight = 3, value = 150 },
 		{ class = "item_slc_adrenaline", weight = 3, value = 150 },
+		{ class = "item_slc_ephedrine", weight = 3, value = 150 },
+		{ class = "item_slc_hemostatic", weight = 3, value = 150 },
+		{ class = "item_slc_antidote", weight = 3, value = 150 },
+		{ class = "item_slc_poison", weight = 1, value = 225, max = 1 },
 		{ class = "item_slc_omnitool", weight = 5, value = 175, ntd = { chip_chance = 1, chip_min = 2, chip_max = 3 }, post = chip_post, roll = chip_roll },
 		{ class = "item_slc_access_chip", weight = 5, value = 120, ntd = { chip_min = 2, chip_max = 3 }, post = chip_post, roll = chip_roll },
 		{ class = "loadout:pistol_mid", weight = 3, value = 301, max = 1 },
 		{ class = "__slc_ammo", weight = 5, value = 75, max = 2, ntd = { min = 9, max = 27 }, roll = ammo_roll, func = ammo_func },
-		{ class = "cw_flash_grenade", weight = 1, value = 200 },
-		{ class = "cw_smoke_grenade", weight = 1, value = 200 },
-		{ class = "cw_frag_grenade", weight = 1, value = 200 },
+		{ class = "cw_kk_ins2_nade_m84", weight = 1, value = 200 },
+		{ class = "cw_kk_ins2_nade_m18", weight = 1, value = 200 },
+		{ class = "cw_kk_ins2_nade_f1", weight = 1, value = 200 },
+		{ class = "cw_kk_ins2_nade_molotov", weight = 1, value = 200 },
 		{ class = "loadout:melee_mid", weight = 2, max = 150 },
 	}
 } )
@@ -624,13 +650,17 @@ AddLootPool( "ez_rare_loot", {
 		{ class = "item_slc_medkitplus", weight = 2, max = 1 },
 		{ class = "item_slc_morphine", weight = 3 },
 		{ class = "item_slc_adrenaline", weight = 3 },
+		{ class = "item_slc_ephedrine", weight = 2 },
+		{ class = "item_slc_hemostatic", weight = 2 },
+		{ class = "item_slc_antidote", weight = 2 },
 		{ class = "item_slc_access_chip", weight = 5, ntd = { chip_min = 3, chip_max = 3 }, post = chip_post, roll = chip_roll },
 		{ class = "weapon_taser", weight = 5 },
 		{ class = "item_scp_500", weight = 1 },
 		{ class = "__slc_ammo", weight = 3, max = 1, ntd = { min = 15, max = 45 }, roll = ammo_roll, func = ammo_func },
-		{ class = "cw_flash_grenade", weight = 2, max = 1 },
-		{ class = "cw_smoke_grenade", weight = 2, max = 1 },
-		{ class = "cw_frag_grenade", weight = 2, max = 1 },
+		{ class = "cw_kk_ins2_nade_m84", weight = 2, max = 1 },
+		{ class = "cw_kk_ins2_nade_m18", weight = 2, max = 1 },
+		{ class = "cw_kk_ins2_nade_f1", weight = 2, max = 1 },
+		{ class = "cw_kk_ins2_nade_molotov", weight = 1, max = 1 },
 	}
 } )
 
@@ -647,20 +677,24 @@ AddLootPool( "ez_valuable_loot", {
 		{ class = "item_slc_medkitplus", weight = 2, value = 100 },
 		{ class = "item_slc_morphine", weight = 3, value = 75 },
 		{ class = "item_slc_adrenaline", weight = 3, value = 75 },
+		{ class = "item_slc_ephedrine", weight = 3, value = 75 },
+		{ class = "item_slc_hemostatic", weight = 3, value = 75 },
+		{ class = "item_slc_antidote", weight = 3, value = 75 },
 		{ class = "item_slc_omnitool", weight = 5, value = 150, max = 1, ntd = { chip_chance = 1, chip_min = 2, chip_max = 3 }, post = chip_post, roll = chip_roll },
 		{ class = "item_slc_access_chip", weight = 5, value = 100, max = 1, ntd = { chip_min = 2, chip_max = 3 }, post = chip_post, roll = chip_roll },
 		{ class = "weapon_taser", weight = 5, max = 1, value = 150 },
 		{ class = "item_scp_500", weight = 1, max = 1, value = 999 },
-		{ class = "cw_flash_grenade", weight = 3, value = 175, max = 1 },
-		{ class = "cw_smoke_grenade", weight = 3, value = 175, max = 1 },
-		{ class = "cw_frag_grenade", weight = 3, value = 175, max = 1 },
+		{ class = "cw_kk_ins2_nade_m84", weight = 3, value = 175, max = 1 },
+		{ class = "cw_kk_ins2_nade_m18", weight = 3, value = 175, max = 1 },
+		{ class = "cw_kk_ins2_nade_f1", weight = 3, value = 175, max = 1 },
+		{ class = "cw_kk_ins2_nade_molotov", weight = 2, value = 175, max = 1 },
 	}
 } )
 
 //Special
 AddLootPool( "guard_desk", {
 	max = 2,
-	chance = 0.25,
+	chance = 0.5,
 	items = {
 		{ class = "item_slc_flashlight", weight = 6 },
 		{ class = "loadout:melee_low", weight = 6 },
@@ -669,8 +703,12 @@ AddLootPool( "guard_desk", {
 		{ class = "loadout:melee_mid", weight = 4 },
 		{ class = "item_slc_adrenaline", weight = 3 },
 		{ class = "item_slc_morphine", weight = 3 },
+		{ class = "item_slc_ephedrine", weight = 3 },
+		{ class = "item_slc_hemostatic", weight = 3 },
+		{ class = "item_slc_antidote", weight = 3 },
+		{ class = "item_slc_poison", weight = 2 },
 		{ class = "item_slc_snav_ultimate", weight = 2 },
-		{ class = "cw_frag_grenade", weight = 2 },
+		{ class = "cw_kk_ins2_nade_m67", weight = 2 },
 		{ class = "item_slc_access_chip", weight = 1, ntd = { chip_max = 4 }, post = chip_post, roll = chip_roll },
 		{ class = "item_slc_turret", weight = 1 },
 		{ class = "cw_ar15", weight = 1 },
@@ -686,6 +724,10 @@ AddLootPool( "toilet", {
 		{ class = "weapon_slc_pc", weight = 1 },
 		{ class = "item_slc_morphine", weight = 1, post = function( ply, item, data, ntd ) item.ExtraHealth = 999 item.SelfInjectSpeed = 0.1 item.InjectSpeed = 0.1 end },
 		{ class = "item_slc_adrenaline", weight = 1, post = function( ply, item, data, ntd ) item.BoostTime = 300 item.SelfInjectSpeed = 0.1 item.InjectSpeed = 0.1 end },
+		{ class = "item_slc_ephedrine", weight = 1, post = function( ply, item, data, ntd ) item.BoostPower = 1.9 item.SelfInjectSpeed = 0.1 item.InjectSpeed = 0.1 end },
+		{ class = "item_slc_hemostatic", weight = 1, post = function( ply, item, data, ntd ) item.BoostTime = 1200 item.SelfInjectSpeed = 0.1 item.InjectSpeed = 0.1 end },
+		{ class = "item_slc_antidote", weight = 1, post = function( ply, item, data, ntd ) item.BoostTime = 900 item.SelfInjectSpeed = 0.1 item.InjectSpeed = 0.1 end },
+		{ class = "item_slc_poison", weight = 1, post = function( ply, item, data, ntd ) item.PoisonTick = 0.1 item.PoisonDamage = 5 item.SelfInjectSpeed = 0.1 item.InjectSpeed = 0.1 end },
 		{ class = "__slc_ammo", weight = 1, ntd = { min = 333, max = 999 }, roll = ammo_roll, func = ammo_func },
 		{ class = "cw_fiveseven", weight = 2 },
 		{ class = "item_scp_009", weight = 2 },
@@ -708,15 +750,22 @@ AddLootPool( "toilet", {
 } )
 
 AddLootPool( "medbay", {
-	max = 4,
-	chance = 0.4,
+	max = 5,
+	chance = 0.5,
 	items = {
 		{ class = "item_slc_medkit", weight = 9 },
 		{ class = "item_slc_medkitplus", weight = 3 },
 		{ class = "item_slc_morphine", weight = 4 },
 		{ class = "item_slc_adrenaline", weight = 4 },
+		{ class = "item_slc_ephedrine", weight = 4 },
+		{ class = "item_slc_hemostatic", weight = 4 },
+		{ class = "item_slc_antidote", weight = 4 },
 		{ class = "item_slc_morphine_big", weight = 2 },
 		{ class = "item_slc_adrenaline_big", weight = 2 },
+		{ class = "item_slc_ephedrine_big", weight = 2 },
+		{ class = "item_slc_hemostatic_big", weight = 2 },
+		{ class = "item_slc_antidote_big", weight = 2 },
+		
 	}
 } )
 

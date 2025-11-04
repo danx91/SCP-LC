@@ -29,7 +29,7 @@ function SetupSupportTimer()
 		max = tonumber( max )
 
 		if max then
-			time = math.random( time, max )
+			time = SLCRandom( time, max )
 		end
 	end
 
@@ -58,17 +58,25 @@ function AddThenableTimer( ... )
 	return p, t
 end
 
-function SetRoundProperty( key, value )
+function SetRoundProperty( key, value, sync )
 	if !ROUND.active then return end
 
 	ROUND.properties[key] = value
+
+	if sync then
+		net.Start( "SLCRoundProperties" )
+			net.WriteString( key )
+			net.WriteTable( { value } )
+		net.Broadcast()
+	end
+
 	return value
 end
 
 function GetRoundProperty( key, def )
-	if !ROUND.active then return end
+	if !ROUND.active then return def end
 
-	if !ROUND.properties[key] and def then
+	if !ROUND.properties[key] and def != nil then
 		ROUND.properties[key] = def
 	end
 
@@ -214,14 +222,14 @@ function RestartRound()
 
 		print( "Initializing round..." )
 
+		ROUND.preparing = true
+		ROUND.infoscreen = true
+
 		SCPHooks.__PreventUpdate = true
 		ROUND.roundtype:init()
 		SCPHooks.__PreventUpdate = false
 
 		TransmitSCPHooks()
-
-		ROUND.preparing = true
-		ROUND.infoscreen = true
 
 		local prep = CVAR.slc_time_preparing:GetInt()
 

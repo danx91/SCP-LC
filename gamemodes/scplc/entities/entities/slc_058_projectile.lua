@@ -9,7 +9,7 @@ ENT.Gravity = Vector( 0, 0, 4 )
 ENT.EffectName = "SLCBloodSplash"
  
 function ENT:SetupDataTables()
-	self:AddNetworkVar( "Size", "Float" )
+	self:NetworkVar( "Float", "Size" )
 end
 
 function ENT:Initialize()
@@ -62,8 +62,8 @@ function ENT:Think()
 			local radius_max = 25 * size
 
 			for i = 1, num do
-				local n = ang * ( i - 1 + ( math.random() * 0.5 - 0.25 ) )
-				local d_pos = trace.HitPos + math.sin( n ) * right * math.random( radius_min, radius_max ) - math.cos( n ) * up * math.random( radius_min, radius_max )
+				local n = ang * ( i - 1 + ( SLCRandom() * 0.5 - 0.25 ) )
+				local d_pos = trace.HitPos + math.sin( n ) * right * SLCRandom( radius_min, radius_max ) - math.cos( n ) * up * SLCRandom( radius_min, radius_max )
 				util.Decal( "Blood", d_pos + trace.HitNormal * 15, d_pos - trace.HitNormal * 15 )
 			end
 
@@ -104,8 +104,8 @@ function ENT:Draw()
 		particle:SetEndAlpha( 0 )
 		particle:SetStartSize( 4 * size )
 		particle:SetEndSize( 8 * size )
-		particle:SetRoll( math.random() * math.pi * 2 )
-		particle:SetRollDelta( math.random() * 0.2 - 0.1 )
+		particle:SetRoll( SLCRandom() * math.pi * 2 )
+		particle:SetRollDelta( SLCRandom() * 0.2 - 0.1 )
 		particle:SetColor( 120, 10, 10 )
 		particle:SetAirResistance( 100 )
 		particle:SetGravity( Vector( 0, 0, 5 ) )

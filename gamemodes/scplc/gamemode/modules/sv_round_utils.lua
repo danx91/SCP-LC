@@ -1,252 +1,387 @@
 --[[-------------------------------------------------------------------------
 Spawn players
 ---------------------------------------------------------------------------]]
-local function select_wighted( tab )
-	local rng = math.random( tab.total_weight )
+local function select_weighted( tab, total_weight, rem )
+	if isbool( total_weight ) then
+		rem = total_weight
+		total_weight = nil
+	end
+
+	local rng = SLCRandom( total_weight or tab.total_weight )
 	local sum = 0
 
 	for i, v in ipairs( tab ) do
 		sum = sum + v.weight
-		if sum >= rng then
+		if sum < rng then continue end
+
+		if rem then
 			table.remove( tab, i )
-			tab.total_weight = tab.total_weight - v.weight
-			return v.class
+
+			if !total_weight then
+				tab.total_weight = tab.total_weight - v.weight
+			end
 		end
+
+		return v.value
 	end
 end
 
-function SetupPlayers()
-	local plys = GetActivePlayers()
-	local all = #plys
-	
-	//Assign SCPs
-	local scp_list = table.Copy( SCPS )
-	local assigned_scps = {}
-	local scp_plys = {}
-	local scp_num = 0
-	local scp_sum = 0
+local function assign_scps( plys, num )
+	if num <= 0 then return {} end
 
-	if SLC_SCP_OVERRIDE then
-		scp_num = SLC_SCP_OVERRIDE( all )
-	elseif all >= CVAR.slc_scp_min_players:GetInt() then
-		if all < 12 then
-			scp_num = 1
-		elseif all < 21 then
-			scp_num = 2
+	local skip_filter = CVAR.slc_scp_filter_last:GetInt() != 1
+	local scp_list = {}
+
+	-- Filter last round SCP
+	//print( "Collecting SCPS", skip_filter )
+	for i, v in ipairs( SCPS ) do
+		if skip_filter or !ROUND.LastRoundSCPs or !ROUND.LastRoundSCPs[v] then
+			//print( "Add", v )
+			table.insert( scp_list, v )
 		else
-			scp_num = math.floor( ( all - 20 ) / 12 ) + 3
+			//print( "Skip", v )
 		end
 	end
 
-	if ROUND.LastRoundSCPs then
-		for i, v in rpairs( scp_list ) do
-			if ROUND.LastRoundSCPs[v] then
-				table.remove( scp_list, i )
+	-- Calculate select chances
+	local priority_players, other_players = { total_weight = 0 }, {}
+	local exponent = CVAR.slc_scp_chance_exponent:GetFloat()
+	local use_weights = exponent > 0
+	local karma_enabled = CVAR.slc_scp_karma:GetInt() == 1
+
+	//printf( "Collecting players - plys: %i, num: %i, exp: %.2f, u/w: %s", #plys, num, exponent, use_weights )
+	for i, v in ipairs( plys ) do
+		local penalty = v:GetSCPPenalty()
+		if use_weights and penalty <= 0 then
+			local karma_mult = 1
+
+			if karma_enabled then
+				karma_mult =  math.ClampMap( v:GetSCPKarma(), 0, 1000, 1, 1.2 )
 			end
-		end
 
-		if #scp_list < scp_num then
-			scp_list = table.Copy( SCPS )
-		end
-	end
+			local weight = math.ceil( ( -penalty + 1 ) ^ exponent * karma_mult )
 
-	for k, v in ipairs( plys ) do
-		local p = v:GetSCPPenalty()
-		if p <= 0 then
-			local w = -p + 1
-
-			scp_sum = scp_sum + w
-			table.insert( scp_plys, { v, w } )
-		end
-
-		if p > 0 or scp_num > 0 then
-			v:SetSCPPenalty( p - 1 )
+			priority_players.total_weight = priority_players.total_weight + weight
+			table.insert( priority_players, { value = v, weight = weight } )
+		else
+			table.insert( other_players, v )
 		end
 	end
 
-	
-	for i = 1, scp_num do
-		if #scp_list == 0 then --not enough SCPs
+	//print( "Prio" )
+	//PrintTable( priority_players )
+	//print( "Non-prio" )
+	//PrintTable( other_players )
+
+	-- Select players and SCPs
+	local assigned_scps = {}
+
+	for i = 1, num do
+		//print( "Iter", i )
+
+		if #scp_list == 0 then
+			//print( "SCP Select - not enough SCPs" )
 			break
 		end
 
-		if #scp_plys == 0 then
-			scp_plys = {}
-
-			for n, v in ipairs( plys ) do
-				scp_plys[n] = { v, 1 }
-			end
-
-			scp_sum = #scp_plys
-		end
-
 		local ply
-		local rng = math.random( scp_sum )
 
-		for idx, v in ipairs( scp_plys ) do
-			rng = rng - v[2]
-
-			if rng <= 0 then
-				ply = v[1]
-
-				scp_sum = scp_sum - v[2]
-				table.remove( scp_plys, idx )
-
-				break
+		if priority_players.total_weight > 0 then
+			//print( "Priority select" )
+			ply = select_weighted( priority_players, true )
+		else
+			//print( "Non-priority select" )
+			local other_len = #other_players
+			if other_len > 0 then
+				ply = table.remove( other_players, SLCRandom( other_len ) )
 			end
 		end
 
 		if !ply then
-			print( "Failed to select any player as SCP!" )
-			continue
+			ErrorNoHalt( "THIS SHOULD NEVER HAPPEN! Failed to select player for SCP" )
+			break
 		end
 
-		local scp = table.remove( scp_list, math.random( #scp_list ) )
+		local scp = table.remove( scp_list, SLCRandom( #scp_list ) )
 		local obj = GetSCP( scp )
+
+		//print( "Selected", ply, scp )
 
 		if obj.basestats.avoid then
 			for _, v in ipairs( obj.basestats.avoid ) do
 				table.RemoveByValue( scp_list, v )
+				//print( "Removing avoid SCP", v )
 			end
 		end
 
 		table.RemoveByValue( plys, ply )
 		assigned_scps[ply] = scp
-		all = all - 1
 	end
 
-	hook.Run( "SLCAlterAssignedSCPs", assigned_scps )
+	//printf( "Done - plys left: %i, SCPs left: %i", #plys, #scp_list )
+	//PrintTable( assigned_scps )
 
-	//Build list of players
-	local groups = GetClassGroups()
-	local available_classes = {}
+	return assigned_scps
+end
+
+function get_player_classes( plys, groups )
+	local player_classes = {}
+
+	//printf( "Collecting players for group", #plys )
 
 	for _, ply in ipairs( plys ) do
-		local p_tab = {}
-		available_classes[ply] = p_tab
+		local ply_tab = {}
+		player_classes[ply] = ply_tab
+	
+		//print( "> "..tostring( ply ) )
+	
+		for group, classes in pairs( groups ) do
+			//print( "  > "..group )
 
-		for group_name, group in pairs( groups ) do
-			if group_name == "SUPPORT" then continue end
+			local ply_weight = ply:GetGroupData( group ) + 1
+			local override = hook.Run( "SLCGroupPlayerWeight", ply, group, ply_weight )
+			if isnumber( override ) then
+				ply_weight = math.ceil( override )
+			end
 
-			local g_tab = {
-				total_weight = 0,
-			}
+			if ply_weight <= 0 then /*print( "    > weight <= 0", ply_weight )*/ continue end
 
-			p_tab[group_name] = g_tab
+			local group_tab = { total_weight = 0, ply_weight = ply_weight }
+			ply_tab[group] = group_tab
 
-			for class_name, class in pairs( group ) do
+			for class, data in pairs( classes ) do
+				//print( "    > "..class )
+				if data.no_select then continue end
+
 				local weight
 
-				if class.override then
-					local result = class.override( ply )
+				if data.override then
+					local result = data.override( ply )
 					if result then
-						weight = isnumber( result ) and result or class.weight or class.tier and ( class.tier + 1 ) or 1
+						weight = isnumber( result ) and result or true
 					elseif result == false then
 						weight = false
 					end
+					//print( "      > override", weight )
 				end
 
-				weight = weight or ply:IsClassUnlocked( class.name ) and ( class.weight or class.tier and ( class.tier + 1 ) or 1 )
+				if weight != false and !isnumber( weight ) then
+					weight = ( weight or ply:IsClassUnlocked( data.name ) ) and ( data.weight or data.tier and ( data.tier + 1 ) or 1 )
+					//print( "      > weight", weight )
+				end
 
 				if weight and weight > 0 then
-					g_tab.any = true
-					g_tab.total_weight = g_tab.total_weight + weight
-					table.insert( g_tab, { class = class_name, weight = weight } )
+					weight = math.ceil( weight )
+
+					group_tab.total_weight = group_tab.total_weight + weight
+					table.insert( group_tab, { value = class, weight = weight } )
 				end
+			end
+
+			if group_tab.total_weight <= 0 then
+				ErrorNoHalt( "THIS SHOULD NEVER HAPPEN! Player '", ply, "' has no class available in group: ", group, "! Did you register this group properly?" )
+				continue
 			end
 		end
 	end
-	
-	//Assign players to classes
-	local classes = GetPlayerTable( all )
-	local num_classes = #classes
+
+	//print( "Done" )
+	//PrintTable( player_classes )
+
+	return player_classes
+end
+
+local function group_players_compare( a, b )
+	if a.order == b.order then
+		return a.index < b.index
+	end
+
+	return a.order > b.order
+end
+
+function assign_groups( plys, all_groups, player_classes )
+	local groups_order = {}
+
+	//print( "Collecting groups" )
+	for k, v in pairs( all_groups ) do
+		table.insert( groups_order, k )
+	end
+	//PrintTable( groups_order )
+
+	//print( "Shuffle" )
+	ShuffleTable( groups_order )
+	//PrintTable( groups_order )
+
+	//print( "Player table" )
+	local ply_tab = GetPlayerTable( #plys )
+	//PrintTable( ply_tab )
+
 	local assigned_groups = {}
+	for idx, group in ipairs( groups_order ) do
+		//print( "Processing", idx, group )
+		//PrintTable( plys )
+
+		local available_plys = { total_weight = 0 }
+		for _, ply in ipairs( plys ) do
+			local group_data = player_classes[ply][group]
+			if !group_data or group_data.total_weight < 1 then /*print( "Player has no class in group", ply, group )*/ continue end
+
+			available_plys.total_weight = available_plys.total_weight + group_data.ply_weight
+			table.insert( available_plys, { value = ply, weight = group_data.ply_weight } )
+		end
+
+		local to_select = math.Clamp( ply_tab[group] or 0, 0, #available_plys )
+		//print( "Selecting", to_select, ply_tab[group], #available_plys )
+
+		local karma_enabled = CVAR.slc_scp_karma:GetInt() == 1
+		local tmp_players = {}
+
+		for i = 1, to_select do
+			local ply = select_weighted( available_plys, true )
+			if !ply then
+				//print( "FATAL" )
+				break
+			end
+
+			local karma_add = 0
+
+			if karma_enabled then
+				karma_add = math.floor( math.ClampMap( ply:GetSCPKarma(), 0, 1000, 0, 2.5 ) )
+			end
+
+			tmp_players[i] = { ply = ply, index = i, order = ply:GetPrestigeLevel() + karma_add }
+			table.RemoveByValue( plys, ply )
+			//print( "Player select", i, ply )
+		end
+
+		table.sort( tmp_players, group_players_compare )
+
+		local group_tab = {}
+		assigned_groups[group] = group_tab
+
+		for i, v in ipairs( tmp_players ) do
+			group_tab[i] = v.ply
+		end
+
+		//print( "---" )
+	end
+
+	//print( "Done" )
+	//PrintTable( assigned_groups )
+
+	return assigned_groups
+end
+
+function assign_classes( groups, assigned_groups, player_classes )
+	local assigned_classes = {}
 	local classes_in_use = {}
 	local select_groups = {}
 
-	for i, group_info in ipairs( classes ) do
-		local group_name = group_info[1]
-		local to_spawn = i == num_classes and #plys or group_info[2]
+	for group, plys in pairs( assigned_groups ) do
+		local group_tab = groups[group]
+		local group_total = #plys
 
-		if !assigned_groups[group_name] then
-			assigned_groups[group_name] = {}
-		end
+		//print( "Processing", group, #plys )
 
-		if #plys == 0 then
-			print( "No more players! Interrupting!" )
-			break
-		end
-		
-		while to_spawn > 0 do
-			local indices = PopulateTable( #plys )
-			local ply
+		for i, ply in ipairs( plys ) do
+			//print( "  > "..tostring(ply) )
+			local ply_classes = player_classes[ply][group]
 
-			//Select valid player
-			repeat
-				local ind = table.remove( indices, math.random( #indices ) )
-				local tmp_ply = plys[ind]
+			while ply_classes.total_weight > 0 do
+				local tmp_class = select_weighted( ply_classes, true )
+				local tmp_data = group_tab[tmp_class]
+				local select_group = tmp_data.select_group or tmp_class
 
-				if available_classes[tmp_ply][group_name].total_weight > 0 then
-					ply = tmp_ply
+				//Msg( "    > "..tmp_class )
+
+				if !classes_in_use[tmp_class] then
+					classes_in_use[tmp_class] = 0
 				end
-			until ply or #indices == 0
 
-			if !ply then
-				print( "No more valid players! Failed to assign "..to_spawn.." players to group '"..group_name.."'!" )
-				continue
+				if !select_groups[select_group] then
+					select_groups[select_group] = 0
+				end
+
+				local override = tmp_data.select_override and tmp_data.select_override( tmp_class, classes_in_use[tmp_class], select_groups[select_group], group_total )
+				if override == true or override == nil and (
+					!tmp_data.max or tmp_data.max == 0 or classes_in_use[tmp_class] < tmp_data.max and select_groups[select_group] < tmp_data.max
+				) then
+					classes_in_use[tmp_class] = classes_in_use[tmp_class] + 1
+					select_groups[select_group] = select_groups[select_group] + 1
+					assigned_classes[ply] = tmp_class
+					//Msg( " <----", tmp_data.max, classes_in_use[tmp_class], select_groups[select_group], "\n" )
+					break
+				end
+				//print()
 			end
 
-			local ply_classes = available_classes[ply][group_name]
-			local class_name, select_group_name
-
-			//Attempt to select class
-			repeat
-				local tmp_class_name = select_wighted( ply_classes )
-				local tmp_class_tab = groups[group_name][tmp_class_name]
-
-				if !classes_in_use[tmp_class_name] then
-					classes_in_use[tmp_class_name] = 0
-				end
-
-				if tmp_class_tab.select_group and !select_groups[tmp_class_tab.select_group] then
-					select_groups[tmp_class_tab.select_group] = 0
-				end
-
-				local override = tmp_class_tab.select_override and tmp_class_tab.select_override( tmp_class_tab.select_group and select_groups[tmp_class_tab.select_group] or classes_in_use[tmp_class_name], group_info[2] )
-				if ( override or override == nil ) and ( !tmp_class_tab.max or tmp_class_tab.max == 0 or ( tmp_class_tab.select_group and select_groups[tmp_class_tab.select_group] or classes_in_use[tmp_class_name] ) < tmp_class_tab.max ) then
-					class_name = tmp_class_name
-					select_group_name = tmp_class_tab.select_group
-				end
-			until class_name or #ply_classes == 0
-
-			if !class_name then
-				print( "Failed to assing player '"..ply:Nick().."' to any class in group '"..group_name.."'!" )
-				continue
-			end
-
-			table.RemoveByValue( plys, ply )
-			to_spawn = to_spawn - 1
-			assigned_groups[group_name][ply] = class_name
-			classes_in_use[class_name] = classes_in_use[class_name] + 1
-
-			if select_group_name then
-				select_groups[select_group_name] = select_groups[select_group_name] + 1
+			if !assigned_classes[ply] then
+				ErrorNoHalt( "Failed to assign player '", ply, "' to any class in group '", group, "'! Falling back to 'classd'..." )
+				assigned_classes[ply] = "classd"
 			end
 		end
 	end
 
-	hook.Run( "SLCAlterAssignedClasses", assigned_groups )
+	//print( "Done" )
+	//PrintTable( assigned_classes )
 
-	/*print( "SCPs selected" )
-	PrintTable( assigned_scps )
-	print( "Classes selected" )
-	PrintTable( assigned_groups )*/
+	return assigned_classes
+end
 
+function SetupPlayers()
+	local active_plys = GetActivePlayers()
+	local plys_num = #active_plys
+	local scp_num = 0
+
+	if SLC_SCP_OVERRIDE then
+		scp_num = SLC_SCP_OVERRIDE( plys_num )
+	elseif plys_num >= CVAR.slc_scp_min_players:GetInt() then
+		scp_num = math.ceil( plys_num / math.max( CVAR.slc_players_per_scp:GetInt(), 5 ) )
+	end
+
+	//print( "Setting up players", plys_num )
+	//print( "==================================" )
+
+	//print( "=== Assigning SCPs ===" )
+	local assigned_scps = assign_scps( active_plys, scp_num )
+	hook.Run( "SLCAlterAssignedSCPs", assigned_scps )
+	//print( "==================================" )
+
+	for i, v in ipairs( active_plys ) do
+		local penalty = v:GetSCPPenalty()
+		if penalty > 0 or scp_num > 0 then
+			v:SetSCPPenalty( penalty - 1 )
+		end
+	end
+
+	local groups = GetClassGroups()
+	local spawns = GetSpawnInfo()
+
+	groups.SUPPORT = nil
+
+	//print( "=== Setting up player classes ===" )
+	local player_classes = get_player_classes( active_plys, groups )
+	//print( "==================================" )
+
+	//print( "=== Assigning groups ===" )
+	local assigned_groups = assign_groups( active_plys, groups, player_classes )
+	hook.Run( "SLCAlterAssignedGroups", assigned_groups )
+	//print( "==================================" )
+
+	//print( "=== Assigning classes ===" )
+	local assigned_classes = assign_classes( groups, assigned_groups, player_classes )
+	hook.Run( "SLCAlterAssignedClasses", assigned_classes )
+	//print( "==================================" )
+
+	//print( "=== Spawning SCPs ===" )
 	local initial_teams = {
 		scps = {}
 	}
 
-	//Spawn SCPs
+	local initial_teams_plys = {
+		scps = {}
+	}
+
 	local penalty = CVAR.slc_scp_penalty:GetInt()
 	local ppenalty = CVAR.slc_scp_premium_penalty:GetInt()
 
@@ -254,64 +389,99 @@ function SetupPlayers()
 		local obj = GetSCP( scp )
 		obj:SetupPlayer( ply )
 		
-		//ply:SetSCPData( "scp_penalty", ply:IsPremium() and ppenalty or penalty )
 		ply:SetSCPPenalty( ply:IsPremium() and ppenalty or penalty )
 		
 		ply:SetInitialTeam( TEAM_SCP )
-		table.insert( initial_teams.scps, ply )
+		table.insert( initial_teams_plys.scps, ply )
+		initial_teams.scps[ply] = { TEAM_SCP, TEAM_SCP }
 
-		print( "Assigning '"..ply:Nick().."' to class '"..obj.name.."' [SCP]" )
+		print( "Spawning '"..ply:Nick().."' as '"..obj.name.."' [SCP]" )
 	end
+	//print( "==================================" )
+	//print( "=== Spawning classes ===" )
 
-	//Spawn other classes
-	for group_name, tab in pairs( assigned_groups ) do
-		local group_data, spawn_info = GetClassGroup( group_name )
-		local spawns = table.Copy( spawn_info )
-		local class_spawns = {}
+	local group_spawn_table = {}
+	local class_spawn_table = {}
 
-		for ply, class_name in pairs( tab ) do
-			local class_data = group_data[class_name]
-			local pos
+	for group, plys in pairs( assigned_groups ) do
+		//print( "Spawning group", group, #plys )
+		local group_data = groups[group]
+		local group_spawns = group_spawn_table[group]
 
-			if class_data.spawn then
-				if istable( class_data.spawn ) then
-					if !class_spawns[class_name] or #class_spawns[class_name] == 0 then
-						class_spawns[class_name] = table.Copy( class_data.spawn )
-					end
+		for _, ply in ipairs( plys ) do
+			local class = assigned_classes[ply]
+			//print( "  > "..tostring( ply ), class )
+			local class_data = group_data[class]
+			local spawn_pos
 
-					pos = table.remove( class_spawns[class_name], math.random( #class_spawns[class_name] ) )
-				else
-					pos = class_data.spawn
+			local class_spawns = class_data.spawn
+			local stype = type( class_spawns )
+			if stype == "Vector" then
+				//print( "    > using individual spawn (single)" )
+				spawn_pos = class_spawns
+			elseif stype == "table" then
+				local spawn_table = class_spawn_table[class_spawns]
+				if !spawn_table or #spawn_table == 0 then
+					spawn_table = table.Copy( class_spawns )
+					class_spawn_table[class_spawns] = spawn_table
 				end
+
+				//print( "    > using individual spawn (table)", #spawn_table )
+				spawn_pos = table.remove( spawn_table, SLCRandom( #spawn_table ) )
+			elseif stype == "string" then
+				local spawn_table = group_spawn_table[class_spawns]
+				if !spawn_table or #spawn_table == 0 then
+					spawn_table = table.Copy( spawns[class_spawns] )
+					group_spawn_table[class_spawns] = spawn_table
+				end
+
+				//print( "    > using foreign spawn", class_spawns, #spawn_table )
+				spawn_pos = table.remove( spawn_table, SLCRandom( #spawn_table ) )
 			else
-				if #spawns == 0 then
-					spawns = table.Copy( spawn_info )
+				if !group_spawns or #group_spawns == 0 then
+					group_spawns = table.Copy( spawns[group] )
+					group_spawn_table[group] = group_spawns
 				end
 
-				pos = table.remove( spawns, math.random( #spawns ) )
+				//print( "    > using native spawn", #group_spawns )
+				spawn_pos = table.remove( group_spawns, SLCRandom( #group_spawns ) )
 			end
 
-			ply:SetupPlayer( class_data, pos )
+			ply:SetupPlayer( class_data, spawn_pos )
 			ply:SetInitialTeam( class_data.team )
+			ply:ApplyGroupData( group )
 
-			if !initial_teams[group_name] then
-				initial_teams[group_name] = {}
+			if !initial_teams[group] then
+				initial_teams[group] = {}
+				initial_teams_plys[group] = {}
 			end
 
-			table.insert( initial_teams[group_name], ply )
+			table.insert( initial_teams_plys[group], ply )
+			initial_teams[group][ply] = { class_data.team, class_data.persona and class_data.persona.team or class_data.team }
 
-			print( "Assigning '"..ply:Nick().."' to class '"..class_name.."' ["..group_name.."]" )
+			if class_data.id_group then
+				if !initial_teams[class_data.id_group] then
+					initial_teams[class_data.id_group] = {}
+					initial_teams_plys[class_data.id_group] = {}
+				end
+
+				table.insert( initial_teams_plys[class_data.id_group], ply )
+				initial_teams[class_data.id_group][ply] = { class_data.team, class_data.persona and class_data.persona.team or class_data.team }
+			end
+
+			print( "Spawning '"..ply:Nick().."' as '"..class.."' ["..group.."]" )
 		end
 	end
 
-	//Transmit initial IDs
 	AddTimer( "RoundInitialIDs", INFO_SCREEN_DURATION + 1, 1, function()
 		for k, v in pairs( initial_teams ) do
 			net.Start( "InitialIDs" )
 				net.WriteTable( v )
-			net.Send( v )
+			net.Send( initial_teams_plys[k] )
 		end
 	end )
+	//print( "==================================" )
+	//print( "All done!" )
 end
 
 hook.Add( "SLCRound", "SLCSCPLastRound", function()
@@ -420,16 +590,41 @@ function QueueCheck()
 	return #queue
 end
 
+function QueueUpdate()
+	local done = {}
+
+	for i, v in ipairs( queue ) do
+		if IsValid( v ) then
+			v:SetQueuePosition( i )
+			done[v] = true
+		end
+	end
+
+	for i, v in ipairs( suicide_queue ) do
+		if IsValid( v ) then
+			v:SetQueuePosition( -1 )
+			done[v] = true
+		end
+	end
+
+	for i, v in ipairs( player.GetAll() ) do
+		if !done[v] and IsValid( v ) then
+			v:SetQueuePosition( 0 )
+		end
+	end
+end
+
 function QueueInsert( ply, front )
 	if !ply:IsValidSpectator() or queue_lookup[ply] then return end
 
 	if suicide_queue_sid[ply:SteamID64()] then
-		QueueInsertSuicide( ply )
+		QueueInsertSuicide( ply, front )
 		return
 	end
 
 	if front then
-		ply:SetQueuePosition( table.insert( queue, 1, ply ) )
+		table.insert( queue, 1, ply )
+		QueueUpdate()
 	else
 		ply:SetQueuePosition( table.insert( queue, ply ) )
 	end
@@ -563,17 +758,19 @@ function SpawnSupport( group_override )
 			if class.override then
 				local result = class.override( ply )
 				if result then
-					weight = isnumber( result ) and result or class.weight or class.tier and ( class.tier + 1 ) or 1
+					weight = isnumber( result ) and result or true
 				elseif result == false then
 					weight = false
 				end
 			end
 
-			weight = weight or ply:IsClassUnlocked( class.name ) and ( class.weight or class.tier and ( class.tier + 1 ) or 1 )
+			if weight != false and !isnumber( weight ) then
+				weight = ( weight or ply:IsClassUnlocked( class.name ) ) and ( class.weight or class.tier and ( class.tier + 1 ) or 1 )
+			end
 
 			if weight and weight > 0 then
 				available_classes.total_weight = available_classes.total_weight + weight
-				table.insert( available_classes, { class = class_name, weight = weight } )
+				table.insert( available_classes, { value = class_name, weight = weight } )
 			end
 		end
 
@@ -587,23 +784,26 @@ function SpawnSupport( group_override )
 		local class_name, select_group_name, slots
 
 		repeat
-			local tmp_class_name = select_wighted( available_classes )
+			local tmp_class_name = select_weighted( available_classes )
 			local tmp_class_tab = classes[tmp_class_name]
+			local tmp_class_sg = tmp_class_tab.select_group or tmp_class_name
 
 			if !classes_in_use[tmp_class_name] then
 				classes_in_use[tmp_class_name] = 0
 			end
 
-			if tmp_class_tab.select_group and !select_groups[tmp_class_tab.select_group] then
-				select_groups[tmp_class_tab.select_group] = 0
+			if !select_groups[tmp_class_sg] then
+				select_groups[tmp_class_sg] = 0
 			end
 
 			slots = tmp_class_tab.slots or 1
 
-			local override = tmp_class_tab.select_override and tmp_class_tab.select_override( tmp_class_tab.select_group and select_groups[tmp_class_tab.select_group] or classes_in_use[tmp_class_name], max )
-			if override != false and to_spawn - slots >= 0 and ( !tmp_class_tab.max or tmp_class_tab.max == 0 or ( tmp_class_tab.select_group and select_groups[tmp_class_tab.select_group] or classes_in_use[tmp_class_name] ) < tmp_class_tab.max ) then
+			local override = tmp_class_tab.select_override and tmp_class_tab.select_override( tmp_class_name, classes_in_use[tmp_class_name], select_groups[tmp_class_sg], max )
+			if override == true or override == nil and to_spawn - slots >= 0 and (
+				!tmp_class_tab.max or tmp_class_tab.max == 0 or classes_in_use[tmp_class_name] < tmp_class_tab.max and select_groups[tmp_class_sg] < tmp_class_tab.max
+			) then
 				class_name = tmp_class_name
-				select_group_name = tmp_class_tab.select_group
+				select_group_name = tmp_class_sg
 			end
 		until class_name or #available_classes == 0
 
@@ -616,10 +816,7 @@ function SpawnSupport( group_override )
 		to_spawn = to_spawn - slots
 		assigned_classes[ply] = class_name
 		classes_in_use[class_name] = classes_in_use[class_name] + 1
-
-		if select_group_name then
-			select_groups[select_group_name] = select_groups[select_group_name] + 1
-		end
+		select_groups[select_group_name] = select_groups[select_group_name] + 1
 	end
 
 	/*print( "Classes assigned" )
@@ -649,6 +846,8 @@ function SpawnSupport( group_override )
 
 	//Spawn all players
 	local spawned = {}
+	local spawned_plys = {}
+
 	local class_spawns = {}
 	local spawns = table.Copy( spawn_info )
 
@@ -662,7 +861,7 @@ function SpawnSupport( group_override )
 					class_spawns[class_name] = table.Copy( class_data.spawn )
 				end
 
-				pos = table.remove( class_spawns[class_name], math.random( #class_spawns[class_name] ) )
+				pos = table.remove( class_spawns[class_name], SLCRandom( #class_spawns[class_name] ) )
 			else
 				pos = class_data.spawn
 			end
@@ -671,13 +870,14 @@ function SpawnSupport( group_override )
 				spawns = table.Copy( spawn_info )
 			end
 
-			pos = table.remove( spawns, math.random( #spawns ) )
+			pos = table.remove( spawns, SLCRandom( #spawns ) )
 		end
 
 		print( "Assigning '"..ply:Nick().."' to support class '"..class_name.."' ["..group_name.."]" )
 		ply:SetupPlayer( class_data, pos )
 
-		table.insert( spawned, ply )
+		table.insert( spawned_plys, ply )
+		spawned[ply] = { class_data.team, class_data.persona and class_data.persona.team or class_data.team }
 	end
 
 	if group_data.callback then
@@ -689,7 +889,7 @@ function SpawnSupport( group_override )
 	AddTimer( "SupportInitialIDs", INFO_SCREEN_DURATION + 1, 1, function()
 		net.Start( "InitialIDs" )
 			net.WriteTable( spawned )
-		net.Send( spawned )
+		net.Send( spawned_plys )
 	end )
 
 	if group_override then
@@ -878,6 +1078,7 @@ hook.Add( "Tick", "SLCEscapeCheck", function()
 				SCPTeams.AddScore( team, SCPTeams.GetReward( team ) * 2 )
 
 				v:Despawn()
+				v:SkipNextSuicide()
 
 				v:KillSilent()
 				v:SetSCPTeam( TEAM_SPEC )
@@ -897,13 +1098,26 @@ hook.Add( "Tick", "SLCEscapeCheck", function()
 				local msg
 
 				local rtime, ttime, diff
+				local xp_info = { "escape_xp" }
+
+				local mult_tab = {
+					skip_count = {},
+					skip_mult = {},
+					bonus_mult = {},
+				}
+
+				for i, v in ipairs( tab ) do
+					mult_tab[v] = 1
+				end
+
+				hook.Run( "SLCEscapeMultiplier", tab, mult_tab )
 
 				if ROUND.aftermatch then
 					xp = min
 
 					msg = {
 						"escape1",
-						{ "escape_xp", "text;"..xp }
+						xp_info
 					}
 				else
 					rtime = t:GetRemainingTime()
@@ -924,22 +1138,25 @@ hook.Add( "Tick", "SLCEscapeCheck", function()
 					msg = {
 						"escape1",
 						{ "escape_time", "time;"..diff },
-						{ "escape_xp", "text;"..xp }
+						xp_info
 					}
 				end
 
 				for k, v in ipairs( tab ) do
-					if hook.Run( "SLCPlayerEscaped", v, false, diff or -1, rtime or -1 ) == true then continue end
+					if hook.Run( "SLCPlayerEscaped", v, false, diff or -1, rtime or -1, tab ) == true then continue end
 
-					//CenterMessage( string.format( "offset:75;escaped#255,0,0,SCPHUDVBig;escapeinfo$%s;escapexp$%d", string.ToMinutesSeconds( diff ), xp ), v )
+					local ply_xp = math.floor( xp * mult_tab[v] )
+
+					xp_info[2] = "text;"..ply_xp
 					InfoScreen( v, "escaped", INFO_SCREEN_DURATION, msg )
 
-					v:AddXP( xp, "escape" )
+					v:AddXP( ply_xp, "escape" )
 
 					local team = v:SCPTeam()
 					SCPTeams.AddScore( team, SCPTeams.GetReward( team ) * 3 )
 
 					v:Despawn()
+					v:SkipNextSuicide()
 
 					v:KillSilent()
 					v:SetSCPTeam( TEAM_SPEC )
@@ -978,6 +1195,24 @@ function IsBlockingEscape( ply1, ply2 )
 	local ply2_team = ply2:SCPTeam()
 	return SCPTeams.IsEnemy( ply1_team, ply2_team ) or SCPTeams.IsEnemy( ply2_team, ply1_team )
 end
+
+function GM:SLCEscapeMultiplier( plys, mult )
+	local num_ply = -1
+
+	for i, v in ipairs( plys ) do
+		if !mult.skip_count[v]  then
+			num_ply = num_ply + 1
+		end
+	end
+
+	local xp_mult = math.Clamp( num_ply / 10, 0, 1 )
+
+	for i, v in ipairs( plys ) do
+		if !mult.skip_mult[v] then
+			mult[v] = mult[v] + xp_mult * ( mult.bonus_mult[v] or 1 )
+		end
+	end
+end
 --[[-------------------------------------------------------------------------
 Round aftermatch
 ---------------------------------------------------------------------------]]
@@ -985,12 +1220,10 @@ function StartAftermatch( endcheck )
 	if ROUND.post then return end
 
 	print( "Starting aftermatch" )
-	//PlayerMessage( "aftermatch", LAST_ESCAPE )
 
 	local support_timer = GetTimer( "SupportTimer" )
 	if IsValid( support_timer ) then
 		support_timer:Destroy()
-		//print( "SUPPORT TIMER DESTROYED" )
 	end
 
 	ROUND.aftermatch = true
@@ -1073,10 +1306,13 @@ function PlayerEscort( ply )
 			SCPTeams.AddScore( vteam, SCPTeams.GetReward( vteam ) * 3 )
 
 			v:Despawn()
-
 			v:KillSilent()
+			v:SkipNextSuicide()
+
+
 			v:SetSCPTeam( TEAM_SPEC )
 			v:SetSCPClass( "spectator" )
+			
 			v.DeathScreen = CurTime() + INFO_SCREEN_DURATION
 		end
 
@@ -1101,12 +1337,23 @@ function PrintSCPNotice( tab )
 		tab = { tab }
 	end
 
+	local karma_enabled = CVAR.slc_scp_karma:GetInt() == 1
+
 	for k, v in ipairs( tab ) do
-		local r = v:GetSCPPenalty()
-		if r <= 0 then
-			PlayerMessage( "scpready$"..( -r + 1 ).."#50,200,50", v )
+		local penalty = v:GetSCPPenalty()
+		if penalty <= 0 then
+			local karma_mult = 1
+
+			if karma_enabled then
+				karma_mult =  math.ClampMap( v:GetSCPKarma(), 0, 1000, 1, 1.2 )
+			end
+
+			local exponent = CVAR.slc_scp_chance_exponent:GetFloat()
+			local chance = exponent <= 0 and 1 or math.ceil( ( -penalty + 1 ) ^ exponent * karma_mult )
+
+			PlayerMessage( "scpready$"..chance.."#50,200,50", v )
 		else
-			PlayerMessage( "scpwait$"..r.."#200,50,50", v )
+			PlayerMessage( "scpwait$"..penalty.."#200,50,50", v )
 		end
 	end
 end

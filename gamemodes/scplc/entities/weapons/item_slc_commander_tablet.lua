@@ -28,16 +28,22 @@ local STATE = {
 local OPTIONS = {
 	"scan",
 	"tesla",
+	"intercom",
+	"vent"
 }
 
 local DURATION = {
 	scan = 45,
 	tesla = 10,
+	intercom = 15,
+	vent = 180,
 }
 
 local CD = {
 	scan = 300,
 	tesla = 120,
+	intercom = 300,
+	vent = true,
 }
 
 if CLIENT then
@@ -47,7 +53,7 @@ end
 
 function SWEP:SetupDataTables()
 	self:ActionQueueSetup()
-	self:AddNetworkVar( "Selected", "Int" )
+	self:NetworkVar( "Int", "Selected" )
 
 	self:SetSelected( 1 )
 end
@@ -78,7 +84,7 @@ function SWEP:Deploy()
 		self:ResetAction( STATE.LOADING, self.LoadingDuration )
 	end
 
-	self:ResetViewModelBones()
+	//self:ResetViewModelBones()
 end
 
 function SWEP:Holster()
@@ -96,9 +102,13 @@ function SWEP:PrimaryAttack()
 	local option = OPTIONS[selected]
 
 	local cd = G_COM_TABLET_DATA["t_cd_"..option]
-	if cd and cd >= CurTime() then return end
+	if cd == true or cd and cd >= CurTime() then return end
 
-	G_COM_TABLET_DATA["t_cd_"..option] = CurTime() + CD[option]
+	if CD[option] == true then
+		G_COM_TABLET_DATA["t_cd_"..option] = true
+	else
+		G_COM_TABLET_DATA["t_cd_"..option] = CurTime() + CD[option]
+	end
 
 	self:QueueAction( STATE.PRESS, 1.5, function( finish, dur )
 		self:SendWeaponAnim( ACT_VM_PRIMARYATTACK )
@@ -159,7 +169,7 @@ function SWEP:PrimaryAttack()
 						self:ResetAction( STATE.IDLE, 0 )
 					end
 
-					PlayPA( string.format( "scp_lc/announcements/tesla%i.ogg", math.random( 3 ) ), 9 )
+					PlayPA( string.format( "scp_lc/announcements/tesla%i.ogg", SLCRandom( 3 ) ), 9 )
 
 					local btn = GetButton( "Tesla" )
 
@@ -177,9 +187,51 @@ function SWEP:PrimaryAttack()
 					end )
 				end )
 			end
+		elseif selected == 3 then
+			if CLIENT then return end
+
+			local owner = self:GetOwner()
+			G_COM_TABLET_DATA.IntercomPlayer = owner
+
+			TransmitSound( "scp_lc/misc/v_start.ogg", true, 1 )
+			PausePA()
+
+			AddTimer( "ComTabIntercom", dur, 1, function()
+				if G_COM_TABLET_DATA.IntercomPlayer != owner then return end
+				G_COM_TABLET_DATA.IntercomPlayer = nil
+	
+				TransmitSound( "scp_lc/misc/v_end.ogg", true, 1 )
+				UnPausePA()
+			end )
+		elseif selected == 4 then
+			if CLIENT then return end
+
+			EnableZoneVentilation( ZONE_ALL )
+
+			AddTimer( "ComTabVent", dur, 1, function()
+				DisableZoneVentilation( ZONE_ALL )
+			end )
 		end
 	end )
 end
+
+hook.Add( "PlayerSpeakOverride", "SLCCommanderIntercom", function( talker )
+	if !G_COM_TABLET_DATA or !IsValid( G_COM_TABLET_DATA.IntercomPlayer ) then return end
+
+	local wep = G_COM_TABLET_DATA.IntercomPlayer:GetActiveWeapon()
+	if !IsValid( wep ) or wep:GetClass() != "item_slc_commander_tablet" then
+		G_COM_TABLET_DATA.IntercomPlayer = nil
+
+		TransmitSound( "scp_lc/misc/v_end.ogg", true, 1 )
+		UnPausePA()
+
+		return
+	end
+
+	if talker == G_COM_TABLET_DATA.IntercomPlayer then
+		return true
+	end
+end )
 
 function SWEP:SecondaryAttack()
 	if self:GetState() != STATE.IDLE then return end
@@ -194,6 +246,10 @@ function SWEP:SecondaryAttack()
 
 	self:SetSelected( selected )
 end
+
+hook.Add( "SLCRoundCleanup", "SLCCommanderTablet", function()
+	G_COM_TABLET_DATA = {}
+end )
 
 if SERVER then
 	util.AddNetworkString( "SLCComTabletUpdate" )
@@ -284,8 +340,8 @@ if CLIENT then
 			surface.SetMaterial( logo )
 			surface.DrawTexturedRect( x + w * 0.5 - h * 0.1, y + h * 0.33, h * 0.2, h * 0.2 )
 
-			local tw = draw.SimpleText( self.Lang.loading, "SCPHUDMedium", x + w * 0.5, y + h * 0.55, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP )
-			draw.SimpleText( string.rep( ".", ( ct * 3 ) % 4 ), "SCPHUDMedium", x + w * 0.5 + tw * 0.5, y + h * 0.55, color_white, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
+			local tw = draw.SimpleText( self.Lang.loading, "SLCTabletLarge", x + w * 0.5, y + h * 0.55, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP )
+			draw.SimpleText( string.rep( ".", ( ct * 3 ) % 4 ), "SLCTabletLarge", x + w * 0.5 + tw * 0.5, y + h * 0.55, color_white, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
 
 			return
 		elseif state == STATE.PROGRESS then
@@ -296,7 +352,7 @@ if CLIENT then
 			surface.DrawTexturedRect( x + w * 0.5 - h * 0.1, y + h * 0.25, h * 0.2, h * 0.2 )
 
 			local option = OPTIONS[self:GetSelected()]
-			draw.SimpleText( self.Lang.actions[option] or option, "SCPHUDMedium", x + w * 0.5, y + h * 0.5, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP )
+			draw.SimpleText( self.Lang.actions[option] or option, "SLCTabletLarge", x + w * 0.5, y + h * 0.5, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP )
 
 			local lw, lh = w * 0.4, h * 0.05
 			local as, af = self:GetActionStart(), self:GetActionFinish()
@@ -306,7 +362,7 @@ if CLIENT then
 			surface.DrawOutlinedRect( x + w * 0.5 - lw * 0.5, y + h * 0.66, lw, lh )
 			surface.DrawRect( x + w * 0.5 - lw * 0.5, y + h * 0.66, lw * pct, lh )
 
-			draw.SimpleText( self.Lang.eta..string.ToMinutesSeconds( math.max( math.ceil( af - ct ), 0 ) ), "SCPHUDSmall", x + w * 0.5, y + h * 0.66 + lh, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP )
+			draw.SimpleText( self.Lang.eta..string.ToMinutesSeconds( math.max( math.ceil( af - ct ), 0 ) ), "SLCTabletMedium", x + w * 0.5, y + h * 0.66 + lh, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP )
 
 			return
 		end
@@ -320,14 +376,14 @@ if CLIENT then
 			surface.SetAlphaMultiplier( alpha )
 		end
 
-		local _, hh = draw.SimpleText( self.Lang.detected, "SCPHUDMedium", x + 16, y + 4, color_white, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
+		local _, hh = draw.SimpleText( self.Lang.detected, "SLCTabletLarge", x + 16, y + 4, color_white, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
 		
 		local tw, th
 		local dy = y + 4 + hh
 
 		local longest = 0
 
-		surface.SetFont( "SCPHUDSmall" )
+		surface.SetFont( "SLCTabletMedium" )
 		local _, font_h = surface.GetTextSize( "W" )
 
 		for _, t in pairs( SCPTeams.GetAll() ) do
@@ -346,37 +402,39 @@ if CLIENT then
 				local name = SCPTeams.GetName( t )
 				local color = SCPTeams.GetColor( t )
 
-				draw.SimpleText( ( LANG.TEAMS[name] or name )..":", "SCPHUDSmall", x + 8 + longest, dy, color or color_white, TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP )
-				draw.SimpleText( G_COM_TABLET_DATA["team_"..t] or "?", "SCPHUDSmall", x + 8 + longest + 8, dy, color or color_white, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
+				draw.SimpleText( ( LANG.TEAMS[name] or name )..":", "SLCTabletMedium", x + 8 + longest, dy, color or color_white, TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP )
+				draw.SimpleText( G_COM_TABLET_DATA["team_"..t] or "?", "SLCTabletMedium", x + 8 + longest + 8, dy, color or color_white, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
 				dy = dy + font_h
 			end
 		end
 
 		local t_cd = G_COM_TABLET_DATA.notif_tesla
-			if t_cd and t_cd > ct then
-				draw.SimpleText( self.Lang.tesla_deactivated..string.ToMinutesSeconds( math.ceil( t_cd - ct ) ), "SCPHUDMedium", x + w * 0.5, y + 16, t_cd - 10 < ct and math.floor( ct ) % 2 == 1 and color_red or color_white, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
-			end
+		if t_cd and t_cd > ct then
+			draw.SimpleText( self.Lang.tesla_deactivated..string.ToMinutesSeconds( math.ceil( t_cd - ct ) ), "SLCTabletLarge", x + w * 0.5, y + 16, t_cd - 10 < ct and math.floor( ct ) % 2 == 1 and color_red or color_white, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
+		end
 
 		local m_x, m_y = x + w * 0.45, y + h - 8
 		local m_w = w * 0.45
 
-		draw.SimpleText( self.Lang.change, "SCPHUDSmall", m_x + m_w * 0.1, m_y, color or color_white, TEXT_ALIGN_LEFT, TEXT_ALIGN_BOTTOM )
+		draw.SimpleText( self.Lang.change, "SLCTabletMedium", m_x + m_w * 0.1, m_y, color or color_white, TEXT_ALIGN_LEFT, TEXT_ALIGN_BOTTOM )
 		m_y = m_y - font_h
 
-		draw.SimpleText( self.Lang.confirm, "SCPHUDSmall", m_x + m_w * 0.1, m_y, color or color_white, TEXT_ALIGN_LEFT, TEXT_ALIGN_BOTTOM )
+		draw.SimpleText( self.Lang.confirm, "SLCTabletMedium", m_x + m_w * 0.1, m_y, color or color_white, TEXT_ALIGN_LEFT, TEXT_ALIGN_BOTTOM )
 		m_y = m_y - font_h - 32
 
 		local selected = self:GetSelected()
 		for i, option in ipairs( OPTIONS ) do
-			_, th = draw.SimpleText( self.Lang.options[option] or option, "SCPHUDMedium", m_x + 16, m_y, color_white, TEXT_ALIGN_LEFT, TEXT_ALIGN_BOTTOM )
+			_, th = draw.SimpleText( self.Lang.options[option] or option, "SLCTabletLarge", m_x + 16, m_y, color_white, TEXT_ALIGN_LEFT, TEXT_ALIGN_BOTTOM )
 
 			if i == selected then
-				draw.SimpleText( pointer, "SCPHUDMedium", m_x, m_y, color or color_white, TEXT_ALIGN_RIGHT, TEXT_ALIGN_BOTTOM )
+				draw.SimpleText( pointer, "SLCTabletLarge", m_x, m_y, color or color_white, TEXT_ALIGN_RIGHT, TEXT_ALIGN_BOTTOM )
 			end
 
 			local cd = G_COM_TABLET_DATA["t_cd_"..option]
-			if cd and cd > ct then
-				draw.SimpleText( string.ToMinutesSeconds( math.ceil( cd - ct ) ), "SCPHUDVSmall", x + w - 8, m_y, color_white, TEXT_ALIGN_RIGHT, TEXT_ALIGN_BOTTOM )
+			if cd == true then
+				draw.SimpleText( "--:--", "SLCTabletSmall", x + w - 8, m_y, color_white, TEXT_ALIGN_RIGHT, TEXT_ALIGN_BOTTOM )
+			elseif cd and cd > ct then
+				draw.SimpleText( string.ToMinutesSeconds( math.ceil( cd - ct ) ), "SLCTabletSmall", x + w - 8, m_y, color_white, TEXT_ALIGN_RIGHT, TEXT_ALIGN_BOTTOM )
 			end
 
 			surface.SetDrawColor( 125, 125, 125, 255 )
@@ -389,3 +447,29 @@ if CLIENT then
 		surface.SetAlphaMultiplier( 1 )
 	end
 end
+
+hook.Add( "RebuildFonts", "SLCTabletFonts", function()
+		surface.CreateFont( "SLCTabletSmall", {
+			font = "Impacted",
+			size = 28,
+			antialias = true,
+			weight = 500,
+			extended = true,
+		} )
+
+		surface.CreateFont( "SLCTabletMedium", {
+			font = "Impacted",
+			size = 33,
+			antialias = true,
+			weight = 500,
+			extended = true,
+		} )
+
+		surface.CreateFont( "SLCTabletLarge", {
+			font = "Impacted",
+			size = 40,
+			antialias = true,
+			weight = 500,
+			extended = true,
+		} )
+	end )

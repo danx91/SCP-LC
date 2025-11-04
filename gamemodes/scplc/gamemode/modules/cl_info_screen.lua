@@ -340,9 +340,9 @@ hook.Add( "DrawOverlay", "SLCInfoScreen", function()
 				if pos < tab.length - 5 then
 					if chars > INFO_SCREEN.last_char then
 						INFO_SCREEN.last_char = chars + 2
-						//sound.Play( "common/talk.wav", Vector( 0, 0, 0 ), 0, math.random( 100, 120 ), 1 )
-						sound.Play( "scp_lc/misc/text_sound.wav", Vector( 0, 0, 0 ), 0, math.random( 100, 120 ), 1 )
-						//sound.Play( "ambient/machines/keyboard"..math.random(7).."_clicks.wav", Vector( 0, 0, 0 ), 0, math.random( 100, 120 ), 1 )
+						//sound.Play( "common/talk.wav", Vector( 0, 0, 0 ), 0, SLCRandom( 100, 120 ), 1 )
+						sound.Play( "scp_lc/misc/text_sound.wav", Vector( 0, 0, 0 ), 0, SLCRandom( 100, 120 ), 1 )
+						//sound.Play( "ambient/machines/keyboard"..SLCRandom(7).."_clicks.wav", Vector( 0, 0, 0 ), 0, SLCRandom( 100, 120 ), 1 )
 					end
 				end
 

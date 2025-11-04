@@ -15,6 +15,7 @@ end
 Gas System
 ---------------------------------------------------------------------------]]
 SLC_GAS = SLC_GAS or {}
+SLC_GAS_DATA = SLC_GAS_DATA or {}
 SLC_GAS_VENT = SLC_GAS_VENT or {}
 SLC_GAS_ZONES = {
 	ZONE_LCZ,
@@ -38,7 +39,7 @@ if SERVER then
 
 	function EnableZoneVentilation( zone )
 		SLC_GAS_VENT[zone] = true
-		UpdateGasStatus( false  )
+		UpdateGasStatus( false )
 	end
 
 	function DisableZoneVentilation( zone )
@@ -47,24 +48,79 @@ if SERVER then
 	end
 
 	hook.Add( "SLCRound", "SLCGasZones", function( time )
+		local zones = {}
+
 		for k, v in pairs( SLC_GAS_ZONES ) do
 			local start = CVAR["slc_gas_"..v]:GetInt()
 			local dur = CVAR["slc_gas_"..v.."_time"]:GetInt()
+
+			SLC_GAS_DATA[v] = {}
 
 			if start <= 0 then
 				SLC_GAS[v] = { 0, 0 }
 				continue
 			end
 
+			table.insert( zones, { v, start, dur, #SLCZones.GetPlayersInZone( v ) } )
+
 			local t_start = CurTime() + start
 			SLC_GAS[v] = { t_start, t_start + dur }
 
-			AddTimer( "SLCGas"..v, start - 60, 1, function()
+			/*AddTimer( "SLCGas"..v, start - 60, 1, function()
 				PlayerMessage( "gaswarn$@MISC.zones."..v )
-			end )
+			end )*/
 		end
 
 		UpdateGasStatus( true )
+
+		if #zones == 0 then return end
+
+		table.sort( zones, function( a, b )
+			return a[2] < b[2]
+		end )
+
+		local fast = CVAR.slc_gas_fast:GetInt()
+		local fast_alt = CVAR.slc_gas_fast_alt:GetInt()
+		local fast_rate = CVAR.slc_gas_fast_rate:GetInt()
+
+		AddTimer( "SLCFastDecon", 1, 0, function()
+			if #zones == 0 then return end
+
+			local z = zones[1]
+			local zone = z[1]
+			local zone_gas = SLC_GAS[zone]
+			local zone_data = SLC_GAS_DATA[zone]
+			local zone_tokens = zone_data.tokens or 0
+
+			local ct = CurTime()
+			local st = zone_gas[1] - ct
+
+			if st <= 0 then
+				table.remove( zones, 1 )
+			elseif st <= 60 then
+				if !zone_data.warn then
+					zone_data.warn = true
+					PlayerMessage( "gaswarn$@MISC.zones."..zone )
+				end
+			elseif fast > 0 and ( fast_alt == 1 and st - zone_tokens / fast <= 60 or fast_alt != 1 and zone_tokens >= fast ) then
+				zone_gas[1] = ct + 60
+				zone_gas[2] = zone_gas[1] + z[3]
+				UpdateGasStatus( false )
+
+				zone_data.warn = true
+				PlayerMessage( "gaswarn$@MISC.zones."..zone )
+			end
+
+			if fast <= 0 then return end
+			
+			local rate_reduction = #SLCZones.GetPlayersInZone( zone )
+			if z[4] > 0 and z[4] < fast_rate then
+				rate_reduction = math.ceil( fast_rate * rate_reduction / z[4] )
+			end
+
+			zone_data.tokens = zone_tokens + math.max( fast_rate - rate_reduction, 0 )
+			//print( string.format( "[GAS] Zone: %s; Gas time: %i (%i, %i); Ct: %i; T: %i; Fast: %i, %i; Rcn: %i", zone, zone_gas[1], st, st - zone_tokens / fast, ct, zone_tokens, fast, fast_rate, rate_reduction ) )
+		end )
 	end )
 
 	hook.Add( "PlayerReady", "SLCGasZones", function( ply )
@@ -73,6 +129,7 @@ if SERVER then
 
 	hook.Add( "SLCRoundCleanup", "SLCGasZones", function( time )
 		SLC_GAS = {}
+		SLC_GAS_DATA = {}
 		SLC_GAS_VENT = {}
 
 		for k, v in pairs( SLC_GAS_ZONES ) do
@@ -87,8 +144,8 @@ if SERVER then
 		if ply.NGasDamageTick and ply.NGasDamageTick > ct then return end
 		ply.NGasDamageTick = ct + 1
 
-		if ply:SCPTeam() == TEAM_SPEC or !ply:Alive() then return end
-		
+		if SLC_GAS_VENT[ZONE_ALL] or ply:SCPTeam() == TEAM_SPEC or !ply:Alive() then return end
+
 		for k, v in pairs( SLC_GAS_VENT ) do
 			if ply:IsInZone( k ) then return end
 		end

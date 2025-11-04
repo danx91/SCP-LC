@@ -995,11 +995,11 @@ function util.GlitchData( seg, scale, color_r, color_g, color_b )
 
 	for i = 1, seg do
 		data[i] = {
-			offset = ( math.random() * 2 - 1 ) * scale
+			offset = ( SLCRandom() * 2 - 1 ) * scale
 		}
 
 		if color_r then
-			data[i].color = Color( math.random( color_r, 255 ), math.random( color_g or color_r, 255 ), math.random( color_b or color_r, 255 ) )
+			data[i].color = Color( SLCRandom( color_r, 255 ), SLCRandom( color_g or color_r, 255 ), SLCRandom( color_b or color_r, 255 ) )
 		end
 	end
 

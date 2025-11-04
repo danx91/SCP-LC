@@ -27,8 +27,8 @@ SWEP.HealCooldown 	= 0
 SWEP.Skin = 0
 
 function SWEP:SetupDataTables()
-	self:AddNetworkVar( "Charges", "Int" )
-	self:AddNetworkVar( "HealEnd", "Float" )
+	self:NetworkVar( "Int", "Charges" )
+	self:NetworkVar( "Float", "HealEnd" )
 
 	self:SetCharges( self.Charges )
 
@@ -81,7 +81,7 @@ function SWEP:Think()
 		local target = self.HealTarget
 		self:StopHeal()
 
-		local rnd = math.random() * 2 - 1
+		local rnd = SLCRandom() * 2 - 1
 		local heal = self.HealDmg + math.ceil( self.HealRand * rnd )
 
 		local override = hook.Run( "SLCScaleHealing", target, owner, heal )

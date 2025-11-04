@@ -18,8 +18,8 @@ local STATE_COUNTDOWN = 3
 local STATE_NONE = 4
 
 function ENT:SetupDataTables()
-	self:AddNetworkVar( "State", "Int" )
-	self:AddNetworkVar( "Time", "Float" )
+	self:NetworkVar( "Int", "State" )
+	self:NetworkVar( "Float", "Time" )
 end
 
 function ENT:Think()

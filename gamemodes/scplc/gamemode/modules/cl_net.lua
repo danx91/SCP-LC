@@ -185,6 +185,10 @@ net.Receive( "RoundInfo", function( len )
 	end
 end )
 
+net.Receive( "SLCRoundProperties", function( len )
+	ROUND.properties[net.ReadString()] = net.ReadTable()[1]
+end )
+
 net.Receive( "SCPHooks", function( len )
 	local mode = net.ReadBool()
 

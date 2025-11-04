@@ -157,7 +157,7 @@ local function generate_apple()
 		return
 	end
 
-	local rng = free[math.random( #free )]
+	local rng = free[SLCRandom( #free )]
 	table.insert( snake_apples, rng )
 	snake_board[rng.y][rng.x] = 2
 end
@@ -219,7 +219,7 @@ local function snake_update()
 		return
 	elseif tile == 2 then
 		apple = true
-		snake_next_apple = math.random( 10, 40 )
+		snake_next_apple = SLCRandom( 10, 40 )
 		snake_score = snake_score + 1
 
 		if snake_score > snake_high_score then
@@ -249,7 +249,7 @@ local function snake_update()
 	end
 
 	if snake_next_apple <= 0 then
-		snake_next_apple = math.random( 10, 40 )
+		snake_next_apple = SLCRandom( 10, 40 )
 		generate_apple()
 	end
 

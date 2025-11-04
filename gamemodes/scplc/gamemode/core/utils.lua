@@ -71,6 +71,13 @@ function AddTables( tab1, tab2 )
 		end
 	end
 end
+
+function ShuffleTable( tab )
+	for i = #tab, 2, -1 do
+		local j = SLCRandom( 1, i )
+		tab[i], tab[j] = tab[j], tab[i]
+	end
+end
 --[[-------------------------------------------------------------------------
 Roman numbers
 ---------------------------------------------------------------------------]]
@@ -306,4 +313,8 @@ function player.FindInSphere( pos, rad )
 	end
 
 	return res
+end
+
+function printf( ... )
+	print( string.format( ... ) )
 end

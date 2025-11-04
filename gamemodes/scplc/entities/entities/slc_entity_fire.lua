@@ -12,9 +12,9 @@ ENT.CreateParticles = true
 ENT.Offset = Vector( 0, 0, 32 )
 
 function ENT:SetupDataTables()
-	self:AddNetworkVar( "_DieTime", "Float" )
-	self:AddNetworkVar( "_BurnTime", "Float" )
-	self:AddNetworkVar( "DontCreateParticles", "Bool" )
+	self:NetworkVar( "Float", "_DieTime" )
+	self:NetworkVar( "Float", "_BurnTime" )
+	self:NetworkVar( "Bool", "DontCreateParticles" )
 
 	self:Set_BurnTime( 3 )
 end
@@ -137,7 +137,7 @@ function ENT:Think()
 		end
 
 		if self.ShouldSpread then
-			if math.random( 100 ) <= self.Power then
+			if SLCRandom( 100 ) <= self.Power then
 				v:Burn( math.max( self:Get_BurnTime() * 0.75, 1 ), self.Power * 0.75, owner, self.Damage, self.Signature != nil, self.DontOverride )
 			end
 		end

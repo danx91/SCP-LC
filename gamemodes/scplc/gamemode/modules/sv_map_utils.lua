@@ -518,14 +518,14 @@ hook.Add( "SLCPreround", "SLCFuseBox", function()
 
 			if isnumber( v.fuse ) and v.fuse > 0 then
 				if v.fuse < 1 then
-					if math.random() < v.fuse then
+					if SLCRandom() < v.fuse then
 						box:SetFuse( box:GetRating() )
 					end
 				else
 					box:SetFuse( v.fuse )
 				end
 			elseif istable( v.fuse ) then
-				box:SetFuse( math.random( v.fuse[1], v.fuse[2] ) )
+				box:SetFuse( SLCRandom( v.fuse[1], v.fuse[2] ) )
 			end
 			
 			box:Spawn()

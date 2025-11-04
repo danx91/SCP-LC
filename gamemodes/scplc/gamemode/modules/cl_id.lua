@@ -1,4 +1,5 @@
 IDs = IDs or {}
+InitialIDs = InitialIDs or {}
 
 function UpdatePlayerID( ply )
 	local lp = LocalPlayer()
@@ -9,6 +10,13 @@ function UpdatePlayerID( ply )
 	local pclass, pteam = ply:SCPPersona()
 
 	local tc, tt
+
+	if InitialIDs[ply] then
+		tc = "unknown"
+		tt = InitialIDs[ply]
+
+		InitialIDs[ply] = nil
+	end
 
 	if IsValid( wep ) and wep:GetClass() == "item_slc_id" then
 		if SCPTeams.IsAlly( team, lpt ) then
@@ -34,11 +42,19 @@ end
 
 function SetupInitialIDs( tab )
 	local lp = LocalPlayer()
-	local _, lppt = lp:SCPPersona()
+	local lp_team = lp:SCPTeam()
+	local _, lp_pteam = lp:SCPPersona()
 
-	for k, v in pairs( tab ) do
-		if !IsValid( v ) or v == lp then continue end
-		IDs[v] = { class = "unknown", team = lppt }
+	for ply, v in pairs( tab ) do
+		if !IsValid( ply ) or ply == lp then continue end
+		local ply_team = v[1]
+		local ply_pteam = v[2]
+
+		if lp_team == ply_team or lp_pteam == ply_team then
+			InitialIDs[ply] = ply_team
+		elseif lp_team == ply_pteam then
+			InitialIDs[ply] = ply_pteam
+		end
 	end
 end
 
@@ -52,10 +68,12 @@ end
 
 function RemovePlayerID( ply )
 	IDs[ply] = nil
+	InitialIDs[ply] = nil
 end
 
 function ClearPlayerIDs()
 	IDs = {}
+	InitialIDs = {}
 end
 
 function GM:HUDDrawTargetID()

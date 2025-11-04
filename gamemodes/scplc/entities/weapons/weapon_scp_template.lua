@@ -21,7 +21,7 @@ SWEP.BasicCooldown = 2
 function SWEP:SetupDataTables()
 	self:CallBaseClass( "SetupDataTables" )
 
-	//self:AddNetworkVar( "Charging", "Bool" )
+	//self:NetworkVar( "Bool", "Charging" )
 
 end
 

@@ -21,10 +21,10 @@ if CLIENT then
 end
 
 function SWEP:SetupDataTables()
-	self:AddNetworkVar( "NextIdle", "Float" )
-	self:AddNetworkVar( "Attack", "Float" )
+	self:NetworkVar( "Float", "NextIdle" )
+	self:NetworkVar( "Float", "Attack" )
 
-	self:AddNetworkVar( "Hits", "Int" )
+	self:NetworkVar( "Int", "Hits" )
 end
 
 function SWEP:Initialize()
@@ -177,7 +177,7 @@ function SWEP:DoAttack()
 	dmg:SetAttacker( owner )
 	dmg:SetInflictor( self )
 
-	dmg:SetDamage( math.random( self.AttackDamage[1], self.AttackDamage[2] ) )
+	dmg:SetDamage( SLCRandom( self.AttackDamage[1], self.AttackDamage[2] ) )
 	dmg:SetDamageType( DMG_CLUB )
 
 	SuppressHostEvents( NULL )
@@ -185,5 +185,5 @@ function SWEP:DoAttack()
 	SuppressHostEvents( owner )
 end
 
-AddLoadout( "weapon_slc_pipe", nil, "melee_low" )
+AddWeaponLoadout( "weapon_slc_pipe", nil, "melee_low" )
 MarkAsWeapon( "weapon_slc_pipe" )

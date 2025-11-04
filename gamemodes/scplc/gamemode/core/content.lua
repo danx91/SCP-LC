@@ -214,6 +214,8 @@ end
 
 if SERVER then
 	hook.Add( "SLCFullyLoaded", "SLCGamemodeContent", function()
+		if DEVELOPER_MODE then return end
+
 		if game.IsDedicated() then
 			timer.Simple( 30, function()
 				fetch_collection():Catch( function()

@@ -1,28 +1,33 @@
 SLC_SCP_UPGRADES = SLC_SCP_UPGRADES or {}
 
 local generic_skill_icons = {
-	//nvmod = "slc/hud/upgrades/nvmod.png",
 	outside_buff = "slc/hud/upgrades/outside_buff.png",
 }
 
-//%def, flat, buff_hp, %regen_min, %regen_max, %heal_min, %heal_max
 local custom_skill_parsers = {
 	outside_buff = function( wep, lang, info )
 		local scp = SCPStats[wep:GetOwner():SCPClass()]
-		local scale = scp and scp.buff_scale or 1
+		local buff_scale = scp and scp.buff_scale or 1
+		local prot_scale = scp and scp.prot_scale or 1
 
 		local heal_pct = CVAR.slc_scp_buff_pct_regen:GetFloat()
 		local heal_cap = CVAR.slc_scp_buff_max_regen:GetInt()
 
-		return {
-			def = SCP_BUFF_DEF,
-			flat = SCP_BUFF_FLAT,
-			buff_hp = math.Round( ( scp and math.min( heal_pct * scp.hp, heal_cap ) or heal_cap ) * scale ),
-			regen_min = math.Round( SCP_BUFF_REGEN_MIN * scale, 3 ),
-			regen_max = math.Round( SCP_BUFF_REGEN_MAX * scale, 3 ),
-			heal_min = math.Round( SCP_BUFF_HEAL_MIN * scale, 3 ),
-			heal_max = math.Round( SCP_BUFF_HEAL_MAX * scale, 3 ),
+		local mods = {
+			def = math.Round( SCP_BUFF_DEF * prot_scale, 3 ),
+			flat = math.Round( SCP_BUFF_FLAT * prot_scale, 3 ),
+			buff_hp = math.Round( ( scp and math.min( heal_pct * scp.hp, heal_cap ) or heal_cap ) * buff_scale ),
+			regen_min = math.Round( SCP_BUFF_REGEN_MIN * buff_scale, 3 ),
+			regen_max = math.Round( SCP_BUFF_REGEN_MAX * buff_scale, 3 ),
+			heal_min = math.Round( SCP_BUFF_HEAL_MIN * buff_scale, 3 ),
+			heal_max = math.Round( SCP_BUFF_HEAL_MAX * buff_scale, 3 ),
 		}
+
+		if mods.regen_max > SCP_BUFF_REGEN_CAP then
+			mods.regen_max = SCP_BUFF_REGEN_CAP
+		end
+
+		return mods
 	end,
 }
 
@@ -153,6 +158,10 @@ function InstallUpgradeSystem( name, swep )
 				end
 			end
 
+			if changed then
+				hook.Run( "SCPUpgradePoint", self, self.UpgradeSystemRegistry.points, self.UpgradeSystemRegistry.lastreward, count )
+			end
+
 			if SERVER and changed then
 				net.Start( "SCPUpgrade" )
 					net.WriteUInt( self.UpgradeSystemRegistry.points, 8 )
@@ -240,8 +249,8 @@ function InstallUpgradeSystem( name, swep )
 				if upgrade.active and self.OnUpgradeBought then
 					self:OnUpgradeBought( upgrade.name, upgrade.active, upgrade.group )
 				end
-				
-				hook.Run( "SCPUpgradeBought", self:GetOwner(), self, upgrade )
+
+				hook.Run( "SCPUpgradeBought", self, upgrade )
 			end
 		end
 	end

@@ -10,12 +10,12 @@ function GM:ShutDown()
 end
 
 function GM:SCPDamage( ply, ent, dmg )
-	if IsValid( ply ) and IsValid( ent ) then
-		if ent:GetClass() == "func_breakable" then
-			ent:TakeDamage( dmg, ply, ply )
-			return true
-		end
-	end
+	if !IsValid( ply ) or !IsValid( ent ) then return end
+	if !ent.SCPBreakable and ent:GetClass() != "func_breakable" then return end
+
+	ent:TakeDamage( dmg, ply, ply )
+
+	return true
 end
 
 function GM:OnEntityCreated( ent )

@@ -2,13 +2,13 @@
 GM.Name 	= "SCP: Lost Control"
 GM.Author 	= "danx91 [ZGFueDkx]"
 GM.Email 	= ""
-GM.Website 	= ""
+GM.Website 	= "https://github.com/danx91/SCP-LC"
 
 --[[-------------------------------------------------------------------------
 Global values
 ---------------------------------------------------------------------------]]
-DATE = "03/12/2024"
-SIGNATURE = "b001002r0"
+DATE = "04/11/2025"
+SIGNATURE = "b001101r0"
 VERSION = SLCVersion().name
 
 SCPS = {}
@@ -62,18 +62,22 @@ SLCCVar( "slc_time_goc_device", { "round", "time" }, 90, { FCVAR_NOTIFY, FCVAR_A
 
 //GENERAL
 SLCCVar( "slc_time_explode", { "general", "time" }, 30, { FCVAR_NOTIFY, FCVAR_ARCHIVE }, "Gate A explosion time (seconds)", 1, nil, tonumber )
+SLCCVar( "slc_time_gate_fire", { "general", "time" }, 15, { FCVAR_NOTIFY, FCVAR_ARCHIVE }, "Gate A fire time (seconds) - 0 to disable", 0, nil, tonumber )
 SLCCVar( "slc_auto_destroy_gatea", { "general", "time" }, 300, { FCVAR_NOTIFY, FCVAR_ARCHIVE }, "How long before the end of the round, Gate A should automatically explode? (seconds). 0 to disable", 0, nil, tonumber )
 SLCCVar( "slc_time_looting", { "general", "time" }, 1.5, { FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED }, "The time required to identify a single item while looting (seconds)", 0.1, nil, tonumber )
 SLCCVar( "slc_time_swapping", { "general", "time" }, 1.5, { FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED }, "The time required to swap item from EQ to backpack and vice versa", 0, nil, tonumber )
 SLCCVar( "slc_blink_delay", "general", 5, { FCVAR_NOTIFY, FCVAR_ARCHIVE }, "The delay between eye blinks", 1, nil, tonumber )
 
 //FEATURES
-SLCCVar( "slc_door_unblocker", "feature", 1, { FCVAR_ARCHIVE }, "EXPERIMENTAL! This feature will try to move away any potential items that may get stuck between doors. Set to 1 to enable", nil, nil, tonumber )
+SLCCVar( "slc_door_unblocker", "feature", 1, { FCVAR_ARCHIVE }, "This feature will try to move away any potential items that may get stuck between doors. Set to 1 to enable", nil, nil, tonumber )
 SLCCVar( "slc_disable_fuseboxes", "feature", 0, { FCVAR_ARCHIVE }, "If other than 0, completely disable fuse boxes. Fuses can still spawn, however they will be unusable" )
 SLCCVar( "slc_intercom_cooldown", { "feature", "time" }, 180, { FCVAR_ARCHIVE }, "Intercom cooldown", 1, nil, tonumber )
 SLCCVar( "slc_intercom_duration", { "feature", "time" }, 20, { FCVAR_ARCHIVE }, "Intercom duration", 1, nil, tonumber )
 SLCCVar( "slc_door_destroy_time", { "feature", "time" }, 120, { FCVAR_ARCHIVE }, "For how long doors will remain destroyed (0 - permanent)", 1, nil, tonumber )
 SLCCVar( "slc_door_repair_time", { "feature", "time" }, 10, { FCVAR_ARCHIVE }, "How long players have to look away to allow door repair", 0, nil, tonumber )
+SLCCVar( "slc_sv_precache", { "feature" }, 0, { FCVAR_ARCHIVE, FCVAR_REPLICATED }, "EXPERIMENTAL! Enables server precache of models allowing clients to precache", nil, nil, tonumber )
+SLCCVar( "slc_scp_logging", { "feature" }, 0, { FCVAR_ARCHIVE }, "EXPERIMENTAL! Enables SCP data logging", nil, nil, tonumber )
+SLCCVar( "slc_scp_karma", { "feature" }, 1, { FCVAR_ARCHIVE }, "1 to enable karma", nil, nil, tonumber )
 //SLCCVar( "slc_spawn_protection", { "general", "time" }, 0, { FCVAR_NOTIFY, FCVAR_ARCHIVE }, "The duration of spawn protection of some classes, mostly support (seconds)", nil, nil, tonumber )
 
 //PREMIUM
@@ -124,19 +128,26 @@ SLCCVar( "slc_overload_delay", { "scp", "time" }, 6, { FCVAR_ARCHIVE }, "The tim
 SLCCVar( "slc_overload_door_cooldown", { "scp", "time" }, 60, { FCVAR_ARCHIVE }, "Door overload cooldown (seconds)", 0, nil, tonumber )
 SLCCVar( "slc_overload_advanced_cooldown", { "scp", "time" }, 300, { FCVAR_ARCHIVE }, "Door advanced overload cooldown (seconds)", 0, nil, tonumber )
 SLCCVar( "slc_scp_min_players", { "scp" }, 4, { FCVAR_ARCHIVE }, "Minimum number of players to spawn SCP", 1, nil, tonumber )
+SLCCVar( "slc_players_per_scp", { "scp" }, 12, { FCVAR_ARCHIVE, FCVAR_NOTIFY }, "How many players are needed for next SCP - SCPs = ceil( total_players / this_number )", 5, nil, tonumber )
+SLCCVar( "slc_scp_filter_last", { "scp" }, 1, { FCVAR_ARCHIVE, FCVAR_NOTIFY }, "If 1, SCPs from the previous round will not appear in the next round", nil, nil, tonumber )
+SLCCVar( "slc_scp_chance_exponent", { "scp" }, 2, { FCVAR_ARCHIVE }, "Exponent of SCP selection chance. 0 to disable SCP chance system", 0, nil, tonumber )
 SLCCVar( "slc_scp_penalty", { "general", "scp" }, 4, { FCVAR_ARCHIVE }, "The number of rounds of low SCP priority for players that just played as SCP", 0, nil, tonumber )
-SLCCVar( "slc_allow_scp_spectate", { "general" }, 0, { FCVAR_NOTIFY, FCVAR_ARCHIVE }, "If 1, all players will be able to spectate SCPs", nil, nil, tonumber )
+SLCCVar( "slc_allow_scp_spectate", { "general", "scp" }, 0, { FCVAR_NOTIFY, FCVAR_ARCHIVE }, "If 1, all players will be able to spectate SCPs", nil, nil, tonumber )
 SLCCVar( "slc_689_min_players", { "scp" }, 1, { FCVAR_ARCHIVE }, "Minimum number of players for SCP-689 to spawn. 0 to disable this SCP", 0, nil, tonumber )
-SLCCVar( "slc_scp_buff_pct_regen", { "scp" }, 0.4, { FCVAR_ARCHIVE, FCVAR_NOTIFY, FCVAR_REPLICATED }, "TODO", 0, 1, tonumber )
-SLCCVar( "slc_scp_buff_max_regen", { "scp" }, 1000, { FCVAR_ARCHIVE, FCVAR_NOTIFY, FCVAR_REPLICATED }, "TODO", 0, nil, tonumber )
+SLCCVar( "slc_scp_buff_pct_regen", { "scp" }, 0.4, { FCVAR_ARCHIVE, FCVAR_NOTIFY, FCVAR_REPLICATED }, "Outside buff one time heal % of SCP max HP", 0, 1, tonumber )
+SLCCVar( "slc_scp_buff_max_regen", { "scp" }, 1000, { FCVAR_ARCHIVE, FCVAR_NOTIFY, FCVAR_REPLICATED }, "Outside buff one time heal HP cap", 0, nil, tonumber )
 
 //GAS
 SLCCVar( "slc_gas_lcz", { "gas" }, 450, { FCVAR_NOTIFY, FCVAR_ARCHIVE }, "The time after which gas will be released in LCZ (seconds)", 0, nil, tonumber )
-SLCCVar( "slc_gas_hcz", { "gas" }, 750, { FCVAR_NOTIFY, FCVAR_ARCHIVE }, "The time after which gas will be released in HCZ (seconds)", 0, nil, tonumber )
-SLCCVar( "slc_gas_ez", { "gas" }, 900, { FCVAR_NOTIFY, FCVAR_ARCHIVE }, "The time after which gas will be released in EZ (seconds)", 0, nil, tonumber )
 SLCCVar( "slc_gas_lcz_time", { "gas" }, 150, { FCVAR_ARCHIVE }, "How long it takes for gas to have its maximum power in LCZ (seconds)", 0, nil, tonumber )
+SLCCVar( "slc_gas_hcz", { "gas" }, 750, { FCVAR_NOTIFY, FCVAR_ARCHIVE }, "The time after which gas will be released in HCZ (seconds)", 0, nil, tonumber )
 SLCCVar( "slc_gas_hcz_time", { "gas" }, 120, { FCVAR_ARCHIVE }, "How long it takes for gas to have its maximum power in HCZ (seconds)", 0, nil, tonumber )
+SLCCVar( "slc_gas_ez", { "gas" }, 900, { FCVAR_NOTIFY, FCVAR_ARCHIVE }, "The time after which gas will be released in EZ (seconds)", 0, nil, tonumber )
 SLCCVar( "slc_gas_ez_time", { "gas" }, 60, { FCVAR_ARCHIVE }, "How long it takes for gas to have its maximum power in EZ (seconds)", 0, nil, tonumber )
+
+SLCCVar( "slc_gas_fast", { "gas" }, 0, { FCVAR_ARCHIVE }, "How many tokens are required to trigger fast decontamination. 0 to disable", 0, nil, tonumber )
+SLCCVar( "slc_gas_fast_rate", { "gas" }, 5, { FCVAR_ARCHIVE }, "How many tokens are added per second if no player is present. Each player inside zone reduces this number by some amount", 1, nil, tonumber )
+SLCCVar( "slc_gas_fast_alt", { "gas" }, 0, { FCVAR_ARCHIVE }, "Enables alternative mode. In alternative mode gas start time is reduced by number of tokens divided by slc_gas_fast", nil, nil, tonumber )
 
 //MINIGAMES
 SLCCVar( "slc_spectator_points_xp", { "minigames" }, 10, { FCVAR_ARCHIVE, FCVAR_REPLICATED }, "For each X xp player will get 1 spectator point. Calculation are rounded down and don't carry over!", 1, nil, tonumber )
@@ -184,555 +195,6 @@ end*/
 /*function GM:EntityFireBullets( ent, data )
 	
 end*/
-
---[[-------------------------------------------------------------------------
-Damage related stuff
----------------------------------------------------------------------------]]
-function GM:ScalePlayerDamage( ply, hitgroup, info )
-	if hook.Run( "PlayerShouldTakeDamage", ply, info:GetAttacker() ) == false then return true end
-
-	/*if !info:IsDamageType( DMG_DIRECT ) then --TODO disabled till all models have hitgroups
-		if hitgroup == HITGROUP_HEAD then
-			info:ScaleDamage( 2 )
-		elseif hitgroup == HITGROUP_CHEST then
-			info:ScaleDamage( 1 )
-		elseif hitgroup == HITGROUP_STOMACH then
-			info:ScaleDamage( 1 )
-		elseif hitgroup == HITGROUP_LEFTARM or hitgroup == HITGROUP_RIGHTARM then
-			info:ScaleDamage( 0.75 )
-		elseif hitgroup == HITGROUP_LEFTLEG or hitgroup == HITGROUP_RIGHTLEG then
-			info:ScaleDamage( 0.75 )
-		end
-	end*/
-end
-
-function GetSCPModifiers( ply )
-	local mods = {
-		def = 1,
-		flat = 0,
-		heal_scale = 1,
-		regen_scale = 0.75,
-	}
-
-	if ROUND.aftermatch then
-		mods.def = 0.1
-		mods.flat = 0
-	elseif ESCAPE_STATUS == ESCAPE_ACTIVE and ply:IsInEscape() then
-		mods.def = 0.25
-		mods.flat = 0
-	end
-
-	if !IsRoundLive() then
-		return mods
-	end
-
-	local round_pct = math.Clamp( 1 - RemainingRoundTime() / RoundDuration(), 0, 1 )
-
-	mods.def = math.Map( round_pct, 0, 1, 1.33, 0.5 )
-	mods.flat = math.Map( round_pct, 0, 1, 0, -3 )
-	mods.heal_scale = math.Clamp( math.Map( round_pct, 0.1, 0.9, SCP_BUFF_HEAL_MIN, SCP_BUFF_HEAL_MAX ), SCP_BUFF_HEAL_MIN, SCP_BUFF_HEAL_MAX )
-	mods.regen_scale = math.Clamp( math.Map( round_pct, 0.1, 0.9, SCP_BUFF_REGEN_MIN, SCP_BUFF_REGEN_MAX ), SCP_BUFF_REGEN_MIN, SCP_BUFF_REGEN_MAX )
-
-	if mods.def < 0.75 then
-		mods.def = 0.75
-	end
-
-	if mods.flat < -2 then
-		mods.flat = -2
-	end
-
-	if ply:GetProperty( "scp_buff" ) and ply:IsInZone( ZONE_SURFACE ) then
-		mods.def = mods.def - SCP_BUFF_DEF
-		mods.flat = mods.flat - SCP_BUFF_FLAT
-	end
-
-	return mods
-end
-
-hook.Add( "SLCRound", "SCPSurfaceCheck", function( time )
-	AddTimer( "SLCSurfaceCheck", 3, 0, function()
-		for i, v in ipairs( player.GetAll() ) do
-			if v:SCPTeam() != TEAM_SCP or v:GetSCPHuman() then continue end
-			if v:GetProperty( "scp_buff_applied" ) or !v:GetProperty( "scp_buff" ) or !v:IsInZone( ZONE_SURFACE ) then continue end
-
-			local buff_scale = v.SCPData and v.SCPData.buff_scale or 1
-
-			v:SetProperty( "scp_buff_applied", true )
-			v:SetProperty( "scp_buff_heal", math.min( CVAR.slc_scp_buff_pct_regen:GetFloat() * v:GetMaxHealth(), CVAR.slc_scp_buff_max_regen:GetInt() ) * buff_scale )
-
-			v:AddTimer( "SCPOutsideBuff", SCP_BUFF_TICK, 0, function( this )
-				if !IsValid( v ) then return end
-
-				if !v:IsInZone( ZONE_SURFACE ) then
-					v:SetProperty( "scp_buff_regen", 0 )
-					v:SetProperty( "scp_buff_heal", 0 )
-				end
-
-				local buff_heal = v:GetProperty( "scp_buff_heal", 0 )
-				if buff_heal > 0 then
-					local to_heal = SCP_BUFF_HEAL_RATE
-
-					if to_heal > buff_heal then
-						to_heal = buff_heal
-					end
-
-					v:AddHealth( to_heal )
-					v:SetProperty( "scp_buff_heal", buff_heal - to_heal )
-				end
-
-				local buff_regen = v:GetProperty( "scp_buff_regen", 0 )
-				if buff_regen > 0 and v:GetProperty( "scp_buff_regen_time", 0 ) <= CurTime() then
-					local to_regen = SCP_BUFF_REGEN_RATE
-
-					if to_regen > buff_regen then
-						to_regen = buff_regen
-					end
-
-					v:AddHealth( to_regen )
-					v:SetProperty( "scp_buff_regen", buff_regen - to_regen )
-				end
-			end )
-		end
-	end )
-end )
-
-hook.Add( "SCPUpgradeBought", "SCPOutsideBuff", function( ply, wep, upgrade )
-	if upgrade.name == "outside_buff" then
-		ply:SetProperty( "scp_buff", true, true )
-	end
-end )
-
---It's serverside only function, but lets leave it here, next to ScalePlayerDamage
-local INVERSE_POISON = bit.bnot( DMG_POISON )
-function GM:EntityTakeDamage( target, info )
-	if PREVENT_BREAK then
-		local cache = GetRoundProperty( "prevent_break_cache" )
-
-		if !cache then
-			cache = SetRoundProperty( "prevent_break_cache", {} )
-		end
-
-		if !cache then return end --round is not active
-
-		if !cache[target] and !target.SkipSCPDamageCheck then
-			local pos = target:GetPos()
-			for k, v in pairs( PREVENT_BREAK ) do
-				if v == pos then
-					cache[target] = true
-					break
-				end
-
-				target.SkipSCPDamageCheck = true
-			end
-		end
-
-		if cache[target] then
-			return true
-		end
-	end
-
-	if target:IsPlayer() and hook.Run( "PlayerShouldTakeDamage", target, info:GetAttacker() ) == false then return true end
-
-	local dmg_orig = info:GetDamage()
-
-	if !info:IsDamageType( DMG_DIRECT ) and target:IsPlayer() then
-		local t_trg = target:SCPTeam()
-		local attacker = info:GetAttacker()
-		
-		--vest
-		local bleed_prot, shock_prot = false, false
-		local vest = target:GetVest()
-		if vest > 0 then
-			local dur = target:GetVestDurability()
-			local data = VEST.GetData( vest )
-
-			if data and ( data.durability == -1 or dur > 0 ) then
-				local pre_scaled = info:GetDamage()
-				local wep = IsValid( attacker ) and attacker:IsPlayer() and attacker:GetActiveWeapon()
-
-				for k, v in pairs( data.damage ) do
-					if info:IsDamageType( k ) then
-						if k == DMG_BULLET or k == DMG_SLASH then
-							bleed_prot = true
-						end
-
-						if k == DMG_SHOCK or k == DMG_ENERGYBEAM then
-							shock_prot = true
-						end
-						
-						if IsValid( wep ) and wep.ArmorPenetration and v < 1 then
-							v = 1 - ( 1 - v ) * ( 1 - wep.ArmorPenetration )
-						end
-
-						info:ScaleDamage( v )
-					end
-				end
-
-				if dur > 0 then
-					target:SetVestDurability( dur - math.Clamp( pre_scaled - info:GetDamage(), 0, dur ) )
-				end
-			end
-		end
-
-		if IsValid( attacker ) then
-			if attacker:IsVehicle() then
-				return true
-			elseif attacker:IsPlayer() then
-				local t_att = attacker:SCPTeam()
-
-				if attacker:InVehicle() then
-					return true
-				end
-
-				if target != attacker then
-					if t_trg == TEAM_SCP then
-						if t_att == TEAM_SCP then
-							return true
-						elseif !target:GetSCPHuman() then
-							local mods = GetSCPModifiers( target )
-							
-							local dmg = info:GetDamage() + mods.flat
-							if dmg < 0 then
-								dmg = 0
-							end
-							
-							info:SetDamage( dmg )
-							info:ScaleDamage( mods.def )
-						end
-					end
-
-					AddRoundStat( "dmg", dmg_orig )
-
-					if SCPTeams.IsAlly( t_att, t_trg ) then
-						AddRoundStat( "rdmdmg", dmg_orig )
-					end
-				end
-			end
-		end
-
-		if info:IsDamageType( DMG_RADIATION ) and target:HasEffect( "radiation" ) then
-			info:ScaleDamage( 1.5 )
-		end
-
-		if info:IsDamageType( DMG_BULLET ) or info:IsDamageType( DMG_SLASH ) then
-			if math.random( 1, 100 ) <= ( bleed_prot and 4 or 20 ) then
-				target:ApplyEffect( "bleeding", attacker )
-			end
-		end
-
-		if !shock_prot and ( info:IsDamageType( DMG_SHOCK ) or info:IsDamageType( DMG_ENERGYBEAM ) ) then
-			target:ApplyEffect( "electrical_shock" )
-		end
-
-		local extra = target:GetExtraHealth()
-		if extra > 0 then
-			local pre = info:GetDamage()
-			local dmg = pre - extra
-
-			if dmg < 0 then
-				dmg = 0
-			end
-
-			extra = extra - pre
-
-			if extra <= 0 then
-				extra = 0
-				target:SetMaxExtraHealth( extra )
-			end
-
-			target:SetExtraHealth( extra )
-			info:SetDamage( dmg )
-			info:SetDamageCustom( pre )
-		end
-	end
-
-	if target:IsPlayer() then
-		local dmg_type = info:GetDamageType()
-		local dmg = info:GetDamage()
-		local hp = target:Health()
-		local attacker = info:GetAttacker()
-
-		target.Logger:DamageTaken( dmg, attacker, { dmg_type = dmg_type, dmg_orig = dmg_orig, inflictor = info:GetInflictor(), hp = hp } )
-
-		if IsValid( attacker ) and attacker:IsPlayer() then
-			attacker.Logger:DamageDealt( dmg_orig, target, { dmg_type = dmg_type, dmg_final = dmg, hp = hp } )
-		end
-	end
-
-	local prevent, direct = hook.Run( "SLCPostScaleDamage", target, info )
-	if prevent == true and ( direct == true or !info:IsDamageType( DMG_DIRECT ) ) then return true end
-
-	local dmgtype = info:GetDamageType()
-	if bit.band( dmgtype, DMG_POISON ) == DMG_POISON then
-		info:SetDamageType( bit.bor( bit.band( dmgtype, INVERSE_POISON ), DMG_NERVEGAS ) )
-	end
-end
-
-function GM:SLCPostScaleDamage( target, info )
-	if !IsValid( target ) or !target:IsPlayer() then return end
-
-	local att = info:GetAttacker()
-	if target == att or !IsValid( att ) or !att:IsPlayer() or SCPTeams.IsAlly( att:SCPTeam(), target:SCPTeam() ) then return end
-
-	if target:SCPTeam() == TEAM_SCP and target:GetProperty( "scp_buff" ) and target:IsInZone( ZONE_SURFACE ) then
-		if  info:IsDamageType( DMG_DIRECT ) or !info:IsDamageType( DMG_BULLET ) then return end
-
-		local buff_scale = target.SCPData and target.SCPData.buff_scale or 1
-		target:SetProperty( "scp_buff_regen", target:GetProperty( "scp_buff_regen", 0 ) + info:GetDamage() * GetSCPModifiers( target ).regen_scale * buff_scale )
-		target:SetProperty( "scp_buff_regen_time", CurTime() + SCP_BUFF_REGEN_TIME )
-	elseif att:SCPTeam() == TEAM_SCP and att:GetProperty( "scp_buff" ) and att:IsInZone( ZONE_SURFACE ) then
-		local buff_scale = att.SCPData and att.SCPData.buff_scale or 1
-		att:SetProperty( "scp_buff_heal", att:GetProperty( "scp_buff_heal", 0 ) + info:GetDamage() * GetSCPModifiers( att ).heal_scale * buff_scale )
-	end
-end
-
-function ApplyDamageHUDEvents( target, dmg )
-	local target_valid = IsValid( target ) and target:IsPlayer()
-	if !target.slc_dmg_ind and target_valid then target.slc_dmg_ind = {} end
-
-	local att = dmg:GetInflictor()
-	if IsValid( att ) then
-		local owner = att:GetOwner()
-		if IsValid( owner ) then
-			att = owner
-		end
-	else
-		att = dmg:GetAttacker()
-	end
-
-	if IsValid( att ) and att != target and dmg:IsBulletDamage() then
-		if ( !target_valid or !target.slc_dmg_ind[att] ) and att:IsPlayer() then
-			net.Start( "SLCHitMarker" )
-			net.Send( att )
-		end
-
-		if target_valid then
-			target.slc_dmg_ind[att] = ( target.slc_dmg_ind[att] or 0 ) + dmg:GetDamage()
-		end
-	elseif target_valid then
-		net.Start( "SLCDamageIndicator" )
-			net.WriteUInt( math.Clamp( math.ceil( dmg:GetDamage() ), 0, 1023 ), 10 )
-
-			net.WriteFloat( 0 )
-			net.WriteFloat( 0 )
-		net.Send( target )
-	end
-end
-
-function GM:PostEntityTakeDamage( ent, dmg, took )
-	if !ent:IsPlayer() then return end
-	ApplyDamageHUDEvents( ent, dmg )
-end
-
-hook.Add( "PlayerPostThink", "SLCDamageIndicator", function( ply )
-	local tab = ply.slc_dmg_ind
-	if !tab then return end
-
-	for att, dmg in pairs( tab ) do
-		tab[att] = nil
-		if !IsValid( att ) then continue end
-
-		net.Start( "SLCDamageIndicator" )
-			net.WriteUInt( math.Clamp( math.ceil( dmg ), 0, 1023 ), 10 )
-
-			local dir = att:GetPos() - ply:GetPos()
-			net.WriteFloat( dir.x )
-			net.WriteFloat( dir.y )
-		net.Send( ply )
-	end
-end )
-
---[[-------------------------------------------------------------------------
-Move functions
----------------------------------------------------------------------------]]
-function GM:SetupMove( ply, mv, cmd )
-	if controller.SetupMove( ply, mv, cmd ) then return true end
-end
-
-function GM:Move( ply, mv )
-	if controller.Move( ply, mv ) then return true end
-
-	local speed_mod = { 1 }
-	hook.Run( "SLCScaleSpeed", ply, speed_mod )
-
-	local mod = speed_mod[1]
-
-	if ply:SCPTeam() == TEAM_SCP and ply:GetProperty( "scp_buff" ) and ply:IsInZone( ZONE_SURFACE ) then
-		mod = mod * 1.1
-	end
-
-	if mod != 1 then
-		local speed = ( mv:KeyDown( IN_SPEED ) and ply:GetRunSpeed() or ply:GetWalkSpeed() ) * mod
-
-		if ply:Crouching() then
-			speed = speed * ply:GetCrouchedWalkSpeed()
-		end
-
-		mv:SetMaxSpeed( speed )
-		mv:SetMaxClientSpeed( speed )
-	end
-end
-
---[[-------------------------------------------------------------------------
-Footsteps
-For some reason when playerd move slower than some speed threshold (91 hu/s) thay make no step sounds at all
-So, yea, I created new step sound system
----------------------------------------------------------------------------]]
-STEPTYPE_NORMAL = 0
-STEPTYPE_LADDER = 1
-STEPTYPE_WATER = 2
-
-function GM:PlayerFootstep( ply, pos, foot, sound, vol, filter )
-	return true
-end
-
-function GM:FinishMove( ply, mv )
-	local mvtype = ply:GetMoveType()
-	if SERVER and ( ply:OnGround() and ( mvtype == MOVETYPE_WALK or mvtype == MOVETYPE_STEP ) or mvtype == MOVETYPE_LADDER ) then
-		local vel = mv:GetVelocity()
-		local len = vel:Length()
-
-		if ply.slc_next_footstep then
-			ply.slc_next_footstep = ply.slc_next_footstep - len * FrameTime()
-
-			if ply.slc_next_footstep <= 0 then
-				ply:PlayStepSound()
-			end
-		end
-
-		if !ply.slc_next_footstep or ply.slc_next_footstep <= 0 then
-			ply:UpdateStepTime()
-		end
-	end
-
-	if controller.FinishMove( ply, mv ) then return true end
-end
-
-
-function GM:SLCPlayerFootstep( ply, foot, snd )
-
-end
-
-function GM:SLCFootstepParams( ply, st, vel, crouch )
-	if st == STEPTYPE_LADDER then
-		return 100
-	end
-
-	local units = 50
-	local len = vel:Length()
-
-	if len > 125 then
-		units = units + len / 10
-	end
-
-	if crouch then
-		units = units - 15
-	end
-
-	if units < 25 then
-		units = 25
-	end
-
-	return units
-end
-
-if !SLCStepSoundsAdded then
-	SLCStepSoundsAdded = true
-
-	for i, v in ipairs( sound.GetTable() ) do
-		if !string.find( v, "StepLeft" ) and !string.find( v, "StepRight" ) then continue end
-
-		local tab = sound.GetProperties( v )
-		local orig = tab.name
-		
-		tab.name = orig.."Walk"
-		tab.level = 70
-		tab.volume = 0.7
-		sound.Add( tab )
-
-		tab.name = orig.."Crouch"
-		tab.level = 65
-		tab.volume = 0.4
-		sound.Add( tab )
-	end
-end
-
---[[-------------------------------------------------------------------------
-Fall Damage
----------------------------------------------------------------------------]]
-local function calc_fall_threshold( ply )
-	local vest = ply:GetVest()
-	if vest > 0 then
-		local data = VEST.GetData( vest )
-		if data then
-			return math.max( 300 / ( 1 + data.weight / 10 ), 75 )
-		end
-	end
-
-	return 300
-end
-
-local function calc_fall_dmg( ply, speed )
-	if speed <= 100 then
-		return speed * 0.1
-	elseif speed <= 200 then
-		return speed * 0.15
-	elseif speed <= 300 then
-		return speed * 0.25
-	else
-		return speed * 0.5
-	end
-end
-
-function GM:OnPlayerHitGround( ply, water, floater, speed )
-	if CLIENT then return true end
-	local override, threshold, damage = hook.Run( "SLCFallDamage", ply, water, floater, speed )
-
-	if override then
-		speed = override
-	end
-
-	threshold = threshold or calc_fall_threshold( ply )
-
-	ply:PlayStepSound()
-
-	if speed <= threshold then return true end
-	
-	if !water then
-		if speed > 300 then
-			local ang = math.min( speed - 300, 750 ) * 0.03
-			ply:ViewPunch( Angle( 0, 0, ang ) )
-		end
-
-		local dmg_t = threshold + 150
-		if damage or speed > dmg_t then
-			local dmg = damage or calc_fall_dmg( ply, speed - dmg_t )
-			if dmg > 0 then
-				local info = DamageInfo()
-				info:SetAttacker( ply )
-				info:SetDamageType( DMG_FALL )
-
-				if ply:HasEffect( "fracture" ) then
-					info:SetDamage( dmg * 2.5 )
-					ply:ApplyEffect( "bleeding", ply )
-				else
-					info:SetDamage( dmg )
-				end
-
-				if dmg > 25 then
-					ply:ApplyEffect( "fracture" )
-				end
-
-				ply:TakeDamageInfo( info )
-				ply:EmitSound( "Player.FallDamage", 100, 100, 1, CHAN_BODY )
-			end
-		end
-	else
-		ply:EmitSound( "Physics.WaterSplash" )
-	end
-
-	return true
-end
 
 --[[-------------------------------------------------------------------------
 EntityEmitSound

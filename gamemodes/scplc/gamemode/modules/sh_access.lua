@@ -146,7 +146,7 @@ function GenerateAccessOverride( chip )
 
 		local len = #st
 		for i = 1, tab.num do
-			override[i] = table.remove( st, math.random( len ) )
+			override[i] = table.remove( st, SLCRandom( len ) )
 			--print( "selecting", i, tab.num, override[i] )
 
 			len = #st
@@ -172,14 +172,14 @@ function SelectChip( level, blacklist )
 	if !tab then return end
 
 	if !blacklist then
-		return tab[math.random( #tab )]
+		return tab[SLCRandom( #tab )]
 	end
 
 	local copy = table.Copy( tab )
 	blacklist = CreateLookupTable( blacklist )
 
 	for i = #copy, 1, -1 do
-		local selected = table.remove( copy, math.random( i ) )
+		local selected = table.remove( copy, SLCRandom( i ) )
 		if !blacklist[selected] then
 			return selected
 		end
@@ -205,7 +205,7 @@ function SelectUpgrade( name, mode )
 		return result, GenerateAccessOverride( GetChip( result ) )
 	end
 
-	local dice = math.random( total )
+	local dice = SLCRandom( total )
 	for i = 1, len do
 		if dice <= weightlist[i][1] then
 			local result = weightlist[i][2]
@@ -604,7 +604,7 @@ hook.Add( "SLCModulesLoaded", "SLCAccessSetup", function()
 	//PrintTable( ACC_REGISTRY )
 end )
 
-hook.Add( "SLCRegisterAccess", "SCLBaseAccess", function()
+hook.Add( "SLCRegisterAccess", "SLCBaseAccess", function()
 	RegisterAccess( "SAFE" )
 	RegisterAccess( "EUCLID" )
 	RegisterAccess( "KETER" )
@@ -625,7 +625,7 @@ hook.Add( "SLCRegisterAccess", "SCLBaseAccess", function()
 	RegisterAccess( "PARTICLE" )
 end )
 
-hook.Add( "SLCRegisterChips", "SCLBaseChips", function()
+hook.Add( "SLCRegisterChips", "SLCBaseChips", function()
 	RegisterChip( "jan", 1, { ACCESS_SAFE, ACCESS_GENERAL }, 3 )
 	:AddUpgrade( UPGRADE_MODE.FINE, 12, "sci2" )
 	:AddUpgrade( UPGRADE_MODE.FINE, 8, "spec" )
@@ -720,8 +720,8 @@ hook.Add( "SLCRegisterChips", "SCLBaseChips", function()
 	:AddUpgrade( UPGRADE_MODE.VERY_FINE, 2, true )
 
 	RegisterChip( "hacked4", 4, {
-		access = { ACCESS_SAFE, ACCESS_EUCLID, ACCESS_KETER },
-		randomtable = { ACCESS_OFFICE, ACCESS_GENERAL, ACCESS_MEDBAY, ACCESS_CHECKPOINT_LCZ, ACCESS_CHECKPOINT_EZ, ACCESS_WARHEAD_ELEVATOR, ACCESS_EC, ACCESS_GATE_A,
+		access = { ACCESS_SAFE, ACCESS_EUCLID, ACCESS_KETER, ACCESS_CHECKPOINT_EZ },
+		randomtable = { ACCESS_OFFICE, ACCESS_GENERAL, ACCESS_MEDBAY, ACCESS_CHECKPOINT_LCZ, ACCESS_WARHEAD_ELEVATOR, ACCESS_EC, ACCESS_GATE_A,
 						ACCESS_GATE_B, ACCESS_ARMORY, ACCESS_FEMUR, ACCESS_PARTICLE },
 		randomnum = 6
 	}, 16 )
@@ -735,8 +735,8 @@ hook.Add( "SLCRegisterChips", "SCLBaseChips", function()
 	:AddUpgrade( UPGRADE_MODE.VERY_FINE, 5, true )
 
 	RegisterChip( "hacked5", 5, {
-		access = { ACCESS_SAFE, ACCESS_EUCLID, ACCESS_KETER },
-		randomtable = { ACCESS_OFFICE, ACCESS_GENERAL, ACCESS_MEDBAY, ACCESS_CHECKPOINT_LCZ, ACCESS_CHECKPOINT_EZ, ACCESS_WARHEAD_ELEVATOR, ACCESS_EC, ACCESS_GATE_A,
+		access = { ACCESS_SAFE, ACCESS_EUCLID, ACCESS_KETER, ACCESS_CHECKPOINT_LCZ, ACCESS_CHECKPOINT_EZ },
+		randomtable = { ACCESS_OFFICE, ACCESS_GENERAL, ACCESS_MEDBAY, ACCESS_WARHEAD_ELEVATOR, ACCESS_EC, ACCESS_GATE_A,
 						ACCESS_GATE_B, ACCESS_ARMORY, ACCESS_FEMUR, ACCESS_ALPHA, ACCESS_OMEGA, ACCESS_PARTICLE },
 		randomnum = 7
 	}, 17 )

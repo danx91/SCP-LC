@@ -10,23 +10,29 @@ SWEP.WorldModel				= "models/weapons/wolf/w_faton.mdl"
 
 SWEP.ViewModelFOV			= 80
 SWEP.RenderGroup 			= RENDERGROUP_BOTH
-//SWEP.m_WeaponDeploySpeed 	= 0.25
-
-SWEP.Primary.Automatic 		= true
 
 SWEP.HoldType 				= "ar2"
 
-SWEP.Charges = 400
-SWEP.ChargesUsage = 75
-SWEP.DamagePerCharge = 15
-SWEP.DMGType = bit.bor( DMG_RADIATION, DMG_PREVENT_PHYSICS_FORCE )
+SWEP.Primary.ClipSize		= 500
+SWEP.Primary.DefaultClip 	= 500
+
+SWEP.FireDelay				= 1 / 50
+SWEP.Damage 				= 15
+SWEP.Range 					= 5000
+SWEP.DamageType 			= bit.bor( DMG_RADIATION, DMG_PREVENT_PHYSICS_FORCE )
+
+SWEP.WindUpPhase1Duration 	= 0.75
+SWEP.WindUpPhase2Duration 	= 0.5
+SWEP.WindDownDuration		= 1.5
+SWEP.Cooldown				= 1
 
 local STATE = {
 	IDLE = 0,
-	WIND_UP1 = 1,
-	WIND_UP2 = 2,
-	WIND_DOWN = 3,
-	SHOOTING = 4,
+	WINDUP_1 = 1,
+	WINDUP_2 = 2,
+	WINDDOWN = 3,
+	COOLDOWN = 4,
+	SHOOTING = 5
 }
 
 if CLIENT then
@@ -35,445 +41,448 @@ if CLIENT then
 end
 
 function SWEP:SetupDataTables()
-	self:AddNetworkVar( "Charges", "Int" )
-	self:SetCharges( self.Charges )
-
-	self:ActionQueueSetup()
+	//self:NetworkVar( "Int", "Charges" )
+	self:NetworkVar( "Float", "WeaponState" )
 end
 
 function SWEP:Initialize()
 	self:InitializeLanguage()
 	self:SetHoldType( self.HoldType )
-	self:SetDeploySpeed( 0.25 )
-
-	self:ActionQueueInit()
+	self:SetDeploySpeed( 0.4 )
 end
 
-SWEP.PrimaryTime = 0
-SWEP.Cooldown = 0
-SWEP.LastAttack = 0
-SWEP.Enabled = false
-function SWEP:Think()
-	//self:SetCharges( self.Charges )
+local vector_zero = Vector( 0, 0, 0 )
+local attack_trace = {}
+attack_trace.output = attack_trace
+attack_trace.mask = MASK_SHOT
+attack_trace.mins = Vector( -3, -3, -3 )
+attack_trace.maxs = Vector( 3, 3, 3 )
 
-	local ct = CurTime()
-	local state = self:GetState()
-	if state == STATE.IDLE and self.PrimaryTime > ct then
-		//print( "SATRTING SEQUENCE", CurTime() )
-		self:StartSequence()
-	elseif state != STATE.IDLE and state != STATE.WIND_DOWN and self.PrimaryTime < ct or state == STATE.IDLE and self.Enabled then
-		//print( "interrupt - standard", CurTime() )
-		self:StopSequence()
+SWEP.LastState = STATE.IDLE
+function SWEP:Think()
+	local owner = self:GetOwner()
+	if !IsValid( owner ) then return end
+
+	local state, time = self:WeaponState()
+	local prev = self.LastState
+
+	if state != prev then
+		self.LastState = state
+		self:StateChanged( state, prev )
 	end
 
-	local charges = self:GetCharges()
-	if self:GetState() == STATE.SHOOTING then --not using local because 'state' could've changed
-		local interrupt = false
+	if state == STATE.IDLE or state == STATE.WINDDOWN then return end
 
-		if charges <= 0 then
-			interrupt = true
-		else
-			local diff = ct - self.LastAttack
-			if diff > 1 then
-				diff = 0
-				self.LastAttack = ct
-			end
-
-			local take = math.floor( diff * self.ChargesUsage )
-
-			if take > 0 then
-				self.LastAttack = ct
-
-				local owner = self:GetOwner()
-
-				if SERVER then
-					local start = owner:GetShootPos()
-					local tr = util.TraceHull( {
-						start = start,
-						endpos = start + owner:GetAimVector() * 5000,
-						mask = MASK_SHOT,
-						filter = { self, owner },
-						mins = Vector( -3, -3, -3 ),
-						maxs = Vector( 3, 3, 3 )
-					} )
-
-					local target = tr.Entity
-					if IsValid( target ) and ( !target:IsPlayer() or target:SCPTeam() != TEAM_SPEC ) then
-						local dmg = take
-						if dmg > charges then
-							dmg = charges
-						end
-
-						dmg = dmg * self.DamagePerCharge
-
-						local info = DamageInfo()
-						info:SetInflictor( self )
-						info:SetAttacker( owner )
-						info:SetDamage( dmg )
-						info:SetDamageType( self.DMGType )
-						info:SetDamageForce( Vector( 0, 0, 0 ) )
-
-						target:TakeDamageInfo( info )
-					end
-
-					for k, v in pairs( FindInCylinder( start, 256, -64, 256, nil, MASK_SOLID_BRUSHONLY, player.GetAll() ) ) do
-						local team = v:SCPTeam()
-						if team != TEAMS_SPEC and team != TEAMS_SCP then
-							//if !v:HasEffect( "radiation" ) then
-								v:ApplyEffect( "radiation" )
-							//end
-						end
-					end
-				end
-
-				charges = charges - take
-
-				if charges <= 0 then
-					charges = 0
-					interrupt = true
-				end
-
-				self:SetCharges( charges )
-			end
+	if state == STATE.COOLDOWN then
+		if time >= self.Cooldown then
+			self:SetWeaponState( 0 )
 		end
 
-		if interrupt then
-			//print( "interrupt - no charges", CurTime() )
-			self:StopSequence()
-			self.PrimaryTime = 0
+		return
+	end
+
+	owner:UpdateHold( self, "particle_cannon" )
+
+	if !owner:IsHolding( self, "particle_cannon" ) then
+		self:SetWeaponState( -CurTime() - self.WindDownDuration )
+		return
+	end
+
+	if CLIENT or state != STATE.SHOOTING then return end
+
+	local ct = CurTime()
+	local start = owner:GetShootPos()
+
+	while self.NextFire <= ct do
+		self.NextFire = self.NextFire + self.FireDelay
+		self:TakePrimaryAmmo( 1 )
+
+		attack_trace.start = start
+		attack_trace.endpos = start + owner:GetAimVector() * self.Range
+		attack_trace.filter = { self, owner }
+
+		util.TraceHull( attack_trace )
+
+		local target = attack_trace.Entity
+		if !attack_trace.Hit or !IsValid( target ) or target:IsPlayer() and target:SCPTeam() == TEAM_SPEC then
+			util.TraceLine( attack_trace )
 		end
-	else
-		self:ActionQueueThink()
+
+		if attack_trace.Hit and IsValid( target ) and ( !target:IsPlayer() or target:SCPTeam() != TEAM_SPEC ) then
+			local info = DamageInfo()
+
+			info:SetInflictor( self )
+			info:SetAttacker( owner )
+			info:SetDamage( self.Damage )
+			info:SetDamageType( self.DamageType )
+			info:SetDamageForce( vector_zero )
+
+			target:TakeDamageInfo( info )
+		end
+
+		if self:Clip1() <= 0 then
+			owner:InterruptHold( self, "particle_cannon" )
+			break
+		end
+	end
+
+	for k, v in pairs( FindInCylinder( start, 256, -64, 256, nil, MASK_SOLID_BRUSHONLY, player.GetAll() ) ) do
+		v:ApplyEffect( "radiation" )
 	end
 end
 
 function SWEP:Deploy()
-	if SERVER then
-		local owner = self:GetOwner()
-		if IsValid( owner )  then
-			owner:PushSpeed( 0.75, 0.75, -1, "particle_cannon", 1 )
-		end
-	end
+	self.BoneRotation:Zero()
 
-	self:ResetViewModelBones()
+	if CLIENT then return end
+	
+	local owner = self:GetOwner()
+	if !IsValid( owner ) then return end
+
+	owner:PushSpeed( 0.8, 0.8, -1, "SLC_ParticleCannon", 1 )
 end
 
 function SWEP:Holster()
-	if self:GetState() != STATE.IDLE then return false end
-
-	if SERVER then
-		self:PopSpeed()
-	end
-
-	self:ResetViewModelBones()
+	if self:WeaponState() != STATE.IDLE then return false end
+	self:Cleanup()
 
 	return true
 end
 
 function SWEP:SLCPreDrop()
-	if SERVER then
-		self:PopSpeed()
-	end
-
-	self:ResetViewModelBones()
+	self:Cleanup()
 end
 
 function SWEP:CanDrop()
-	return self:GetState() == STATE.IDLE
-end
-
-function SWEP:CanPickup( ply )
-	self:SetPos( self:GetPos() + Vector( 0, 0, 20 ) )
-
-	return true
+	return self:WeaponState() == STATE.IDLE
 end
 
 function SWEP:OnRemove()
-	self:StopSound( "particle_cannon.shot" )
-	self:StopSound( "particle_cannon.windup1" )
-
-	self:ResetViewModelBones()
+	self:Cleanup()
 end
 
 function SWEP:OnDrop()
-	if self:GetState() != STATE.IDLE then
-		self:StopSequence()
-	end
-
-	self:StopSound( "particle_cannon.shot" )
-	self:StopSound( "particle_cannon.windup1" )
+	self:Cleanup()
 end
 
 function SWEP:PrimaryAttack()
+	if self:Clip1() <= 0 or self:WeaponState() != STATE.IDLE then return end
+
+	local owner = self:GetOwner()
+	if owner:IsHolding( self, "particle_cannon" ) then return end
+
+	local windup = self.WindUpPhase1Duration + self.WindUpPhase2Duration
+
+	self:SetWeaponState( CurTime() + windup )
+	owner:StartHold( self, "particle_cannon", IN_ATTACK, windup, nil, true )
+end
+
+function SWEP:Reload()
+	/*local owner = self:GetOwner()
+	owner:InterruptHold( self, "particle_cannon" )
+	self:SetWeaponState( 0 )*/
+end
+
+function SWEP:WeaponState()
+	local state = self:GetWeaponState()
+
+	if state == 0 then
+		return STATE.IDLE, state
+	end
+
 	local ct = CurTime()
-	if self.Cooldown < ct and self:GetCharges() > 0 then
-		self.PrimaryTime = ct + 0.3
+
+	if state < 0 then
+		state = -state - ct
+
+		return state < 0 and STATE.COOLDOWN or STATE.WINDDOWN, math.abs( state )
+	end
+
+	if state < ct then
+		return STATE.SHOOTING, state
+	end
+
+	state = state - ct
+
+	if state > self.WindUpPhase2Duration then
+		return STATE.WINDUP_1, state - self.WindUpPhase2Duration
+	end
+
+	return STATE.WINDUP_2, state
+end
+
+function SWEP:StateChanged( new, old )
+	if new == STATE.WINDUP_1 then
+		self:EmitSound( "SLC.ParticleCannon.WindUpPhase1" )
+		controller.Start( self:GetOwner(), "particle_cannon" )
+	elseif new == STATE.WINDUP_2 then
+		self:StopSound( "SLC.ParticleCannon.WindUpPhase1" )
+		self:EmitSound( "SLC.ParticleCannon.WindUpPhase2" )
+	elseif new == STATE.SHOOTING then
+		self:EmitSound( "SLC.ParticleCannon.Shot" )
+		self.NextFire = CurTime()
+	elseif new == STATE.WINDDOWN then
+		self:StopSound( "SLC.ParticleCannon.WindUpPhase1" )
+		self:StopSound( "SLC.ParticleCannon.Shot" )
+
+		if old == STATE.SHOOTING then
+			self:EmitSound( "SLC.ParticleCannon.WindDown" )
+		end
+	elseif new == STATE.COOLDOWN then
+		controller.Stop( self:GetOwner() )
 	end
 end
 
-function SWEP:GetCustomClip()
-	return self:GetCharges()
-end
+function SWEP:Cleanup()
+	self:SetWeaponState( 0 )
 
-function SWEP:SetCustomClip( num )
-	self:SetCharges( num )
-end
+	self:StopSound( "SLC.ParticleCannon.WindUpPhase1" )
+	self:StopSound( "SLC.ParticleCannon.Shot" )
+	self:PopSpeed()
 
-function SWEP:StartSequence()
-	if !IsFirstTimePredicted() then return end
-	self.Enabled = true
+	local owner = self:GetOwner()
+	if !IsValid( owner ) then return end
 
-	self:QueueAction( STATE.WIND_UP1, 0.75, function( time, dur )
-		self.WheelAcc = CurTime() + dur
-		self:EmitSound( "particle_cannon.windup1" )
-	end )
-
-	self:QueueAction( STATE.WIND_UP2, 0.5, function( time, dur )
-		self:StopSound( "particle_cannon.windup1" )
-		self:EmitSound( "particle_cannon.windup2" )
-	end )
-
-	self:QueueAction( STATE.SHOOTING, 0, function( time, dur )
-		self:EmitSound( "particle_cannon.shot" )
-	end )
-end
-
-function SWEP:StopSequence()
-	self.Enabled = false
-	self.Cooldown = CurTime() + 2
-
-	self:StopSound( "particle_cannon.windup1" )
-	self:StopSound( "particle_cannon.shot" )
-
-	if self:GetState() != STATE.WIND_UP1 then
-		self:EmitSound( "particle_cannon.winddown" )
-	end
-
-	self:ResetAction( STATE.WIND_DOWN, 2 )
-	self.WheelAcc = CurTime() + 2
+	controller.Stop( owner )
 end
 
 function SWEP:PopSpeed()
+	if !SERVER then return end
+
 	local owner = self:GetOwner()
-	if IsValid( owner )  then
-		owner:PopSpeed( "particle_cannon" )
-	end
+	if !IsValid( owner ) then return end
+
+	owner:PopSpeed( "SLC_ParticleCannon" )
 end
 
-function SWEP:AdjustMouseSensitivity()
-	if self:GetState() != STATE.IDLE then
-		return 0.2
+--[[-------------------------------------------------------------------------
+Model effects
+---------------------------------------------------------------------------]]
+SWEP.RotationSpeed = 0
+SWEP.BoneRotation = Angle( 0, 0, 0 )
+
+function SWEP:PreDrawViewModel( vm, wep, ply )
+	local state, time = self:WeaponState()
+	local c_speed
+
+	if state == STATE.WINDUP_1 then
+		self.RotationSpeed = math.Clamp( 1 - time / self.WindUpPhase1Duration, 0, 1 )
+	elseif state == STATE.WINDUP_2 then
+		self.RotationSpeed = 1
+	elseif state == STATE.WINDDOWN then
+		c_speed = Lerp( math.Clamp( 1 - time / self.WindDownDuration, 0, 1 ), self.RotationSpeed, 0 )
+	elseif state == STATE.IDLE or state == STATE.COOLDOWN then
+		self.RotationSpeed = 0
+	elseif state == STATE.SHOOTING then
+		vm:SetSkin( 1 )
 	end
+
+	c_speed = c_speed or self.RotationSpeed
+	if c_speed <= 0 then return end
+
+	local bone = vm:LookupBone( "bone007" )
+	if !bone then return end
+
+	self.BoneRotation.r = ( self.BoneRotation.r + FrameTime() * c_speed * 280 ) % 360
+	vm:ManipulateBoneAngles( bone, self.BoneRotation )
 end
 
-if CLIENT then
-	SWEP.Speed = 0
-	SWEP.WepRot = Angle( 0, 0, 0 )
-	function SWEP:PreDrawViewModel( vm, wep, ply )
-		local state = self:GetState()
-		local c_speed
-
-		if state == STATE.WIND_UP1 then
-			local t = self.WheelAcc - CurTime()
-
-			if t < 0 then
-				t = 0
-			end
-
-			self.Speed = 1 - ( t / 3 )
-		elseif state == STATE.WIND_UP2 then
-			self.Speed = 1
-		elseif state == STATE.WIND_DOWN then
-			local t = self.WheelAcc - CurTime()
-
-			if t < 0 then
-				t = 0
-			end
-
-			c_speed = Lerp( 1 - ( t / 2 ), self.Speed, 0 )
-		elseif state == STATE.IDLE then
-			self.Speed = 0
-		end
-
-		c_speed = c_speed or self.Speed
-
-		if c_speed > 0 then
-			local bone = vm:LookupBone( "bone007" )
-			if bone then
-				self.WepRot.r = ( self.WepRot.r + FrameTime() * c_speed * 280 ) % 360
-				vm:ManipulateBoneAngles( bone, self.WepRot )
-			end
-		end
-
-		if state == STATE.SHOOTING then
-			vm:SetSkin( 1 )
-		end
-	end
-
-	function SWEP:ViewModelDrawn( vm )
-		self:DrawBeams( vm )
-	end
-
-	function SWEP:DrawWorldModel()
-		self:DrawModel()
-	end
-
-	function SWEP:DrawWorldModelTranslucent()
-		self:DrawBeams()
-	end
-
-	/*local laser = CreateMaterial( "particle_cannon_laser", "UnlitGeneric", { --tofile
-		[ "$basetexture" ]    = "sprites/laserbeam",
-		[ "$additive" ]        = "1",
-		[ "$vertexcolor" ]    = "1",
-		[ "$vertexalpha" ]    = "1",
-	} )*/
-	local laser = GetMaterial( "slc/misc/pc_laser" )
-	local laser_color = Color( 190, 225, 255, 255 )
-	local color_white255 = Color( 255, 255, 255 )
-	local color_white0 = Color( 255, 255, 255, 0 )
-
-	function SWEP:DrawBeams( ent )
-		if self:GetState() == STATE.SHOOTING then
-			if !ent then
-				ent = self
-			end
-
-			if IsValid( ent ) then
-				local owner = self:GetOwner()
-
-				if IsValid( owner ) then
-					local tr_start = owner:GetShootPos()
-					local vec = owner:GetAimVector()
-
-					local trace = util.TraceHull( {
-						start = tr_start,
-						endpos = tr_start + vec * 5000,
-						mask = MASK_SHOT,
-						filter = { self, owner },
-						mins = Vector( -3, -3, -3 ),
-						maxs = Vector( 3, 3, 3 )
-					} )
-
-					local beam_end = trace.HitPos
-					local beam_start
-
-					local att = ent:GetAttachment( 1 )
-					if att then
-						beam_start = att.Pos + vec * 5
-					else
-						beam_start = tr_start - Vector( 0, 0, 10 )
-					end
-
-					self:SetRenderBoundsWS( beam_start, beam_end )
-
-					local max_c = 30
-					local count = max_c
-
-					local dir = ( beam_end - beam_start ):GetNormalized()
-					local inc = ( beam_end - beam_start ):Length()
-
-					local num = inc / 25
-					if num < count then
-						count = math.floor( num )
-
-						if count < 5 then
-							count = 5
-						end
-					end
-
-					local f = 1 / count
-					inc = inc / count
-
-					local ang = dir:Angle()
-					ang:RotateAroundAxis( ang:Up(), math.random( -60, 10 ) )
-					ang:RotateAroundAxis( ang:Right(), math.random( -15, 5 ) )
-
-					render.SetMaterial( laser )
-					render.StartBeam( count )
-					local tx = CurTime() % 1 + 1
-
-					render.AddBeam(
-						beam_start,
-						15,
-						tx,
-						color_white255
-					)
-
-					for i = 1, count - 2 do
-						ang:RotateAroundAxis( ang:Up(), math.random( -20, 20 ) / i )
-						ang:RotateAroundAxis( ang:Right(), math.random( -20, 20 ) / i )
-						local pos = dir * inc * i + ang:Forward() * math.sin( i / count * 2 * math.pi ) * f * 100 * ( count / max_c )
-
-						render.AddBeam(
-							beam_start + pos,
-							15,
-							tx - f * i,
-							laser_color
-						)
-					end
-
-					render.AddBeam(
-						beam_end,
-						15,
-						tx - 1,
-						color_white0
-					)
-
-					render.EndBeam()
-					//render.DrawBeam( beam_start, beam_end, 20, 0, 1 )
-				end
-			end
-		end
-	end
+--[[-------------------------------------------------------------------------
+Beam
+---------------------------------------------------------------------------]]
+function SWEP:ViewModelDrawn( vm )
+	self:DrawBeams( vm )
 end
 
-hook.Add( "StartCommand", "ParticleCannonMovement", function( ply, cmd )
-	local wep = ply:GetActiveWeapon()
-	if IsValid( wep ) and wep:GetClass() == "weapon_slc_pc" then
-		local state = wep:GetState()
-		if state != STATE.IDLE then
-			cmd:ClearMovement()
+function SWEP:DrawWorldModel()
+	self:DrawModel()
+end
+
+function SWEP:DrawWorldModelTranslucent()
+	self:DrawBeams()
+end
+
+local laser = GetMaterial( "slc/misc/pc_laser" )
+local laser_color = Color( 190, 225, 255, 255 )
+local color_white255 = Color( 255, 255, 255 )
+local color_white0 = Color( 255, 255, 255, 0 )
+
+local beam_trace = {}
+beam_trace.output = beam_trace
+beam_trace.mask = MASK_SHOT
+beam_trace.mins = Vector( -3, -3, -3 )
+beam_trace.maxs = Vector( 3, 3, 3 )
+
+function SWEP:DrawBeams( ent )
+	if self:WeaponState() != STATE.SHOOTING then return end
+
+	if !ent then ent = self end
+	if !IsValid( ent ) then return end
+
+	local owner = self:GetOwner()
+	if !IsValid( owner ) then return end
+
+	local tr_start = owner:GetShootPos()
+	local vec = owner:GetAimVector()
+
+	beam_trace.start = tr_start
+	beam_trace.endpos = tr_start + vec * self.Range
+	beam_trace.filter = { self, owner }
+
+	util.TraceHull( beam_trace )
+
+	local beam_end = beam_trace.HitPos
+	local beam_start
+
+	local att = ent:GetAttachment( 1 )
+	if att then
+		beam_start = att.Pos + vec * 5
+	else
+		beam_start = tr_start - Vector( 0, 0, 10 )
+	end
+
+	//self:SetRenderBoundsWS( beam_start, beam_end ) --TODO
+
+	local max_c = 30
+	local count = max_c
+
+	local dir = ( beam_end - beam_start ):GetNormalized()
+	local inc = ( beam_end - beam_start ):Length()
+
+	local num = inc / 25
+	if num < count then
+		count = math.floor( num )
+
+		if count < 5 then
+			count = 5
 		end
 	end
-end )
 
-InstallTable( "ActionQueue", SWEP )
+	local f = 1 / count
+	inc = inc / count
 
-sound.Add{
-	name = "particle_cannon.windup1",
+	local ang = dir:Angle()
+	ang:RotateAroundAxis( ang:Up(), SLCRandom( -60, 10 ) )
+	ang:RotateAroundAxis( ang:Right(), SLCRandom( -15, 5 ) )
+
+	render.SetMaterial( laser )
+	render.StartBeam( count )
+	local tx = CurTime() % 1 + 1
+
+	render.AddBeam(
+		beam_start,
+		15,
+		tx,
+		color_white255
+	)
+
+	for i = 1, count - 2 do
+		ang:RotateAroundAxis( ang:Up(), SLCRandom( -20, 20 ) / i )
+		ang:RotateAroundAxis( ang:Right(), SLCRandom( -20, 20 ) / i )
+		local pos = dir * inc * i + ang:Forward() * math.sin( i / count * 2 * math.pi ) * f * 100 * ( count / max_c )
+
+		render.AddBeam(
+			beam_start + pos,
+			15,
+			tx - f * i,
+			laser_color
+		)
+	end
+
+	render.AddBeam(
+		beam_end,
+		15,
+		tx - 1,
+		color_white0
+	)
+
+	render.EndBeam()
+end
+
+--[[-------------------------------------------------------------------------
+Controller
+---------------------------------------------------------------------------]]
+controller.Register( "particle_cannon", {
+	StartCommand = function( self, ply, cmd )
+		local wep = ply:GetActiveWeapon()
+		if !IsValid( wep ) or wep:GetClass() != "weapon_slc_pc" then
+			self:Stop()
+			return
+		end
+
+		local state = wep:WeaponState()
+		
+		if state == STATE.IDLE then
+			self:Stop()
+			return
+		end
+
+		cmd:SetButtons( bit.band( cmd:GetButtons(), IN_ATTACK ) )
+
+		if state == STATE.WINDUP_1 then return end
+
+		cmd:ClearMovement()
+
+		if state == STATE.COOLDOWN then return end
+
+		if !self.Angle then
+			self.Angle = cmd:GetViewAngles()
+		end
+
+		local ang = cmd:GetViewAngles()
+		local diff = ang - self.Angle
+		diff:Normalize()
+
+		local abs_diff = math.sqrt( diff.y * diff.y + diff.p * diff.p )
+		local max_diff = 180 * FrameTime()
+
+		if abs_diff > max_diff then
+			diff:Div( abs_diff / max_diff )
+		end
+
+		self.Angle:Add( diff )
+		cmd:SetViewAngles( self.Angle )
+	end,
+} )
+
+
+--[[-------------------------------------------------------------------------
+Sounds
+---------------------------------------------------------------------------]]
+sound.Add( {
+	name = "SLC.ParticleCannon.WindUpPhase1",
 	sound = "weapons/particle_cannon/cg_motor_loop_01.wav",
 	volume = 1,
 	level = 100,
 	pitch = 100,
 	channel = CHAN_STATIC,
-}
+} )
 
-sound.Add{
-	name = "particle_cannon.windup2",
+sound.Add( {
+	name = "SLC.ParticleCannon.WindUpPhase2",
 	sound = "weapons/particle_cannon/cg_windup_mix_01.wav",
 	volume = 1,
 	level = 100,
 	pitch = 100,
 	channel = CHAN_STATIC,
-}
+} )
 
-sound.Add{
-	name = "particle_cannon.winddown",
+sound.Add( {
+	name = "SLC.ParticleCannon.WindDown",
 	sound = "weapons/particle_cannon/cg_winddown_mix_01.wav",
 	volume = 1,
 	level = 100,
 	pitch = 100,
 	channel = CHAN_STATIC,
-}
+} )
 
-sound.Add{
-	name = "particle_cannon.shot",
+sound.Add( {
+	name = "SLC.ParticleCannon.Shot",
 	sound = "weapons/particle_cannon/pc_shot.wav",
 	volume = 1,
 	level = 100,
 	pitch = 100,
 	channel = CHAN_STATIC,
-}
+} )
 
 MarkAsWeapon( "weapon_slc_pc" )

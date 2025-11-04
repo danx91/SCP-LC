@@ -51,6 +51,13 @@ function SCPTeams.AddInfo( team, info )
 	end
 end
 
+function SCPTeams.RemoveInfo( team, info )
+	local t = SCPTeams.REG[team]
+	if t then
+		t.info = bit.band( t.info, bit.bnot( info ) )
+	end
+end
+
 function SCPTeams.SetupAllies( tab, ally )
 	if !istable( tab ) then
 		tab = { tab }
@@ -380,9 +387,13 @@ SCPTeams.Register( "CI", bit.bor( SCPTeams.INFO_ALIVE, SCPTeams.INFO_HUMAN ), Co
 SCPTeams.Register( "GOC", bit.bor( SCPTeams.INFO_ALIVE, SCPTeams.INFO_HUMAN ), Color( 80, 5, 130 ), 4, false )
 SCPTeams.Register( "SCP", bit.bor( SCPTeams.INFO_ALIVE, SCPTeams.INFO_SCP ), Color( 100, 0, 0 ), 10, true )
 
+hook.Run( "SLCSetupTeams" )
+
 SCPTeams.SetupNeutral( TEAM_GOC, true )
+SCPTeams.SetupNeutral( { TEAM_CLASSD, TEAM_SCI, TEAM_GUARD }, TEAM_GOC )
 SCPTeams.SetupNeutral( { TEAM_CLASSD, TEAM_SCI } )
-SCPTeams.SetupEnemy( TEAM_GOC, TEAM_SCP )
+
+SCPTeams.SetupEnemy( TEAM_GOC, { TEAM_SCP, TEAM_CI } )
 
 SCPTeams.SetupAllies( { TEAM_CLASSD, TEAM_CI } )
 SCPTeams.SetupAllies( { TEAM_SCI, TEAM_GUARD, TEAM_MTF } )
@@ -390,3 +401,5 @@ SCPTeams.SetupAllies( { TEAM_SCI, TEAM_GUARD, TEAM_MTF } )
 SCPTeams.SetupEscort( TEAM_MTF, TEAM_SCI )
 SCPTeams.SetupEscort( TEAM_GUARD, TEAM_SCI )
 SCPTeams.SetupEscort( TEAM_CI, TEAM_CLASSD )
+
+hook.Run( "SLCTeamsRelations" )

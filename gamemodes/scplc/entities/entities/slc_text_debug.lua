@@ -4,7 +4,7 @@ ENT.Base = "base_anim"
 ENT.Model = "models/hunter/plates/plate025x025.mdl"
 
 function ENT:SetupDataTables()
-	self:AddNetworkVar( "Text", "String" )
+	self:NetworkVar( "String", "Text" )
 end
 
 function ENT:Initialize()

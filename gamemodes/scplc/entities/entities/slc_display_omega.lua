@@ -11,8 +11,8 @@ local STATE_COUNTDOWN = 4
 local STATE_NONE = 5
 
 function ENT:SetupDataTables()
-	self:AddNetworkVar( "State", "Int" )
-	self:AddNetworkVar( "Time", "Float" )
+	self:NetworkVar( "Int", "State" )
+	self:NetworkVar( "Float", "Time" )
 end
 
 ENT.Waiting = 0

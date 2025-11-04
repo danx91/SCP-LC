@@ -63,7 +63,7 @@ RegisterEntityTable( "ActionQueue", {
 		ActionFinish = 0,
 		ActionQueueSetup = function( self, np )
 			if np then
-				self:AddNetworkVar( "_State", "Int" )
+				self:NetworkVar( "Int", "_State" )
 
 				self.State = 0
 
@@ -85,9 +85,9 @@ RegisterEntityTable( "ActionQueue", {
 				self.SetActionFinish = function( this, num ) this.ActionFinish = num end
 				self.GetActionFinish = function( this ) return this.ActionFinish end
 			else
-				self:AddNetworkVar( "State", "Int" )
-				self:AddNetworkVar( "ActionStart", "Float" )
-				self:AddNetworkVar( "ActionFinish", "Float" )
+				self:NetworkVar( "Int", "State" )
+				self:NetworkVar( "Float", "ActionStart" )
+				self:NetworkVar( "Float", "ActionFinish" )
 			end
 		end,
 		ActionQueueInit = function( self )

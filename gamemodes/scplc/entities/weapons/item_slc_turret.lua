@@ -22,8 +22,8 @@ SWEP.PlaceTime = 5
 SWEP.RotationSpeed = 90
 
 function SWEP:SetupDataTables()
-	self:AddNetworkVar( "Place", "Float" )
-	self:AddNetworkVar( "Rotation", "Float" )
+	self:NetworkVar( "Float", "Place" )
+	self:NetworkVar( "Float", "Rotation" )
 end
 
 function SWEP:Initialize()

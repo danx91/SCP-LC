@@ -14,16 +14,16 @@ function EFFECT:Init( data )
 
     for i = 1, self.Arcs do
         local vec_ang = normal:Angle()
-        local n_ang = ang * ( i - 1 ) + ang * ( math.random() * 0.5 + 1 )
+        local n_ang = ang * ( i - 1 ) + ang * ( SLCRandom() * 0.5 + 1 )
 
         local up = vec_ang:Up()
         local right = vec_ang:Right()
 
-        local endpos = self.Origin + right * math.sin( n_ang ) * self.Radius * (math.random() * 0.5 + 0.5) + up * -math.cos( n_ang ) * self.Radius * (math.random() * 0.5 + 0.5) --?
+        local endpos = self.Origin + right * math.sin( n_ang ) * self.Radius * (SLCRandom() * 0.5 + 0.5) + up * -math.cos( n_ang ) * self.Radius * (SLCRandom() * 0.5 + 0.5) --?
         self.ArcPos[i] = { endpos = endpos, up = up, right = right }
     end
 
-    self:GenerateArcs( math.random( 3, 8 ) )
+    self:GenerateArcs( SLCRandom( 3, 8 ) )
 
     self.GenDelay = 0.05
     self.NextGen = CurTime() + self.GenDelay
@@ -32,7 +32,7 @@ end
 function EFFECT:Think()
     if self.NextGen <= CurTime() then
         self.NextGen = CurTime() + self.GenDelay
-        self:GenerateArcs( math.random( 3, 8 ) )
+        self:GenerateArcs( SLCRandom( 3, 8 ) )
     end
 
     return self.DieTime > CurTime()
@@ -50,7 +50,7 @@ function EFFECT:GenerateArcs( segments )
         self.ArcData[i][1] = self.Origin + VectorRand() * self.Radius / 25
 
         for j = 1, segments do
-            self.ArcData[i][j + 1] = self.Origin + diff * j / segments + arcpos.right * math.random() * self.Radius / 6 + arcpos.up * math.random() * self.Radius / 6 + self.Normal * math.random() * self.Radius / 5
+            self.ArcData[i][j + 1] = self.Origin + diff * j / segments + arcpos.right * SLCRandom() * self.Radius / 6 + arcpos.up * SLCRandom() * self.Radius / 6 + self.Normal * SLCRandom() * self.Radius / 5
         end
     end
 end
@@ -67,7 +67,7 @@ function EFFECT:RenderArc( data, endpos )
     render.StartBeam( len )
 
     for i = 1, len do
-        render.AddBeam( data[i], 1, math.random() * 0.5, arc_color )
+        render.AddBeam( data[i], 1, SLCRandom() * 0.5, arc_color )
     end
 
     render.EndBeam()

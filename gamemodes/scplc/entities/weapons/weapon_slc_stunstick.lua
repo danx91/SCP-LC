@@ -21,7 +21,7 @@ SWEP.DamageType 		= DMG_CLUB
 SWEP.DamageTypePowered 	= bit.bor( DMG_CLUB, DMG_SHOCK )
 
 SWEP.HasBattery 		= true
-SWEP.BatteryUsage		= 15
+SWEP.BatteryUsage		= 20
 
 if CLIENT then
 	SWEP.SelectFont = "SCPHLIcons"
@@ -31,7 +31,7 @@ end
 function SWEP:SetupDataTables()
 	self:CallBaseClass( "SetupDataTables" )
 
-	self:AddNetworkVar( "NextIdle", "Float" )
+	self:NetworkVar( "Float", "NextIdle" )
 end
 
 function SWEP:Initialize()
@@ -52,7 +52,7 @@ function SWEP:Think()
 		self:SetNextIdle( ct + vm:SequenceDuration() / vm:GetPlaybackRate() )
 	end
 
-	if SERVER or !IsFirstTimePredicted() or owner:ShouldDrawLocalPlayer() or vm:GetSequence() <= 1 or math.random( 0, 3 ) != 0 then return end
+	if SERVER or !IsFirstTimePredicted() or owner:ShouldDrawLocalPlayer() or vm:GetSequence() <= 1 or SLCRandom( 0, 3 ) != 0 then return end
 	if self:GetBattery() <= 0 and !self.LastAttackPowered then return end
 
 	self:CreateBeam( vm, 19 )
@@ -223,7 +223,7 @@ function SWEP:PlayActivity( act, speed )
 	return dur
 end
 
-AddLoadout( "weapon_slc_stunstick", nil, "melee_mid" )
+AddWeaponLoadout( "weapon_slc_stunstick", nil, "melee_mid" )
 MarkAsWeapon( "weapon_slc_stunstick" )
 
 if SERVER then return end
@@ -268,8 +268,8 @@ function SWEP:CreateBeam( ent, att )
 		segments = 16,
 
 		speed = 0,
-		amplitude = math.random() * 16 + 16,
-		width = math.random() + 1,
+		amplitude = SLCRandom() * 16 + 16,
+		width = SLCRandom() + 1,
 		width_end = 0,
 		life = 0.05,
 		fade = 0,
@@ -303,8 +303,8 @@ function SWEP:ViewModelDrawn( vm )
 	render.DrawSprite( self:TranslateViewModelAttachment( vm:GetAttachment( 19 ).Pos, true ), scale, scale, v_glow_color )
 
 	for i = 1, 18 do
-		clr = ( math.random() * 125 + 25 ) * ( is_swing and 1 or fade )
-		scale = ( math.random() + 4 ) * ( is_swing and 1 or fade )
+		clr = ( SLCRandom() * 125 + 25 ) * ( is_swing and 1 or fade )
+		scale = ( SLCRandom() + 4 ) * ( is_swing and 1 or fade )
 
 		v_glow_color.r = clr
 		v_glow_color.g = clr
@@ -321,17 +321,17 @@ function SWEP:DrawWorldModel( flags )
 		render.SetMaterial( glow_mat )
 		render.DrawSprite( pos, 20, 20, w_glow_color )
 
-		local clr = math.random() * 51 + 153
+		local clr = SLCRandom() * 51 + 153
 		w_glow_color2.r = clr
 		w_glow_color2.g = clr
 		w_glow_color2.b = clr
 
-		local scale = math.random() * 2 + 4
+		local scale = SLCRandom() * 2 + 4
 
 		render.SetMaterial( glow_mat2 )
 		render.DrawSprite( pos, scale, scale, w_glow_color2 )
 
-		if math.random( 0, 8 ) == 0 then
+		if SLCRandom( 0, 8 ) == 0 then
 			self:CreateBeam( self, 1 )
 		end
 	end

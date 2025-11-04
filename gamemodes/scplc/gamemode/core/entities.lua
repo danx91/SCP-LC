@@ -55,43 +55,19 @@ ResetBones
 ---------------------------------------------------------------------------]]
 local zero_angle = Angle( 0, 0, 0 )
 local zero_vector = Vector( 0, 0, 0 )
-function ENTITY:ResetBones()
-	if IsValid( self ) then
-		for i = 0, self:GetBoneCount() do
-			self:ManipulateBoneAngles( i, zero_angle )
-			self:ManipulateBonePosition( i, zero_vector )
-		end
+function ENTITY:ResetBones( num )
+	if !IsValid( self ) then return end
+
+	local count = self:GetBoneCount()
+	if num and num > count then
+		count = num
+	end
+
+	for i = 0, count do
+		self:ManipulateBoneAngles( i, zero_angle )
+		self:ManipulateBonePosition( i, zero_vector )
 	end
 end
-
---[[-------------------------------------------------------------------------
-TakeDamageInfo
----------------------------------------------------------------------------]]
-/*if SERVER then
-_EntityTakeDamageInfo = _EntityTakeDamageInfo or ENTITY.TakeDamageInfo
-	function ENTITY:TakeDamageInfo( info )
-		local dmgtype = info:GetDamageType()
-		local prevent_forces = bit.band( dmgtype, DMG_PREVENT_PHYSICS_FORCE ) == DMG_PREVENT_PHYSICS_FORCE
-		local velocity
-
-		if prevent_forces then
-			info:SetDamageType( bit.band( dmgtype, bit.bnot( DMG_PREVENT_PHYSICS_FORCE ) ) )
-			velocity = self:GetVelocity()
-		end
-
-		_EntityTakeDamageInfo( self, info )
-
-		if prevent_forces then
-			if self:IsPlayer() then
-				//self:SetVelocity( -self:GetVelocity() + velocity )
-				self:SetVelocity( -self:GetVelocity() )
-				//print( self:GetVelocity() )
-			else
-				self:SetPhysVelocity( velocity )
-			end
-		end
-	end
-end*/
 
 --[[-------------------------------------------------------------------------
 SetPhysVelocity
@@ -106,27 +82,11 @@ function ENTITY:SetPhysVelocity( velocity )
 end
 
 --[[-------------------------------------------------------------------------
-AddNetworkVar
+AddNetworkVar - Deprecated!
+GMod added it's own solution to use auto index on network vars. To not break compatibility, I'll just leave AddNetworkVar as binding to NetworkVar
 ---------------------------------------------------------------------------]]
 function ENTITY:AddNetworkVar( name, type )
-	if !self._NVTable then
-		self._NVTable = {
-			Int = { 0, 32 },
-			Float = { 0, 32 },
-			Bool = { 0, 32 },
-			String = { 0, 4 },
-			Vector = { 0, 32 },
-			Angle = { 0, 32 },
-			Entity = { 0, 32 }
-		}
-	end
-
-	local tab = self._NVTable[type]
-	assert( tab, "Unknown NetworkVar type: "..tostring( type ) )
-	assert( tab[1] < tab[2], "You have already hit NetworkVar limit for type '"..tostring( type ).."' on this entity! ["..tostring( self ).."]" )
-
-	self:NetworkVar( type, tab[1], name )
-	tab[1] = tab[1] + 1
+	self:NetworkVar( type, name )
 end
 
 --[[-------------------------------------------------------------------------
@@ -217,25 +177,6 @@ function ENTITY:GetNameEx( pname_limit, blacklist, rep )
 
 	return name
 end
-
---[[-------------------------------------------------------------------------
-DT Registry
----------------------------------------------------------------------------]]
-/*ENTITY.OldInstallDataTable = ENTITY.OldInstallDataTable or ENTITY.InstallDataTable
-function ENTITY:InstallDataTable()
-	self:OldInstallDataTable()
-
-	self.OldNetworkVar = self.NetworkVar
-	function self:NetworkVar( type, slot, name, ex )
-		if !self.DTRegistry then
-			self.DTRegistry = {}
-		end
-
-		table.insert( self.DTRegistry, name )
-
-		self:OldNetworkVar( type, slot, name, ex )
-	end
-end*/
 
 --[[-------------------------------------------------------------------------
 FullSwapModels

@@ -3,7 +3,7 @@ AddCSLuaFile()
 ENT.Type = "anim"
 ENT.Base = "base_anim"
 
-ENT.PathMode = "Simple"
+ENT.Mode = "Simple"
 ENT.NextRepath = 0
 ENT.Speed = 200
 ENT.CutCornerRadius = 0
@@ -63,7 +63,7 @@ function ENT:Move()
 				end
 			end
 
-			if path and self:Repath() != nil then
+			if path and self:Repath() != nil then --TODO CHECK `if path`
 				return "unreachable"
 			end
 		end

@@ -1,6 +1,7 @@
 AddCSLuaFile()
 
-ENT.Type = "anim"
+ENT.Type 		= "anim"
+ENT.SCPIgnore	= true
 
 function ENT:Initialize()
 	self:SetModel( "models/slc/scp106_teleport/portal_floor.mdl" )
@@ -15,6 +16,9 @@ function ENT:Initialize()
 	if IsValid( phys ) then
 		phys:EnableMotion( false )
 	end
+
+	local outside = SLCZones.IsInZone( self:GetPos(), ZONE_FLAG_SURFACE )
+	DestroyOnWarhead( self, outside, !outside )
 end
 
 /*function ENT:Think()

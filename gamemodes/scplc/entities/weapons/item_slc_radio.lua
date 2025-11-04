@@ -22,7 +22,7 @@ end
 function SWEP:SetupDataTables()
 	self:CallBaseClass( "SetupDataTables" )
 
-	self:AddNetworkVar( "Channel", "Int" )
+	self:NetworkVar( "Int", "Channel" )
 
 	self:SetChannel( 1 )
 end

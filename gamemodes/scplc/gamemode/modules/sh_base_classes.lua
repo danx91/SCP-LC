@@ -87,7 +87,7 @@ hook.Add( "SLCRegisterClassGroups", "BaseGroups", function()
 	AddSupportGroup( "mtf_ntf", 60, SPAWN_SUPPORT_MTF, -1, function()
 		SetRoundProperty( "mtfs_spawned", true )
 
-		local num = math.random( 3 )
+		local num = SLCRandom( 3 )
 		PlayPA( string.format( "scp_lc/announcements/ntf_entered%i.ogg", num ), num == 1 and 25 or 12 )
 	end )
 
@@ -153,6 +153,11 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		vest = nil,
 		max = 0,
 		tier = 0,
+		override = function( ply )
+			if ply:IsClassUnlocked( "veterand" ) then
+				return false
+			end
+		end,
 	} )
 
 	/*RegisterClass( "test1", "classd", CLASSD_MODELS, {
@@ -220,6 +225,7 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 
 	RegisterClass( "ciagent", "classd", CLASSD_MODELS, {
 		team = TEAM_CI,
+		id_group = "ci",
 		weapons = { "weapon_taser" },
 		ammo = {},
 		chip = "jan",
@@ -250,7 +256,7 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		rng_effects = { "expd_rubber_bones", "expd_stamina_tweaks", "expd_revive", "expd_lifesteal", "expd_glass_cannon", "expd_speedy_gonzales",
 			"expd_reflect", "expd_invis", "expd_enderman" },
 		callback = function( ply, this )
-			ply:ApplyEffect( this.rng_effects[math.random( #this.rng_effects )] )
+			ply:ApplyEffect( this.rng_effects[SLCRandom( #this.rng_effects )] )
 		end
 	} )
 
@@ -287,6 +293,11 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		vest = nil,
 		max = 0,
 		tier = 0,
+		override = function( ply )
+			if ply:IsClassUnlocked( "sci" ) then
+				return false
+			end
+		end,
 	} )
 
 	RegisterClass( "sci", "sci", SCI_MODELS, {
@@ -395,9 +406,9 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		ammo = {},
 		chip = "guard",
 		omnitool = true,
-		health = 100,
-		walk_speed = 105,
-		run_speed = 240,
+		health = 140,
+		walk_speed = 110,
+		run_speed = 245,
 		sanity = 100,
 		vest = nil,
 		max = 0,
@@ -423,6 +434,7 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 
 	RegisterClass( "chief", "guard", GUARD_MODELS, {
 		team = TEAM_GUARD,
+		loadout = "pistol_high",
 		weapons = { "weapon_slc_stunstick", "item_slc_radio", "item_slc_cctv", "weapon_taser" },
 		ammo = {},
 		chip = "chief",
@@ -457,6 +469,7 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 
 	RegisterClass( "guardmedic", "guard", GUARD_MODELS, {
 		team = TEAM_GUARD,
+		loadout = "pistol_mid",
 		weapons = { "weapon_slc_stunstick", "item_slc_radio", "item_slc_medkitplus", "weapon_taser" },
 		ammo = {},
 		chip = "guard",
@@ -473,6 +486,7 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 
 	RegisterClass( "tech", "guard", GUARD_MODELS, {
 		team = TEAM_GUARD,
+		loadout = "pistol_mid",
 		weapons = { "weapon_slc_stunstick", "item_slc_radio", "item_slc_cctv", "item_slc_turret" },
 		ammo = {},
 		chip = "guard",
@@ -489,6 +503,7 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 
 	RegisterClass( "cispy", "guard", GUARD_MODELS, {
 		team = TEAM_CI,
+		id_group = "ci",
 		loadout = "guard",
 		weapons = { "weapon_slc_stunstick", "item_slc_radio", "item_slc_cctv" },
 		ammo = {},
@@ -504,21 +519,22 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		select_group = "cispy",
 		persona = { team = TEAM_GUARD, class = "guard" },
 		skin = 4,
-		select_override = function( cur, total )
-			return cur < math.floor( total / 2 )
+		select_override = function( name, cur_class, cur_group, total )
+			return cur_group < math.floor( total / 2 )
 		end,
 	} )
 
 	RegisterClass( "lightcispy", "guard", GUARD_MODELS, {
 		team = TEAM_CI,
+		id_group = "ci",
 		loadout = "pistol_low",
 		weapons = { "weapon_slc_stunstick", "item_slc_radio", "item_slc_flashlight", "item_slc_battery" },
 		ammo = {},
 		chip = "guard",
 		omnitool = true,
-		health = 100,
-		walk_speed = 105,
-		run_speed = 240,
+		health = 140,
+		walk_speed = 110,
+		run_speed = 245,
 		sanity = 100,
 		vest = nil,
 		max = 2,
@@ -527,13 +543,14 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		select_group = "cispy",
 		persona = { team = TEAM_GUARD, class = "lightguard" },
 		skin = 4,
-		select_override = function( cur, total )
-			return cur < math.floor( total / 2 )
+		select_override = function( name, cur_class, cur_group, total )
+			return cur_group < math.floor( total / 2 )
 		end,
 	} )
 
 	RegisterClass( "heavycispy", "guard", GUARD_MODELS, {
 		team = TEAM_CI,
+		id_group = "ci",
 		loadout = "heavyguard",
 		weapons = { "weapon_slc_stunstick", "item_slc_radio", "item_slc_cctv" },
 		ammo = {},
@@ -550,14 +567,14 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		select_group = "cispy",
 		persona = { team = TEAM_GUARD, class = "heavyguard" },
 		skin = 4,
-		select_override = function( cur, total )
-			return cur < math.floor( total / 2 )
+		select_override = function( name, cur_class, cur_group, total )
+			return cur_group < math.floor( total / 2 )
 		end,
 	} )
 
 	RegisterClass( "guard_prestige", "guard", GUARD_MODELS, {
 		team = TEAM_GUARD,
-		loadout = "tech",
+		loadout = "pistol_mid",
 		weapons = { "weapon_slc_stunstick", "item_slc_radio", "item_slc_fuse", "item_slc_door_blocker" },
 		ammo = {},
 		chip = "guard",
@@ -575,7 +592,7 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 			local fuse = ply:GetWeapon( "item_slc_fuse" )
 			if !IsValid( fuse ) then return end
 
-			fuse:SetRating( math.random( 3, 15 ) )
+			fuse:SetRating( SLCRandom( 3, 15 ) )
 		end
 	} )
 
@@ -639,7 +656,8 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 
 	RegisterSupportClass( "ntfmedic", "mtf_ntf", MTF_MODELS, {
 		team = TEAM_MTF,
-		weapons = { "item_slc_radio", "item_slc_gasmask", "item_slc_thermal", "item_slc_medkitplus", { "item_slc_morphine", "item_slc_adrenaline" } },
+		weapons = { "item_slc_radio", "item_slc_gasmask", "item_slc_thermal", "item_slc_medkitplus", { "item_slc_morphine", "item_slc_adrenaline", "item_slc_ephedrine",
+			"item_slc_hemostatic" } },
 		ammo = {},
 		chip = "mtf",
 		omnitool = true,
@@ -673,7 +691,7 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 
 	RegisterSupportClass( "ntfsniper", "mtf_ntf", MTF_MODELS, {
 		team = TEAM_MTF,
-		loadout = "sniper_mid",
+		//loadout = "sniper_mid",
 		weapons = { "item_slc_radio", "item_slc_gasmask" },
 		ammo = {},
 		chip = "mtf",
@@ -712,8 +730,8 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 
 	RegisterSupportClass( "alpha1sniper", "mtf_alpha", MTF_MODELS, {
 		team = TEAM_MTF,
-		loadout = "sniper_high",
-		weapons = { "item_slc_radio", "item_slc_cctv", "item_slc_heavymask", "item_slc_thermal", "cw_smoke_grenade" },
+		//loadout = "sniper_high",
+		weapons = { "item_slc_radio", "item_slc_cctv", "item_slc_heavymask", "item_slc_thermal", "cw_kk_ins2_nade_m18" },
 		ammo = {},
 		chip = "o5",
 		omnitool = true,
@@ -734,7 +752,8 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 
 	RegisterSupportClass( "alpha1medic", "mtf_alpha", MTF_MODELS, {
 		team = TEAM_MTF,
-		weapons = { "item_slc_radio", "item_slc_cctv", "item_slc_heavymask", "item_slc_thermal", { "item_slc_morphine", "item_slc_adrenaline" }, "item_slc_medkitplus" },
+		weapons = { "item_slc_radio", "item_slc_cctv", "item_slc_heavymask", "item_slc_thermal", { "item_slc_morphine", "item_slc_adrenaline", "item_slc_ephedrine",
+			"item_slc_hemostatic" }, "item_slc_medkitplus" },
 		ammo = {},
 		chip = "o5",
 		omnitool = true,
@@ -754,8 +773,8 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 
 	RegisterSupportClass( "alpha1com", "mtf_alpha", MTF_MODELS, {
 		team = TEAM_MTF,
-		weapons = { "item_slc_commander_tablet", "item_slc_radio", "item_slc_cctv", "item_slc_heavymask", "item_slc_thermal", "cw_frag_grenade" },
-		ammo = { cw_frag_grenade = 3 },
+		weapons = { "item_slc_commander_tablet", "item_slc_radio", "item_slc_cctv", "item_slc_heavymask", "item_slc_thermal", "cw_kk_ins2_nade_m67" },
+		ammo = { cw_kk_ins2_nade_m67 = 3 },
 		chip = "o5",
 		omnitool = true,
 		health = 160,
@@ -776,7 +795,8 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 	--CI
 	RegisterSupportClass( "ci", "ci", CI_MODELS, {
 		team = TEAM_CI,
-		weapons = { "item_slc_radio", "item_slc_gasmask", "item_slc_nvg", "cw_flash_grenade",  },
+		loadout = "rifle_low",
+		weapons = { "item_slc_radio", "item_slc_gasmask", "item_slc_nvg", { "cw_kk_ins2_nade_m84", "cw_kk_ins2_nade_molotov" } },
 		ammo = {},
 		chip = "hacked4",
 		omnitool = true,
@@ -793,7 +813,7 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 
 	RegisterSupportClass( "cisniper", "ci", CI_MODELS, {
 		team = TEAM_CI,
-		loadout = "sniper_low",
+		//loadout = "sniper_low",
 		weapons = { "item_slc_radio", "item_slc_gasmask", "item_slc_nvg" },
 		ammo = {},
 		chip = "hacked4",
@@ -811,7 +831,7 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 
 	RegisterSupportClass( "cicom", "ci", "models/player/1000shells/captan_ci.mdl", {
 		team = TEAM_CI,
-		weapons = { "item_slc_radio", "item_slc_gasmask", "item_slc_nvg", "cw_frag_grenade" },
+		weapons = { "item_slc_radio", "item_slc_gasmask", "item_slc_nvg", "cw_kk_ins2_nade_m67" },
 		ammo = {},
 		chip = "hacked5",
 		omnitool = true,
@@ -828,7 +848,7 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 
 	RegisterSupportClass( "cimedic", "ci", CI_MODELS, {
 		team = TEAM_CI,
-		weapons = { "item_slc_radio", "item_slc_gasmask", "item_slc_medkitplus", { "item_slc_morphine", "item_slc_adrenaline" } },
+		weapons = { "item_slc_radio", "item_slc_gasmask", "item_slc_medkitplus", { "item_slc_morphine", "item_slc_adrenaline", "item_slc_ephedrine", "item_slc_hemostatic" } },
 		ammo = {},
 		chip = "hacked4",
 		omnitool = true,
@@ -863,7 +883,6 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 
 	RegisterSupportClass( "ciheavy", "ci", CI_MODELS, {
 		team = TEAM_CI,
-		loadout = "heavy",
 		weapons = { "item_slc_radio", "item_slc_heavymask", "item_slc_nvg" },
 		ammo = {},
 		chip = "hacked4",
@@ -890,9 +909,18 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		goc_bgs[i] = 1
 	end
 
+	local function goc_rdm( att, vic )
+		if att:SCPTeam() != TEAM_GOC then return end
+
+		local alpha = GetSupportGroup( "mtf_alpha" )
+		if !alpha[vic:SCPClass()] then return end
+
+		return true, false
+	end
+
 	RegisterSupportClass( "goc", "goc", "models/player/cheddar/goc/goc_soldier2.mdl", {
 		team = TEAM_GOC,
-		weapons = { "item_slc_goc_tablet", "item_slc_radio", "item_slc_heavymask", "item_slc_thermal", "cw_flash_grenade" },
+		weapons = { "item_slc_goc_tablet", "item_slc_radio", "item_slc_heavymask", "item_slc_thermal", { "cw_kk_ins2_nade_m84", "cw_kk_ins2_nade_anm14" } },
 		ammo = {},
 		chip = "goc",
 		omnitool = true,
@@ -906,11 +934,15 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		bodygroups = goc_bgs,
 		backpack = "large",
 		spawn_protection = true,
+		callback = function( ply, this )
+			ply:SetProperty( "rdm_override", goc_rdm )
+		end,
 	} )
 
 	RegisterSupportClass( "gocmedic", "goc", "models/player/cheddar/goc/goc_soldier2.mdl", {
 		team = TEAM_GOC,
-		weapons = { "item_slc_goc_tablet", "item_slc_radio", "item_slc_heavymask", "item_slc_thermal", "item_slc_medkitplus", { "item_slc_morphine", "item_slc_adrenaline" } },
+		weapons = { "item_slc_goc_tablet", "item_slc_radio", "item_slc_heavymask", "item_slc_thermal", "item_slc_medkitplus", { "item_slc_morphine", "item_slc_adrenaline",
+			"item_slc_ephedrine", "item_slc_hemostatic" } },
 		ammo = {},
 		chip = "goc",
 		omnitool = true,
@@ -924,12 +956,15 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		bodygroups = goc_bgs,
 		backpack = "large",
 		spawn_protection = true,
+		callback = function( ply, this )
+			ply:SetProperty( "rdm_override", goc_rdm )
+		end,
 	} )
 
 	RegisterSupportClass( "goccom", "goc", "models/player/cheddar/goc/goc_soldier2.mdl", {
 		team = TEAM_GOC,
-		weapons = { "item_slc_goc_tablet", "item_slc_radio", "item_slc_heavymask", "item_slc_thermal", "cw_smoke_grenade" },
-		ammo = { cw_smoke_grenade = 3 },
+		weapons = { "item_slc_goc_tablet", "item_slc_radio", "item_slc_heavymask", "item_slc_thermal", "cw_kk_ins2_nade_m18" },
+		ammo = { cw_kk_ins2_nade_m18 = 3 },
 		chip = "goc",
 		omnitool = true,
 		health = 130,
@@ -943,6 +978,9 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		bodygroups = goc_bgs,
 		backpack = "large",
 		spawn_protection = true,
+		callback = function( ply, this )
+			ply:SetProperty( "rdm_override", goc_rdm )
+		end,
 	} )
 end )
 

@@ -29,6 +29,7 @@ local SCP_VALID_ENTRIES = {
 	hide = true,
 	avoid = true,
 	buff_scale = true,
+	prot_scale = true,
 }
 
 local SCP_DYNAMIC_VARS = {}
@@ -80,6 +81,7 @@ function SendSCPList( ply )
 			no_select = obj.basestats.no_select,
 			hide = obj.basestats.hide,
 			buff_scale = obj.basestats.buff_scale,
+			prot_scale = obj.basestats.prot_scale,
 		} )
 	end
 
@@ -256,6 +258,10 @@ local function setup_scp_internal( self, ply, ... )
 
 	if !basestats.no_model then
 		ply:SetModel( self.model )
+
+		for i = 1, ply:GetNumBodyGroups() do
+			ply:SetBodygroup( i, 0 )
+		end
 	end
 
 	ply:SetModelScale( basestats.model_scale or 1 )
@@ -267,12 +273,12 @@ local function setup_scp_internal( self, ply, ... )
 	ply:SetJumpPower( basestats.jump_power or 200 )
 
 	if !basestats.no_swep then
-		local wep = ply:Give( self.swep )
+		ply:Give( self.swep )
 		ply:SelectWeapon( self.swep )
+	end
 
-		if IsValid( wep ) then
-			wep.ShouldFreezePlayer = basestats.prep_freeze == true
-		end
+	if basestats.prep_freeze and ROUND.preparing then
+		ply:DisableControls( "scp_prep_freeze", CAMERA_MASK )
 	end
 
 	ply:SetArmor( 0 )
@@ -329,6 +335,11 @@ end
 
 setmetatable( ObjectSCP, { __call = ObjectSCP.Create } )
 --------------------------------------------------------------------------------
+hook.Add( "SLCRound", "SLCSCPFreeze", function()
+	for i, v in ipairs( player.GetAll() ) do
+		v:StopDisableControls( "scp_prep_freeze" )
+	end
+end )
 
 hook.Add( "SLCGamemodeLoaded", "SLCSCPModule", function()
 	UpdateDynamicVars()

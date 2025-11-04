@@ -55,7 +55,7 @@ function GM:PlayerReady( ply )
 		QueueInsert( ply )
 	else
 		local _, spawn = GetClassGroup( "classd" )
-		ply:SetupPlayer( GetClassData( CLASSES.CLASSD ), spawn[math.random( #spawn )] )
+		ply:SetupPlayer( GetClassData( CLASSES.CLASSD ), spawn[SLCRandom( #spawn )] )
 		PlayerMessage( "preparing_classd", ply )
 	end
 
@@ -155,6 +155,8 @@ function GM:PlayerDeath( victim, inflictor, attacker )
 	local pprop = victim.StoredProperties or {}
 	victim.StoredProperties = nil
 
+	victim:SetProperty( "stored_properties", pprop )
+
 	if ROUND.post then return end
 
 	AddRoundStat( "kill" )
@@ -179,7 +181,7 @@ function GM:PlayerDeath( victim, inflictor, attacker )
 		hook.Run( "SLCPlayerDeath", victim, attacker, killinfo.killer_pct )
 
 		for i, v in ipairs( killinfo.assists ) do
-			hook.Run( "SLCKillAssist", victim, attacker, v[1], v[2] )
+			hook.Run( "SLCKillAssist", v[1], victim, v[2], attacker )
 		end
 
 		if !victim._SkipNextKillRewards then
@@ -239,14 +241,26 @@ function GM:PlayerDeath( victim, inflictor, attacker )
 					//print( "kill", attacker, reward, rdm )
 					//print( t_att, t_vic, SCPTeams.IsAlly( t_att, t_vic ), SCPTeams.IsEnemy( t_att, t_vic ), SCPTeams.IsNeutral( t_att, t_vic ) )
 
+					local custom = attacker:GetProperty( "rdm_override" )
+					if custom then
+						local ovr, result = custom( attacker, victim )
+						if ovr then
+							if result == true then
+								rdm = true
+							elseif result == false then
+								preventrdm = true
+							end
+						end
+					end
+
 					--phase 2: giving
-					if rdm then
+					if rdm and !preventrdm then
 						AddRoundStat( "rdm" )
 
 						local n = math.min( reward, attacker:Frags() )
 						PlayerMessage( string.format( "rdm$%d,%s,%s#200,25,25", reward, "@TEAMS."..tname, EscapeMessage( victim:Nick() ) ), attacker )
 						attacker:AddFrags( -n )
-					elseif SCPTeams.IsEnemy( t_att, t_vic ) then
+					elseif preventrdm or SCPTeams.IsEnemy( t_att, t_vic ) then
 						PlayerMessage( string.format( "kill$%d,%s,%s", reward, "@TEAMS."..tname, EscapeMessage( victim:Nick() ) ), attacker )
 						attacker:AddFrags( reward )
 					else

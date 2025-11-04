@@ -85,6 +85,7 @@ lang.NRegistry = {
 	tailor_success = "Udało ci się ukraść identyfikator. Uważaj, niedługo straci on swoją ważność!",
 	tailor_fail = "Nie udało ci się znależć identyfikatora tej osoby!",
 	tailor_end = "Ukradziony identyfikator stracił ważność!",
+	karma = "Twoja ocena karmy: %s"
 }
 
 lang.NFailed = "Nie udało się uzyskać dostępu do NRegistry z kluczem: %s"
@@ -227,7 +228,7 @@ eq.durability = "Wytrzymałość: "
 eq.mobility = "Mobilność: "
 eq.weight = "Waga: "
 eq.weight_unit = "KG"
-eq.multiplier = "Mnożnik obrażeń"
+eq.multiplier = "Mnożnik obrażeń:"
 eq.count = "Ilość"
 
 lang.eq_unknown = "Nieznany przedmiot"
@@ -244,6 +245,7 @@ lang.pickup_msg = {
 	cant_stack = "Nie możesz nieść większej ilości tego przedmiotu!",
 	has_already = "Już posiadasz ten przedmiot!",
 	same_type = "Już posiadasz przedmiot tego samego typu!",
+	max_type = "Osiągnąłeś limit przedmiotów tego typu!",
 	one_weapon = "Możesz nosić tylko jedną broń palną na raz!",
 	goc_only = "Tylko jednostki GOC mogą to podnieść!"
 }
@@ -302,6 +304,10 @@ effects.scp009 = "SCP-009"
 effects.scp106_withering = "Obumieranie"
 effects.scp966_effect = "Wyczerpanie"
 effects.scp966_mark = "Znak Śmierci"
+effects.ephedrine = "Efedryna"
+effects.hemostatic = "Hemostatyk"
+effects.antidote = "Antidotum"
+effects.poison_syringe = "Trucizna"
 
 --[[-------------------------------------------------------------------------
 Class viewer
@@ -403,6 +409,9 @@ lang.settings = {
 	popup_cancel = "ANULUJ",
 	popup_continue = "KONTYNUUJ",
 
+	enabled = "Aktywne",
+	resource_warn = "Z powodu działania tekstur w Garry's Modzie, te zmiany aktywują się po ponownym dołączeniu na serwer.",
+
 	panels = {
 		binds = "Klawiatura",
 		general_config = "Ogólne ustawienia",
@@ -410,6 +419,7 @@ lang.settings = {
 		performance_config = "Wydajność",
 		scp_config = "Ustawienia SCP",
 		skins = "Skórki GUI",
+		resource_packs = "Paczki zasobów",
 		reset = "Reset trybu gry",
 		cvars = "Edytor ConVarów",
 	},
@@ -638,7 +648,7 @@ misc.omega_warhead = {
 }
 
 misc.alpha_warhead = {
-	idle = "Głowica ALPHA jest bezczynna\n\nCzekam na kody nuklearne...",
+	idle = "Głowica ALPHA jest bezczynna\n\nOczekiwanie na kody nuklearne...",
 	ready = "Głowica ALPHA jest bezczynna\n\nKody zaakceptowane!\nOczekiwanie na aktywację...",
 	no_remote = "Aktywacja głowicy ALPHA nie powiodła się\n\nNie udało się nawiązać połączenia z głowicą!\t",
 	active = "Głowica ALPHA aktywowana\n\nNatychmiastowo przystąp do ewakuacji!\nDetonacja za %.2fs",
@@ -686,6 +696,14 @@ misc.inventory = {
 	},
 }
 
+misc.karma = {
+	vbad = "Bardzo zła",
+	bad = "Zła",
+	good = "Dobra",
+	vgood = "Bardzo dobra",
+	perfect = "Wzorowa",
+}
+
 misc.font = {
 	name = "Czcionki",
 	content = [[Nie udało się załadować niestandardowej czcionki trybu gry! Powrót do czcionki systemowej...
@@ -699,8 +717,7 @@ misc.commands_aliases = {
 	["odcisz"] = "unmuteall",
 	["ustawienia"] = "settings",
 	["kolejka"] = "queue",
-	["minigry"] = "minigames",
-	["miny"] = "minigames",
+	["wsparcie"] = "queue",
 }
 
 --[[-------------------------------------------------------------------------
@@ -998,7 +1015,7 @@ ntf_3 = generic_ntf,
 - Słuchaj swojego przełożonego]],
 
 	goc = [[- Zniszcz podmioty SCP
-- Zlokalizuj i aktywuj urzadzenie GOC
+- Zlokalizuj i aktywuj urządzenie GOC
 - Słuchaj swojego przełożonego]],
 
 	gocmedic = [[- Zniszcz podmioty SCP
@@ -1006,7 +1023,7 @@ ntf_3 = generic_ntf,
 - Słuchaj swojego przełożonego]],
 
 	goccom = [[- Zniszcz podmioty SCP
-- Zlokalizuj i aktywuj urzadzenie GOC
+- Zlokalizuj i aktywuj urządzenie GOC
 - Wydawaj rozkazy żołnierzom GOC]],
 
 	SCP023 = generic_scp,
@@ -1573,16 +1590,16 @@ Trudność: Łatwa | Wytrzymałość: Zwykła | Zwinność: Zwykła | Obrażenia
 Przyzwoity wybór ze zrównoważonymi statystykami
 
 Zabójca zombie:
-Trudność: Średnia | Wytrzymałość: Niska | Zwinność: Wysoka | Obrażenia: Zwykłe/Wysokie
-Najszybszy, ale ma najniższe zdrowie i obrażenia
+Trudność: Trudny | Wytrzymałość: Niska | Zwinność: Bardzo Wysoka | Obrażenia: Wysokie
+Najszybszy z dużymi obrażeniami, ale ma najniższe zdrowie. Posiada szybki atak.
 
 Wybuchające zombie:
-Trudność: Średnia | Wytrzymałość: Wysoka | Zwinność: Niska | Obrażenia: Zwykłe/Wysokie
-Niska prędkość ruchu, ale ma wysokie zdrowie i największe obrażenia
+Trudność: Trudny | Wytrzymałość: Wysoka | Zwinność: Niska | Obrażenia: Bardzo Wysokie
+Niska prędkość ruchu, ale ma wysokie zdrowie i największe obrażenia. Wybucha po śmierci.
 
-Spitting zombie:
-Trudność: Średnia | Wytrzymałość: Wysoka | Zwinność: Niska | Obrażenia: Zwykłe/Wysokie
-Najwolniejszy typ zombie, ale zadaje duże obrażenia i najwięcej zdrowia
+Plujący zombie:
+Trudność: Średnia | Wytrzymałość: Bardzo Wysoka | Zwinność: Bardzo Niska | Obrażenia: Niskie
+Najwolniejszy typ zombie z niskimi obrażeniami, ale ma najwięcej zdrowia. Może strzelać pociskami.
 ]],
 }
 
@@ -1592,7 +1609,8 @@ Weapons
 lang.GenericUpgrades = {
 	outside_buff = {
 		name = "Wzmocnienie na powierzchni",
-		info = "Zyskaj dodatkową orchronę przed pociskami oraz odblokuj leczenie i regenerację, kiedy jesteś na powierzchni\n\t• Dodatkowa ochrona przed pociskami: [%def]\n\t• Dodatkowa ochrona przed pociskami: [flat] dmg\n\t• Po wyjściu na powierzchnię, wylecz [buff_hp] HP w krótkim czasie\n\t• Poza walką, odzyskaj [%regen_min] - [%regen_max] (skalowane z czasem) otrzymanych obrażeń od pocisków\n\t• Zadawnie obrażeń leczy cię za [%heal_min] - [%heal_max] (skalowane z czasem) zadanych obrażeń\n\t• Powrót do placówki całkowicie anuluje wszystkie leczenia"
+		info = "Zyskaj dodatkową orchronę przed pociskami oraz odblokuj leczenie i regenerację, kiedy jesteś na powierzchni\n\t• Dodatkowa ochrona przed pociskami: [%def]\n\t• Dodatkowa ochrona przed pociskami: [flat] dmg\n\t• Po wyjściu na powierzchnię, wylecz [buff_hp] HP w krótkim czasie\n\t• Poza walką, odzyskaj [%regen_min] - [%regen_max] (skalowane z czasem) otrzymanych obrażeń od pocisków\n\t• Zadawnie obrażeń leczy cię za [%heal_min] - [%heal_max] (skalowane z czasem) zadanych obrażeń\n\t• Powrót do placówki całkowicie anuluje wszystkie leczenia",
+		parse_description = true,
 	}
 }
 
@@ -1603,7 +1621,7 @@ lang.CommonSkills = {
 	},
 	c_dmg_mod = {
 		name = "Ochrona przed obrażeniami",
-		dsc = "Aktualna ochrona: [mod]\nDodatkowa ochrona: [flat]\n\nOchrona ta nie dotyczy obrażeń bezpośrednich. Uwzględnia jedynie modyfikatory skalowania czasu i wzmocnienie na powierzchni. Modyfikatory specyficzne dla danego SCP nie są uwzględnione!\n\nWzmocnienie: [buff]",
+		dsc = "Aktualna ochrona: [mod]\nDodatkowa ochrona: [flat]\n\nOchrona ta dotyczy obrażeń od pocisków. Uwzględnia jedynie modyfikatory skalowania czasu i wzmocnienie na powierzchni. Modyfikatory specyficzne dla danego SCP nie są uwzględnione!\n\nWzmocnienie: [buff]",
 		dmg = "DMG",
 		not_bought = "Nie kupione",
 		not_surface = "Wyłączone w placówce",
@@ -1698,9 +1716,9 @@ wep.SCP049 = {
 	},
 	zombies_desc = {
 		normal = "Standardowy zombie\n\t• Posiada zarówno lekkie, jak i ciężkie ataki\n\t• Dobry wybór z zrównoważonymi statystykami",
-		assassin = "Zombie zabójca\n\t• Posiada lekki atak i umiejętność szybkiego ataku\n\t• Najszybszy, ale ma najniższe zdrowie i obrażenia",
+		assassin = "Zombie zabójca\n\t• Posiada lekki atak i umiejętność szybkiego ataku\n\t• Najszybszy, duże obrażenia, ale ma najniższe zdrowie",
 		boomer = "Wybuchający ciężki zombie\n\t• Posiada ciężki atak i zdolność wybuchu\n\t• Niska prędkość ruchu, ale ma dużo zdrowia i największe obrażenia",
-		heavy = "Plujący ciężki zombie\n\t• Posiada ciężki atak i zdolność strzału\n\t• Najwolniejszy typ zombie, ale ma wysokie obrażenia i najwięcej zdrowia",
+		heavy = "Plujący ciężki zombie\n\t• Posiada ciężki atak i zdolność strzału\n\t• Najwolniejszy typ zombie z niskimi obrażeniami, ale ma najwięcej zdrowia",
 	},
 	skills = {
 		_overview = { "passive", "choke", "surgery", "boost" },
@@ -2063,7 +2081,7 @@ wep.SCP096 = {
 
 		rage = {
 			name = "Gniew",
-			info = "Otrzymanie [rage_dmg] w [rage_time] sekund od jednego gracza wprawia cię w gniew",
+			info = "Otrzymanie [rage_dmg] obrażeń w [rage_time] sekund od jednego gracza wprawia cię w gniew",
 		},
 		heal1 = {
 			name = "Pożeranie I",
@@ -3130,11 +3148,15 @@ wep.COM_TAB = {
 	confirm = "LPM - zatwierdź",
 	options = {
 		scan = "Skan placówki",
-		tesla = "Wyłącz tesle"
+		tesla = "Wyłącz tesle",
+		intercom = "Interkom",
+		vent = "Wentylacja gazu",
 	},
 	actions = {
 		scan = "Skanowanie placówki...",
 		tesla = "Wyłączanie tesli...",
+		intercom = "Interkom aktywny...",
+		vent = "Wentylacja aktywna...",
 	}
 }
 
@@ -3200,6 +3222,46 @@ wep.MORPHINE_BIG = {
 	info = "Zapewnia dużo tymczasowego zdrowia, które z czasem zanika",
 }
 
+wep.EPHEDRINE = {
+	name = "Efedryna",
+	info = "Zapewnia małe przyśpieszenie na krótki czas",
+}
+
+wep.EPHEDRINE_BIG = {
+	name = "Duża Efedryna",
+	info = "Zapewnia duże przyśpieszenie na krótki czas",
+}
+
+wep.HEMOSTATIC = {
+	name = "Hemostatyk",
+	info = "Przez krótki okres wszystkie krwawienia będą szybko znikać",
+}
+
+wep.HEMOSTATIC_BIG = {
+	name = "Duży Hemostatyk",
+	info = "Przez długi okres wszystkie krwawienia będą szybko znikać",
+}
+
+wep.ANTIDOTE = {
+	name = "Antidotum",
+	info = "Przez krótki okres wszystkie trucizny będą szybko znikać",
+}
+
+wep.ANTIDOTE_BIG = {
+	name = "Duże Antidotum ",
+	info = "Przez długi okres wszystkie trucizny będą szybko znikać",
+}
+
+wep.POISON = {
+	name = "Trucizna",
+	info = "Powoduje poważne obrażenia w czasie",
+}
+
+wep.POISON_BIG = {
+	name = "Duża Trucizna",
+	info = "Powoduje śmiertelne obrażenia w czasie",
+}
+
 wep.TASER = {
 	name = "Paralizator"
 }
@@ -3253,6 +3315,17 @@ wep.CROWBAR = {
 wep.STUNSTICK = {
 	name = "Pałka",
 }
+
+--[[-------------------------------------------------------------------------
+Pages
+---------------------------------------------------------------------------]]
+lang.SLCPAGES = {}
+lang.SLCPAGES.message = "Wiadomość"
+lang.SLCPAGES.error = "Błąd"
+lang.SLCPAGES.fatal = "Błąd Krytyczny"
+
+local pages = {}
+lang.SLCPAGES.PAGES = pages
 
 --[[-------------------------------------------------------------------------
 Minigames - Global

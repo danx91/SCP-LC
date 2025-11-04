@@ -10,6 +10,7 @@ SWEP.PassiveDamage = 1400
 SWEP.PassiveCooldown = 60
 SWEP.TeleportDistance = 40
 SWEP.TeleportDamage = 15
+SWEP.TeleportSpeed = 1.2
 
 SWEP.WitheringDuration = 10
 SWEP.WitheringSlow = 0.2
@@ -22,6 +23,7 @@ SWEP.AttackCooldownPD = 5
 SWEP.TrapCooldown = 120
 SWEP.TrapTPTime = 5
 SWEP.TrapLifeTime = 300
+SWEP.TrapSpeed = 2
 
 SWEP.SpotCooldown = 30
 SWEP.TeleportCooldown = 45
@@ -31,13 +33,13 @@ SWEP.SpotDrawDuration = 1
 function SWEP:SetupDataTables()
 	self:CallBaseClass( "SetupDataTables" )
 
-	self:AddNetworkVar( "PlacingTrap", "Bool" )
-	self:AddNetworkVar( "Teeth", "Int" )
-	self:AddNetworkVar( "PassiveDamage", "Float" )
-	self:AddNetworkVar( "NextSpot", "Float" )
-	self:AddNetworkVar( "PassiveCooldown", "Float" )
-	self:AddNetworkVar( "TrapTime", "Float" )
-	self:AddNetworkVar( "TeleportSequence", "Float" )
+	self:NetworkVar( "Bool", "PlacingTrap" )
+	self:NetworkVar( "Int", "Teeth" )
+	self:NetworkVar( "Float", "PassiveDamage" )
+	self:NetworkVar( "Float", "NextSpot" )
+	self:NetworkVar( "Float", "PassiveCooldown" )
+	self:NetworkVar( "Float", "TrapTime" )
+	self:NetworkVar( "Float", "TeleportSequence" )
 end
 
 function SWEP:Initialize()
@@ -76,7 +78,7 @@ function SWEP:Think()
 			owner:DisableControls( "scp106_penalty", CAMERA_MASK )
 
 			SuppressHostEvents( NULL )
-			self:TeleportSequence( POS_POCKETD[math.random( #POS_POCKETD )], false )
+			self:TeleportSequence( POS_POCKETD[SLCRandom( #POS_POCKETD )], false )
 			SuppressHostEvents( owner )
 
 			util.Decal( "Decal106", pos + Vector( 0, 0, 8 ), pos - Vector( 0, 0, 8 ), owner )
@@ -99,7 +101,10 @@ function SWEP:Think()
 			if v:CheckHazmat( 60 ) then continue end
 
 			v:TakeDamage( self.TeleportDamage * self:GetUpgradeMod( "teleport_dmg", 1 ), owner, owner )
-			SendToPocketDimension( v, owner )
+
+			if v:Alive() then
+				SendToPocketDimension( v, owner )
+			end
 
 			self:AddScore( 1 )
 			self:SetTeeth( self:GetTeeth() + 1 )
@@ -312,7 +317,7 @@ function SWEP:SecondaryAttack()
 		util.Decal( "Decal106", pos + Vector( 0, 0, 8 ), pos - Vector( 0, 0, 8 ), owner )
 		
 		SuppressHostEvents( NULL )
-		self:TeleportSequence( self.LastTrap:GetGroundPos(), self.LastTrap:GetAngles() )
+		self:TeleportSequence( self.LastTrap:GetGroundPos(), self.LastTrap:GetAngles(), self.TrapSpeed )
 		SuppressHostEvents( owner )
 
 		self.LastTrap = nil
@@ -391,7 +396,9 @@ function SWEP:SpecialAttack()
 
 	if self:GetNextSpot() > ct then return end
 
+	local num_spots = self:CheckSpots()
 	local pos = owner:GetPos()
+
 	for i, v in ipairs( self.Spots ) do
 		if v:GetPos():DistToSqr( pos ) < 10000 then return end
 	end
@@ -413,7 +420,7 @@ function SWEP:SpecialAttack()
 		end
 	end
 
-	if self:CheckSpots() >= self.MaxSpots + self:GetUpgradeMod( "spot_max", 0 ) then
+	if num_spots >= self.MaxSpots + self:GetUpgradeMod( "spot_max", 0 ) then
 		local spot = table.remove( self.Spots, 1 )
 
 		if IsValid( spot ) then
@@ -491,21 +498,30 @@ function SWEP:SpotTeleport( idx )
 
 	if !valid then return end
 
-	local dur = self:TeleportSequence( ent:GetPos(), false )
+	local dur = self:TeleportSequence( ent:GetPos(), false, self.TeleportSpeed, self.TeleportSpeed )
 	self:SetNextSpecialAttack( CurTime() + self.TeleportCooldown * self:GetUpgradeMod( "tp_cd", 1 ) + dur )
 end
 
 local fade_color = Color( 0, 0, 0 )
-function SWEP:TeleportSequence( dest, wall )
+function SWEP:TeleportSequence( dest, wall, despawn_speed, spawn_speed )
 	local owner = self:GetOwner()
 
-	local seq_despawn, dur_despawn = owner:LookupSequence( "scp_106_despawn_1" )
-	if seq_despawn == -1 then dur_despawn = 4.3 end
+	despawn_speed = despawn_speed or 1
+	spawn_speed = spawn_speed or 1
 
-	local seq_sapwn, dur_spawn = owner:LookupSequence( wall and "scp_106_spawn_wall" or "scp_106_spawn_floor" )
+	local despawn_name = "scp_106_despawn_1"
+	local seq_despawn, dur_despawn = owner:LookupSequence( despawn_name )
+	if seq_despawn == -1 then dur_despawn = 4.3 end
+	
+	dur_despawn = dur_despawn / despawn_speed
+	
+	local spawn_name = wall and "scp_106_spawn_wall" or "scp_106_spawn_floor"
+	local seq_sapwn, dur_spawn = owner:LookupSequence( spawn_name )
 	if seq_sapwn == -1 then dur_spawn = wall and 1.2 or 4.3 end
 
-	local total = dur_despawn + dur_spawn
+	dur_spawn = dur_spawn
+
+	local total = dur_despawn + dur_spawn / spawn_speed
 
 	if wall then
 		owner:SetEyeAngles( wall )
@@ -513,7 +529,8 @@ function SWEP:TeleportSequence( dest, wall )
 
 	self:SetTeleportSequence( CurTime() + total )
 	owner:DisableControls( "scp106_tp" )
-	owner:DoCustomAnimEvent( PLAYERANIMEVENT_CUSTOM_SEQUENCE, seq_despawn )
+	
+	owner:PlaySequence( seq_despawn, false, despawn_speed )
 
 	owner:AddTimer( "SCP106FinishTPSound", dur_despawn - 2, 1, function()
 		owner:EmitSound( "SCP106.Disappear" )
@@ -526,7 +543,7 @@ function SWEP:TeleportSequence( dest, wall )
 	owner:AddTimer( "SCP106FinishTP", dur_despawn, 1, function()
 		owner:ScreenFade( SCREENFADE.IN, fade_color, 1, 0.25 )
 		owner:SetPos( dest )
-		owner:DoCustomAnimEvent( PLAYERANIMEVENT_CUSTOM_SEQUENCE, seq_sapwn )
+		owner:PlaySequence( seq_sapwn, false, spawn_speed )
 		owner:EmitSound( "SCP106.Teleport" )
 	end )
 
@@ -698,15 +715,6 @@ SCPHook( "SCP106", "ShouldCollide", function ( ent1, ent2 )
 		if ent1.ignorecollide106 or ent2.ignorecollide106 then
 			return false
 		end
-	end
-end )
-
-SCPHook( "SCP106", "DoAnimationEvent", function( ply, event, data )
-	if ply:SCPClass() != CLASSES.SCP106 then return end
-
-	if event == PLAYERANIMEVENT_CUSTOM_SEQUENCE  then
-		ply:AddVCDSequenceToGestureSlot( GESTURE_SLOT_ATTACK_AND_RELOAD, data, 0, true )
-		return ACT_INVALID
 	end
 end )
 

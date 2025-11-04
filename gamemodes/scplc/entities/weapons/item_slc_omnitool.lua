@@ -38,12 +38,12 @@ end
 function SWEP:SetupDataTables()
 	self:CallBaseClass( "SetupDataTables" )
 
-	self:AddNetworkVar( "ChipID", "Int" )
-	self:AddNetworkVar( "AccessOverride", "Int" )
-	//self:AddNetworkVar( "State", "Int" )
+	self:NetworkVar( "Int", "ChipID" )
+	self:NetworkVar( "Int", "AccessOverride" )
+	//self:NetworkVar( "Int", "State" )
 
-	self:AddNetworkVar( "ShowText", "Float" )
-	self:AddNetworkVar( "Text", "String" )
+	self:NetworkVar( "Float", "ShowText" )
+	self:NetworkVar( "String", "Text" )
 
 	/*self:NetworkVarNotify( "ChipID",  function( ent, name, old, new )
 		if CLIENT then
@@ -117,7 +117,7 @@ function SWEP:Deploy()
 	self:ResetAction( STATE.PREPARING, self.LoadingDuration )
 	
 	if CLIENT then
-		self:ResetViewModelBones()
+		//self:ResetViewModelBones()
 	end
 end
 
@@ -510,7 +510,7 @@ if CLIENT then
 		local state = self:GetState()
 		//if self.Preparing > CurTime() then
 		if state == STATE.PREPARING then
-			/*if mal < CurTime() and ( mb and math.random() < 0.03 or math.random() < 0.02 ) then
+			/*if mal < CurTime() and ( mb and SLCRandom() < 0.03 or SLCRandom() < 0.02 ) then
 				mal = CurTime() + 0.1
 				mb = !mb
 			end*/

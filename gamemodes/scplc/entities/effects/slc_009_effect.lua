@@ -3,18 +3,18 @@ function EFFECT:Init( data )
 	local emitter = ParticleEmitter( orig, false )
 
 	for i = 1, 5 do
-		local particle = emitter:Add( "particle/smokesprites_000"..math.random( 1,9 ), orig )
+		local particle = emitter:Add( "particle/smokesprites_000"..SLCRandom( 1,9 ), orig )
 		if particle then
-			particle:SetDieTime( math.Rand( 1, 2 ) )
+			particle:SetDieTime( SLCRandom:NextFloat( 1, 2 ) )
 			particle:SetStartAlpha( 125 )
 			particle:SetEndAlpha( 0 )
 			particle:SetStartSize( 0 )
-			particle:SetEndSize( math.random( 128, 196 ) )
-			particle:SetRoll( math.random() * math.pi * 2 )
-			particle:SetRollDelta( math.random() * 0.2 - 0.1 )
+			particle:SetEndSize( SLCRandom( 128, 196 ) )
+			particle:SetRoll( SLCRandom() * math.pi * 2 )
+			particle:SetRollDelta( SLCRandom() * 0.2 - 0.1 )
 			particle:SetColor( 225, 15, 15 )
 			particle:SetAirResistance( 75 )
-			particle:SetVelocity( Vector( math.Rand( -5, 5 ), math.Rand( -5, 5 ), math.Rand( 16, 64 ) ) )
+			particle:SetVelocity( Vector( SLCRandom:NextFloat( -5, 5 ), SLCRandom:NextFloat( -5, 5 ), SLCRandom:NextFloat( 16, 64 ) ) )
 		end
 	end
 

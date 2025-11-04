@@ -6,6 +6,8 @@ SLCZones = {
 	ALL = {},
 }
 
+ZONE_ALL = "all"
+
 ZONE_FLAG_FACILITY = bit.lshift( 1, 0 )
 ZONE_FLAG_SURFACE = bit.lshift( 1, 1 )
 ZONE_FLAG_ANOMALY = bit.lshift( 1, 2 )
@@ -39,6 +41,7 @@ function SLCZones.HasFlag( zone, flag )
 end
 
 function SLCZones.GetPlayersInZone( zone )
+	if zone == ZONE_ALL then return player.GetAll() end
 	if !SLCZones.ZONES[zone] then return end 
 
 	local tab = {}
@@ -88,6 +91,8 @@ function SLCZones.IsInZone( vec, zone )
 		return SLCZones.IsInZoneByFlag( vec, zone )
 	end
 
+	if zone == ZONE_ALL then return true end
+
 	local tab = MAP_ZONES[zone]
 	if !tab then return false end
 
@@ -131,7 +136,6 @@ function ENTITY:IsInZone( zone )
 
 	return false
 end
-
 
 --[[-------------------------------------------------------------------------
 Default zones

@@ -15,7 +15,7 @@ local callbacks = {}
 local pages = {}
 
 function SWEP:SetupDataTables()
-	self:AddNetworkVar( "Disease", "Int" )
+	self:NetworkVar( "Int", "Disease" )
 end
 
 function SWEP:Initialize()
@@ -30,7 +30,10 @@ function SWEP:Equip()
 end
 
 function SWEP:Deploy()
-	if CLIENT then return end
+	if CLIENT then
+		self:UpdateText()
+		return
+	end
 
 	local owner = self:GetOwner()
 	if owner:GetProperty( "slc_1025_disease" ) or owner:GetSCP714() then return end
@@ -50,7 +53,7 @@ function SWEP:Disease()
 	local sig = owner:TimeSignature()
 
 	if !self.PlayerCache[owner] or self.PlayerCache[owner][1] != sig then
-		local rand = math.random( #diseases )
+		local rand = SLCRandom( #diseases )
 
 		self:SetDisease( rand )
 		self.PlayerCache[owner] = { sig, rand }
@@ -67,6 +70,19 @@ if CLIENT then
 
 	local page_color = Color( 255, 255, 255, 255 )
 	local text_color = Color( 0, 0, 0, 255 )
+
+	function SWEP:UpdateText()
+		local name = diseases[self:GetDisease()]
+		if !name then return end
+
+		local desc = self.Lang.descriptions[name]
+		if !desc then
+			self.Markup = nil
+			return
+		end
+
+		self.Markup = SLCMarkupParse( "<font=SCP1025Font><color=black>"..desc.."</color></font>", ScrH() * 0.75 * ratio * 0.9 )
+	end
 
 	function SWEP:DrawHUD()
 		local w, h = ScrW(), ScrH()
@@ -85,6 +101,7 @@ if CLIENT then
 		local name = diseases[id]
 
 		if !name then return end
+
 		draw.Text{
 			text = pages[id] or "00",
 			pos = { x + dw - 16, y + dh - 16 },
@@ -96,17 +113,16 @@ if CLIENT then
 
 		local _, th = draw.Text{
 			text = self.Lang.diseases[name] or name,
-			pos = { w * 0.5, y + w * 0.03 },
+			pos = { w * 0.5, y + h * 0.04 },
 			font = "SCPHUDMedium",
 			color = text_color,
 			xalign = TEXT_ALIGN_CENTER,
 			yalign = TEXT_ALIGN_CENTER,
 		}
 
-		local desc = self.Lang.descriptions[name]
-		if !desc then return end
-		
-		draw.MultilineText( x, y + w * 0.03 + th * 0.5, desc, "SCP1025Font", text_color, dw, w * 0.0175, 4, "justify" )
+		if self.Markup then
+			self.Markup:Draw( x + dw * 0.5, y + h * 0.06 + th * 0.5, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP, 255, true )
+		end
 	end
 
 	hook.Add( "RebuildFonts", "SCP1025Font", function()
@@ -130,7 +146,7 @@ end
 
 --Negative
 AddSCP1025Disease( "arrest", 17, function( ply )
-	local t = ply:AddTimer( "1025disease", math.random( 30, 90 ), 1, function( self )
+	local t = ply:AddTimer( "1025disease", SLCRandom( 30, 90 ), 1, function( self )
 		if IsValid( ply ) then
 			ply:SetProperty( "death_info_override", {
 				type = "dead",
@@ -204,7 +220,7 @@ EFFECTS.RegisterEffect( "asthma", {
 		if SERVER then
 			if ply:GetStamina() < ply:GetMaxStamina() * 0.75 then
 				ply:EmitSound( "SLCEffects.Asthma" )
-				return math.random( 10, 30 )
+				return SLCRandom( 10, 30 )
 			end
 		end
 	end,

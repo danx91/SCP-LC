@@ -80,7 +80,8 @@ function PLAYER:Cleanup( norem )
 
 	if !norem then
 		self:SetVest( 0 )
-		self:RemoveAllItems()
+		self:RemoveAllAmmo()
+		self:StripWeapons()
 	end
 
 	local sig = math.floor( CurTime() )
@@ -122,7 +123,7 @@ end
 local function give_player_weapon( ply, class, ammo )
 	local loadout = string.match( class, "^loadout:(.+)$" )
 	if loadout then
-		local l_wep, l_ammo = GetLoadoutWeapon( loadout )
+		local l_wep, l_ammo = GetLoadoutWeapon( loadout, true )
 		if !l_wep then return end
 	
 		class = l_wep
@@ -132,9 +133,19 @@ local function give_player_weapon( ply, class, ammo )
 	local wep = ply:Give( class )
 	if IsValid( wep ) then
 		if !ammo then return wep end
-		ammo = wep.Primary.ClipSize * ammo
+
+		local clip_size = wep.Primary.ClipSize
+		if clip_size == -1 then
+			clip_size = 1
+		end
+
+		ammo = clip_size * ammo
 
 		local clip = math.min( ammo, wep:GetMaxClip1() )
+		if clip == -1 then
+			clip = 1
+		end
+
 		local reserve = ammo - clip
 
 		wep:SetClip1( clip )
@@ -185,7 +196,7 @@ local function setup_player_internal( self, class, spawn )
 		end
 	end
 
-	local chip = GetChip( class.chip )
+	local chip = GetChip( istable( class.chip ) and table.Random( class.chip ) or class.chip )
 	if class.omnitool then
 		local omnitool = self:Give( "item_slc_omnitool" )
 		if IsValid( omnitool ) and chip then
@@ -207,7 +218,7 @@ local function setup_player_internal( self, class, spawn )
 			local tab = table.Copy( v )
 
 			for i = 1, v.amount or 1 do
-				local wep_c = table.remove( tab, math.random( #tab ) )
+				local wep_c = table.remove( tab, SLCRandom( #tab ) )
 				give_player_weapon( self,  wep_c, class.ammo[wep_c] )
 			end
 		else
@@ -246,7 +257,7 @@ local function setup_player_internal( self, class, spawn )
 			if k < 0 then continue end
 
 			if v == "?" then
-				v = math.random( self:GetBodygroupCount( k ) )
+				v = SLCRandom( self:GetBodygroupCount( k ) )
 			elseif isstring( v ) then
 				local r1, r2 = string.match( v, "^(%d+):(%d+)$" )
 
@@ -254,7 +265,7 @@ local function setup_player_internal( self, class, spawn )
 				r2 = tonumber( r2 )
 
 				if r1 and r2 then
-					v = math.random( r1, r2 )
+					v = SLCRandom( r1, r2 )
 				else
 					v = tonumber( v )
 				end
@@ -350,7 +361,7 @@ function PLAYER:EquipVest( vest, silent, dur )
 					if k < 0 then continue end
 		
 					if v == "?" then
-						v = math.random( self:GetBodygroupCount( k ) )
+						v = SLCRandom( self:GetBodygroupCount( k ) )
 					elseif isstring( v ) then
 						local r1, r2 = string.match( v, "^(%d+):(%d+)$" )
 		
@@ -358,7 +369,7 @@ function PLAYER:EquipVest( vest, silent, dur )
 						r2 = tonumber( r2 )
 		
 						if r1 and r2 then
-							v = math.random( r1, r2 )
+							v = SLCRandom( r1, r2 )
 						else
 							v = tonumber( v )
 						end
@@ -522,7 +533,7 @@ function PLAYER:CreatePlayerRagdoll( disable_loot )
 
 		local wep = self:GetMainWeapon()
 		if IsValid( wep ) then
-			local ammo = math.floor( self:GetAmmoCount( wep:GetPrimaryAmmoType() ) * ( math.random() * 0.2 + 0.1 ) )
+			local ammo = math.floor( self:GetAmmoCount( wep:GetPrimaryAmmoType() ) * ( SLCRandom() * 0.2 + 0.1 ) )
 			if ammo > 0 then
 				table.insert( loot, {
 					info = {
@@ -643,18 +654,13 @@ function PLAYER:CheckPremium()
 	if !self.PlayerData then return end
 
 	local groups = {}
-	//for s in string.gmatch( string.gsub( CVAR.slc_premium_groups:GetString(), "%s", "" ), "[^,]+" ) do
 	for s in string.gmatch( CVAR.slc_premium_groups:GetString(), "[^,]+" ) do
 		table.insert( groups, string.Trim( s ) )
 	end
 
 	local premium = false
-
-	local group = self:GetUserGroup()
-	local useulib = ULib != nil
-
 	for i, v in ipairs( groups ) do
-		if useulib and self:CheckGroup( v ) or v == group then
+		if self:IsUserGroup( v ) then
 			premium = true
 			break
 		end
@@ -666,7 +672,7 @@ end
 --[[-------------------------------------------------------------------------
 SPEED SYSTEM
 ---------------------------------------------------------------------------]]
-function PLAYER:PushSpeed( walk, run, crouch, id, maxstack )
+function PLAYER:PushSpeed( walk, run, crouch, id, maxstack, force_mult )
 	if walk <= 0 and walk != -1 then
 		print( "Inavlid value for walk speed!" )
 		return false
@@ -713,13 +719,13 @@ function PLAYER:PushSpeed( walk, run, crouch, id, maxstack )
 		} }
 	end
 
-	if walk > 0 and walk <= 2 then
+	if force_mult or walk > 0 and walk <= 2 then
 		self:SetWalkSpeed( swalk * walk )
 	elseif walk != -1 then
 		self:SetWalkSpeed( walk )
 	end
 
-	if run > 0 and run <= 2 then
+	if force_mult or run > 0 and run <= 2 then
 		self:SetRunSpeed( srun * run )
 	elseif run != -1 then
 		self:SetRunSpeed( run )
@@ -1195,9 +1201,9 @@ end
 
 Timer( "SLCAFKCheck", 10, 0, function( self, n )
 	local rt = RealTime()
-	local afk_time = CVAR.slc_afk_time:GetInt() or 60
-	local afk_autoslay = CVAR.slc_afk_autoslay:GetInt() or 60
-	local afk_mode = CVAR.slc_afk_mode:GetInt() or 1
+	local afk_time = CVAR.slc_afk_time:GetInt()
+	local afk_autoslay = CVAR.slc_afk_autoslay:GetInt()
+	local afk_mode = CVAR.slc_afk_mode:GetInt()
 
 	local players = player.GetAll()
 	local server_full = #players == game.MaxPlayers()
@@ -1452,6 +1458,8 @@ Helper functions
 Player_AddFrags = Player_AddFrags or PLAYER.AddFrags
 
 function PLAYER:AddFrags( f )
+	if hook.Run( "SLCAddFrags", self, f ) == true then return end
+
 	if f > 0 then
 		local team = self:SCPTeam()
 		if team != TEAM_SPEC then
@@ -1492,6 +1500,8 @@ function PLAYER:AddLevel( lvl )
 		self:SetSCPLevel( level )
 		self:AddClassPoints( lvl )
 	end
+
+	hook.Run( "SLCPlayerLevel", self, lvl )
 end
 
 local xp_scale_mfn = function( tab, mul, cat )
@@ -1563,6 +1573,8 @@ function PLAYER:AddXP( xp, category )
 
 	local req = self:RequiredXP( level ) //lvlxp + lvlinc * level
 	local lvls = 0
+
+	hook.Run( "SLCPlayerExperience", self, plyxp )
 
 	while plyxp >= req do
 		plyxp = plyxp - req
@@ -1643,7 +1655,7 @@ function PLAYER:IsAboutToSpawn()
 end
 
 function PLAYER:IsValidSpectator( ignore_death_screen, softafk )
-	return !self:Alive() and self:IsActive() and self:SCPTeam() == TEAM_SPEC and!self:IsAboutToSpawn()
+	return !self:Alive() and self:IsActive() and self:SCPTeam() == TEAM_SPEC and !self:IsAboutToSpawn()
 		and ( !self:IsAFK() or softafk and self.SoftAFK and self.SoftAFK >= RealTime() )
 		and ( ignore_death_screen or !self.SetupAsSpectator and !self.DeathScreen )
 end

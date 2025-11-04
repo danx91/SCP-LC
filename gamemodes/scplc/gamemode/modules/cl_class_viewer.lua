@@ -274,7 +274,7 @@ local function addClass( tab, p, h )
 				if k < 0 then continue end
 	
 				if v == "?" then
-					v = math.random( ent:GetBodygroupCount( k ) )
+					v = SLCRandom( ent:GetBodygroupCount( k ) )
 				elseif isstring( v ) then
 					local r1, r2 = string.match( v, "^(%d+):(%d+)$" )
 	
@@ -282,7 +282,7 @@ local function addClass( tab, p, h )
 					r2 = tonumber( r2 )
 	
 					if r1 and r2 then
-						v = math.random( r1, r2 )
+						v = SLCRandom( r1, r2 )
 					else
 						v = tonumber( v )
 					end
@@ -734,6 +734,9 @@ local function openViewer()
 							if isstring( data ) then
 								local loadout = string.match( data, "^loadout:(.+)$" )
 								if loadout then
+									local alt1 = string.match( loadout, "^(.+):%d+$" )
+									loadout = alt1 or loadout
+
 									local loadout_tab = GetLoadout( loadout )
 
 									if LANG.loadouts[loadout] then
@@ -744,7 +747,16 @@ local function openViewer()
 										data = {}
 
 										for _, l_wep in ipairs( loadout_tab ) do
-											table.insert( data, l_wep.class )
+											local nested_loadout = string.match( l_wep.class, "^loadout:(.+)$" )
+											if nested_loadout then
+												local alt2 = string.match( nested_loadout, "^(.+):%d+$" )
+												nested_loadout = alt2 or nested_loadout
+
+												table.insert( data, LANG.loadouts[nested_loadout] or nested_loadout )
+											else
+												local alt2 = string.match( l_wep.class, "^(.+):%d+$" )
+												table.insert( data, alt2 or l_wep.class )
+											end
 										end
 									end
 								end

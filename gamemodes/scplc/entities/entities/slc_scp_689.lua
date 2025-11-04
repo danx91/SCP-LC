@@ -3,7 +3,7 @@ AddCSLuaFile()
 ENT.Type = "anim"
 
 function ENT:SetupDataTables()
-	self:AddNetworkVar( "Sigma", "Bool" )
+	self:NetworkVar( "Bool", "Sigma" )
 end
 
 function ENT:Initialize()
@@ -89,7 +89,7 @@ function ENT:Think()
 		self:SetSigma( false )
 		self:StopSound( "SLC.SCP689.Sigma" )
 		
-		AddTimer( "SCP689Attack"..self:EntIndex(), math.random( 15, 90 ), 1, function()
+		AddTimer( "SCP689Attack"..self:EntIndex(), SLCRandom( 15, 90 ), 1, function()
 			self:DoAttack()
 		end )
 	end
@@ -140,7 +140,7 @@ function ENT:DoAttack()
 	self:CheckTargets()
 
 	local plys, num = self:GetTargets()
-	local target = plys[math.random( num )]
+	local target = plys[SLCRandom( num )]
 
 	self.NextAttack = 0
 
@@ -162,9 +162,9 @@ function ENT:DoAttack()
 end
 
 function ENT:DoRandom()
-	self:SetAngles( Angle( 0, math.random( 0, 3 ) * 90, 0 ) )
+	self:SetAngles( Angle( 0, SLCRandom( 0, 3 ) * 90, 0 ) )
 
-	local sigma = math.random( 100 ) == 69
+	local sigma = SLCRandom( 100 ) == 69
 	self:SetSigma( sigma )
 
 	if sigma then

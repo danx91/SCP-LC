@@ -8,8 +8,8 @@ local STATE_ACTIVE = 1
 local STATE_COOLDOWN = 2
 
 function ENT:SetupDataTables()
-	self:AddNetworkVar( "State", "Int" )
-	self:AddNetworkVar( "Time", "Float" )
+	self:NetworkVar( "Int", "State" )
+	self:NetworkVar( "Float", "Time" )
 end
 
 function ENT:Initialize()

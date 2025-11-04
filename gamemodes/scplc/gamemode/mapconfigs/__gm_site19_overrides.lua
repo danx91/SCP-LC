@@ -117,7 +117,7 @@ local function scp106_tp_func( self, ent )
 
 	if !status then
 		local num = ent:GetProperty( "106exit", 0 ) + 1
-		if math.random() < num * 0.25 then
+		if SLCRandom() < num * 0.25 then
 			ent:SetProperty( "106exit", 0 )
 			status = true
 		else
@@ -130,9 +130,9 @@ local function scp106_tp_func( self, ent )
 				GetGasPower( ZONE_HCZ ) == 0 and pos_106tp_hcz or ( GetRoundStat( "alpha_warhead" ) or GetGasPower( ZONE_EZ ) == 0 ) and pos_106tp_ez
 			) or pos_106tp_surf
 		
-		ent:SetPos( tab[math.random( #tab )] )
+		ent:SetPos( tab[SLCRandom( #tab )] )
 	else
-		ent:SetPos( pos_106tp_pd[math.random( #pos_106tp_pd )] )
+		ent:SetPos( pos_106tp_pd[SLCRandom( #pos_106tp_pd )] )
 		TransmitSound( "#scp_lc/scp/106/laugh.ogg", true, ent, 1 )
 	end
 end
@@ -270,7 +270,7 @@ end
 
 --[[-------------------------------------------------------------------------
 It turns out that author of site19 missed some things during map creation like fcking door being wrongly named and now I have to fix it in code
-because, yes you guessed correctly, he will not give vmf file to fix it and, yes you are also correct, he isn't going to fix it either...
+because, yes you guessed correctly, he will not give vmf file to fix it and yes, you are also correct, he isn't going to fix it either...
 Also, idk how the hell this "very skilled" mapper managed to make half of the fcking doors to have wrongly oriented fcking bounding boxes...
 ---------------------------------------------------------------------------]]
 FRENCH_MAP_FIXED = FRENCH_MAP_FIXED or false
@@ -384,11 +384,13 @@ hook.Add( "SLCPreround", "Site19Preround", function()
 			v:SetKeyValue( "forceclosed", "1" )
 		elseif name == "049_door" then
 			v:SetKeyValue( "forceclosed", "1" )
-		elseif mapid == 3240 then --Unlock Gate B
+		elseif mapid == 3240 and CVAR.slc_disable_fuseboxes:GetInt() == 0 then --Unlock Gate B
 			v:Fire( "Unlock" )
 		elseif name == "bt_914_tirette" then
 			v:ClearAllOutputs( "OnPressed" )
 			CatchInput( "bt_914_tirette", new_914_logic )
+		elseif mapid == 3034 or mapid == 3551 then --Make forest teleports bigger
+			v:UseTriggerBounds( true, 32 )
 		end
 		
 		if remove_name[name] or remove_mapid[mapid] then

@@ -55,7 +55,7 @@ function SWEP:StateChanged( ply, enabled )
 	if enabled then
 		ply:SetStaminaLimit( 51 )
 	else
-		ply:SetStaminaLimit( ply.ClassData.stamina or 100 )
+		ply:SetStaminaLimit( ply.ClassData and ply.ClassData.stamina or 100 )
 	end
 end
 

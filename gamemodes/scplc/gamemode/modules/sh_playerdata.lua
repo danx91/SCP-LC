@@ -318,7 +318,7 @@ end
 //reset = function( ply, val ) return true to prevent
 //* - true: only on roundend, false: never, nil: always, func: return true to suppress
 //name cannot contain ':'
-//if <initial value> is like '!key:value', value will be initially set to 'value' and will be replaced from value in database with key 'key'
+//if <initial value> is like '!key:value', value will be initially set to 'value' and will be replaced with value in database with key 'key'
 //(gamemode will always try to convert 'value' to number or bool)
 
 RegisterPlayerStatus( "Premium", false, function( ply, old, new ) ply:Set_SCPPremium( new ) end, false )
@@ -330,6 +330,7 @@ RegisterPlayerStatus( "Blink", false )
 RegisterPlayerStatus( "NextBlink", -1 )
 RegisterPlayerStatus( "SightLimit", -1 )
 RegisterPlayerStatus( "SCPPenalty", "!scp_penalty:0", false, false )
+RegisterPlayerStatus( "SCPKarma", "!scp_karma:250", false, false )
 
 RegisterPlayerStatus( "SCPHuman", false, nil, nil, true )
 RegisterPlayerStatus( "SCPCanInteract", false )

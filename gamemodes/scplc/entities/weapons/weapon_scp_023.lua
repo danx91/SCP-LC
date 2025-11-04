@@ -12,20 +12,22 @@ SWEP.PassiveDamage = 2
 SWEP.DrainCooldown = 45
 SWEP.DrainDuration = 10
 SWEP.DrainRadius = 300
+SWEP.DrainRadiusSurface = 450
 SWEP.DrainRate = 0.66
 
-SWEP.CloneCooldown = 180
+SWEP.CloneCooldown = 150
 
 SWEP.HuntCooldown = 130
 SWEP.HuntRandomRadius = 750
 
 function SWEP:SetupDataTables()
 	self:CallBaseClass( "SetupDataTables" )
-	
-	self:AddNetworkVar( "Preys", "Int" )
-	self:AddNetworkVar( "InvisRadius", "Int" )
-	self:AddNetworkVar( "PassiveCooldown", "Float" )
-	self:AddNetworkVar( "Drain", "Float" )
+
+	self:NetworkVar( "Bool", "Clone" )
+	self:NetworkVar( "Int", "Preys" )
+	self:NetworkVar( "Int", "InvisRadius" )
+	self:NetworkVar( "Float", "PassiveCooldown" )
+	self:NetworkVar( "Float", "Drain" )
 end
 
 function SWEP:Initialize()
@@ -38,12 +40,11 @@ end
 
 SWEP.NextDrain = 0
 SWEP.NextPassive = 0
+SWEP.NextCloneCheck = 0
 
 function SWEP:Think()
 	if CLIENT or ROUND.post then return end
 
-	self:PlayerFreeze()
-	
 	if ROUND.preparing then
 		return
 	end
@@ -78,6 +79,11 @@ function SWEP:Think()
 		self:CheckPreys()
 	end
 
+	if self.NextCloneCheck < ct then --No need for high accuracy
+		self.NextCloneCheck = ct + 1
+		self:SetClone( IsValid( self.Clone ) )
+	end
+
 	local drain = self:GetDrain()
 	if drain != 0 and drain < ct then
 		self:SetDrain( 0 )
@@ -91,7 +97,7 @@ function SWEP:Think()
 			self.NextDrain = ct + drain_tick
 		end
 
-		local drain_radius = self.DrainRadius * self:GetUpgradeMod( "drain_dist", 1 )
+		local drain_radius = ( owner:IsInZone( ZONE_FLAG_SURFACE ) and self.DrainRadiusSurface or self.DrainRadius ) * self:GetUpgradeMod( "drain_dist", 1 )
 		local any = false
 		local drained = 0
 
@@ -134,7 +140,7 @@ function SWEP:PrimaryAttack()
 	local owner = self:GetOwner()
 	local pos = owner:GetPos()
 
-	local radius = self.DrainRadius * self:GetUpgradeMod( "drain_dist", 1 )
+	local radius = ( owner:IsInZone( ZONE_FLAG_SURFACE ) and self.DrainRadiusSurface or self.DrainRadius ) * self:GetUpgradeMod( "drain_dist", 1 )
 	radius = radius * radius
 
 	for i, v in ipairs( player.GetAll() ) do
@@ -163,6 +169,7 @@ function SWEP:SecondaryAttack()
 	self:SetNextSecondaryFire( CurTime() + self.CloneCooldown )
 
 	self.Clone = clone
+	self:SetClone( true )
 
 	clone:SetPos( owner:GetPos() )
 	clone:Spawn()
@@ -192,7 +199,7 @@ function SWEP:SpecialAttack()
 		return
 	end
 
-	local prey = preys[math.random( preys_len )]
+	local prey = preys[SLCRandom( preys_len )]
 	local prey_pos = prey:GetPos()
 	local rng_radius = self.HuntRandomRadius * self:GetUpgradeMod( "hunt_range", 1 )
 	rng_radius = rng_radius * rng_radius
@@ -206,7 +213,7 @@ function SWEP:SpecialAttack()
 
 	self:SetNextSpecialAttack( ct + 5 )
 
-	local new_prey = new_preys[math.random( #new_preys )]
+	local new_prey = new_preys[SLCRandom( #new_preys )]
 	if !new_prey then return end
 	
 	owner:Blink( 0, 0.5 )
@@ -356,13 +363,13 @@ DefineUpgradeSystem( "scp023", {
 			mod = { prot = 0.6 }, icon = icons.prot, active = false },
 
 		{ name = "drain1", cost = 1, req = {}, reqany = false, pos = { 3, 1 },
-			mod = { drain_dur = 1.25, drain_dist = 1.15 }, icon = icons.drain, active = false },
+			mod = { drain_dur = 1.25, drain_dist = 1.2 }, icon = icons.drain, active = false },
 		{ name = "drain2", cost = 2, req = { "drain1" }, reqany = false, pos = { 3, 2 },
-			mod = { drain_rate = 0.8, drain_heal = 0.8 }, icon = icons.drain, active = false },
+			mod = { drain_rate = 0.8, drain_heal = 0.9 }, icon = icons.drain, active = false },
 		{ name = "drain3", cost = 2, req = { "drain2" }, reqany = false, pos = { 3, 3 },
-			mod = { drain_dur = 1.6, drain_dist = 1.4 }, icon = icons.drain, active = false },
+			mod = { drain_dur = 1.6, drain_dist = 1.5 }, icon = icons.drain, active = false },
 		{ name = "drain4", cost = 2, req = { "drain3" }, reqany = false, pos = { 3, 4 },
-			mod = { drain_rate = 0.5, drain_heal = 1.75 }, icon = icons.drain, active = false },
+			mod = { drain_rate = 0.5, drain_heal = 2 }, icon = icons.drain, active = false },
 
 		{ name = "hunt1", cost = 2, req = {}, reqany = false, pos = { 4, 1 },
 			mod = { hunt_cd = 0.9 }, icon = icons.hunt, active = false },
@@ -404,6 +411,9 @@ if CLIENT then
 		:SetButton( "attack2" )
 		:SetMaterial( "slc/hud/scp/023/clone.png", "smooth" )
 		:SetCooldownFunction( "GetNextSecondaryFire" )
+		:SetTextFunction( function( swep )
+			return swep:GetClone() and "*" or ""
+		end )
 
 	hud:AddSkill( "hunt" )
 		:SetButton( "scp_special" )

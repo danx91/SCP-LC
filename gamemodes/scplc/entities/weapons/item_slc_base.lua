@@ -46,10 +46,10 @@ SWEP.Durability				= 0
 SWEP.OwnerChangedTime 		= 0
 
 function SWEP:SetupDataTables()
-	if self.Toggleable then self:AddNetworkVar( "Enabled", "Bool" ) end
-	if self.HasBattery then self:AddNetworkVar( "Battery", "Int" ) self:SetBattery( 100 ) end
-	if self.Stacks > 1 then self:AddNetworkVar( "Count", "Int" ) self:SetCount( 1 ) end
-	if self.Durability > 0 then self:AddNetworkVar( "Durability", "Int" ) self:SetDurability( self.Durability ) end
+	if self.Toggleable then self:NetworkVar( "Bool", "Enabled" ) end
+	if self.HasBattery then self:NetworkVar( "Int", "Battery" ) self:SetBattery( 100 ) end
+	if self.Stacks > 1 then self:NetworkVar( "Int", "Count" ) self:SetCount( 1 ) end
+	if self.Durability > 0 then self:NetworkVar( "Int", "Durability" ) self:SetDurability( self.Durability ) end
 end
 
 function SWEP:InitializeLanguage()
@@ -96,7 +96,7 @@ function SWEP:Deploy()
 			owner:DrawWorldModel( self.ShouldDrawWorldModel )
 		end
 
-		self:ResetViewModelBones()
+		//self:ResetViewModelBones()
 	end
 
 	return true

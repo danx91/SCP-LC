@@ -49,8 +49,8 @@ end
 function SWEP:SetupDataTables()
 	self:CallBaseClass( "SetupDataTables" )
 
-	self:AddNetworkVar( "ChipID", "Int" )
-	self:AddNetworkVar( "AccessOverride", "Int" )
+	self:NetworkVar( "Int", "ChipID" )
+	self:NetworkVar( "Int", "AccessOverride" )
 end
 
 function SWEP:Initialize()

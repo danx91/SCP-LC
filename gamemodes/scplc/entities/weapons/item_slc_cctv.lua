@@ -14,7 +14,6 @@ SWEP.DrawCrosshair = false
 
 SWEP.Secondary.Automatic = true
 
-SWEP.UseGroup = "vision"
 SWEP.Toggleable = true
 SWEP.HasBattery = true
 SWEP.CCTVCache = {}
@@ -39,8 +38,8 @@ local STATE_ACTIVE = 2
 function SWEP:SetupDataTables()
 	self:CallBaseClass( "SetupDataTables" )
 
-	self:AddNetworkVar( "Camera", "Int" )
-	self:AddNetworkVar( "State", "Int" )
+	self:NetworkVar( "Int", "Camera" )
+	self:NetworkVar( "Int", "State" )
 
 	self:SetCamera( 1 )
 end

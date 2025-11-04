@@ -9,7 +9,7 @@ ENT.Damage = 3
 PrecacheParticleSystem( "SLC_SCP457_Fireball" )
 
 function ENT:SetupDataTables()
-	self:AddNetworkVar( "Speed", "Float" )
+	self:NetworkVar( "Float", "Speed" )
 end
 
 local mat = Material( "slc/scp/457fireball" )

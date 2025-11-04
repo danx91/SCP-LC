@@ -11,10 +11,10 @@ SWEP.ChangeCooldown = 10
 SWEP.JEvidenceMultiplier = 0.6
 SWEP.JEvidenceLoss = 0.5
 
-SWEP.PPassiveDefense = 0.2
+SWEP.PPassiveDefense = 0.4
 SWEP.PPassiveSlow = 0.2
 SWEP.PEvidenceDot = 0.85
-SWEP.PEvidenceRate = 0.03
+SWEP.PEvidenceRate = 0.04
 
 SWEP.DashCooldown = 8
 SWEP.DashDamage = 30
@@ -66,19 +66,19 @@ local hud_materials = {
 function SWEP:SetupDataTables()
 	self:CallBaseClass( "SetupDataTables" )
 
-	self:AddNetworkVar( "Mode", "Bool" ) --false -> judge
-	self:AddNetworkVar( "LookedAt", "Entity" )
-	self:AddNetworkVar( "Evidence", "Float" )
-	self:AddNetworkVar( "NextMode", "Float" )
-	self:AddNetworkVar( "Camouflage", "Float" )
-	self:AddNetworkVar( "Drain", "Float" )
-	self:AddNetworkVar( "Ghost", "Float" )
-	self:AddNetworkVar( "Special", "Float" )
-	self:AddNetworkVar( "SpectateTime", "Float" )
-	self:AddNetworkVar( "SpectateDuration", "Float" )
-	self:AddNetworkVar( "SpectateYaw", "Float" )
-	self:AddNetworkVar( "SpectateEntity", "Entity" )
-	self:AddNetworkVar( "DrainTarget", "Entity" )
+	self:NetworkVar( "Bool", "Mode" )
+	self:NetworkVar( "Entity", "LookedAt" )
+	self:NetworkVar( "Float", "Evidence" )
+	self:NetworkVar( "Float", "NextMode" )
+	self:NetworkVar( "Float", "Camouflage" )
+	self:NetworkVar( "Float", "Drain" )
+	self:NetworkVar( "Float", "Ghost" )
+	self:NetworkVar( "Float", "Special" )
+	self:NetworkVar( "Float", "SpectateTime" )
+	self:NetworkVar( "Float", "SpectateDuration" )
+	self:NetworkVar( "Float", "SpectateYaw" )
+	self:NetworkVar( "Entity", "SpectateEntity" )
+	self:NetworkVar( "Entity", "DrainTarget" )
 end
 
 function SWEP:Initialize()
@@ -93,8 +93,6 @@ end
 SWEP.NextGhostTick = 0
 function SWEP:Think()
 	if CLIENT then return end
-
-	self:PlayerFreeze()
 
 	local ct = CurTime()
 	local owner = self:GetOwner()
@@ -494,7 +492,7 @@ function SWEP:SecondaryAttack()
 
 		if len < 1 then return end
 
-		local ent = targets[math.random( len )]
+		local ent = targets[SLCRandom( len )]
 		local path = SLCAStar( owner_pos, ent:GetPos(), "manhattan", nil, 200 )
 		if !path then return end
 
@@ -965,9 +963,9 @@ DefineUpgradeSystem( "scp24273", {
 		{ name = "j_passive2", cost = 2, req = { "j_passive1" }, block = { "p_passive2" }, reqany = false, pos = { 1, 2 },
 			mod = { j_mult = 1.2, j_loss = 0.25 }, icon = icons.passive },
 		{ name = "p_passive1", cost = 2, req = {}, reqany = false, pos = { 1, 3 },
-			mod = { p_prot = 0.4, p_slow = 0.3, p_rate = 0.06 }, icon = icons.passive },
+			mod = { p_prot = 0.6, p_slow = 0.3, p_rate = 0.07 }, icon = icons.passive },
 		{ name = "p_passive2", cost = 2, req = { "p_passive1" }, block = { "j_passive2" }, reqany = false, pos = { 1, 4 },
-			mod = { p_prot = 0.6, p_slow = 0.4, p_rate = 0.09 }, icon = icons.passive },
+			mod = { p_prot = 0.8, p_slow = 0.4, p_rate = 0.1 }, icon = icons.passive },
 
 		{ name = "dash1", cost = 1, req = {}, reqany = false, pos = { 2, 1 },
 			mod = { dash_cd = 0.9, dash_dmg = 1.1 }, icon = icons.dash },

@@ -25,12 +25,12 @@ SWEP.DecoyLimit 	= 1
 function SWEP:SetupDataTables()
 	self:CallBaseClass( "SetupDataTables" )
 	
-	self:AddNetworkVar( "Freeze", "Bool" )
-	self:AddNetworkVar( "InStealth", "Bool" )
-	self:AddNetworkVar( "Statue", "Entity" )
-	self:AddNetworkVar( "Stealth", "Float" )
-	self:AddNetworkVar( "NextDecoy", "Float" )
-	self:AddNetworkVar( "Decoys", "Int" )
+	self:NetworkVar( "Bool", "Freeze" )
+	self:NetworkVar( "Bool", "InStealth" )
+	self:NetworkVar( "Entity", "Statue" )
+	self:NetworkVar( "Float", "Stealth" )
+	self:NetworkVar( "Float", "NextDecoy" )
+	self:NetworkVar( "Int", "Decoys" )
 end
 
 function SWEP:Initialize()
@@ -141,7 +141,7 @@ function SWEP:Think()
 		if next_horror < ct and test_pos:DistToSqr( v:GetPos() ) < horror_dist then
 			v:SetProperty( "SCP173NextHorror", ct + self.HorrorDelay )
 			v:TakeSanity( 15 * self:GetUpgradeMod( "horror_sanity", 1 ), SANITY_TYPE.ANOMALY )
-			TransmitSound( "scp_lc/scp/173/horror/horror"..math.random( 0, 9 )..".ogg", true, v )
+			TransmitSound( "scp_lc/scp/173/horror/horror"..SLCRandom( 0, 9 )..".ogg", true, v )
 		end
 	end
 

@@ -20,7 +20,7 @@
 		weight = 1, --nil!
 		persona = { class = <fake_class>, team = <fake_team> },
 		override = function( ply ) end, --return false to disallow, nil to do standard check, true to allow
-		spawn = <Vector or table of vectors> Override group spawn
+		spawn = <Vector or table of vectors or string to use other group spawns> Override group spawn
 		select_override = function( cur, total ) end, --wheater this class can be selected, return true to allow
 		callback = function( ply, class ) end,
 	}
@@ -31,10 +31,11 @@ if slc_classes_fully_registered and slc_classes_fully_registered > CurTime() the
 local gwarn = true
 local cwarn = true
 
-local WeightList = {}
 local SuppWeightList = {}
 
+local AllGroups = {}
 local SelectInfo = {}
+local SpecialGroups = {}
 local SelectClasses = {}
 SelectClasses.SUPPORT = {}
 
@@ -66,7 +67,28 @@ function AddClassGroup( name, weight, spawn )
 	SelectClasses[name] = {}
 	SpawnInfo[name] = spawn
 
-	table.insert( SelectInfo, { name, weight } )
+	local registered = false
+
+	if isnumber( weight ) then
+		table.insert( SelectInfo, {
+			name = name,
+			weight = weight,
+			percent = -1,
+		} )
+
+		registered = true
+	elseif isfunction( weight ) then
+		table.insert( SpecialGroups, {
+			name = name,
+			callback = weight,
+		} )
+
+		registered = true
+	end
+
+	if registered then
+		table.insert( AllGroups, name )
+	end
 end
 
 function AddSupportGroup( name, weight, spawn, max, callback, spawnrule )
@@ -111,6 +133,14 @@ function GetClassGroups()
 	return table.Copy( SelectClasses )
 end
 
+function GetSpawnInfo()
+	return SpawnInfo
+end
+
+function GetSpecialGroups()
+	return SpecialGroups
+end
+
 function GetSupportData( name )
 	return SupportData[name]
 end
@@ -124,7 +154,7 @@ function RegisterClass( name, group, model, data, support )
 
 	assert( group != "SUPPORT", "Forbidden group name: 'SUPPORT'! To register support class use 'RegisterSupportClass' function instead" )
 	assert( !string.match( name, "%s" ), "Class name can not contain any whitespace characters!" )
-	assert( usetab[group] != nil, "Invalid group: "..group )
+	assert( group == true or usetab[group] != nil, "Invalid group: "..group )
 	--assert( usetab[group][name] == nil, "Class '"..name.."' is already registered!" )
 
 	if AllClasses[name] and !usetab[group][name] then
@@ -148,20 +178,20 @@ function RegisterClass( name, group, model, data, support )
 	data.group = group
 	data.model = model
 	data.loadout = data.loadout or name
+	data.tier = data.tier or 0
 
 	AllClasses[name] = data
 	usetab[group][name] = data
 
-	local tier = data.tier or 0
-	if !ClassTiers[tier] then
-		ClassTiers[tier] = {}
+	if !ClassTiers[data.tier] then
+		ClassTiers[data.tier] = {}
 	end
 
-	if tier > highest_tier then
-		highest_tier = tier
+	if data.tier > highest_tier then
+		highest_tier = data.tier
 	end
 
-	ClassTiers[tier][name] = true
+	ClassTiers[data.tier][name] = true
 end
 
 function RegisterSupportClass( name, group, model, data )
@@ -180,29 +210,23 @@ function GetPlayerTable( ply )
 	local tab = {}
 	local total = 0
 
-	for i, v in ipairs( WeightList ) do
-		local num = math.floor( ply * v )
-		tab[SelectInfo[i][1]] = { num, v }
+	for i, v in ipairs( SelectInfo ) do
+		if v.percent <= 0 then
+			tab[v.name] = 0
+			continue
+		end
+
+		local num = math.floor( ply * v.percent )
+		tab[v.name] = num
 		total = total + num
 	end
 
-	ply = ply - total
-
-	if ply > 0 then
-		for i = 1, ply do
-			tab[SelectInfo[i][1]][1] = tab[SelectInfo[i][1]][1] + 1
-		end
+	for i = 1, ply - total do
+		local name = SelectInfo[i].name
+		tab[name] = tab[name] + 1
 	end
 
-	local final = {}
-
-	for k, v in pairs( tab ) do
-		table.insert( final, { k, v[1] } )
-	end
-
-	table.sort( final, function( a, b ) return tab[a[1]][2] < tab[b[1]][2] end )
-
-	return final
+	return tab
 end
 
 function SelectSupportGroup()
@@ -233,7 +257,7 @@ function SelectSupportGroup()
 		end
 	end
 	
-	local dice = math.random( total )
+	local dice = SLCRandom( total )
 	total = 0
 
 	for i, v in ipairs( newlist ) do
@@ -257,40 +281,51 @@ hook.Add( "SLCGamemodeLoaded", "SLCRegisterClasses", function()
 		local override = LoadINI( "slc/classes_data.txt" )
 		if override.ENABLED then
 			for i, v in ipairs( SelectInfo ) do
-				//print( "WEIGHT OVERRIDE", v[1], v[2], override.WEIGHTS[v[1]], "USING", override.WEIGHTS[v[1]] or v[2] )
-				v[2] = tonumber( override.WEIGHTS[v[1]] ) or v[2]
+				v.weight = tonumber( override.WEIGHTS[v.name] ) or v.weight
 			end
 		end
-	end
-
-	if !file.Exists( "slc/classes_data.txt", "DATA" ) then
+	else
 		local tab = {}
 
 		for i, v in ipairs( SelectInfo ) do
-			tab[v[1]] = v[2]
+			tab[v.name] = v.weight
 		end
 
 		WriteINI( "slc/classes_data.txt", {
 			WEIGHTS = tab,
 			ENABLED = false,
-		}, false, ".", "This file has spawn weights for spawnable teams. To use change ENABLED to true then edit values as you wish.\n# To disable change ENABLED to false. To restore default values delete this file and restart the game" )
+		}, false, ".", "This file has spawn weights for spawnable teams. To use, change ENABLED to true then edit values as you wish.\n# To disable, change ENABLED to false. To restore default values delete this file and restart the game" )
 	end
 
-	table.sort( SelectInfo, function( a, b ) return a[2] > b[2] end )
+	table.sort( SelectInfo, function( a, b ) return a.weight > b.weight end )
 
 	local total = 0
 
 	for i, v in ipairs( SelectInfo ) do
-		total = total + v[2]
+		total = total + v.weight
 	end
 
 	for i, v in ipairs( SelectInfo ) do
-		WeightList[i] = v[2] / total
+		v.percent = v.weight / total
 	end
 
 	cwarn = false
 	hook.Run( "SLCRegisterPlayerClasses" )
 	cwarn = true
+
+	for group, classes in pairs( SelectClasses ) do
+		if group == "SUPPORT" then continue end
+
+		local any_free = false
+		for class, data in pairs( classes ) do
+			if data.tier == 0 then
+				any_free = true
+				break
+			end
+		end
+
+		assert( any_free, "The group '"..group.."' has no free (Tier 0) class! You are going to break the gamemode, register it as a special group instead..." )
+	end
 end )
 
 hook.Add( "SLCVersionChanged", "ClassesOverride", function( new, old )
@@ -409,12 +444,45 @@ function PLAYER:PerformPrestige()
 
 	self.playermeta.classes = {}
 
+	hook.Run( "SLCPlayerPrestige", self )
+
 	if CLIENT then
 		net.Ping( "SLCPrestige" )
 	end
 end
 
 if SERVER then
+	function PLAYER:GetGroupData( group )
+		return self.GroupData and self.GroupData[group] or 0
+	end
+
+	function PLAYER:ApplyGroupData( group )
+		local gd = self.GroupData
+		if !gd then return end
+
+		for i, v in ipairs( AllGroups ) do
+			local num = gd[v] or 0
+
+			if v == group then
+				num = 0
+			else
+				num = num + 1
+			end
+
+			gd[v] = num
+			self:SetSCPData( "group_last_game#"..v, num )
+		end
+	end
+end
+
+--[[-------------------------------------------------------------------------
+SV Logic
+---------------------------------------------------------------------------]]
+if SERVER then
+	--[[-------------------------------------------------------------------------
+	Classes and refunding
+	---------------------------------------------------------------------------]]
+
 	hook.Add( "SLCPlayerMeta", "SLCClassInfo", function( p, playermeta )
 		local classinfo = p.PlayerInfo:Get( "unlocked_classes" )
 		local prestigeinfo = p.PlayerInfo:Get( "prestige_classes" )
@@ -504,5 +572,26 @@ if SERVER then
 
 	hook.Add( "SLCRegisterGamerules", "SLCLANRule", function()
 		gamerule.Register( "lan", { value = false } )
+	end )
+
+	--[[-------------------------------------------------------------------------
+	Player group data
+	---------------------------------------------------------------------------]]
+	hook.Add( "PlayerInitialSpawn", "SLCGroupsData", function( ply )
+		local group_data = {}
+		ply.GroupData = group_data
+
+		local promises = {}
+
+		for i, v in ipairs( AllGroups ) do
+			promises[i] = ply:GetSCPData( "group_last_game#"..v, 0 )
+			group_data[v] = 0
+		end
+
+		SLCPromiseJoin( promises ):Then( function( data )
+			for i, v in ipairs( AllGroups ) do
+				group_data[v] = tonumber( data[i] or 0 ) or 0
+			end
+		end )
 	end )
 end

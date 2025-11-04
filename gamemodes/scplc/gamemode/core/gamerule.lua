@@ -150,7 +150,7 @@ if SERVER then
 		end
 	end )
 
-	hook.Add( "SCLFactoryReset", "SLCGameruleReset", function()
+	hook.Add( "SLCFactoryReset", "SLCGameruleReset", function()
 		print( "Deleting gamerules..." )
 		file.Delete( "slc/gamerule.dat" )
 	end )

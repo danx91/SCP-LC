@@ -198,10 +198,14 @@ Return pseudo random float from the interval [0, 1).
 
 @return		[nil]			-					Pseudo random number
 ---------------------------------------------------------------------------]]--
-function xoshiro128:NextFloat()
+function xoshiro128:NextFloat( min, max )
 	assert( self.state, "Attempted to call NextFloat on an uninitialized xoshiro128 object!" )
 	
-	return self:NextUInt() / UINT32_MAX_PLUS_ONE
+	if min and max then
+		return min + self:NextUInt() / UINT32_MAX_PLUS_ONE * ( max - min )
+	else
+		return self:NextUInt() / UINT32_MAX_PLUS_ONE
+	end
 end
 
 

@@ -54,12 +54,12 @@ SWEP.ActTranslate = {
 function SWEP:SetupDataTables()
 	self:CallBaseClass( "SetupDataTables" )
 	
-	self:AddNetworkVar( "Targets", "Int" )
-	self:AddNetworkVar( "RegenStacks", "Int" )
-	self:AddNetworkVar( "PassiveCooldown", "Float" )
-	self:AddNetworkVar( "Regen", "Float" )
-	self:AddNetworkVar( "Rage", "Float" )
-	self:AddNetworkVar( "Lunge", "Float" )
+	self:NetworkVar( "Int", "Targets" )
+	self:NetworkVar( "Int", "RegenStacks" )
+	self:NetworkVar( "Float", "PassiveCooldown" )
+	self:NetworkVar( "Float", "Regen" )
+	self:NetworkVar( "Float", "Rage" )
+	self:NetworkVar( "Float", "Lunge" )
 
 end
 

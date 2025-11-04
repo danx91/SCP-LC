@@ -1,4 +1,14 @@
 --[[-------------------------------------------------------------------------
+Watermark
+---------------------------------------------------------------------------]]
+local watermark = Color( 255, 255, 255, 15 )
+
+hook.Add( "DrawOverlay", "SLCDeveloper", function()
+	draw.SimpleText( "DEVELOPER MODE", "SCPHUDVBig", ScrW() - 16, 16, watermark, TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP )
+	draw.SimpleText( "DEVELOPER MODE", "SCPHUDVBig", 16, ScrH() - 16, watermark, TEXT_ALIGN_LEFT, TEXT_ALIGN_BOTTOM )
+end )
+
+--[[-------------------------------------------------------------------------
 Draw vectors
 ---------------------------------------------------------------------------]]
 if SERVER then
@@ -12,11 +22,14 @@ if SERVER then
 		draw_key = string.Explode( ".", args[1] )
 
 		for i, v in ipairs( draw_key ) do
-			local num = string.match( v, "^!(%d+)$" )
+			local num = tonumber( v ) //string.match( v, "^!(%d+)$" )
 			if num then
-				draw_key[i] = tonumber( num )
+				draw_key[i] = num //tonumber( num )
 			end
 		end
+
+		print( "DRAW KEY" )
+		PrintTable( draw_key )
 	end )
 
 	timer.Create( "slcdrawvectors", 0.5, 0, function()
@@ -33,7 +46,6 @@ if SERVER then
 
 			debugoverlay.Axis( v, a_zero, 5, 0.51, true )
 			debugoverlay.Text( v, tostring( v ), 0.51, false )
-			debugoverlay.Text( v + v_off, dk_str.." ("..tostring( v )..")", 0.51, false )
 		end
 		
 	end )
@@ -122,6 +134,7 @@ function util.TraceLine( tr )
 		if IsValid( ent ) then
 			local mins, maxs = ent:GetCollisionBounds()
 			debugoverlay.Box( ent:GetPos(), mins, maxs, life, Color( 255, 255, 255, 0 ) )
+			print( "[DEBUG] TraceLine", ent )
 		end
 	end
 
@@ -146,6 +159,7 @@ function util.TraceHull( tr )
 		if IsValid( ent ) then
 			local mins, maxs = ent:GetCollisionBounds()
 			debugoverlay.Box( ent:GetPos(), mins, maxs, life, Color( 255, 255, 255, 0 ) )
+			print( "[DEBUG] TraceHull", ent )
 		end
 	end
 	
@@ -364,7 +378,7 @@ concommand.Add( "trace_contents", function( ply )
 		mask = MASK_ALL,
 	} )
 
-	print( "Trace resuls", tr.Entity, tr.Contents )
+	print( "Trace resuls", tr.Entity, tr.Contents, IsValid( tr.Entity ) and tr.Entity:GetCollisionGroup() or "-" )
 
 	local mask = tr.Contents
 	local i = 1
@@ -641,6 +655,36 @@ if CLIENT then
 		size = math.max( diff.x, diff.y )
 
 		update_rt()
+	end )
+end
+
+--[[-------------------------------------------------------------------------
+Damage recording
+---------------------------------------------------------------------------]]
+if SERVER then
+	local recording = false
+
+	concommand.Add( "dmg_record", function( ply )
+		if recording then
+			print( string.format( "Recording end - Bullets: %i, Total damage: %.1f, Avg. %.1f", recording.num, recording.dmg, recording.dmg / recording.num ) )
+			recording = false
+			hook.Remove( "SLCPostScaleDamage", "developer_recording" )
+		else
+			recording = {
+				num = 0,
+				dmg = 0,
+			}
+
+			hook.Add( "SLCPostScaleDamage", "developer_recording", function( target, info )
+				local att = info:GetAttacker()
+				if !IsValid( target ) or !target:IsPlayer() or att != ply or !info:IsDamageType( DMG_BULLET ) and !info:IsDamageType( DMG_BUCKSHOT ) then return end
+
+				recording.num = recording.num + 1
+				recording.dmg = recording.dmg + info:GetDamage()
+
+				print( string.format( "Bullet #%i - dmg: %.1f", recording.num, info:GetDamage() ) )
+			end )
+		end
 	end )
 end
 

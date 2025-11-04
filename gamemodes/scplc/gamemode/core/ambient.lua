@@ -34,7 +34,7 @@ end
 function SelectAmbient( group )
 	local tab = SLC_AMBIENTS.Groups[group]
 	if tab then
-		return tab[math.random( #tab )]
+		return tab[SLCRandom( #tab )]
 	end
 end
 

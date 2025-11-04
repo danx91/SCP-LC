@@ -14,19 +14,19 @@ SWEP.SkillCooldowns = {
 	heavy = 4,
 	rapid = 20,
 	explode = 999,
-	shot = 12
+	shot = 6
 }
 
 SWEP.LightAttackDamage = { 15, 25 }
 SWEP.HeavyAttackDamage = { 40, 50 }
 SWEP.RapidAttackDamage = { 15, 20 }
 
-SWEP.ExplosionDamage = 125
+SWEP.ExplosionDamage = 150
 SWEP.ExplosionRadius = 250
 SWEP.ExplosionTime = 10
 SWEP.ExplosionSpeed = 1.4
 
-SWEP.ShotDamage = 25
+SWEP.ShotDamage = 20
 SWEP.ShotRadius = 100 ^ 2
 
 SWEP.Overloads = 1
@@ -45,14 +45,14 @@ end
 function SWEP:SetupDataTables()
 	self:CallBaseClass( "SetupDataTables" )
 	
-	self:AddNetworkVar( "SCP049", "Entity" )
-	self:AddNetworkVar( "SCP049Position", "Vector" )
-	self:AddNetworkVar( "ZombieType", "Int" )
-	self:AddNetworkVar( "Protection", "Float" )
-	self:AddNetworkVar( "Boost", "Float" )
-	self:AddNetworkVar( "BoostDuration", "Float" )
+	self:NetworkVar( "Entity", "SCP049" )
+	self:NetworkVar( "Vector", "SCP049Position" )
+	self:NetworkVar( "Int", "ZombieType" )
+	self:NetworkVar( "Float", "Protection" )
+	self:NetworkVar( "Float", "Boost" )
+	self:NetworkVar( "Float", "BoostDuration" )
 
-	self:AddNetworkVar( "Explode", "Float" )
+	self:NetworkVar( "Float", "Explode" )
 
 	self:NetworkVarNotify( "ZombieType", function( ent, name, old, new )
 		if CLIENT then return end
@@ -61,6 +61,10 @@ function SWEP:SetupDataTables()
 		if !zombie then return end
 
 		ent.ZombieData = zombie
+
+		if ent._DataDump then
+			ent._DataDump.zombie_type = zombie.name
+		end
 	end )
 end
 
@@ -269,7 +273,7 @@ function SWEP:DoAttack( strong, mod )
 				dmginfo:SetDamageType( DMG_SLASH )
 
 				local dmg_tab = strong and self.HeavyAttackDamage or self.LightAttackDamage
-				local dmg = math.random( dmg_tab[1], dmg_tab[2] ) * ( self.DamageMultiplier + mod - 1 )
+				local dmg = SLCRandom( dmg_tab[1], dmg_tab[2] ) * ( self.DamageMultiplier + mod - 1 )
 				dmginfo:SetDamage( dmg )
 
 				SuppressHostEvents( NULL )
@@ -361,7 +365,7 @@ function SWEP:DoFastAttack( dur, speed, n )
 	dmginfo:SetAttacker( owner )
 	dmginfo:SetDamageType( DMG_SLASH )
 
-	local dmg = math.random( self.RapidAttackDamage[1], self.RapidAttackDamage[2] ) * ( self.DamageMultiplier + self:GetUpgradeMod( "secondary_dmg", 1 ) - 1 )
+	local dmg = SLCRandom( self.RapidAttackDamage[1], self.RapidAttackDamage[2] ) * ( self.DamageMultiplier + self:GetUpgradeMod( "secondary_dmg", 1 ) - 1 )
 	dmginfo:SetDamage( dmg )
 
 	ent:TakeDamageInfo( dmginfo )
@@ -488,6 +492,16 @@ function SWEP:OnUpgradeBought( name, active, group )
 		self.Overloads = self.Overloads + self:GetUpgradeMod( "overloads" )
 		self:GetOwner():SetSCPDisableOverload( false )
 	end
+end
+
+function SWEP:DataDump()
+	local data = {
+		zombie_type = self.ZombieData and self.ZombieData.name or "N/A"
+	}
+
+	self._DataDump = data
+
+	return data
 end
 
 local indicator = Material( "slc/hud/scp/0492/indicator.png", "smooth" )

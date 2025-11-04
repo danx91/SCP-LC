@@ -1,126 +1,606 @@
 --[[-------------------------------------------------------------------------
-Markup Builder
+Edited version of markup that supports justification
+It's included here because my pull request have been pending for almost 2 years...
 ---------------------------------------------------------------------------]]
-local function color_fallback( clr )
-	return clr.r..","..clr.g..","..clr.b..( clr.a == 255 and "" or ","..col.a )
+
+local string = string
+local table = table
+local surface = surface
+local tostring = tostring
+local ipairs = ipairs
+local pairs = pairs
+local setmetatable = setmetatable
+local tonumber = tonumber
+local math = math
+local utf8 = utf8
+local Color = Color
+
+local TEXT_ALIGN_LEFT	= TEXT_ALIGN_LEFT
+local TEXT_ALIGN_CENTER	= TEXT_ALIGN_CENTER
+local TEXT_ALIGN_RIGHT	= TEXT_ALIGN_RIGHT
+local TEXT_ALIGN_BOTTOM	= TEXT_ALIGN_BOTTOM
+
+local MarkupObject = {}
+MarkupObject.__index = MarkupObject
+
+--[[---------------------------------------------------------
+	Name: Temporary information used when building text frames.
+-----------------------------------------------------------]]
+local colour_stack = { Color( 255, 255, 255 ) }
+local font_stack = { "DermaDefault" }
+local paragraph = 1
+local blocks = {}
+
+local colourmap = {
+
+	-- it's all black and white
+	["black"] =		Color( 0, 0, 0 ),
+	["white"] =		Color( 255, 255, 255 ),
+
+	-- it's greys
+	["dkgrey"] =	Color( 64, 64, 64 ),
+	["grey"] =		Color( 128, 128, 128 ),
+	["ltgrey"] =	Color( 192, 192, 192 ),
+
+	-- account for speeling mistakes
+	["dkgray"] =	Color( 64, 64, 64 ),
+	["gray"] =		Color( 128, 128, 128 ),
+	["ltgray"] =	Color( 192, 192, 192 ),
+
+	-- normal colours
+	["red"] =		Color( 255, 0, 0 ),
+	["green"] =		Color( 0, 255, 0 ),
+	["blue"] =		Color( 0, 0, 255 ),
+	["yellow"] =	Color( 255, 255, 0 ),
+	["purple"] =	Color( 255, 0, 255 ),
+	["cyan"] =		Color( 0, 255, 255 ),
+	["turq"] =		Color( 0, 255, 255 ),
+
+	-- dark variations
+	["dkred"] =		Color( 128, 0, 0 ),
+	["dkgreen"] =	Color( 0, 128, 0 ),
+	["dkblue"] =	Color( 0, 0, 128 ),
+	["dkyellow"] =	Color( 128, 128, 0 ),
+	["dkpurple"] =	Color( 128, 0, 128 ),
+	["dkcyan"] =	Color( 0, 128, 128 ),
+	["dkturq"] =	Color( 0, 128, 128 ),
+
+	-- light variations
+	["ltred"] =		Color( 255, 128, 128 ),
+	["ltgreen"] =	Color( 128, 255, 128 ),
+	["ltblue"] =	Color( 128, 128, 255 ),
+	["ltyellow"] =	Color( 255, 255, 128 ),
+	["ltpurple"] =	Color( 255, 128, 255 ),
+	["ltcyan"] =	Color( 128, 255, 255 ),
+	["ltturq"] =	Color( 128, 255, 255 ),
+}
+
+--[[---------------------------------------------------------
+	Name: colourMatch( c )
+	Desc: Match a colour name to an rgb value.
+	Usage: ** INTERNAL ** Do not use!
+-----------------------------------------------------------]]
+local function colourMatch( c )
+	return colourmap[ string.lower( c ) ]
 end
 
-MarkupBuilder = {}
+--[[---------------------------------------------------------
+	Name: ExtractParams(p1,p2,p3)
+	Desc: This function is used to extract the tag information.
+	Usage: ** INTERNAL ** Do not use!
+-----------------------------------------------------------]]
+local function ExtractParams( p1, p2, p3 )
 
-function MarkupBuilder:New( font )
-	if self != MarkupBuilder then
-		return self
-	end
+	if ( string.sub( p1, 1, 1 ) == "/" ) then
 
-	local builder = setmetatable( {
-		text = "",
-		font_stack = 0,
-		color_stack = 0,
-	}, {
-		__index = MarkupBuilder,
-		__tostring = MarkupBuilder.ToString
-	} )
+		local tag = string.sub( p1, 2 )
 
-	if font then
-		builder:PushFont( font )
-	end
+		if ( tag == "color" or tag == "colour" ) then
+			table.remove( colour_stack )
+		elseif ( tag == "font" or tag == "face" ) then
+			table.remove( font_stack )
+		end
 
-	return builder
-end
-
-function MarkupBuilder:PushFont( font )
-	self.text = self.text.."<font="..font..">"
-	self.font_stack = self.font_stack + 1
-
-	return self
-end
-
-function MarkupBuilder:PopFont()
-	self.text = self.text.."</font>"
-	self.font_stack = self.font_stack - 1
-
-	return self
-end
-
-function MarkupBuilder:PushColor( r, g, b )
-	local clr
-
-	if IsColor( r ) then
-		clr = markup and markup.Color( r ) or color_fallback( r )
 	else
-		clr = r..","..( g or r )..","..( b or r )
+
+		if ( p1 == "color" or p1 == "colour" ) then
+
+			local rgba = colourMatch( p2 )
+
+			if ( rgba == nil ) then
+				rgba = Color( 255, 255, 255, 255 )
+				local x = { "r", "g", "b", "a" }
+				local n = 1
+				for k, v in string.gmatch( p2, "(%d+),?" ) do
+					rgba[ x[ n ] ] = tonumber( k )
+					n = n + 1
+				end
+			end
+
+			table.insert( colour_stack, rgba )
+
+		elseif ( p1 == "font" or p1 == "face" ) then
+
+			table.insert( font_stack, tostring( p2 ) )
+
+		elseif ( p1 == "par" ) then
+
+			paragraph = paragraph + 1
+
+		end
+
+	end
+end
+
+--[[---------------------------------------------------------
+	Name: CheckTextOrTag( p )
+	Desc: This function places data in the "blocks" table
+		  depending of if p is a tag, or some text
+	Usage: ** INTERNAL ** Do not use!
+-----------------------------------------------------------]]
+local function CheckTextOrTag( p )
+	if ( p == "" ) then return end
+	if ( p == nil ) then return end
+
+	if ( string.sub( p, 1, 1 ) == "<" ) then
+		string.gsub( p, "<([/%a]*)=?([^>]*)", ExtractParams )
+	else
+
+		local text_block = {}
+		text_block.text = p
+		text_block.colour = colour_stack[ #colour_stack ]
+		text_block.font = font_stack[ #font_stack ]
+		text_block.paragraph = paragraph
+		table.insert( blocks, text_block )
+
+	end
+end
+
+--[[---------------------------------------------------------
+	Name: ProcessMatches(p1,p2,p3)
+	Desc: CheckTextOrTag for 3 parameters. Called by string.gsub
+	Usage: ** INTERNAL ** Do not use!
+-----------------------------------------------------------]]
+local function ProcessMatches( p1, p2, p3 )
+	if ( p1 ) then CheckTextOrTag( p1 ) end
+	if ( p2 ) then CheckTextOrTag( p2 ) end
+	if ( p3 ) then CheckTextOrTag( p3 ) end
+end
+
+--[[---------------------------------------------------------
+	Name: MarkupObject:GetWidth()
+	Desc: Returns the width of a markup block
+	Usage: ml:GetWidth()
+-----------------------------------------------------------]]
+function MarkupObject:GetWidth()
+	return self.totalWidth
+end
+
+--[[---------------------------------------------------------
+	Name: MarkupObject:GetMaxWidth()
+	Desc: Returns the maximum width of a markup block
+	Usage: ml:GetMaxWidth()
+-----------------------------------------------------------]]
+function MarkupObject:GetMaxWidth()
+	return self.maxWidth or self.totalWidth
+end
+
+--[[---------------------------------------------------------
+	Name: MarkupObject:GetHeight()
+	Desc: Returns the height of a markup block
+	Usage: ml:GetHeight()
+-----------------------------------------------------------]]
+function MarkupObject:GetHeight()
+	return self.totalHeight
+end
+
+function MarkupObject:Size()
+	return self.totalWidth, self.totalHeight
+end
+
+--[[---------------------------------------------------------
+	Name: MarkupObject:Draw(xOffset, yOffset, halign, valign, alphaoverride, textAlign)
+	Desc: Draw the markup text to the screen as position xOffset, yOffset.
+		  Halign and Valign can be used to align the text relative to its offset.
+		  Alphaoverride can be used to override the alpha value of the text-colour.
+		  textAlign can be used to align the actual text inside of its bounds.
+	Usage: MarkupObject:Draw(100, 100)
+-----------------------------------------------------------]]
+function MarkupObject:Draw( xOffset, yOffset, halign, valign, alphaoverride, textAlign )
+	local yOffsetLast, wordOffset
+
+	for i, blk in ipairs( self.blocks ) do
+		if ( yOffsetLast != blk.offset.y ) then
+			yOffsetLast = blk.offset.y
+			wordOffset = xOffset + blk.offset.xNoTabs
+
+			if ( halign == TEXT_ALIGN_CENTER ) then		wordOffset = wordOffset - ( self.totalWidth / 2 )
+			elseif ( halign == TEXT_ALIGN_RIGHT ) then	wordOffset = wordOffset - self.totalWidth
+			end
+		end
+
+		local y = yOffset + ( blk.height - blk.thisY ) + blk.offset.y
+		local x = xOffset
+
+		if ( halign == TEXT_ALIGN_CENTER ) then		x = x - ( self.totalWidth / 2 )
+		elseif ( halign == TEXT_ALIGN_RIGHT ) then	x = x - self.totalWidth
+		end
+
+		x = x + blk.offset.x
+
+		if ( valign == TEXT_ALIGN_CENTER ) then		y = y - ( self.totalHeight / 2 )
+		elseif ( valign == TEXT_ALIGN_BOTTOM ) then	y = y - self.totalHeight
+		end
+
+		local alpha = blk.colour.a
+		if ( alphaoverride ) then alpha = alphaoverride end
+
+		surface.SetFont( blk.font )
+		surface.SetTextColor( blk.colour.r, blk.colour.g, blk.colour.b, alpha )
+
+		surface.SetTextPos( x, y )
+
+		if ( textAlign == true and self.justificationOffsets[ blk.offset.y ] > 0 ) then
+			for j, word in ipairs( blk.words ) do
+				surface.SetTextPos( wordOffset, y )
+				surface.DrawText( word )
+
+				wordOffset = wordOffset + surface.GetTextSize( word ) + self.justificationOffsets[ blk.offset.y ]
+			end
+
+			continue
+		elseif ( textAlign ~= TEXT_ALIGN_LEFT ) then
+			local lineWidth = self.lineWidths[ blk.offset.y ]
+			if ( lineWidth ) then
+				if ( textAlign == TEXT_ALIGN_CENTER ) then
+					surface.SetTextPos( x + ( ( self.totalWidth - lineWidth ) / 2 ), y )
+				elseif ( textAlign == TEXT_ALIGN_RIGHT ) then
+					surface.SetTextPos( x + ( self.totalWidth - lineWidth ), y )
+				end
+			end
+		end
+
+		surface.DrawText( blk.text )
+	end
+end
+
+local escapeEntities, unescapeEntities = {
+	["&"] = "&amp;",
+	["<"] = "&lt;",
+	[">"] = "&gt;"
+}, {
+	["&amp;"] = "&",
+	["&lt;"] = "<",
+	["&gt;"] = ">"
+}
+
+--[[---------------------------------------------------------
+	Name: Parse(ml, maxwidth)
+	Desc: Parses the pseudo-html markup language, and creates a
+		  MarkupObject, which can be used to the draw the
+		  text to the screen. Valid tags are: font and colour.
+		  \n and \t are also available to move to the next line,
+		  or insert a tab character.
+		  Maxwidth can be used to make the text wrap to a specific
+		  width and allows for text alignment (e.g. centering) inside
+		  the bounds.
+	Usage: markup.Parse( "<font=Default>changed font</font>\n<colour=255,0,255,255>changed colour</colour>" )
+-----------------------------------------------------------]]
+function SLCMarkupParse( ml, maxwidth )
+
+	ml = utf8.force( ml ) -- Ensure we have valid UTF-8 data
+
+	colour_stack = { Color( 255, 255, 255 ) }
+	font_stack = { "DermaDefault" }
+	paragraph = 1
+	blocks = {}
+
+	if ( !string.find( ml, "<" ) ) then
+		ml = ml .. "<nop>"
 	end
 
-	self.text = self.text.."<color="..clr..">"
-	self.color_stack = self.color_stack + 1
+	string.gsub( ml, "([^<>]*)(<[^>]+.)([^<>]*)", ProcessMatches )
 
-	return self
-end
+	local xOffset = 0
+	local xOffsetNoTabs = 0
+	local yOffset = 0
+	local xSize = 0
+	local xMax = 0
+	local thisMaxY = 0
+	local new_block_list = {}
+	local ymaxes = {}
+	local lineWidths = {}
 
-function MarkupBuilder:PopColor()
-	self.text = self.text.."</color>"
-	self.color_stack = self.color_stack - 1
+	local lineHeight = 0
+	local lastParagraph = 1
+	for i, blk in ipairs( blocks ) do
 
-	return self
-end
+		surface.SetFont( blk.font )
 
-function MarkupBuilder:Print( txt, clr, font )
-	if isstring( clr ) then
-		font = clr
-		clr = nil
+		blk.text = string.gsub( blk.text, "(&.-;)", unescapeEntities )
+
+		if ( blk.paragraph > lastParagraph ) then
+			xOffset = 0
+			xOffsetNoTabs = 0
+			xSize = 0
+			yOffset = yOffset + thisMaxY * 1.5
+			thisMaxY = 0
+			lastParagraph = blk.paragraph
+
+			if ( #new_block_list > 0 ) then
+				new_block_list[ #new_block_list ].NoJustification = true
+			end
+		end
+
+		local thisY = 0
+		local curString = ""
+		for j, c in utf8.codes( blk.text ) do
+
+			local ch = utf8.char( c )
+
+			if ( ch == "\n" ) then
+
+				if ( thisY == 0 ) then
+					thisY = lineHeight
+					thisMaxY = lineHeight
+				else
+					lineHeight = thisY
+				end
+
+				if ( string.len( curString ) > 0 ) then
+					local x1 = surface.GetTextSize( curString )
+
+					local new_block = {
+						text = curString,
+						font = blk.font,
+						colour = blk.colour,
+						thisY = thisY,
+						thisX = x1,
+						offset = {
+							x = xOffset,
+							y = yOffset,
+							xNoTabs = xOffsetNoTabs
+						}
+					}
+					table.insert( new_block_list, new_block )
+					if ( xOffset + x1 > xMax ) then
+						xMax = xOffset + x1
+					end
+				end
+
+				xOffset = 0
+				xOffsetNoTabs = 0
+				xSize = 0
+				yOffset = yOffset + thisMaxY
+				thisY = 0
+				curString = ""
+				thisMaxY = 0
+
+			elseif ( ch == "\t" ) then
+
+				if ( string.len( curString ) > 0 ) then
+					local x1 = surface.GetTextSize( curString )
+
+					local new_block = {
+						text = curString,
+						font = blk.font,
+						colour = blk.colour,
+						thisY = thisY,
+						thisX = x1,
+						offset = {
+							x = xOffset,
+							y = yOffset,
+							xNoTabs = xOffsetNoTabs
+						}
+					}
+					table.insert( new_block_list, new_block )
+					if ( xOffset + x1 > xMax ) then
+						xMax = xOffset + x1
+					end
+
+					xOffsetNoTabs = xOffsetNoTabs + x1
+				end
+
+				curString = ""
+
+				local xOldSize = xSize
+				xSize = 0
+				local xOldOffset = xOffset
+				xOffset = math.ceil( ( xOffset + xOldSize ) / 50 ) * 50
+
+				if ( xOffset == xOldOffset ) then
+					xOffset = xOffset + 50
+					xOffsetNoTabs = xOffsetNoTabs + 50
+
+					if ( maxwidth and xOffset > maxwidth ) then
+						-- Needs a new line
+						if ( thisY == 0 ) then
+							thisY = lineHeight
+							thisMaxY = lineHeight
+						else
+							lineHeight = thisY
+						end
+
+						xOffset = 0
+						xOffsetNoTabs = 0
+						yOffset = yOffset + thisMaxY
+						thisY = 0
+						thisMaxY = 0
+					end
+				end
+			else
+				local x, y = surface.GetTextSize( ch )
+
+				if ( x == nil ) then return end
+
+				if ( maxwidth and maxwidth > x ) then
+					if ( xOffset + xSize + x >= maxwidth ) then
+
+						-- need to: find the previous space in the curString
+						--          if we can't find one, take off the last character
+						--          and insert as a new block, incrementing the y etc
+
+						local lastSpacePos = string.len( curString )
+						for k = 1, string.len( curString ) do
+							local chspace = string.sub( curString, k, k )
+							if ( chspace == " " ) then
+								lastSpacePos = k
+							end
+						end
+
+						local previous_block = new_block_list[ #new_block_list ]
+						local wrap = lastSpacePos == string.len( curString ) && lastSpacePos > 0
+						if ( previous_block and previous_block.text:match( " $" ) and wrap and surface.GetTextSize( blk.text ) < maxwidth ) then
+							-- If the block was preceded by a space, wrap the block onto the next line first, as we can probably fit it there
+							local trimmed, trimCharNum = previous_block.text:gsub( " +$", "" )
+							if ( trimCharNum > 0 ) then
+								previous_block.text = trimmed
+								previous_block.thisX = surface.GetTextSize( previous_block.text )
+							end
+						else
+							if ( wrap ) then
+								-- If the block takes up multiple lines (and has no spaces), split it up
+								local sequenceStartPos = utf8.offset( curString, 0, lastSpacePos )
+								ch = string.match( curString, utf8.charpattern, sequenceStartPos ) .. ch
+								j = utf8.offset( curString, 1, sequenceStartPos )
+								curString = string.sub( curString, 1, sequenceStartPos - 1 )
+							else
+								-- Otherwise, strip the trailing space and start a new line
+								ch = string.sub( curString, lastSpacePos + 1 ) .. ch
+								j = lastSpacePos + 1
+								curString = string.sub( curString, 1, math.max( lastSpacePos - 1, 0 ) )
+							end
+
+							local m = 1
+							while ( string.sub( ch, m, m ) == " " ) do
+								m = m + 1
+							end
+							ch = string.sub( ch, m )
+
+							local x1, y1 = surface.GetTextSize( curString )
+
+							if ( y1 > thisMaxY ) then
+								thisMaxY = y1
+								ymaxes[ yOffset ] = thisMaxY
+								lineHeight = y1
+							end
+
+							local new_block = {
+								text = curString,
+								font = blk.font,
+								colour = blk.colour,
+								thisY = thisY,
+								thisX = x1,
+								offset = {
+									x = xOffset,
+									y = yOffset,
+									xNoTabs = xOffsetNoTabs
+								}
+							}
+							table.insert( new_block_list, new_block )
+
+							if ( xOffset + x1 > xMax ) then
+								xMax = xOffset + x1
+							end
+
+							curString = ""
+						end
+
+						xOffsetNoTabs = 0
+						xOffset = 0
+						xSize = 0
+						x, y = surface.GetTextSize( ch )
+						yOffset = yOffset + thisMaxY
+						thisY = 0
+						thisMaxY = 0
+					end
+				end
+
+				curString = curString .. ch
+
+				thisY = y
+				xSize = xSize + x
+
+				if ( y > thisMaxY ) then
+					thisMaxY = y
+					ymaxes[ yOffset ] = thisMaxY
+					lineHeight = y
+				end
+			end
+		end
+
+		if ( string.len( curString ) > 0 ) then
+
+			local x1 = surface.GetTextSize( curString )
+
+			local new_block = {
+				text = curString,
+				font = blk.font,
+				colour = blk.colour,
+				thisY = thisY,
+				thisX = x1,
+				offset = {
+					x = xOffset,
+					y = yOffset,
+					xNoTabs = xOffsetNoTabs
+				}
+			}
+			table.insert( new_block_list, new_block )
+
+			lineHeight = thisY
+
+			if ( xOffset + x1 > xMax ) then
+				xMax = xOffset + x1
+			end
+			xOffset = xOffset + x1
+			xOffsetNoTabs = xOffsetNoTabs + x1
+		end
+		xSize = 0
 	end
 
-	if font then self.text = self.text.."<font="..font..">" end
-	if clr then self.text = self.text.."<color="..( markup and markup.Color( clr ) or color_fallback( clr ) )..">" end
-
-	self.text = self.text..txt
-
-	if font then self.text = self.text.."</font>" end
-	if clr then self.text = self.text.."</color>" end
-
-	return self
-end
-
-function MarkupBuilder.StaticPrint( txt, clr, font )
-	if isstring( clr ) then
-		font = clr
-		clr = nil
+	if ( #new_block_list > 0 ) then
+		new_block_list[ #new_block_list ].NoJustification = true
 	end
 
-	local text = ""
-	if font then text = text.."<font="..font..">" end
-	if clr then text = text.."<color="..( markup and markup.Color( clr ) or color_fallback( clr ) )..">" end
+	local totalHeight = 0
+	local wordsInLine = {}
+	local lineWidthsNoTabs = {}
+	local lineNoJustification = {}
+	for i, blk in ipairs( new_block_list ) do
+		blk.height = ymaxes[ blk.offset.y ]
 
-	text = text..txt
+		if ( blk.offset.y + blk.height > totalHeight ) then
+			totalHeight = blk.offset.y + blk.height
+		end
 
-	if font then text = text.."</font>" end
-	if clr then text = text.."</color>" end
+		lineWidths[ blk.offset.y ] = math.max( lineWidths[ blk.offset.y ] or 0, blk.offset.x + blk.thisX )
+		lineWidthsNoTabs[ blk.offset.y ] = math.max( lineWidthsNoTabs[ blk.offset.y ] or 0, blk.offset.xNoTabs + blk.thisX )
 
-	return text
-end
+		lineNoJustification[ blk.offset.y ] = lineNoJustification[ blk.offset.y ] or blk.NoJustification
+		blk.words = {}
 
-function MarkupBuilder:Finish()
-	while self.font_stack > 0 do
-		self:PopFont()
+		for word in string.gmatch( blk.text, " ?[^ ]+ ?" ) do
+			table.insert( blk.words, word )
+		end
+
+		wordsInLine[ blk.offset.y ] = ( wordsInLine[ blk.offset.y ] or 0 ) + #blk.words
 	end
 
-	while self.color_stack > 0 do
-		self:PopColor()
+	local justificationOffsets = {}
+	for y, width in pairs( lineWidthsNoTabs ) do
+		if ( !lineNoJustification[ y ] and wordsInLine[ y ] > 1 ) then
+			justificationOffsets[ y ] = ( xMax - width ) / ( wordsInLine[ y ] - 1 )
+		else
+			justificationOffsets[ y ] = 0
+		end
 	end
 
-	return self
+	return setmetatable( {
+		totalHeight = totalHeight,
+		totalWidth = xMax,
+		maxWidth = maxwidth,
+		lineWidths = lineWidths,
+		justificationOffsets = justificationOffsets,
+		blocks = new_block_list
+	}, MarkupObject )
 end
-
-function MarkupBuilder:ToString()
-	self:Finish()
-	return self.text
-end
-
-function MarkupBuilder:Parse( width )
-	if SERVER then return end
-
-	self:Finish()
-	return markup.Parse( self.text, width )
-end
-
-setmetatable( MarkupBuilder, { __call = MarkupBuilder.New } )

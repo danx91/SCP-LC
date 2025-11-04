@@ -100,7 +100,7 @@ hook.Add( "RegisterSCP", "RegisterBaseSCPs", function()
 		base_health = 2550,
 		max_health = 2550,
 		base_speed = 180,
-		buff_scale = 0.9,
+		buff_scale = 1.25,
 	}, nil, function( ply )
 		ply:SetRenderMode( RENDERMODE_TRANSCOLOR )
 		ply:SetCustomCollisionCheck( true )
@@ -169,7 +169,7 @@ hook.Add( "RegisterSCP", "RegisterBaseSCPs", function()
 		base_health = 2600,
 		max_health = 2600,
 		base_speed = 165,
-		buff_scale = 0.85,
+		buff_scale = 0.9,
 	} )
 
 	RegisterSCP( "SCP096", "models/shaklin/scp/096/scp_096.mdl", "weapon_scp_096", {
@@ -181,7 +181,7 @@ hook.Add( "RegisterSCP", "RegisterBaseSCPs", function()
 		base_health = 1900,
 		max_health = 1900,
 		base_speed = 125,
-		buff_scale = 0.5,
+		buff_scale = 0.4,
 	} )
 
 	RegisterSCP( "SCP106", "models/danx91/scp/scp_106.mdl", "weapon_scp_106", {
@@ -205,6 +205,8 @@ hook.Add( "RegisterSCP", "RegisterBaseSCPs", function()
 		base_health = 4000,
 		max_health = 4000,
 		base_speed = 500,
+		buff_scale = 0.15,
+		prot_scale = 0.25,
 	} )
 
 	RegisterSCP( "SCP457", "models/cultist/scp/scp_457.mdl", "weapon_scp_457", {
@@ -214,15 +216,15 @@ hook.Add( "RegisterSCP", "RegisterBaseSCPs", function()
 		base_health = 2300,
 		max_health = 2300,
 		base_speed = 165,
-		buff_scale = 0.75,
+		buff_scale = 0.85,
 	} )
 
 	RegisterSCP( "SCP682", "models/danx91/scp/scp_682.mdl", "weapon_scp_682", {
 		jump_power = 200,
 		no_damage_forces = true,
 	}, {
-		base_health = 2900,
-		max_health = 2900,
+		base_health = 3500,
+		max_health = 3500,
 		base_speed = 160,
 	} )
 
@@ -230,9 +232,10 @@ hook.Add( "RegisterSCP", "RegisterBaseSCPs", function()
 		jump_power = 200,
 		prep_freeze = true,
 	}, {
-		base_health = 4400,
-		max_health = 4400,
-		base_speed = 170,
+		base_health = 4600,
+		max_health = 4600,
+		base_speed = 175,
+		buff_scale = 1.25,
 	} )
 
 	RegisterSCP( "SCP939", "models/scp/939/unity/unity_scp_939.mdl", "weapon_scp_939", {
@@ -261,9 +264,9 @@ hook.Add( "RegisterSCP", "RegisterBaseSCPs", function()
 		prep_freeze = true,
 		no_ragdoll = true,
 	}, {
-		base_health = 3000,
-		max_health = 3000,
-		base_speed = 160,
+		base_health = 4500,
+		max_health = 4500,
+		base_speed = 170,
 	} )
 
 	RegisterSCP( "SCP3199", "models/player/alski/scp3199/scp3199.mdl", "weapon_scp_3199", {
@@ -273,6 +276,6 @@ hook.Add( "RegisterSCP", "RegisterBaseSCPs", function()
 		base_health = 1450,
 		max_health = 1450,
 		base_speed = 215,
-		buff_scale = 0.85,
+		buff_scale = 0.95,
 	} )
 end )

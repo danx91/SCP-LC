@@ -4,8 +4,8 @@ ENT.Type = "anim"
 ENT.Used = false
 
 function ENT:SetupDataTables()
-	self:AddNetworkVar( "Vest", "Int" )
-	self:AddNetworkVar( "Durability", "Float" )
+	self:NetworkVar( "Int", "Vest" )
+	self:NetworkVar( "Float", "Durability" )
 end
 
 function ENT:Initialize()
@@ -22,7 +22,7 @@ function ENT:Initialize()
 	self:SetMoveType( MOVETYPE_NONE )
 	self:SetCollisionGroup( COLLISION_GROUP_DEBRIS )
 
-	self:EnableCustomCollisions( true )
+	self:EnableCustomCollisions()
 end
 
 function ENT:Use( activator, caller, type, value )

@@ -9,8 +9,8 @@ ENT.Time = 0
 ENT.BreakTime = 0
 
 function ENT:SetupDataTables()
-	self:AddNetworkVar( "Fuse", "Int" )
-	self:AddNetworkVar( "Rating", "Int" )
+	self:NetworkVar( "Int", "Fuse" )
+	self:NetworkVar( "Int", "Rating" )
 end
 
 function ENT:Initialize()
@@ -43,14 +43,14 @@ function ENT:Think()
 			hook.Run( "SLCFuseRemoved", self.BoxName )
 			
 			if self.NextEffect < ct then
-				self.NextEffect = ct + math.random( 4, 8 )
+				self.NextEffect = ct + SLCRandom( 4, 8 )
 
 				self:EmitSound( "SLC.FuseBox.Disable" )
 
 				local effect = EffectData()
 				local ang = self:GetAngles()
 
-				effect:SetOrigin( self:GetPos() + ang:Forward() * 4 + ang:Right() * ( math.random() < 0.5 and -6.5 or 3.5 ) + ang:Up() * -3.5 )
+				effect:SetOrigin( self:GetPos() + ang:Forward() * 4 + ang:Right() * ( SLCRandom() < 0.5 and -6.5 or 3.5 ) + ang:Up() * -3.5 )
 				effect:SetNormal( ang:Forward() )
 				effect:SetRadius( 1 )
 				effect:SetMagnitude( 2 )
@@ -78,7 +78,7 @@ function ENT:Use( activator, caller, use_type, value )
 		local fuse
 
 		for k, v in pairs( activator:GetWeapons() ) do
-			if v.Group == "fuse" then
+			if v:IsGroup( "fuse" ) then
 				fuse = v
 				break
 			end
@@ -124,7 +124,7 @@ function ENT:InstallFuse( ent )
 	local effect = EffectData()
 	local ang = self:GetAngles()
 
-	effect:SetOrigin( self:GetPos() + ang:Forward() * 4 + ang:Right() * ( math.random() < 0.5 and -6.5 or 3.5 ) + ang:Up() * -3.5 )
+	effect:SetOrigin( self:GetPos() + ang:Forward() * 4 + ang:Right() * ( SLCRandom() < 0.5 and -6.5 or 3.5 ) + ang:Up() * -3.5 )
 	effect:SetNormal( ang:Forward() )
 	effect:SetRadius( 1 )
 	effect:SetMagnitude( 2 )
@@ -169,7 +169,7 @@ function ENT:RemoveFuse( ply, drop )
 	local effect = EffectData()
 	local ang = self:GetAngles()
 
-	effect:SetOrigin( self:GetPos() + ang:Forward() * 4 + ang:Right() * ( math.random() < 0.5 and -6.5 or 3.5 ) + ang:Up() * -3.5 )
+	effect:SetOrigin( self:GetPos() + ang:Forward() * 4 + ang:Right() * ( SLCRandom() < 0.5 and -6.5 or 3.5 ) + ang:Up() * -3.5 )
 	effect:SetNormal( ang:Forward() )
 	effect:SetRadius( 1 )
 	effect:SetMagnitude( 2 )

@@ -41,6 +41,7 @@ function SWEP:PrimaryAttack()
 	vm:SendViewModelMatchingSequence( seq )
 	vm:SetPlaybackRate( self.SelfInjectSpeed )
 
+	self:SetNextPrimaryFire( CurTime() + dur / self.SelfInjectSpeed + 1 )
 	self.PreventDropping = true
 
 	timer.Simple( dur / self.SelfInjectSpeed, function()
@@ -132,3 +133,5 @@ function SWEP:DrawWorldModel()
 	self:UpdateColor()
 	self:DrawModel()
 end
+
+SetWeaponGroupLimit( "syringe", 2 )

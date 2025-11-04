@@ -36,7 +36,7 @@ if SERVER then
 		end
 
 		if !tab or !tab.realm then
-			net.Ping( "SCLChatCommand", msg, ply )
+			net.Ping( "SLCChatCommand", msg, ply )
 
 			if tab and tab.hide then
 				return ""
@@ -54,7 +54,7 @@ if SERVER then
 		end
 	end )
 else
-	net.ReceivePing( "SCLChatCommand", function( data )
+	net.ReceivePing( "SLCChatCommand", function( data )
 		local args = string.Explode( " ", data )
 		local cmd = table.remove( args, 1 )
 
@@ -102,6 +102,28 @@ AddChatCommand( "scp", function( ply )
 	ply.ncmdcheck = CurTime() + 2
 
 	PrintSCPNotice( ply )
+end, SERVER, false )
+
+AddChatCommand( "karma", function( ply )
+	if ply.ncmdcheck and ply.ncmdcheck > CurTime() then return end
+	ply.ncmdcheck = CurTime() + 2
+
+	if CVAR.slc_scp_karma:GetInt() != 1 then return end
+
+	local karma = ply:GetSCPKarma()
+	local standing = "good"
+
+	if karma < -500 then
+		standing = "vbad"
+	elseif karma < -100 then
+		standing = "bad"
+	elseif karma > 900 then
+		standing = "perfect"
+	elseif karma > 400 then
+		standing = "vgood"
+	end
+
+	PlayerMessage( "karma$@MISC.karma."..standing, ply )
 end, SERVER, false )
 
 AddChatCommand( "afk", function( ply )

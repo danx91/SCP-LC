@@ -34,12 +34,12 @@ end
 function SWEP:SetupDataTables()
 	self:CallBaseClass( "SetupDataTables" )
 
-	self:AddNetworkVar( "Eric", "Int" )
-	self:AddNetworkVar( "SpecialType", "Int" )
-	self:AddNetworkVar( "NextEric", "Float" )
-	self:AddNetworkVar( "NextDash", "Float" )
-	self:AddNetworkVar( "DetachTime", "Float" )
-	self:AddNetworkVar( "LastDamaged", "Float" )
+	self:NetworkVar( "Int", "Eric" )
+	self:NetworkVar( "Int", "SpecialType" )
+	self:NetworkVar( "Float", "NextEric" )
+	self:NetworkVar( "Float", "NextDash" )
+	self:NetworkVar( "Float", "DetachTime" )
+	self:NetworkVar( "Float", "LastDamaged" )
 end
 
 function SWEP:Initialize()
@@ -57,8 +57,6 @@ dash_trace.output = dash_trace
 SWEP.MusicAttack = 0
 SWEP.NextMusicAttackTick = 0
 function SWEP:Think()
-	self:PlayerFreeze()
-
 	if CLIENT or ROUND.preparing or ROUND.post then return end
 
 	local ct = CurTime()
@@ -204,7 +202,7 @@ function SWEP:PrimaryAttack()
 
 	if !SERVER then return end
 
-	self:GetOwner():EmitSound( math.random( 1000 ) == 666 and "SCP066.IHateMyLife" or "SCP066.Music" )
+	self:GetOwner():EmitSound( SLCRandom( 1000 ) == 666 and "SCP066.IHateMyLife" or "SCP066.Music" )
 	AddRoundStat( "066" )
 end
 
@@ -288,7 +286,7 @@ function SWEP:SpecialAttack()
 
 	if special_type == 0 then --speed
 		local speed = 1 + power * self.SpecialSpeed
-		owner:PushSpeed( speed, speed, -1, "SLC_SCP066Special", 1 )
+		owner:PushSpeed( speed, speed, -1, "SLC_SCP066Special", 1, true )
 
 		owner:AddTimer( "SCP066Special", duration, 1, function()
 			owner:PopSpeed( "SLC_SCP066Special" )

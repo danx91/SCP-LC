@@ -28,8 +28,8 @@ SWEP.IgniteRate = 0.8
 function SWEP:SetupDataTables()
 	self:CallBaseClass( "SetupDataTables" )
 
-	self:AddNetworkVar( "Traps", "Int" )
-	self:AddNetworkVar( "Fuel", "Float" )
+	self:NetworkVar( "Int", "Traps" )
+	self:NetworkVar( "Float", "Fuel" )
 end
 
 function SWEP:Initialize()

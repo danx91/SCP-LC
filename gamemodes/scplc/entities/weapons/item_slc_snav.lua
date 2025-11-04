@@ -28,9 +28,9 @@ end
 function SWEP:SetupDataTables()
 	self:CallBaseClass( "SetupDataTables" )
 
-	self:AddNetworkVar( "Radius", "Int" )
-	self:AddNetworkVar( "ScanTime", "Float" )
-	self:AddNetworkVar( "NextScan", "Float" )
+	self:NetworkVar( "Int", "Radius" )
+	self:NetworkVar( "Float", "ScanTime" )
+	self:NetworkVar( "Float", "NextScan" )
 end
 
 function SWEP:Initialize()

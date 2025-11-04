@@ -78,7 +78,7 @@ if SERVER then
 
 		local egg = ents.Create( "slc_3199_egg" )
 		if IsValid( egg ) then
-			egg:SetPos( table.remove( tab, math.random( #tab ) ) )
+			egg:SetPos( table.remove( tab, SLCRandom( #tab ) ) )
 			egg:SetOwner( owner )
 			egg:Spawn()
 		end

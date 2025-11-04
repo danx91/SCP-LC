@@ -84,6 +84,7 @@ lang.NRegistry = {
 	tailor_success = "You successfully stole an ID. Be careful, it will expire soon!",
 	tailor_fail = "You wasn't able to find a valid ID on the body!",
 	tailor_end = "Your stolen ID expired!",
+	karma = "Your karma rating: %s"
 }
 
 lang.NFailed = "Failed to access NRegistry with key: %s"
@@ -243,6 +244,7 @@ lang.pickup_msg = {
 	cant_stack = "You can't carry more of this item!",
 	has_already = "You already have this item!",
 	same_type = "You already has item of the same type!",
+	max_type = "You've reached a limit of items of this type!",
 	one_weapon = "You can carry only one firearm at the time!",
 	goc_only = "Only GOC members can pick this up!"
 }
@@ -301,6 +303,10 @@ effects.scp009 = "SCP-009"
 effects.scp106_withering = "Withering"
 effects.scp966_effect = "Fatigue"
 effects.scp966_mark = "Death Mark"
+effects.ephedrine = "Ephedrine"
+effects.hemostatic = "Hemostatic"
+effects.antidote = "Antidote"
+effects.poison_syringe = "Poison"
 
 --[[-------------------------------------------------------------------------
 Class viewer
@@ -582,7 +588,7 @@ lang.info_screen_registry = {
 	hazard = "You have been killed by hazard",
 	alpha_mia = "Last known location: Surface",
 	omega_mia = "Last known location: Facility",
-	scp914_death = "Your hearth was stopped by SCP-914",
+	scp914_death = "Your heart was stopped by SCP-914",
 	killer_t = "Your killer's team: %s"
 }
 
@@ -590,7 +596,7 @@ lang.info_screen_type = {
 	alive = "Alive",
 	escaped = "Escaped",
 	dead = "Deceased",
-	mia = "Missed in action",
+	mia = "Missing in Action",
 	unknown = "Unknown",
 }
 
@@ -689,6 +695,14 @@ misc.inventory = {
 	},
 }
 
+misc.karma = {
+	vbad = "Very Bad",
+	bad = "Bad",
+	good = "Good",
+	vgood = "Very Good",
+	perfect = "Outstanding",
+}
+
 misc.font = {
 	name = "Fonts",
 	content = [[Custom gamemode font failed to load! Falling back to system font...
@@ -704,7 +718,6 @@ misc.commands_aliases = {
 	["unmute"] = "unmuteall",
 	["config"] = "settings",
 	["cfg"] = "settings",
-	["mines"] = "minigames",
 }
 --[[-------------------------------------------------------------------------
 Vests
@@ -1576,16 +1589,16 @@ Difficulty: Easy | Toughness: Normal | Agility: Normal | Damage: Normal
 A decent choice with balanced statistics
 
 Assasin zombie:
-Difficulty: Medium | Toughness: Low | Agility: High | Damage: Normal/High
-The fastest one, but has the lowest health and damage
+Difficulty: Hard | Toughness: Low | Agility: Very High | Damage: High
+The fastest one with decent damage, but has the lowest health. Has rapid attack.
 
 Exploding zombie:
-Difficulty: Medium | Toughness: High | Agility: Low | Damage: Normal/High
-Low movement speed, but has high health and highest damage
+Difficulty: Hard | Toughness: High | Agility: Low | Damage: Very High
+Low movement speed, but has high health and highest damage. Explodes when killed.
 
 Spitting zombie:
-Difficulty: Medium | Toughness: High | Agility: Low | Damage: Normal/High
-The slowest zombie type, but has high damage and the most health
+Difficulty: Medium | Toughness: Very High | Agility: Very Low | Damage: Low
+The slowest zombie type with lowest damage, but has the most health. Can shoot projectiles.
 ]],
 }
 
@@ -1595,7 +1608,8 @@ Weapons
 lang.GenericUpgrades = {
 	outside_buff = {
 		name = "Outside buff",
-		info = "Receive additional bullet protection and enable healing and regeneration when on surface.\n\t• Additional bullet defense: [%def]\n\t• Additional flat bullet defense: [flat] dmg\n\t• Once on surface heal for [buff_hp] HP in a short time\n\t• When out of combat, quickly recover [%regen_min] - [%regen_max] (time scaled) of received bullet damage\n\t• Dealing damage heals you for [%heal_min] - [%heal_max] (time scaled) of dealt damage\n\t• Returning back to the facility voids all active healings"
+		info = "Receive additional bullet protection and enable healing and regeneration when on surface.\n\t• Additional bullet defense: [%def]\n\t• Additional flat bullet defense: [flat] dmg\n\t• Once on surface heal for [buff_hp] HP in a short time\n\t• When out of combat, quickly recover [%regen_min] - [%regen_max] (time scaled) of received bullet damage\n\t• Dealing damage heals you for [%heal_min] - [%heal_max] (time scaled) of dealt damage\n\t• Returning back to the facility voids all active healings",
+		parse_description = true,
 	}
 }
 
@@ -1606,7 +1620,7 @@ lang.CommonSkills = {
 	},
 	c_dmg_mod = {
 		name = "Damage protection",
-		dsc = "Current protection: [mod]\nCurrent flat protection: [flat]\n\nThis is the protection against received non-direct damage. It takes into account only modificators of time scaling and outside buff. SCP specific modificators are not included!\n\nOutside buff: [buff]",
+		dsc = "Current protection: [mod]\nCurrent flat protection: [flat]\n\nThis is the protection against received bullet damage. It takes into account only modificators of time scaling and outside buff. SCP specific modificators are not included!\n\nOutside buff: [buff]",
 		dmg = "DMG",
 		not_bought = "Not bought",
 		not_surface = "Disabled inside the facility",
@@ -1701,9 +1715,9 @@ wep.SCP049 = {
 	},
 	zombies_desc = {
 		normal = "A standard zombie\n\t• Has both light and heavy attacks\n\t• Decent choice with balanced statistics",
-		assassin = "An assassin zombie\n\t• Has light attack and rapid attack ability\n\t• The fastest one, but has the lowest health and damage",
+		assassin = "An assassin zombie\n\t• Has light attack and rapid attack ability\n\t• The fastest one with decent damage, but has the lowest health",
 		boomer = "An exploding heavy zombie\n\t• Has heavy attack and explode ability\n\t• Low movement speed, but has high health and highest damage",
-		heavy = "A spiting heavy zombie\n\t• Has heavy attack and shot ability\n\t• The slowest zombie type, but has high damage and the most health",
+		heavy = "A spiting heavy zombie\n\t• Has heavy attack and shot ability\n\t• The slowest zombie type with low damage, but has the most health",
 	},
 	skills = {
 		_overview = { "passive", "choke", "surgery", "boost" },
@@ -2066,7 +2080,7 @@ wep.SCP096 = {
 
 		rage = {
 			name = "Anger",
-			info = "Receiving [rage_dmg] in [rage_time] seconds from single player will enrage you",
+			info = "Receiving [rage_dmg] damage in [rage_time] seconds from single player will enrage you",
 		},
 		heal1 = {
 			name = "Devour I",
@@ -2114,7 +2128,7 @@ wep.SCP106 = {
 		_overview = { "passive", "withering", "teleport", "trap" },
 		withering = {
 			name = "Withering",
-			dsc = "Inflict withering effect on target. Withering gradually slow target over time. Attacking target who is inside Pocket Dimension instantly kill them\n\nEffect duration [dur]\nMaximum slow: [slow]",
+			dsc = "Inflict withering effect on target. Withering gradually slow target over time. Attacking target who is inside Pocket Dimension instantly kills them\n\nEffect duration [dur]\nMaximum slow: [slow]",
 		},
 		trap = {
 			name = "Trap",
@@ -3133,11 +3147,15 @@ wep.COM_TAB = {
 	confirm = "LMB - confirm",
 	options = {
 		scan = "Facility scan",
-		tesla = "Request tesla"
+		tesla = "Request tesla",
+		intercom = "Intercom",
+		vent = "Enable gas vents",
 	},
 	actions = {
 		scan = "Scanning facility...",
 		tesla = "Disabling tesla...",
+		intercom = "Intercom active...",
+		vent = "Gas ventilation active...",
 	}
 }
 
@@ -3203,6 +3221,46 @@ wep.MORPHINE_BIG = {
 	info = "Provides a lot of temporary health that decreases over time",
 }
 
+wep.EPHEDRINE = {
+	name = "Ephedrine",
+	info = "Provides small speed boost for a short time",
+}
+
+wep.EPHEDRINE_BIG = {
+	name = "Large Ephedrine",
+	info = "Provides big speed boost for a short time",
+}
+
+wep.HEMOSTATIC = {
+	name = "Hemostatic",
+	info = "All types of bleeding will disappear quickly. Effect lasts for a short time.",
+}
+
+wep.HEMOSTATIC_BIG = {
+	name = "Large Hemostatic",
+	info = "All types of bleeding will disappear quickly. Effect lasts for a longer time",
+}
+
+wep.ANTIDOTE = {
+	name = "Antidote",
+	info = "All types of poison will disappear quickly. Effect lasts for a short time.",
+}
+
+wep.ANTIDOTE_BIG = {
+	name = "Large Antidote",
+	info = "All types of poison will disappear quickly. Effect lasts for a longer time",
+}
+
+wep.POISON = {
+	name = "Poison",
+	info = "Causes major damage over time",
+}
+
+wep.POISON_BIG = {
+	name = "Large Poison",
+	info = "Causes lethal damage over time",
+}
+
 wep.TASER = {
 	name = "Taser"
 }
@@ -3257,9 +3315,16 @@ wep.STUNSTICK = {
 	name = "Stunstick",
 }
 
-wep.CANDY = { --REMOVE
-	name = "Cukierek"
-}
+--[[-------------------------------------------------------------------------
+Pages
+---------------------------------------------------------------------------]]
+lang.SLCPAGES = {}
+lang.SLCPAGES.message = "Message"
+lang.SLCPAGES.error = "Error"
+lang.SLCPAGES.fatal = "Fatal Error"
+
+local pages = {}
+lang.SLCPAGES.PAGES = pages
 
 --[[-------------------------------------------------------------------------
 Minigames - Global

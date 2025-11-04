@@ -32,6 +32,8 @@ util.AddNetworkString( "SLCDamageIndicator" )
 util.AddNetworkString( "SLCMoveItem" )
 util.AddNetworkString( "SCPSpecialAttack" )
 util.AddNetworkString( "SLCChatPrint" )
+util.AddNetworkString( "SLCRoundProperties" )
+util.AddNetworkString( "SLCDataTable" )
 
 net.AddTableChannel( "SLCPlayerMeta" )
 net.AddTableChannel( "SLCGameruleData" )

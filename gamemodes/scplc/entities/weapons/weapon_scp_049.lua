@@ -2,6 +2,7 @@ SWEP.Base 			= "weapon_scp_base"
 SWEP.PrintName		= "SCP-049"
 
 SWEP.HoldType		= "normal"
+SWEP.UseCustomDT 	= true
 
 SWEP.DisableDamageEvent = true
 
@@ -23,19 +24,19 @@ SWEP.BoostRadius = 600
 
 SCP049_ZOMBIE_TYPES = {
 	{ name = "normal", speed = 1, health = 1, damage = 1, primary = "light", secondary = "heavy", material = nil },
-	{ name = "assassin", speed = 1.19, health = 0.7, damage = 0.5, primary = "light", secondary = "rapid", material = nil },
-	{ name = "boomer", speed = 0.87, health = 1.3, damage = 1.25, primary = "heavy", secondary = "explode", material = nil },
-	{ name = "heavy", speed = 0.82, health = 1.5, damage = 1.15, primary = "heavy", secondary = "shot", material = nil },
+	{ name = "assassin", speed = 1.4, health = 0.5, damage = 1.25, primary = "light", secondary = "rapid", material = nil },
+	{ name = "boomer", speed = 0.9, health = 1.3, damage = 1.5, primary = "heavy", secondary = "explode", material = nil },
+	{ name = "heavy", speed = 0.8, health = 1.6, damage = 0.75, primary = "heavy", secondary = "shot", material = nil },
 }
 
 function SWEP:SetupDataTables()
 	self:CallBaseClass( "SetupDataTables" )
 
-	self:AddNetworkVar( "Surgeries", "Int" )
-	self:AddNetworkVar( "Nearby", "Int" )
-	self:AddNetworkVar( "Surgery", "Float" )
-	self:AddNetworkVar( "Choke", "Float" )
-	self:AddNetworkVar( "Boost", "Float" )
+	self:NetworkVar( "Int", "Surgeries" )
+	self:NetworkVar( "Int", "Nearby" )
+	self:NetworkVar( "Float", "Surgery" )
+	self:NetworkVar( "Float", "Choke" )
+	self:NetworkVar( "Float", "Boost" )
 end
 
 function SWEP:Initialize()
@@ -46,6 +47,13 @@ function SWEP:Initialize()
 	self:SetChoke( -1 )
 	self.Zombies = {}
 	self.ChokeProgress = {}
+
+	for i, v in ipairs( SCP049_ZOMBIE_TYPES ) do
+		if v.name == "normal" then continue end
+
+		self.Data["cap_"..v.name] = 1
+		self.Data["num_"..v.name] = 1
+	end
 end
 
 SWEP.NextProtectionTick = 0
@@ -213,6 +221,9 @@ function SWEP:PrimaryAttack()
 	ent:TakeDamage( 1, owner, owner )
 end
 
+local color_ok = "<color=0,200,0>"
+local color_bad = "<color=200,0,0>"
+
 function SWEP:Reload()
 	if SERVER or ROUND.preparing or ROUND.post then return end
 	if self:GetSurgery() >= CurTime() or self:GetChoke() >= 0 then return end
@@ -237,10 +248,25 @@ function SWEP:Reload()
 	local options = {}
 
 	for i, v in ipairs( SCP049_ZOMBIE_TYPES ) do
+		local num = self.Data["num_"..v.name]
+		local cap = self.Data["cap_"..v.name]
+
+		local ok = !num or num > 0
+		local txt = ""
+
+		if num and cap then
+			if num > cap then
+				cap = num
+			end
+
+			txt = "\n("..( ok and color_ok or color_bad )..num.."</color>/"..cap..")"
+		end
+
 		table.insert( options, {
 			mat = v.material,
 			name = self.Lang.zombies[v.name] or v.name,
-			desc = self.Lang.zombies_desc[v.name],
+			desc = self.Lang.zombies_desc[v.name]..txt,
+			disabled = !ok,
 			data = i
 		} )
 	end
@@ -299,6 +325,7 @@ end
 
 function SWEP:StopChoke()
 	local owner = self:GetOwner()
+	if !IsValid( owner ) then return end
 	
 	owner:StopDisableControls( "scp049_attack" )
 
@@ -345,6 +372,12 @@ function SWEP:StartSurgery( option )
 	} ).Entity
 
 	if !IsValid( ent ) or ent:GetClass() != "prop_ragdoll" or !ent.Data or ent.Data.team == TEAM_SCP or ent.Data.invalid then return end
+
+	local ztype = SCP049_ZOMBIE_TYPES[option]
+	if ztype then
+		local num = self.Data["num_"..ztype.name]
+		if num and num <= 0 then return end
+	end
 
 	self.SurgeryType = option
 	self.SurgeryTarget = ent
@@ -405,6 +438,32 @@ function SWEP:FinishSurgery()
 		return
 	end
 
+	local num = self.Data["num_"..stats.name]
+	local cap = self.Data["cap_"..stats.name]
+
+	if num and cap then
+		num = num - 1
+		cap = cap - 1
+
+		if num < 0 then num = 0 end
+		if cap < 0 then cap = 0 end
+
+		self.Data["num_"..stats.name] = num
+		self.Data["cap_"..stats.name] = cap
+	end
+
+	for i, v in ipairs( SCP049_ZOMBIE_TYPES ) do
+		if v.name == "normal" or v.name == stats.name then continue end
+
+		local v_cap = self.Data["cap_"..v.name]
+
+		if stats.name == "normal" then
+			self.Data["num_"..v.name] = math.Clamp( self.Data["num_"..v.name] + 1, 0, v_cap )
+		else
+			self.Data["cap_"..v.name] = v_cap + 1
+		end
+	end
+
 	local owner = self:GetOwner()
 	local model, skin = self:TranslateZombieModel( ply, ent )
 	local surg = self:GetSurgeries()
@@ -446,17 +505,17 @@ function SWEP:TranslateZombieModel( ply, rag )
 	local class = ply:GetProperty( "last_class" )
 
 	if team == TEAM_CLASSD or class == CLASSES.CIAGENT then
-		return "models/player/alski/scp049-2.mdl", math.random( 0, 4 )
+		return "models/player/alski/scp049-2.mdl", SLCRandom( 0, 4 )
 	elseif team == TEAM_MTF then
-		if math.random( 1, 2 ) == 1 then
-			return "models/player/alski/scp049-2mtf.mdl", math.random( 0, 4 )
+		if SLCRandom( 1, 2 ) == 1 then
+			return "models/player/alski/scp049-2mtf.mdl", SLCRandom( 0, 4 )
 		else
-			return "models/player/alski/scp049-2mtf2.mdl", math.random( 0, 4 )
+			return "models/player/alski/scp049-2mtf2.mdl", SLCRandom( 0, 4 )
 		end
 	elseif team == TEAM_SCI then
-		return "models/player/alski/scp049-2_scientist.mdl", math.random( 0, 4 )
+		return "models/player/alski/scp049-2_scientist.mdl", SLCRandom( 0, 4 )
 	elseif team == TEAM_GUARD or class == CLASSES.CISPY then
-		return "models/player/alski/049-2_security.mdl", math.random( 0, 4 ) * 5 + rag:GetSkin()
+		return "models/player/alski/049-2_security.mdl", SLCRandom( 0, 4 ) * 5 + rag:GetSkin()
 	end
 end
 
@@ -563,6 +622,70 @@ SCPHook( "SCP049", "StartCommand", function( ply, cmd )
 	cmd:ClearMovement()
 	cmd:ClearButtons()
 	cmd:SetButtons( IN_DUCK )
+end )
+
+SCPHook( "SCP049", "SLCEscapeMultiplier", function( tab, mult )
+	local scp049 = nil
+	local zombies = {}
+	local z_len = 0
+
+	for i, v in ipairs( tab ) do
+		local class = v:SCPClass()
+		if class == CLASSES.SCP049 then
+			mult.bonus_mult[v] = 0.75
+			scp049 = v
+		elseif class == CLASSES.SCP0492 then
+			z_len = z_len + 1
+			mult.skip_count[v] = z_len % 3 != 2
+			mult.bonus_mult[v] = 0.75
+			table.insert( zombies, v )
+		end
+	end
+
+	if !scp049 and z_len <= 0 then return end
+
+	local scp_alive = false
+	local total_z = 0
+
+	for i, v in ipairs( player.GetAll() ) do
+		local class = v:SCPClass()
+		if class == CLASSES.SCP049 then
+			scp_alive = true
+		elseif class == CLASSES.SCP0492 then
+			total_z = total_z + 1
+		end
+	end
+
+	if scp049 and total_z > 0 then
+		local lower_limit = math.ClampMap( total_z, 2, 5, 1, 0.25 )
+
+		mult[scp049] = math.ClampMap( z_len, 0, total_z, lower_limit, 1.25 )
+	end
+
+	if z_len > 0 then
+		local z_mul
+		
+		if total_z == 1 then
+			z_mul = 0.1
+		else
+			local upper_limit = scp_alive and 1 or math.ClampMap( total_z, 1, 5, 0.1, 1 )
+			z_mul = math.Map( z_len, 1, total_z, 0.1, upper_limit )
+		end
+
+		if scp049 then
+			z_mul = z_mul + 0.25
+		elseif scp_alive then
+			z_mul = z_mul - 0.5
+
+			if z_mul < 0 then
+				z_mul = 0
+			end
+		end
+
+		for i, v in ipairs( zombies ) do
+			mult[v] = z_mul
+		end
+	end
 end )
 
 if SERVER then

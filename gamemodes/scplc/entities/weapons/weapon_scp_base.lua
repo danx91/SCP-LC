@@ -26,9 +26,6 @@ SWEP.ViewModel 				= ""
 SWEP.ShouldDrawViewModel 	= false
 SWEP.ShouldDrawWorldModel 	= false
 
-SWEP.FreezePlayer 			= false
-SWEP.ShouldFreezePlayer 	= false
-
 SWEP.DisableDamageEvent		= false
 
 SWEP.ScoreOnDamage 			= false
@@ -37,7 +34,7 @@ SWEP.ScoreOnKill 			= false
 SWEP.SelectFont 			= "SCPHUDMedium"
 
 function SWEP:SetupDataTables()
-	self:AddNetworkVar( "NextSpecialAttack", "Float" )
+	self:NetworkVar( "Float", "NextSpecialAttack" )
 end
 
 function SWEP:InitializeLanguage( name )
@@ -73,7 +70,7 @@ function SWEP:Deploy()
 			owner:DrawWorldModel( self.ShouldDrawWorldModel )
 		end
 
-		self:ResetViewModelBones()
+		//self:ResetViewModelBones()
 	end
 end
 
@@ -81,31 +78,7 @@ function SWEP:Holster( wep )
 	return false
 end
 
-function SWEP:PlayerFreeze()
-	if !SERVER then return end
-
-	if ROUND.preparing and self.ShouldFreezePlayer and !self.FreezePlayer then
-		self.FreezePlayer = true
-		
-		local owner = self:GetOwner()
-		self.OldJumpPower = owner:GetJumpPower()
-		owner:SetJumpPower( 0 )
-		owner:PushSpeed( 3, 3, -1, "SLC_SCPFreeze" )
-	end
-
-	if ROUND.preparing or ROUND.post then return end
-
-	if self.FreezePlayer then
-		self.FreezePlayer = false
-
-		local owner = self:GetOwner()
-		owner:PopSpeed( "SLC_SCPFreeze" )
-		owner:SetJumpPower( self.OldJumpPower )
-	end
-end
-
 function SWEP:Think()
-	self:PlayerFreeze()
 	self:SwingThink()
 end
 

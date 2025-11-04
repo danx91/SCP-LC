@@ -1,333 +1,3 @@
---[[-------------------------------------------------------------------------
-Gamemode hooks
----------------------------------------------------------------------------]]
-function GM:PlayerNoClip( ply, on )
-	return ply:SCPTeam() == TEAM_SPEC and on == true
-end
-
-function GM:PlayerButtonDown( ply, button )
-	if SERVER then
-		numpad.Activate( ply, button )
-		
-		local rt = RealTime()
-		
-		if !ply.SLCAFKTimer then
-			ply.SLCAFKTimer = 0
-		end
-		
-		if ply.SLCAFKTimer <= rt then
-			if ply:IsAFK() then
-				ply:Set_SCPAFK( false )
-				QueueInsert( ply ) --insert player back to spawn queue
-				CheckRoundStart()
-				
-				PlayerMessage( "afk_end", ply )
-			end
-			
-			ply.SLCAFKTimer = rt
-			ply.AFKWarned = false
-		end
-	end
-	
-	if CLIENT and IsFirstTimePredicted() then
-		SLCAFKWarning = false
-
-		if button == GetBindButton( "eq_button" ) and hook.Run( "SLCCanUseBind", "eq" ) != false then
-
-			if CanShowEQ() then
-				//ShowEQ()
-				ShowGUIElement( "eq" )
-			end
-
-			HUDDrawInfo = true
-
-			if ply:SCPTeam() == TEAM_SPEC then
-				HUDSpectatorInfo = true
-			end
-		elseif button == GetBindButton( "upgrade_tree_button" ) and hook.Run( "SLCCanUseBind", "scp_tree" ) != false then
-			ShowSCPUpgrades()
-		elseif button == GetBindButton( "ppshop_button" ) and hook.Run( "SLCCanUseBind", "class_viewer" ) != false then
-			OpenClassViewer()
-		elseif button == GetBindButton( "settings_button" ) and hook.Run( "SLCCanUseBind", "settings" ) != false then
-			OpenSettingsWindow()
-		end
-	end
-end
-
-function GM:PlayerButtonUp( ply, button )
-	if SERVER then numpad.Deactivate( ply, button ) end
-
-	if CLIENT and IsFirstTimePredicted() then
-		if button == GetBindButton( "eq_button" ) then
-			HideGUIElement( "eq" )
-
-			HUDDrawInfo = false
-
-			if ply:SCPTeam() == TEAM_SPEC then
-				HUDSpectatorInfo = false
-			end
-		elseif button == GetBindButton( "upgrade_tree_button" ) then
-			HideSCPUpgrades()
-		end
-	end
-end
-
-function GM:KeyPress( ply, key )
-	if SERVER and !ply:IsBot() then
-		if ply:SCPTeam() == TEAM_SPEC then
-			if key == IN_ATTACK then
-				ply:SpectatePlayerNext()
-			elseif key == IN_ATTACK2 then
-				ply:SpectatePlayerPrev()
-			elseif key == IN_RELOAD then
-				ply:ChangeSpectateMode()
-			end
-		end
-	end
-end
-
-function GM:KeyRelease( ply, key )
-
-end
-
-if CLIENT then
-	hook.Add( "Tick", "SLCClientSideUse", function()
-		local ply = LocalPlayer()
-		if !IsValid( ply ) or !ply:KeyDown( IN_USE ) then return end
-		if ply:SCPTeam() == TEAM_SPEC then return end
-
-		local sp = ply:GetShootPos()
-		local tr = util.TraceLine{
-			start = sp,
-			endpos = sp + ply:GetAimVector() * 75,
-			filter = ply,
-		}
-
-		if !tr.Hit or !IsValid( tr.Entity ) then return end
-		if !tr.Entity.CSUse then return end
-		
-		tr.Entity:CSUse( ply )
-	end )
-end
-
-CAMERA_MASK = bit.lshift( 1, 31 )
-MOVEMENT_MASK = bit.lshift( 1, 30 )
-
-function GM:StartCommand( ply, cmd )
-	if controller.StartCommand( ply, cmd ) then return true end
-
-	if ply:Alive() and !IsValid( ply:GetActiveWeapon() ) then
-		local holster = ply:GetWeaponByBase( "item_slc_holster" )
-		if IsValid( holster ) then
-			cmd:SelectWeapon( holster )
-		end
-	end
-
-	if ply.GetDisableControls and ply:GetDisableControls() then
-		local mask = ply:GetDisableControlsMask()
-		if mask == 0 then
-			cmd:ClearButtons()
-		else
-			cmd:SetButtons( bit.band( cmd:GetButtons(), mask ) )
-		end
-
-		if bit.band( mask, CAMERA_MASK ) == 0 then
-			if !ply.DisableControlsAngle then
-				ply.DisableControlsAngle = cmd:GetViewAngles()
-			end
-
-			cmd:SetViewAngles( ply.DisableControlsAngle )
-		end
-
-		if bit.band( mask, MOVEMENT_MASK ) == 0 then
-			cmd:ClearMovement()
-		end
-	elseif ply.DisableControlsAngle then
-		ply.DisableControlsAngle = nil
-	end
-
-	if SERVER then
-		if ply:IsAboutToSpawn() then
-			cmd:ClearMovement()
-			cmd:ClearButtons()
-		end
-	end
-end
-
-function GM:PlayerSwitchWeapon( ply, old, new )
-	if !IsValid( new ) then return end
-
-	if new.eq_slot and new.eq_slot > 6 then return true end
-	if new.OnSelect and new:OnSelect() == true then return true end
-	if new.Selectable == false then return true end
-	if ply:GetProperty( "prevent_weapon_switch", 0 ) >= CurTime() then return true end
-
-	//new:ResetViewModelBones()
-end
-
-local admin_weapons = {
-	weapon_physgun = true,
-	tool_slc_remover = true,
-	tool_slc_inv = true,
-}
-
-function GM:PlayerCanPickupWeapon( ply, wep )
-	if ply:GetAdminMode() then
-		local class = wep:GetClass()
-		return !!admin_weapons[class]
-	end
-
-	local t = ply:SCPTeam()
-	if t == TEAM_SPEC then return false end
-
-	if ply:GetFreeInventory() <= 0 then
-		if wep.Stacks and wep.Stacks <= 1 then return false, "max_eq" end --TEST does it work for non stackable items?
-
-		local pwep = ply:GetWeapon( wep:GetClass() )
-		if !IsValid( pwep ) then return false, "max_eq" end
-		if pwep.CanStack and !pwep:CanStack() then return false, "cant_stack" end
-	end
-
-	if t == TEAM_SCP then
-		if wep.SCP then
-			return true
-		end
-
-		if !ply:GetSCPHuman() then
-			return false
-		end
-	end
-
-	if wep.SCP then
-		return false
-	end
-
-	local status, msg = hook.Run( "SLCCanPickupWeaponClass", ply, wep:GetClass() )
-	if status == false then
-		return false, msg
-	end
-
-	local class = wep:GetClass()
-	local has = false
-	
-	for k, v in pairs( ply:GetWeapons() ) do
-		if v:GetClass() == class then
-			has = true
-			break
-		end
-	end
-
-	if has then
-		if !wep.Stacks or wep.Stacks <= 1 then return false, "has_already" end
-
-		local pwep = ply:GetWeapon( wep:GetClass() )
-		if IsValid( pwep ) then
-			if pwep.CanStack and !pwep:CanStack() then return false, "cant_stack" end
-		end
-	end
-
-	if wep.CanPickUp then
-		local s, m = wep:CanPickUp( ply )
-		if s != nil then
-			return s, m
-		end
-	end
-
-	if CLIENT then return true end
-
-	local ct = CurTime()
-	if wep.PickupPriority and wep.PickupPriorityTime and wep.PickupPriorityTime >= ct then
-		return wep.PickupPriority == ply
-	elseif !wep.Dropped then
-		return true
-	elseif wep.Dropped + 1 >= ct then
-		return false
-	end
-
-	if ply:KeyDown( IN_USE ) then
-		if wep == ply:GetEyeTrace().Entity then
-			if wep.CanPickup and wep:CanPickup( ply ) == false then
-				return false
-			end
-
-			return true
-		end
-	end
-
-	return false
-end
-
-function GM:SLCCanPickupWeaponClass( ply, class )
-	local tab = weapons.Get( class )
-	local group = SLC_WEAPON_GROUP_OVERRIDE[class] or tab and tab.Group
-	
-	if !group then return end
-
-	for k, v in pairs( ply:GetWeapons() ) do
-		if v:GetGroup() == group then
-			return false, "same_type"
-		end
-	end
-end
-
-function GM:PhysgunPickup( ply, ent )
-	return ply:GetAdminMode()
-end
-
---From base gamemode
-function GM:UpdateAnimation( ply, velocity, maxseqgroundspeed )
-
-	local len = velocity:Length()
-	local rate = 1
-
-	if ( len > 0.2 ) then
-		rate = ( len / maxseqgroundspeed )
-	end
-
-	local n_rate, noclamp = hook.Run( "SLCMovementAnimSpeed", ply, velocity, maxseqgroundspeed, len, rate )
-	if isnumber( n_rate ) then
-		rate = n_rate
-	end
-
-	if !noclamp and rate > 2 then
-		rate = 2
-	end
-
-	-- if we're under water we want to constantly be swimming..
-	if ( ply:WaterLevel() >= 2 ) then
-		rate = math.max( rate, 0.5 )
-	elseif ( !ply:IsOnGround() and len >= 1000 ) then
-		rate = 0.1
-	end
-
-	ply:SetPlaybackRate( rate )
-
-	-- We only need to do this clientside..
-	if ( CLIENT ) then
-		if ( ply:InVehicle() ) then
-			--
-			-- This is used for the 'rollercoaster' arms
-			--
-			local Vehicle = ply:GetVehicle()
-			local Velocity = Vehicle:GetVelocity()
-			local fwd = Vehicle:GetUp()
-			local dp = fwd:Dot( Vector( 0, 0, 1 ) )
-
-			ply:SetPoseParameter( "vertical_velocity", ( dp < 0 and dp or 0 ) + fwd:Dot( Velocity ) * 0.005 )
-
-			-- Pass the vehicles steer param down to the player
-			local steer = Vehicle:GetPoseParameter( "vehicle_steer" )
-			steer = steer * 2 - 1 -- convert from 0..1 to -1..1
-			if ( Vehicle:GetClass() == "prop_vehicle_prisoner_pod" ) then steer = 0 ply:SetPoseParameter( "aim_yaw", math.NormalizeAngle( ply:GetAimVector():Angle().y - Vehicle:GetAngles().y - 90 ) ) end
-			ply:SetPoseParameter( "vehicle_steer", steer )
-
-		end
-
-		GAMEMODE:GrabEarAnimation( ply )
-		GAMEMODE:MouthMoveAnimation( ply )
-	end
-end
-
 local PLAYER = FindMetaTable( "Player" )
 
 --[[-------------------------------------------------------------------------
@@ -379,6 +49,7 @@ function PLAYER:StartHold( tab, id, key, time, cb, never )
 		time = CurTime() + time,
 		never = !!never,
 		cb = cb,
+		sig = self:TimeSignature()
 	}
 
 	tab._ButtonHold[id] = data
@@ -392,7 +63,7 @@ function PLAYER:UpdateHold( tab, id )
 	local data = tab._ButtonHold[id]
 	if !data then return end
 
-	if data.interrupted or !self:KeyDown( data.key ) then
+	if data.interrupted or !self:KeyDown( data.key ) or !self:CheckSignature( data.sig ) then
 		if data.cb then data.cb( self, tab, false ) end
 		tab._ButtonHold[id] = nil
 		return false, data
@@ -422,7 +93,7 @@ function PLAYER:IsHolding( tab, id )
 	id = id..self:SteamID()
 
 	local data = tab._ButtonHold[id]
-	if !data then return false end
+	if !data or !self:CheckSignature( data.sig ) then return false end
 
 	return self:KeyDown( data.key )
 end
@@ -602,7 +273,7 @@ function PLAYER:GetFreeInventory()
 end
 
 function PLAYER:IsHuman()
-	return SCPTeams.HasInfo( self:SCPTeam(), SCPTeams.INFO_HUMAN ) or self:GetSCPHuman()
+	return SCPTeams.HasInfo( self:SCPTeam(), SCPTeams.INFO_HUMAN ) or SERVER and self:GetSCPHuman() --FIX: GetSCPHuman on other players
 end
 
 function PLAYER:IsInEscape()
@@ -654,7 +325,7 @@ end
 
 function PLAYER:GetWeaponByGroup( group )
 	for i, v in ipairs( self:GetWeapons() ) do
-		if v.Group and v.Group == group then
+		if v:IsGroup( group ) then
 			return v
 		end
 	end

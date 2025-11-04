@@ -29,7 +29,7 @@ end
 function SWEP:SetupDataTables()
 	self:CallBaseClass( "SetupDataTables" )
 
-	self:AddNetworkVar( "Light", "Entity" )
+	self:NetworkVar( "Entity", "Light" )
 end
 
 function SWEP:Initialize()

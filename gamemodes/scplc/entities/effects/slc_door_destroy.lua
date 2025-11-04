@@ -8,15 +8,15 @@ function EFFECT:Init( data )
 	for i = 1, num do
 		local dir = Vector( math.sin( ang * i ), math.cos( ang * i ), 0 )
 
-		local particle = emitter:Add( "particle/smokesprites_000"..math.random( 9 ), orig + dir * 50 )
+		local particle = emitter:Add( "particle/smokesprites_000"..SLCRandom( 9 ), orig + dir * 50 )
 		if particle then
 			particle:SetDieTime( 2.5 )
 			particle:SetStartAlpha( 225 )
 			particle:SetEndAlpha( 0 )
 			particle:SetStartSize( 96 )
 			particle:SetEndSize( 128 )
-			particle:SetRoll( math.random() * math.pi * 2 )
-			particle:SetRollDelta( math.random() * 0.2 - 0.1 )
+			particle:SetRoll( SLCRandom() * math.pi * 2 )
+			particle:SetRollDelta( SLCRandom() * 0.2 - 0.1 )
 			particle:SetColor( 40, 35, 30 )
 			particle:SetGravity( dir * 10 )
 			particle:SetAirResistance( 100 )

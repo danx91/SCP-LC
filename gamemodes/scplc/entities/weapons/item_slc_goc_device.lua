@@ -21,7 +21,6 @@ function SWEP:Think()
 	if !IsValid( owner ) or owner:SCPTeam() != TEAM_GOC then return end
 
 	local status = owner:UpdateHold( self, "gocdevice_place" )
-
 	if status == true then
 		if SERVER then
 			local device = ents.Create( "slc_goc_device" )

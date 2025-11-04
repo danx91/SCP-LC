@@ -1,11 +1,12 @@
 AddCSLuaFile()
 
 ENT.Type = "anim"
+ENT.SCPIgnore = true
 
 function ENT:SetupDataTables()
-	self:AddNetworkVar( "OnGround", "Bool" )
-	self:AddNetworkVar( "Move", "Bool" )
-	self:AddNetworkVar( "Target", "Vector" )
+	self:NetworkVar( "Bool", "OnGround" )
+	self:NetworkVar( "Bool", "Move" )
+	self:NetworkVar( "Vector", "Target" )
 end
 
 function ENT:Initialize()

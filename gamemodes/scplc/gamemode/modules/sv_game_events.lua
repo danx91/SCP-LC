@@ -31,8 +31,14 @@ function SCP914Upgrade( mode, ply )
 
 			if istable( v.SCP914Upgrade ) then
 				item_class = v.SCP914Upgrade[mode]
+			elseif isfunction( v.SCP914Upgrade ) then
+				item_class = v.SCP914Upgrade( mode, ply )
 			elseif mode >= UPGRADE_MODE.FINE and isstring( v.SCP914Upgrade ) then
 				item_class = v.SCP914Upgrade
+			end
+
+			if istable( item_class ) then
+				item_class = item_class[SLCRandom( #item_class )]
 			end
 
 			if !item_class then
@@ -63,21 +69,21 @@ function SCP914Upgrade( mode, ply )
 			v:SetPos( SCP_914_OUTPUT )
 
 			if mode == UPGRADE_MODE.ROUGH then
-				v:TakeDamage( math.random( 50, 100 ), v, v )
+				v:TakeDamage( SLCRandom( 50, 100 ), v, v )
 			elseif mode == UPGRADE_MODE.COARSE then
-				v:TakeDamage( math.random( 5, 50 ), v, v )
+				v:TakeDamage( SLCRandom( 5, 50 ), v, v )
 			elseif mode == UPGRADE_MODE.FINE then
-				v:AddHealth( math.random( 5, 25 ) )
+				v:AddHealth( SLCRandom( 5, 25 ) )
 			elseif mode == UPGRADE_MODE.VERY_FINE then
 				local upgrade_num = v:GetProperty( "scp914_veryfine", 0 )
 				v:SetProperty( "scp914_veryfine", upgrade_num + 1 )
 
-				local extra = v:GetExtraHealth() + math.random( 30, 50 ) + 15 * upgrade_num
+				local extra = v:GetExtraHealth() + SLCRandom( 30, 50 ) + 15 * upgrade_num
 				v:SetExtraHealth( extra )
 				v:SetMaxExtraHealth( extra )
 				v:SetProperty( "extra_hp_think", ct + 1 )
 
-				if math.random( 10 ) <= upgrade_num then
+				if SLCRandom( 10 ) <= upgrade_num then
 					v:SetProperty( "death_info_override", {
 						type = "dead",
 						args = {
@@ -155,6 +161,81 @@ local function TakeDamageA( ent, ply )
 	end
 end
 
+local fire_trace = {}
+fire_trace.output = fire_trace
+fire_trace.mask = MASK_SOLID_BRUSHONLY
+
+local function spawn_fire_ents( pos, time )
+	local pos1, pos2 = pos[1], pos[2]
+	local step = 90
+	local noise = step / 2
+	
+	for x = pos1.x, pos2.x, step do
+		for y = pos1.y, pos2.y, step do
+			fire_trace.start = Vector(
+				x + ( SLCRandom() * 2 - 1 ) * noise,
+				y + ( SLCRandom() * 2 - 1 ) * noise,
+				pos2.z
+			)
+
+			if !util.IsInWorld( fire_trace.start ) then continue end
+
+			fire_trace.endpos = fire_trace.start * 1
+			fire_trace.endpos.z = pos1.z
+
+			_DrawNextTrace = true
+			util.TraceLine( fire_trace )
+
+			if !fire_trace.Hit or fire_trace.StartSolid or fire_trace.AllSolid then continue end
+
+			local fire = ents.Create( "slc_entity_fire" )
+			if !IsValid( fire ) then return end
+
+			fire:SetPos( fire_trace.HitPos )
+			fire:SetBurnTime( time + SLCRandom() * 1.5 - 0.5 )
+			fire:SetFireRadius( 0 )
+			fire:SetFireDamage( 0 )
+			fire:Spawn()
+		end
+	end
+end
+
+local function spawn_fire()
+	local time = CVAR.slc_time_gate_fire:GetInt()
+	if time <= 0 then return end
+
+	local pos = EXPLOSION_FIRE
+	local tick = 0.2
+
+	for i, v in ipairs( pos ) do
+		spawn_fire_ents( v, time )
+	end
+
+	SetRoundProperty( "gate_a_fire", CurTime() + time, true )
+
+	AddTimer( "GateFireTimer", tick, time / tick, function()
+		for i, v in ipairs( pos ) do
+			for _, ply in ipairs( player.GetAll() ) do
+				if !ply:GetPos():WithinAABox( v[1], v[2] ) then continue end
+
+				local t = ply:SCPTeam()
+				if !ply:Alive() or t == TEAM_SPEC then continue end
+
+				if t == TEAM_SCP then
+					ply:TakeDamage( 100, ply )
+				else
+					local dmg = DamageInfo()
+					dmg:SetAttacker( ply )
+					dmg:SetDamageType( DMG_BURN )
+					dmg:SetDamage( 10 )
+
+					ply:TakeDamageInfo( dmg )
+				end
+			end
+		end
+	end )
+end
+
 function ExplodeGateA( ply )
 	if GetRoundProperty( "gatea" ) or GetRoundProperty( "gatea_destroyed" ) then return end
 	if IsGateAOpen() then return end
@@ -198,6 +279,7 @@ function ExplodeGateA( ply )
 			explosion:Fire( "explode", "", 0 )
 
 			DestroyGateA()
+			spawn_fire()
 
 			if IsValid( ply ) then
 				TakeDamageA( explosion, ply )
@@ -344,6 +426,7 @@ local function omega_shelter()
 			SCPTeams.AddScore( team, SCPTeams.GetReward( team ) * 2 )
 
 			v:Despawn()
+			v:SkipNextSuicide()
 
 			v:KillSilent()
 			v:SetSCPTeam( TEAM_SPEC )
@@ -495,9 +578,9 @@ function OMEGAWarhead( ply1, ply2 )
 					if IsValid( k ) then
 						k:Remove()
 					end
-
-					OMEGA_DESTROY[k] = nil
 				end
+
+				OMEGA_DESTROY = {}
 
 				local sel_omega = GetSELObject( "OmegaWarhead" )
 				if sel_omega then
@@ -523,11 +606,11 @@ hook.Add( "SLCPreround", "SLCAlphaWarhead", function()
 	local tab = table.Copy( ALPHA_CARD_SPAWN )
 
 	for i = 1, 2 do
-		local spawns = table.remove( tab, math.random( #tab ) )
+		local spawns = table.remove( tab, SLCRandom( #tab ) )
 
 		local card = ents.Create( "item_slc_alpha_card"..i )
 		if IsValid( card ) then
-			card:SetPos( spawns[math.random( #spawns )] )
+			card:SetPos( spawns[SLCRandom( #spawns )] )
 			card:Spawn()
 			card.Dropped = 0
 		end
@@ -603,9 +686,9 @@ function ALPHAWarhead( ply )
 					if IsValid( k ) then
 						k:Remove()
 					end
-
-					ALPHA_DESTROY[k] = nil
 				end
+				
+				ALPHA_DESTROY = {}
 
 				local surface = {}
 				local facility = {}
@@ -842,8 +925,8 @@ end )
 Pocket Dimension
 ---------------------------------------------------------------------------]]
 function SendToPocketDimension( ply, attacker )
-	ply:SetPos( istable( POS_POCKETD ) and POS_POCKETD[math.random( #POS_POCKETD )] or POS_POCKETD )
-	ply:SetAngles( Angle( 0, math.random( -180, 180 ), 0 ) )
+	ply:SetPos( istable( POS_POCKETD ) and POS_POCKETD[SLCRandom( #POS_POCKETD )] or POS_POCKETD )
+	ply:SetAngles( Angle( 0, SLCRandom( -180, 180 ), 0 ) )
 	//ply:ScreenFade( bit.bor( SCREENFADE.IN, SCREENFADE.OUT ), Color( 0, 0, 0 ), 0.05, 0.3 )
 	ply:ApplyEffect( "decay", attacker )
 

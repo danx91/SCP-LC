@@ -20,7 +20,7 @@ data = {
 
 function EFFECTS.RegisterEffect( name, data )
 	local num_tiers = data.max_tier or #data.tiers
-	local tiers = data.tiers
+	local tiers = data.tiers or {}
 
 	for i = 1, num_tiers do
 		local tier = table.Copy( tiers[i] or tiers.all or {} )
@@ -483,8 +483,8 @@ EFFECTS.RegisterEffect( "heavy_bleeding", {
 	finish = function( self, ply, tier, args, interrupt, all )
 		if CLIENT or !interrupt or all then return end
 		
-		ply:AddTimer( "reopen_wound", math.random( 30, 120 ), 1, function()
-			if !ply:HasEffect( "heavy_bleeding" ) and math.random( 1, 100 ) <= 50 / args[2] then
+		ply:AddTimer( "reopen_wound", SLCRandom( 30, 120 ), 1, function()
+			if !ply:HasEffect( "heavy_bleeding" ) and SLCRandom( 1, 100 ) <= 50 / args[2] then
 				ply:ApplyEffect( "heavy_bleeding", args[1], args[2] + 1 )
 			end
 		end )
@@ -620,7 +620,7 @@ EFFECTS.RegisterEffect( "radiation", {
 			ply:EmitSound( "SLCEffects.Radiation" )
 		end
 
-		return math.random() * 0.15 + 0.05
+		return SLCRandom() * 0.15 + 0.05
 	end,
 	wait = 1,
 } )
@@ -1091,7 +1091,7 @@ EFFECTS.RegisterEffect( "scp009", {
 		local radius = 50 ^ 2
 
 		for i, v in ipairs( player.GetAll() ) do
-			if math.random( 4 ) < 4 and !v:HasEffect( "scp009" ) and v:GetPos():DistToSqr( pos ) <= radius then
+			if SLCRandom( 4 ) < 4 and !v:HasEffect( "scp009" ) and v:GetPos():DistToSqr( pos ) <= radius then
 				v:ApplyEffect( "scp009", self.attacker, self.team )
 			end
 		end
@@ -1108,9 +1108,7 @@ EFFECTS.RegisterEffect( "electrical_shock", {
 	tiers = {
 		{ icon = Material( "slc/hud/effects/electrical_shock.png" ) },
 	},
-	cantarget = function( ply )
-		if !scp_spec_filter( ply ) then return false end
-	end,
+	cantarget = scp_spec_filter,
 	begin = function( self, ply, tier, args, refresh )
 		if SERVER then
 			ply:PushSpeed( 0.2, 0.2, -1, "SLC_ElectricalShock", 1 )
@@ -1124,6 +1122,128 @@ EFFECTS.RegisterEffect( "electrical_shock", {
 			ply:PopSpeed( "SLC_ElectricalShock" )
 		end
 	end,
+} )
+
+--[[-------------------------------------------------------------------------
+Ephedrine (speed)
+---------------------------------------------------------------------------]]
+EFFECTS.RegisterEffect( "ephedrine", {
+	duration = 60,
+	stacks = 0,
+	tiers = {
+		{ icon = Material( "slc/items/ephedrine.png" ) },
+	},
+	cantarget = scp_spec_filter,
+	begin = function( self, ply, tier, args, refresh )
+		if SERVER then
+			ply:PushSpeed( args[1], args[1], -1, "SLC_EphedrineBoost", 1 )
+		end
+	end,
+	finish = function( self, ply, tier, args, interrupt )
+		if SERVER then
+			ply:PopSpeed( "SLC_EphedrineBoost" )
+		end
+	end,
+	ignore500 = true,
+} )
+
+--[[-------------------------------------------------------------------------
+Hemostatic
+---------------------------------------------------------------------------]]
+EFFECTS.RegisterEffect( "hemostatic", {
+	duration = 5,
+	stacks = 0,
+	tiers = {
+		{ icon = Material( "slc/items/hemostatic.png" ) },
+	},
+	cantarget = scp_spec_filter,
+	begin = function( self, ply, tier, args, refresh )
+		self.duration = args[1]
+	end,
+	think = function( self, ply, tier, args )
+		if CLIENT then return end
+
+		if ply:HasEffect( "bleeding" ) then
+			ply:RemoveEffect( "bleeding" )
+		end
+
+		if ply:HasEffect( "heavy_bleeding" ) then
+			ply:RemoveEffect( "heavy_bleeding" )
+		end
+	end,
+	wait = 1,
+	ignore500 = true,
+} )
+
+--[[-------------------------------------------------------------------------
+Antidote
+---------------------------------------------------------------------------]]
+EFFECTS.RegisterEffect( "antidote", {
+	duration = 5,
+	stacks = 0,
+	tiers = {
+		{ icon = Material( "slc/items/antidote.png" ) },
+	},
+	cantarget = scp_spec_filter,
+	begin = function( self, ply, tier, args, refresh )
+		self.duration = args[1]
+	end,
+	think = function( self, ply, tier, args )
+		if CLIENT then return end
+
+		if ply:HasEffect( "poison" ) then
+			ply:RemoveEffect( "poison" )
+		end
+
+		if ply:HasEffect( "poison_syringe" ) then
+			ply:RemoveEffect( "poison_syringe" )
+		end
+	end,
+	wait = 1,
+	ignore500 = true,
+} )
+
+--[[-------------------------------------------------------------------------
+Poison (syringe)
+---------------------------------------------------------------------------]]
+EFFECTS.RegisterEffect( "poison_syringe", {
+	duration = 60,
+	stacks = 0,
+	tiers = {
+		{ icon = Material( "slc/hud/effects/poison_alt.png" ) },
+	},
+	cantarget = scp_spec_filter,
+	begin = function( self, ply, tier, args, refresh )
+		if !IsValid( args[1] ) or !args[1]:IsPlayer() then return end
+		if args[2] > self.args[2] then
+			self.args[2] = args[2]
+		end
+
+		if args[3] < self.args[3] then
+			self.args[3] = args[3]
+		end
+
+		self.args[1] = args[1]
+		self.args[4] = args[1]:TimeSignature()
+	end,
+	think = function( self, ply, tier, args )
+		if CLIENT then return end
+
+		local att = args[1]
+		local dmg = DamageInfo()
+
+		dmg:SetDamage( args[2] )
+		dmg:SetDamageType( DMG_DIRECT )
+
+		if IsValid( att ) and att:IsPlayer() and att:CheckSignature( args[4] ) then
+			dmg:SetAttacker( att )
+		end
+
+		ply:TakeDamageInfo( dmg )
+
+		return args[3]
+	end,
+	wait = 1,
 } )
 
 --[[-------------------------------------------------------------------------
@@ -1516,7 +1636,7 @@ EFFECTS.RegisterEffect( "expd_invis", {
 			if !is_crouching then
 				ply:SetProperty( "expd_clown_sound", 0 )
 			elseif snd == 0 then
-				ply:SetProperty( "expd_clown_sound", CurTime() + 4 + math.random() * 6 )
+				ply:SetProperty( "expd_clown_sound", CurTime() + 4 + SLCRandom() * 6 )
 			elseif snd < CurTime() then
 				ply:SetProperty( "expd_clown_sound", 0 )
 				ply:EmitSound( "SLCEffects.EXPD.Clown" )
@@ -1576,7 +1696,7 @@ EFFECTS.RegisterEffect( "expd_enderman", {
 			if n <= 0 then return end
 
 			for i = 1, n > 5 and 5 or n do
-				local nav = table.remove( nav_list, math.random( n ) )
+				local nav = table.remove( nav_list, SLCRandom( n ) )
 				n = n - 1
 
 				for j = 1, 5 do
@@ -1629,8 +1749,10 @@ AddSounds( "SLCEffects.EXPD.Enderman", "scp_lc/effects/expd/expd_enderman_%i.ogg
 Healing Hooks
 ---------------------------------------------------------------------------]]
 hook.Add( "SLCCanHeal", "SLCEffectsCanHeal", function( target, healer, heal_type )
+	if heal_type == "poison" then return end
+
 	if target:HasEffect( "radiation" ) then return false end
-	if target:HasEffect( "poison" ) then return false end
+	if target:HasEffect( "poison" ) and heal_type != "antidote" then return false end
 end )
 
 hook.Add( "SLCNeedHeal", "SLCEffectsNeedHeal", function( target, healer, heal_type )

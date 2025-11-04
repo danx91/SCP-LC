@@ -16,13 +16,13 @@ SWEP.BiteDamageMax = 90
 SWEP.BiteAngle = math.pi * 2 / 5 -- 2/5pi = 72 deg
 SWEP.BiteAngleCos = math.cos( SWEP.BiteAngle / 2 ) --Don't change! - used for hit detection (dot >= BiteAngleCos)
 SWEP.BiteRangeMin = 30
-SWEP.BiteRangeMax = 120
+SWEP.BiteRangeMax = 140
 SWEP.PrepareTime = 3
-SWEP.PrepareSpeed = 0.3
+SWEP.PrepareSpeed = 0.35
 
-SWEP.ChargeCooldown = 110
+SWEP.ChargeCooldown = 90
 
-SWEP.DefaultShield = 800
+SWEP.DefaultShield = 900
 SWEP.ShieldCooldown = 60
 
 local STATE_NONE = 0
@@ -31,10 +31,10 @@ local STATE_STUNNED = 1
 function SWEP:SetupDataTables()
 	self:CallBaseClass( "SetupDataTables" )
 
-	self:AddNetworkVar( "Charging", "Bool" )
-	self:AddNetworkVar( "State", "Int" )
-	self:AddNetworkVar( "ShieldCooldown", "Float" )
-	self:AddNetworkVar( "Shield", "Float" )
+	self:NetworkVar( "Bool", "Charging" )
+	self:NetworkVar( "Int", "State" )
+	self:NetworkVar( "Float", "ShieldCooldown" )
+	self:NetworkVar( "Float", "Shield" )
 end
 
 function SWEP:Initialize()
@@ -66,6 +66,13 @@ trace_tab.output = trace_tab
 local trace_offset = Vector( 0, 0, 48 )
 local class_whitelist = {
 	prop_ragdoll = true
+}
+
+local collision_group_whitelist = {
+	[COLLISION_GROUP_WEAPON] = true,
+	[COLLISION_GROUP_DEBRIS] = true,
+	[COLLISION_GROUP_DEBRIS_TRIGGER] = true,
+	[COLLISION_GROUP_WORLD] = true,
 }
 
 SWEP.NextThinkTime = 0
@@ -134,6 +141,13 @@ function SWEP:ChargeThink()
 	if IsValid( ent ) then
 		if self.EntityCache[ent] then return end
 		self.EntityCache[ent] = true
+
+		if ent.SCPIgnore or collision_group_whitelist[ent:GetCollisionGroup()] then return end
+
+		if ( ent.SCPBreakable or ent:GetClass() == "func_breakable" ) and self.FullSpeed then
+			ent:TakeDamage( ent:Health(), owner )
+			return
+		end
 
 		local door_ent = ent
 		if door_ent:GetClass() == "prop_dynamic" then
@@ -267,6 +281,7 @@ local bite_offset = Vector( 0, 0, 32 )
 local bite_trace = {}
 bite_trace.mask = MASK_SOLID_BRUSHONLY
 bite_trace.output = bite_trace
+
 function SWEP:PerformBiteAttack()
 	local ct = CurTime()
 	self:SetNextSecondaryFire( ct + self.BiteCooldown )
@@ -306,7 +321,7 @@ function SWEP:PerformBiteAttack()
 	local has_upgrade = self:HasUpgrade( "attack_3" )
 
 	local min_range_square = self.BiteRangeMin ^ 2
-	local max_range_square = math.Map( pct, 0, 1, self.BiteRangeMin, self.BiteRangeMax ) ^ 2
+	local max_range_square = math.Map( pct, 0, 1, self.BiteRangeMin, self.BiteRangeMax * self:GetUpgradeMod( "sec_range", 1 ) ) ^ 2
 	local max_dot = self.BiteAngleCos
 
 	bite_trace.start = pos + bite_offset
@@ -703,19 +718,19 @@ DefineUpgradeSystem( "scp682", {
 	grid_x = 4,
 	grid_y = 4,
 	upgrades = {
-		{ name = "shield_a", cost = 2, req = {}, block = { "shield_b", "shield_c", "shield_d" }, reqany = false, pos = { 1, 1 },
+		{ name = "shield_a", cost = 2, req = {}, block = { "shield_b", "shield_c", "shield_d" }, reqany = false, pos = { 1, 1 }, // Empowered
 			mod = { shield = 1.6, shield_cd = 1.15 }, icon = icons.shield_a, active = { icons.shield_a }, group = "shield" },
-		{ name = "shield_b", cost = 2, req = {}, block = { "shield_a", "shield_c", "shield_d" }, reqany = false, pos = { 1, 2 },
-			mod = { shield = 0.75, shield_cd = 1.3, shield_regen = 6 }, icon = icons.shield_b, active = { icons.shield_b, Color( 20, 157, 20 ) }, group = "shield" },
-		{ name = "shield_c", cost = 2, req = {}, block = { "shield_a", "shield_b", "shield_d" }, reqany = false, pos = { 1, 3 },
+		{ name = "shield_b", cost = 2, req = {}, block = { "shield_a", "shield_c", "shield_d" }, reqany = false, pos = { 1, 2 }, // Regen
+			mod = { shield = 0.8, shield_cd = 1.4, shield_regen = 6 }, icon = icons.shield_b, active = { icons.shield_b, Color( 20, 157, 20 ) }, group = "shield" },
+		{ name = "shield_c", cost = 2, req = {}, block = { "shield_a", "shield_b", "shield_d" }, reqany = false, pos = { 1, 3 }, // Sacri
 			mod = { shield_cd = 0.5, shield_hp = 500 }, icon = icons.shield_c, active = { icons.shield_c, Color( 183, 0, 0 ) }, group = "shield" },
-		{ name = "shield_d", cost = 2, req = {}, block = { "shield_a", "shield_b", "shield_c" }, reqany = false, pos = { 1, 4 },
+		{ name = "shield_d", cost = 2, req = {}, block = { "shield_a", "shield_b", "shield_c" }, reqany = false, pos = { 1, 4 }, // Refelct
 			mod = { shield = 0.6, shield_cd = 1.25, shield_pct = 0.4, reflect_pct = 0.35 }, icon = icons.shield_d, active = { icons.shield_d, Color( 173, 0, 163 ) }, group = "shield" },
 
 		{ name = "shield_1", cost = 1, req = {}, reqany = false, pos = { 2, 1 },
-			mod = { shield_speed_pow = 1.2, shield_speed_dur = 15 }, icon = icons.shield, active = false },
+			mod = { shield_speed_pow = 1.2, shield_speed_dur = 20 }, icon = icons.shield, active = false },
 		{ name = "shield_2", cost = 2, req = { "shield_1" }, reqany = false, pos = { 2, 2 }, icon = icons.shield,
-			mod = { shield_speed_pow = 1.4, shield_speed_dur = 25, shield_cdr = 0.02 }, active = false },
+			mod = { shield_speed_pow = 1.5, shield_speed_dur = 60, shield_cdr = 0.02 }, active = false },
 
 		{ name = "attack_1", cost = 1, req = {}, reqany = false, pos = { 3, 1 },
 			mod = { prim_cd = 0.6, prim_dmg = 10 }, icon = icons.attack1, active = false },
@@ -727,7 +742,7 @@ DefineUpgradeSystem( "scp682", {
 		{ name = "charge_1", cost = 1, req = {}, reqany = false, pos = { 3, 3 },
 			mod = {}, icon = icons.charge, active = false },
 		{ name = "charge_2", cost = 1, req = { "charge_1" }, reqany = false, pos = { 3, 4 }, icon = icons.charge,
-			mod = { charge_cd = 0.85, charge_stun = 0.6 }, active = false },
+			mod = { charge_cd = 0.6, charge_stun = 0.5 }, active = false },
 
 		{ name = "outside_buff", cost = 1, req = {}, reqany = false, pos = { 4, 4 }, mod = {}, active = false },
 	},
@@ -815,8 +830,6 @@ controller.Register( "scp682_charge", {
 		if abs_diff > max_diff then
 			diff:Div( abs_diff / max_diff, max_diff )
 		end
-
-		abs_diff = math.sqrt( diff.y * diff.y + diff.p * diff.p )
 
 		self.Angle:Add( diff )
 

@@ -22,7 +22,7 @@ end
 function SWEP:SetupDataTables()
 	self:CallBaseClass( "SetupDataTables" )
 
-	self:AddNetworkVar( "Backpack", "Int" )
+	self:NetworkVar( "Int", "Backpack" )
 end
 
 function SWEP:Initialize()

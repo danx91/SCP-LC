@@ -187,6 +187,17 @@ function math.SinWave( x, freq, amp, offset )
 	return wave
 end
 
+function math.ClampMap( num, min, max, newmin, newmax )
+	local cl = newmin
+	local cm = newmax
+
+	if cm < cl then
+		cl, cm = cm, cl
+	end
+
+	return math.Clamp( math.Map( num, min, max, newmin, newmax ), cl, cm )
+end
+
 function math.Map( num, min, max, newmin, newmax )
 	if max == min then error( "Invalid arguments to math.Map" ) end
 

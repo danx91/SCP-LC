@@ -22,7 +22,7 @@ SWEP.UseGroup	= "vision"
 function SWEP:SetupDataTables()
 	self:CallBaseClass( "SetupDataTables" )
 
-	self:AddNetworkVar( "Upgraded", "Bool" )
+	self:NetworkVar( "Bool", "Upgraded" )
 end
 
 function SWEP:HandleUpgrade( mode, exit, ply )
@@ -31,7 +31,7 @@ function SWEP:HandleUpgrade( mode, exit, ply )
 	if mode == UPGRADE_MODE.VERY_FINE then
 		self:Refill()
 
-		if math.random( 100 ) <= 33 then
+		if SLCRandom( 100 ) <= 33 then
 			self:SetUpgraded( true )
 		end
 	end

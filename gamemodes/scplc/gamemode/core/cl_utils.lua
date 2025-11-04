@@ -551,8 +551,10 @@ hook.Add( "HUDPaint", "SLCWheelMenu", function()
 
 		if i == selected then
 			surface.SetDrawColor( 100, 100, 100 )
+		elseif tab.disabled then
+			surface.SetDrawColor( 40, 40, 40 )
 		else
-			surface.SetDrawColor( 50, 50, 50 )
+			surface.SetDrawColor( 60, 60, 60 )
 		end
 		
 		draw.NoTexture()

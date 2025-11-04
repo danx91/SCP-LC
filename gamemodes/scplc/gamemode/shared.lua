@@ -14,6 +14,8 @@ LANGUAGE = {
 	EQ_LONG_TEXT = bit.lshift( 1, 0 ),
 }
 
+SLCRandom = math.random
+
 function RegisterLanguage( tab, name, ... )
 	if !tab or !name then return end
 
@@ -116,6 +118,8 @@ if DEVELOPER_MODE then
 	MsgC( Color( 230, 20, 20 ), "=================================================\n" )
 	print( "\n\n\n\n\n" )
 end
+
+SLCRandom = xoshiro128()
 
 --[[-------------------------------------------------------------------------
 Load languages

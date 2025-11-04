@@ -58,7 +58,7 @@ attack_trace.mask = MASK_SOLID
 attack_trace.output = attack_trace
 
 function ENT:Attack()
-	local victim = self.Targets[math.random( #self.Targets )]
+	local victim = self.Targets[SLCRandom( #self.Targets )]
 	if !IsValid( victim ) or !victim:CheckSignature( self.TargetsLookup[victim] ) or !victim:GetBlink() then return end
 
 	local pos = victim:GetPos() + victim:OBBCenter()
@@ -98,7 +98,7 @@ function ENT:Attack()
 	victim:SetProperty( "SCP173NextHorror", CurTime() + 10 )
 	victim:TakeSanity( 15, SANITY_TYPE.ANOMALY )
 	
-	TransmitSound( "scp_lc/scp/173/horror/horror"..math.random( 0, 9 )..".ogg", true, victim )
+	TransmitSound( "scp_lc/scp/173/horror/horror"..SLCRandom( 0, 9 )..".ogg", true, victim )
 end
 
 function ENT:Draw()

@@ -8,6 +8,7 @@ ROUND = {
 	preparing = false,
 	post = false,
 	active = false,
+	properties = {}
 }
 
 SCPStats = {}
@@ -173,19 +174,26 @@ hook.Add( "SLCRegisterSettings", "SLCLanguage", function()
 	} )
 end )
 
-local function PrintTableDiff( tab, ref, stack )
+local diff_skip = {
+	["MISC.commands_aliases"] = true,
+	["__binds"] = true,
+}
+
+local function PrintTableDiff( tab, ref, stack, raw_stack )
 	local wrong, err = 0, 0
 	stack = stack or "LANG"
 
-	for k, v in pairs( ref ) do
-		if k == "__binds" then continue end
+	if raw_stack and diff_skip[raw_stack] then
+		return wrong, err
+	end
 
+	for k, v in pairs( ref ) do
 		if istable( v ) then
 			if !istable( tab[k] ) then
 				print( "Missing table: "..stack.." > "..k )
 				wrong = wrong + 1
 			else
-				local a_w, a_e = PrintTableDiff( tab[k], v, stack.." > "..k )
+				local a_w, a_e = PrintTableDiff( tab[k], v, stack.." > "..k, raw_stack and raw_stack.."."..k or k )
 				wrong = wrong + a_w
 				err = err + a_e
 			end
@@ -206,13 +214,17 @@ local function PrintTableDiff( tab, ref, stack )
 	return wrong, err
 end
 
-local function PrintRevDiff( tab, ref, stack )
+local function PrintRevDiff( tab, ref, stack, raw_stack )
 	local num = 0
 	stack = stack or "LANG"
 
+	if raw_stack and diff_skip[raw_stack] then
+		return num
+	end
+
 	for k, v in pairs( tab ) do
 		if istable( v ) and istable( ref[k] ) then
-				num = num + PrintRevDiff( v, ref[k], stack.." > "..k )
+				num = num + PrintRevDiff( v, ref[k], stack.." > "..k, raw_stack and raw_stack.."."..k or k )
 		elseif ref[k] == nil then
 			print( "Unused value: "..stack.." > "..k )
 			num = num + 1
@@ -516,9 +528,28 @@ hook.Add( "SLCRegisterSettings", "SLCBlinkSettings", function()
 end )
 
 --[[-------------------------------------------------------------------------
-Commands
+RoundProperties
 ---------------------------------------------------------------------------]]
---
+function SetRoundProperty( key, value )
+	if !ROUND.active then return end
+
+	ROUND.properties[key] = value
+	return value
+end
+
+function GetRoundProperty( key, def )
+	if !ROUND.active then return def end
+
+	if !ROUND.properties[key] and def != nil then
+		ROUND.properties[key] = def
+	end
+
+	return ROUND.properties[key]
+end
+
+hook.Add( "SLCRoundCleanup", "RoundProperties", function()
+	ROUND.properties = {}
+end )
 
 --[[-------------------------------------------------------------------------
 GM hooks

@@ -3,7 +3,7 @@ AddCSLuaFile()
 ENT.Type 			= "anim"  
 ENT.Base 			= "base_anim"
 
-ENT.Speed = 12
+ENT.Speed = 14
 ENT.Gravity = Vector( 0, 0, 6 )
 
 function ENT:Initialize()
@@ -74,8 +74,8 @@ function ENT:Draw()
 		particle:SetEndAlpha( 0 )
 		particle:SetStartSize( 3 )
 		particle:SetEndSize( 6 )
-		particle:SetRoll( math.random() * math.pi * 2 )
-		particle:SetRollDelta( math.random() * 0.2 - 0.1 )
+		particle:SetRoll( SLCRandom() * math.pi * 2 )
+		particle:SetRollDelta( SLCRandom() * 0.2 - 0.1 )
 		particle:SetColor( 10, 120, 10 )
 		particle:SetAirResistance( 100 )
 		particle:SetGravity( Vector( 0, 0, 5 ) )

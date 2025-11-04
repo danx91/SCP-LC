@@ -284,7 +284,7 @@ if SERVER then
 	}, true )
 
 	ItemSpawnRule( "scp689", {
-		item = { slc_scp_689 = 10, _none = 70 },
+		item = { slc_scp_689 = 8, _none = 92 },
 		amount = 1,
 		condition = function()
 			local min = CVAR.slc_689_min_players:GetInt()
@@ -475,7 +475,8 @@ if SERVER then
 	Items spawn
 	---------------------------------------------------------------------------]]
 	ItemSpawnRule( "med_misc", {
-		item = { item_slc_medkit = 95, item_slc_medkitplus = 5, item_slc_adrenaline = 30, item_slc_adrenaline_big = 3, item_slc_morphine = 30, item_slc_morphine_big = 3 },
+		item = { item_slc_medkit = 150, item_slc_medkitplus = 5, item_slc_adrenaline = 30, item_slc_adrenaline_big = 3, item_slc_morphine = 30, item_slc_morphine_big = 3,
+			item_slc_ephedrine = 30, item_slc_ephedrine_big = 3, item_slc_hemostatic = 30, item_slc_hemostatic_big = 3, item_slc_antidote = 30, item_slc_antidote_big = 3 },
 		amount = { 4, 10 },
 		spawns = {
 			--lcz
@@ -588,10 +589,12 @@ if SERVER then
 	}, true )
 
 	ItemSpawnRule( "forest", {
-		item = { item_slc_medkit = 15, item_slc_medkitplus = 15, item_slc_morphine = 10, item_slc_adrenaline = 10, item_slc_nvgplus = 10, item_slc_thermal = 10,
-			item_slc_snav = 10, item_slc_snav_ultimate = 10, item_slc_morphine_big = 10, item_slc_adrenaline_big = 10, item_scp_500 = 10, item_slc_heavymask = 10,
-			weapon_slc_crowbar = 5, weapon_slc_stunstick = 5, weapon_taser = 5, item_slc_turret = 5, item_slc_commander_tablet = 2, item_slc_battery_x = 1,
-			["func:fuse:4:8"] = 10, ["func:fuse:8:12"] = 5, ["func:chip:3"] = 10, ["func:chip:4"] = 5, ["func:vest:ntf"] = 5, ["func:vest:alpha1"] = 2 },
+		item = { item_slc_medkit = 15, item_slc_medkitplus = 15, item_slc_morphine = 10, item_slc_adrenaline = 10, item_slc_ephedrine = 10, item_slc_hemostatic = 10,
+			item_slc_antidote = 10, item_slc_poison = 10, item_slc_nvgplus = 10, item_slc_thermal = 10, item_slc_snav = 10, item_slc_snav_ultimate = 10,
+			item_slc_morphine_big = 10, item_slc_adrenaline_big = 10, item_slc_ephedrine_big = 10, item_slc_hemostatic_big = 10, item_slc_antidote_big = 10,
+			item_slc_poison_big = 10, item_scp_500 = 10, item_slc_heavymask = 10, weapon_slc_crowbar = 5, weapon_slc_stunstick = 5, weapon_taser = 5, item_slc_turret = 5,
+			item_slc_commander_tablet = 2, item_slc_battery_x = 1, ["func:fuse:4:8"] = 10, ["func:fuse:8:12"] = 5, ["func:chip:3"] = 10, ["func:chip:4"] = 5,
+			["func:vest:ntf"] = 5, ["func:vest:alpha1"] = 2 },
 		amount = { 4, 8 },
 		spawns = {
 			Vector( 6463.00, 4750.00, -1100.00 ),
@@ -1457,9 +1460,40 @@ BLOCKERS = {
 		}
 	},
 	{
+		name = "gateb_elevator",
+		pos = Vector( -3904, 1918, 55 ),
+		bounds = { Vector( -35, -5, -60 ), Vector( 35, 5, 60 ) },
+		filter = {
+			mode = BLOCKER_BLACKLIST,
+			custom_check = function( ply )
+				if ply:SCPClass() != CLASSES.SCP173 then return true end
+
+				local wep = ply:GetSCPWeapon()
+				if !IsValid( wep ) then return true end
+
+				return !wep:GetInStealth()
+			end
+		}
+	},
+	{
+		name = "gate_a",
+		pos = Vector( -450, 4830, 50 ),
+		bounds = { Vector( -70, -10, -50 ), Vector( 75, 15, 60 ) },
+		filter = {
+			mode = BLOCKER_BLACKLIST,
+			custom_check = function( ply )
+				if ply:SCPTeam() != TEAM_SCP then return true end
+				return GetRoundProperty( "gate_a_fire", 0 ) < CurTime()
+			end
+		}
+	},
+	{
 		name = "forest_door",
 		pos = Vector( 1472.00, 2272.50, 50.00 ),
-		bounds = { Vector( -0.1, -24, -54 ), Vector( 0.1, 24, 54 ) },
+		bounds = { Vector( -1, -24, -54 ), Vector( 1, 24, 54 ) },
+		filter = {
+			allow_use = true,
+		},
 	},
 }
 
@@ -1675,6 +1709,10 @@ GATE_A_EXPLOSION_RADIUS = 1000
 EXPLOSION_AREAS_A = {
 	{ Vector( -750, 4607, -10 ), Vector( 25, 5400, 314 ) },
 	{ Vector( -772, 3775, -80 ), Vector( -300, 4610, 130 ) },
+}
+
+EXPLOSION_FIRE = {
+	{ Vector( -769.00, 3974.00, -65.00 ), Vector( -298.00, 4835.00, 72.00 ) }
 }
 
 --[[-------------------------------------------------------------------------

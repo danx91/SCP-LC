@@ -65,7 +65,7 @@ function RebuildResourceOverrides()
 	local order = {}
 	for k, v in pairs( resource_manifest ) do
 		if v.order == -1 then continue end
-		table.insert( order, v.order, k )
+		table.insert( order, v.order, k ) --TODO change that
 	end
 
 	for k, v in pairs( resource_manifest ) do
@@ -79,7 +79,7 @@ function RebuildResourceOverrides()
 		local id = order[i]
 		local tab = resource_manifest[id]
 
-		if !tab.enabled then continue end
+		if !tab.enabled or !resource_overrides[id] then continue end
 		
 		tab.order = i
 		table.Merge( resource_overrides_built, resource_overrides[id] )

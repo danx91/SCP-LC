@@ -600,16 +600,12 @@ function SCPHUDObject:AddCommonSkills()
 
 	dmg_mod:SetMaterial( "slc/hud/scp/dmg_mod.png", "smooth" )
 		:SetTextFunction( function( swep, hud )
-			return string.format( "%.1f%%", 100 - GetSCPModifiers( LocalPlayer() ).def * 100 )
+			return string.format( "%.1f%%", GetSCPModifiers( LocalPlayer() ).def * 100 )
 		end )
 		:SetParser( function( swep, lang )
 			local ply = LocalPlayer()
-
-			local scp = SCPStats[ply:SCPClass()]
-			local scale = scp and scp.buff_scale or 1
-
 			local mods = GetSCPModifiers( ply )
-			local def = 100 - mods.def * 100
+			local def = mods.def * 100
 			local buff
 
 			if !ply:GetProperty( "scp_buff" ) then
@@ -617,8 +613,9 @@ function SCPHUDObject:AddCommonSkills()
 			elseif !ply:IsInZone( ZONE_SURFACE ) then
 				buff = MarkupBuilder.StaticPrint( lang.not_surface, color_red )
 			else
-				buff = string.format( lang.buff, MarkupBuilder.StaticPrint( math.Round( mods.heal_scale * scale * 100, 1 ).."%", color_green ),
-					MarkupBuilder.StaticPrint( math.Round( mods.regen_scale * scale * 100, 1 ).."%", color_green ) )
+				buff = string.format( lang.buff, MarkupBuilder.StaticPrint( math.Round( mods.regen_scale * 100, 1 ).."%", color_green ),
+					MarkupBuilder.StaticPrint( math.Round( mods.heal_scale * 100, 1 ).."%", color_green ) )
+					
 			end
 
 			return {

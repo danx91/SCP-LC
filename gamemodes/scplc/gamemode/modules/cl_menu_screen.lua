@@ -20,7 +20,7 @@ local function add_button( text, func, pnl, dock )
 	
 	btn.DoClick = function( this )
 		if func and this:IsEnabled() and !IsValid( pnl.LockIfValid ) then
-			func()
+			func( this )
 		end
 	end
 
@@ -57,7 +57,7 @@ function OpenMenuScreen()
 	if IsValid( SLCMenuScreen ) then SLCMenuScreen:Remove() end
 	if LocalPlayer().IsActive and LocalPlayer():IsActive() then return end
 
-	local url = "https://github.com/danx91/scp-lc-menu-videos/raw/main/vid"..math.random( 4 )..".webm"
+	local url = "https://github.com/danx91/scp-lc-menu-videos/raw/main/vid"..SLCRandom( 4 )..".webm"
 
 	SLCMenuScreen = vgui.Create( "HTML" )
 
@@ -189,27 +189,11 @@ html, body {
 	end, pnl )
 
 	--Precache button
-	local pre_btn = add_button( "precache", function()
+	local pre_btn = add_button( "precache", function( btn )
 		SLCLegacyPopup( lang.model_precache, lang.model_precache_text, false, function( i )
 			if i == 1 then
-				local models = {}
-
-				for _, v in pairs( GetAllClasses() ) do
-					if isstring( v.model ) then
-						table.insert( models, v.model )
-					elseif istable( v.model ) then
-						for _, mdl in pairs( v.model ) do
-							table.insert( models, mdl )
-						end
-					end
-				end
-
-				for k, v in pairs( file.Find( BASE_LUA_PATH.."/entities/weapons/*.lua", "LUA" ) ) do
-					local wep = weapons.GetStored( string.sub( v, 1, -5 ) )
-					if wep and wep.WorldModel and wep.WorldModel != "" then
-						table.insert( models, wep.WorldModel )
-					end
-				end
+				btn:SetEnabled( false )
+				BuildPrecacheList()
 
 				local pre = vgui.Create( "DPanel" )
 				pnl.LockIfValid = pre
@@ -219,33 +203,26 @@ html, body {
 				pre:MakePopup()
 				pre:SetDrawOnTop( true )
 
-				local cur = ""
-				local index = 0
-				local max = #models
-
 				pre.Paint = function( this, pw, ph )
+					local progress, current = PrecacheProgress()
+
 					surface.SetDrawColor( 0, 0, 0 )
 					surface.DrawRect( 0, 0, pw, ph )
 
-					draw.SimpleText( math.Round( index / max * 100 ).."%", "SCPHUDSmall", pw / 2, ph * 0.48, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+					draw.SimpleText( math.Round( progress * 100 ).."%", "SCPHUDSmall", pw / 2, ph * 0.48, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
 
 					surface.SetDrawColor( 255, 255, 255 )
 					surface.DrawOutlinedRect( pw * 0.333, ph * 0.5, pw * 0.333, ph * 0.0075 )
-					surface.DrawRect( pw * 0.333, ph * 0.5, pw * 0.333 * index / max, ph * 0.0075 )
+					surface.DrawRect( pw * 0.333, ph * 0.5, pw * 0.333 * progress, ph * 0.0075 )
 
-					draw.SimpleText( cur, "SCPHUDSmall", pw / 2, ph * 0.55, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+					draw.SimpleText( current or "-", "SCPHUDSmall", pw / 2, ph * 0.55, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
 				end
 
 				pre.Think = function( this )
-					if index >= max then
+					if !PrecacheNext() then
 						this:Remove()
 						return
 					end
-
-					index = index + 1
-					cur = models[index]
-
-					util.PrecacheModel( cur )
 				end
 			end
 		end, lang.all, lang.cancel )
@@ -253,7 +230,7 @@ html, body {
 		pnl.LockIfValid = SLC_POPUP
 	end, pnl )
 
-	pre_btn:SetEnabled( false )
+	pre_btn:SetEnabled( CVAR.slc_sv_precache:GetInt() == 1 )
 
 	--Credits button
 	add_button( "credits", function()
@@ -269,7 +246,10 @@ html, body {
 
 		local dm = w * 0.012
 		placeholder:DockMargin( dm, dm, dm, dm )
-		placeholder.Paint = function() end
+		placeholder.Paint = nil
+
+		local credits_markup = markup.Parse( "<font=SCPHUDSmall>"..lang.credits_text.."</font>", credpnl:GetWide() - 16 )
+		placeholder:SetTall( credits_markup:GetHeight() + 8 )
 
 		credpnl.Paint = function( this, pw, ph )
 			draw.RoundedBox( 16, 1, 1, pw - 2, ph - 2, color_black250 )
@@ -277,11 +257,7 @@ html, body {
 			surface.SetDrawColor( 255, 255, 255 )
 			surface.OutlinedRoundedRect( 0, 0, pw, ph, 16, 1 )
 
-			local th, _, feed = draw.MultilineText( 0, credpnl.VBar:GetOffset(), lang.credits_text, "SCPHUDSmall", color_white, pw, pw * 0.03, 0, TEXT_ALIGN_LEFT, nil, false, false, this.Feed )
-			if !this.Feed then
-				placeholder:SetTall( th )
-				this.Feed = feed
-			end
+			credits_markup:Draw( 8, 4 + credpnl.VBar:GetOffset(), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP, 255, TEXT_ALIGN_LEFT )
 		end
 
 		credpnl.Think = function( this )

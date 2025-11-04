@@ -2,8 +2,8 @@ local insane_effects = {}
 function InsaneTick( ply )
 	if !ply.NextSanityEffect then ply.NextSanityEffect = 0 end
 	if ply.NextSanityEffect < CurTime() then
-		if math.random( 1, 2 ) == 1 then
-			local id = math.random( #insane_effects )
+		if SLCRandom( 1, 2 ) == 1 then
+			local id = SLCRandom( #insane_effects )
 			local eff = insane_effects[id]
 
 			if eff then
@@ -65,8 +65,8 @@ hook.Add( "StartCommand", "InsaneKickView", function( ply, cmd )
 			ply.InsaneKickViewNext = CurTime() + 1
 
 			local ang = cmd:GetViewAngles()
-			ang.yaw = ang.yaw + math.random( -30, 30 )
-			ang.pitch = ang.pitch + math.random( -30, 30 )
+			ang.yaw = ang.yaw + SLCRandom( -30, 30 )
+			ang.pitch = ang.pitch + SLCRandom( -30, 30 )
 			ply.InsaneKickViewAngle = ang
 		end
 

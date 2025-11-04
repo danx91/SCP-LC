@@ -39,8 +39,8 @@ if CLIENT then
 end
 
 function SWEP:SetupDataTables()
-	self:AddNetworkVar( "Objective", "Int" )
-	self:AddNetworkVar( "Tracking", "Vector" )
+	self:NetworkVar( "Int", "Objective" )
+	self:NetworkVar( "Vector", "Tracking" )
 
 	self:ActionQueueSetup()
 end
@@ -131,7 +131,7 @@ end
 
 function SWEP:Deploy()
 	self:ResetAction( STATE.LOADING, self.LoadingDuration )
-	self:ResetViewModelBones()
+	//self:ResetViewModelBones()
 end
 
 function SWEP:Holster()
@@ -211,8 +211,8 @@ if CLIENT then
 			surface.SetMaterial( logo )
 			surface.DrawTexturedRect( x + w * 0.5 - h * 0.1, y + h * 0.33, h * 0.2, h * 0.2 )
 
-			local tw = draw.SimpleText( self.Lang.loading, "SCPHUDMedium", x + w * 0.5, y + h * 0.55, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP )
-			draw.SimpleText( string.rep( ".", ( ct * 3 ) % 4 ), "SCPHUDMedium", x + w * 0.5 + tw * 0.5, y + h * 0.55, color_white, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
+			local tw = draw.SimpleText( self.Lang.loading, "SLCTabletLarge", x + w * 0.5, y + h * 0.55, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP )
+			draw.SimpleText( string.rep( ".", ( ct * 3 ) % 4 ), "SLCTabletLarge", x + w * 0.5 + tw * 0.5, y + h * 0.55, color_white, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
 
 			return
 		end
@@ -229,8 +229,8 @@ if CLIENT then
 		local oid = self:GetObjective()
 		local obj = objectives[oid] or oid
 
-		local tw, th = draw.SimpleText( self.Lang.status, "SCPHUDMedium", x + w * 0.5, y + 8, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP )
-		draw.SimpleText( self.Lang.objectives[obj] or obj, "SCPHUDMedium", x + w * 0.5, y + 8 + th, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP )
+		local tw, th = draw.SimpleText( self.Lang.status, "SLCTabletLarge", x + w * 0.5, y + 8, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP )
+		draw.SimpleText( self.Lang.objectives[obj] or obj, "SLCTabletLarge", x + w * 0.5, y + 8 + th, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP )
 
 		local size = h - th * 2 - 40
 		local sx, sy = x + w * 0.025, y + th * 2 + 24
@@ -273,11 +273,11 @@ if CLIENT then
 			local ix = sx + size + w * 0.025
 			local dy = sy + 16
 
-			tw, th = draw.SimpleText( self.Lang.dist..": ", "SCPHUDSmall", ix, dy, color_white, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
+			tw, th = draw.SimpleText( self.Lang.dist..": ", "SLCTabletMedium", ix, dy, color_white, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
 			dy = dy + th
 
 			local ttx = ix + 32
-			tw, th = draw.SimpleText( math.ceil( self.CachedDist * 0.01905 ).."m", "SCPHUDSmall", ttx, dy, color_white, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
+			tw, th = draw.SimpleText( math.ceil( self.CachedDist * 0.01905 ).."m", "SLCTabletMedium", ttx, dy, color_white, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
 
 			if math.abs( self.CachedZDiff ) > 100 then
 				surface.SetDrawColor( 255, 255, 255 )
@@ -287,7 +287,7 @@ if CLIENT then
 
 			dy = dy + th
 
-			/*tw, th = draw.SimpleText( self.Lang.dist..": "..math.ceil( self.CachedDistance ), "SCPHUDSmall", ix, dy, color_white, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
+			/*tw, th = draw.SimpleText( self.Lang.dist..": "..math.ceil( self.CachedDistance ), "SLCTabletMedium", ix, dy, color_white, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
 			dy = dy + th*/
 
 			render.SetStencilCompareFunction( STENCIL_LESSEQUAL )

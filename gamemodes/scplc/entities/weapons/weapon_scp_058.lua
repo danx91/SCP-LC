@@ -25,9 +25,9 @@ SWEP.ExplosionSlowTime = 3
 function SWEP:SetupDataTables()
 	self:CallBaseClass( "SetupDataTables" )
 	
-	self:AddNetworkVar( "Explode", "Bool" )
-	self:AddNetworkVar( "ShotStacks", "Int" )
-	self:AddNetworkVar( "NextStack", "Float" )
+	self:NetworkVar( "Bool", "Explode" )
+	self:NetworkVar( "Int", "ShotStacks" )
+	self:NetworkVar( "Float", "NextStack" )
 end
 
 function SWEP:Initialize()
@@ -41,8 +41,6 @@ function SWEP:Think()
 	self:SwingThink()
 	
 	if !SERVER then return end
-
-	self:PlayerFreeze()
 
 	local ct = CurTime()
 	local owner = self:GetOwner()
@@ -240,7 +238,7 @@ function SWEP:SecondaryAttack()
 				local ent = trace.Entity
 
 				if !IsValid( ent ) or !ent:IsPlayer() or !self:CanTargetPlayer( ent ) or ent:CheckHazmat( 60 ) then return end
-				if trace.HitPos:DistToSqr( owner_pos ) < self.ShotMinDistance and math.random( 3 ) != 1 then return end
+				if trace.HitPos:DistToSqr( owner_pos ) < self.ShotMinDistance and SLCRandom( 3 ) != 1 then return end
 
 				ent:ApplyEffect( "poison", owner, pdmg )
 			end

@@ -1,10 +1,11 @@
 AddCSLuaFile()
 
-ENT.Type = "anim"
+ENT.Type 		= "anim"
+ENT.SCPIgnore	= true
 
 function ENT:SetupDataTables()
-	self:AddNetworkVar( "DieTime", "Float" )
-	self:AddNetworkVar( "GroundPos", "Vector" )
+	self:NetworkVar( "Float", "DieTime" )
+	self:NetworkVar( "Vector", "GroundPos" )
 end
 
 local bounds = Vector( 16, 16, 32 )

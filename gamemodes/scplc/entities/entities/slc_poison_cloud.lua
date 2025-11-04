@@ -8,8 +8,8 @@ ENT.PoisonDamage = 0
 ENT.ParticleNum = 6
 
 function ENT:SetupDataTables()
-	self:AddNetworkVar( "Duration", "Float" )
-	self:AddNetworkVar( "Size", "Float" )
+	self:NetworkVar( "Float", "Duration" )
+	self:NetworkVar( "Float", "Size" )
 end
 
 function ENT:Initialize()
@@ -42,7 +42,7 @@ function ENT:Initialize()
 	local rot = 360 / self.ParticleNum
 
 	for i = 1, self.ParticleNum do
-		self.Particles[i] = { pos = pos + ang:Forward() * 64 * size, roll = math.random() * math.pi * 2 - math.pi, delta = ( math.random( 0, 1 ) * 2 - 1 ) * 0.08 }
+		self.Particles[i] = { pos = pos + ang:Forward() * 64 * size, roll = SLCRandom() * math.pi * 2 - math.pi, delta = ( SLCRandom( 0, 1 ) * 2 - 1 ) * 0.08 }
 		ang:RotateAroundAxis( up, rot )
 	end
 end
@@ -67,17 +67,17 @@ function ENT:Think()
 	end
 
 	local owner = self:GetOwner()
-	local wep = owner:GetSCPWeapon()
+	local wep = IsValid( owner ) and owner:GetSCPWeapon()
+	local wep_valid = IsValid( wep ) and wep:CheckOwner()
 
-	local owner_valid = IsValid( wep ) and wep:CheckOwner()
 	local pos = self:GetPos()
 	local radius = ( 64 * self:GetSize() ) ^ 2
 
 	for i, v in ipairs( player.GetAll() ) do
 		if v:GetPos():DistToSqr( pos ) > radius or v:CheckHazardProtection( 50 ) then continue end
 
-		if owner_valid and !wep:CanTargetPlayer( v ) then continue end
-		if !owner_valid then
+		if wep_valid and !wep:CanTargetPlayer( v ) then continue end
+		if !wep_valid then
 			local t = v:SCPTeam()
 			if t == TEAM_SPEC or SCPTeams.IsAlly( TEAM_SCP, t ) then continue end
 		end
@@ -90,7 +90,7 @@ function ENT:Think()
 		dmg:SetDamageType( DMG_POISON )
 		dmg:SetDamage( self.Damage )
 
-		if owner_valid then
+		if wep_valid then
 			dmg:SetAttacker( owner )
 		end
 
