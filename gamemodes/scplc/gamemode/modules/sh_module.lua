@@ -8,7 +8,7 @@ GM.Website 	= "https://github.com/danx91/SCP-LC"
 Global values
 ---------------------------------------------------------------------------]]
 DATE = "17/11/2025"
-SIGNATURE = "b001101r1"
+SIGNATURE = "b001101r2"
 VERSION = SLCVersion().name
 
 SCPS = {}

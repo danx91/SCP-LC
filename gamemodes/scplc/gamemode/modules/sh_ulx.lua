@@ -92,14 +92,10 @@ function InitializeSCPULX()
 
 		if !class or !spawn then return end
 
-		local pos = table.Random( spawn )
+		local pos = class.spawn or table.Random( spawn )
 
-		if class.spawn then
-			if istable( class.spawn ) then
-				pos = class.spawn[SLCRandom( #class.spawn )]
-			else
-				pos = class.spawn
-			end
+		while istable( pos ) do
+			pos = pos[SLCRandom( #pos )]
 		end
 
 		plyt:SetupPlayer( class, pos, true )
