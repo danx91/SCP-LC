@@ -26,7 +26,8 @@ net.Receive( "SCPList", function( len )
 	ShowSCPs = {}
 	SCPStats = {}
 
-	local lang = _LANG.english.CLASSES
+	local lang_tab = _LANG[_LANG_DEFAULT] or _LANG.english
+	local lang = lang_tab.CLASSES
 	local numbers = {}
 
 	for i, v in ipairs( data ) do

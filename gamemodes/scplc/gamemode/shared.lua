@@ -9,6 +9,7 @@ MAP_CONFIG_PATH = BASE_GAMEMODE_PATH.."/mapconfigs"
 _LANG = {}
 _LANG_ALIASES = {}
 _LANG_FLAGS = {}
+_LANG_DEFAULT = "english"
 
 LANGUAGE = {
 	EQ_LONG_TEXT = bit.lshift( 1, 0 ),
@@ -28,6 +29,10 @@ function RegisterLanguage( tab, name, ... )
 
 	for k, v in pairs( { ... } ) do
 		_LANG_ALIASES[v] = name
+
+		if v == "default" then
+			_LANG_DEFAULT = name
+		end
 	end
 
 	print( "# Language loaded: "..name )

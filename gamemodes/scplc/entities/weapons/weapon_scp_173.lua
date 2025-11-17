@@ -409,7 +409,7 @@ SCPHook( "SCP173", "EntityTakeDamage", function ( ent, dmg )
 	local mod = wep:GetUpgradeMod( "prot" )
 	if !mod then return end
 
-	dmg:ScaleDamage( mod )
+	dmg:ScaleDamage( math.Clamp( 1 - mod, 0, 1 ) )
 end )
 
 SCPHook( "SCP173", "ShouldCollide", function ( ent1, ent2 )

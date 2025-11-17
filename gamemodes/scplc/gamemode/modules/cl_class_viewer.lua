@@ -174,8 +174,9 @@ local function addClass( tab, p, h )
 		surface.DrawOutlinedRect( pw * 0.1, 0, pw * 0.8, ph )
 
 		local tier_lock = !ply:CanUnlockClassTier( tab.tier )
+		local unlocked = override == true or override == nil and ply:IsClassUnlocked( tab.name )
 
-		if override == true or override == nil and ply:IsClassUnlocked( tab.name ) then
+		if unlocked then
 			surface.SetDrawColor( COLOR.unlocked )
 		elseif tier_lock then
 			surface.SetDrawColor( COLOR.tier_locked )
@@ -213,7 +214,7 @@ local function addClass( tab, p, h )
 			}
 		end
 
-		if tier_lock then
+		if !unlocked and tier_lock then
 			surface.SetDrawColor( 255, 255, 255, 33 )
 			surface.SetMaterial( MATS.locked )
 			surface.DrawTexturedRect( pw * 0.1 + ph * 0.1, ph * 0.1, ph * 0.8, ph * 0.8 )

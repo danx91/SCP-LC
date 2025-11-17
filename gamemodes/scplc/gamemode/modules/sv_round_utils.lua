@@ -1,6 +1,17 @@
 --[[-------------------------------------------------------------------------
 Spawn players
 ---------------------------------------------------------------------------]]
+local function copy_spawns( spawns, prev )
+	if !istable( spawns ) then return spawns end
+	if !istable( spawns[1] ) then return table.Copy( spawns ) end
+
+	local rng = prev and prev._rng or SLCRandom( #spawns )
+	local copy = table.Copy( spawns[rng] )
+	copy._rng = rng
+
+	return copy
+end
+
 local function select_weighted( tab, total_weight, rem )
 	if isbool( total_weight ) then
 		rem = total_weight
@@ -98,7 +109,7 @@ local function assign_scps( plys, num )
 		end
 
 		if !ply then
-			ErrorNoHalt( "THIS SHOULD NEVER HAPPEN! Failed to select player for SCP" )
+			ErrorNoHalt( "THIS SHOULD NEVER HAPPEN! Failed to select player for SCP\n" )
 			break
 		end
 
@@ -179,7 +190,7 @@ function get_player_classes( plys, groups )
 			end
 
 			if group_tab.total_weight <= 0 then
-				ErrorNoHalt( "THIS SHOULD NEVER HAPPEN! Player '", ply, "' has no class available in group: ", group, "! Did you register this group properly?" )
+				ErrorNoHalt( "THIS SHOULD NEVER HAPPEN! Player '", ply, "' has no class available in group: ", group, "! Did you register this group properly?\n" )
 				continue
 			end
 		end
@@ -422,7 +433,7 @@ function SetupPlayers()
 			elseif stype == "table" then
 				local spawn_table = class_spawn_table[class_spawns]
 				if !spawn_table or #spawn_table == 0 then
-					spawn_table = table.Copy( class_spawns )
+					spawn_table = copy_spawns( class_spawns, spawn_table )
 					class_spawn_table[class_spawns] = spawn_table
 				end
 
@@ -431,7 +442,7 @@ function SetupPlayers()
 			elseif stype == "string" then
 				local spawn_table = group_spawn_table[class_spawns]
 				if !spawn_table or #spawn_table == 0 then
-					spawn_table = table.Copy( spawns[class_spawns] )
+					spawn_table = copy_spawns( spawns[class_spawns], spawn_table )
 					group_spawn_table[class_spawns] = spawn_table
 				end
 
@@ -439,7 +450,7 @@ function SetupPlayers()
 				spawn_pos = table.remove( spawn_table, SLCRandom( #spawn_table ) )
 			else
 				if !group_spawns or #group_spawns == 0 then
-					group_spawns = table.Copy( spawns[group] )
+					group_spawns = copy_spawns( spawns[group], group_spawns )
 					group_spawn_table[group] = group_spawns
 				end
 
@@ -849,7 +860,7 @@ function SpawnSupport( group_override )
 	local spawned_plys = {}
 
 	local class_spawns = {}
-	local spawns = table.Copy( spawn_info )
+	local spawns = copy_spawns( spawn_info )
 
 	for ply, class_name in pairs( assigned_classes ) do
 		local class_data = classes[class_name]
@@ -858,7 +869,7 @@ function SpawnSupport( group_override )
 		if class_data.spawn then
 			if istable( class_data.spawn ) then
 				if !class_spawns[class_name] or #class_spawns[class_name] == 0 then
-					class_spawns[class_name] = table.Copy( class_data.spawn )
+					class_spawns[class_name] = copy_spawns( class_data.spawn, class_spawns[class_name] )
 				end
 
 				pos = table.remove( class_spawns[class_name], SLCRandom( #class_spawns[class_name] ) )
@@ -867,7 +878,7 @@ function SpawnSupport( group_override )
 			end
 		else
 			if #spawns == 0 then
-				spawns = table.Copy( spawn_info )
+				spawns = copy_spawns( spawn_info, spawns )
 			end
 
 			pos = table.remove( spawns, SLCRandom( #spawns ) )
