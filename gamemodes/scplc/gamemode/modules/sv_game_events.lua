@@ -65,7 +65,7 @@ function SCP914Upgrade( mode, ply )
 			end
 
 			v:Remove()
-		elseif v:IsPlayer() then
+		elseif v:IsPlayer() and v:Alive() and ply:SCPTeam() != TEAM_SPEC then
 			v:SetPos( SCP_914_OUTPUT )
 
 			if mode == UPGRADE_MODE.ROUGH then
@@ -78,7 +78,7 @@ function SCP914Upgrade( mode, ply )
 				local upgrade_num = v:GetProperty( "scp914_veryfine", 0 )
 				v:SetProperty( "scp914_veryfine", upgrade_num + 1 )
 
-				local extra = v:GetExtraHealth() + SLCRandom( 30, 50 ) + 15 * upgrade_num
+				local extra = v:GetExtraHealth() + SLCRandom( 25, 50 ) * upgrade_num
 				v:SetExtraHealth( extra )
 				v:SetMaxExtraHealth( extra )
 				v:SetProperty( "extra_hp_think", ct + 1 )
@@ -661,17 +661,14 @@ function ALPHAWarhead( ply )
 		local support_timer = GetTimer( "SupportTimer" )
 		if IsValid( support_timer ) then
 			support_timer:Destroy()
-			//print( "SUPPORT TIMER DESTROYED" )
 		end
 
 		AddTimer( "AlphaCountdown", time - 10, 1, function()
-			//print( "Lockdown" )
 			SetRoundProperty( "warhead_lockdown", true )
 
 			local escape_timer = GetTimer( "EscapeTimer" )
 			if IsValid( escape_timer ) then
 				escape_timer:Destroy()
-				//print( "ESCAPE TIMER DESTROYED" )
 			end
 
 			AddTimer( "AlphaSiren", 5, 1, function()
@@ -679,7 +676,6 @@ function ALPHAWarhead( ply )
 			end )
 
 			AddTimer( "AlphaExplosion", 10, 1, function()
-				//print( "HOLDING ROUND" )
 				HoldRound()
 
 				for k, v in pairs( ALPHA_DESTROY ) do
@@ -711,8 +707,6 @@ function ALPHAWarhead( ply )
 							v:SkipNextKillRewards()
 							v:SkipNextSuicide()
 							v:Kill()
-
-							//print( "ALPHA KILL", v )
 						end
 					else
 						table.insert( facility, v )
@@ -723,7 +717,6 @@ function ALPHAWarhead( ply )
 				TransmitSound( "scp_lc/warhead/explosion.ogg", true, surface, 1 )
 				TransmitSound( "scp_lc/warhead/explosion_far.ogg", true, facility, 1 )
 
-				//print( "RELEASING ROUND" )
 				ReleaseRound()
 
 				if IsValid( ALPHA_WARHED_SCREEN ) then
@@ -757,8 +750,10 @@ function ALLWarheads( time )
 
 	TransmitSound( "scp_lc/warhead/alarm.ogg", true, 1 )
 	AddTimer( "GOCSiren", 3, 1, function()
-
-		//print( "Opening doors..." )
+		local support_timer = GetTimer( "SupportTimer" )
+		if IsValid( support_timer ) then
+			support_timer:Destroy()
+		end
 
 		PlayerMessage( "goc_detonation$"..time )
 		TransmitSound( "scp_lc/warhead/siren.wav", true, 1 )
@@ -774,8 +769,6 @@ function ALLWarheads( time )
 		end
 
 		AddTimer( "GOCCountdown", time - 10, 1, function()
-			//print( "closig shelter, lockdown" )
-
 			SetRoundProperty( "warhead_lockdown", true )
 
 			for k, v in ipairs( ents.GetAll() ) do
@@ -816,7 +809,6 @@ function ALLWarheads( time )
 
 				TransmitSound( "scp_lc/warhead/explosion.ogg", true, player.GetAll(), 1 )
 
-				//print( "RELEASING ROUND" )
 				SetRoundStat( "omega_warhead", false )
 				SetRoundStat( "alpha_warhead", false )
 

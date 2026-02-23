@@ -753,8 +753,8 @@ AddLootPool( "medbay", {
 	max = 5,
 	chance = 0.5,
 	items = {
-		{ class = "item_slc_medkit", weight = 9 },
-		{ class = "item_slc_medkitplus", weight = 3 },
+		{ class = "item_slc_medkit", weight = 18 },
+		{ class = "item_slc_medkitplus", weight = 6 },
 		{ class = "item_slc_morphine", weight = 4 },
 		{ class = "item_slc_adrenaline", weight = 4 },
 		{ class = "item_slc_ephedrine", weight = 4 },

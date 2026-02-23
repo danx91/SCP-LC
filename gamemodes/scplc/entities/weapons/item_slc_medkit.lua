@@ -207,6 +207,6 @@ function SWEP:DrawHUD()
 	if heal_end > ct then
 		draw.NoTexture()
 		surface.SetDrawColor( 255, 255, 255 )
-		surface.DrawRing( ScrW() * 0.5, ScrH() * 0.5, 30, 6, 360, 40, 1 - ( heal_end - ct ) / self.HealTime )
+		SLCDrawRing( ScrW() * 0.5, ScrH() * 0.5, 36, 6, 1 - ( heal_end - ct ) / self.HealTime )
 	end
 end

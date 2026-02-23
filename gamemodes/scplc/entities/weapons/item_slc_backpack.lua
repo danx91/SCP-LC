@@ -117,6 +117,15 @@ function SWEP:SLCPreDrop()
 	self:StoreBackpack()
 end
 
+// TODO
+/*function SWEP:CanPickUp( ply )
+	if !self.StoredItems then return end
+
+	for i, v in ipairs( self.StoredItems ) do
+		if ply:HasWeapon( v.class ) and hook.Run( "SLCCanPickupWeaponClass", ply, v.class ) != false then return false, "has_already" end
+	end
+end*/
+
 function SWEP:OnDrop()
 	self.PreventDropping = false
 end

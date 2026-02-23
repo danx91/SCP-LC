@@ -1,20 +1,14 @@
 hook.Add( "SLCGamemodeLoaded",  "SLCPlayerInfo", function()
-	if !file.Exists( "slc/playerinfo", "DATA" ) then
-		file.CreateDir( "slc/playerinfo" )
-	end
-end )
-
-hook.Add( "SLCFactoryReset", "SLCGameruleReset", function()
-	local files = file.Find( "slc/playerinfo/*.dat", "DATA" )
-	print( "Deleting "..#files.." playerinfo objects..." )
-
-	for i, v in ipairs( files ) do
-		file.Delete( "slc/playerinfo/"..v )
+	if !file.Exists( "slc/playerinfo/corrupted", "DATA" ) then
+		file.CreateDir( "slc/playerinfo/corrupted" )
 	end
 end )
 
 PlayerInfo = {}
+
 function PlayerInfo:New( arg )
+	if self != PlayerInfo then return end
+
 	local tab = {}
 	setmetatable( tab, { __index = PlayerInfo } )
 
@@ -33,29 +27,63 @@ function PlayerInfo:New( arg )
 		return
 	end
 
-	tab.File = "slc/playerinfo/"..tab.ID..".dat"
-	if !file.Exists( tab.File, "DATA" ) then
-		file.Write( tab.File, "{}" )
-		tab.Data = {}
-	else
-		local f = file.Read( tab.File, "DATA" )
-		local data = util.JSONToTable( f )
+	tab.Ready = GetSCPData( tab.ID, "playerinfo", "{}" ):Then( function( raw )
+		local data = util.JSONToTable( raw )
 
 		if !data then
 			print( "Player data of '"..tab.ID.."' is corrupted! Fixing..." )
+			file.Write( "slc/playerinfo/corrupted/"..tab.ID.."_"..os.date( "%d%m%y" )..".dat", raw )
 
-			if f then
-				if !file.Exists( "slc/playerinfo/corrupted", "DATA" ) then
-					file.CreateDir( "slc/playerinfo/corrupted" )
-				end
+			data = {}
+			SetSCPData( tab.ID, "playerinfo", "{}" )
+		end
 
-				file.Write( "slc/playerinfo/corrupted/"..tab.ID.."_"..os.date( "%d%m%y" )..".dat", f )
-			end
+		tab.Data = data
+	end )
 
-			file.Write( tab.File, "{}" )
-			tab.Data = {}
+	return tab
+end
 
-			return tab
+function PlayerInfo:Update()
+	local data = util.TableToJSON( self.Data )
+	SetSCPData( self.ID, "playerinfo", data )
+end
+
+function PlayerInfo:Get( key )
+	if !self.Data then
+		ErrorNoHalt( "Tried to use PlayerInfo too early - info not loaded yet!\n" )
+		return
+	end
+
+	return self.Data[key]
+end
+
+function PlayerInfo:Set( key, value )
+	if !self.Data then
+		ErrorNoHalt( "Tried to use PlayerInfo too early - info not loaded yet!\n" )
+		return
+	end
+
+	self.Data[key] = value
+	self:Update()
+end
+
+setmetatable( PlayerInfo, { __call = PlayerInfo.New } )
+
+if SERVER then
+	//lua_run slc_convert_playerinfo_to_db()
+
+	local function convert_file( f )
+		local raw = file.Read( "slc/playerinfo/"..f, "DATA" )
+		if !raw then
+			print( "Failed to read '"..f.."' playerinfo - cannot read file!" )
+			return nil
+		end
+
+		local data = util.JSONToTable( raw )
+		if !data then
+			print( "Failed to read '"..f.."' playerinfo - corrupted JSON!" )
+			return nil
 		end
 
 		if data.compressed then
@@ -63,48 +91,40 @@ function PlayerInfo:New( arg )
 		end
 
 		if !data then
-			print( "Failed to load Playerdata for player: "..tostring( tab.Player ).." - "..tab.ID )
+			print( "Failed to read '"..f.."' playerinfo!" )
+			return nil
+		end
 
-			if t == "Player" then
-				tab.Player.PlayerInfo = nil
+		return SetSCPData( string.sub( f, 1, -5 ), "playerinfo", util.TableToJSON( data ) )
+	end
+
+	function slc_convert_playerinfo_to_db()
+		print( "Begin playerinfo migration to database..." )
+
+		SLCDatabase:Query( "BEGIN;" ):Then( function()
+			local files = file.Find( "slc/playerinfo/*.dat", "DATA" )
+			local size = #files
+
+			print( "Migrating "..size.." files" )
+
+			local promises = {}
+			for i, v in ipairs( files ) do
+				if i % 10 == 0 then
+					print( i.." / "..size.." ("..math.Round( i / size * 100, 1 ).."%)" )
+				end
+
+				promises[i] = convert_file( v )
 			end
 
-			return
-		end
-
-		tab.Data = data
-
-		tab:Update()
+			print( "Commiting - It may take a while..." )
+			return SLCPromiseJoin( promises )
+		end ):Then( function()
+			return SLCDatabase:Query( "COMMIT;" )
+		end ):Then( function()
+			print( "Migration done! You can now safely delete 'garrysmod/data/slc/playerinfo/' directory" )
+		end ):Catch( function()
+			print( "Migration failed - rolling back database operations" )
+			SLCDatabase:Query( "ROLLBACK;" )
+		end )
 	end
-
-	return tab
 end
-
-function PlayerInfo:Update()
-	local data = util.TableToJSON( self.Data )
-
-	if gamerule.Get( "compressPlayerdata" ) == true then
-		local c = util.Compress( data )
-
-		if c then
-			data = util.TableToJSON( { compressed = true, data = c } )
-		end
-	end
-
-	file.Write( self.File, data )
-end
-
-function PlayerInfo:Get( key )
-	return self.Data[key]
-end
-
-function PlayerInfo:Set( key, value )
-	self.Data[key] = value
-	self:Update()
-end
-
-setmetatable( PlayerInfo, { __call = PlayerInfo.New } )
-
-hook.Add( "SLCRegisterGamerules", "SLCPlayerInfoRule", function()
-	gamerule.Register( "compressPlayerdata", { value = false } )
-end )

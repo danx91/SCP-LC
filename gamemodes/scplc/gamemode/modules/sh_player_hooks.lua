@@ -14,7 +14,7 @@ function GM:PlayerButtonDown( ply, button )
 		
 		if ply.SLCAFKTimer <= rt then
 			if ply:IsAFK() then
-				ply:Set_SCPAFK( false )
+				ply:SetIsAFK( false )
 				QueueInsert( ply ) --insert player back to spawn queue
 				CheckRoundStart()
 				

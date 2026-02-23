@@ -98,11 +98,11 @@ function SWEP:SecondaryAttack()
 	self.PreventDropping = true
 
 	timer.Simple( dur / self.InjectSpeed, function()
-		if !IsValid( self ) or !IsValid( owner ) or !IsValid( other ) or owner != self:GetOwner() then return end
+		if !IsValid( self ) or !IsValid( owner ) or owner != self:GetOwner() then return end
 		
 		self.PreventDropping = false
 
-		if owner:GetPos():DistToSqr( other:GetPos() ) > 4900 then return end
+		if !IsValid( other ) or owner:GetPos():DistToSqr( other:GetPos() ) > 4900 then return end
 
 		self:UsedOn( other, owner )
 

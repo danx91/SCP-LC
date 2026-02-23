@@ -579,8 +579,7 @@ if CLIENT then
 
 			if rnum > 1 and !v.reqany then
 				surface.SetDrawColor( 150, 150, 150, 255 )
-				draw.NoTexture()
-				surface.DrawFilledCircle( xpos, sy - 1, 5, 10 )
+				SLCDrawCircle( xpos, sy - 1, 5 )
 			end
 
 			local btn = Button( sx, sy, icosize, icosize )
@@ -643,7 +642,6 @@ if CLIENT then
 						wep.cached_description = {}
 					end
 
-					
 					if !wep.cached_description[info.name] then
 						local parser_data = custom_skill_parsers[info.name] and custom_skill_parsers[info.name]( wep, clang, info )
 						

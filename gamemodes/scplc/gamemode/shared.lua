@@ -6,43 +6,7 @@ CORE_PATH = BASE_GAMEMODE_PATH.."/core"
 LANGUAGES_PATH = BASE_GAMEMODE_PATH.."/languages"
 MAP_CONFIG_PATH = BASE_GAMEMODE_PATH.."/mapconfigs"
 
-_LANG = {}
-_LANG_ALIASES = {}
-_LANG_FLAGS = {}
-_LANG_DEFAULT = "english"
-
-LANGUAGE = {
-	EQ_LONG_TEXT = bit.lshift( 1, 0 ),
-}
-
-SLCRandom = math.random
-
-function RegisterLanguage( tab, name, ... )
-	if !tab or !name then return end
-
-	if _LANG[name] then
-		print( "WARNING! Language '"..name.."' is already registered!" )
-	end
-
-	_LANG[name] = tab
-	_LANG_FLAGS[name] = 0
-
-	for k, v in pairs( { ... } ) do
-		_LANG_ALIASES[v] = name
-
-		if v == "default" then
-			_LANG_DEFAULT = name
-		end
-	end
-
-	print( "# Language loaded: "..name )
-end
-
-function SetLanguageFlag( name, flag )
-	if _LANG_FLAGS[name] and flag then
-		_LANG_FLAGS[name] = bit.bor( _LANG_FLAGS[name], flag )
-	end
-end
+SLCRandom = math.random // Initially set it to math.random before xoshiro is loaded
 
 --[[-------------------------------------------------------------------------
 Load folder
@@ -119,25 +83,15 @@ if DEVELOPER_MODE then
 
 	print( "\n\n" )
 	MsgC( Color( 230, 20, 20 ), "=================================================\n" )
-	MsgC( Color( 230, 20, 20 ), "=================================================\n" )
+	MsgC( Color( 230, 20, 20 ), "================ DEVELOPER MODE =================\n" )
 	MsgC( Color( 230, 20, 20 ), "=================================================\n" )
 	print( "\n\n\n\n\n" )
 end
 
 SLCRandom = xoshiro128()
+hook.Run( "SLCCoreLoaded" ) --core loaded, xoshiro is available, pre-languages
 
---[[-------------------------------------------------------------------------
-Load languages
----------------------------------------------------------------------------]]
-print( "----------------Loading Languages----------------" )
-for k, f in pairs( file.Find( LANGUAGES_PATH.."/*.lua", "LUA" ) ) do
-	if SERVER then
-		AddCSLuaFile( LANGUAGES_PATH.."/"..f )
-	end
-
-	include( LANGUAGES_PATH.."/"..f )
-end
-
+SLCLoadLanguages()
 hook.Run( "SLCLanguagesLoaded" ) --language has beed loaded, pre-modules
 
 --[[-------------------------------------------------------------------------

@@ -16,13 +16,13 @@ PROMISE_FULFILLED = 1
 PROMISE_REJECTED = 2
 
 SLCPromise = {}
-SLCPromise._ISPROMISE = true
+SLCPromise.__index = SLCPromise
 SLCPromise._STATUS = PROMISE_PENDING
 
 function SLCPromise:New( func )
 	local tab = setmetatable( {
 		Handler = {},
-	}, { __index = SLCPromise } )
+	}, SLCPromise )
 
 	if func then
 		func( function( data )
@@ -36,29 +36,40 @@ function SLCPromise:New( func )
 end
 
 function SLCPromise:Resolve( data )
-	NextTick( function()
-		if self._STATUS == PROMISE_PENDING then
-			self._STATUS = PROMISE_FULFILLED
-			self._RESULT = data
+	if self._STATUS != PROMISE_PENDING then return end
 
-			for i, v in ipairs( self.Handler ) do
-				v( true, data )
-			end
+	self._STATUS = PROMISE_FULFILLED
+	self._RESULT = data
+
+	NextTick( function()
+		for i, v in ipairs( self.Handler ) do
+			v( true, data )
 		end
+
+		self.Handler = {}
 	end )
 end
 
 function SLCPromise:Reject( err )
-	NextTick( function()
-		if self._STATUS == PROMISE_PENDING then
-			self._STATUS = PROMISE_REJECTED
-			self._RESULT = err
+	if self._STATUS != PROMISE_PENDING then return end
+	self._STATUS = PROMISE_REJECTED
+	self._RESULT = err
 
-			for i, v in ipairs( self.Handler ) do
-				v( false, err )
-			end
+	NextTick( function()
+		for i, v in ipairs( self.Handler ) do
+			v( false, err )
 		end
+
+		self.Handler = {}
 	end )
+end
+
+local function error_handler( err )
+	print( "Error in promise:" )
+	print( debug.traceback( err, 2 ) )
+	print()
+	
+	return err
 end
 
 function SLCPromise:Then( success, failure )
@@ -67,9 +78,9 @@ function SLCPromise:Then( success, failure )
 	local func = function( status, data )
 		if status then
 			if success then
-				local pcall_status, then_return = pcall( success, data )
+				local pcall_status, then_return = xpcall( success, error_handler, data )
 				if pcall_status then
-					if type( then_return ) == "table" and then_return._ISPROMISE then
+					if ispromise( then_return ) then
 						then_return:Then( function( new_data )
 							ret:Resolve( new_data )
 						end, function( err )
@@ -86,9 +97,9 @@ function SLCPromise:Then( success, failure )
 			end
 		else
 			if failure then
-				local pcall_status, then_return = pcall( failure, data )
+				local pcall_status, then_return = xpcall( failure, error_handler, data )
 				if pcall_status then
-					if type( then_return ) == "table" and then_return._ISPROMISE then
+					if ispromise( then_return ) then
 						then_return:Then( function( new_data )
 							ret:Resolve( new_data )
 						end, function( err )
@@ -124,7 +135,7 @@ end
 function SLCPromise:Finally( func )
 	local function fn( val )
 		local ret = func( val )
-		if !istable( ret ) or !ret._ISPROMISE then
+		if !istable( ret ) or !ispromise( ret ) then
 			return val
 		end
 
@@ -149,48 +160,54 @@ setmetatable( SLCPromise, { __call = SLCPromise.New } )
 --[[-------------------------------------------------------------------------
 Global functions
 ---------------------------------------------------------------------------]]
-function ispromise( arg )
-	return istable( arg ) and arg._ISPROMISE == true
+function ispromise( obj )
+	return getmetatable( obj ) == SLCPromise
 end
 
 function SLCPromiseJoin( ... )
 	local tab = { ... }
-	if #tab == 1 and istable( tab[1] ) and !tab[1]._ISPROMISE then
-		tab = tab[1]
-	end
-
 	local num = table.Count( tab )
+
+	if num == 1 and istable( tab[1] ) and !ispromise( tab[1] ) then
+		tab = tab[1]
+		num = table.Count( tab )
+	end
 
 	local ret = {}
 	local p = SLCPromise()
 
 	if num == 0 then
-		p:Resolve()
+		p:Resolve( ret )
 		return p
 	end
 
-	for i, v in pairs( tab ) do
+	local remaining = num
+	local rejected = false
+
+	for i = 1, num do
+		local v = tab[i]
+
 		if ispromise( v ) then
 			v:Then( function( data )
-				ret[i] = data
-				num = num - 1
+				if rejected then return end
 
-				if num <= 0 then
+				ret[i] = data
+				remaining = remaining - 1
+
+				if remaining <= 0 then
 					p:Resolve( ret )
 				end
 			end, function( err )
-				ret[i] = err
-				num = num - 1
+				if rejected then return end
 
-				if num <= 0 then
-					p:Resolve( ret )
-				end
+				rejected = true
+				p:Reject( err )
 			end )
 		else
 			ret[i] = v
-			num = num - 1
+			remaining = remaining - 1
 
-			if num <= 0 then
+			if remaining <= 0 then
 				p:Resolve( ret )
 			end
 		end
@@ -203,6 +220,8 @@ function SLCPromiseAny( ... )
 	local p = SLCPromise()
 
 	for i, v in pairs( { ... } ) do
+		if !ispromise( v ) then continue end
+
 		v:Then( function( data )
 			p:Resolve( data )
 		end )

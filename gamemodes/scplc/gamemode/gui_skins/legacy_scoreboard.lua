@@ -72,7 +72,7 @@ local function createPlayerTab( ply, pnl )
 
 		self.DrawAlpha = ply:IsActive() and 225 or 100
 
-		self:SetZPos( sorting * 1500 - ply:SCPLevel() + ply:EntIndex() )
+		self:SetZPos( sorting * 1500 - ply:PlayerLevel() + ply:EntIndex() )
 	end
 
 	tab.PerformLayout = function( self, pw, ph )
@@ -244,7 +244,7 @@ local function createPlayerTab( ply, pnl )
 		surface.SetDrawColor( tab.Color )
 		surface.DrawOutlinedRect( 0, 0, pw, ph )
 
-		local text = IsValid( ply ) and ply:SCPLevel() or "-"
+		local text = IsValid( ply ) and ply:PlayerLevel() or "-"
 		draw.Text{
 			text = text,
 			pos = { pw * 0.5, ph * 0.5 },
@@ -720,7 +720,7 @@ function overlay_scoreboard()
 			surface.SetDrawColor( 225, 225, 225, 255 )
 		end
 
-		surface.DrawFilledCircle( cpx, ny, 6, 12 )
+		SLCDrawCircle( cpx, ny, 6 )
 	end
 end
 

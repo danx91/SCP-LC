@@ -58,6 +58,11 @@ function AddThenableTimer( ... )
 	return p, t
 end
 
+--[[-------------------------------------------------------------------------
+Round properties
+---------------------------------------------------------------------------]]
+SLCSyncRoundProperties = SLCSyncRoundProperties or {}
+
 function SetRoundProperty( key, value, sync )
 	if !ROUND.active then return end
 
@@ -65,9 +70,10 @@ function SetRoundProperty( key, value, sync )
 
 	if sync then
 		net.Start( "SLCRoundProperties" )
-			net.WriteString( key )
-			net.WriteTable( { value } )
+			net.WriteTable( { [key] = value } )
 		net.Broadcast()
+
+		SLCSyncRoundProperties[key] = value
 	end
 
 	return value
@@ -82,6 +88,17 @@ function GetRoundProperty( key, def )
 
 	return ROUND.properties[key]
 end
+
+function ClearRoundProperties()
+	ROUND.properties = {}
+	SLCSyncRoundProperties = {}
+end
+
+hook.Add( "PlayerReady", "SLCSyncRoundProperties", function( ply )
+	net.Start( "SLCRoundProperties" )
+		net.WriteTable( SLCSyncRoundProperties )
+	net.Broadcast()
+end )
 
 --[[-------------------------------------------------------------------------
 Local util functions
@@ -103,9 +120,8 @@ local function CleanupPlayers()
 
 		v._SLCXPCategories = {}
 
-		v.PlayerData:RoundReset()
 		v.Logger:Reset( true )
-		v:Cleanup()
+		v:Cleanup( false, true )
 		v:ResetDailyBonus()
 
 		if v:IsAFK() then
@@ -125,9 +141,9 @@ local function ResetEvents()
 	ROUND.freeze = false
 	ROUND.roundtype = ROUNDS.dull
 
-	ROUND.properties = {}
 	ROUND.winners = {}
 
+	ClearRoundProperties()
 	ClearQueue()
 	ClearSCPHooks()
 

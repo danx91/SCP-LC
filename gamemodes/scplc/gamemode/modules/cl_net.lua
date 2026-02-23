@@ -26,7 +26,7 @@ net.Receive( "SCPList", function( len )
 	ShowSCPs = {}
 	SCPStats = {}
 
-	local lang_tab = _LANG[_LANG_DEFAULT] or _LANG.english
+	local lang_tab = _LANG_DEFAULT
 	local lang = lang_tab.CLASSES
 	local numbers = {}
 
@@ -187,7 +187,9 @@ net.Receive( "RoundInfo", function( len )
 end )
 
 net.Receive( "SLCRoundProperties", function( len )
-	ROUND.properties[net.ReadString()] = net.ReadTable()[1]
+	for k, v in pairs( net.ReadTable() ) do
+		ROUND.properties[k] = v
+	end
 end )
 
 net.Receive( "SCPHooks", function( len )
@@ -264,7 +266,7 @@ net.ReceivePing( "AFKSlayWarning", function( data )
 end )
 
 --[[-------------------------------------------------------------
-SCP VARS
+SLC VARS
 ---------------------------------------------------------------]]
 local PLAYER = FindMetaTable( "Player" )
 
@@ -284,32 +286,34 @@ function PLAYER:SetupSLCVarTable()
 	}
 end
 
-function PLAYER:SLCVarUpdated( id, data_type, new_val )
+function PLAYER:SLCVarUpdated( id, var_type, new_val )
 	if new_val != nil then
-		local cb = self.scp_var_callbacks[data_type][id]
+		local cb = self.scp_var_callbacks[var_type][id]
 		if cb then
 			cb( self, new_val )
 		end
 	end
 end
 
-function PLAYER:SetSLCVarCallback( id, data_type, cb )
+function PLAYER:SetSLCVarCallback( id, var_type, cb )
+	assert( self.scp_var_callbacks[var_type], "Invalid var_type '"..var_type.."'!" )
 	assert( type( cb ) == "function", "Bad argument #1 to function SetSLCVarCallback. Function expected got "..type( cb ) )
 
-	self.scp_var_callbacks[data_type][id] = cb
+	self.scp_var_callbacks[var_type][id] = cb
 end
 
-function PLAYER:AddSLCVar( name, id, data_type )
-	if !name or !id or !data_type then return end
+function PLAYER:AddSLCVar( name, id, var_type, cb )
+	if !name or !id or !var_type then return end
 
 	if !self.scp_var_table then
 		self:SetupSLCVarTable()
 	end
 
-	assert( id < 16, "Too big ID in AddSLCVar function. IDs cannot be greater than 15!" )
+	assert( self.scp_var_table[var_type], "Invalid var_type '"..var_type.."'!" )
+	assert( id < 64, "Too big ID in AddSLCVar function. IDs cannot be greater than 63!" )
 	assert( id >= 0, "ID in AddSLCVar cannot be negative!" )
 
-	if data_type == "BOOL" then
+	if var_type == "BOOL" then
 		self.scp_var_table.BOOL[id] = self.scp_var_table.BOOL[id] or false
 		self["Set"..name] = function( this, b )
 			assert( type( b ) == "boolean", "Bad argument #1 to function Set"..name..". Boolean expected, got "..type( b ) )
@@ -318,7 +322,7 @@ function PLAYER:AddSLCVar( name, id, data_type )
 		self["Get"..name] = function( this )
 			return this.scp_var_table.BOOL[id]
 		end
-	elseif data_type == "INT" then
+	elseif var_type == "INT" then
 		self.scp_var_table.INT[id] = self.scp_var_table.INT[id] or 0
 		self["Set"..name] = function( this, int )
 			assert( type( int ) == "number", "Bad argument #1 to function Set"..name..". Number expected, got "..type( int ) )
@@ -327,7 +331,7 @@ function PLAYER:AddSLCVar( name, id, data_type )
 		self["Get"..name] = function( this )
 			return this.scp_var_table.INT[id]
 		end
-	elseif data_type == "FLOAT" then
+	elseif var_type == "FLOAT" then
 		self.scp_var_table.FLOAT[id] = self.scp_var_table.FLOAT[id] or 0
 		self["Set"..name] = function( this, f )
 			assert( type( f ) == "number", "Bad argument #1 to function Set"..name..". Number expected, got "..type( f ) )
@@ -336,7 +340,7 @@ function PLAYER:AddSLCVar( name, id, data_type )
 		self["Get"..name] = function( this )
 			return this.scp_var_table.FLOAT[id]
 		end
-	elseif data_type == "STRING" then
+	elseif var_type == "STRING" then
 		self.scp_var_table.STRING[id] = self.scp_var_table.STRING[id] or ""
 		self["Set"..name] = function( this, str )
 			assert( type( str ) == "string", "Bad argument #1 to function Set"..name..". String expected, got "..type( str ) )
@@ -346,12 +350,23 @@ function PLAYER:AddSLCVar( name, id, data_type )
 			return this.scp_var_table.STRING[id]
 		end
 	end
+
+	if cb then
+		self:SetSLCVarCallback( id, var_type, cb )
+	end
 end
 
 function PLAYER:RequestSLCVars()
 	net.Start( "UpdateSLCVars" )
 	net.SendToServer()
 end
+
+local FLAG_BOOL = 0 //b00000000
+local FLAG_INT = 64  //b01000000
+local FLAG_FLOAT = -128  //b10000000
+local FLAG_STRING = -64  //b11000000
+local TYPE_MASK = FLAG_STRING
+local ID_MASK = -FLAG_STRING - 1
 
 net.Receive( "UpdateSLCVars", function()
 	local lp = LocalPlayer()
@@ -362,27 +377,27 @@ net.Receive( "UpdateSLCVars", function()
 		lp:SetupSLCVarTable()
 	end
 
-	local len = net.ReadUInt( 6 )
+	local len = net.ReadUInt( 8 )
 
 	for i = 1, len do
-		local sig = net.ReadInt( 6 )
+		local sig = net.ReadInt( 8 )
 
-		local t = bit.band( sig, -16 ) --xxxxxx & 110000
-		local id = bit.band( sig, 15 ) --xxxxxx & 001111
+		local t = bit.band( sig, TYPE_MASK )
+		local id = bit.band( sig, ID_MASK )
 
-		if t == 0 then --BOOL
+		if t == FLAG_BOOL then --BOOL
 			local val = net.ReadBool()
 			lp.scp_var_table.BOOL[id] = val
 			lp:SLCVarUpdated( id, "BOOL", val )
-		elseif t == 16 then --INT
+		elseif t == FLAG_INT then --INT
 			local val = net.ReadInt( 32 )
 			lp.scp_var_table.INT[id] = val
 			lp:SLCVarUpdated( id, "INT", val )
-		elseif t == -32 then --FLOAT
+		elseif t == FLAG_FLOAT then --FLOAT
 			local val = net.ReadFloat()
 			lp.scp_var_table.FLOAT[id] = val
 			lp:SLCVarUpdated( id, "FLOAT", val )
-		elseif t == -16 then --STRING
+		elseif t == FLAG_STRING then --STRING
 			local val = net.ReadString()
 			lp.scp_var_table.STRING[id] = val
 			lp:SLCVarUpdated( id, "STRING", val )

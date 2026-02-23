@@ -37,7 +37,7 @@ local header_items = {
 	end },
 	{ text = "badges", size = -1, font = "SCPHUDMedium" }, --fill, docking order is reversed after this!
 	{ text = "ping", size = 0.09, font = "SCPNumbersMedium", func = function( ply ) return ply:Ping() end },
-	{ text = "level", size = 0.09, font = "SCPNumbersMedium", func = function( ply ) return ply:SCPLevel() end },
+	{ text = "level", size = 0.09, font = "SCPNumbersMedium", func = function( ply ) return ply:PlayerLevel() end },
 	{ text = "score", size = 0.09, font = "SCPNumbersMedium", func = function( ply )
 		local lp = LocalPlayer()
 
@@ -104,7 +104,7 @@ local function create_player( ply, parent, marg )
 	item.Update = function( this )
 		local sorting, color = ScoreboardPlayerData( ply )
 
-		this:SetZPos( sorting * 1500 - ( lp:Alive() and ply:SCPLevel() or ply:Frags() ) )
+		this:SetZPos( sorting * 1500 - ( lp:Alive() and ply:PlayerLevel() or ply:Frags() ) )
 		this.Color = color or this._Color
 
 		this.ElementsName.badges:CreateBadges()

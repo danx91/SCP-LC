@@ -20,7 +20,7 @@ function GetSCPModifiers( ply )
 		regen_scale = 0.75,
 	}
 
-	if ROUND.aftermatch then
+	if ROUND.aftermatch then //TODO REVIEW
 		mods.def = 0.9
 		mods.flat = 0
 	elseif ESCAPE_STATUS == ESCAPE_ACTIVE and ply:IsInEscape() then
@@ -264,21 +264,8 @@ function handle_scps( target, info, attacker )
 end
 
 function GM:ScalePlayerDamage( ply, hitgroup, info )
-	if hook.Run( "PlayerShouldTakeDamage", ply, info:GetAttacker() ) == false then return true end
+	if hook.Run( "PlayerShouldTakeDamage", ply, info:GetAttacker() ) == false then return true end --TODO test if called by default?
 
-	/*if !info:IsDamageType( DMG_DIRECT ) then --TODO disabled till all models have hitgroups
-		if hitgroup == HITGROUP_HEAD then
-			info:ScaleDamage( 2 )
-		elseif hitgroup == HITGROUP_CHEST then
-			info:ScaleDamage( 1 )
-		elseif hitgroup == HITGROUP_STOMACH then
-			info:ScaleDamage( 1 )
-		elseif hitgroup == HITGROUP_LEFTARM or hitgroup == HITGROUP_RIGHTARM then
-			info:ScaleDamage( 0.75 )
-		elseif hitgroup == HITGROUP_LEFTLEG or hitgroup == HITGROUP_RIGHTLEG then
-			info:ScaleDamage( 0.75 )
-		end
-	end*/
 end
 
 function GM:PlayerTakeDamage( target, info )

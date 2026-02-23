@@ -249,7 +249,7 @@ function SWEP:DrawWorldModel()
 	self:DrawModel()
 
 	if !self:GetEnabled() then return end
-	
+
 	local owner = self:GetOwner()
 	if !IsValid( owner ) then return end
 
@@ -271,14 +271,14 @@ function SWEP:DrawWorldModel()
 	util.TraceLine( light_trace )
 
 	if light_trace.StartSolid or light_trace.HitPos:DistToSqr( pos ) < 100 then return end
-	
+
 	local dot = ( LocalPlayer():EyePos() - pos ):GetNormalized():Dot( forward )
-	
+
 	local beamalpha = 1
 	if dot > 0.4 then
 		beamalpha = math.Clamp( ( 0.8 - dot ) / 0.4, 0, 1 )
 	end
-	
+
 	if beamalpha > 0 then
 		beamrenderer[#beamrenderer + 1] = { pos, light_trace.HitPos, beamalpha }
 	end

@@ -364,13 +364,13 @@ function PLAYER:SCPTeam()
 	return self:Get_SCPTeam()
 end
 
-function PLAYER:SetSCPTeam( team )
+function PLAYER:SetSCPTeam( team, persona )
 	if !self.Set_SCPTeam then
 		self:DataTables()
 	end
 
 	self:Set_SCPTeam( team )
-	self:Set_SCPPersonaT( team )
+	self:Set_SCPPersonaT( persona or team )
 end
 
 SCPTeams.AddTeamInfo( "ALIVE" )

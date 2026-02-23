@@ -800,7 +800,6 @@ hook.Add( "SLCGamemodeLoaded", "SLCCWStuff", function()
 	add_cw_weapon( "cw_kk_ins2_m14", { IconLetter = "v", PenetrationPower = 115 }, 8, "rifle_high" )
 
 	--Shotguns
-	
 	SLC_GLOBAL_LOADOUT = "shotgun_all"
 	//add_cw_weapon( "cw_xm1014_official", { Shots = 8, Damage = 9, FireDelay = 60 / 240, PenetrationPower = 0.2 }, { "md_m203" }, 8, "shotgun_high", "gocmedic" ) // 9x8 - 576 - 288 (240/m)
 	add_cw_weapon( "cw_kk_ins2_chaser13", { IconLetter = "k", PenetrationPower = 145 }, 8, "shotgun_low" )

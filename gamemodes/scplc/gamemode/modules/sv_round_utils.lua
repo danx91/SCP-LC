@@ -67,7 +67,7 @@ local function assign_scps( plys, num )
 			local karma_mult = 1
 
 			if karma_enabled then
-				karma_mult =  math.ClampMap( v:GetSCPKarma(), 0, 1000, 1, 1.2 )
+				karma_mult =  math.ClampMap( v:GetPlayerKarma(), 0, 1000, 1, 1.2 )
 			end
 
 			local weight = math.ceil( ( -penalty + 1 ) ^ exponent * karma_mult )
@@ -257,7 +257,7 @@ function assign_groups( plys, all_groups, player_classes )
 			local karma_add = 0
 
 			if karma_enabled then
-				karma_add = math.floor( math.ClampMap( ply:GetSCPKarma(), 0, 1000, 0, 2.5 ) )
+				karma_add = math.floor( math.ClampMap( ply:GetPlayerKarma(), 0, 1000, 0, 2.5 ) )
 			end
 
 			tmp_players[i] = { ply = ply, index = i, order = ply:GetPrestigeLevel() + karma_add }
@@ -315,11 +315,12 @@ function assign_classes( groups, assigned_groups, player_classes )
 
 				local override = tmp_data.select_override and tmp_data.select_override( tmp_class, classes_in_use[tmp_class], select_groups[select_group], group_total )
 				if override == true or override == nil and (
-					!tmp_data.max or tmp_data.max == 0 or classes_in_use[tmp_class] < tmp_data.max and select_groups[select_group] < tmp_data.max
+					( !tmp_data.max or tmp_data.max == 0 or classes_in_use[tmp_class] < tmp_data.max ) and
+					( !tmp_data.group_max or tmp_data.group_max == 0 or select_groups[select_group] < tmp_data.group_max )
 				) then
-					classes_in_use[tmp_class] = classes_in_use[tmp_class] + 1
-					select_groups[select_group] = select_groups[select_group] + 1
 					assigned_classes[ply] = tmp_class
+					classes_in_use[tmp_class] = classes_in_use[tmp_class] + 1
+					select_groups[select_group] = select_groups[select_group] + ( tmp_data.group_slots or 1 )
 					//Msg( " <----", tmp_data.max, classes_in_use[tmp_class], select_groups[select_group], "\n" )
 					break
 				end
@@ -792,42 +793,40 @@ function SpawnSupport( group_override )
 		end
 
 		//Attempt to select class
-		local class_name, select_group_name, slots
+		while available_classes.total_weight > 0 do
+			local tmp_class = select_weighted( available_classes, true )
+			local tmp_data = classes[tmp_class]
+			local select_group = tmp_data.select_group or tmp_class
+			local slots = tmp_data.slots or 1
 
-		repeat
-			local tmp_class_name = select_weighted( available_classes )
-			local tmp_class_tab = classes[tmp_class_name]
-			local tmp_class_sg = tmp_class_tab.select_group or tmp_class_name
-
-			if !classes_in_use[tmp_class_name] then
-				classes_in_use[tmp_class_name] = 0
+			if !classes_in_use[tmp_class] then
+				classes_in_use[tmp_class] = 0
 			end
 
-			if !select_groups[tmp_class_sg] then
-				select_groups[tmp_class_sg] = 0
+			if !select_groups[select_group] then
+				select_groups[select_group] = 0
 			end
 
-			slots = tmp_class_tab.slots or 1
 
-			local override = tmp_class_tab.select_override and tmp_class_tab.select_override( tmp_class_name, classes_in_use[tmp_class_name], select_groups[tmp_class_sg], max )
+			local override = tmp_data.select_override and tmp_data.select_override( tmp_class, classes_in_use[tmp_class], select_groups[select_group], max )
 			if override == true or override == nil and to_spawn - slots >= 0 and (
-				!tmp_class_tab.max or tmp_class_tab.max == 0 or classes_in_use[tmp_class_name] < tmp_class_tab.max and select_groups[tmp_class_sg] < tmp_class_tab.max
+				( !tmp_data.max or tmp_data.max == 0 or classes_in_use[tmp_class] < tmp_data.max ) and
+				( !tmp_data.group_max or tmp_data.group_max == 0 or select_groups[select_group] < tmp_data.max )
 			) then
-				class_name = tmp_class_name
-				select_group_name = tmp_class_sg
-			end
-		until class_name or #available_classes == 0
+				to_spawn = to_spawn - slots
+				assigned_classes[ply] = tmp_class
+				classes_in_use[tmp_class] = classes_in_use[tmp_class] + 1
+				select_groups[select_group] = select_groups[select_group] + ( tmp_data.group_slots or slots )
 
-		if !class_name then
+				break
+			end
+		end
+
+		if !assigned_classes[ply] then
 			print( "Failed to assing player '"..ply:Nick().."' to any class in group '"..group_name.."'!" )
 			table.insert( unused_players, ply )
 			continue
 		end
-
-		to_spawn = to_spawn - slots
-		assigned_classes[ply] = class_name
-		classes_in_use[class_name] = classes_in_use[class_name] + 1
-		select_groups[select_group_name] = select_groups[select_group_name] + 1
 	end
 
 	/*print( "Classes assigned" )
@@ -1252,7 +1251,14 @@ function StartAftermatch( endcheck )
 		for i, v in ipairs( player.GetAll() ) do
 			if !v:Alive() then return end
 
-			v:TakeDamage( 1 )
+			local dmg = DamageInfo()
+
+			dmg:SetDamage( v:SCPTeam() == TEAM_SCP and 10 or 1 )
+			dmg:SetDamageType( DMG_DIRECT )
+			dmg:SetAttacker( NULL )
+			dmg:SetInflictor( NULL )
+
+			v:TakeDamageInfo( dmg )
 		end
 	end )
 end
@@ -1335,37 +1341,6 @@ function PlayerEscort( ply )
 		ply:AddFrags( points )
 
 		CheckRoundEnd()
-	end
-end
-
---[[-------------------------------------------------------------------------
-Misc functions
----------------------------------------------------------------------------]]
-function PrintSCPNotice( tab )
-	if !tab then
-		tab = GetActivePlayers()
-	elseif !istable( tab ) then
-		tab = { tab }
-	end
-
-	local karma_enabled = CVAR.slc_scp_karma:GetInt() == 1
-
-	for k, v in ipairs( tab ) do
-		local penalty = v:GetSCPPenalty()
-		if penalty <= 0 then
-			local karma_mult = 1
-
-			if karma_enabled then
-				karma_mult =  math.ClampMap( v:GetSCPKarma(), 0, 1000, 1, 1.2 )
-			end
-
-			local exponent = CVAR.slc_scp_chance_exponent:GetFloat()
-			local chance = exponent <= 0 and 1 or math.ceil( ( -penalty + 1 ) ^ exponent * karma_mult )
-
-			PlayerMessage( "scpready$"..chance.."#50,200,50", v )
-		else
-			PlayerMessage( "scpwait$"..penalty.."#200,50,50", v )
-		end
 	end
 end
 

@@ -434,8 +434,8 @@ function GM:DrawOverlay()
 
 				//local req = CVAR.slc_xp_level:GetInt()
 				//local inc = CVAR.slc_xp_increase:GetInt()
-				show_xp = ply:SCPExp()
-				show_lvl = ply:SCPLevel()
+				show_xp = ply:PlayerXP()
+				show_lvl = ply:PlayerLevel()
 				show_maxxp = ply:RequiredXP( show_lvl ) //req + inc * show_lvl
 
 				while sum > 0 do

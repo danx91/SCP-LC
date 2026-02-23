@@ -579,7 +579,6 @@ function SWEP:DrawSCPHUD()
 	if self.TargetsDieTime <= CurTime() then return end
 
 	surface.SetDrawColor( 255, 0, 0 )
-	draw.NoTexture()
 
 	for i, v in ipairs( self.Targets ) do
 		if !IsValid( v.ply ) then return end
@@ -588,7 +587,7 @@ function SWEP:DrawSCPHUD()
 			local scr = v.pos:ToScreen()
 			if !scr.visible then continue end
 
-			surface.DrawRing( scr.x, scr.y, 4, 2, 360, 12, 1 )
+			SLCDrawRing( scr.x, scr.y, 6, 2)
 		else
 			table.insert( self.HaloTable, v.ply )
 		end
@@ -607,7 +606,7 @@ SCPHook( "SCP096", "EntityTakeDamage", function( ent, dmg )
 
 	local rage = wep:GetRage()
 	if ( rage >= 0 or !wep.Healing ) and ( rage <= 0 or wep.KillTimeLimit == 0 ) then return end
-	
+
 	local prot = wep:GetUpgradeMod( "prot" )
 	if !prot then return end
 

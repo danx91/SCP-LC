@@ -5,7 +5,6 @@ ENT.Type = "anim"
 ENT.Size = 1
 ENT.Damage = 3
 
---TODO test PVS
 PrecacheParticleSystem( "SLC_SCP457_Fireball" )
 
 function ENT:SetupDataTables()

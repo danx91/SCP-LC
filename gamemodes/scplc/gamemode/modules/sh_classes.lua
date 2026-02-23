@@ -17,6 +17,8 @@
 		tier = 0,
 		hide = false, --nil!
 		select_group = "", --nil!
+		group_max = 0, --nil!
+		group_slots = 1, --nil!
 		weight = 1, --nil!
 		persona = { class = <fake_class>, team = <fake_team> },
 		override = function( ply ) end, --return false to disallow, nil to do standard check, true to allow
@@ -364,7 +366,7 @@ function PLAYER:CanUnlockClass( name )
 	if self.playermeta.classes[name] then return false end
 	if self.playermeta.prestige[name] then return false end
 	if class.tier == -1 then return self:GetPrestigePoints() > 0 end
-	if self:SCPClassPoints() < 1 then return false end
+	if self:ClassPoints() < 1 then return false end
 	if class.tier and !self:CanUnlockClassTier( class.tier ) then return false end
 
 	return true
@@ -429,14 +431,12 @@ function PLAYER:PerformPrestige()
 
 		local new_level = self:GetPrestigeLevel() + 1
 		self:SetPrestigeLevel( new_level )
-		self:SetSCPData( "prestige_level", new_level )
 
 		self:ResetDailyBonus( true )
 
 		self:SetClassPoints( 0 )
-		self:SetSCPLevel( 0 )
-		self:Set_SCPExp( 0 )
-		self:SetSCPData( "xp", 0 )
+		self:SetPlayerLevel( 0 )
+		self:SetPlayerXP( 0 )
 
 		self.PlayerInfo:Set( "unlocked_classes", {} )
 		self.PlayerInfo:Update()
@@ -483,18 +483,18 @@ if SERVER then
 	Classes and refunding
 	---------------------------------------------------------------------------]]
 
-	hook.Add( "SLCPlayerMeta", "SLCClassInfo", function( p, playermeta )
-		local classinfo = p.PlayerInfo:Get( "unlocked_classes" )
-		local prestigeinfo = p.PlayerInfo:Get( "prestige_classes" )
+	hook.Add( "SLCPlayerMeta", "SLCClassInfo", function( ply, playermeta )
+		local classinfo = ply.PlayerInfo:Get( "unlocked_classes" )
+		local prestigeinfo = ply.PlayerInfo:Get( "prestige_classes" )
 
 		if !classinfo then
 			classinfo = {}
-			p.PlayerInfo:Set( "unlocked_classes", classinfo )
+			ply.PlayerInfo:Set( "unlocked_classes", classinfo )
 		end
 
 		if !prestigeinfo then
 			prestigeinfo = {}
-			p.PlayerInfo:Set( "prestige_classes", prestigeinfo )
+			ply.PlayerInfo:Set( "prestige_classes", prestigeinfo )
 		end
 
 		local classmeta = {}
@@ -525,18 +525,18 @@ if SERVER then
 			end
 		end
 
-		p.PlayerInfo:Update()
+		ply.PlayerInfo:Update()
 
 		playermeta.refund = refund
 		playermeta.classes = classmeta
 		playermeta.prestige = prestigemeta
 	end )
 
-	net.ReceivePing( "SLCrefundClasses", function( data, p )
+	net.ReceivePing( "SLCrefundClasses", function( data, ply )
 		local points = 0
 		local prestige_points = 0
 
-		local classinfo = p.PlayerInfo:Get( "unlocked_classes" )
+		local classinfo = ply.PlayerInfo:Get( "unlocked_classes" )
 		if classinfo then
 			for k, v in pairs( classinfo ) do
 				if !AllClasses[k] then
@@ -546,7 +546,7 @@ if SERVER then
 			end
 		end
 
-		local prestigeinfo = p.PlayerInfo:Get( "prestige_classes" )
+		local prestigeinfo = ply.PlayerInfo:Get( "prestige_classes" )
 		if prestigeinfo then
 			for k, v in pairs( prestigeinfo ) do
 				if !AllClasses[k] then
@@ -556,18 +556,18 @@ if SERVER then
 			end
 		end
 
-		p.PlayerInfo:Update()
+		ply.PlayerInfo:Update()
 
 		if points > 0 or prestige_points > 0 then
-			net.Ping( "SLCrefundClasses", points..","..prestige_points, p )
+			net.Ping( "SLCrefundClasses", points..","..prestige_points, ply )
 			
-			p:AddClassPoints( points )
-			p:AddPrestigePoints( prestige_points )
+			ply:AddClassPoints( points )
+			ply:AddPrestigePoints( prestige_points )
 		end
 	end )
 
-	net.ReceivePing( "SLCPrestige", function( data, p )
-		p:PerformPrestige()
+	net.ReceivePing( "SLCPrestige", function( data, ply )
+		ply:PerformPrestige()
 	end )
 
 	hook.Add( "SLCRegisterGamerules", "SLCLANRule", function()

@@ -722,7 +722,7 @@ EFFECTS.RegisterEffect( "poison", {
 		end
 
 		if tier == 1 then
-			ply:SetDSP( 0 )
+			ply:SetDSP( 1 )
 		elseif tier == 2 then
 			ply:SetDSP( 14 )
 		elseif tier < 5 then
@@ -736,7 +736,7 @@ EFFECTS.RegisterEffect( "poison", {
 			ply:PopSpeed( "SLC_Poison" )
 		end
 
-		ply:SetDSP( 0 )
+		ply:SetDSP( 1 )
 	end,
 	think = function( self, ply, tier, args )
 		if SERVER then
@@ -872,7 +872,7 @@ EFFECTS.RegisterEffect( "decay", {
 			ply:PopSpeed( "SLC_Decay" )
 		end
 
-		ply:SetDSP( 0 )
+		ply:SetDSP( 1 )
 	end,
 	think = function( self, ply, tier, args )
 		if !SERVER then return end

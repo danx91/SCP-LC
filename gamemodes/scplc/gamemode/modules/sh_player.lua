@@ -3,11 +3,23 @@ local PLAYER = FindMetaTable( "Player" )
 --[[-------------------------------------------------------------------------
 SLCProperties
 ---------------------------------------------------------------------------]]
-function PLAYER:ResetProperties()
-	self.SLCProperties = {}
+SLCKeepProperties = SLCKeepProperties or {}
+
+PROPERTY_KEEP_ROUND = 0
+PROPERTY_KEEP_ALWAYS = 1
+
+function PLAYER:ResetProperties( round_reset )
+	if !self.SLCProperties then self.SLCProperties = {} end
+
+	for k, v in pairs( self.SLCProperties ) do
+		local keep = SLCKeepProperties[k]
+		if !keep or keep == PROPERTY_KEEP_ROUND and round_reset then
+			self.SLCProperties[k] = nil
+		end
+	end
 end
 
-function PLAYER:SetProperty( key, value, sync )
+function PLAYER:SetProperty( key, value, sync, keep )
 	if !self.SLCProperties then self.SLCProperties = {} end
 
 	if SERVER and sync then
@@ -24,11 +36,33 @@ end
 function PLAYER:GetProperty( key, def )
 	if !self.SLCProperties then self.SLCProperties = {} end
 
-	if !self.SLCProperties[key] and def then
+	if !self.SLCProperties[key] and def != nil then
 		self.SLCProperties[key] = def
 	end
 
 	return self.SLCProperties[key]
+end
+
+function KeepPlayerProperty( key, keep )
+	SLCKeepProperties[key] = keep
+end
+
+function BindPlayerProperty( func, key, def, data )
+	data = data or {}
+
+	local sync = !!data.sync
+
+	if data.keep then
+		KeepPlayerProperty( key, data.keep )
+	end
+
+	PLAYER["Get"..func] = function( self )
+		return self:GetProperty( key, def )
+	end
+
+	PLAYER["Set"..func] = function( self, val )
+		self:SetProperty( key, val, sync )
+	end
 end
 
 --[[-------------------------------------------------------------------------
@@ -153,6 +187,59 @@ function PLAYER:ResetDisableControls()
 end
 
 --[[-------------------------------------------------------------------------
+Accessors
+---------------------------------------------------------------------------]]
+function SLCAccessor( func, data )
+	data = data or {}
+
+	local getter = "Get"..(data.internal or "_"..func)
+	local setter = "Set"..(data.internal or "_"..func)
+	local db_key = data.db_key
+	local db_client = data.db_client
+	local ignore_dt = data.ignore_dt
+
+	PLAYER[data.getter or "Get"..func] = function( self )
+		if !ignore_dt and !self[getter] then
+			self:DataTables()
+		end
+
+		return self[getter]( self )
+	end
+
+	PLAYER[data.setter or "Set"..func] = function( self, val )
+		if !ignore_dt and !self[setter] then
+			self:DataTables()
+		end
+
+		self[setter]( self, val )
+
+		if db_key and ( db_client or SERVER ) then
+			self:SetSCPData( db_key, val )
+		end
+	end
+end
+
+SLCDatabaseProperties = SLCDatabaseProperties or {}
+
+function SLCDatabaseProperty( func, key, def, db, sync )
+	local db_key = db or key
+
+	SLCDatabaseProperties[key] = { db_key = db_key, def = def, sync = sync }
+
+	BindPlayerProperty( "_"..func, key, def, { sync = sync, keep = PROPERTY_KEEP_ALWAYS } )
+	SLCAccessor( func, { db_key = db_key, ignore_dt = true } )
+end
+
+hook.Add( "PlayerInitialSpawn", "SLCDatabaseProperties", function( ply )
+	for key, data in pairs( SLCDatabaseProperties ) do
+		ply:GetSCPData( data.db_key, data.def ):Then( function( val )
+			if !IsValid( ply ) then return end
+			ply:SetProperty( key, val, data.sync )
+		end )
+	end
+end )
+
+--[[-------------------------------------------------------------------------
 Player functions
 ---------------------------------------------------------------------------]]
 function PLAYER:DataTables()
@@ -162,49 +249,9 @@ function PLAYER:DataTables()
 	player_manager.RunClass( self, "SetupDataTables" )
 end
 
-local function accessor( func, var )
-	var = "Get"..( var or "_"..func )
-
-	PLAYER[func] = function( self )
-		if !self[var] then
-			self:DataTables()
-		end
-
-		return self[var]( self )
-	end
-end
-
-local function db_functions( func, db )
-	local getter = "Get_"..func
-	local setter = "Set_"..func
-
-	PLAYER["Get"..func] = function( self )
-		return self[getter]( self )
-	end
-
-	PLAYER["Set"..func] = function( self, val )
-		self[setter]( self, val )
-		self:SetSCPData( db, val )
-	end
-end
-
-accessor( "IsActive", "_SCPActive" )
-accessor( "IsPremium", "_SCPPremium" )
-accessor( "IsAFK", "_SCPAFK" )
-accessor( "SCPLevel" )
-accessor( "SCPExp" )
-accessor( "SCPClassPoints" )
-accessor( "DailyBonus" )
-
-db_functions( "SpectatorPoints", "spectator_points" )
-
-function PLAYER:GetPrestigePoints()
-	return self:Get_PrestigePoints()
-end
-
 function PLAYER:RequiredXP( lvl )
 	if !lvl then
-		lvl = self:SCPLevel()
+		lvl = self:PlayerLevel()
 	end
 
 	if SLC_XP_OVERRIDE then
@@ -273,7 +320,7 @@ function PLAYER:GetFreeInventory()
 end
 
 function PLAYER:IsHuman()
-	return SCPTeams.HasInfo( self:SCPTeam(), SCPTeams.INFO_HUMAN ) or SERVER and self:GetSCPHuman() --FIX: GetSCPHuman on other players
+	return SCPTeams.HasInfo( self:SCPTeam(), SCPTeams.INFO_HUMAN ) or ( SERVER or self == LocalPlayer() ) and self:GetSCPHuman()
 end
 
 function PLAYER:IsInEscape()
@@ -386,3 +433,35 @@ function PLAYER:ChatPrint( ... )
 		net.Send( self )
 	end
 end
+
+--[[-------------------------------------------------------------------------
+Base functions
+---------------------------------------------------------------------------]]
+BindPlayerProperty( "Blink", "slc_blink", false )
+BindPlayerProperty( "NextBlink", "slc_next_blink", -1 )
+BindPlayerProperty( "SightLimit", "slc_sight_limit", -1 )
+
+BindPlayerProperty( "SCPCanInteract", "scp_can_interact", false )
+BindPlayerProperty( "SCPChat", "scp_humans_chat", false )
+BindPlayerProperty( "SCPNoRagdoll", "scp_no_ragdoll", false )
+BindPlayerProperty( "SCPChase", "scp_chase_active", false )
+BindPlayerProperty( "ChaseLevel", "scp_chase_level", 0 )
+
+BindPlayerProperty( "InitialTeam", "slc_initial_team", 0, { keep = PROPERTY_KEEP_ROUND } )
+
+BindPlayerProperty( "SCPHuman", "scp_is_human", false, { sync = true } )
+BindPlayerProperty( "SCPDisableOverload", "scp_disable_overload", false, { sync = true } )
+
+SLCAccessor( "IsActive", { getter = "IsActive" } )
+SLCAccessor( "IsPremium", { getter = "IsPremium" } )
+SLCAccessor( "IsAFK", { getter = "IsAFK" } )
+
+SLCAccessor( "PlayerLevel", { db_key = "level", getter = "PlayerLevel" } )
+SLCAccessor( "PlayerXP", { db_key = "xp", getter = "PlayerXP" } )
+SLCAccessor( "ClassPoints", { db_key = "class_points", getter = "ClassPoints" } )
+SLCAccessor( "DailyBonus", { db_key = "daily_bonus", getter = "DailyBonus" } )
+SLCAccessor( "PrestigePoints", { db_key = "prestige_points" } )
+SLCAccessor( "PrestigeLevel", { db_key = "prestige_level" } )
+SLCAccessor( "SpectatorPoints", { db_key = "spectator_points" } )
+SLCAccessor( "SCPPenalty", { db_key = "scp_penalty" } )
+SLCAccessor( "PlayerKarma", { db_key = "scp_karma" } )

@@ -1054,6 +1054,8 @@ function PANEL:OnDrop( tab, dropped )
 		INVENTORY[to] = from_item
 		INVENTORY[from] = nil
 
+		if from_item then from_item.eq_slot = to end
+
 		//print( "EQ Move (1)", from_item, from, "<=>", to_item, to, "BP?", backpack )
 
 		if backpack then 
@@ -1097,6 +1099,10 @@ function PANEL:OnDrop( tab, dropped )
 
 			INVENTORY[to] = from_item
 			INVENTORY[from] = to_item
+
+			if from_item then from_item.eq_slot = to end
+			if to_item then to_item.eq_slot = from end
+
 			//print( "EQ Move (2)", from_item, from, "<=>", to_item, to, "BP?", backpack )
 
 			if backpack then

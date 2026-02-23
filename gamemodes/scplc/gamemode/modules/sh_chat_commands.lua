@@ -97,35 +97,6 @@ end )
 --[[-------------------------------------------------------------------------
 Base chat commands
 ---------------------------------------------------------------------------]]
-AddChatCommand( "scp", function( ply )
-	if ply.ncmdcheck and ply.ncmdcheck > CurTime() then return end
-	ply.ncmdcheck = CurTime() + 2
-
-	PrintSCPNotice( ply )
-end, SERVER, false )
-
-AddChatCommand( "karma", function( ply )
-	if ply.ncmdcheck and ply.ncmdcheck > CurTime() then return end
-	ply.ncmdcheck = CurTime() + 2
-
-	if CVAR.slc_scp_karma:GetInt() != 1 then return end
-
-	local karma = ply:GetSCPKarma()
-	local standing = "good"
-
-	if karma < -500 then
-		standing = "vbad"
-	elseif karma < -100 then
-		standing = "bad"
-	elseif karma > 900 then
-		standing = "perfect"
-	elseif karma > 400 then
-		standing = "vgood"
-	end
-
-	PlayerMessage( "karma$@MISC.karma."..standing, ply )
-end, SERVER, false )
-
 AddChatCommand( "afk", function( ply )
 	if ply.ncmdcheck and ply.ncmdcheck > CurTime() or !ply:IsValidSpectator() then return end
 	ply.ncmdcheck = CurTime() + 2
@@ -179,4 +150,27 @@ AddChatCommand( "queue", function( ply )
 			PlayerMessage( "queue_pos$"..pos )
 		end
 	end
+end, CLIENT, true )
+
+AddChatCommand( "scp", function( ply )
+	PrintSCPNotice()
+end, CLIENT, true )
+
+AddChatCommand( "karma", function( ply )
+	if CVAR.slc_scp_karma:GetInt() != 1 then return end
+
+	local karma = ply:GetPlayerKarma()
+	local standing = "good"
+
+	if karma < -500 then
+		standing = "vbad"
+	elseif karma < -100 then
+		standing = "bad"
+	elseif karma > 900 then
+		standing = "perfect"
+	elseif karma > 400 then
+		standing = "vgood"
+	end
+
+	PlayerMessage( "karma$@MISC.karma."..standing )
 end, CLIENT, true )

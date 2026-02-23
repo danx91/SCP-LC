@@ -501,6 +501,12 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		skin = 3,
 	} )
 
+	local function cispy_select_override( name, cur_class, cur_group, total )
+		if cur_group >= math.floor( total / 2 ) then
+			return false
+		end
+	end
+
 	RegisterClass( "cispy", "guard", GUARD_MODELS, {
 		team = TEAM_CI,
 		id_group = "ci",
@@ -519,9 +525,7 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		select_group = "cispy",
 		persona = { team = TEAM_GUARD, class = "guard" },
 		skin = 4,
-		select_override = function( name, cur_class, cur_group, total )
-			return cur_group < math.floor( total / 2 )
-		end,
+		select_override = cispy_select_override,
 	} )
 
 	RegisterClass( "lightcispy", "guard", GUARD_MODELS, {
@@ -543,9 +547,7 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		select_group = "cispy",
 		persona = { team = TEAM_GUARD, class = "lightguard" },
 		skin = 4,
-		select_override = function( name, cur_class, cur_group, total )
-			return cur_group < math.floor( total / 2 )
-		end,
+		select_override = cispy_select_override,
 	} )
 
 	RegisterClass( "heavycispy", "guard", GUARD_MODELS, {
@@ -567,9 +569,7 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		select_group = "cispy",
 		persona = { team = TEAM_GUARD, class = "heavyguard" },
 		skin = 4,
-		select_override = function( name, cur_class, cur_group, total )
-			return cur_group < math.floor( total / 2 )
-		end,
+		select_override = cispy_select_override,
 	} )
 
 	RegisterClass( "guard_prestige", "guard", GUARD_MODELS, {

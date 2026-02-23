@@ -17,15 +17,13 @@ function PANEL:Init()
 		surface.SetDrawColor( 255, 255, 255 )
 
 		if self.Radio then
-			draw.NoTexture()
-
 			local s = pw < ph and pw or ph
 			local s2 = s * 0.5
 
-			surface.DrawRing( s2, s2, s2, 1, 360, 24 )
+			SLCDrawRing( s2, s2, s2, 1 )
 
 			if self.b_State then
-				surface.DrawFilledCircle( s2, s2, s2 - 3, 24 )
+				SLCDrawCircle( s2, s2, s2 - 3 )
 			end
 		else
 			surface.DrawOutlinedRect( 0, 0, pw, ph )

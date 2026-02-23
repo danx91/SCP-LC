@@ -15,7 +15,7 @@ function PANEL:Paint( w, h )
 
 	draw.NoTexture()
 	surface.SetDrawColor( 255, 255, 255, 255 )
-	surface.DrawFilledCircle( w / 2, h / 2, w / 2, self.Quality or 24 )
+	SLCDrawCircle( w / 2, h / 2, w / 2 )
 
 	render.SetStencilFailOperation( STENCIL_KEEP )
 	render.SetStencilCompareFunction( STENCIL_EQUAL )

@@ -13,10 +13,10 @@ SWEP.HasBattery = true
 SWEP.BatteryUsage = 0
 
 SWEP.MaxBattery = 30
-SWEP.MinBattery = 70
-SWEP.MaxTime = 15
-SWEP.MinTime = 5
-SWEP.UseTime = 4
+SWEP.MinBattery = 15
+SWEP.MaxTime = 10
+SWEP.MinTime = 2.5
+SWEP.UseTime = 3
 
 if CLIENT then
 	SWEP.WepSelectIcon = Material( "slc/items/emptool.png" )
@@ -56,7 +56,7 @@ function SWEP:Think()
 	end
 end
 
-local button_mask = bit.bor( CONTENTS_GRATE, CONTENTS_MOVEABLE )
+local button_mask = bit.bor( CONTENTS_GRATE, CONTENTS_MOVEABLE, CONTENTS_SOLID )
 function SWEP:PrimaryAttack()
 	if CLIENT or ROUND.preparing or ROUND.post then return end
 

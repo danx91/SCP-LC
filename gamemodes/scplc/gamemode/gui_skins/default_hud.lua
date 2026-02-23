@@ -88,7 +88,7 @@ local function draw_admin_hud()
 	_, th = draw_admin_text( "Player ID: "..target:UserID(), dx, dy ) dy = dy + th
 	_, th = draw_admin_text( "SteamID: "..target:SteamID(), dx, dy ) dy = dy + th
 	_, th = draw_admin_text( "SteamID64: "..target:SteamID64(), dx, dy ) dy = dy + th
-	_, th = draw_admin_text( "Level: "..target:SCPLevel().."  ( "..target:SCPExp().." XP )", dx, dy ) dy = dy + th
+	_, th = draw_admin_text( "Level: "..target:PlayerLevel().."  ( "..target:PlayerXP().." XP )", dx, dy ) dy = dy + th
 	_, th = draw_admin_text( "Active: "..tostring( target:IsActive() ), dx, dy ) dy = dy + th
 	_, th = draw_admin_text( "Premium: "..tostring( target:IsPremium() ), dx, dy ) dy = dy + th
 	_, th = draw_admin_text( "Class: "..target:SCPClass().."  ( "..SCPTeams.GetName( target:SCPTeam() ).." )", dx, dy ) dy = dy + th

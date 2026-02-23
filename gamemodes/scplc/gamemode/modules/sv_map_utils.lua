@@ -101,6 +101,7 @@ Door destroyer
 SLC_DESTROYED_DOORS_LOOKUP = SLC_DESTROYED_DOORS_LOOKUP or {}
 SLC_DESTROYED_DOORS = SLC_DESTROYED_DOORS or {}
 
+//lua_run DestroyDoor(Entity(1):GetEyeTrace().Entity:GetParent(), Entity(1):EyeAngles())
 function DestroyDoor( ent, breach_ang, ignore_moving )
 	if SLC_DESTROYED_DOORS_LOOKUP[ent:EntIndex()] then return true end
 	if !CanDestroyDoor( ent, ignore_moving ) then return false end

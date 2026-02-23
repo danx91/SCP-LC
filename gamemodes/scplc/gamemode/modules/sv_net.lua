@@ -43,7 +43,6 @@ Receivers
 ---------------------------------------------------------------------------]]
 net.Receive( "PlayerReady", function( len, ply )
 	if ply.FullyLoaded and !DEVELOPER_MODE then return end
-	ply.FullyLoaded = true
 
 	SendSCPList( ply )
 
@@ -99,14 +98,14 @@ net.Receive( "PlayerReady", function( len, ply )
 		end
 	end
 
-	if !ply.playermeta then
-		ErrorNoHalt( "Error! Player.playermeta is nil!\n", ply )
-	end
-
 	TransmitSCPHooks( ply )
-	net.SendTable( "SLCPlayerMeta", ply.playermeta or {}, ply )
 
-	hook.Run( "PlayerReady", ply )
+	ply.FullyLoaded = true
+	print( "Player "..ply:Nick().." is fully loaded!" )
+
+	if ply.playermeta then
+		hook.Run( "PlayerReady", ply )
+	end
 end )
 
 net.Receive( "DropWeapon", function( len, ply )
@@ -209,12 +208,13 @@ function PLAYER:SLCVarUpdated( id, var_type, newVal )
 end
 
 function PLAYER:SetSLCVarCallback( id, var_type, cb )
+	assert( self.scp_var_callbacks[var_type], "Invalid var_type '"..var_type.."'!" )
 	assert( type( cb ) == "function", "Bad argument #1 to function SetSLCVarCallback. Function expected got "..type( cb ) )
 
 	self.scp_var_callbacks[var_type][id] = cb
 end
 
-function PLAYER:AddSLCVar( name, id, var_type )
+function PLAYER:AddSLCVar( name, id, var_type, cb )
 	if !name or !id or !var_type then return end
 
 	if !self.scp_var_table then
@@ -222,7 +222,7 @@ function PLAYER:AddSLCVar( name, id, var_type )
 	end
 
 	assert( self.scp_var_table[var_type], "Invalid var_type '"..var_type.."'!" )
-	assert( id < 16, "Too big ID in AddSLCVar function. IDs cannot be greater than 15!" )
+	assert( id < 64, "Too big ID in AddSLCVar function. IDs cannot be greater than 63!" )
 	assert( id >= 0, "ID in AddSLCVar cannot be negative!" )
 
 	if var_type == "BOOL" then
@@ -283,44 +283,53 @@ function PLAYER:AddSLCVar( name, id, var_type )
 
 		self:SLCVarUpdated( id, "STRING" )
 	end
+
+	if cb then
+		self:SetSLCVarCallback( id, var_type, cb )
+	end
 end
 
+local FLAG_BOOL = 0 //b00000000
+local FLAG_INT = 64  //b01000000
+local FLAG_FLOAT = -128  //b10000000
+local FLAG_STRING = -64  //b11000000
+
 function UpdateSLCVars( ply )
-	if ply.scp_update_var then
-		local num = #ply.scp_update_var
-		if num > 0 then
-			net.Start( "UpdateSLCVars" )
-			net.WriteUInt( num, 6 ) --max 64 values, 16 of each var_type
+	if !ply.scp_update_var then return end
 
-			for _, var in pairs( ply.scp_update_var ) do
-				if var[2] == "BOOL" then
-					local id = var[1]
+	local num = #ply.scp_update_var
+	if num <= 0 then return end
 
-					net.WriteInt( id, 6 ) --00xxxx where xxxx is 4 bit ID
-					net.WriteBool( ply.scp_var_table.BOOL[id] )
-				elseif var[2] == "INT" then
-					local id = var[1]
+	net.Start( "UpdateSLCVars" )
+	net.WriteUInt( num, 8 ) --max 256 values, 64 of each var_type
 
-					net.WriteInt( id + 16, 6 ) --01xxxx where xxxx is 4 bit ID
-					net.WriteInt( ply.scp_var_table.INT[id], 32 )
-				elseif var[2] == "FLOAT" then
-					local id = var[1]
+	for _, var in pairs( ply.scp_update_var ) do
+		if var[2] == "BOOL" then
+			local id = var[1]
 
-					net.WriteInt( id - 32, 6 ) --10xxxx where xxxx is 4 bit ID
-					net.WriteFloat( ply.scp_var_table.FLOAT[id] )
-				elseif var[2] == "STRING" then
-					local id = var[1]
+			net.WriteInt( id + FLAG_BOOL, 8 )
+			net.WriteBool( ply.scp_var_table.BOOL[id] )
+		elseif var[2] == "INT" then
+			local id = var[1]
 
-					net.WriteInt( id - 16, 6 ) --11xxxx where xxxx is 4 bit ID
-					net.WriteString( ply.scp_var_table.STRING[id] )
-				end
-			end
+			net.WriteInt( id + FLAG_INT, 8 )
+			net.WriteInt( ply.scp_var_table.INT[id], 32 )
+		elseif var[2] == "FLOAT" then
+			local id = var[1]
 
-			net.Send( ply )
+			net.WriteInt( id + FLAG_FLOAT, 8 )
+			net.WriteFloat( ply.scp_var_table.FLOAT[id] )
+		elseif var[2] == "STRING" then
+			local id = var[1]
 
-			ply.scp_update_var = {}
+			net.WriteInt( id + FLAG_STRING, 8 )
+			net.WriteString( ply.scp_var_table.STRING[id] )
 		end
 	end
+
+	net.Send( ply )
+
+	ply.scp_update_var = {}
 end
 
 hook.Add( "Tick", "UpdateSLCVars", function()
@@ -334,9 +343,7 @@ net.Receive( "UpdateSLCVars", function( len, ply )
 
 	for k, v in pairs( ply.scp_var_table ) do
 		for id, val in pairs( v ) do
-			//if isnumber( id ) then
-				ply:SLCVarUpdated( id, k )
-			//end
+			ply:SLCVarUpdated( id, k )
 		end
 	end
 

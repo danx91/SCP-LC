@@ -461,7 +461,7 @@ function SWEP:Explode()
 	owner:TakeDamageInfo( dmg )
 
 	if IsValid( self.LastAttacker ) then
-		print( "Explo kaboom! Killer team: ", self.LastAttacker:SCPClass(), self.LastAttacker:SCPTeam() )
+		print( "Kaboom! Killer team: ", self.LastAttacker:SCPClass(), self.LastAttacker:SCPTeam() )
 		//dmg:SetAttacker( self.LastAttacker )
 	end
 end

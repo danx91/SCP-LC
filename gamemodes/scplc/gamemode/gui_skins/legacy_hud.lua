@@ -195,7 +195,7 @@ local function spec_hud()
 				SpecInfoText( dx, h * 0.3, "Player ID: "..spectarget:UserID() )
 				SpecInfoText( dx, h * 0.33, "SteamID: "..spectarget:SteamID() )
 				SpecInfoText( dx, h * 0.36, "SteamID64: "..( spectarget:SteamID64() or "-" ) )
-				SpecInfoText( dx, h * 0.39, "Level: "..spectarget:SCPLevel().."   |   XP: "..spectarget:SCPExp() )
+				SpecInfoText( dx, h * 0.39, "Level: "..spectarget:PlayerLevel().."   |   XP: "..spectarget:PlayerXP() )
 				SpecInfoText( dx, h * 0.42, "Active: "..tostring( spectarget:IsActive() ).."   |   AFK: "..tostring( spectarget:IsAFK() ) )
 				SpecInfoText( dx, h * 0.45, "Premium: "..tostring( spectarget:IsPremium() ) )
 				SpecInfoText( dx, h * 0.48, "Team: "..SCPTeams.GetName( spectarget:SCPTeam() ) )
@@ -818,8 +818,8 @@ local function a_hud()
 	surface.SetDrawColor( COLOR.gray_bg )
 	surface.DrawDifference( bar:ToPoly(), bar_out:ToPoly() )
 
-	local xp = ply:SCPExp()
-	local maxxp = ply:RequiredXP() //CVAR.slc_xp_level:GetInt() + CVAR.slc_xp_increase:GetInt() * ply:SCPLevel()
+	local xp = ply:PlayerXP()
+	local maxxp = ply:RequiredXP() //CVAR.slc_xp_level:GetInt() + CVAR.slc_xp_increase:GetInt() * ply:PlayerLevel()
 	if xp > 0 then
 		local s = start + xoffset + cxo + ixo + w * 0.004
 
@@ -854,7 +854,7 @@ local function a_hud()
 	PopFilters()
 
 	draw.Text{
-		text = LANG.HUD.class_points..":\t"..ply:SCPClassPoints(),
+		text = LANG.HUD.class_points..":\t"..ply:ClassPoints(),
 		pos = { start + (cxo + xoffset) * 2 + w * 0.01, h * 0.91 + addy },
 		color = COLOR.text_white,
 		font = "SCPScaledHUDSmall",

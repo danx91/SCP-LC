@@ -91,6 +91,9 @@ local syringes = {}
 local list_small = {}
 local list_big = {}
 
+local public_syringes_small = {}
+local public_syringes_big = {}
+
 local function handle_upgrade( self, mode, exit, ply )
 	local class = self:GetClass()
 	local new_ent
@@ -187,7 +190,13 @@ function AddSyringe( class, data )
 		table.insert( data.is_better and list_big or list_small, class )
 	end
 
+	table.insert( data.is_better and public_syringes_big or public_syringes_small, class )
+
 	weapons.Register( swep, class )
+end
+
+function GetSyringes()
+	return public_syringes_small, public_syringes_big
 end
 
 // Morphine

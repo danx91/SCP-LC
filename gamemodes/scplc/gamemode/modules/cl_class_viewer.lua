@@ -473,7 +473,7 @@ local function openViewer()
 		}
 
 		local tw = draw.Text{
-			text = LANG.HUD.class_points..": "..ply:SCPClassPoints(),
+			text = LANG.HUD.class_points..": "..ply:ClassPoints(),
 			pos = { pw * 0.25, ph * 0.02 },
 			font = "SCPHUDSmall",
 			color = COLOR.white,
@@ -582,13 +582,13 @@ local function openViewer()
 	xp_bar:SetTall( h * 0.02 )
 
 	xp_bar.Paint = function( this, pw, ph )
-		local xp = ply:SCPExp()
+		local xp = ply:PlayerXP()
 		local req_xp = ply:RequiredXP()
 
 		draw.RoundedBox( ph * 0.4, 0, 0, pw, ph, COLOR.outline )
 		draw.RoundedBox( ph * 0.4, 0, 0, pw * math.Clamp( xp / req_xp, 0, 1 ), ph, COLOR.xp )
 
-		draw.SimpleText( string.format( "%s: %i", LANG.level, ply:SCPLevel() ), "SCPHUDVSmall", pw * 0.01, ph * 0.5, COLOR.white, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER )
+		draw.SimpleText( string.format( "%s: %i", LANG.level, ply:PlayerLevel() ), "SCPHUDVSmall", pw * 0.01, ph * 0.5, COLOR.white, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER )
 		draw.SimpleText( string.format( "%s: %i / %i", LANG.xp, xp, req_xp ), "SCPHUDVSmall", pw * 0.5, ph * 0.5, COLOR.white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
 	end
 
@@ -742,8 +742,6 @@ local function openViewer()
 
 									if LANG.loadouts[loadout] then
 										data = LANG.loadouts[loadout]
-									elseif loadout_tab and #loadout_tab == 1 then
-										data = loadout_tab[1].class
 									elseif loadout_tab then
 										data = {}
 
@@ -761,6 +759,10 @@ local function openViewer()
 										end
 									end
 								end
+							end
+
+							if istable( data ) and #data == 1 then
+								data = data[1]
 							end
 
 							if istable( data ) then

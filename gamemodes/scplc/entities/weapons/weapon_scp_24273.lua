@@ -777,7 +777,7 @@ SCP Hooks
 //lua_run ClearSCPHooks() EnableSCPHook("SCP24273") TransmitSCPHooks()
 SCPHook( "SCP24273", "EntityTakeDamage", function( target, dmg )
 	if dmg:IsDamageType( DMG_DIRECT ) or !IsValid( target ) or !target:IsPlayer() or target:SCPClass() != CLASSES.SCP24273 then return end
-	
+
 	local wep = target:GetSCPWeapon()
 	if !IsValid( wep ) then return end
 

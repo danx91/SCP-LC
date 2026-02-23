@@ -85,7 +85,7 @@ end
 --[[-------------------------------------------------------------------------
 Draw zones
 ---------------------------------------------------------------------------]]
-if SERVER then	
+if SERVER then
 	concommand.Add( "draw_zones", function( ply, cmd, args )
 		if !args[1] or args[1] == "" then draw_zones = nil return end
 		draw_zones = args[1]

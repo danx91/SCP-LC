@@ -3,8 +3,6 @@ data = {
 	init = initial_value
 	ref = num, func(return importance 0-100; 0 most important), true(if changed), false(if not changed), nil(never transmit)
 	importance = 0-100; 0 most important
-	player_entry = playerstat name; use player stats
-	NOT USED! - single_target = boolean; if player_entry is used: if true and multiple player has same score, this stat will be omited; if false, table will be passed; if nil, first player will be used
 }
 */
 
@@ -18,8 +16,6 @@ function RegisterRoundStat( name, data )
 		numerical = isnumber( data.init ),
 		ref = data.ref == data.init or data.ref,
 		importance = math.Clamp( data.importance or 100, 0, 100 ),
-		player_entry = data.player_entry,
-		--single_target = data.single_target --NOT USED!
 	}
 end
 
@@ -103,33 +99,6 @@ function GetRoundSummary( stats )
 
 	for k, v in pairs( ROUND.stats ) do
 		local value = v.value
-
-		if v.player_entry then
-			if !PlayerStats._STATS[v.player_entry] then
-				print( "Round stat '"..k.."' tried to use unknown player stat '"..tostring( v.player_entry ).."'!" )
-				continue
-			end
-
-			local lower = v.ref < v.init
-
-			local best
-
-			for _, ply in ipairs( player.GetAll() ) do
-				if ply.PlayerData then
-					local stat = ply.PlayerData:GetRoundStat( v.player_entry )
-
-					if !best or lower and stat < best or !lower and stat > best then
-						best = stat
-					end
-				end
-			end
-
-			if !best then
-				continue
-			end
-
-			value = best
-		end
 
 		local imp = 100
 

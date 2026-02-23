@@ -556,15 +556,8 @@ hook.Add( "HUDPaint", "SLCWheelMenu", function()
 		else
 			surface.SetDrawColor( 60, 60, 60 )
 		end
-		
-		draw.NoTexture()
-		surface.DrawRing( cx, cy, inner, thickness, ang, 40, 2, ang * ( i - 1 ) )
 
-		local la = math.rad( ang * ( i - 1 ) )
-		local dlx, dly = math.sin( la ), -math.cos( la )
-
-		surface.SetDrawColor( 200, 200, 200 )
-		surface.DrawLine( cx + dlx * inner, cy + dly * inner, cx + dlx * outer, cy + dly * outer )
+		SLCDrawRing( cx, cy, outer, thickness, 1 / seg, -ang * ( i - 1 ), 0, 1, 200, 200, 200 )
 		
 		if tab.mat then
 			surface.SetDrawColor( 255, 255, 255 )

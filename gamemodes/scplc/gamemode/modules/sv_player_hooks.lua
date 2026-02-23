@@ -1,14 +1,20 @@
 function GM:PlayerInitialSpawn( ply )
-	ply.playermeta = {}
-
 	ply:DataTables()
 
-	PlayerInfo( ply )
-	PlayerData( ply )
+	PlayerInfo( ply ).Ready:Then( function()
+		if !IsValid( ply ) then return end
+
+		ply.playermeta = {}
+		hook.Run( "SLCPlayerMeta", ply, ply.playermeta )
+
+		if ply.FullyLoaded and !ply:IsActive() then
+			hook.Run( "PlayerReady", ply )
+		end
+	end )
+
 	DamageLogger( ply )
 
 	ply:CheckPremium()
-	hook.Run( "SLCPlayerMeta", ply, ply.playermeta )
 
 	if ply:IsBot() then
 		hook.Run( "PlayerReady", ply )
@@ -47,9 +53,10 @@ function GM:PlayerSpawn( ply )
 end
 
 function GM:PlayerReady( ply )
+	net.SendTable( "SLCPlayerMeta", ply.playermeta or {}, ply )
 	gamerule.SendAll( ply )
 
-	ply:SetActive( true )
+	ply:SetIsActive( true )
 
 	if !ROUND.preparing or ply:GetInfoNum( "cvar_slc_preparing_classd", 0 ) == 0 then
 		QueueInsert( ply )
@@ -59,6 +66,7 @@ function GM:PlayerReady( ply )
 		PlayerMessage( "preparing_classd", ply )
 	end
 
+	print( "Player "..ply:Nick().." is ready!" )
 	CheckRoundStart()
 end
 
@@ -126,7 +134,7 @@ function GM:DoPlayerDeath( ply, attacker, dmginfo )
 
 	ply:DropEQ()
 
-	ply.StoredProperties = ply.SLCProperties
+	ply.StoredProperties = table.Copy( ply.SLCProperties )
 
 	if !ply._SkipNextRagdoll then
 		ply:CreatePlayerRagdoll()
@@ -624,7 +632,6 @@ function GM:PlayerCanHearPlayersVoice( listener, talker )
 			return true
 		end
 	end
-
 
 	if listener:GetPos():DistToSqr( talker:GetPos() ) <= 562500 then --750 * 750
 		return true, true

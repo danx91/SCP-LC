@@ -33,7 +33,7 @@ function command:Execute(player, silent, arguments)
 
     if !IsValid(target) then serverguard.Notify(player, SERVERGUARD.NOTIFY.RED, "Player invalid!"); return end
 
-    if !target:GetActive() then
+    if !target:IsActive() then
         serverguard.Notify(target, SERVERGUARD.NOTIFY.RED, "Player is inactive! Force spawn failed");
         return
     end
@@ -253,31 +253,22 @@ function command:Execute(player, silent, arguments)
     if !IsValid(target) then serverguard.Notify(player, SERVERGUARD.NOTIFY.RED, "Player invalid!"); return end
 
     if atype == "level" then
-        target:Set_SCPLevel( 0 )
-        target:SetSCPData( "level", 0 )
-
+        target:SetPlayerLevel( 0 )
         rem_info( ply, target, atype, silent )
     elseif atype == "xp" then
-        target:Set_SCPExp( 0 )
-        target:SetSCPData( "xp", 0 )
-
+        target:SetPlayerXP( 0 )
         rem_info( ply, target, atype, silent )
     elseif atype == "class_points" then
-        target:Set_SCPClassPoints( 0 )
-        target:SetSCPData( "class_points", 0 )
-
+        target:SetClassPoints( 0 )
         rem_info( ply, target, atype, silent )
     elseif atype == "owned_classes" then
         target.PlayerInfo:Set( "unlocked_classes", {} )
 
         rem_info( ply, target, atype, silent )
     elseif atype == "all" then
-        target:Set_SCPLevel( 0 )
-        target:SetSCPData( "level", 0 )
-        target:Set_SCPExp( 0 )
-        target:SetSCPData( "xp", 0 )
-        target:Set_SCPClassPoints( 0 )
-        target:SetSCPData( "class_points", 0 )
+        target:SetPlayerLevel( 0 )
+        target:SetPlayerXP( 0 )
+        target:SetClassPoints( 0 )
         target.PlayerInfo:Set( "unlocked_classes", {} )
 
         rem_info( ply, target, atype, silent )

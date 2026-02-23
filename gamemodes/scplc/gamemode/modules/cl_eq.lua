@@ -105,6 +105,7 @@ function UpdatePlayerEQ()
 		//Add if empty slot is found
 		if target > 0 then
 			INVENTORY[target] = v
+			v.eq_slot = target
 			//print( "ADD WEP EQ", target, v )
 		else
 			error( "Too many items! "..#weps.."/"..6 + bp_size )
@@ -141,6 +142,7 @@ net.Receive( "SLCMoveItem", function( len )
 		local wep = ply:GetWeapon( v )
 		if IsValid( wep ) then
 			INVENTORY[k] = wep
+			wep.eq_slot = k
 		else
 			sync_tmp[v] = k
 		end

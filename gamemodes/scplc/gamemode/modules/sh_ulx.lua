@@ -54,13 +54,13 @@ function InitializeSCPULX()
 			return
 		end
 		
-		if !plyt:GetActive() then
+		if !plyt:IsActive() then
 			ULib.tsayError( ply, "Player "..plyt:Nick().." is inactive! Force spawn failed", true )
 			return
 		end
 
-		local class
-		local spawn
+		local class, spawn
+		local issupport = false
 
 		for group_name, group in pairs( GetClassGroups() ) do
 			if group_name != "SUPPORT" then
@@ -79,6 +79,7 @@ function InitializeSCPULX()
 						if k == class_n then
 							class = c
 							spawn = grspwn
+							issupport = true
 							break
 						end
 					end
@@ -93,6 +94,20 @@ function InitializeSCPULX()
 		if !class or !spawn then return end
 
 		local pos = class.spawn or table.Random( spawn )
+
+		if isstring( pos ) then
+			local _
+
+			if issupport then
+				_, pos = GetSupportGroup( pos )
+			else
+				_, pos = GetClassGroup( pos )
+			end
+
+			if !pos then
+				return
+			end
+		end
 
 		while istable( pos ) do
 			pos = pos[SLCRandom( #pos )]
@@ -252,12 +267,11 @@ function InitializeSCPULX()
 
 	function ulx.removedata( ply, target, atype, silent )
 		if atype == "level" then
-			target:SetSCPLevel( 0 )
+			target:SetPlayerLevel( 0 )
 
 			rem_info( ply, target, atype, silent )
 		elseif atype == "xp" then
-			target:Set_SCPExp( 0 )
-			target:SetSCPData( "xp", 0 )
+			target:SetPlayerXP( 0 )
 
 			rem_info( ply, target, atype, silent )
 		elseif atype == "class_points" then
@@ -266,7 +280,6 @@ function InitializeSCPULX()
 			rem_info( ply, target, atype, silent )
 		elseif atype == "prestige" then
 			target:SetPrestigeLevel( 0 )
-			target:SetSCPData( "prestige_level", 0 )
 			target:SetPrestigePoints( 0 )
 			target.PlayerInfo:Set( "prestige_classes", {} )
 
@@ -276,13 +289,11 @@ function InitializeSCPULX()
 
 			rem_info( ply, target, atype, silent )
 		elseif atype == "all" then
-			target:SetSCPLevel( 0 )
-			target:Set_SCPExp( 0 )
-			target:SetSCPData( "xp", 0 )
+			target:SetPlayerLevel( 0 )
+			target:SetPlayerXP( 0 )
 			target:SetClassPoints( 0 )
 			target.PlayerInfo:Set( "unlocked_classes", {} )
 			target:SetPrestigeLevel( 0 )
-			target:SetSCPData( "prestige_level", 0 )
 			target:SetPrestigePoints( 0 )
 			target.PlayerInfo:Set( "prestige_classes", {} )
 
@@ -359,7 +370,7 @@ function InitializeSCPULX()
 			return
 		end
 		
-		if !target:GetActive() then
+		if !target:IsActive() then
 			ULib.tsayError( ply, "Player "..target:Nick().." is inactive! Force spawn failed", true )
 			return
 		end
@@ -386,7 +397,7 @@ hook.Add( "SetupForceSCP", "ULXForceSCP", function()
 			return
 		end
 
-		if !plyt:GetActive() then
+		if !plyt:IsActive() then
 			ULib.tsayError( plyc, "Player "..plyt:GetName().." is inactive! Force spawn failed", true )
 			return
 		end

@@ -124,14 +124,12 @@ hook.Add( "SLCPlayerCleanup", "SCPLogger", function( ply )
 	end
 
 	if ply.SCPLogger then
-		print("Cleanup regular")
 		ply.SCPLogger:Save()
 		ply.SCPLogger = nil
 	end
 
 	local prop = ply:GetProperty( "stored_properties" )
 	if prop and prop.scp_logger then
-		print("Cleanup stored")
 		prop.scp_logger:Save()
 		prop.scp_logger = nil
 	end
@@ -140,7 +138,6 @@ end )
 hook.Add( "DoPlayerDeath", "SCPLogger", function( ply )
 	if !ply.SCPLogger then return end
 
-	print("Death finish")
 	ply.SCPLogger:Finish()
 
 	ply:SetProperty( "scp_logger", ply.SCPLogger )

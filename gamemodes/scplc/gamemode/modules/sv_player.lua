@@ -3,16 +3,16 @@ local PLAYER = FindMetaTable( "Player" )
 --[[-------------------------------------------------------------------------
 General Functions
 ---------------------------------------------------------------------------]]
-function PLAYER:SetSCPClass( class )
+function PLAYER:SetSCPClass( class, persona )
 	if !self.Set_SCPClass then
 		self:DataTables()
 	end
 
 	self:Set_SCPClass( class )
-	self:Set_SCPPersonaC( class )
+	self:Set_SCPPersonaC( persona or class )
 end
 
-function PLAYER:Cleanup( norem )
+function PLAYER:Cleanup( norem, round_reset )
 	hook.Run( "SLCPlayerCleanup", self )
 
 	self:RemoveEffect()
@@ -24,9 +24,8 @@ function PLAYER:Cleanup( norem )
 	self.ClassData = nil
 	self.SCPData = nil
 
-	self:ResetProperties()
+	self:ResetProperties( round_reset )
 	self:ClearSpeedStack()
-	self.PlayerData:Reset()
 	self.Logger:Reset()
 
 	self:SetExtraHealth( 0 )
@@ -59,7 +58,7 @@ function PLAYER:Cleanup( norem )
 		self:SetBodygroup( i, 0 )
 	end
 
-	self:SetDSP( 0 )
+	self:SetDSP( 1 )
 	self:SetModelScale( 1 )
 	self:Freeze( false )
 	self:SetNoDraw( false )
@@ -171,16 +170,8 @@ local function setup_player_internal( self, class, spawn )
 	self:AllowFlashlight( false )
 	self:SetArmor( 0 )
 
-	self:SetSCPClass( class.name )
-	self:SetSCPTeam( class.team )
-
-	if class.persona and class.persona.class then
-		self:Set_SCPPersonaC( class.persona.class )
-	end
-
-	if class.persona and class.persona.team then
-		self:Set_SCPPersonaT( class.persona.team )
-	end
+	self:SetSCPClass( class.name, class.persona and class.persona.class )
+	self:SetSCPTeam( class.team, class.persona and class.persona.team )
 
 	self:Give( class.holster_override or "item_slc_holster" )
 	self:Give( "item_slc_id" )
@@ -651,8 +642,6 @@ cvars.AddChangeCallback( CVAR.slc_premium_groups:GetName(), function( cvar, old,
 end, "PremiumGroups" )
 
 function PLAYER:CheckPremium()
-	if !self.PlayerData then return end
-
 	local groups = {}
 	for s in string.gmatch( CVAR.slc_premium_groups:GetString(), "[^,]+" ) do
 		table.insert( groups, string.Trim( s ) )
@@ -666,7 +655,7 @@ function PLAYER:CheckPremium()
 		end
 	end
 
-	self:SetPremium( premium )
+	self:SetIsPremium( premium )
 end
 
 --[[-------------------------------------------------------------------------
@@ -1191,7 +1180,7 @@ function PLAYER:MakeAFK( timeout )
 
 	local rt = RealTime()
 	self.SLCAFKTimer = rt + 10
-	self:Set_SCPAFK( true )
+	self:SetIsAFK( true )
 	PlayerMessage( "afk", self )
 	
 	if timeout then
@@ -1269,14 +1258,14 @@ function PLAYER:ToggleAdminMode()
 	if self:GetAdminMode() then
 		self:SetAdminMode( false )
 
-		self:SetActive( true )
+		self:SetIsActive( true )
 		self:KillSilent()
 		self:Cleanup()
 		self:SetupSpectator()
 	else
 		self:SetAdminMode( true )
 
-		self:SetActive( false )
+		self:SetIsActive( false )
 		self:InvalidatePlayerForSpectate()
 		self:SetSCPTeam( TEAM_SPEC )
 		self:SetSCPClass( "spectator" )
@@ -1470,34 +1459,19 @@ function PLAYER:AddFrags( f )
 	Player_AddFrags( self, f )
 end
 
-function PLAYER:SetClassPoints( cp )
-	self:Set_SCPClassPoints( cp )
-	self:SetSCPData( "class_points", cp )
-end
-
 function PLAYER:AddClassPoints( cp )
-	self:SetClassPoints( self:Get_SCPClassPoints() + cp )
-end
-
-function PLAYER:SetPrestigePoints( pp )
-	self:Set_PrestigePoints( pp )
-	self:SetSCPData( "prestige_points", pp )
+	self:SetClassPoints( self:ClassPoints() + cp )
 end
 
 function PLAYER:AddPrestigePoints( cp )
 	self:SetPrestigePoints( self:GetPrestigePoints() + cp )
 end
 
-function PLAYER:SetSCPLevel( lvl )
-	self:Set_SCPLevel( lvl )
-	self:SetSCPData( "level", lvl )
-end
-
 function PLAYER:AddLevel( lvl )
 	if lvl >= 0 then
-		local level = self:Get_SCPLevel() + lvl
+		local level = self:PlayerLevel() + lvl
 
-		self:SetSCPLevel( level )
+		self:SetPlayerLevel( level )
 		self:AddClassPoints( lvl )
 	end
 
@@ -1526,8 +1500,8 @@ function PLAYER:AddXP( xp, category )
 	//local lvlxp = CVAR.slc_xp_level:GetInt()
 	//local lvlinc = CVAR.slc_xp_increase:GetInt()
 
-	local plyxp = self:SCPExp()
-	local level = self:SCPLevel()
+	local plyxp = self:PlayerXP()
+	local level = self:PlayerLevel()
 	local orig_xp = plyxp
 
 	local ref = setmetatable( {
@@ -1562,8 +1536,7 @@ function PLAYER:AddXP( xp, category )
 		self._SLCXPCategories.daily = ( self._SLCXPCategories.daily or 0 ) + bonus
 
 		daily_bonus = daily_bonus - bonus
-		self:Set_DailyBonus( daily_bonus )
-		self:SetSCPData( "daily_bonus", daily_bonus )
+		self:SetDailyBonus( daily_bonus )
 	end
 
 	local sp_xp = CVAR.slc_spectator_points_xp:GetInt()
@@ -1583,9 +1556,7 @@ function PLAYER:AddXP( xp, category )
 	end
 
 	self:AddLevel( lvls )
-
-	self:Set_SCPExp( plyxp )
-	self:SetSCPData( "xp", plyxp )
+	self:SetPlayerXP( plyxp )
 
 	return xp
 end
@@ -1608,8 +1579,7 @@ function PLAYER:ResetDailyBonus( force )
 			self:SetSCPData( "daily_bonus_reset", SLC_UNIX_DAY )
 
 			local amount = CVAR.slc_dailyxp_amount:GetInt()
-			self:Set_DailyBonus( amount )
-			self:SetSCPData( "daily_bonus", amount )
+			self:SetDailyBonus( amount )
 		end
 	end )
 end

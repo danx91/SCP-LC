@@ -21,9 +21,10 @@ local function post_draw( self, num, x, y, size, s )
 			pct = 1
 		end
 
-		draw.NoTexture()
+		local name_off = size * 0.2
+
 		surface.SetDrawColor( 255, 255, 255, 255 )
-		surface.DrawRing( x + size * 0.5, y + size * 0.5, size * 0.21, 6, pct * 360, 25, 1 )
+		SLCDrawRing( x + size * 0.5, y + size * 0.5 + name_off * 0.5, size * 0.26, 8, pct, 0, 1 )
 	end
 end
 

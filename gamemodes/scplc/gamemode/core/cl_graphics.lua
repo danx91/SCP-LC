@@ -1,3 +1,4 @@
+local pi = math.pi
 local mat_cache = {}
 
 /*---------------------------------------------------------------------------
@@ -30,109 +31,180 @@ concommand.Add( "slc_mat_clear_cache", function()
 	mat_cache = {}
 end )
 
-/*---------------------------------------------------------------------------
-surface.DrawRing( x, y, radius, thick, angle, segments, fill, rotation )
+--[[-------------------------------------------------------------------------
+Circle shader
+---------------------------------------------------------------------------]]
+local SHADER_MATERIAL = CreateMaterial("slc_circle_"..SysTime(), "screenspace_general", {
+	["$pixshader"] = "slc_circle_shader_ps30",
+	["$vertexshader"] = "slc_circle_shader_vs30",
 
-Draws ring with specified radius, thickness, etc. in specified position.
-You have to set draw color with surface.SetDrawColor() and remove current
-texture by calling draw.NoTexture()
+	["$basetexture"] = "",
+	["$texture1"] = "",
+	["$texture2"] = "",
+	["$texture3"] = "",
 
-@param 		[number] 		x 			X coordinate of the ring center
-@param 		[number] 		y 			Y coordinate of the ring center
-@param  	[number] 		radius  	Distance from center to place where ring begins
-@param 		[number] 		thick 		Thickness of ring
-@param 		[number] 		angle 		360 by default - use it if you want only part of ring
-@param  	[number] 		segments  	How many segments to draw - more segments = smoother ring
-										If this value is lower than 3, ring will not appear
-@param 		[number] 		fill 		Number from 0 to 1, specifies visible part of the ring
-										1(default) - whole ring is visible, 0 - ring is invisible
-@param 		[number] 		rotation 	Rotation of the ring, by deafult 0
+	["$ignorez"] = "1",
+	["$vertexcolor"] = "1",
+	["$vertextransform"] = "1",
 
-@return 	[nil] 			- 		  	-
----------------------------------------------------------------------------*/
-function surface.DrawRing( x, y, radius, thick, angle, segments, fill, rotation )
-	angle = math.Clamp( angle or 360, 1, 360 )
-	fill = math.Clamp( fill or 1, 0, 1 )
-	rotation = rotation or 0
+	["$copyalpha"] = "0",
+	["$alpha_blend_color_overlay"] = "0",
+	["$alphablend"] = "1",
 
-	//local segmentstodraw = {}
-	local segang = angle / segments
-	local bigradius = radius + thick
+	["$linearwrite"] = "1",
+	["$linearread_basetexture"] = "1",
+	["$linearread_texture1"] = "1",
+	["$linearread_texture2"] = "1",
+	["$linearread_texture3"] = "1",
+})
 
-	//local lastsin = 0 --TODO optimize
-	//local lastcos = 0
+local SHADER_MATRIX = Matrix()
 
-	for i = 1, math.Round( segments * fill ) do
-		local ang1 = math.rad( rotation + ( i - 1 ) * segang )
-		local ang2 = math.rad( rotation + i * segang )
+--[[-------------------------------------------------------------------------
+Internal - sets parameters of the shader and draws it
+---------------------------------------------------------------------------]]
+local function draw_circle_shader(
+	x, 			y, 				size,
+	radius, 	inner_radius, 	cap_radius,
+	fill, 		rotation, 		outline,
+	outline_r,	outline_g, 		outline_b,
+	texture
+)
+	local angle = fill * pi
+	local mid_r = ( radius + inner_radius ) * 0.5
 
-		local sin1 = math.sin( ang1 )
-		local cos1 = -math.cos( ang1 )
+	local h = ( radius - inner_radius ) * 0.5
+	if cap_radius > h then cap_radius = h end
 
-		local sin2 = math.sin( ang2 )
-		local cos2 = -math.cos( ang2 )
+	local maxcap = angle * mid_r
+	if cap_radius > maxcap then cap_radius = maxcap end
 
-		surface.DrawPoly( {
-			{ x = x + sin1 * radius, y = y + cos1 * radius },
-			{ x = x + sin1 * bigradius, y = y + cos1 * bigradius },
-			{ x = x + sin2 * bigradius, y = y + cos2 * bigradius },
-			{ x = x + sin2 * radius, y = y + cos2 * radius }
-		} )
-	end
+	local ratio = cap_radius / mid_r
+	if ratio > 1 then ratio = 1 end
+
+	local cap_angle = math.asin( ratio );
+
+	local corrected_angle = angle - cap_angle * ( 1 - fill )
+	if corrected_angle < 0 then corrected_angle = 0 end
+
+	local rotation_rad = math.rad( rotation ) - pi - corrected_angle - cap_angle
+
+	local r_eff = radius - cap_radius
+	local i_eff = inner_radius + cap_radius
+	local h_eff = (r_eff - i_eff) * 0.5
+
+	SHADER_MATRIX:SetUnpacked(
+		radius, 		cap_radius,	math.sin( rotation_rad ),		outline_r / 255,
+		inner_radius, 	r_eff,		math.cos( rotation_rad ),		outline_g / 255,
+		outline, 		i_eff,		math.sin( corrected_angle ), 	outline_b / 255,
+		angle,			h_eff,		math.cos( corrected_angle ),	texture and 1 or 0
+	)
+
+	SHADER_MATERIAL:SetMatrix( "$viewprojmat", SHADER_MATRIX )
+
+	surface.SetMaterial( SHADER_MATERIAL )
+	surface.DrawTexturedRectUV( x, y, size, size, -0.015625, -0.015625, 1.015625, 1.015625 )
 end
 
-/*---------------------------------------------------------------------------
-surface.DrawRingDC( x, y, radius, thick, angle, segments, fill, rotation, dist, func )
+--[[---------------------------------------------------------------------------
+SLCDrawRing( x, y, radius, thickness, fill, rotation, cap_radius, outline, outline_r, outline_g, outline_b )
 
-Works like surface.DrawRing, but you can specify distance between segments of ring and
-function that will be called before each segment is drawn - for example to set color of next segment
+Draws ring or arc.
 
-@param 		[number] 		x 			X coordinate of the ring center
-@param 		[number] 		y 			Y coordinate of the ring center
-@param  	[number] 		radius  	Distance from center to place where ring begins
-@param 		[number] 		thick 		Thickness of ring
-@param 		[number] 		angle 		360 by default - use it if you want only part of ring
-@param  	[number] 		segments  	How many segments to draw - more segments = smoother ring
-										If this value is lower than 3, ring will not appear
-@param 		[number] 		fill 		Number from 0 to 1, specifies visible part of the ring
-										1(default) - whole ring is visible, 0 - ring is invisible
-@param 		[number] 		rotation 	Rotation of the ring, by deafult 0
-@param 		[number] 		dist 	 	Distance in degrees between each ring segment
-@param 		[function] 		func 	 	Called before each segment is drawn
+@param		[type]			x					X position of the center
+@param		[type]			y					Y position of the center
+@param		[type]			radius				Radius of the ring
+@param		[type]			thickness			Thickness of the ring
+@param		[type]			fill				Fill % of the ring in range [0, 1] - default: 1
+@param		[type]			rotation			Rotation of the circle in degrees - default: 0
+@param		[type]			cap_radius			Softness of the ring caps in range [0, 1] - 0 = sharp caps, 1 = fully round caps, default: 0
+@param		[type]			outline				Outline size of the ring - default: 0
+@param		[number/Color]	outline_r			Either Color or red part of the outline color - default: 0
+@param		[number]		outline_g			Green part of the outline color. Unused if Color was passed to outline_r - default: 0
+@param		[number]		outline_b			Blue part of the outline color.  Unused if Color was passed to outline_r - default: 0
 
-@return 	[nil] 			- 		  	-
----------------------------------------------------------------------------*/
-function surface.DrawRingDC( x, y, radius, thick, angle, segments, fill, rotation, dist, func )
-	angle = math.Clamp( angle or 360, 1, 360 )
-	fill = math.Clamp( fill or 1, 0, 1 )
-	rotation = rotation or 0
-	dist = dist or 0
+@return		[nil]			-					-
+---------------------------------------------------------------------------]]--
+function SLCDrawRing( x, y, radius, thickness, fill, rotation, cap_radius, outline, outline_r, outline_g, outline_b )
+	if radius <= 0 or thickness <= 0 then return end
 
-	//local segmentstodraw = {}
-	local segang = ( angle / segments )
-	local bigradius = radius + thick
+	if !cap_radius or cap_radius < 0 then cap_radius = 0 end
+	if !outline or outline < 0 then outline = 0 end
 
-	for i = 1, math.Round( segments * fill ) do
-		local ang1 = math.rad( rotation + ( i - 1 ) * segang )
-		local ang2 = math.rad( rotation + i * segang - dist )
-
-		local sin1 = math.sin( ang1 )
-		local cos1 = -math.cos( ang1 )
-
-		local sin2 = math.sin( ang2 )
-		local cos2 = -math.cos( ang2 )
-
-		if func and isfunction( func ) then
-			func( i )
-		end
-
-		surface.DrawPoly( {
-			{ x = x + sin1 * radius, y = y + cos1 * radius },
-			{ x = x + sin1 * bigradius, y = y + cos1 * bigradius },
-			{ x = x + sin2 * bigradius, y = y + cos2 * bigradius },
-			{ x = x + sin2 * radius, y = y + cos2 * radius }
-		} )
+	if thickness > radius then
+		thickness = radius
+		cap_radius = 0
 	end
+
+	fill = fill and math.Clamp( fill, 0, 1 ) or 1
+
+	if istable(outline_r) then
+		outline_g = outline_r.g
+		outline_b = outline_r.b
+		outline_r = outline_r.r
+	end
+
+	draw_circle_shader(
+		x - radius, 	y - radius, 		radius * 2,
+		radius, 		radius - thickness, cap_radius * thickness,
+		fill, 			rotation or 0, 		outline,
+		outline_r or 0, outline_g or 0, 	outline_b or 0
+	)
+end
+
+--[[---------------------------------------------------------------------------
+SLCDrawCircle( x, y, radius, fill, rotation, outline, outline_r, outline_g, outline_b )
+
+Draws circle or pie.
+
+@param		[number]			x					X position of the center
+@param		[number]			y					Y position of the center
+@param		[number]			radius				Radius of the circle
+@param		[number]			fill				Fill % of the circle in range [0, 1] - default: 1
+@param		[number]			rotation			Rotation of the circle in degrees - default: 0
+@param		[number]			outline				Outline size of the circle - default: 0
+@param		[number/Color]		outline_r			Either Color or red part of the outline color - default: 0
+@param		[number]			outline_g			Green part of the outline color. Unused if Color was passed to outline_r - default: 0
+@param		[number]			outline_b			Blue part of the outline color.  Unused if Color was passed to outline_r - default: 0
+
+@return		[nil]			-					-
+---------------------------------------------------------------------------]]--
+function SLCDrawCircle( x, y, radius, fill, rotation, outline, outline_r, outline_g, outline_b )
+	if radius <= 0 then return end
+
+	if !outline or outline < 0 then outline = 0 end
+
+	fill = fill and math.Clamp( fill, 0, 1 ) or 1
+
+	if istable(outline_r) then
+		outline_g = outline_r.g
+		outline_b = outline_r.b
+		outline_r = outline_r.r
+	end
+
+	draw_circle_shader(
+		x - radius, 	y - radius, 	radius * 2,
+		radius, 		0, 				0,
+		fill, 			rotation or 0, 	outline,
+		outline_r or 0, outline_g or 0, outline_b or 0
+	)
+end
+
+--[[-------------------------------------------------------------------------
+Deprecated - use SLCDrawRing
+---------------------------------------------------------------------------]]
+function surface.DrawRing( x, y, radius, thick, angle, segments, fill, rotation )
+	angle = angle or 360
+	fill = fill or 1
+
+	SLCDrawRing( x, y, radius, thick, angle / 360 * fill, rotation )
+end
+
+--[[-------------------------------------------------------------------------
+Deprecated - use SLCDrawCircle
+---------------------------------------------------------------------------]]
+function surface.DrawFilledCircle( x, y, radius, seg )
+	SLCDrawCircle( x, y, radius )
 end
 
 /*-------------------------------------------------------------------------
@@ -185,37 +257,6 @@ function surface.DrawSubTexturedRect( x, y, w, h, subx, suby, subw, subh, txw, t
 			v = vstart + vwidth
 		},
 	} )
-end
-
-/*-------------------------------------------------------------------------
-surface.DrawFilledCircle( x, y, radius, seg )
-
-Draws filled circle
-
-@param 		[number] 		x 			X coordinate of circle
-@param 		[number] 		y 			Y coordinate of circle
-@param  	[number] 		radius 		Radius of circle
-@param 		[number] 		seg			Segments to draw - more segments = smoother circle, but less performance
-
-@return 	[nil] 			- 		  	-
----------------------------------------------------------------------------*/
-function surface.DrawFilledCircle( x, y, radius, seg )
-	seg = math.Round( seg )
-	local verts = {}
-
-	/*for i = 0, seg do
-		local a = math.rad( ( i / seg ) * -360 )
-		table.insert( verts, { x = x + math.sin( a ) * radius, y = y + math.cos( a ) * radius } )
-	end*/
-
-	table.insert( verts, { x = x, y = y, u = 0.5, v = 0.5 } )
-	for i = 0, seg do
-		local a = math.rad( ( i / seg ) * -360 )
-		local sin, cos = math.sin( a ), math.cos( a )
-		table.insert( verts, { x = x + sin * radius, y = y + cos * radius, u = sin / 2 + 0.5, v = cos / 2 + 0.5 } )
-	end
-
-	surface.DrawPoly( verts )
 end
 
 /*-------------------------------------------------------------------------
@@ -274,7 +315,7 @@ function surface.PolyRoundedRect( x, y, w, h, r, output )
 		verts[4] = { x = x, y = y }
 	else
 		for i = 0, seg - 1 do
-			local ang = ( i / ( seg - 1 ) ) * math.pi / 2
+			local ang = ( i / ( seg - 1 ) ) * pi / 2
 			local sin, cos = 1 - math.sin( ang ), 1 - math.cos( ang )
 
 			verts[i + 1] = { x = x + w - sin * r, y = y + cos * r }
@@ -421,7 +462,7 @@ function surface.DrawCooldownCircleCW( x, y, radius, pct, pctstep )
 	local nbreak = false
 	local todraw = math.ceil( ( 1 - pct ) / pctstep )
 	for i = 0, todraw do
-		local ang = 2 * math.pi * pct
+		local ang = 2 * pi * pct
 		table.insert( verts, { x = x + math.sin( ang ) * radius, y = y - math.cos( ang ) * radius } )
 
 		if nbreak then
@@ -463,7 +504,7 @@ function surface.DrawCooldownCircleCCW( x, y, radius, pct, pctstep )
 	local npct = 0
 	local todraw = math.ceil( pct / pctstep )
 	for i = 0, todraw do
-		local ang = 2 * math.pi * npct
+		local ang = 2 * pi * npct
 		table.insert( verts, { x = x + math.sin( ang ) * radius, y = y - math.cos( ang ) * radius } )
 
 		if nbreak then
@@ -509,7 +550,7 @@ function surface.DrawCooldownRectCW( x, y, width, height, pct )
 
 	table.insert( verts, { x = x + hw, y = y + hh } )
 
-	local ang = 2 * math.pi * pct
+	local ang = 2 * pi * pct
 
 	local nx = math.sin( ang )
 	local ny = -math.cos( ang )
@@ -567,7 +608,7 @@ function surface.DrawCooldownRectCCW( x, y, width, height, pct )
 	if pct >= 0.625 then table.insert( verts, { x = x, y = y + height } ) end
 	if pct >= 0.875 then table.insert( verts, { x = x, y = y } ) end
 
-	local ang = 2 * math.pi * pct
+	local ang = 2 * pi * pct
 
 	local nx = math.sin( ang )
 	local ny = -math.cos( ang )

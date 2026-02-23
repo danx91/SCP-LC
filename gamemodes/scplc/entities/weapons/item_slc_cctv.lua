@@ -422,9 +422,8 @@ function SWEP:DrawScreen( x, y, w, h )
 
 			draw.OutlinedText( self.Lang.scanning, "SCPHUDBig", x + w * 0.5, y + h * 0.6, scan_text_color, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, color_black, 2, 3 )
 
-			draw.NoTexture()
 			surface.SetDrawColor( color_white )
-			surface.DrawRing( x + w * 0.5, y + h * 0.5, h * 0.05, h * 0.01, 360, 48, owner:HoldProgress( self, "cctv_scan" ) or 0 )
+			SLCDrawRing( x + w * 0.5, y + h * 0.5, h * 0.05, h * 0.01, owner:HoldProgress( self, "cctv_scan" ) or 0 )
 		else
 			scan_text_color.a = math.TimedSinWave( 0.5, 128, 255 )
 
@@ -602,8 +601,6 @@ function SWEP:DrawMap( x, y, w, h )
 
 	local mx, my = self:HandleMouse()
 
-	draw.NoTexture()
-
 	for i, v in ipairs( data.cams ) do
 		local tab = CCTV[v]
 		if !tab then continue end
@@ -620,7 +617,7 @@ function SWEP:DrawMap( x, y, w, h )
 		local dy = y + map_margin + cy * max_size
 		local dr = h * 0.009
 
-		surface.DrawFilledCircle( dx, dy, dr, 12 )
+		SLCDrawCircle( dx, dy, dr )
 
 		if mx and point_within_circle( mx, my, dx, dy, dr * 1.5 ) then
 			net.Ping( "SLCCCTVChange", v )

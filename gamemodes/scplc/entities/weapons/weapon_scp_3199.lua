@@ -243,7 +243,7 @@ function SWEP:PrimaryAttack()
 					frenzy_stacks = max_stacks
 				else
 					local speed = self.FrenzySpeed + ( self.FrenzySpeedMultiplier + self:GetUpgradeMod( "frenzy_speed_stacks", 0 ) ) * total_stacks
-					owner:PushSpeed( speed, speed, -1, "SLC_SCP3199Frenzy"..frenzy_stacks, 1 )
+					owner:PushSpeed( speed, speed, -1, "SLC_SCP3199Frenzy"..frenzy_stacks, 1, true )
 				end
 
 				self:SetFrenzyStacks( frenzy_stacks )

@@ -617,3 +617,11 @@ end )
 ItemSpawnFunction( "backpack", function( args, data )
 	return BACKPACK.Create( args[1] )
 end )
+
+ItemSpawnFunction( "syringe", function( args )
+	local chance = tonumber( args[1] ) or 0
+	local small_list, big_list = GetSyringes()
+
+	local use_list = chance > 0 and SLCRandom( 100 ) <= chance and big_list or small_list
+	return ents.Create( use[SLCRandom( #use_list )] )
+end )

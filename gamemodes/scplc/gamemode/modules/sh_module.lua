@@ -7,8 +7,8 @@ GM.Website 	= "https://github.com/danx91/SCP-LC"
 --[[-------------------------------------------------------------------------
 Global values
 ---------------------------------------------------------------------------]]
-DATE = "17/11/2025"
-SIGNATURE = "b001101r2"
+DATE = "23/02/2026"
+SIGNATURE = "b001102r0"
 VERSION = SLCVersion().name
 
 SCPS = {}
@@ -73,11 +73,11 @@ SLCCVar( "slc_door_unblocker", "feature", 1, { FCVAR_ARCHIVE }, "This feature wi
 SLCCVar( "slc_disable_fuseboxes", "feature", 0, { FCVAR_ARCHIVE }, "If other than 0, completely disable fuse boxes. Fuses can still spawn, however they will be unusable" )
 SLCCVar( "slc_intercom_cooldown", { "feature", "time" }, 180, { FCVAR_ARCHIVE }, "Intercom cooldown", 1, nil, tonumber )
 SLCCVar( "slc_intercom_duration", { "feature", "time" }, 20, { FCVAR_ARCHIVE }, "Intercom duration", 1, nil, tonumber )
-SLCCVar( "slc_door_destroy_time", { "feature", "time" }, 120, { FCVAR_ARCHIVE }, "For how long doors will remain destroyed (0 - permanent)", 1, nil, tonumber )
+SLCCVar( "slc_door_destroy_time", { "feature", "time" }, 120, { FCVAR_ARCHIVE }, "For how long doors will remain destroyed (0 - permanent)", 0, nil, tonumber )
 SLCCVar( "slc_door_repair_time", { "feature", "time" }, 10, { FCVAR_ARCHIVE }, "How long players have to look away to allow door repair", 0, nil, tonumber )
 SLCCVar( "slc_sv_precache", { "feature" }, 0, { FCVAR_ARCHIVE, FCVAR_REPLICATED }, "EXPERIMENTAL! Enables server precache of models allowing clients to precache", nil, nil, tonumber )
 SLCCVar( "slc_scp_logging", { "feature" }, 0, { FCVAR_ARCHIVE }, "EXPERIMENTAL! Enables SCP data logging", nil, nil, tonumber )
-SLCCVar( "slc_scp_karma", { "feature" }, 1, { FCVAR_ARCHIVE }, "1 to enable karma", nil, nil, tonumber )
+SLCCVar( "slc_scp_karma", { "feature" }, 1, { FCVAR_ARCHIVE, FCVAR_REPLICATED }, "1 to enable karma", nil, nil, tonumber )
 //SLCCVar( "slc_spawn_protection", { "general", "time" }, 0, { FCVAR_NOTIFY, FCVAR_ARCHIVE }, "The duration of spawn protection of some classes, mostly support (seconds)", nil, nil, tonumber )
 
 //PREMIUM
@@ -130,7 +130,7 @@ SLCCVar( "slc_overload_advanced_cooldown", { "scp", "time" }, 300, { FCVAR_ARCHI
 SLCCVar( "slc_scp_min_players", { "scp" }, 4, { FCVAR_ARCHIVE }, "Minimum number of players to spawn SCP", 1, nil, tonumber )
 SLCCVar( "slc_players_per_scp", { "scp" }, 12, { FCVAR_ARCHIVE, FCVAR_NOTIFY }, "How many players are needed for next SCP - SCPs = ceil( total_players / this_number )", 5, nil, tonumber )
 SLCCVar( "slc_scp_filter_last", { "scp" }, 1, { FCVAR_ARCHIVE, FCVAR_NOTIFY }, "If 1, SCPs from the previous round will not appear in the next round", nil, nil, tonumber )
-SLCCVar( "slc_scp_chance_exponent", { "scp" }, 2, { FCVAR_ARCHIVE }, "Exponent of SCP selection chance. 0 to disable SCP chance system", 0, nil, tonumber )
+SLCCVar( "slc_scp_chance_exponent", { "scp" }, 2, { FCVAR_ARCHIVE, FCVAR_REPLICATED }, "Exponent of SCP selection chance. 0 to disable SCP chance system", 0, nil, tonumber )
 SLCCVar( "slc_scp_penalty", { "general", "scp" }, 4, { FCVAR_ARCHIVE }, "The number of rounds of low SCP priority for players that just played as SCP", 0, nil, tonumber )
 SLCCVar( "slc_allow_scp_spectate", { "general", "scp" }, 0, { FCVAR_NOTIFY, FCVAR_ARCHIVE }, "If 1, all players will be able to spectate SCPs", nil, nil, tonumber )
 SLCCVar( "slc_689_min_players", { "scp" }, 1, { FCVAR_ARCHIVE }, "Minimum number of players for SCP-689 to spawn. 0 to disable this SCP", 0, nil, tonumber )

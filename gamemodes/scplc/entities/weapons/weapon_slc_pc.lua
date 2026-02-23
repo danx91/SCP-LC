@@ -341,8 +341,6 @@ function SWEP:DrawBeams( ent )
 		beam_start = tr_start - Vector( 0, 0, 10 )
 	end
 
-	//self:SetRenderBoundsWS( beam_start, beam_end ) --TODO
-
 	local max_c = 30
 	local count = max_c
 
