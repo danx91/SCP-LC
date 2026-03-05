@@ -437,6 +437,8 @@ end
 --[[-------------------------------------------------------------------------
 Base functions
 ---------------------------------------------------------------------------]]
+KeepPlayerProperty( "slc_xp_categories", PROPERTY_KEEP_ROUND )
+
 BindPlayerProperty( "Blink", "slc_blink", false )
 BindPlayerProperty( "NextBlink", "slc_next_blink", -1 )
 BindPlayerProperty( "SightLimit", "slc_sight_limit", -1 )

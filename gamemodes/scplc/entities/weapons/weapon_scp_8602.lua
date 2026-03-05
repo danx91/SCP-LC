@@ -1,5 +1,6 @@
 SWEP.Base 			= "weapon_scp_base"
 SWEP.PrintName		= "SCP-8602"
+SWEP.Stat 			= RoundStat( "8602" ):Show( true, 0, 5 )
 
 SWEP.HoldType		= "normal"
 
@@ -321,7 +322,7 @@ function SWEP:PerformDefenseAttack()
 end
 
 function SWEP:OnPlayerKilled( ply )
-	AddRoundStat( "8602" )
+	self:AddRoundStat()
 end
 
 local indicator = Material( "slc/hud/scp/8602/indicator.png", "smooth" )
@@ -370,7 +371,7 @@ end
 SCP Hooks
 ---------------------------------------------------------------------------]]
 //lua_run ClearSCPHooks() EnableSCPHook("SCP8602") TransmitSCPHooks()
-SCPHook( "SCP8602", "EntityTakeDamage", function( target, dmg )
+SCPHook( "SCP8602", "SLCEntityTakeDamage", function( target, dmg )
 	if dmg:IsDamageType( DMG_DIRECT ) or !dmg:IsDamageType( DMG_BULLET ) or !IsValid( target ) or !target:IsPlayer() or target:SCPClass() != CLASSES.SCP8602 then return end
 
 	local wep = target:GetSCPWeapon()

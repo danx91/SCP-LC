@@ -87,10 +87,6 @@ function GetActivePlayers()
 	return tab
 end
 
-function GetAlivePlayers()
-	return SCPTeams.GetPlayersByInfo( SCPTeams.INFO_ALIVE )
-end
-
 function PlayerMessage( msg, ply, center )
 	if !msg or msg == "" then return end
 	if ply and !IsValid( ply ) then return end
@@ -219,19 +215,19 @@ Timer( "PlayXP", 300, 0, function()
 		local plus = rt:GetRemainingTime() <= rt:GetTime() * 0.5
 
 		for i, v in ipairs( player.GetAll() ) do
-			if !v:IsAFK() then
-				if SCPTeams.HasInfo( v:SCPTeam(), SCPTeams.INFO_ALIVE ) then
-					if plus then
-						v:AddXP( pplus, "round" )
-						PlayerMessage( "rxpplus$"..pplus, v )
-					else
-						v:AddXP( pplay, "round" )
-						PlayerMessage( "rxpplay$"..pplay, v )
-					end
+			if v:IsAFK() then continue end
+
+			if v:Alive() then
+				if plus then
+					v:AddXP( pplus, "round" )
+					PlayerMessage( "rxpplus$"..pplus, v )
 				else
-					v:AddXP( pspec, "round" )
-					PlayerMessage( "rxpspec$"..pspec, v )
+					v:AddXP( pplay, "round" )
+					PlayerMessage( "rxpplay$"..pplay, v )
 				end
+			else
+				v:AddXP( pspec, "round" )
+				PlayerMessage( "rxpspec$"..pspec, v )
 			end
 		end
 	else

@@ -1,5 +1,6 @@
 SWEP.Base 			= "weapon_scp_base"
 SWEP.PrintName		= "SCP-173"
+SWEP.Stat 			= RoundStat( "173" ):Show( true, 0, 4 )
 
 SWEP.HoldType		= "normal"
 
@@ -393,14 +394,14 @@ function SWEP:OnBlink( duration, delay )
 end
 
 function SWEP:OnPlayerKilled( ply )
-	AddRoundStat( "173" )
+	self:AddRoundStat()
 end
 
 --[[-------------------------------------------------------------------------
 SCP Hooks
 ---------------------------------------------------------------------------]]
 //lua_run ClearSCPHooks() EnableSCPHook("SCP173") TransmitSCPHooks()
-SCPHook( "SCP173", "EntityTakeDamage", function ( ent, dmg )
+SCPHook( "SCP173", "SLCEntityTakeDamage", function ( ent, dmg )
 	if dmg:IsDamageType( DMG_DIRECT ) or !dmg:IsDamageType( DMG_BULLET ) or !IsValid( ent ) or !ent:IsPlayer() or ent:SCPClass() != CLASSES.SCP173 then return end
 
 	local wep = ent:GetSCPWeapon()

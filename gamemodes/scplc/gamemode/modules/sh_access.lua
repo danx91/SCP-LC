@@ -201,7 +201,7 @@ function SelectUpgrade( name, mode )
 		if !result or result == true then
 			return result
 		end
-		
+
 		return result, GenerateAccessOverride( GetChip( result ) )
 	end
 
@@ -307,7 +307,7 @@ if SERVER then
 	function HandleButtonUse( ply, ent, data )
 		local omnitool
 		local omnitoolused = false
-		
+
 		local wep = ply:GetActiveWeapon()
 		if IsValid( wep ) and wep:GetClass() == "item_slc_omnitool" then
 			omnitool = wep
@@ -406,7 +406,7 @@ if SERVER then
 
 		local spos = ply:GetShootPos()
 		local pos = spos + ply:GetAimVector() * 25
-	
+
 		local trace = util.TraceHull{
 			start = spos,
 			endpos = pos,
@@ -414,13 +414,13 @@ if SERVER then
 			maxs = Vector( 5, 5, 5 ),
 			mask = MASK_SOLID_BRUSHONLY
 		}
-	
+
 		effect:SetOrigin( trace.HitPos )
 		effect:SetNormal( trace.Hit and trace.HitNormal or (pos - spos):GetNormalized() )
 		effect:SetRadius( 1 )
 		effect:SetMagnitude( 2 )
 		effect:SetScale( 2.5 )
-	
+
 		util.Effect( "ElectricSpark", effect, false, true )
 
 		timer.Simple( 0.2, function()
@@ -440,9 +440,9 @@ if SERVER then
 		local cd = ply:GetProperty( "overload_cd" )
 		local override = hook.Run( "SLCOverloadOverride", ply, ent, data )
 		if override == false or cd and cd >= ct and override != true then return true end
-		
+
 		ply:SetProperty( "overload_cd", ct + 3, true )
-		
+
 		if ent.OverloadCooldown and ent.OverloadCooldown >= ct and override != true then
 			PlayerMessage( string.format( "overload_cooldown$%i", ent.OverloadCooldown - ct ), ply, true )
 			return true
@@ -466,7 +466,7 @@ if SERVER then
 				local adv_cd = CVAR.slc_overload_advanced_cooldown:GetInt()
 				ent.OverloadCooldown = in_ct + adv_cd
 				ent.AdvancedOverload = true
-				
+
 				ent:EmitSound( "SLCMisc.Overload" )
 				overload_effect( ply )
 
@@ -506,7 +506,7 @@ if SERVER then
 		return true
 	end
 
-	hook.Add( "EntityTakeDamage", "SLCButtonOverload", function( ply, info )
+	hook.Add( "SLCEntityTakeDamage", "SLCButtonOverload", function( ply, info )
 		if IsValid( ply ) and ply:IsPlayer() and ply:IsDoingSLCTask( "button_overload" ) and !info:IsDamageType( DMG_POISON ) then
 			ply:StopSLCTask( 3 )
 			ply:SetProperty( "overload_cd", CurTime() + 3, true )
@@ -523,7 +523,7 @@ if SERVER then
 			end
 		end
 	end
-	
+
 	function GetButton( name )
 		local cache = BUTTONS_NAME_CACHE[name]
 

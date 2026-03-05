@@ -78,7 +78,7 @@ function SCPLogger:Save()
 	end
 
 	print( "[SCPLogger] Saving Logger", self.Player )
-	
+
 	local file_path
 	local n = 0
 
@@ -212,7 +212,7 @@ hook.Add( "SLCPreround", "SCPLogger", function()
 			prop.scp_logger.Data.finish_type = "death"
 
 			local killinfo = victim.Logger:GetDeathDetails()
-			prop.scp_logger.Data.death_src = killinfo and killinfo.weapon or "N/A"
+			prop.scp_logger.Data.death_src = killinfo and killinfo.inflictor or "N/A"
 
 			prop.scp_logger:Save()
 			prop.scp_logger = nil
@@ -259,7 +259,7 @@ hook.Add( "SLCPreround", "SCPLogger", function()
 		data.escape_num = #all_players
 		data.escape_hp = ply:Health()
 	end )
-	
+
 	AddTimer( "SCPLogger", 30, 0, function()
 		for i, v in ipairs( player.GetAll() ) do
 			if !v.SCPLogger then continue end

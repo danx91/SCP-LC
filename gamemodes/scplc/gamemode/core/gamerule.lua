@@ -123,11 +123,11 @@ if SERVER then
 
 			if !data then
 				print( "Gamerule file is corrupted! Fixing..." )
-				
+
 				if f then
 					file.Write( "slc/gamerule_corrupted.dat", f )
 				end
-	
+
 				file.Write( "slc/gamerule.dat", util.TableToJSON( gamerule.data ) )
 				return
 			end
@@ -170,6 +170,8 @@ if CLIENT then
 	end )
 end
 
+local color_white = Color( 255, 255, 255 )
+
 local actions = {
 	get = true,
 	set = true,
@@ -188,13 +190,13 @@ local function printRules( name )
 	end
 
 	if #list > 0 then
-		MsgC( Color( 255, 255, 255 ), "--------------------------------------------------------------------------------\n" )
-		MsgC( Color( 255, 255, 255 ), "Gamerule name:                | Type:             | Value: ", Color( 175, 175, 175 ), "(modified) ", Color( 100, 255, 100 ), "(protected) ", Color( 255, 100, 100 ), "(not registered)\n" )
+		MsgC( color_white, "--------------------------------------------------------------------------------\n" )
+		MsgC( color_white, "Gamerule name:                | Type:             | Value: ", Color( 175, 175, 175 ), "(modified) ", Color( 100, 255, 100 ), "(protected) ", Color( 255, 100, 100 ), "(not registered)\n" )
 		for k, v in pairs( list ) do
-			MsgC( Color( 255, 255, 255 ), "--------------------------------------------------------------------------------\n" )
+			MsgC( color_white, "--------------------------------------------------------------------------------\n" )
 			local data = gamerule.data[v]
 			if data then
-				local color = Color( 255, 255, 255 )
+				local color = color_white
 
 				if !data.registered then
 					color = Color( 255, 100, 100 )
@@ -203,9 +205,9 @@ local function printRules( name )
 				end
 
 				if data.value == data.default then
-					MsgC( color, string.ExactLength( v, 30 ), Color( 255, 255, 255 ), "| ", string.ExactLength( data.type or "?", 18 ), "| ", data.value == nil and "?" or data.value, "\n" )
+					MsgC( color, string.ExactLength( v, 30 ), color_white, "| ", string.ExactLength( data.type or "?", 18 ), "| ", data.value == nil and "?" or data.value, "\n" )
 				else
-					MsgC( color, string.ExactLength( v, 30 ), Color( 255, 255, 255 ), "| ", string.ExactLength( data.type or "?", 18 ), "| ", Color( 175, 175, 175 ), data.value == nil and "?" or data.value, Color( 255, 255, 255 ), "   ["..tostring( data.default == nil and "?" or data.default ).."]", "\n" )
+					MsgC( color, string.ExactLength( v, 30 ), color_white, "| ", string.ExactLength( data.type or "?", 18 ), "| ", Color( 175, 175, 175 ), data.value == nil and "?" or data.value, color_white, "   ["..tostring( data.default == nil and "?" or data.default ).."]", "\n" )
 				end
 			end
 		end

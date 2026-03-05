@@ -40,7 +40,7 @@ hook.Add( "PlayerPostThink", "SLCEffectsThink", function( ply )
 
 	for i, v in rpairs( ply.EFFECTS ) do
 		local eff = EFFECTS.effects[v.name]
-		
+
 		if v.endtime != -1 and v.endtime <= ct then
 			local decrease = v.decrease or 1
 			local keep = eff.finish_type == 1 and v.tier > decrease
@@ -130,7 +130,7 @@ end
 local PLAYER = FindMetaTable( "Player" )
 function PLAYER:ApplyEffect( name, ... )
 	if CLIENT and self != LocalPlayer() then return false end
-	
+
  	local args = {...}
 	local effect = EFFECTS.effects[name]
 
@@ -410,6 +410,8 @@ end
 --[[-------------------------------------------------------------------------
 Bleeding
 ---------------------------------------------------------------------------]]
+local bleed_stat = RoundStat( "bleed" ):Show( true, 0, 0.4 )
+
 local decal_up = Vector( 0, 0, 10 )
 local decal_down = Vector( 0, 0, -30 )
 
@@ -439,10 +441,12 @@ EFFECTS.RegisterEffect( "bleeding", {
 
 		if IsValid( att ) and att:IsPlayer() and att:CheckSignature( args[2] ) then
 			dmg:SetAttacker( att )
+		else
+			att = NULL
 		end
 
 		ply:TakeDamageInfo( dmg )
-		AddRoundStat( "bleed", tier )
+		bleed_stat:AddValue( tier, { effect = "bleeding", attacker = att } )
 
 		if self.next_decal and self.next_decal > CurTime() then return end
 		self.next_decal = CurTime() + ( 4 - tier ) * 0.75
@@ -482,7 +486,7 @@ EFFECTS.RegisterEffect( "heavy_bleeding", {
 	end,
 	finish = function( self, ply, tier, args, interrupt, all )
 		if CLIENT or !interrupt or all then return end
-		
+
 		ply:AddTimer( "reopen_wound", SLCRandom( 30, 120 ), 1, function()
 			if !ply:HasEffect( "heavy_bleeding" ) and SLCRandom( 1, 100 ) <= 50 / args[2] then
 				ply:ApplyEffect( "heavy_bleeding", args[1], args[2] + 1 )
@@ -500,10 +504,12 @@ EFFECTS.RegisterEffect( "heavy_bleeding", {
 
 		if IsValid( att ) and att:CheckSignature( args[3] ) then
 			dmg:SetAttacker( att )
+		else
+			att = NULL
 		end
 
 		ply:TakeDamageInfo( dmg )
-		AddRoundStat( "bleed", 2 )
+		bleed_stat:AddValue( 2, { effect = "heavy_bleeding", attacker = att } )
 
 		if self.next_decal and self.next_decal > CurTime() then return end
 		self.next_decal = CurTime() + 1
@@ -694,6 +700,8 @@ end )
 --[[-------------------------------------------------------------------------
 Poison
 ---------------------------------------------------------------------------]]
+local poison_stat = RoundStat( "poison" ):Show( true, 0, 0.6 )
+
 EFFECTS.RegisterEffect( "poison", {
 	duration = 30,
 	stacks = 2,
@@ -750,10 +758,12 @@ EFFECTS.RegisterEffect( "poison", {
 
 			if IsValid( att ) and att:CheckSignature( args[3] ) then
 				dmg:SetAttacker( att )
+			else
+				att = NULL
 			end
 
 			ply:TakeDamageInfo( dmg )
-			AddRoundStat( "poison", tier )
+			poison_stat:AddValue( tier, { attacker = att } )
 		end
 	end,
 	wait = 1.5,
@@ -833,7 +843,7 @@ EFFECTS.RegisterEffect( "fracture", {
 local fcv = 0
 hook.Add( "SLCCalcView", "SLCFracture", function( ply, view )
 	if !ply:OnGround() or !ply.HasEffect or !ply:HasEffect( "fracture" ) then return end
-	
+
 	if !view.vm and ply:GetVelocity():LengthSqr() > 900 then
 		fcv = fcv + FrameTime() * 3
 	end
@@ -1009,14 +1019,14 @@ hook.Add( "AcceptInput", "SLCDoorlock", function( ent, input, activator, caller,
 		if t == TEAM_SPEC or t == TEAM_SCP then continue end
 
 		local dc = ply:GetProperty( "door_counter", 0 ) + 1
-		
+
 		if dc > 3 then
 			dc = 0
-			
+
 			ply:ApplyEffect( "doorlock" )
 			ply.NextSLCUse = CurTime() + 1
 		end
-		
+
 		ply:SetProperty( "door_counter", dc )
 	end
 end )
@@ -1070,7 +1080,7 @@ EFFECTS.RegisterEffect( "scp009", {
 		dmg:SetDamageType( DMG_DIRECT )
 
 		if IsValid( self.attacker ) then
-			self.attacker:SetProperty( "kill_team_override", self.team )
+			self.attacker:SetProperty( "dmg_team_override", self.team )
 			dmg:SetAttacker( self.attacker )
 		else
 			ply:SkipNextSuicide()
@@ -1081,7 +1091,7 @@ EFFECTS.RegisterEffect( "scp009", {
 		ply._RagEntity = nil
 
 		if IsValid( self.attacker ) then
-			self.attacker:SetProperty( "kill_team_override", nil )
+			self.attacker:SetProperty( "dmg_team_override", nil )
 		end
 	end,
 	think = function( self, ply, tier, args )
@@ -1429,7 +1439,7 @@ EFFECTS.RegisterEffect( "expd_recovery", {
 
 		local id = pl:SteamID64()
 
-		AddRoundHook( "EntityTakeDamage", "expd_effect"..id, function( ply, dmg )
+		AddRoundHook( "SLCEntityTakeDamage", "expd_effect"..id, function( ply, dmg )
 			if ply == pl then return true end
 		end )
 
@@ -1448,7 +1458,7 @@ EFFECTS.RegisterEffect( "expd_recovery", {
 		end
 
 		local id = pl:SteamID64()
-		RemoveRoundHook( "EntityTakeDamage", "expd_effect"..id )
+		RemoveRoundHook( "SLCEntityTakeDamage", "expd_effect"..id )
 		RemoveRoundHook( "PlayerSwitchWeapon", "expd_effect"..id )
 		RemoveRoundHook( "SLCPlayerFootstep", "expd_effect"..id )
 	end,
@@ -1480,7 +1490,7 @@ EFFECTS.RegisterEffect( "expd_lifesteal", {
 
 			local attacker = dmg:GetAttacker()
 			if attacker != pl or SCPTeams.IsAlly( attacker:SCPTeam(), ply:SCPTeam() ) then return end
-			
+
 			attacker:AddHealth( dmg:GetDamage() * 0.25 )
 		end )
 
@@ -1516,7 +1526,7 @@ EFFECTS.RegisterEffect( "expd_glass_cannon", {
 			attacker:SetProperty( "expd_glass_cannon", attacker:GetProperty( "expd_glass_cannon", 0 ) + 1 )
 		end )
 
-		AddRoundHook( "EntityTakeDamage", "expd_effect"..id, function( ply, dmg )
+		AddRoundHook( "SLCEntityTakeDamage", "expd_effect"..id, function( ply, dmg )
 			if ply != pl then
 				local attacker = dmg:GetAttacker()
 				if attacker != pl then return end
@@ -1533,7 +1543,7 @@ EFFECTS.RegisterEffect( "expd_glass_cannon", {
 	finish = function( self, pl )
 		local id = pl:SteamID64()
 		RemoveRoundHook( "SLCPLayerDeath", "expd_effect"..id )
-		RemoveRoundHook( "EntityTakeDamage", "expd_effect"..id )
+		RemoveRoundHook( "SLCEntityTakeDamage", "expd_effect"..id )
 	end,
 	ignore500 = true,
 } )

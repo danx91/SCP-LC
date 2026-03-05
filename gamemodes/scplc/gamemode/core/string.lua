@@ -1,20 +1,3 @@
-function string.ExactLength( str, len, alignRight )
-	local sl = string.len( str )
-
-	if sl == len then
-		return str
-	elseif sl > len then
-		return string.sub( str, 1, len )
-	else
-		local s = string.rep( " ", len - sl )
-
-		if alignRight then
-			return s..str
-		else
-			return str..s
-		end
-	end
-end
 --[[-------------------------------------------------------------------------
 String builder
 ---------------------------------------------------------------------------]]
@@ -68,174 +51,201 @@ end
 setmetatable( StringBuilder, { __call = StringBuilder.New } )
 
 --[[-------------------------------------------------------------------------
-StringTable --TODO do it better
+StringTable
 ---------------------------------------------------------------------------]]
 StringTable = {}
+StringTable.__index = StringTable
 
-function StringTable:New( rows, cols, data )
-	local st = setmetatable( {}, { __index = StringTable } )
+setmetatable( StringTable, {
+	__call = function( class, ... )
+		local obj = setmetatable( {}, class )
+		if obj.Initialize then obj:Initialize( ... ) end
+		return obj
+	end
+} )
 
-	st.New = function() end
+function StringTable:Initialize( split )
+	self.Split = split or false
 
-	data = data or {}
-	st.Data = {}
-	st.Content = {}
-	st.Columns = {}
-	st.Dim = { rows, cols }
+	self.Columns = {}
+	self.Rows = { {} }
 
-	for i = 1, rows do
-		st.Data[i] = {}
+	self.NumColumns = 0
+end
 
-		for j = 1, cols do
-			if !st.Data[i][j] then
-				local d = data[i] and data[i][j] or 1
-				st.Data[i][j] = d
+function StringTable:AddColumn( name, specifier, flags, length, precision )
+	if type( name ) != "string" then argerror( 1, "AddColumn", "string", type( name ) ) end
+	if type( specifier ) != "string" then argerror( 2, "AddColumn", "string", type( specifier ) ) end
 
-				if d > 1 then
-					for k = 1, d - 1 do
-						if j + k > cols then
-							st.Data[i][j] = k
-							break
-						end
+	name = utf8.force( tostring( name ) )
 
-						st.Data[i][j + k] = 0
-					end
-				end
-			end
+	flags = flags or "-"
+
+	local name_len = utf8.len( name )
+
+	if !length or length < name_len then
+		length = name_len
+	end
+
+	local no_length = "%"..flags
+
+	if precision then
+		no_length = no_length.."."..precision
+	end
+
+	no_length = no_length..specifier
+
+	table.insert( self.Columns, {
+		specifier = specifier,
+		flags = flags,
+		length = length,
+		precision = precision,
+		no_length = no_length,
+		pad_right = !!string.find( flags, "-", 1, true ),
+	} )
+
+	self.NumColumns = self.NumColumns + 1
+
+	self.Rows[1][self.NumColumns] = name
+end
+
+function StringTable:AddRow( ... )
+	local args = { ... }
+	local len = #args
+
+	assert( len == self.NumColumns, string.format( "AddRow arguments count must match columns count (expected %i, got %i)", self.NumColumns, len ) )
+
+	for i, v in ipairs( args ) do
+		if isstring( v ) then
+			v = utf8.force( v )
+			args[i] = v
+		end
+
+		local column = self.Columns[i]
+		local arg_len = utf8.len( string.format( column.no_length, v ) )
+
+		if arg_len > column.length then
+			column.length = arg_len
 		end
 	end
 
-	return st
+	table.insert( self.Rows, args )
 end
 
-function StringTable:Insert( x, y, text, format )
-	if x > 0 or y > 0 and x <= self.Dim[2] and y <= self.Dim[1] then
-		self.Content[y] = self.Content[y] or {}
+function StringTable:ParseRow( num )
+	local row = self.Rows[num]
+	if !row then return "" end
 
-		self.Content[y][x] = { " "..tostring( text ).." ", format }
-	end
-end
+	local header = num == 1
+	local format = "|"
 
-function StringTable:CalcColumns()
-	local cols = {}
+	for i, v in ipairs( self.Columns ) do
+		format = format.." %"..v.flags..v.length
 
-	for y = 1, self.Dim[1] do
-		for x = 1, self.Dim[2] do
-			cols[x] = cols[x] or 0
+		if !header and v.precision then
+			format = format.."."..v.precision
+		end
 
-			if self.Data[y][x] == 1 then
-				local len = self.Content[y][x] and string.len( self.Content[y][x][1] )
-				if len and ( !cols[x] or cols[x] < len ) then
-					cols[x] = len
-				end
+		format = format..( header and "s" or v.specifier )
+
+		local cell = row[i]
+		if isstring( cell ) then
+			local correction = string.len( cell ) - utf8.len( cell )
+			if correction > 0 then
+				format = format..string.rep( " ", correction )
 			end
 		end
+
+		format = format.." |"
 	end
 
-	for y = 1, self.Dim[1] do
-		for x = 1, self.Dim[2] do
-			local size = self.Data[y][x]
-			if size > 1 then
-				local len = self.Content[y][x][1] and string.len( self.Content[y][x][1] )
-				local cl = cols[x]
-
-				for i = 1, size - 1 do
-					cl = cl + cols[x + i]
-				end
-
-				if len and ( !cols[x] or cl < len ) then
-					cols[x + size - 1] = cols[x + size - 1] + len - cl
-				end
-			end
-		end
-	end
-
-	self.Columns = cols
+	return string.format( format.."\n", unpack( row ) )
 end
 
-function StringTable:Get( prt )
-	self:CalcColumns()
-
-	local len = 2
-	local c = 0
-	for k, v in pairs( self.Columns ) do
-		len = len + v
-		c = c + 1
-	end
-
-	local sep = string.rep( "-", len + c - 1 )
-
-	local str = sep
-
-	if prt then
-		print( sep )
-	end
-
-	for i = 1, self.Dim[1] do
-		local row = self:GetRow( i )
-
-		if prt then
-			print( row )
-			print( sep )
-		else
-			str = str.."\n"..row.."\n"..sep
+function StringTable:ToString( dest )
+	if self.NumColumns <= 0 then
+		if dest then
+			dest[1] = ""
+			return dest
 		end
+
+		return ""
 	end
 
-	return str
-end
+	local total_length = 1
 
-function StringTable:GetRow( y )
-	local col = "|"
+	for i, v in ipairs( self.Columns ) do
+		total_length = total_length + v.length + 3
+	end
 
-	for x = 1, self.Dim[2] do
-		local len = self.Data[y][x]
-		if len > 0 then
-			local w = self.Columns[x] or 0
+	local border = string.rep( "-", total_length ).."\n"
+	local separator = "|"..string.rep( "-", total_length - 2 ).."|\n"
 
-			if len > 1 then
-				for i = 1, len - 1 do
-					w = w + self.Columns[x + i] or 0
-				end
+	local current = border
+	local current_len = string.len( current )
 
-				w = w + len - 1
-			end
+	local last = #self.Rows
+	for i = 1, last do
+		local tmp = self:ParseRow( i )
 
-			local cont_tab = self.Content[y] and self.Content[y][x]
-			local content = cont_tab and self.Content[y][x][1] or ""
-			local align = false
+		if i == last then
+			tmp = tmp..border
+		elseif i == 1 or self.Split then
+			tmp = tmp..separator
+		end
 
-			if cont_tab and cont_tab[2] then
-				align = string.match( cont_tab[2], "[%<%>%&][%<%>%&]" )
-			end
-
-			if align == "<>" then
-				local dif = w - string.len( content )
-
-				local left = math.floor( dif * 0.5 )
-				local right = dif - left
-
-				local str = string.format( "%%%is%s", w - right, string.rep( " ", right ) )
-				col = col..string.format( str, content ).."|"
+		local tmp_len = string.len( tmp )
+		if current_len + tmp_len > 4096 then
+			if dest then
+				table.insert( dest, current )
+				current = tmp
+				current_len = tmp_len
 			else
-				local str = string.format( "%%%s%is", align == "<&" and "-" or "", w )
-				col = col..string.format( str, content ).."|"
+				return current.."..."
 			end
+		else
+			current = current..tmp
+			current_len = current_len + tmp_len
 		end
 	end
 
-	return col
+	if dest then
+		table.insert( dest, current )
+		return dest
+	end
+
+	return current
 end
 
 function StringTable:Print()
-	self:Get( true )
+	for i, v in ipairs( self:ToString( {} ) ) do
+		Msg( v.."\n" )
+	end
 end
 
-setmetatable( StringTable, { __call = StringTable.New } )
+StringTable.__tostring = StringTable.ToString
 
 --[[-------------------------------------------------------------------------
-Thousands
+General functions
 ---------------------------------------------------------------------------]]
+function string.ExactLength( str, len, alignRight )
+	local sl = string.len( str )
+
+	if sl == len then
+		return str
+	elseif sl > len then
+		return string.sub( str, 1, len )
+	else
+		local s = string.rep( " ", len - sl )
+
+		if alignRight then
+			return s..str
+		else
+			return str..s
+		end
+	end
+end
+
 function string.SplitThousands( number, separator )
 	local format = "%1"..( separator or " " )
 
@@ -244,9 +254,6 @@ function string.SplitThousands( number, separator )
 	//return left..string.reverse( string.gsub( string.reverse( num ), "(%d%d%d)", format ) )..right
 end
 
---[[-------------------------------------------------------------------------
-UUID
----------------------------------------------------------------------------]]
 function string.UUID()
 	return string.gsub( "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx", "[xy]", function( c )
 		return string.format( "%x", c == "x" and SLCRandom( 0x00, 0x0f ) or SLCRandom( 0x08, 0x0b ) )

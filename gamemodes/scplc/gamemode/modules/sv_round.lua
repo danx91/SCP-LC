@@ -115,12 +115,11 @@ local function DestroyTimers()
 end
 
 local function CleanupPlayers()
+	SCPTeams.ResetScore()
+
 	for i, v in ipairs( player.GetAll() ) do
 		if v:GetAdminMode() then continue end
 
-		v._SLCXPCategories = {}
-
-		v.Logger:Reset( true )
 		v:Cleanup( false, true )
 		v:ResetDailyBonus()
 
@@ -143,6 +142,7 @@ local function ResetEvents()
 
 	ROUND.winners = {}
 
+	ClearRoundStats()
 	ClearRoundProperties()
 	ClearQueue()
 	ClearSCPHooks()
@@ -206,7 +206,6 @@ function RestartRound()
 	print( string.format( "Players cleaned - %i ms!", util.TimerCycle() ) )
 
 	ResetEvents()
-	ResetRoundStats()
 	print( string.format( "Round data reset - %i ms!", util.TimerCycle() ) )
 
 	game.CleanUpMap( false, {}, function()
@@ -216,7 +215,7 @@ function RestartRound()
 		print( string.format( "Everything is ready -  total time: %.5f ms!", ( SysTime() - t_start ) * 1000 ) )
 
 		if #GetActivePlayers() < CVAR.slc_min_players:GetInt() then
-			MsgC( Color( 255, 50, 50 ), "Not enough players to start round! Round restart canceled!\n" )
+			SLCErrorMessage( "Not enough players to start round! Round restart canceled!" )
 			ROUND.active = false
 
 			for i, v in ipairs( player.GetAll() ) do
@@ -353,7 +352,7 @@ function CheckRoundStart()
 
 				if !ROUND.active then
 					if #GetActivePlayers() < CVAR.slc_min_players:GetInt() then
-						MsgC( Color( 255, 50, 50 ), "Round start terminated due to not enough players!" )
+						SLCErrorMessage( "Round start terminated due to not enough players!" )
 						return
 					end
 
@@ -388,7 +387,7 @@ function GM:SLCPostround( winner )
 		time = CVAR.slc_time_postround:GetInt(),
 		winner = winner,
 	}, nil, false, true )*/
-	
+
 	local specialinfo
 
 	if winner != true then
@@ -480,7 +479,6 @@ function GM:SLCPostround( winner )
 
 	for i, v in ipairs( player.GetAll() ) do
 		local frags = v:Frags()
-		v:SetFrags( 0 )
 
 		if frags > 0 then
 			local xp = pxp * frags
@@ -496,12 +494,7 @@ function GM:SLCPostround( winner )
 			v:AddXP( winxp, "win" )
 			PlayerMessage( "winxp$"..winxp, v )
 		end
-	end
 
-	--Send xp summary
-	for i, v in ipairs( player.GetAll() ) do
-		net.Start( "SLCXPSummary" )
-			net.WriteTable( v:ExperienceSummary() )
-		net.Send( v )
+		v:ExperienceSummary()
 	end
 end

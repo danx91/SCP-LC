@@ -411,6 +411,7 @@ Omega Warhead
 OMEGA_DESTROY = OMEGA_DESTROY or {}
 
 local function omega_shelter()
+	local escape_stat = GetRoundStat( "escapes" )
 	local xp = CVAR.slc_xp_omega_shelter:GetInt()
 	for i, v in ipairs( SCPTeams.GetPlayersByInfo( SCPTeams.INFO_HUMAN ) ) do
 		if v:GetPos():WithinAABox( OMEGA_SHELTER[1], OMEGA_SHELTER[2] ) then
@@ -433,7 +434,7 @@ local function omega_shelter()
 			v:SetSCPClass( "spectator" )
 			v.DeathScreen = CurTime() + INFO_SCREEN_DURATION
 
-			AddRoundStat( "escapes" )
+			escape_stat:AddValue( 1, { player = v, type = "omega" } )
 			//print( "SHELTER ESCAPE", v )
 		end
 	end

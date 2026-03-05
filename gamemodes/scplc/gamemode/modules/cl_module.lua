@@ -73,7 +73,7 @@ function GM:RenderScreenspaceEffects()
 		local hp = ply:Health()
 		local extra = ply:GetExtraHealth()
 		local t = ply:SCPTeam()
-		
+
 		if ply:Alive() and t != TEAM_SPEC and t != TEAM_SCP and hp < 25 and extra <= 0 then
 			local scale = 1 - hp / 25, 0.2
 			clr.colour = clr.colour * ( 1 - scale )
@@ -120,7 +120,7 @@ function GM:RenderScreenspaceEffects()
 
 	render.UpdateScreenEffectTexture()
 	color_mat:SetTexture( "$fbtexture", render.GetScreenEffectTexture() )
-	
+
 	color_mat:SetFloat( "$pp_colour_mulr", clr.mul_r )
 	color_mat:SetFloat( "$pp_colour_mulg", clr.mul_g )
 	color_mat:SetFloat( "$pp_colour_mulb", clr.mul_b )
@@ -133,7 +133,7 @@ function GM:RenderScreenspaceEffects()
 	color_mat:SetFloat( "$pp_colour_contrast", clr.contrast )
 	color_mat:SetFloat( "$pp_colour_colour", clr.colour )
 	color_mat:SetFloat( "$pp_colour_inv", clr.inv )
-	
+
 	render.SetMaterial( color_mat )
 	render.DrawScreenQuad()
 
@@ -169,7 +169,7 @@ net.Receive( "PlayerBlink", function( len )
 	endblink = CurTime() + duration
 	nextblink = CurTime() + delay
 
-	HUDNextBlink = nextblink 
+	HUDNextBlink = nextblink
 	HUDBlink = delay - duration
 
 	hook.Run( "SLCBlink", ply, duration, delay )
@@ -321,7 +321,7 @@ function CalcThirdPersonView( ply, view, dist, ang )
 end
 
 function GM:CreateMove( cmd )
-	
+	//
 end
 
 hook.Add( "SLCRegisterSettings", "SLCSpeedFOV", function()
@@ -405,7 +405,7 @@ function GM:CalcViewModelView( wep, vm, old_pos, old_ang, pos, ang )
 end
 
 function  GM:SetupWorldFog()
-	
+
 end
 
 function GM:PreRender()
@@ -545,3 +545,15 @@ concommand.Add( "slc_debuginfo_cl", function( ply, cmd, args )
 	PrintTable( v.EFFECTS, 2 )
 	print( "==================" )
 end )
+
+--[[-------------------------------------------------------------------------
+Bleeding-Edge Show
+---------------------------------------------------------------------------]]
+if BLEEDING_EDGE then
+	local be_color = Color( 255, 255, 255, 15 )
+
+	hook.Add( "DrawOverlay", "SLCBleedingEdge", function()
+		local _, th = draw.SimpleText( VERSION.." BLEEDING EDGE v"..BLEEDING_EDGE, "SCPHUDVBig", 16, 16, be_color, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
+		draw.SimpleText( "This is experimental release, things might not work", "SCPHUDSmall", 16, 16 + th, be_color, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
+	end )
+end

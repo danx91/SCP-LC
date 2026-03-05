@@ -37,7 +37,7 @@ function SWEP:Deploy()
 
 	local owner = self:GetOwner()
 	if owner:GetProperty( "slc_1025_disease" ) or owner:GetSCP714() then return end
-	
+
 	self:Disease()
 
 	local cb = callbacks[self:GetDisease()]
@@ -173,7 +173,7 @@ end )
 local function gen_effect_cb( name )
 	return function( ply )
 		ply:ApplyEffect( name )
-	
+
 		ply:SetProperty( "slc_1025_disease", {
 			id = name,
 			remove = function()
@@ -280,6 +280,8 @@ EFFECTS.RegisterEffect( "throm", {
 	hide = true,
 } )
 
+local bleed_stat = GetRoundStat( "bleeding" )
+
 EFFECTS.RegisterEffect( "light_bleeding", {
 	duration = 10,
 	stacks = 0,
@@ -316,10 +318,12 @@ EFFECTS.RegisterEffect( "light_bleeding", {
 
 			if IsValid( att ) and att:CheckSignature( args[3] ) then
 				dmg:SetAttacker( att )
+			else
+				att = NULL
 			end
-			
+
 			ply:TakeDamageInfo( dmg )
-			AddRoundStat( "bleed", args[2] )
+			bleed_stat:AddValue( args[2], { effect = "light_bleeding", attacker = att } )
 		else
 			ply:EmitSound( "SLCEffects.Bleeding" )
 		end

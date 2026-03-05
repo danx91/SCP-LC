@@ -122,6 +122,15 @@ function SWEP:Reload()
 	self:DamageEvent()
 end
 
+function SWEP:AddRoundStat( num, context )
+	if !self.Stat then return end
+
+	context = context or {}
+	context.swep = self
+
+	self.Stat:AddValue( num, context )
+end
+
 SWEP.DamageEventCD = 0
 function SWEP:DamageEvent()
 	if ROUND.preparing or self.DisableDamageEvent then return end

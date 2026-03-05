@@ -167,7 +167,7 @@ function ENT:Think()
 						if !IsValid( attacker ) then
 							attacker = self
 						elseif !attacker:CheckSignature( self:GetOwnerSignature() ) then
-							attacker:SetProperty( "kill_team_override", self.OwnerTeam )
+							attacker:SetProperty( "dmg_team_override", self.OwnerTeam )
 						end
 
 						self:FireBullets{
@@ -187,7 +187,7 @@ function ENT:Think()
 						}
 
 						if attacker:IsPlayer() then
-							attacker:SetProperty( "kill_team_override", nil )
+							attacker:SetProperty( "dmg_team_override", nil )
 						end
 
 						self:EmitSound( "Turret.Shot" )
@@ -465,22 +465,24 @@ if SERVER then
 
 	function ENT:FindTarget( ply )
 		local mode = self:GetMode()
-		if mode > 1 then
-			local shoot_pos = self:GetPos()
-			local shoot_ang = self:GetAngles()
+		if mode <= 0 then return end
 
-			if IsValid( ply ) and ply:Alive() and test_target( ply:GetModel(), mode, ply ) then
-				if turret_test_range_vis( self, ply, shoot_pos, shoot_ang, self.VerticalRange, self.HorizontalRange ) then
-					return ply
-				end
-			end
+		local shoot_pos = self:GetPos()
+		local shoot_ang = self:GetAngles()
 
-			for i, v in ipairs( SCPTeams.GetPlayersByInfo( SCPTeams.INFO_ALIVE, true ) ) do
-				if test_target( v:GetModel(), mode, v ) then
-					if turret_test_range_vis( self, v, shoot_pos, shoot_ang, self.VerticalRange, self.HorizontalRange ) then
-						return v
-					end
-				end
+		if IsValid( ply ) and ply:SCPTeam() != TEAM_SPEC and ply:Alive()
+			and test_target( ply:GetModel(), mode, ply )
+			and turret_test_range_vis( self, ply, shoot_pos, shoot_ang, self.VerticalRange, self.HorizontalRange )
+		then
+			return ply
+		end
+
+		for i, v in ipairs( player.GetAll() ) do
+			if v:SCPTeam() != TEAM_SPEC and v:Alive()
+				and test_target( v:GetModel(), mode, v )
+				and turret_test_range_vis( self, v, shoot_pos, shoot_ang, self.VerticalRange, self.HorizontalRange )
+			then
+				return v
 			end
 		end
 	end

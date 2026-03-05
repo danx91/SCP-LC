@@ -1,5 +1,6 @@
 SWEP.Base 			= "weapon_scp_base"
 SWEP.PrintName		= "SCP-106"
+SWEP.Stat 			= RoundStat( "106" ):Show( true, 0, 4 )
 
 SWEP.HoldType		= "normal"
 
@@ -108,7 +109,7 @@ function SWEP:Think()
 
 			self:AddScore( 1 )
 			self:SetTeeth( self:GetTeeth() + 1 )
-			AddRoundStat( "106" )
+			self:AddRoundStat()
 		end
 
 		return

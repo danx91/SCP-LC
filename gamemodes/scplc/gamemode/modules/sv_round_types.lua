@@ -49,12 +49,13 @@ AddRoundType( "normal", {
 		PrintSCPNotice()
 	end,
 	endcheck = function( self )
-		local plys = GetAlivePlayers()
 		local teams = {}
 		local num = 0
 
-		for k, v in pairs( plys ) do
+		for k, v in pairs( player.GetAll() ) do
 			local t = v:SCPTeam()
+			if t == TEAM_SPEC or !v:Alive() then continue end
+
 			if !teams[t] then
 				teams[t] = true
 				num = num + 1
@@ -78,48 +79,42 @@ AddRoundType( "normal", {
 	getwinner = function( self )
 		if #player.GetAll() < CVAR.slc_min_players:GetInt() then return true end
 
-		local plys = GetAlivePlayers()
 		local teams = {}
 		local num = 0
 
-		for k, v in pairs( plys ) do
+		for k, v in pairs( player.GetAll() ) do
 			local t = v:SCPTeam()
+			if t == TEAM_SPEC or !v:Alive() then continue end
+
 			if !teams[t] then
 				teams[t] = true
 				num = num + 1
 			end
 		end
 
-		//if num == 0 then
-			//return false
-		//else
+		print( "Check end", num )
+		PrintTable( teams )
+
+		if num == 0 then
+			return false
+		else
 			local hs = SCPTeams.HighestScore()
+			if !hs then return false end
 
-			if hs then
-				if istable( hs ) then
-					local allies = SCPTeams.GetAllies( hs[1], true )
-					local lookup = CreateLookupTable( allies )
-
-					for k, v in pairs( hs ) do
-						if !lookup[v] then
-							return false
-						end
-					end
-
-					return allies
-				else
-					local winner = SCPTeams.GetAllies( hs, true )
-
-					if #winner == 1 then
-						winner = winner[1]
-					end
-
-					return winner
+			local group = SCPTeams.GetTeamsByGroup( hs[1] )
+			for i, v in ipairs( group ) do
+				print( "Checking team", v )
+				if teams[v] then
+					num = num - 1
 				end
-			else
-				return false
 			end
-		//end
+
+			print( "DONE", num )
+			if num <= 0 then
+				PrintTable( group )
+				return group
+			end
+		end
 	end
 }, "dull" )
 

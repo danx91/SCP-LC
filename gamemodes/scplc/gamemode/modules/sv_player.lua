@@ -26,7 +26,7 @@ function PLAYER:Cleanup( norem, round_reset )
 
 	self:ResetProperties( round_reset )
 	self:ClearSpeedStack()
-	self.Logger:Reset()
+	self.Logger:Reset( round_reset )
 
 	self:SetExtraHealth( 0 )
 	self:SetMaxExtraHealth( 0 )
@@ -86,6 +86,10 @@ function PLAYER:Cleanup( norem, round_reset )
 	local sig = math.floor( CurTime() )
 	self:SetTimeSignature( sig )
 
+	if round_reset then
+		self:SetFrags( 0 )
+	end
+
 	net.Ping( "SLCPlayerSync", sig, self )
 
 	net.Start( "PlayerCleanup" )
@@ -124,7 +128,7 @@ local function give_player_weapon( ply, class, ammo )
 	if loadout then
 		local l_wep, l_ammo = GetLoadoutWeapon( loadout, true )
 		if !l_wep then return end
-	
+
 		class = l_wep
 		ammo = ammo or l_ammo
 	end
@@ -279,11 +283,11 @@ local function setup_player_internal( self, class, spawn )
 	if class.vest then
 		self:EquipVest( class.vest, true )
 	end
-	
+
 	if class.callback then
 		class.callback( self, class )
 	end
-	
+
 	hook.Run( "SLCPlayerSetup", self )
 end
 
@@ -324,7 +328,7 @@ function PLAYER:EquipVest( vest, silent, dur )
 		if !hook.Run( "SLCArmorPickedUp", self ) then
 			self:SetVest( vest )
 			self:SetVestDurability( dur or data.durability or -1 )
-			
+
 			local use_model
 			local callback = VEST.GetCallback( vest )
 			if callback then
@@ -348,26 +352,26 @@ function PLAYER:EquipVest( vest, silent, dur )
 					if isstring( k ) then
 						k = self:FindBodygroupByName( k )
 					end
-		
+
 					if k < 0 then continue end
-		
+
 					if v == "?" then
 						v = SLCRandom( self:GetBodygroupCount( k ) )
 					elseif isstring( v ) then
 						local r1, r2 = string.match( v, "^(%d+):(%d+)$" )
-		
+
 						r1 = tonumber( r1 )
 						r2 = tonumber( r2 )
-		
+
 						if r1 and r2 then
 							v = SLCRandom( r1, r2 )
 						else
 							v = tonumber( v )
 						end
 					end
-		
+
 					if !isnumber( v ) then continue end
-		
+
 					self:SetBodygroup( k, v )
 				end
 			end
@@ -538,7 +542,7 @@ function PLAYER:CreatePlayerRagdoll( disable_loot )
 
 		local num = #loot
 		local w, h = 3, 2
-		
+
 		if num > 12 then
 			w, h = 5, math.ceil( num / w )
 		elseif num > 10 then
@@ -587,7 +591,7 @@ function PLAYER:CreatePlayerRagdoll( disable_loot )
 	if t != TEAM_SCP then
 		self._RagEntity = rag
 	end
-	
+
 	return rag
 end
 
@@ -1182,7 +1186,7 @@ function PLAYER:MakeAFK( timeout )
 	self.SLCAFKTimer = rt + 10
 	self:SetIsAFK( true )
 	PlayerMessage( "afk", self )
-	
+
 	if timeout then
 		self.SoftAFK = rt + timeout
 	end
@@ -1211,7 +1215,7 @@ Timer( "SLCAFKCheck", 10, 0, function( self, n )
 				v:AddTimer( "SLCAFKSlay", 15, 1, function()
 					//print( "fn", !v:Alive(), afk_autoslay <= 0, !v.SLCAFKTimer, v.SLCAFKTimer + afk_autoslay >= rt )
 					if !v:Alive() or afk_autoslay <= 0 or !v.SLCAFKTimer or v.SLCAFKTimer + afk_autoslay >= rt then return end
-					
+
 					v:SkipNextKillRewards()
 					v:Kill()
 					v:MakeAFK()
@@ -1378,12 +1382,12 @@ function PLAYER:PlayStepSound( no_update )
 
 	local mv = self:GetMoveType()
 	if mv != MOVETYPE_WALK and mv != MOVETYPE_STEP and mv != MOVETYPE_LADDER then return end
-	
+
 	local foot = self.slc_foot == 0 and 1 or 0
 	local snd = foot == 0 and "Default.StepLeft" or "Default.StepRight"
-	
+
 	self.slc_foot = foot
-	
+
 	if mv == MOVETYPE_LADDER then
 		snd = foot == 0 and "Ladder.StepLeft" or "Ladder.StepRight"
 	else
@@ -1406,7 +1410,7 @@ function PLAYER:PlayStepSound( no_update )
 			snd = self.slc_foot == 0 and surf.stepLeftSound or surf.stepRightSound
 		end
 	end
-	
+
 	if self:Crouching() then
 		snd = snd.."Crouch"
 	elseif self:GetRunSpeed() == self:GetWalkSpeed() or !self:KeyDown( IN_SPEED ) then
@@ -1479,6 +1483,8 @@ function PLAYER:AddLevel( lvl )
 end
 
 local xp_scale_mfn = function( tab, mul, cat )
+	if !mul or mul < 0 then return end
+
 	cat = cat or tab.main_category
 
 	if !tab.categories[cat] then
@@ -1493,13 +1499,10 @@ function PLAYER:AddXP( xp, category )
 	if !isnumber( xp ) then return end
 	category = category or "general"
 
-	if !self._SLCXPCategories then
-		self._SLCXPCategories = {}
-	end
-
 	//local lvlxp = CVAR.slc_xp_level:GetInt()
 	//local lvlinc = CVAR.slc_xp_increase:GetInt()
 
+	local xp_categories = self:GetProperty( "slc_xp_categories", {} )
 	local plyxp = self:PlayerXP()
 	local level = self:PlayerLevel()
 	local orig_xp = plyxp
@@ -1519,7 +1522,7 @@ function PLAYER:AddXP( xp, category )
 	hook.Run( "SLCScaleXP", self, ref )
 
 	for k, v in pairs( ref.categories ) do
-		self._SLCXPCategories[k] = ( self._SLCXPCategories[k] or 0 ) + math.floor( xp * v )
+		xp_categories[k] = ( xp_categories[k] or 0 ) + math.floor( xp * v )
 	end
 
 	xp = math.floor( xp * ref.value )
@@ -1533,7 +1536,7 @@ function PLAYER:AddXP( xp, category )
 		end
 
 		plyxp = plyxp + bonus
-		self._SLCXPCategories.daily = ( self._SLCXPCategories.daily or 0 ) + bonus
+		xp_categories.daily = ( xp_categories.daily or 0 ) + bonus
 
 		daily_bonus = daily_bonus - bonus
 		self:SetDailyBonus( daily_bonus )
@@ -1561,11 +1564,16 @@ function PLAYER:AddXP( xp, category )
 	return xp
 end
 
-function PLAYER:ExperienceSummary()
-	local tmp = self._SLCXPCategories
-	self._SLCXPCategories = {}
+function PLAYER:ExperienceSummary( no_clear )
+	local categories = self:GetProperty( "slc_xp_categories", {} )
 
-	return tmp or {}
+	if !no_clear then
+		self:SetProperty( "slc_xp_categories", {} )
+	end
+
+	net.Start( "SLCXPSummary" )
+		net.WriteTable( categories )
+	net.Send( self )
 end
 
 function PLAYER:ResetDailyBonus( force )
@@ -1591,17 +1599,26 @@ function PLAYER:AddSanity( s )
 	self:SetSanity( math.Clamp( sanity + s, 0, maxsanity ) )
 end
 
-function PLAYER:AddHealth( num )
-	local max = self:GetMaxHealth()
-	local hp = self:Health() + num
+function PLAYER:AddHealth( heal, healer )
+	local hp = self:Health()
+	local hp_missing = self:GetMaxHealth() - hp
 
-	if hp > max then
-		hp = max
+	if hp_missing <= 0 then
+		return hp, 0
 	end
 
-	self:SetHealth( hp )
+	if heal > hp_missing then
+		heal = hp_missing
+	end
 
-	return hp
+	local new_hp = hp + heal
+	self:SetHealth( new_hp )
+
+	if IsValid( healer ) then
+		heal = self.Logger:HealingEvent( healer, heal, hp_missing )
+	end
+
+	return new_hp, heal
 end
 
 function PLAYER:SkipNextKillRewards()

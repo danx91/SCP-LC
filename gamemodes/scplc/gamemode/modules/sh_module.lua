@@ -7,9 +7,10 @@ GM.Website 	= "https://github.com/danx91/SCP-LC"
 --[[-------------------------------------------------------------------------
 Global values
 ---------------------------------------------------------------------------]]
-DATE = "23/02/2026"
-SIGNATURE = "b001102r0"
+DATE = "04/03/2026"
+SIGNATURE = "b001200r0"
 VERSION = SLCVersion().name
+BLEEDING_EDGE = 1
 
 SCPS = {}
 CLASSES = {}
@@ -204,15 +205,15 @@ local timeScale = GetConVar( "host_timescale" )
 
 function GM:EntityEmitSound( t )
 	local p = t.Pitch
-	
+
 	if ( game.GetTimeScale() != 1 ) then
 		p = p * game.GetTimeScale()
 	end
-	
+
 	if ( timeScale:GetFloat() != 1 and cheats:GetBool() ) then
 		p = p * timeScale:GetFloat()
 	end
-	
+
 	if p != t.Pitch then
 		t.Pitch = math.Clamp( p, 0, 255 )
 		return true
@@ -227,11 +228,11 @@ end
 Commands
 ---------------------------------------------------------------------------]]
 slc_cmd.AddCommand( "slc_destroy_gatea", function( ply )
-	if !SERVER or !IsValid( ply ) or !ply.ClassData or !ply.ClassData.support or ply:GetPos():DistToSqr( POS_EXPLODE_A ) > 62500 then return end 
+	if !SERVER or !IsValid( ply ) or !ply.ClassData or !ply.ClassData.support or ply:GetPos():DistToSqr( POS_EXPLODE_A ) > 62500 then return end
 	ExplodeGateA( ply )
 end, 30 )
 
 slc_cmd.AddCommand( "slc_escort", function( ply )
-	if !SERVER or !IsValid( ply ) then return end 
+	if !SERVER or !IsValid( ply ) then return end
 	PlayerEscort( ply )
 end, 10 )

@@ -1,13 +1,24 @@
 SCPTeams = {
 	ALL = {},
-	REG = {},
-	SCORE = {}
+	REGISTRY = {},
+	SCORE = {},
 }
 
 local info_num = 0
-function SCPTeams.AddTeamInfo( name )
-	local key = "INFO_"..string.upper( name )
 
+--[[---------------------------------------------------------------------------
+SCPTeams.AddTeamInfo( name )
+
+Registers info flag that can be added to teams
+
+@param		[string]		name				Name of the info, SCPTeams.INFO_[NAME] will be created (name will be converted to upper case)
+
+@return		[nil]			-					-
+---------------------------------------------------------------------------]]--
+function SCPTeams.AddTeamInfo( name )
+	if !isstring( name ) then argerror( 1, "AddTeamInfo", "string", type( name ) ) end
+
+	local key = "INFO_"..string.upper( name )
 	if SCPTeams[key] then
 		return SCPTeams[key]
 	end
@@ -25,39 +36,139 @@ function SCPTeams.AddTeamInfo( name )
 	return info
 end
 
-function SCPTeams.Register( name, info, clr, reward, can_escape )
-	local n = table.insert( SCPTeams.REG, {
-		info = info or 0,
-		color = clr, name = name,
-		reward = math.floor( reward ),
-		can_escape = can_escape,
+--[[---------------------------------------------------------------------------
+SCPTeams.Register( name, data )
+
+Registers new team
+
+@param		[string]		name				Team name, global TEAM_[NAME] will be created (name will be converted to upper case)
+@param		[TeamData]		data				Team data
+
+@return		[nil]			-					-
+
+Types:
+	TeamData [table]
+		@field		[Color]					color				Team color
+		@field		[number]				reward				Initial reward for killing class in this team
+		@field		[number]				reward_max			Optional, maximum reward for killing class in this team, defaults to 5x reward
+		@field		[string]				group				Optional, team group for automatic ally relation and common score calculation, defaults to name
+		@field		[boolean]				can_escape			Optional, whether this team can naturally escape, defaults to false
+		@field		[number/table]			info				Optional, teams info flag, either number or table of flags (bit.bor will be used), defaults to 0
+---------------------------------------------------------------------------]]--
+function SCPTeams.Register( name, data )
+	if !isstring( name ) then argerror( 1, "Register", "string", type( name ) ) end
+	if !istable( data ) then argerror( 2, "Register", "table", type( data ) ) end
+
+	if !IsColor( data.color ) then fielderror( "color", 2, "Register", "Color", type( data.color ) ) end
+	if !isnumber( data.reward ) then fielderror( "reward", 2, "Register", "number", type( data.reward ) ) end
+
+	if data.reward_max and !isnumber( data.reward_max ) then fielderror( "reward_max", 2, "Register", "number", type( data.reward_max ) ) end
+	if data.group and !isstring( data.group ) then fielderror( "group", 2, "Register", "string", type( data.group ) ) end
+	if data.can_escape and !isbool( data.can_escape ) then fielderror( "can_escape", 2, "Register", "boolean", type( data.can_escape ) ) end
+	if data.info and !isnumber( data.info ) and !istable( data.info ) then fielderror( "info", 2, "Register", "number or table", type( data.info ) ) end
+
+	name = string.upper( name )
+
+	local info = 0
+	if istable( data.info ) then
+		info = next( data.info ) and bit.bor( unpack( data.info ) ) or 0
+	elseif data.info then
+		info = data.info
+	end
+
+	local tab = {
+		name = name,
+		color = data.color,
+		reward = data.reward,
+		reward_max = data.reward_max or ( data.reward * 5 ),
+		group = data.group or name,
+		can_escape = data.can_escape or false,
+		info = info,
+
 		relations = {},
 		escort = {},
 		escorted_by = {},
-	} )
+	}
 
-	_G["TEAM_"..name] = n
-	table.insert( SCPTeams.ALL, n )
+	local index = table.insert( SCPTeams.REGISTRY, tab )
+
+	table.insert( SCPTeams.ALL, index )
+	_G["TEAM_"..name] = index
 end
 
+--[[---------------------------------------------------------------------------
+SCPTeams.GetAll()
+
+Gets all teams
+
+@return		[table]			teams			Table containing all teams
+---------------------------------------------------------------------------]]--
 function SCPTeams.GetAll()
 	return SCPTeams.ALL
 end
 
+--[[-------------------------------------------------------------------------
+Team functions
+---------------------------------------------------------------------------]]
 function SCPTeams.AddInfo( team, info )
-	local t = SCPTeams.REG[team]
-	if t then
-		t.info = bit.bor( t.info, info )
-	end
+	local data = SCPTeams.REGISTRY[team]
+	if !data then return end
+
+	data.info = bit.bor( data.info, info )
 end
 
 function SCPTeams.RemoveInfo( team, info )
-	local t = SCPTeams.REG[team]
-	if t then
-		t.info = bit.band( t.info, bit.bnot( info ) )
-	end
+	local data = SCPTeams.REGISTRY[team]
+	if !data then return end
+
+	data.info = bit.band( data.info, bit.bnot( info ) )
 end
 
+function SCPTeams.HasInfo( team, info )
+	local data = SCPTeams.REGISTRY[team]
+	if !data then return false end
+
+	return bit.band( data.info, info ) == info
+end
+
+function SCPTeams.InGroup( team, group )
+	local data = SCPTeams.REGISTRY[team]
+	if !data then return false end
+
+	return data.group == group
+end
+
+function SCPTeams.GetName( team )
+	local data = SCPTeams.REGISTRY[team]
+	if !data then return false end
+
+	return data.name
+end
+
+function SCPTeams.GetColor( team )
+	local data = SCPTeams.REGISTRY[team]
+	if !data then return false end
+
+	return data.color
+end
+
+function SCPTeams.GetReward( team )
+	local data = SCPTeams.REGISTRY[team]
+	if !data then return false end
+
+	return data.reward, data.reward_max
+end
+
+function SCPTeams.CanEscape( team )
+	local data = SCPTeams.REGISTRY[team]
+	if !data then return false end
+
+	return data.can_escape
+end
+
+--[[-------------------------------------------------------------------------
+Team relations
+---------------------------------------------------------------------------]]
 function SCPTeams.SetupAllies( tab, ally )
 	if !istable( tab ) then
 		tab = { tab }
@@ -72,7 +183,7 @@ function SCPTeams.SetupAllies( tab, ally )
 	end
 
 	for k, v in pairs( tab ) do
-		local t = SCPTeams.REG[v]
+		local t = SCPTeams.REGISTRY[v]
 
 		for _k, _v in pairs( ally ) do
 			if v != _v then
@@ -96,7 +207,7 @@ function SCPTeams.SetupNeutral( tab, neutral )
 	end
 
 	for k, v in pairs( tab ) do
-		local t = SCPTeams.REG[v]
+		local t = SCPTeams.REGISTRY[v]
 
 		for _k, _v in pairs( neutral ) do
 			if v != _v then
@@ -120,7 +231,7 @@ function SCPTeams.SetupEnemy( tab, enemy )
 	end
 
 	for k, v in pairs( tab ) do
-		local t = SCPTeams.REG[v]
+		local t = SCPTeams.REGISTRY[v]
 
 		for _k, _v in pairs( enemy ) do
 			if v != _v then
@@ -130,26 +241,48 @@ function SCPTeams.SetupEnemy( tab, enemy )
 	end
 end
 
-function SCPTeams.SetupEscort( team, tab )
-	tab = istable( tab ) and tab or { tab }
+function SCPTeams.Relation( team1, team2 )
+	if team1 == team2 then return true end
 
-	local t = SCPTeams.REG[team]
-	if !t then return end
-
-	for k, v in pairs( tab ) do
-		t.escort[v] = true
-
-		local t2 = SCPTeams.REG[v]
-		if !t2 then continue end
-
-		t2.escorted_by[team] = true
+	local t = SCPTeams.REGISTRY[team1]
+	if t then
+		return t.relations[team2]
 	end
+
+	return false
+end
+
+function SCPTeams.PlayerDamageRelation( ply1, ply2 )
+	local prevent_rdm = ply1:GetProperty( "prevent_rdm" )
+	local override = ply1:GetProperty( "relation_override" )
+
+	if override then
+		local use, result = override( ply1, ply2 )
+		if use then
+			if result == nil and prevent_rdm then
+				return false
+			end
+
+			return result
+		end
+	end
+
+	local result = SCPTeams.Relation(
+		ply1:GetProperty( "dmg_team_override" ) or ply1:SCPTeam(),
+		ply2:GetProperty( "dmg_team_override" ) or ply2:SCPTeam()
+	)
+
+	if result == nil and prevent_rdm then
+		return false
+	end
+
+	return result
 end
 
 function SCPTeams.IsEnemy( team1, team2 )
 	if team1 == team2 then return false end
 
-	local t = SCPTeams.REG[team1]
+	local t = SCPTeams.REGISTRY[team1]
 	if t then
 		return t.relations[team2] == nil
 	end
@@ -160,7 +293,7 @@ end
 function SCPTeams.IsAlly( team1, team2 )
 	if team1 == team2 then return true end
 
-	local t = SCPTeams.REG[team1]
+	local t = SCPTeams.REGISTRY[team1]
 	if t then
 		return t.relations[team2] == true
 	end
@@ -171,7 +304,7 @@ end
 function SCPTeams.IsNeutral( team1, team2 )
 	if team1 == team2 then return true end
 
-	local t = SCPTeams.REG[team1]
+	local t = SCPTeams.REGISTRY[team1]
 	if t then
 		return t.relations[team2] == false
 	end
@@ -180,7 +313,7 @@ function SCPTeams.IsNeutral( team1, team2 )
 end
 
 function SCPTeams.GetAllies( team, include_self )
-	local t = SCPTeams.REG[team]
+	local t = SCPTeams.REGISTRY[team]
 
 	if t then
 		local allies = {}
@@ -199,36 +332,55 @@ function SCPTeams.GetAllies( team, include_self )
 	end
 end
 
+--[[-------------------------------------------------------------------------
+Escort rules
+---------------------------------------------------------------------------]]
+function SCPTeams.SetupEscort( team, tab )
+	tab = istable( tab ) and tab or { tab }
+
+	local t = SCPTeams.REGISTRY[team]
+	if !t then return end
+
+	for k, v in pairs( tab ) do
+		t.escort[v] = true
+
+		local t2 = SCPTeams.REGISTRY[v]
+		if !t2 then continue end
+
+		t2.escorted_by[team] = true
+	end
+end
+
 function SCPTeams.CanEscort( team1, team2 )
-	if !SCPTeams.REG[team1] then return false end
-	if !next( SCPTeams.REG[team1].escort ) then return false end
+	if !SCPTeams.REGISTRY[team1] then return false end
+	if !next( SCPTeams.REGISTRY[team1].escort ) then return false end
 
 	if team2 == true then
 		return true
 	end
 
-	return SCPTeams.REG[team1].escort[team2]
+	return SCPTeams.REGISTRY[team1].escort[team2]
 end
 
 function SCPTeams.CanBeEscorted( team1, team2 )
-	if !SCPTeams.REG[team1] then return false end
-	if !next( SCPTeams.REG[team1].escorted_by ) then return false end
+	if !SCPTeams.REGISTRY[team1] then return false end
+	if !next( SCPTeams.REGISTRY[team1].escorted_by ) then return false end
 
 	if team2 == true then
 		return true
 	end
 
-	if !SCPTeams.REG[team2] then return false end
-	return SCPTeams.REG[team2].escort[team1]
+	if !SCPTeams.REGISTRY[team2] then return false end
+	return SCPTeams.REGISTRY[team2].escort[team1]
 end
 
 function SCPTeams.GetEscort( team )
-	if !SCPTeams.REG[team] then return {} end
-	if !next( SCPTeams.REG[team].escort ) then return {} end
+	if !SCPTeams.REGISTRY[team] then return {} end
+	if !next( SCPTeams.REGISTRY[team].escort ) then return {} end
 
 	local tab = {}
 
-	for k, v in pairs( SCPTeams.REG[team].escort ) do
+	for k, v in pairs( SCPTeams.REGISTRY[team].escort ) do
 		table.insert( tab, k )
 	end
 
@@ -236,80 +388,68 @@ function SCPTeams.GetEscort( team )
 end
 
 function SCPTeams.GetEscortedBy( team )
-	if !SCPTeams.REG[team] then return {} end
-	if !next( SCPTeams.REG[team].escorted_by ) then return {} end
+	if !SCPTeams.REGISTRY[team] then return {} end
+	if !next( SCPTeams.REGISTRY[team].escorted_by ) then return {} end
 
 	local tab = {}
 
-	for k, v in pairs( SCPTeams.REG[team].escorted_by ) do
+	for k, v in pairs( SCPTeams.REGISTRY[team].escorted_by ) do
 		table.insert( tab, k )
 	end
 
 	return tab
 end
 
-function SCPTeams.CanEscape( team )
-	if !SCPTeams.REG[team] then return false end
-
-	return SCPTeams.REG[team].can_escape
-end
-
-function SCPTeams.GetName( team )
-	if !SCPTeams.REG[team] then return end
-
-	return SCPTeams.REG[team].name
-end
-
-function SCPTeams.GetColor( team )
-	if !SCPTeams.REG[team] then return end
-
-	return SCPTeams.REG[team].color
-end
-
-function SCPTeams.GetReward( team )
-	if !SCPTeams.REG[team] then return end
-
-	return SCPTeams.REG[team].reward
-end
-
+--[[-------------------------------------------------------------------------
+Team score
+---------------------------------------------------------------------------]]
 function SCPTeams.SetScore( team, score )
-	SCPTeams.SCORE[team] = score
+	local data = SCPTeams.REGISTRY[team]
+	if !data then return end
+
+	SCPTeams.SCORE[data.group] = score
 end
 
 function SCPTeams.GetScore( team, score )
-	if !SCPTeams.SCORE[team] then
-		SCPTeams.SCORE[team] = 0
+	local data = SCPTeams.REGISTRY[team]
+	if !data then return end
+
+	local group = data.group
+
+	if !SCPTeams.SCORE[group] then
+		SCPTeams.SCORE[group] = 0
 	end
 
-	return SCPTeams.SCORE[team]
+	return SCPTeams.SCORE[group]
 end
 
 function SCPTeams.AddScore( team, score )
-	if !SCPTeams.SCORE[team] then
-		SCPTeams.SCORE[team] = 0
+	local data = SCPTeams.REGISTRY[team]
+	if !data then return end
+
+	local group = data.group
+
+	if !SCPTeams.SCORE[group] then
+		SCPTeams.SCORE[group] = 0
 	end
 
-	SCPTeams.SCORE[team] = SCPTeams.SCORE[team] + score
+	SCPTeams.SCORE[group] = SCPTeams.SCORE[group] + score
 end
 
 function SCPTeams.HighestScore()
 	local score = 0
-	local team
+	local group
 
 	for k, v in pairs( SCPTeams.SCORE ) do
 		if v > score then
 			score = v
-			team = { k }
+			group = { k }
 		elseif v > 0 and v == score then
-			table.insert( team, k )
+			table.insert( group, k )
 		end
 	end
 
-	if !team then
-		return
-	end
-
-	return #team == 1 and team[1] or team
+	return group
 end
 
 function SCPTeams.ResetScore()
@@ -318,18 +458,9 @@ function SCPTeams.ResetScore()
 	end
 end
 
-function SCPTeams.HasInfo( team, info )
-	local t = SCPTeams.REG[team]
-
-	if t then
-		if !t.info then
-			t.info = 0
-		end
-
-		return bit.band( t.info, info ) == info
-	end
-end
-
+--[[-------------------------------------------------------------------------
+Helper functions
+---------------------------------------------------------------------------]]
 function SCPTeams.GetPlayersByTeam( team )
 	local plys = {}
 
@@ -342,11 +473,11 @@ function SCPTeams.GetPlayersByTeam( team )
 	return plys
 end
 
-function SCPTeams.GetPlayersByInfo( info, alive )
+function SCPTeams.GetPlayersByInfo( info )
 	local plys = {}
 
 	for i, v in ipairs( player.GetAll() ) do
-		if SCPTeams.HasInfo( v:SCPTeam(), info ) and ( !alive or v:Alive() ) then
+		if SCPTeams.HasInfo( v:SCPTeam(), info ) then
 			table.insert( plys, v )
 		end
 	end
@@ -354,6 +485,33 @@ function SCPTeams.GetPlayersByInfo( info, alive )
 	return plys
 end
 
+function SCPTeams.GetPlayersByGroup( group )
+	local plys = {}
+
+	for i, v in ipairs( player.GetAll() ) do
+		if SCPTeams.InGroup( v:SCPTeam(), group ) then
+			table.insert( plys, v )
+		end
+	end
+
+	return plys
+end
+
+function SCPTeams.GetTeamsByGroup()
+	local tab = {}
+
+	for i, v in ipairs( SCPTeams.REGISTRY ) do
+		if SCPTeams.InGroup( i ) then
+			table.insert( tab, i )
+		end
+	end
+
+	return tab
+end
+
+--[[-------------------------------------------------------------------------
+Player funtions
+---------------------------------------------------------------------------]]
 local PLAYER = FindMetaTable( "Player" )
 
 function PLAYER:SCPTeam()
@@ -373,19 +531,77 @@ function PLAYER:SetSCPTeam( team, persona )
 	self:Set_SCPPersonaT( persona or team )
 end
 
-SCPTeams.AddTeamInfo( "ALIVE" )
+--[[-------------------------------------------------------------------------
+Base teams
+---------------------------------------------------------------------------]]
+//SCPTeams.AddTeamInfo( "ALIVE" ) 	// Unused atm
 SCPTeams.AddTeamInfo( "HUMAN" )
 SCPTeams.AddTeamInfo( "SCP" )
 SCPTeams.AddTeamInfo( "STAFF" )
 
-SCPTeams.Register( "SPEC", 0, Color( 150, 150, 150 ), 0 )
-SCPTeams.Register( "CLASSD", bit.bor( SCPTeams.INFO_ALIVE, SCPTeams.INFO_HUMAN ), Color( 242, 125, 25 ), 1, true )
-SCPTeams.Register( "SCI", bit.bor( SCPTeams.INFO_ALIVE, SCPTeams.INFO_HUMAN, SCPTeams.INFO_STAFF ), Color( 60, 200, 220 ), 2, true )
-SCPTeams.Register( "GUARD", bit.bor( SCPTeams.INFO_ALIVE, SCPTeams.INFO_HUMAN, SCPTeams.INFO_STAFF ), Color( 30, 75, 110 ), 3, false )
-SCPTeams.Register( "MTF", bit.bor( SCPTeams.INFO_ALIVE, SCPTeams.INFO_HUMAN, SCPTeams.INFO_STAFF ), Color( 10, 20, 80 ), 4, false )
-SCPTeams.Register( "CI", bit.bor( SCPTeams.INFO_ALIVE, SCPTeams.INFO_HUMAN ), Color( 10, 80, 5 ), 4, false )
-SCPTeams.Register( "GOC", bit.bor( SCPTeams.INFO_ALIVE, SCPTeams.INFO_HUMAN ), Color( 80, 5, 130 ), 4, false )
-SCPTeams.Register( "SCP", bit.bor( SCPTeams.INFO_ALIVE, SCPTeams.INFO_SCP ), Color( 100, 0, 0 ), 10, true )
+SCPTeams.Register( "SPEC", {
+	color = Color( 150, 150, 150 ),
+	reward = 0,
+} )
+
+SCPTeams.Register( "CLASSD", {
+	color = Color( 242, 125, 25 ),
+	reward = 2,
+	max_reward = 20,
+	can_escape = true,
+	info = SCPTeams.INFO_HUMAN,
+} )
+
+SCPTeams.Register( "SCI", {
+	color = Color( 60, 200, 220 ),
+	reward = 2,
+	max_reward = 20,
+	can_escape = true,
+	info = { SCPTeams.INFO_HUMAN, SCPTeams.INFO_STAFF },
+	group = "STAFF",
+} )
+
+SCPTeams.Register( "GUARD", {
+	color = Color( 30, 75, 110 ),
+	reward = 3,
+	max_reward = 25,
+	can_escape = false,
+	info = { SCPTeams.INFO_HUMAN, SCPTeams.INFO_STAFF },
+	group = "STAFF",
+} )
+
+SCPTeams.Register( "MTF", {
+	color = Color( 10, 20, 80 ),
+	reward = 4,
+	max_reward = 30,
+	can_escape = false,
+	info = { SCPTeams.INFO_HUMAN, SCPTeams.INFO_STAFF },
+	group = "STAFF",
+} )
+
+SCPTeams.Register( "CI", {
+	color = Color( 10, 80, 5 ),
+	reward = 4,
+	max_reward = 30,
+	can_escape = false,
+	info = { SCPTeams.INFO_HUMAN },
+} )
+
+SCPTeams.Register( "GOC", {
+	color = Color( 80, 5, 130 ),
+	reward = 4,
+	max_reward = 30,
+	can_escape = false,
+	info = { SCPTeams.INFO_HUMAN },
+} )
+
+SCPTeams.Register( "SCP", {
+	color = Color( 100, 0, 0 ),
+	reward = 10,
+	max_reward = 75,
+	can_escape = true,
+	info = {},
+} )
 
 hook.Run( "SLCSetupTeams" )
 

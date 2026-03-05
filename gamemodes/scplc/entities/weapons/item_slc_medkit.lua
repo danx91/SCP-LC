@@ -89,8 +89,12 @@ function SWEP:Think()
 			heal = override
 		end
 
-		local hp = math.min( target:Health() + heal, target:GetMaxHealth() )
-		target:SetHealth( hp )
+		local old_health = target:Health()
+		local max_health = target:GetMaxHealth()
+
+		heal = math.min( heal, max_health - old_health )
+		target:AddHealth( heal )
+		target.Logger:HealingEvent( owner, heal, old_health )
 		hook.Run( "SLCHealed", target, owner, heal )
 
 		local charges = self:GetCharges() - 1
@@ -179,7 +183,7 @@ end
 
 function SWEP:Heal( ply, key )
 	if !self:IsValidHealTarget( ply ) then return end
-	
+
 	local owner = self:GetOwner()
 	if hook.Run( "SLCCanHeal", ply, owner, "medkit" ) == false then return end
 	if hook.Run( "SLCNeedHeal", ply, owner, "medkit" ) != true and ply:GetMaxHealth() - ply:Health() < 10 then return end
@@ -192,7 +196,7 @@ function SWEP:Heal( ply, key )
 			ply:PushSpeed( 0.2, 0.2, -1, "SLC_Medkit" )
 		end
 	end
-	
+
 	self.HealTarget = ply
 
 	owner:StartHold( self, "medkit_heal", key, self.HealTime )

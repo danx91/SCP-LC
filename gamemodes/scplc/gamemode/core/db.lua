@@ -52,8 +52,10 @@ end
 --[[-------------------------------------------------------------------------
 SQL Object
 ---------------------------------------------------------------------------]]
+local ok_color = Color( 0, 150, 0 )
+
 local function err_func( self, err, sql_q )
-	MsgC( Color( 200, 0, 0 ), "MySQL query error! "..sql_q.."\n" )
+	SLCErrorMessage( "MySQL query error! "..sql_q )
 	print( err )
 end
 
@@ -65,7 +67,7 @@ function SLCInitializeMySQL()
 	require( "mysqloo" )
 
 	if !mysqloo then
-		MsgC( Color( 200, 0, 0 ), "Couldn't load mysqloo module!\n" )
+		SLCErrorMessage( "Couldn't load mysqloo module!" )
 	end
 end
 
@@ -80,7 +82,7 @@ function SQL:Connect( cfg )
 	SLCInitializeMySQL()
 
 	if !mysqloo then
-		MsgC( Color( 200, 0, 0 ), "MySQL is not loaded!\n" )
+		SLCErrorMessage( "MySQL is not loaded!" )
 		return false
 	end
 
@@ -88,7 +90,7 @@ function SQL:Connect( cfg )
 		local db = mysqloo.connect( cfg.host, cfg.username, cfg.password, cfg.database, cfg.port or 3306, cfg.socket )
 
 		function db.onConnected( this )
-			MsgC( Color( 0, 150, 0 ), string.format( "MySQL successfully connected to %s [%s:%s]!\n", cfg.database, cfg.host, cfg.port or 3306 ) )
+			MsgC( ok_color, string.format( "MySQL successfully connected to %s [%s:%s]!\n", cfg.database, cfg.host, cfg.port or 3306 ) )
 
 			self.MySQLDatabase = this
 			self.MySQLConnected = true
@@ -101,7 +103,7 @@ function SQL:Connect( cfg )
 		end
 
 		function db.onConnectionFailed( this, err )
-			MsgC( Color( 200, 0, 0 ), string.format( "MySQL failed to connected to %s [%s:%s]!\n", cfg.database, cfg.host, cfg.port or 3306 ) )
+			SLCErrorMessage( "MySQL failed to connected to %s [%s:%s]!", cfg.database, cfg.host, cfg.port or 3306 )
 			print( err )
 			reject( err )
 		end
@@ -137,7 +139,7 @@ function SQL:Query( query )
 			end
 
 			q.onError = function( this, err, sql_q )
-				MsgC( Color( 200, 0, 0 ), "MySQL query error! "..sql_q.."\n" )
+				SLCErrorMessage( "MySQL query error! "..sql_q )
 				print( err )
 
 				reject( err )
@@ -150,7 +152,7 @@ function SQL:Query( query )
 			local q = sql.Query( query )
 
 			if q == false then
-				MsgC( Color( 200, 0, 0 ), "SQLite query error! "..query.."\n" )
+				SLCErrorMessage( "SQLite query error! "..query )
 				print( sql.LastError() )
 
 				reject( sql.LastError() )

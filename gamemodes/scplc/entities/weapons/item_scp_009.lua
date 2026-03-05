@@ -30,14 +30,14 @@ function SWEP:Think()
 	if CLIENT then return end
 	if self.Thrown or !self.Throw or self.Throw > CurTime() then return end
 	if owner:KeyDown( IN_ATTACK ) then return end
-	
+
 	self.Thrown = true
 	self:SetNoDraw( true )
 
 	local vm = owner:GetViewModel()
 	local seq, dur = vm:LookupSequence( "molotov_throw" )
 	vm:SendViewModelMatchingSequence( seq )
-	
+
 	timer.Simple( dur, function()
 		if !IsValid( self ) then return end
 		self:Remove()

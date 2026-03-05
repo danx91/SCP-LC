@@ -237,6 +237,7 @@ function ENTITY:DispatchImpactTrace( tr, dmg )
 	data:SetSurfaceProp( tr.SurfaceProps )
 	data:SetDamageType( dmg )
 	data:SetHitBox( tr.HitBox )
+	data:SetEntity( self )
 
-	util.Effect( "Impact", data, false, true )
+	util.Effect( "Impact_GMOD", data, false, true )
 end

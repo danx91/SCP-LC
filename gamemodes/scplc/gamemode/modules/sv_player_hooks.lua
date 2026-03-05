@@ -107,9 +107,9 @@ function GM:PlayerShouldTakeDamage( ply, attacker )
 	if ply:HasEffect( "spawn_protection" ) then return false end
 	if !attacker:IsPlayer() or ply == attacker then return true end
 	if ROUND.preparing then return false end
-	
-	local t_vic = ply:SCPTeam()
-	local t_att = attacker:GetProperty( "kill_team_override" ) or attacker:SCPTeam()
+
+	local t_vic = ply:GetProperty( "dmg_team_override" ) or ply:SCPTeam()
+	local t_att = attacker:GetProperty( "dmg_team_override" ) or attacker:SCPTeam()
 
 	if  t_att == TEAM_SPEC or t_vic == TEAM_SPEC then return false end
 	if  ply != attacker and t_att == TEAM_SCP and t_vic == TEAM_SCP then return false end
@@ -117,16 +117,8 @@ function GM:PlayerShouldTakeDamage( ply, attacker )
 	return true
 end
 
-function GM:PlayerHurt( victim, attacker, health, dmg )
-	--TODO: damage stats
-end
-
 function GM:DoPlayerDeath( ply, attacker, dmginfo )
-	ply.Logger:Dump( attacker, dmginfo:GetInflictor() )
-
-	if IsValid( attacker ) and attacker:IsPlayer() then
-		attacker.Logger:AddKill( ply )
-	end
+	ply.Logger:Finish( attacker, dmginfo )
 
 	if SCPTeams.HasInfo( ply:SCPTeam(), SCPTeams.INFO_HUMAN ) then
 		SanityEvent( 10, SANITY_TYPE.DEATH, ply:GetPos() + Vector( 0, 0, 20 ), 1000, attacker, ply )
@@ -155,9 +147,52 @@ function GM:DoPlayerDeath( ply, attacker, dmginfo )
 	end
 
 	print( txt )
-
-	ply:AddDeaths( 1 )
 end
+
+local kill_stat = GetRoundStat( "kill" )
+local rdm_stat = GetRoundStat( "rdm" )
+
+
+/*
+kill
+kill_rdm
+kill_n
+assist
+assist_rdm
+support
+*/
+local function kill_message( ply, kind, reward, team_name, victim_nick )
+	if reward == 0 then
+		kind = kind.."_n"
+	elseif reward < 0 then
+		reward = -reward
+		kind = kind.."_rdm"
+	end
+
+	local nick = EscapeMessage( victim_nick )
+	local team_key = "@TEAMS."..team_name
+
+	if kind == "kill" then
+		PlayerMessage( string.format( "kill$%i,%s,%s", reward, team_key, nick ), ply )
+	elseif kind == "kill_rdm" then
+		PlayerMessage( string.format( "kill_rdm$%i,%s,%s#200,25,25", reward, team_key, nick ), ply )
+	elseif kind == "kill_n" then
+		PlayerMessage( string.format( "kill_n$%s,%s", team_key, nick ), ply )
+	elseif kind == "assist" then
+		PlayerMessage( string.format( "assist$%i,%s", reward, nick ), ply )
+	elseif kind == "assist_rdm" then
+		PlayerMessage( string.format( "assist_rdm$%i,%s#200,25,25", reward, nick ), ply )
+	elseif kind == "support" then
+		PlayerMessage( string.format( "kill_supp$%i,%s", reward, nick ), ply )
+	end
+end
+
+	/*
+	PlayerMessage( string.format( "rdm$%d,%s,%s#200,25,25", reward, "@TEAMS."..tname, EscapeMessage( victim:Nick() ) ), attacker )
+	PlayerMessage( string.format( "kill$%d,%s,%s", reward, "@TEAMS."..tname, EscapeMessage( victim:Nick() ) ), attacker )
+	PlayerMessage( string.format( "kill_n$%s,%s", "@TEAMS."..tname, EscapeMessage( victim:Nick() ) ), attacker )
+	PlayerMessage( string.format( "assist$%d,%s", v, EscapeMessage( victim:Nick() ) ), k )
+	*/
 
 function GM:PlayerDeath( victim, inflictor, attacker )
 	local pprop = victim.StoredProperties or {}
@@ -167,153 +202,66 @@ function GM:PlayerDeath( victim, inflictor, attacker )
 
 	if ROUND.post then return end
 
-	AddRoundStat( "kill" )
+	local victim_team = victim:SCPTeam()
+	local reward_pool = isnumber( pprop.reward_override ) and pprop.reward_override or SCPTeams.GetReward( victim_team ) * 2
+	local rdm_support_cap = reward_pool * 0.5
+	print( "KILL - get rewards", reward_pool )
 
-	local killinfo = victim.Logger:GetDeathDetails()
-	if killinfo then
-		local len = #killinfo.assists
-		local preventrdm = false
+	local rewards, support_rewards, killer = victim.Logger:GetRewards( reward_pool )
+	local stat_killer = killer or attacker
 
-		if !IsValid( attacker ) or !attacker:IsPlayer() or victim == attacker then
-			if len > 0 then
-				local tmp = table.remove( killinfo.assists, 1 )
+	kill_stat:AddValue( 1, { victim = victim, killer = stat_killer } )
 
-				attacker = tmp[1]
-				killinfo.killer_pct = tmp[2]
-				preventrdm = true
+	if IsValid( stat_killer ) and stat_killer != victim and stat_killer:IsPlayer() and SCPTeams.IsAlly( stat_killer:SCPTeam(), victim_team ) then
+		rdm_stat:AddValue( 1, { victim = victim, killer = stat_killer } )
+	end
 
-				len = len - 1
+	if rewards then
+		local skip_rewards = victim._SkipNextKillRewards
+		local team_name = SCPTeams.GetName( victim_team )
+		local victim_nick = victim:Nick()
+
+		hook.Run( "SLCPlayerDeath", victim, killer, rewards[killer] and rewards[killer].pct or 0 )
+
+		for ply, data in pairs( rewards ) do
+			local is_killer = ply == killer
+			local reward = math.max( data.reward, -rdm_support_cap )
+
+			if !is_killer then
+				local suppress, override = hook.Run( "SLCKillAssist", ply, victim, data.pct, reward, killer )
+				if suppress == true then continue end
+
+				if isnumber( override ) then
+					reward = override
+				end
 			end
+
+			if skip_rewards then continue end
+
+			ply:AddFrags( reward )
+			kill_message( ply, is_killer and "kill" or "assist", reward, team_name, victim_nick )
 		end
 
-		hook.Run( "SLCPlayerDeath", victim, attacker, killinfo.killer_pct )
+		for ply, reward in pairs( support_rewards ) do
+			reward = math.min( reward, rdm_support_cap )
 
-		for i, v in ipairs( killinfo.assists ) do
-			hook.Run( "SLCKillAssist", v[1], victim, v[2], attacker )
-		end
+			local suppress, override = hook.Run( "SLCKillSupport", ply, victim, reward, killer )
+			if suppress == true or skip_rewards then continue end
 
-		if !victim._SkipNextKillRewards then
-			if IsValid( attacker ) and attacker:IsPlayer() and victim != attacker then
-				local t_vic = victim:SCPTeam()
-				local t_att = attacker:GetProperty( "kill_team_override" ) or attacker:SCPTeam()
-
-				local rdm = !preventrdm and !attacker:GetProperty( "prevent_rdm" ) and SCPTeams.IsAlly( t_att, t_vic )
-				local reward = isnumber( pprop.reward_override ) and pprop.reward_override or SCPTeams.GetReward( t_vic )
-				local tname = SCPTeams.GetName( t_vic )
-
-				//if len > 0 and !rdm then
-					local pool = reward * 2
-					local init = pool
-					//print( "pool", victim, pool )
-
-					if len == 0 then
-						reward = pool
-					else
-						local pc = math.floor( init * killinfo.killer_pct )
-						if pc > reward then
-							reward = pc
-						end
-					end
-
-					pool = pool - reward
-
-					local rewardtab = {}
-
-					--phase 1: calculating
-					if len > 0 then
-						while pool > 0 do
-							//print( "cycle" )
-							for i = 1, len do
-								local tab = killinfo.assists[i]
-								local points = math.ceil( init * tab[2] )
-
-								if points > pool then
-									points = pool
-								end
-
-								rewardtab[tab[1]] = ( rewardtab[tab[1]] or 0 ) + points
-								pool = pool - points
-
-								if pool <= 0 then
-									break
-								end
-							end
-
-							if pool > 0 then
-								reward = reward + 1
-								pool = pool - 1
-							end
-						end
-					end
-
-					//print( "kill", attacker, reward, rdm )
-					//print( t_att, t_vic, SCPTeams.IsAlly( t_att, t_vic ), SCPTeams.IsEnemy( t_att, t_vic ), SCPTeams.IsNeutral( t_att, t_vic ) )
-
-					local custom = attacker:GetProperty( "rdm_override" )
-					if custom then
-						local ovr, result = custom( attacker, victim )
-						if ovr then
-							if result == true then
-								rdm = true
-							elseif result == false then
-								preventrdm = true
-							end
-						end
-					end
-
-					--phase 2: giving
-					if rdm and !preventrdm then
-						AddRoundStat( "rdm" )
-
-						local n = math.min( reward, attacker:Frags() )
-						PlayerMessage( string.format( "rdm$%d,%s,%s#200,25,25", reward, "@TEAMS."..tname, EscapeMessage( victim:Nick() ) ), attacker )
-						attacker:AddFrags( -n )
-					elseif preventrdm or SCPTeams.IsEnemy( t_att, t_vic ) then
-						PlayerMessage( string.format( "kill$%d,%s,%s", reward, "@TEAMS."..tname, EscapeMessage( victim:Nick() ) ), attacker )
-						attacker:AddFrags( reward )
-					else
-						PlayerMessage( string.format( "kill_n$%s,%s", "@TEAMS."..tname, EscapeMessage( victim:Nick() ) ), attacker )
-					end
-
-					for k, v in pairs( rewardtab ) do
-						local override, points = hook.Run( "SLCAssistReward", k, victim, v )
-
-						if !override then
-							if points then
-								v = points
-							end
-
-							PlayerMessage( string.format( "assist$%d,%s", v, EscapeMessage( victim:Nick() ) ), k )
-							k:AddFrags( v )
-							//print( "assist", k, v )
-						//else
-							//print( "" )
-						end
-					end
-				//else
-					//if rdm then
-						//AddRoundStat( "rdm" )
-
-						//local n = math.min( reward, attacker:Frags() )
-						//PlayerMessage( string.format( "rdm$%d,%s,%s#200,25,25", reward, "@TEAMS."..tname, EscapeMessage( victim:Nick() ) ), attacker )
-						//attacker:AddFrags( -n )
-					//else
-						//PlayerMessage( string.format( "kill$%d,%s,%s", reward * 2, "@TEAMS."..tname, EscapeMessage( victim:Nick() ) ), attacker )
-						//attacker:AddFrags( reward * 2 )
-					//end
-				//end
+			if isnumber( override ) then
+				reward = override
 			end
-		else
-			victim._SkipNextKillRewards = false
-			print( "Skipping rewards", victim )
+
+			ply:AddFrags( reward )
+			kill_message( ply, "support", reward, team_name, victim_nick )
 		end
 	end
 
-	//victim.LastTeam = victim:SCPTeam()
-	//victim.LastClass = victim:SCPClass()
+	victim._SkipNextKillRewards = false
+
 	victim:SetProperty( "last_team", victim:SCPTeam() )
 	victim:SetProperty( "last_class", victim:SCPClass() )
-	victim:SetProperty( "last_killer", attacker )
+	victim:SetProperty( "last_killer", killer )
 
 	if pprop.death_info_override then
 		victim:SetProperty( "death_info_override", pprop.death_info_override )

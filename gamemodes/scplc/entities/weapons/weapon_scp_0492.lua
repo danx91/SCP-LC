@@ -1,9 +1,10 @@
-SWEP.Base 				= "weapon_scp_base"
-SWEP.PrintName			= "SCP-049-2"
+SWEP.Base 			= "weapon_scp_base"
+SWEP.PrintName		= "SCP-049-2"
+SWEP.Stat 			= RoundStat( "0492" ):Show( true, 0, 5 )
 
-SWEP.HoldType 			= "knife"
+SWEP.HoldType 		= "knife"
 
-SWEP.ViewModel 			= "models/weapons/v_zombiearms.mdl"
+SWEP.ViewModel 		= "models/weapons/v_zombiearms.mdl"
 
 SWEP.ShouldDrawViewModel = true
 SWEP.DisableDamageEvent = true
@@ -484,7 +485,7 @@ function SWEP:EnableBoost( duration, power )
 end
 
 function SWEP:OnPlayerKilled( ply )
-	AddRoundStat( "0492" )
+	self:AddRoundStat()
 end
 
 function SWEP:OnUpgradeBought( name, active, group )
@@ -584,7 +585,7 @@ end*/
 SCP Hooks
 ---------------------------------------------------------------------------]]
 //lua_run ClearSCPHooks() EnableSCPHook("SCP0492") TransmitSCPHooks()
-SCPHook( "SCP0492", "EntityTakeDamage", function( ent, dmg )
+SCPHook( "SCP0492", "SLCEntityTakeDamage", function( ent, dmg )
 	if dmg:IsDamageType( DMG_DIRECT ) or !dmg:IsDamageType( DMG_BULLET ) or !IsValid( ent ) or !ent:IsPlayer() or ent:SCPClass() != CLASSES.SCP0492 then return end
 
 	local wep = ent:GetSCPWeapon()

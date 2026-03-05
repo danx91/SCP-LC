@@ -50,12 +50,6 @@ SpawnInfo.SUPPORT = {}
 
 local SupportData = {}
 
-local function assert_warn( b, s )
-	if !b then
-		MsgC( Color( 255, 50, 50 ), "WARNING! "..s.."\n" )
-	end
-end
-
 function AddClassGroup( name, weight, spawn )
 	if !name or !weight then return end
 
@@ -171,7 +165,7 @@ function RegisterClass( name, group, model, data, support )
 
 	assert( data.team, "Invalid team" )
 	assert( AllClasses[name] == nil, "Class '"..name.."' is already registered!" )
-	assert_warn( _LANG["english"]["CLASSES"][name] != nil and _LANG["english"]["CLASS_OBJECTIVES"][name] != nil, "No language entry for: "..name )
+	assert_warn( _LANG_DEFAULT["CLASSES"][name] != nil and _LANG_DEFAULT["CLASS_OBJECTIVES"][name] != nil, "No language entry for: "..name )
 
 	CLASSES[string.upper( name )] = name
 
@@ -258,7 +252,7 @@ function SelectSupportGroup()
 			total = total + cvar
 		end
 	end
-	
+
 	local dice = SLCRandom( total )
 	total = 0
 
@@ -415,7 +409,7 @@ function PLAYER:UnlockClass( name )
 			net.WriteString( name )
 		net.SendToServer()
 	end
-	
+
 	return true
 end
 
@@ -560,7 +554,7 @@ if SERVER then
 
 		if points > 0 or prestige_points > 0 then
 			net.Ping( "SLCrefundClasses", points..","..prestige_points, ply )
-			
+
 			ply:AddClassPoints( points )
 			ply:AddPrestigePoints( prestige_points )
 		end

@@ -220,7 +220,7 @@ end )
 	
 }*/
 
-hook.Add( "EntityTakeDamage", "SLCCWSniperReductionForIdiots", function( ent, dmg )
+hook.Add( "SLCEntityTakeDamage", "SLCCWSniperReductionForIdiots", function( ent, dmg )
 	local ent_class = ent:GetClass()
 	if ent_class == "cw_ammo_kit_regular" or ent_class == "cw_ammo_kit_small" then return true end
 
@@ -491,30 +491,30 @@ hook.Add( "SLCGamemodeLoaded", "SLCCWStuff", function()
 		stat.varName = "PenetrationPower"
 		stat.display = "PENETRATION POWER"
 		stat.desc = "Penetration power against armor"
-		
+
 		function stat:textFunc( wep )
 			return math.Round( wep.PenetrationPower )
 		end
-		
+
 		function stat:origTextFunc( wep )
 			return math.Round( wep.PenetrationPower_Orig )
 		end
-		
+
 		CustomizableWeaponry.statDisplay:addStat(stat)
 
 		stat = {}
 		stat.varName = "ImpactPower"
 		stat.display = "IMPACT POWER"
 		stat.desc = "Impact power that damages armor"
-		
+
 		function stat:textFunc( wep )
 			return math.Round( wep.ImpactPower * 100 ).."%"
 		end
-		
+
 		function stat:origTextFunc( wep )
 			return math.Round( wep.ImpactPower_Orig * 100 ).."%"
 		end
-		
+
 		CustomizableWeaponry.statDisplay:addStat(stat)
 	end
 
@@ -765,7 +765,7 @@ hook.Add( "SLCGamemodeLoaded", "SLCCWStuff", function()
 	add_cw_weapon( "cw_kk_ins2_mp5a4", { IconLetter = "x", ImpactPower = 1.1 }, { am_magnum = "slc_hp", am_matchgrade = "slc_fmj" }, 8, "smg_low" )
 	add_cw_weapon( "cw_kk_ins2_uzi", { IconLetter = "d", ImpactPower = 1.1 }, { am_magnum = "slc_hp", am_matchgrade = "slc_fmj" }, 8, "smg_low" )
 	add_cw_weapon( "cw_kk_ins2_mac10", { IconLetter = "l", ImpactPower = 1.1 }, { am_magnum = "slc_hp", am_matchgrade = "slc_fmj" }, 8, "smg_low" )
-	
+
 	add_cw_weapon( "cw_kk_ins2_ump45", { IconLetter = "q", ImpactPower = 1.1 }, { am_magnum = "slc_hp", am_matchgrade = "slc_fmj" }, 8, "smg_mid" )
 	add_cw_weapon( "cw_kk_ins2_scorpion", { IconLetter = "q", ImpactPower = 1.1 }, { am_magnum = "slc_hp", am_matchgrade = "slc_fmj" }, 8, "smg_mid" )
 	add_cw_weapon( "cw_kk_ins2_veresk", { IconLetter = "d", ImpactPower = 1.1 }, { am_magnum = "slc_hp", am_matchgrade = "slc_fmj" }, 8, "smg_mid" )

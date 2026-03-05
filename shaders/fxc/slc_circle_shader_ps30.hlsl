@@ -19,15 +19,14 @@ THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR I
         outline_color_r, outline_color_g, outline_color_b,
         texture
     )
-        local angle = fill * pi
-
+	    local angle = fill * pi
         local mid_r = ( radius + inner_radius ) * 0.5
 
         local h = ( radius - inner_radius ) * 0.5
-        local maxcap = angle * mid_r
-
-        if cap_radius > maxcap then cap_radius = maxcap end
         if cap_radius > h then cap_radius = h end
+
+        local maxcap = angle * mid_r
+        if cap_radius > maxcap then cap_radius = maxcap end
 
         local ratio = cap_radius / mid_r
         if ratio > 1 then ratio = 1 end
@@ -44,13 +43,17 @@ THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR I
         local h_eff = (r_eff - i_eff) * 0.5
 
         SHADER_MATRIX:SetUnpacked(
-            radius, 		cap_radius,	math.sin( rotation_rad ),		outline_color_r / 255,
-            inner_radius, 	r_eff,		math.cos( rotation_rad ),		outline_color_g / 255,
-            outline, 		i_eff,		math.sin( corrected_angle ), 	outline_color_b / 255,
+            radius, 		cap_radius,	math.sin( rotation_rad ),		outline_r / 255,
+            inner_radius, 	r_eff,		math.cos( rotation_rad ),		outline_g / 255,
+            outline, 		i_eff,		math.sin( corrected_angle ), 	outline_b / 255,
             angle,			h_eff,		math.cos( corrected_angle ),	texture and 1 or 0
         )
 
         SHADER_MATERIAL:SetMatrix( "$viewprojmat", SHADER_MATRIX )
+
+        if texture then
+            SHADER_MATERIAL:SetTexture( "$basetexture", texture )
+        end
 
         surface.SetMaterial( SHADER_MATERIAL )
         surface.DrawTexturedRectUV( x, y, size, size, -0.015625, -0.015625, 1.015625, 1.015625 )
@@ -62,9 +65,10 @@ struct PS_INPUT
     float4 pos              : POSITION;
     float2 uv               : TEXCOORD0;
     float4 color            : TEXCOORD1;
+    float3 outline_color    : TEXCOORD2;
 };
 
-sampler BaseTexture         : register( s0 );
+sampler BaseTexture         : register(s0);
 
 const float4x4 cViewProj    : register(c11);
 
@@ -111,14 +115,24 @@ float blended_AA(float dist, float2 uv)
 }
 
 // Based on https://iquilezles.org/articles/distfunctions2d/
-float sdAnnularPie(float2 p, float2 c)
+float sdAnnularPie(float2 p, float2 c, float len)
 {
     p.x = abs(p.x);
 
-    float l = abs(length(p) - (I_EFF + H_EFF)) - H_EFF;
+    float l = abs(len - (I_EFF + H_EFF)) - H_EFF;
     float m = length(p - c * clamp(dot(p, c), I_EFF, R_EFF));
 
     return max(l, m * sign(c.y * p.x - c.x * p.y)) - CAP_RADIUS;
+}
+
+inline float sdRadial(float len)
+{
+    [branch] if (INNER_RADIUS <= 0)
+    {
+        return len - RADIUS;
+    }
+
+    return max(len - RADIUS, INNER_RADIUS - len);
 }
 
 float4 main(PS_INPUT i) : COLOR
@@ -128,29 +142,37 @@ float4 main(PS_INPUT i) : COLOR
     float2 p = (i.uv - 0.5) * (RADIUS * 2.0);
     p = float2(p.x * COS_ROT - p.y * SIN_ROT, p.x * SIN_ROT + p.y * COS_ROT);
 
-    float d;
+    float len = length(p);
 
-    [branch] if (ANGLE >= PI - 1e-3) 
+    float d, d_outline;
+
+    [branch] if (ANGLE >= PI - 1e-4) 
     {
-        float len   = length(p);
-        float dPie  = len - RADIUS;
-
-        float dRing = max(len - RADIUS, INNER_RADIUS - len);
-        
-        d = (INNER_RADIUS <= 1e-3) ? dPie : dRing;
+        d = sdRadial(len);
+        d_outline = d;
     }
     else
     {
         float2 c = float2(SIN_ANG, COS_ANG);
-        d = sdAnnularPie(p, c);
+        d = sdAnnularPie(p, c, len);
+
+        [branch] if (OUTLINE >= 0)
+        {
+            d_outline = d;
+        }
+        else
+        {
+            d_outline = sdRadial(len);
+        }
     }
 
     float outerAlpha    = blended_AA(d, p);
-    float outlineBlend  = blended_AA(d + OUTLINE, p);
-    float fillWeight    = saturate(outlineBlend / max(outerAlpha, 0.0001));
+    float outlineBlend  = blended_AA(d_outline + abs(OUTLINE), p);
+    float fillWeight    = saturate(outlineBlend / max(outerAlpha, 1e-4));
 
     float4 finalColor   = USE_TEXTURE == 1 ? tex2D(BaseTexture, i.uv) * i.color : i.color;
-    finalColor.rgb      = lerp(OUTLINE_COLOR.rgb, finalColor.rgb, fillWeight);
+
+    finalColor.rgb      = lerp(i.outline_color, finalColor.rgb, fillWeight);
     finalColor.a       *= outerAlpha;
 
     return finalColor;

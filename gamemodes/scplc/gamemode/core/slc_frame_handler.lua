@@ -213,9 +213,9 @@ if CLIENT then
 		return p:Then( function( rdata )
 			if !IsValid( root ) or rdata.RequestID != self.LastRequestID then return end
 			if rdata.__banned then
-				MsgC( Color( 255, 75, 75 ), "Banned", "\t", self.ID, "\t", rdata.__reason or "No reason provided", "\n" )
+				SLCErrorMessage( "Banned\t%s\t%s", self.ID, rdata.__reason or "No reason provided" )
 			elseif rdata.__restrict then
-				MsgC( Color( 255, 75, 75 ), "Restricted", "\t", self.ID, "\n" )
+				SLCErrorMessage( "Restricted\t"..self.ID)
 			else
 				rdata.Root = root
 				self.PageData = rdata

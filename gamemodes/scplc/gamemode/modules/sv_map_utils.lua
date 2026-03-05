@@ -1,4 +1,63 @@
 --[[-------------------------------------------------------------------------
+Map functions
+---------------------------------------------------------------------------]]
+function UseAll()
+	for k, v in ipairs( FORCE_USE ) do
+		for _, ent in ipairs( ents.GetAll() ) do
+			if ent:GetPos() == v then
+				ent:Fire( "Use" )
+				break
+			end
+		end
+	end
+end
+
+function DestroyAll()
+	for k, v in ipairs( FORCE_DESTROY ) do
+		if isvector( v ) then
+			for _, ent in ipairs( ents.GetAll() ) do
+				if ent:GetPos() == v then
+					ent:Remove()
+					break
+				end
+			end
+		elseif isnumber( v ) then
+			local ent = ents.GetMapCreatedEntity( v )
+			if IsValid( ent ) then
+				ent:Remove()
+			end
+		end
+	end
+end
+
+function OpenSCPs()
+	local lookup = {
+		func_door = POS_DOOR,
+		func_rot_button = POS_ROT_BUTTON,
+		func_button = POS_BUTTON,
+	}
+
+	for i, v in ipairs( ents.GetAll() ) do
+		local class = v:GetClass()
+		local tab = lookup[class]
+		if !tab then continue end
+
+		for _, pos in ipairs( tab ) do
+			if v:GetPos() != pos then continue end
+
+			if class == "func_door" then
+				v:Fire( "unlock" )
+				v:Fire( "open" )
+			else
+				v:Fire( "use" )
+			end
+
+			break
+		end
+	end
+end
+
+--[[-------------------------------------------------------------------------
 EntityCache
 ---------------------------------------------------------------------------]]
 SLC_ENTITY_CACHE = {}

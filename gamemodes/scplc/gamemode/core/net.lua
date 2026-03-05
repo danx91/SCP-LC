@@ -344,7 +344,7 @@ if CLIENT then
 
 			net.RequestsRegistry[id] = nil
 
-			MsgC( Color( 200, 0, 0 ), "Request "..req.name.." ["..req.id.."] timed out!\n" )
+			SLCErrorMessage( "Request %s [%s] timed out!", req.name, req.id )
 			req.promise:Reject( "timeout" )
 		end )
 	end
@@ -354,7 +354,7 @@ if CLIENT then
 		local req = net.RequestsRegistry[id]
 
 		if !req then
-			MsgC( Color( 200, 0, 0 ), "Unknown request with id: "..req.id.."!\n" )
+			SLCErrorMessage( "Unknown request with id: "..req.id )
 			return
 		end
 

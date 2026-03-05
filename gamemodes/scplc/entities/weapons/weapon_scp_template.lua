@@ -2,6 +2,7 @@ if true then return end
 
 SWEP.Base 			= "weapon_scp_base"
 SWEP.PrintName		= "SCP-682"
+//SWEP.Stat 			= RoundStat( "682" ):Show( true, 0, 5 )
 
 SWEP.HoldType		= "normal"
 
@@ -73,7 +74,7 @@ end
 SCP Hooks
 ---------------------------------------------------------------------------]]
 //lua_run ClearSCPHooks() EnableSCPHook("SCP682") TransmitSCPHooks()
-SCPHook( "SCP682", "EntityTakeDamage", function( target, dmg )
+SCPHook( "SCP682", "SLCEntityTakeDamage", function( target, dmg )
 	if dmg:IsDamageType( DMG_DIRECT ) or dmg:IsDamageType( DMG_FALL ) or !IsValid( target ) or !target:IsPlayer() or target:SCPClass() != CLASSES.SCP682 then return end
 	if ROUND.preparing and dmg:IsDamageType( DMG_ACID ) then return true end
 
@@ -156,6 +157,15 @@ if CLIENT then
 			return swep:GetShield() > 0
 		end )*/
 end
+
+--[[-------------------------------------------------------------------------
+Stats
+---------------------------------------------------------------------------]]
+/*if SERVER then
+	RoundStat( "106recontain" )
+		:InitialValue( false )
+		:Show( true, 0, 100 )
+end*/
 
 --[[-------------------------------------------------------------------------
 Sounds

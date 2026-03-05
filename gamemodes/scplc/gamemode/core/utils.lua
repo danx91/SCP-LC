@@ -262,6 +262,26 @@ function player.FindInSphere( pos, rad )
 	return res
 end
 
+function assert_warn( b, s )
+	if !b then
+		SLCErrorMessage( "WARNING! "..s.."\n" )
+	end
+end
+
 function printf( ... )
 	print( string.format( ... ) )
+end
+
+local color_error = Color( 255, 50, 50 )
+
+function SLCErrorMessage( str, ... )
+	MsgC( color_error, string.format( str, ... ), "\n" )
+end
+
+function argerror( n, name, expected, got )
+	error( string.format( "bad argument #%i to '%s' (%s expected, got %s)", n, name, expected, got ), 3 )
+end
+
+function fielderror( field, n, func, expected, got )
+	error( string.format( "bad field '%s' argument #%i to '%s' (%s expected, got %s)", field, n, func, expected, got ), 3 )
 end

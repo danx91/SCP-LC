@@ -1,5 +1,6 @@
 SWEP.Base 			= "weapon_scp_base"
 SWEP.PrintName		= "SCP-049"
+SWEP.Stat 			= RoundStat( "049" ):Show( true, 0, 5 )
 
 SWEP.HoldType		= "normal"
 SWEP.UseCustomDT 	= true
@@ -481,7 +482,7 @@ function SWEP:FinishSurgery()
 	self:SetSurgeries( surg + 1 )
 	self:AddScore( 1 )
 	owner:AddFrags( 2 )
-	AddRoundStat( "049" )
+	self:AddRoundStat()
 
 	if !self:HasUpgrade( "surgery_heal" ) then return end
 
@@ -537,7 +538,7 @@ end
 SCP Hooks
 ---------------------------------------------------------------------------]]
 //lua_run ClearSCPHooks() EnableSCPHook("SCP049") TransmitSCPHooks()
-SCPHook( "SCP049", "EntityTakeDamage", function( ent, dmg )
+SCPHook( "SCP049", "SLCEntityTakeDamage", function( ent, dmg )
 	if dmg:IsDamageType( DMG_DIRECT ) or !dmg:IsDamageType( DMG_BULLET ) or !IsValid( ent ) or !ent:IsPlayer() or ent:SCPClass() != CLASSES.SCP049 then return end
 
 	local wep = ent:GetSCPWeapon()

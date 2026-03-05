@@ -1,5 +1,6 @@
 SWEP.Base 			= "weapon_scp_base"
 SWEP.PrintName		= "SCP-096"
+SWEP.Stat 			= RoundStat( "096" ):Show( true, 0, 5 )
 
 SWEP.HoldType		= "normal"
 
@@ -532,7 +533,7 @@ function SWEP:StopRage( ent )
 end
 
 function SWEP:OnPlayerKilled( ply )
-	AddRoundStat( "096" )
+	self:AddRoundStat()
 end
 
 local regen_offet = Vector( 0, 0, -24 )
@@ -598,7 +599,7 @@ end
 SCP Hooks
 ---------------------------------------------------------------------------]]
 //lua_run ClearSCPHooks() EnableSCPHook("SCP096") TransmitSCPHooks()
-SCPHook( "SCP096", "EntityTakeDamage", function( ent, dmg )
+SCPHook( "SCP096", "SLCEntityTakeDamage", function( ent, dmg )
 	if CLIENT or dmg:IsDamageType( DMG_DIRECT ) or !dmg:IsDamageType( DMG_BULLET ) or !IsValid( ent ) or !ent:IsPlayer() or ent:SCPClass() != CLASSES.SCP096 then return end
 
 	local wep = ent:GetSCPWeapon()

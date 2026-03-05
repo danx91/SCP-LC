@@ -218,13 +218,13 @@ net.Receive( "SLCXPSummary", function( len )
 	local general_index
 
 	for i, v in ipairs( XPSUMMARY_ORDER ) do
-		if data[v] then
-			local index = table.insert( tab, { data[v], v } )
-			data[v] = nil
+		if !data[v] then continue end
 
-			if v == "general" then
-				general_index = index
-			end
+		local index = table.insert( tab, { data[v], v } )
+		data[v] = nil
+
+		if v == "general" then
+			general_index = index
 		end
 	end
 
@@ -235,6 +235,19 @@ net.Receive( "SLCXPSummary", function( len )
 		
 		tab[general_index][1] = tab[general_index][1] + v
 	end
+
+	print( "==========================" )
+	print( LANG.MISC.xp.summary )
+
+	local total = 0
+	for i, v in ipairs( tab ) do
+		total = total + v[1]
+		print( "\t> "..( LANG.XP_BAR[v[2]] or v[2] )..":", v[1].." XP" )
+	end
+
+	print()
+	print( LANG.MISC.xp.total..":", total.." XP" )
+	print( "==========================" )
 
 	HUDXPSummary = tab
 end )

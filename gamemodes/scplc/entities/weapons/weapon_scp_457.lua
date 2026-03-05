@@ -1,5 +1,6 @@
 SWEP.Base 			= "weapon_scp_base"
 SWEP.PrintName		= "SCP-457"
+SWEP.Stat 			= RoundStat( "457" ):Show( true, 0, 5 )
 
 SWEP.HoldType		= "normal"
 
@@ -250,7 +251,7 @@ function SWEP:IgniteTick()
 end
 
 function SWEP:OnPlayerKilled( ply )
-	AddRoundStat( "457" )
+	self:AddRoundStat()
 end
 
 function SWEP:OnUpgradeBought( name, active, group )
@@ -265,7 +266,7 @@ end
 SCP Hooks
 ---------------------------------------------------------------------------]]
 //lua_run ClearSCPHooks() EnableSCPHook("SCP457") TransmitSCPHooks()
-SCPHook( "SCP457", "EntityTakeDamage", function( target, dmg )
+SCPHook( "SCP457", "SLCEntityTakeDamage", function( target, dmg )
 	if dmg:IsDamageType( DMG_DIRECT ) or !IsValid( target ) or !target:IsPlayer() or target:SCPClass() != CLASSES.SCP457 then return end
 	if dmg:IsDamageType( DMG_BURN ) then return true end
 end )

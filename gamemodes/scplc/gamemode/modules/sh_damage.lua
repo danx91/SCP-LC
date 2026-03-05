@@ -20,7 +20,7 @@ function GetSCPModifiers( ply )
 		regen_scale = 0.75,
 	}
 
-	if ROUND.aftermatch then //TODO REVIEW
+	if ROUND.aftermatch then
 		mods.def = 0.9
 		mods.flat = 0
 	elseif ESCAPE_STATUS == ESCAPE_ACTIVE and ply:IsInEscape() then
@@ -243,7 +243,7 @@ local function handle_vest( target, info )
 	return prot
 end
 
-function handle_scps( target, info, attacker )
+local function handle_scps( target, info, attacker )
 	if target:SCPTeam() != TEAM_SCP or !info:IsDamageType( DMG_BULLET ) then return end
 	if attacker:SCPTeam() == TEAM_SCP then return true end
 	if target:GetSCPHuman() then return end
@@ -264,19 +264,20 @@ function handle_scps( target, info, attacker )
 end
 
 function GM:ScalePlayerDamage( ply, hitgroup, info )
-	if hook.Run( "PlayerShouldTakeDamage", ply, info:GetAttacker() ) == false then return true end --TODO test if called by default?
+	if hook.Run( "PlayerShouldTakeDamage", ply, info:GetAttacker() ) == false then return true end //REVIEW test if called by default?
 
 end
 
-function GM:PlayerTakeDamage( target, info )
-	if !target:IsPlayer() or info:IsDamageType( DMG_DIRECT ) then return end
+local dmg_stat = GetRoundStat( "dmg" )
+local rdmdmg_stat = GetRoundStat( "rdmdmg" )
 
+local function handle_player_damage( target, info )
 	local attacker = info:GetAttacker()
-	if hook.Run( "PlayerShouldTakeDamage", target, attacker ) == false then return true end --TODO test if called by default?
-	
+	if hook.Run( "PlayerShouldTakeDamage", target, attacker ) == false then return true end //REVIEW test if called by default?
+
 	if IsValid( attacker ) then
 		if attacker:IsVehicle() then return true end
-		
+
 		if attacker:IsPlayer() then
 			if attacker:InVehicle() then return true end
 
@@ -284,12 +285,11 @@ function GM:PlayerTakeDamage( target, info )
 				if handle_scps( target, info, attacker ) == true then return true end
 
 				local dmg_orig = info:GetDamage()
-				AddRoundStat( "dmg", dmg_orig )
+				dmg_stat:AddValue( dmg_orig )
 
 				if SCPTeams.IsAlly( attacker:SCPTeam(), target:SCPTeam() ) then
-					AddRoundStat( "rdmdmg", dmg_orig )
+					rdmdmg_stat:AddValue( dmg_orig )
 				end
-
 			end
 		end
 	end
@@ -309,27 +309,29 @@ function GM:PlayerTakeDamage( target, info )
 			end
 		end
 	end
+end
 
+local function handle_extra_health( target, info )
 	local extra = target:GetExtraHealth()
-	if extra > 0 then
-		local pre = info:GetDamage()
-		local dmg = pre - extra
+	if extra <= 0 then return end
 
-		if dmg < 0 then
-			dmg = 0
-		end
+	local pre = info:GetDamage()
+	local dmg = pre - extra
 
-		extra = extra - pre
-
-		if extra <= 0 then
-			extra = 0
-			target:SetMaxExtraHealth( extra )
-		end
-
-		target:SetExtraHealth( extra )
-		info:SetDamage( dmg )
-		info:SetDamageCustom( pre )
+	if dmg < 0 then
+		dmg = 0
 	end
+
+	extra = extra - pre
+
+	if extra <= 0 then
+		extra = 0
+		target:SetMaxExtraHealth( extra )
+	end
+
+	target:SetExtraHealth( extra )
+	info:SetDamage( dmg )
+	info:SetDamageCustom( pre )
 end
 
 --It's serverside only function, but lets leave it here, next to ScalePlayerDamage
@@ -339,25 +341,24 @@ function GM:EntityTakeDamage( target, info )
 
 	local dmg_orig = info:GetDamage()
 
-	if hook.Run( "PlayerTakeDamage", target, info ) == true then
-		return result
+	if hook.Run( "SLCEntityTakeDamage", target, info ) == true then
+		return true
 	end
 
-	if target:IsPlayer() then
-		local dmg_type = info:GetDamageType()
-		local dmg = info:GetDamage()
-		local hp = target:Health()
-		local attacker = info:GetAttacker()
+	local is_player = target:IsPlayer()
+	local is_direct = info:IsDamageType( DMG_DIRECT )
 
-		target.Logger:DamageTaken( dmg, attacker, { dmg_type = dmg_type, dmg_orig = dmg_orig, inflictor = info:GetInflictor(), hp = hp } )
-
-		if IsValid( attacker ) and attacker:IsPlayer() then
-			attacker.Logger:DamageDealt( dmg_orig, target, { dmg_type = dmg_type, dmg_final = dmg, hp = hp } )
+	if is_player then
+		if !is_direct and handle_player_damage( target, info ) == true then
+			return true
 		end
+
+		target.Logger:DamageTaken( info, dmg_orig )
+		handle_extra_health( target, info )
 	end
 
 	local prevent, direct = hook.Run( "SLCPostScaleDamage", target, info )
-	if prevent == true and ( direct == true or !info:IsDamageType( DMG_DIRECT ) ) then return true end
+	if prevent == true and ( direct == true or !is_direct ) then return true end
 
 	local dmgtype = info:GetDamageType()
 	if bit.band( dmgtype, DMG_POISON ) == DMG_POISON then

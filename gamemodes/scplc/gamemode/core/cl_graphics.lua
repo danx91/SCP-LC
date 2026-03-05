@@ -51,8 +51,8 @@ local SHADER_MATERIAL = CreateMaterial("slc_circle_"..SysTime(), "screenspace_ge
 	["$alpha_blend_color_overlay"] = "0",
 	["$alphablend"] = "1",
 
-	["$linearwrite"] = "1",
-	["$linearread_basetexture"] = "1",
+	["$linearwrite"] = "0",
+	["$linearread_basetexture"] = "0",
 	["$linearread_texture1"] = "1",
 	["$linearread_texture2"] = "1",
 	["$linearread_texture3"] = "1",
@@ -102,6 +102,10 @@ local function draw_circle_shader(
 
 	SHADER_MATERIAL:SetMatrix( "$viewprojmat", SHADER_MATRIX )
 
+	if texture then
+		SHADER_MATERIAL:SetTexture( "$basetexture", texture )
+	end
+
 	surface.SetMaterial( SHADER_MATERIAL )
 	surface.DrawTexturedRectUV( x, y, size, size, -0.015625, -0.015625, 1.015625, 1.015625 )
 end
@@ -111,25 +115,26 @@ SLCDrawRing( x, y, radius, thickness, fill, rotation, cap_radius, outline, outli
 
 Draws ring or arc.
 
-@param		[type]			x					X position of the center
-@param		[type]			y					Y position of the center
-@param		[type]			radius				Radius of the ring
-@param		[type]			thickness			Thickness of the ring
-@param		[type]			fill				Fill % of the ring in range [0, 1] - default: 1
-@param		[type]			rotation			Rotation of the circle in degrees - default: 0
-@param		[type]			cap_radius			Softness of the ring caps in range [0, 1] - 0 = sharp caps, 1 = fully round caps, default: 0
-@param		[type]			outline				Outline size of the ring - default: 0
-@param		[number/Color]	outline_r			Either Color or red part of the outline color - default: 0
-@param		[number]		outline_g			Green part of the outline color. Unused if Color was passed to outline_r - default: 0
-@param		[number]		outline_b			Blue part of the outline color.  Unused if Color was passed to outline_r - default: 0
+@param		[type]				x					X position of the center
+@param		[type]				y					Y position of the center
+@param		[type]				radius				Radius of the ring
+@param		[type]				thickness			Thickness of the ring
+@param		[type]				fill				Fill % of the ring in range [0, 1] - default: 1
+@param		[type]				rotation			Rotation of the circle in degrees - default: 0
+@param		[type]				cap_radius			Softness of the ring caps in range [0, 1] - 0 = sharp caps, 1 = fully round caps, default: 0
+@param		[ITexture/string]	texture				Texture or texture name to use. This argument can be skipped - other arguments will shift
+@param		[type]				outline				Outline size of the ring, this can be negative to remove radial outlines - default: 0
+@param		[number/Color]		outline_r			Either Color or red part of the outline color - default: 0
+@param		[number]			outline_g			Green part of the outline color. Unused if Color was passed to outline_r - default: 0
+@param		[number]			outline_b			Blue part of the outline color.  Unused if Color was passed to outline_r - default: 0
 
 @return		[nil]			-					-
 ---------------------------------------------------------------------------]]--
-function SLCDrawRing( x, y, radius, thickness, fill, rotation, cap_radius, outline, outline_r, outline_g, outline_b )
+function SLCDrawRing( x, y, radius, thickness, fill, rotation, cap_radius, texture, outline, outline_r, outline_g, outline_b )
 	if radius <= 0 or thickness <= 0 then return end
 
 	if !cap_radius or cap_radius < 0 then cap_radius = 0 end
-	if !outline or outline < 0 then outline = 0 end
+	if !outline then outline = 0 end
 
 	if thickness > radius then
 		thickness = radius
@@ -138,7 +143,21 @@ function SLCDrawRing( x, y, radius, thickness, fill, rotation, cap_radius, outli
 
 	fill = fill and math.Clamp( fill, 0, 1 ) or 1
 
-	if istable(outline_r) then
+	local tex_type = type(texture)
+
+	if tex_type == "number" then
+		outline_b = outline_g
+		outline_g = outline_r
+		outline_r = outline
+		outline = texture
+		texture = nil
+	elseif tex_type == "IMaterial" then
+		texture = texture:GetTexture( "$basetexture" )
+	elseif tex_type != "ITexture" and tex_type != "string" then
+		texture = nil
+	end
+
+	if istable( outline_r ) then
 		outline_g = outline_r.g
 		outline_b = outline_r.b
 		outline_r = outline_r.r
@@ -148,7 +167,8 @@ function SLCDrawRing( x, y, radius, thickness, fill, rotation, cap_radius, outli
 		x - radius, 	y - radius, 		radius * 2,
 		radius, 		radius - thickness, cap_radius * thickness,
 		fill, 			rotation or 0, 		outline,
-		outline_r or 0, outline_g or 0, 	outline_b or 0
+		outline_r or 0, outline_g or 0, 	outline_b or 0,
+		texture
 	)
 end
 
@@ -162,19 +182,34 @@ Draws circle or pie.
 @param		[number]			radius				Radius of the circle
 @param		[number]			fill				Fill % of the circle in range [0, 1] - default: 1
 @param		[number]			rotation			Rotation of the circle in degrees - default: 0
-@param		[number]			outline				Outline size of the circle - default: 0
+@param		[ITexture/string]	texture				Texture or texture name to use. This argument can be skipped - other arguments will shift
+@param		[number]			outline				Outline size of the circle, this can be negative to remove radial outlines - default: 0
 @param		[number/Color]		outline_r			Either Color or red part of the outline color - default: 0
 @param		[number]			outline_g			Green part of the outline color. Unused if Color was passed to outline_r - default: 0
 @param		[number]			outline_b			Blue part of the outline color.  Unused if Color was passed to outline_r - default: 0
 
 @return		[nil]			-					-
 ---------------------------------------------------------------------------]]--
-function SLCDrawCircle( x, y, radius, fill, rotation, outline, outline_r, outline_g, outline_b )
+function SLCDrawCircle( x, y, radius, fill, rotation, texture, outline, outline_r, outline_g, outline_b )
 	if radius <= 0 then return end
 
-	if !outline or outline < 0 then outline = 0 end
+	if !outline then outline = 0 end
 
 	fill = fill and math.Clamp( fill, 0, 1 ) or 1
+
+	local tex_type = type(texture)
+
+	if tex_type == "number" then
+		outline_b = outline_g
+		outline_g = outline_r
+		outline_r = outline
+		outline = texture
+		texture = nil
+	elseif tex_type == "IMaterial" then
+		texture = texture:GetTexture( "$basetexture" )
+	elseif tex_type != "ITexture" and tex_type != "string" then
+		texture = nil
+	end
 
 	if istable(outline_r) then
 		outline_g = outline_r.g
@@ -186,7 +221,8 @@ function SLCDrawCircle( x, y, radius, fill, rotation, outline, outline_r, outlin
 		x - radius, 	y - radius, 	radius * 2,
 		radius, 		0, 				0,
 		fill, 			rotation or 0, 	outline,
-		outline_r or 0, outline_g or 0, outline_b or 0
+		outline_r or 0, outline_g or 0, outline_b or 0,
+		texture
 	)
 end
 
@@ -196,8 +232,9 @@ Deprecated - use SLCDrawRing
 function surface.DrawRing( x, y, radius, thick, angle, segments, fill, rotation )
 	angle = angle or 360
 	fill = fill or 1
+	rotation = rotation or 0
 
-	SLCDrawRing( x, y, radius, thick, angle / 360 * fill, rotation )
+	SLCDrawRing( x, y, radius + thick, thick, angle / 360 * fill, -rotation )
 end
 
 --[[-------------------------------------------------------------------------
@@ -334,11 +371,11 @@ function surface.OutlinedRoundedRect( x, y, w, h, r, t, output )
 	local v1, v2 = {}, {}
 	surface.PolyRoundedRect( x, x, w, h, r, v1 )
 	surface.PolyRoundedRect( x + t, x + t, w - t * 2, h - t * 2, r - t, v2 )
-	
+
 	if output then
 		output[1] = v1
 		output[2] = v2
-		
+
 		return output
 	end
 
@@ -361,7 +398,7 @@ Draw textured rect while maintaining aspect ratio of texture
 ---------------------------------------------------------------------------]]--
 function surface.DrawTexturedRectKeepRatio( x, y, w, h, mat )
 	local mw, mh = mat:Width(), mat:Height()
-	local sr, mr = w / h, mw / mh 
+	local sr, mr = w / h, mw / mh
 	local dw, dh
 
 	if mr > sr then
@@ -626,7 +663,7 @@ function surface.DrawCooldownRectCCW( x, y, width, height, pct )
 end
 
 --[[-------------------------------------------------------------------------
-surface.DrawCooldownHollowRectCW( x, y, width, height, pct )
+surface.DrawCooldownHollowRectCW( x, y, width, height, pct ) --TODO Move to shader
 ---------------------------------------------------------------------------]]
 local DIRECTION_UP, DIRECTION_DOWN, DIRECTION_LEFT, DIRECTION_RIGHT = 1, 2, 3, 4
 
@@ -868,7 +905,7 @@ function draw.MultilineText( x, y, text, font, color, maxWidth, margin, dist, al
 	local final = feed or {}
 
 	if !feed then
-		for i, v in ipairs( string.Split( text , "\n" ) ) do
+		for i, v in ipairs( string.Split( text, "\n" ) ) do
 			local w, _ = surface.GetTextSize( v )
 
 			if w <= maxWidth then
@@ -1093,7 +1130,7 @@ function draw.GlitchToTexture( texture, target, mode, data, clear, r, g, b, a )
 			else
 				surface.SetMaterial( texture )
 			end
-			
+
 			draw.Glitch( 0, 0, target:Width(), target:Height(), mode, data )
 		cam.End2D()
 	render.PopRenderTarget()
@@ -1101,7 +1138,7 @@ end
 
 local color_white = Color( 255, 255, 255, 255 )
 function draw.WepSelectIcon( ico, cx, cy, size, color )
-	local ico_w, ico_h 
+	local ico_w, ico_h
 
 	if isnumber( ico ) then
 		ico_w, ico_h = surface.GetTextureSize( ico )

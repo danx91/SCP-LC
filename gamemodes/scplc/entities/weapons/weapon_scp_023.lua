@@ -1,5 +1,6 @@
 SWEP.Base 			= "weapon_scp_base"
 SWEP.PrintName		= "SCP-023"
+SWEP.Stat 			= RoundStat( "023" ):Show( true, 0, 5 )
 
 SWEP.HoldType		= "fist"
 
@@ -274,7 +275,7 @@ function SWEP:CheckPreys()
 end
 
 function SWEP:OnPlayerKilled( ply )
-	AddRoundStat( "023" )
+	self:AddRoundStat()
 end
 
 function SWEP:OnUpgradeBought( name, active, group )
@@ -299,7 +300,7 @@ SCPHook( "SCP023", "ShouldCollide", function ( ent1, ent2 )
 	end
 end )
 
-SCPHook( "SCP023", "EntityTakeDamage", function ( ent, dmg )
+SCPHook( "SCP023", "SLCEntityTakeDamage", function ( ent, dmg )
 	if dmg:IsDamageType( DMG_DIRECT ) or !dmg:IsDamageType( DMG_BULLET ) or !IsValid( ent ) or !ent:IsPlayer() or ent:SCPClass() != CLASSES.SCP023 then return end
 
 	local wep = ent:GetSCPWeapon()

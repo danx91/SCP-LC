@@ -1,5 +1,6 @@
 SWEP.Base 			= "weapon_scp_base"
 SWEP.PrintName		= "SCP-066"
+SWEP.Stat 			= RoundStat( "066" ):Show( true, 0, 3 )
 
 SWEP.HoldType		= "normal"
 
@@ -203,7 +204,7 @@ function SWEP:PrimaryAttack()
 	if !SERVER then return end
 
 	self:GetOwner():EmitSound( SLCRandom( 1000 ) == 666 and "SCP066.IHateMyLife" or "SCP066.Music" )
-	AddRoundStat( "066" )
+	self:AddRoundStat()
 end
 
 local dash_up = Vector( 0, 0, 250 )
@@ -367,7 +368,7 @@ end
 SCP Hooks
 ---------------------------------------------------------------------------]]
 //lua_run ClearSCPHooks() EnableSCPHook("SCP066") TransmitSCPHooks()
-SCPHook( "SCP066", "EntityTakeDamage", function( ent, dmg )
+SCPHook( "SCP066", "SLCEntityTakeDamage", function( ent, dmg )
 	if dmg:IsDamageType( DMG_DIRECT ) or !dmg:IsDamageType( DMG_BULLET ) or !IsValid( ent ) or !ent:IsPlayer() or ent:SCPClass() != CLASSES.SCP066 then return end
 
 	local wep = ent:GetSCPWeapon()

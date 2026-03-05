@@ -1,5 +1,6 @@
 SWEP.Base 			= "weapon_scp_base"
 SWEP.PrintName		= "SCP-3199"
+SWEP.Stat 			= RoundStat( "3199" ):Show( true, 0, 5 )
 
 SWEP.ViewModel 			= "models/weapons/alski/scp3199arms.mdl"
 SWEP.ShouldDrawViewModel = true
@@ -441,7 +442,7 @@ end
 
 function SWEP:OnPlayerKilled( ply )
 	self:SetEggReady( true )
-	AddRoundStat( "3199" )
+	self:AddRoundStat()
 end
 
 function SWEP:OnUpgradeBought( name, active, group )
@@ -502,7 +503,7 @@ end
 SCP Hooks
 ---------------------------------------------------------------------------]]
 //lua_run ClearSCPHooks() EnableSCPHook("SCP3199") TransmitSCPHooks()
-SCPHook( "SCP3199", "EntityTakeDamage", function( target, dmg )
+SCPHook( "SCP3199", "SLCEntityTakeDamage", function( target, dmg )
 	if dmg:IsDamageType( DMG_DIRECT ) or !IsValid( target ) or !target:IsPlayer() or target:SCPClass() != CLASSES.SCP3199 then return end
 	
 	local wep = target:GetSCPWeapon()

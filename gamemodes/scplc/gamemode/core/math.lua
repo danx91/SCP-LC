@@ -1,3 +1,6 @@
+--[[-------------------------------------------------------------------------
+Vector
+---------------------------------------------------------------------------]]
 local vector = FindMetaTable( "Vector" )
 
 function vector:Copy()
@@ -50,6 +53,9 @@ function vector:WithinRotatedRect( a, b, c, d )
 	return is_right( a, b, self ) and is_right( b, c, self ) and is_right( c, d, self ) and is_right( d, a, self )
 end
 
+--[[-------------------------------------------------------------------------
+Angle
+---------------------------------------------------------------------------]]
 local angle = FindMetaTable( "Angle" )
 
 function angle:Copy()
@@ -175,6 +181,9 @@ function math.NormalizeAngle360( ang )
 	return ang
 end
 
+--[[-------------------------------------------------------------------------
+General math
+---------------------------------------------------------------------------]]
 function math.TimedSinWave( freq, min, max )
 	min = ( min + max ) / 2
 	local wave = math.SinWave( RealTime(), freq, min - max, min )
@@ -204,6 +213,16 @@ function math.Map( num, min, max, newmin, newmax )
 	return newmin + ( num - min ) / ( max - min ) * ( newmax - newmin )
 end
 
+function math.Sign( num )
+	if num < 0 then
+		return -1
+	elseif num > 0 then
+		return 1
+	else
+		return 0
+	end
+end
+
 function math.TrueFOV( fov, aspect )
 	if !aspect and CLIENT then
 		aspect = ScrW() / ScrH()
@@ -214,36 +233,7 @@ function math.TrueFOV( fov, aspect )
 	return 2 * math.deg( math.atan( math.tan( math.rad( fov ) / 2 ) * ratio ) )
 end
 
-local po2 = setmetatable( {}, {
-	__index = function( tab, key )
-		if !isnumber( key ) then return end
-
-		local num = math.pow( 2, key )
-		tab[key] = num
-
-		return num
-	end
-} )
-
-function math.PowerOf2( pow ) --Memoizing po2 values is almost useless (for values up to 2^32 this function is 7% faster and for values up to 2^512 is about 11% faster)
-	return po2[pow]
-end
-/*function math.Bin2Dec( bin, unsigned )
-	local bytes = { string.byte( bin, 1, string.len( bin ) ) }
-	local num = 0
-
-	for i = 1, 4 do
-		num = num + bit.lshift( bytes[i], (4 - i) * 8 )
-	end
-	
-	if num < 0 and unsigned then
-		num = num + 4294967296 --2^32
-	end
-
-	return num
-end*/
-
-function math.Bin2Dec( bin, unsigned ) --this version is about 400% faster
+function math.Bin2Dec( bin, unsigned )
 	local num = bit.lshift( string.byte( bin, 1 ), 24 ) +
 				bit.lshift( string.byte( bin, 2 ), 16 ) +
 				bit.lshift( string.byte( bin, 3 ), 8 ) +
@@ -256,18 +246,7 @@ function math.Bin2Dec( bin, unsigned ) --this version is about 400% faster
 	return num
 end
 
-/*function math.Dec2Bin( dec )
-	local bytes = ""
-
-	for i = 1, 4 do
-		bytes = string.char( bit.band( dec, 255 ) )..bytes
-		dec = bit.rshift( dec, 8 )
-	end
-
-	return bytes
-end*/
-
-function math.Dec2Bin( dec ) --this version is about 30% faster
+function math.Dec2Bin( dec )
 	return string.char( bit.rshift( bit.band( dec, -16777216 ), 24 ) )..
 		   string.char( bit.rshift( bit.band( dec, 16711680 ), 16 ) )..
 		   string.char( bit.rshift( bit.band( dec, 65280 ), 8 ) )..

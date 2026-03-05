@@ -109,8 +109,8 @@ function RegisterSCP( name, model, weapon, static_stats, dynamic_stats, custom_c
 		error( "SCP " .. name .. "is already registered!" )
 	end
 
-	if !_LANG["english"]["CLASSES"][name] or !_LANG["english"]["CLASS_OBJECTIVES"][name] then
-		MsgC( Color( 255, 50, 50 ), "No language entry for: "..name, "\n" )
+	if !_LANG_DEFAULT["CLASSES"][name] or !_LANG_DEFAULT["CLASS_OBJECTIVES"][name] then
+		SLCErrorMessage( "No language entry for SCP: "..name )
 	end
 
 	local spawn = _G["SPAWN_"..name]

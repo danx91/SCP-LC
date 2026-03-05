@@ -1,5 +1,6 @@
 SWEP.Base 			= "weapon_scp_base"
 SWEP.PrintName		= "SCP-939"
+SWEP.Stat 			= RoundStat( "939" ):Show( true, 0, 5 )
 
 SWEP.HoldType		= "normal"
 
@@ -229,7 +230,7 @@ function SWEP:SpecialAttack()
 end
 
 function SWEP:OnPlayerKilled( ply )
-	AddRoundStat( "939" )
+	self:AddRoundStat()
 end
 
 --[[-------------------------------------------------------------------------

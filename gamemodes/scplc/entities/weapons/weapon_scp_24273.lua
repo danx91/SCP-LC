@@ -1,5 +1,6 @@
 SWEP.Base 			= "weapon_scp_base"
 SWEP.PrintName		= "SCP-2427-3"
+SWEP.Stat 			= RoundStat( "24273" ):Show( true, 0, 5 )
 
 SWEP.HoldType		= "melee"
 
@@ -675,7 +676,7 @@ function SWEP:CleanupTargets()
 end
 
 function SWEP:OnPlayerKilled( ply )
-	AddRoundStat( "24273" )
+	self:AddRoundStat()
 end
 
 function SWEP:GetView()
@@ -775,7 +776,7 @@ end
 SCP Hooks
 ---------------------------------------------------------------------------]]
 //lua_run ClearSCPHooks() EnableSCPHook("SCP24273") TransmitSCPHooks()
-SCPHook( "SCP24273", "EntityTakeDamage", function( target, dmg )
+SCPHook( "SCP24273", "SLCEntityTakeDamage", function( target, dmg )
 	if dmg:IsDamageType( DMG_DIRECT ) or !IsValid( target ) or !target:IsPlayer() or target:SCPClass() != CLASSES.SCP24273 then return end
 
 	local wep = target:GetSCPWeapon()

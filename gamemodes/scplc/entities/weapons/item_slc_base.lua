@@ -71,7 +71,7 @@ function SWEP:Initialize()
 end
 
 function SWEP:OnSelect()
-	
+	//
 end
 
 function SWEP:CanEnable()
@@ -117,11 +117,11 @@ function SWEP:OwnerChanged()
 end
 
 function SWEP:Equip()
-	
+	//
 end
 
 function SWEP:OnDrop()
-	
+	//
 end
 
 function SWEP:HolsterThink()
@@ -203,13 +203,13 @@ end
 
 function SWEP:DragAndDrop( wep, test )
 	if !self.HasBattery or !wep:IsDerived( "item_slc_battery" ) then return false end
-	
+
 	if self:GetBattery() >= ( wep.Power or 100 ) then return false end
 	if !SERVER or test then return true end
 
 	self:SetBattery( wep.Power or 100 )
 	self:BatteryInserted()
-	
+
 	if wep:GetCount() <= 1 then
 		wep:Remove()
 	else

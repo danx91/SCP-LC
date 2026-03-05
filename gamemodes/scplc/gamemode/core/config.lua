@@ -1,4 +1,4 @@
-DEVELOPER_MODE = false --IMPORTANT: Set to false before publishing or running public server!
+DEVELOPER_MODE = true --IMPORTANT: Set to false before publishing or running public server!
 
 INFO_SCREEN_DURATION = 10
 

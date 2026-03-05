@@ -8,9 +8,11 @@ lang.NRegistry = {
 	scpwait = "You have to wait %i rounds to be able to play as SCP",
 	abouttostart = "Game will start in %i seconds!",
 	kill = "You received %d points for killing %s: %s!",
+	kill_rdm = "You lost %d points for killing %s: %s!",
 	kill_n = "You killed %s: %s!",
-	assist = "You received %d points for assisting in kill of player: %s!",
-	rdm = "You lost %d points for killing %s: %s!",
+	assist = "You received %d points for assisting in the kill of %s!",
+	assist_rdm = "You lost %d points for assisting in the kill of %s!",
+	kill_supp = "You received %d points for helping in the kill of %s!",
 	acc_denied = "Access denied",
 	acc_granted = "Access granted",
 	acc_omnitool = "An Omnitool is required to operate this door",
@@ -699,6 +701,11 @@ misc.font = {
 It's gmod issue and I can't fix it. To fix it, you have to manually delete some files.
 Navigate to 'steamapps/common/GarrysMod/garrysmod/cache/workshop/resource/fonts' and delete following files: 'impacted.ttf', 'ds-digital.ttf' and 'unispace.ttf']],
 	ok = "OK"
+}
+
+misc.xp = {
+	summary = "Experience summary",
+	total = "Total",
 }
 
 --[[-------------------------------------------------------------------------

@@ -67,7 +67,6 @@ function PLAYER:SpectatePlayerPrev()
 	if self:SCPTeam() != TEAM_SPEC or self:GetAdminMode() then return end
 	if self.DeathScreen or self.SetupAsSpectator then return end
 
-	//local plys = SCPTeams.GetPlayersByInfo( SCPTeams.INFO_HUMAN )
 	local plys = self:GetValidSpectateTargets()
 
 	if self:GetObserverMode() == OBS_MODE_ROAMING then
@@ -119,7 +118,6 @@ function PLAYER:ChangeSpectateMode()
 
 	local cur_mode = self:GetObserverMode()
 
-	//if #SCPTeams.GetPlayersByInfo( SCPTeams.INFO_HUMAN ) < 1 then
 	if #self:GetValidSpectateTargets() < 1 then
 		if cur_mode != OBS_MODE_ROAMING then
 			--print( "SpecMode - foce roam", self )
@@ -144,17 +142,18 @@ function PLAYER:ChangeSpectateMode()
 end
 
 function PLAYER:GetValidSpectateTargets( all )
-	local info = SCPTeams.INFO_HUMAN
+	local blacklist = {
+		[TEAM_SPEC] = true,
+	}
 
-	if CVAR.slc_allow_scp_spectate:GetBool() == true or hook.Run( "SLCCanSpectateSCP", self ) == true or SLCAuth.HasAccess( self, "slc spectatescp" ) then
-		info = SCPTeams.INFO_ALIVE
+	if CVAR.slc_allow_scp_spectate:GetBool() == false and hook.Run( "SLCCanSpectateSCP", self ) != true and !SLCAuth.HasAccess( self, "slc spectatescp" ) then
+		blacklist[TEAM_SCP] = true
 	end
 
 	local plys = {}
-	local tab = SCPTeams.GetPlayersByInfo( info )
 
-	for i, v in ipairs( tab ) do
-		if all or !v:IsAboutToSpawn() then
+	for i, v in ipairs( player.GetAll() ) do
+		if ( all or !v:IsAboutToSpawn() ) and !blacklist[v:SCPTeam()] then
 			table.insert( plys, v )
 		end
 	end
@@ -163,20 +162,17 @@ function PLAYER:GetValidSpectateTargets( all )
 end
 
 function PLAYER:InvalidatePlayerForSpectate()
-	//local roam = #SCPTeams.GetPlayersByInfo( SCPTeams.INFO_HUMAN ) < 1
 	local roam = #self:GetValidSpectateTargets() < 1
 	--print( "ivalidate", self, roam )
 
 	for k, v in pairs( SCPTeams.GetPlayersByTeam( TEAM_SPEC ) ) do
-		if v != self then
-			if v:GetObserverTarget() == self then
-				if roam then
-					v:UnSpectate()
-					v:Spectate( OBS_MODE_ROAMING )
-				else
-					v:SpectatePlayerNext()
-				end
-			end
+		if v == self or v:GetObserverTarget() != self then continue end
+
+		if roam then
+			v:UnSpectate()
+			v:Spectate( OBS_MODE_ROAMING )
+		else
+			v:SpectatePlayerNext()
 		end
 	end
 end

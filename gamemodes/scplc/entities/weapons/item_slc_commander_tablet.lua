@@ -142,7 +142,7 @@ function SWEP:PrimaryAttack()
 					local total = 0
 
 					for _, t in pairs( SCPTeams.GetAll() ) do
-						if SCPTeams.HasInfo( t, SCPTeams.INFO_ALIVE ) then
+						if t != TEAM_SPEC then
 							local num = teams[t] and #teams[t] or 0
 							total = total + num
 
@@ -387,7 +387,7 @@ if CLIENT then
 		local _, font_h = surface.GetTextSize( "W" )
 
 		for _, t in pairs( SCPTeams.GetAll() ) do
-			if SCPTeams.HasInfo( t, SCPTeams.INFO_ALIVE ) then
+			if t != TEAM_SPEC then
 				local name = SCPTeams.GetName( t )
 				tw = surface.GetTextSize( ( LANG.TEAMS[name] or name )..":" )
 
@@ -398,7 +398,7 @@ if CLIENT then
 		end
 
 		for _, t in pairs( SCPTeams.GetAll() ) do
-			if SCPTeams.HasInfo( t, SCPTeams.INFO_ALIVE ) then
+			if t != TEAM_SPEC then
 				local name = SCPTeams.GetName( t )
 				local color = SCPTeams.GetColor( t )
 

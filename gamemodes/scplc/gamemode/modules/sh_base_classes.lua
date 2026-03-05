@@ -909,13 +909,13 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		goc_bgs[i] = 1
 	end
 
-	local function goc_rdm( att, vic )
+	local function goc_relations( att, vic )
 		if att:SCPTeam() != TEAM_GOC then return end
 
 		local alpha = GetSupportGroup( "mtf_alpha" )
 		if !alpha[vic:SCPClass()] then return end
 
-		return true, false
+		return true, nil
 	end
 
 	RegisterSupportClass( "goc", "goc", "models/player/cheddar/goc/goc_soldier2.mdl", {
@@ -935,7 +935,7 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		backpack = "large",
 		spawn_protection = true,
 		callback = function( ply, this )
-			ply:SetProperty( "rdm_override", goc_rdm )
+			ply:SetProperty( "relation_override", goc_relations )
 		end,
 	} )
 
@@ -957,7 +957,7 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		backpack = "large",
 		spawn_protection = true,
 		callback = function( ply, this )
-			ply:SetProperty( "rdm_override", goc_rdm )
+			ply:SetProperty( "relation_override", goc_relations )
 		end,
 	} )
 
@@ -979,7 +979,7 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		backpack = "large",
 		spawn_protection = true,
 		callback = function( ply, this )
-			ply:SetProperty( "rdm_override", goc_rdm )
+			ply:SetProperty( "relation_override", goc_relations )
 		end,
 	} )
 end )
