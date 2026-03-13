@@ -1,6 +1,6 @@
 SWEP.Base 			= "weapon_scp_base"
 SWEP.PrintName		= "SCP-049"
-SWEP.Stat 			= RoundStat( "049" ):Show( true, 0, 5 )
+SWEP.Stat 			= RoundStat( "scp_049" ):ShowByRef( 20 )
 
 SWEP.HoldType		= "normal"
 SWEP.UseCustomDT 	= true
@@ -64,7 +64,7 @@ function SWEP:Think()
 	if ROUND.post then
 		if self.ChokeTarget then
 			self:StopChoke()
-		end	
+		end
 
 		return
 	end
@@ -72,7 +72,7 @@ function SWEP:Think()
 	if self.ChokeTarget and ( !IsValid( self.ChokeTarget ) or !self.ChokeTarget:CheckSignature( self.ChokeTargetSignature ) ) then
 		self:StopChoke()
 	end
-	
+
 	local owner = self:GetOwner()
 
 	local target = self.ChokeTarget
@@ -110,10 +110,10 @@ function SWEP:Think()
 
 		for i, v in ipairs( player.GetAll() ) do
 			if v:SCPClass() != CLASSES.SCP0492 or v:GetPos():DistToSqr( pos ) > self.PassiveRadius then continue end
-	
+
 			local wep = v:GetSCPWeapon()
 			if !IsValid( wep ) or wep:GetSCP049() != owner then continue end
-	
+
 			wep:EnableProtection()
 			nearby = nearby + 1
 		end
@@ -163,7 +163,7 @@ function SWEP:PrimaryAttack()
 
 	local ent = tr.Entity
 	if !IsValid( ent ) then return end
-	
+
 	if !ent:IsPlayer() then
 		self:SCPDamageEvent( ent, 50 )
 		self:SetNextPrimaryFire( ct + 1 )
@@ -195,7 +195,7 @@ function SWEP:PrimaryAttack()
 	self.ChokeTargetPosition = ent:GetPos()
 	self.ChokeOwnerPosition = owner:GetPos()
 	self.ChokeDamage = 0
-	
+
 	owner:EmitSound( "SCP049.Attack" )
 	owner:DisableControls( "scp049_attack" )
 
@@ -327,7 +327,7 @@ end
 function SWEP:StopChoke()
 	local owner = self:GetOwner()
 	if !IsValid( owner ) then return end
-	
+
 	owner:StopDisableControls( "scp049_attack" )
 
 	if IsValid( self.ChokeTarget ) then
@@ -474,7 +474,7 @@ function SWEP:FinishSurgery()
 
 	GetSCP( "SCP0492" ):SetupPlayer( ply, true, owner:GetPos() + Vector( 0, 0, 8 ), owner,
 		self.SurgeryType, hp, stats.speed, dmg, self:GetUpgradeMod( "zombie_ls", 0 ), model, skin )
-	
+
 	ent:Remove()
 	self.SurgeryType = nil
 	self.SurgeryTarget = nil
@@ -665,7 +665,7 @@ SCPHook( "SCP049", "SLCEscapeMultiplier", function( tab, mult )
 
 	if z_len > 0 then
 		local z_mul
-		
+
 		if total_z == 1 then
 			z_mul = 0.1
 		else
@@ -844,7 +844,7 @@ if CLIENT then
 			if time < 0 then
 				time = 0
 			end
-			
+
 			return math.Round( time ).."s"
 		end )
 		:SetProgressFunction( function( swep )

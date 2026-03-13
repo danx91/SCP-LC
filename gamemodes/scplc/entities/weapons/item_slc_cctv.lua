@@ -634,6 +634,8 @@ function SWEP:DrawMap( x, y, w, h )
 	draw.OutlinedText( string.format( data.name, btn ),
 		"SCPHUDMedium", x + w * 0.5, arrow_y, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, color_black, 2, 3 )
 
+	draw.NoTexture()
+
 	surface.DrawTriangle( arrow_x_l, arrow_y, arrow_r, -90 )
 	surface.DrawTriangle( arrow_x_r, arrow_y, arrow_r, 90 )
 

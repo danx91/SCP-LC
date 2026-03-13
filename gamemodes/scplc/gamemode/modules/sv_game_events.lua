@@ -7,7 +7,7 @@ function SCP914Use( ply )
 
 	local mode = SCP_914_MODE()
 
-	AddTimer( "SCP914Upgrade", 10, 1, function() 
+	AddTimer( "SCP914Upgrade", 10, 1, function()
 		SCP914Upgrade( mode, ply )
 	end )
 
@@ -57,7 +57,7 @@ function SCP914Upgrade( mode, ply )
 
 			item:SetPos( SCP_914_OUTPUT )
 			item:Spawn()
-			
+
 			if v.PickupPriority then
 				item.Dropped = ct
 				item.PickupPriority = v.PickupPriority
@@ -112,7 +112,7 @@ end
 
 local function IsGateAOpen()
 	for i, v in ipairs( ents.FindInSphere( POS_MIDDLE_GATE_A, 125 ) ) do
-		if v:GetClass() == "prop_dynamic" then 
+		if v:GetClass() == "prop_dynamic" then
 			if table.HasValue( POS_GATE_A_DOORS, v:GetPos() ) then
 				return false
 			end
@@ -169,7 +169,7 @@ local function spawn_fire_ents( pos, time )
 	local pos1, pos2 = pos[1], pos[2]
 	local step = 90
 	local noise = step / 2
-	
+
 	for x = pos1.x, pos2.x, step do
 		for y = pos1.y, pos2.y, step do
 			fire_trace.start = Vector(
@@ -241,7 +241,7 @@ function ExplodeGateA( ply )
 	if IsGateAOpen() then return end
 
 	SetRoundProperty( "gatea", true )
-	
+
 	local snd = ServerSound( "ambient/alarms/alarm_citizen_loop1.wav" )
 	snd:SetSoundLevel( 0 )
 	snd:Play()
@@ -253,7 +253,7 @@ function ExplodeGateA( ply )
 	PlayerMessage( "gateexplode$"..time )
 
 	AddTimer( "GateExplode", 1, time, function( self, n )
-		if IsGateAOpen() then 
+		if IsGateAOpen() then
 			self:Destroy()
 			snd:Stop()
 
@@ -262,7 +262,7 @@ function ExplodeGateA( ply )
 
 			return
 		end
-		
+
 		if n % 10 == 0 then PlayerMessage( "gateexplode$"..( time - n ) ) end
 		if n + 1 == time then snd:Stop() end
 
@@ -294,7 +294,7 @@ end
 SCP106 Recontain
 ---------------------------------------------------------------------------]]
 function Recontain106( ply )
-	if GetRoundStat( "106recontain" ) then
+	if GetRoundStatValue( "recontain106" ) then
 		PlayerMessage( "r106used", ply, true )
 		//ply:PrintMessage( HUD_PRINTCENTER, "SCP 106 recontain procedure can be triggered only once per round" )
 		return false
@@ -341,7 +341,7 @@ function Recontain106( ply )
 		return false
 	end
 
-	SetRoundStat( "106recontain", true )
+	SetRoundStatValue( "recontain106", true )
 
 	AddTimer( "106Recontain", 8, 1, function()
 		if ROUND.post then return end
@@ -411,7 +411,6 @@ Omega Warhead
 OMEGA_DESTROY = OMEGA_DESTROY or {}
 
 local function omega_shelter()
-	local escape_stat = GetRoundStat( "escapes" )
 	local xp = CVAR.slc_xp_omega_shelter:GetInt()
 	for i, v in ipairs( SCPTeams.GetPlayersByInfo( SCPTeams.INFO_HUMAN ) ) do
 		if v:GetPos():WithinAABox( OMEGA_SHELTER[1], OMEGA_SHELTER[2] ) then
@@ -434,7 +433,11 @@ local function omega_shelter()
 			v:SetSCPClass( "spectator" )
 			v.DeathScreen = CurTime() + INFO_SCREEN_DURATION
 
-			escape_stat:AddValue( 1, { player = v, type = "omega" } )
+			local stat = SCPTeams.GetStat( team, "escape" )
+			if stat then
+				stat:AddValue( 1, { player = v, type = "omega" } )
+			end
+
 			//print( "SHELTER ESCAPE", v )
 		end
 	end
@@ -442,7 +445,7 @@ end
 
 hook.Add( "SLCPreround", "SLCOmegaWarhead", function()
 	local listener = SynchronousEventListener( "OmegaWarhead", 2, 2, function( lis, info )
-		if MAP_CHECKERS.OMEGA_REMOTE() and !GetRoundStat( "goc_countdown" ) and !IsGOCDeviceValid() then
+		if MAP_CHECKERS.OMEGA_REMOTE() and !GetRoundProperty( "goc_countdown" ) and !IsGOCDeviceValid() then
 			OMEGAWarhead( info[1][1], info[2][1] )
 		else
 			lis:Broadcast( NULL, false, 1 )
@@ -492,9 +495,9 @@ end )
 
 function OMEGAWarhead( ply1, ply2 )
 	print( "OMEGA Activated", ply1, ply2 )
-	
-	if GetRoundStat( "omega_warhead" ) or GetRoundStat( "alpha_warhead" ) or GetRoundStat( "goc_countdown" ) then return end
-	SetRoundStat( "omega_warhead", true )
+
+	if GetRoundProperty( "omega_warhead_activated" ) or GetRoundProperty( "alpha_warhead_activated" ) or GetRoundProperty( "goc_countdown" ) then return end
+	SetRoundProperty( "omega_warhead_activated", true )
 
 	if IsValid( ALPHA_WARHED_SCREEN ) then
 		ALPHA_WARHED_SCREEN:SetState( 4 )
@@ -562,7 +565,7 @@ function OMEGAWarhead( ply1, ply2 )
 									"omega_mia"
 								}
 							} )
-							
+
 							v:SkipNextKillRewards()
 							v:SkipNextSuicide()
 							v:Kill()
@@ -587,6 +590,8 @@ function OMEGAWarhead( ply1, ply2 )
 				if sel_omega then
 					sel_omega:Broadcast( NULL, false, 2 )
 				end
+
+				SetRoundStatValue( "omega_warhead", true, { activator1 = ply1, activator2 = ply2 } )
 
 				//print( "RELEASING ROUND" )
 				ReleaseRound()
@@ -645,8 +650,8 @@ end )
 function ALPHAWarhead( ply )
 	print( "ALPHA activated", ply )
 
-	if GetRoundStat( "omega_warhead" ) or GetRoundStat( "alpha_warhead" ) or GetRoundStat( "goc_countdown" ) then return end
-	SetRoundStat( "alpha_warhead", true )
+	if GetRoundProperty( "omega_warhead_activated" ) or GetRoundProperty( "alpha_warhead_activated" ) or GetRoundProperty( "goc_countdown" ) then return end
+	SetRoundProperty( "alpha_warhead_activated", true )
 
 	local sel_omega = GetSELObject( "OmegaWarhead" )
 	if sel_omega then
@@ -684,7 +689,7 @@ function ALPHAWarhead( ply )
 						k:Remove()
 					end
 				end
-				
+
 				ALPHA_DESTROY = {}
 
 				local surface = {}
@@ -718,6 +723,8 @@ function ALPHAWarhead( ply )
 				TransmitSound( "scp_lc/warhead/explosion.ogg", true, surface, 1 )
 				TransmitSound( "scp_lc/warhead/explosion_far.ogg", true, facility, 1 )
 
+				SetRoundStatValue( "alpha_warhead", true, { activator = ply } )
+
 				ReleaseRound()
 
 				if IsValid( ALPHA_WARHED_SCREEN ) then
@@ -733,11 +740,11 @@ end
 
 function ALLWarheads( time )
 	print( "ALL WARHEADS Activated" )
-	
-	if GetRoundStat( "goc_warhead" ) then return end
-	SetRoundStat( "omega_warhead", true )
-	SetRoundStat( "alpha_warhead", true )
-	SetRoundStat( "goc_warhead", true )
+
+	if GetRoundProperty( "goc_warhead_activated" ) then return end
+	SetRoundProperty( "omega_warhead_activated", true )
+	SetRoundProperty( "alpha_warhead_activated", true )
+	SetRoundProperty( "goc_warhead_activated", true )
 
 	if IsValid( ALPHA_WARHED_SCREEN ) then
 		ALPHA_WARHED_SCREEN:SetState( 4 )
@@ -802,7 +809,7 @@ function ALLWarheads( time )
 								v:IsInZone( ZONE_SURFACE ) and "alpha_mia" or "omega_mia"
 							}
 						} )
-						
+
 						v:SkipNextKillRewards()
 						v:Kill()
 					end
@@ -810,8 +817,7 @@ function ALLWarheads( time )
 
 				TransmitSound( "scp_lc/warhead/explosion.ogg", true, player.GetAll(), 1 )
 
-				SetRoundStat( "omega_warhead", false )
-				SetRoundStat( "alpha_warhead", false )
+				SetRoundStatValue( "goc_warhead", true )
 
 				ReleaseRound()
 			end )
@@ -840,7 +846,7 @@ function DestroyOnWarhead( ent, alpha, omega )
 	if alpha then
 		ALPHA_DESTROY[ent] = true
 	end
-	
+
 	if omega then
 		OMEGA_DESTROY[ent] = true
 	end

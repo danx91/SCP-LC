@@ -1,6 +1,6 @@
 SWEP.Base 			= "weapon_scp_base"
 SWEP.PrintName		= "SCP-023"
-SWEP.Stat 			= RoundStat( "023" ):Show( true, 0, 5 )
+SWEP.Stat 			= RoundStat( "scp_023" ):ShowByRef( 20 )
 
 SWEP.HoldType		= "fist"
 
@@ -49,7 +49,7 @@ function SWEP:Think()
 	if ROUND.preparing then
 		return
 	end
-	
+
 	local ct = CurTime()
 	local owner = self:GetOwner()
 	local pos = owner:GetPos()
@@ -174,7 +174,7 @@ function SWEP:SecondaryAttack()
 
 	clone:SetPos( owner:GetPos() )
 	clone:Spawn()
-	
+
 	clone.OwnerSignature = owner:TimeSignature()
 	clone:SetOwner( owner )
 	clone:SetInvisRadius( self:GetInvisRadius() )
@@ -216,7 +216,7 @@ function SWEP:SpecialAttack()
 
 	local new_prey = new_preys[SLCRandom( #new_preys )]
 	if !new_prey then return end
-	
+
 	owner:Blink( 0, 0.5 )
 
 	timer.Simple( 0.4, function()

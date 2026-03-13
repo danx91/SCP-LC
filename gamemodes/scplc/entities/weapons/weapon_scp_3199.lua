@@ -1,6 +1,6 @@
 SWEP.Base 			= "weapon_scp_base"
 SWEP.PrintName		= "SCP-3199"
-SWEP.Stat 			= RoundStat( "3199" ):Show( true, 0, 5 )
+SWEP.Stat 			= RoundStat( "scp_3199" ):ShowByRef( 20 )
 
 SWEP.ViewModel 			= "models/weapons/alski/scp3199arms.mdl"
 SWEP.ShouldDrawViewModel = true
@@ -103,15 +103,15 @@ function SWEP:Think()
 
 		if self.NextTransmit <= ct then
 			self.NextTransmit = ct + 1
-	
+
 			local pos = owner:GetPos()
 			local tab = {}
-	
+
 			local radius = ( self.FrenzyDetect * self:GetUpgradeMod( "passive_radius", 1 ) ) ^ 2
-	
+
 			for i, v in ipairs( player.GetAll() ) do
 				if !self:CanTargetPlayer( v ) or v:HasEffect( "deep_wounds" ) or pos:DistToSqr( v:GetPos() ) > radius then continue end
-				
+
 				local cpos = v:GetPos() + v:OBBCenter()
 				table.insert( tab, {
 					x = cpos.x,
@@ -119,7 +119,7 @@ function SWEP:Think()
 					z = cpos.z
 				} )
 			end
-	
+
 			if #tab > 0 then
 				net.SendTable( "SCP3199Frenzy", tab, owner )
 			end
@@ -259,7 +259,7 @@ function SWEP:PrimaryAttack()
 			if SERVER and !any_hit and self:GetFrenzy() > 0 then
 				self:StopFrenzy( hit_wounded )
 			end
-		end 
+		end
 	} )
 end
 
@@ -398,7 +398,7 @@ function SWEP:EggRespawn()
 
 	local owner = self:GetOwner()
 	local egg = self.Eggs[SLCRandom( total )]
-	
+
 	self:StopFrenzy( false )
 	self:SetRespawnTime( CurTime() + self.RespawnTime )
 
@@ -505,7 +505,7 @@ SCP Hooks
 //lua_run ClearSCPHooks() EnableSCPHook("SCP3199") TransmitSCPHooks()
 SCPHook( "SCP3199", "SLCEntityTakeDamage", function( target, dmg )
 	if dmg:IsDamageType( DMG_DIRECT ) or !IsValid( target ) or !target:IsPlayer() or target:SCPClass() != CLASSES.SCP3199 then return end
-	
+
 	local wep = target:GetSCPWeapon()
 	if !IsValid( wep ) then return end
 	if wep:GetRespawnTime() >= CurTime() then return true end
@@ -521,7 +521,7 @@ end )
 
 SCPHook( "SCP3199", "SLCPostScaleDamage", function( target, dmg )
 	if dmg:IsDamageType( DMG_DIRECT ) or !IsValid( target ) or !target:IsPlayer() or target:SCPClass() != CLASSES.SCP3199 then return end
-	
+
 	local wep = target:GetSCPWeapon()
 	if !IsValid( wep ) then return end
 	if wep:GetRespawnTime() >= CurTime() then return true end

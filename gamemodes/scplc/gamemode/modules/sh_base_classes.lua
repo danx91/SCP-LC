@@ -130,7 +130,7 @@ hook.Add( "SLCRegisterClassGroups", "BaseGroups", function()
 
 		SetRoundProperty( "SupportTimerOverride", CVAR.slc_alpha1_time_goc:GetInt() )
 	end, function()
-		return GetRoundProperty( "mtfs_spawned" ) and !GetRoundProperty( "goc_spawned" ) and !GetRoundStat( "omega_warhead" )
+		return GetRoundProperty( "mtfs_spawned" ) and !GetRoundProperty( "goc_spawned" ) and !GetRoundProperty( "omega_warhead_activated" )
 	end )
 end )
 

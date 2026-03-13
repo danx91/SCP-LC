@@ -90,7 +90,7 @@ end
 
 function SWEP:CheckOwner()
 	local owner = self:GetOwner()
-	
+
 	if !IsValid( owner ) then return false end
 
 	if !self.OwnerSignature then
@@ -193,7 +193,7 @@ if CLIENT then
 
 		local wep = ply:GetSCPWeapon()
 		if !IsValid( wep ) then return end
-		
+
 		if wep:GetNextSpecialAttack() > CurTime() then return end
 
 		wep:SpecialAttack()
@@ -209,7 +209,7 @@ if SERVER then
 
 		local wep = ply:GetSCPWeapon()
 		if !IsValid( wep ) then return end
-		
+
 		if wep:GetNextSpecialAttack() > CurTime() then return end
 
 		wep:SpecialAttack()

@@ -1,6 +1,6 @@
 SWEP.Base 			= "weapon_scp_base"
 SWEP.PrintName		= "SCP-106"
-SWEP.Stat 			= RoundStat( "106" ):Show( true, 0, 4 )
+SWEP.Stat 			= RoundStat( "scp_106" ):ShowByRef( 30 )
 
 SWEP.HoldType		= "normal"
 
@@ -231,7 +231,7 @@ function SWEP:SpotThink()
 		if self.SelectedSpot then
 			net.Ping( "SCP106Teleport", self.SelectedSpot:EntIndex() )
 		end
-		
+
 		self.SelectedSpot = nil
 		self.SpotHolding = false
 	end
@@ -316,7 +316,7 @@ function SWEP:SecondaryAttack()
 
 		local pos = owner:GetPos()
 		util.Decal( "Decal106", pos + Vector( 0, 0, 8 ), pos - Vector( 0, 0, 8 ), owner )
-		
+
 		SuppressHostEvents( NULL )
 		self:TeleportSequence( self.LastTrap:GetGroundPos(), self.LastTrap:GetAngles(), self.TrapSpeed )
 		SuppressHostEvents( owner )
@@ -412,7 +412,7 @@ function SWEP:SpecialAttack()
 			spot_trace.endpos = spot_trace.start - spot_trace_offset * 2
 
 			util.TraceLine( spot_trace )
-			
+
 			if !spot_trace.Hit or spot_trace.HitNormal.z != 1 or ( prev_z and spot_trace.HitPos.z != prev_z ) then
 				return
 			end
@@ -513,9 +513,9 @@ function SWEP:TeleportSequence( dest, wall, despawn_speed, spawn_speed )
 	local despawn_name = "scp_106_despawn_1"
 	local seq_despawn, dur_despawn = owner:LookupSequence( despawn_name )
 	if seq_despawn == -1 then dur_despawn = 4.3 end
-	
+
 	dur_despawn = dur_despawn / despawn_speed
-	
+
 	local spawn_name = wall and "scp_106_spawn_wall" or "scp_106_spawn_floor"
 	local seq_sapwn, dur_spawn = owner:LookupSequence( spawn_name )
 	if seq_sapwn == -1 then dur_spawn = wall and 1.2 or 4.3 end
@@ -530,7 +530,7 @@ function SWEP:TeleportSequence( dest, wall, despawn_speed, spawn_speed )
 
 	self:SetTeleportSequence( CurTime() + total )
 	owner:DisableControls( "scp106_tp" )
-	
+
 	owner:PlaySequence( seq_despawn, false, despawn_speed )
 
 	owner:AddTimer( "SCP106FinishTPSound", dur_despawn - 2, 1, function()
@@ -580,7 +580,7 @@ function SWEP:GetTrapPosition()
 	if !trap_trace.Hit or math.abs( normal.z ) > 0.1 then
 		return false, pos, ( -owner:GetAimVector() ):Angle()
 	end
-	
+
 	local angle = normal:Angle()
 
 	local up = angle:Up()
@@ -612,7 +612,7 @@ function SWEP:GetTrapPosition()
 			trap_trace.endpos = trap_trace.start - normal * 8
 
 			util.TraceLine( trap_trace )
-			
+
 			if !trap_trace.Hit or trap_trace.HitNormal != normal then
 				all_ok = false
 				break

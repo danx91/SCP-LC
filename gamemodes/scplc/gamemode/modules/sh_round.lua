@@ -37,7 +37,7 @@ end
 
 function PrintSCPNotice( tab )
 	if !tab then
-		tab = CLIENT and { LocalPlayer() } or  GetActivePlayers()
+		tab = CLIENT and { LocalPlayer() } or GetActivePlayers()
 	elseif !istable( tab ) then
 		tab = { tab }
 	end

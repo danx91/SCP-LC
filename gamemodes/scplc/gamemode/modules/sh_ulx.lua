@@ -247,6 +247,33 @@ function InitializeSCPULX()
 	spawnchip:defaultAccess( ULib.ACCESS_SUPERADMIN )
 	spawnchip:help( "Spawns chip" )
 
+	function ulx.spawnfuse( ply, rating, silent )
+		rating = tonumber( rating )
+		if !rating or rating <= 0 then rating = 99 end
+
+		local ent = ents.Create( "item_slc_fuse" )
+		if IsValid( ent ) then
+			ent:SetRating( rating )
+			ent:SetPos( ply:GetEyeTrace().HitPos )
+			ent:Spawn()
+
+			if silent then
+				ulx.fancyLogAdmin( ply, true, "#A spawned #sA fuse", rating )
+			else
+				ulx.fancyLogAdmin( ply, "#A spawned #sA fuse", rating )
+			end
+		else
+			ULib.tsayError( ply, "Failed to spawn fuse", true )
+		end
+	end
+
+	local spawnfuse = ulx.command( ULX_CAT, "ulx spawn_fuse", ulx.spawnfuse, "!fuse" )
+	spawnfuse:addParam{ type = ULib.cmds.NumArg, hint = "Fuse rating" }
+	spawnfuse:addParam{ type = ULib.cmds.BoolArg, invisible = true }
+	spawnfuse:setOpposite( "ulx silent spawn_fuse", { nil, nil, true } )
+	spawnfuse:defaultAccess( ULib.ACCESS_SUPERADMIN )
+	spawnfuse:help( "Spawns fuse" )
+
 	function ulx.setafk( ply, target )
 		target:MakeAFK()
 		ulx.fancyLogAdmin( ply, "#A marked #T as AFK", target )

@@ -1,6 +1,6 @@
 SWEP.Base 			= "weapon_scp_base"
 SWEP.PrintName		= "SCP-682"
-SWEP.Stat 			= RoundStat( "682" ):Show( true, 0, 5 )
+SWEP.Stat 			= RoundStat( "scp_682" ):ShowByRef( 20 )
 
 SWEP.HoldType		= "normal"
 
@@ -80,11 +80,11 @@ SWEP.NextThinkTime = 0
 SWEP.NextRegen = 0
 function SWEP:Think()
 	local owner = self:GetOwner()
-	
+
 	if CLIENT and self:GetCharging() and !controller.IsEnabled( owner ) then
 		controller.Start( owner, "scp682_charge" )
 	end
-	
+
 	owner:UpdateHold( self, "scp682_bite" )
 
 	if CLIENT then return end
@@ -122,7 +122,7 @@ function SWEP:ChargeThink()
 	local owner = self:GetOwner()
 
 	if !self:GetCharging() and !controller.IsEnabled( owner ) then return end
-	
+
 	local start = owner:GetPos() + trace_offset
 	local ang = owner:GetAngles()
 	ang.p = 0
@@ -154,7 +154,7 @@ function SWEP:ChargeThink()
 		if door_ent:GetClass() == "prop_dynamic" then
 			door_ent = door_ent:GetParent()
 		end
-		
+
 		local class = door_ent:GetClass()
 		if class_whitelist[class] then return end
 		if ( class == "func_door" or class == "func_door_rotating" ) and
@@ -164,10 +164,10 @@ function SWEP:ChargeThink()
 			if !self:CanTargetPlayer( ent ) then return end
 
 			ent:SetVelocity( trace_tab.Normal * 500 )
-			
+
 			local dmg = DamageInfo()
 			dmg:SetAttacker( owner )
-			
+
 			if self.FullSpeed then
 				dmg:SetDamageType( DMG_DIRECT )
 				dmg:SetDamage( ent:Health() )
@@ -202,7 +202,7 @@ function SWEP:ChargeThink()
 	self:SetState( STATE_STUNNED )
 	owner:DisableControls( "scp682_stun", CAMERA_MASK )
 	owner:PushSpeed( 0.4, 0.4, -1, "SLC_SCP682Penalty", 1 )
-	
+
 	owner:AddTimer( "SCP682ChargeStun", 4 * self:GetUpgradeMod( "charge_stun", 1 ), 1, function()
 		self:SetState( STATE_NONE )
 		owner:StopDisableControls( "scp682_stun" )
@@ -245,7 +245,7 @@ function SWEP:PrimaryAttack()
 	end
 
 	local ent = attack_trace.Entity
-	if IsValid( ent ) then 
+	if IsValid( ent ) then
 		self:EmitSound( "npc/zombie/claw_strike3.wav" )
 		if CLIENT then return end
 
@@ -286,7 +286,7 @@ bite_trace.output = bite_trace
 function SWEP:PerformBiteAttack()
 	local ct = CurTime()
 	self:SetNextSecondaryFire( ct + self.BiteCooldown )
-	
+
 	if self:GetNextPrimaryFire() - 2.5 < ct then
 		self:SetNextPrimaryFire( ct + 2.5 )
 	end
@@ -313,11 +313,11 @@ function SWEP:PerformBiteAttack()
 	local pct = owner:HoldProgress( self, "scp682_bite" )
 	local pos = owner:GetPos()
 	local ang = owner:GetAngles()
-	
+
 	ang.p = 0
 	ang.r = 0
 	local forward = ang:Forward()
-	
+
 	local dmg = math.Map( pct, 0, 1, self.BiteDamageMin, self.BiteDamageMax )
 	local has_upgrade = self:HasUpgrade( "attack_3" )
 
@@ -364,7 +364,7 @@ end
 function SWEP:SpecialAttack()
 	local owner = self:GetOwner()
 	if CLIENT or ROUND.preparing or ROUND.post or !owner:IsOnGround() or !self:HasUpgrade( "charge_1" ) or owner:IsHolding( self, "scp682_bite" ) then return end
-	
+
 	self.FullSpeed = false
 
 	if self:GetCharging() then
@@ -385,10 +385,10 @@ function SWEP:SpecialAttack()
 
 	owner:DoAnimationEvent( ACT_GESTURE_FLINCH_RIGHTARM )
 	owner:DisableControls( "scp682_charge" )
-	
+
 	local dur = owner:SequenceDuration( owner:SelectWeightedSequence( ACT_GESTURE_FLINCH_RIGHTARM ) )
 	self:SetNextSpecialAttack( CurTime() + dur + 5 )
-	
+
 	owner:AddTimer( "SCP682Charge", dur, 1, function()
 		owner:StopDisableControls( "scp682_charge" )
 
@@ -466,7 +466,7 @@ SCPHook( "SCP682", "SLCPostScaleDamage", function( target, dmg )
 	if to_block > shield then
 		to_block = shield
 	end
-	
+
 	shield = shield - to_block
 
 	local new_dmg = orig - to_block
@@ -524,7 +524,7 @@ SCPHook( "SCP682", "SLCScaleSpeed", function( ply, mod )
 
 	local wep = ply:GetSCPWeapon()
 	if !IsValid( wep ) or !ply:IsHolding( wep, "scp682_bite" ) then return end
-	
+
 	local f = ply:HoldProgress( wep, "scp682_bite" )
 
 	mod[1] = mod[1] * math.Map( f, 0, 1, 0.75, wep.PrepareSpeed * wep:GetUpgradeMod( "sec_speed", 1 ) )
@@ -559,7 +559,7 @@ SCPHook( "SCP682", "DoAnimationEvent", function( ply, event, data )
 		return ACT_INVALID
 	elseif event == PLAYERANIMEVENT_ATTACK_SECONDARY and data == 1002 then
 		ply:AnimResetGestureSlot( GESTURE_SLOT_ATTACK_AND_RELOAD )
-		
+
 		return ACT_INVALID
 	end
 end )
@@ -634,7 +634,7 @@ if CLIENT then
 		ang.r = 0
 
 		local pos = ply:GetPos() + draw_offset
-		
+
 		ang.y = ang.y - 90
 
 		local offset = -wep.BiteAngle / 2
@@ -653,18 +653,18 @@ if CLIENT then
 			poly = polys[2]
 		else
 			poly = { { x = 0, y = 0 } }
-			
+
 			local r3 = r1 + ( r2 - r1 ) * f
 			local step_ang = wep.BiteAngle / ( steps - 1 )
 
 			for i = 0, steps - 1 do
 				local sin = math.sin( i * step_ang + offset )
 				local cos = -math.cos( i * step_ang + offset )
-		
+
 				poly[i + 2] = {x = sin * r3, y = cos * r3}
 			end
 		end
-		
+
 		cam.Start3D2D( pos, ang, 1 )
 			draw.NoTexture()
 			surface.SetDrawColor( 225, 35, 35, 20 )
@@ -866,12 +866,12 @@ controller.Register( "scp682_charge", {
 				self:Stop()
 			end
 		end
-		
+
 		local ang = mv:GetAngles()
 		ang.p = 0
 		ang.r = 0
 
-		local vel = ang:Forward() * self.Speed 
+		local vel = ang:Forward() * self.Speed
 
 		if !self.Gravity then
 			self.Gravity = Vector( 0 )

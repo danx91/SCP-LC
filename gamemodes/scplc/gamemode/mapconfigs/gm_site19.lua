@@ -174,7 +174,7 @@ SPAWN_SUPPORT_MTF = {
 	Vector( -3130.00, 1700.00, 2315.00 ),
 }
 
-/*SPAWN_SUPPORT_CI = {
+SPAWN_SUPPORT_CI = {
 	Vector( 540.00, 7100.00, 2035.00 ),
 	Vector( 452.00, 7100.00, 2056.00 ),
 	Vector( 360.00, 7100.00, 2082.00 ),
@@ -195,7 +195,7 @@ SPAWN_SUPPORT_MTF = {
 	Vector( 282.00, 6840.00, 2104.00 ),
 	Vector( 196.00, 6840.00, 2128.00 ),
 	Vector( 88.00, 6840.00, 2158.00 ),
-}*/
+}
 
 SPAWN_SUPPORT_GOC = {
 	Vector( -7050.00, 3400.00, 2563.00 ),
@@ -211,8 +211,6 @@ SPAWN_SUPPORT_GOC = {
 	Vector( -7150.00, 3080.00, 2563.00 ),
 	Vector( -7150.00, 3000.00, 2563.00 ),
 }
-
-SPAWN_SUPPORT_CI = { SPAWN_SUPPORT_MTF, SPAWN_SUPPORT_GOC }
 
 --[[-------------------------------------------------------------------------
 Spawn rules
@@ -2189,7 +2187,7 @@ BUTTONS = {
 		name = "ELO-IID",
 		pos = Vector( 2048.000000, 5244.009766, -202.139999 ),
 		override = function( pl, ent, data )
-			return !GetRoundStat( "106recontain" )
+			return !GetRoundStatValue( "recontain106" )
 		end,
 		suppress_texts = true,
 		scp_disallow = true,
@@ -2198,7 +2196,7 @@ BUTTONS = {
 		name = "Sound Transmission",
 		pos = Vector( 2088.000000, 5243.990234, -201.860001 ),
 		override = function( pl, ent, data )
-			return !GetRoundStat( "106recontain" )
+			return !GetRoundStatValue( "recontain106" )
 		end,
 		suppress_texts = true,
 		scp_disallow = true,

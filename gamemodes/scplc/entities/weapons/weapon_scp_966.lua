@@ -1,6 +1,6 @@
 SWEP.Base 			= "weapon_scp_base"
 SWEP.PrintName		= "SCP-966"
-SWEP.Stat 			= RoundStat( "966" ):Show( true, 0, 5 )
+SWEP.Stat 			= RoundStat( "scp_966" ):ShowByRef( 20 )
 
 SWEP.HoldType		= "normal"
 
@@ -21,7 +21,7 @@ SWEP.MarkRadius = 850
 
 function SWEP:SetupDataTables()
 	self:CallBaseClass( "SetupDataTables" )
-	
+
 	self:NetworkVar( "Int", "LookingAtStacks" )
 	self:NetworkVar( "Int", "Stacks" )
 	self:NetworkVar( "Float", "NextPassive" )
@@ -117,7 +117,7 @@ function SWEP:Think()
 
 			local owner_pos = owner:GetPos()
 			local range = self:GetUpgradeMod( "channeling_range" ) * self:GetUpgradeMod( "channeling_range_mul", 1 )
-			
+
 			range = range * range
 
 			if channeling_a then
@@ -167,7 +167,7 @@ function SWEP:Think()
 
 			for i, v in ipairs( player.GetAll() ) do
 				if v == self.MarkedPlayer or !v:Alive() or !v:HasEffect( "scp966_effect" ) or v:GetPos():DistToSqr( target_pos ) > radius then continue end
-	
+
 				v:DecreaseEffect( "scp966_effect" )
 				stacks = stacks + 1
 			end

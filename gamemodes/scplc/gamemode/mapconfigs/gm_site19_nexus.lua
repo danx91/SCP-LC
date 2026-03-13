@@ -221,7 +221,7 @@ if SERVER then
 	local post = {
 		Dropped = 0,
 	}
-	
+
 	--[[-------------------------------------------------------------------------
 	SCP Items
 	---------------------------------------------------------------------------]]
@@ -269,13 +269,13 @@ if SERVER then
 			Vector( 1827.00, 1227.00, 11.00 ),
 			Vector( 2157.00, -2166.00, 12.00 ),
 			Vector( -443.00, -32.00, -209.00 ),
-	
+
 			Vector( 5142.00, -1007.00, 44.00 ),
 			Vector( 2064.00, 5020.00, -209.00 ),
 			Vector( 2279.00, 3418.00, -217.00 ),
 			Vector( 4725.00, 1163.00, 11.00 ),
 			Vector( 2132.00, 1730.00, 11.00 ),
-	
+
 			Vector( 1515.00, 3101.00, 108.00 ),
 			Vector( 93.00, 3106.00, -39.00 ),
 			Vector( -2008.00, 2866.00, -84.00 ),
@@ -691,10 +691,10 @@ if SERVER then
 			--armory
 			Vector( 1300.00, -1630.00, 11.00 ),
 			Vector( 1450.00, -1630.00, 11.00 ),
-		
+
 			Vector( 1300.00, -1460.00, 11.00 ),
 			Vector( 1450.00, -1460.00, 11.00 ),
-		
+
 			Vector( 1300.00, -1550.00, 11.00 ),
 			Vector( 1450.00, -1550.00, 11.00 ),
 		},
@@ -885,7 +885,7 @@ if SERVER then
 			Vector( 1531.00, -1627.00, 1.00 ),
 			Vector( 1532.00, -1570.00, 1.00 ),
 			Vector( 1303.00, 432.00, 1.00 ),
-		
+
 			Vector( 3652.00, -1375.00, -127.00 ),
 			Vector( 5520.00, -686.00, 1.00 ),
 			Vector( 2518.00, 2859.00, -383.00 ),
@@ -895,7 +895,7 @@ if SERVER then
 			Vector( 5219.00, 2294.00, 1.00 ),
 			Vector( 5031.00, -2265.00, 53.00 ),
 			Vector( 1967.00, 1511.00, 1.00 ),
-		
+
 			Vector( 983.00, 3076.00, 1.00 ),
 			Vector( -92.00, 3624.00, -127.00 ),
 			Vector( 1580.00, 2411.00, 1.00 ),
@@ -912,11 +912,11 @@ if SERVER then
 			Vector( -157.00, -16.00, -255.00 ),
 			Vector( 1476.00, -2401.00, 2.00 ),
 			Vector( 1757.00, 965.00, 1.00 ),
-			
+
 			Vector( 5525.00, -779.00, 1.00 ),
 			Vector( 2285.00, 1706.00, 1.00 ),
 			Vector( 2385.00, 1711.00, 1.00 ),
-			
+
 			Vector( -798.00, 3045.00, 20.00 ),
 		},
 		post_tab = post,
@@ -942,7 +942,7 @@ if SERVER then
 			Vector( 5121.00, 2613.00, 11.00 ),
 			Vector( 2982.00, 3642.00, 11.00 ),
 			Vector( 2942.00, 1788.00, 11.00 ),
-			
+
 			Vector( -447.00, 2203.00, 11.00 ),
 			Vector( -2201.00, 3010.00, 11.00 ),
 		},
@@ -1735,7 +1735,7 @@ GOC_DEVICE_BOUNDS = { Vector( 3955, 150, -400 ), Vector( 4085, 740, -250 ) }
 SCP doors
 ---------------------------------------------------------------------------]]
 POS_DOOR = {
-	
+	//
 }
 
 POS_BUTTON = {
@@ -2189,7 +2189,7 @@ BUTTONS = {
 		name = "ELO-IID",
 		pos = Vector( 2048.000000, 5244.009766, -202.139999 ),
 		override = function( pl, ent, data )
-			return !GetRoundStat( "106recontain" )
+			return !GetRoundStatValue( "recontain106" )
 		end,
 		suppress_texts = true,
 		scp_disallow = true,
@@ -2198,7 +2198,7 @@ BUTTONS = {
 		name = "Sound Transmission",
 		pos = Vector( 2088.000000, 5243.990234, -201.860001 ),
 		override = function( pl, ent, data )
-			return !GetRoundStat( "106recontain" )
+			return !GetRoundStatValue( "recontain106" )
 		end,
 		suppress_texts = true,
 		scp_disallow = true,
@@ -2424,7 +2424,7 @@ if SERVER then
 		initial_state = 1,
 		debug_use = true,
 		disable_overload = true,
-		
+
 		elevator = true,
 	} )
 
@@ -2438,7 +2438,7 @@ if SERVER then
 		initial_state = 1,
 		debug_use = true,
 		disable_overload = true,
-		
+
 		elevator = true,
 	} )
 
@@ -2452,7 +2452,7 @@ if SERVER then
 		initial_state = 1,
 		debug_use = true,
 		disable_overload = true,
-		
+
 		elevator = true,
 	} )
 
@@ -2473,7 +2473,7 @@ if SERVER then
 		debug_use = true,
 		warhead_lockdown = true,
 		disable_overload = true,
-		
+
 		elevator = true,
 	} )
 
@@ -2488,7 +2488,7 @@ if SERVER then
 		debug_use = true,
 		warhead_lockdown = true,
 		disable_overload = true,
-		
+
 		elevator = true,
 	} )
 end

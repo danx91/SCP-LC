@@ -1,6 +1,6 @@
 SWEP.Base 			= "weapon_scp_base"
 SWEP.PrintName		= "SCP-8602"
-SWEP.Stat 			= RoundStat( "8602" ):Show( true, 0, 5 )
+SWEP.Stat 			= RoundStat( "scp_8602" ):ShowByRef( 20 )
 
 SWEP.HoldType		= "normal"
 
@@ -101,7 +101,7 @@ function SWEP:Think()
 				if overheal > max_overheal then
 					overheal = max_overheal
 				end
-				
+
 				self:SetOverheal( overheal )
 
 				hp = max_hp
@@ -275,7 +275,7 @@ defense_trace.output = defense_trace
 function SWEP:PerformDefenseAttack()
 	local ct = CurTime()
 	self:SetNextSecondaryFire( ct + self.DefenseCooldown * self:GetUpgradeMod( "def_cooldown", 1 ) )
-	
+
 	local dmg = self.MitigatedDamage * self.DefenseDamageMultiplier * self:GetUpgradeMod( "def_mult", 1 )
 	local owner = self:GetOwner()
 	local pct = owner:HoldProgress( self, "scp8602_def" )
@@ -376,7 +376,7 @@ SCPHook( "SCP8602", "SLCEntityTakeDamage", function( target, dmg )
 
 	local wep = target:GetSCPWeapon()
 	if !IsValid( wep ) or !target:IsHolding( wep, "scp8602_def" ) then return end
-	
+
 	local pre = dmg:GetDamage()
 
 	local f = target:HoldProgress( wep, "scp8602_def" )
@@ -390,7 +390,7 @@ SCPHook( "SCP8602", "SLCPostScaleDamage", function( target, dmg )
 
 	local wep = target:GetSCPWeapon()
 	if !IsValid( wep ) then return end
-	
+
 	local overheal = wep:GetOverheal()
 	if overheal <= 0 then return end
 
@@ -426,7 +426,7 @@ SCPHook( "SCP8602", "SLCScaleSpeed", function( ply, mod )
 
 	local wep = ply:GetSCPWeapon()
 	if !IsValid( wep ) then return end
-	
+
 	local charge = wep:GetCharge() - CurTime()
 
 	if ply:IsHolding( wep, "scp8602_def" ) then
@@ -455,9 +455,9 @@ if CLIENT then
 		ang.r = 0
 
 		local pos = ply:GetPos() + draw_offset
-		
+
 		ang.y = ang.y + 90
-		
+
 		cam.Start3D2D( pos, ang, 1 )
 			surface.SetDrawColor( 225, 35, 35, 20 )
 			surface.DrawRect( -w * 0.5, 0, w, h )
@@ -507,7 +507,7 @@ DefineUpgradeSystem( "scp8602", {
 			mod = { def_prot = 0.6, def_slow = 0.6 }, icon = icons.def },
 		{ name = "def4", cost = 2, req = { "def3a", "def3b" }, reqany = true, pos = { 2.5, 4 },
 			mod = { def_mult = 1.5 }, icon = icons.def },
-		
+
 		{ name = "charge1", cost = 1, req = {}, reqany = false, pos = { 4, 1 },
 			mod = { charge_cd = 0.8, charge_time = 1.4, charge_dmg = 1.3 }, icon = icons.charge },
 		{ name = "charge2", cost = 2, req = { "charge1" }, reqany = false, pos = { 4, 2 },

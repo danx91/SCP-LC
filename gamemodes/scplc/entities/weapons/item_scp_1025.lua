@@ -280,8 +280,6 @@ EFFECTS.RegisterEffect( "throm", {
 	hide = true,
 } )
 
-local bleed_stat = GetRoundStat( "bleeding" )
-
 EFFECTS.RegisterEffect( "light_bleeding", {
 	duration = 10,
 	stacks = 0,
@@ -299,11 +297,11 @@ EFFECTS.RegisterEffect( "light_bleeding", {
 			if self.args[2] > 3 then
 				self.args[2] = 3
 			end
+		end
 
-			if IsValid( args[1] ) then
-				self.args[1] = args[1]
-				self.args[3] = args[1]:TimeSignature()
-			end
+		if IsValid( args[1] ) then
+			self.args[1] = args[1]
+			self.args[3] = args[1]:TimeSignature()
 		end
 	end,
 	think = function( self, ply, tier, args )
@@ -323,7 +321,7 @@ EFFECTS.RegisterEffect( "light_bleeding", {
 			end
 
 			ply:TakeDamageInfo( dmg )
-			bleed_stat:AddValue( args[2], { effect = "light_bleeding", attacker = att } )
+			AddRoundStatValue( "bleeding", args[2], { effect = "light_bleeding", victim = ply, attacker = att } )
 		else
 			ply:EmitSound( "SLCEffects.Bleeding" )
 		end

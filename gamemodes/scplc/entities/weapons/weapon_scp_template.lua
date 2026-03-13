@@ -2,7 +2,7 @@ if true then return end
 
 SWEP.Base 			= "weapon_scp_base"
 SWEP.PrintName		= "SCP-682"
-//SWEP.Stat 			= RoundStat( "682" ):Show( true, 0, 5 )
+//SWEP.Stat 			= RoundStat( "scp_682" ):ShowByRef( 20 )
 
 SWEP.HoldType		= "normal"
 
@@ -12,11 +12,11 @@ SWEP.ScoreOnDamage 	= true
 SWEP.BasicCooldown = 2
 
 /*
-	Passive - 
-	LMB - 
-	RMB - 
-	Reload - 
-	Special - 
+	Passive -
+	LMB -
+	RMB -
+	Reload -
+	Special -
 */
 
 function SWEP:SetupDataTables()
@@ -35,7 +35,7 @@ end
 
 
 function SWEP:Think()
-	
+
 end
 
 local attack_trace = {}
@@ -47,19 +47,19 @@ attack_trace.output = attack_trace
 function SWEP:PrimaryAttack()
 	if ROUND.preparing or ROUND.post then return end
 
-	
+
 end
 
 function SWEP:SecondaryAttack()
-	
+
 end
 
 function SWEP:Reload()
-	
+
 end
 
 function SWEP:SpecialAttack()
-	
+
 end
 
 function SWEP:OnPlayerKilled( ply )
@@ -67,7 +67,7 @@ function SWEP:OnPlayerKilled( ply )
 end
 
 function SWEP:OnUpgradeBought( name, active, group )
-	
+
 end
 
 --[[-------------------------------------------------------------------------
@@ -78,7 +78,7 @@ SCPHook( "SCP682", "SLCEntityTakeDamage", function( target, dmg )
 	if dmg:IsDamageType( DMG_DIRECT ) or dmg:IsDamageType( DMG_FALL ) or !IsValid( target ) or !target:IsPlayer() or target:SCPClass() != CLASSES.SCP682 then return end
 	if ROUND.preparing and dmg:IsDamageType( DMG_ACID ) then return true end
 
-	
+
 end )
 
 --[[-------------------------------------------------------------------------
@@ -97,7 +97,7 @@ DefineUpgradeSystem( "scp682", {
 	upgrades = {
 		{ name = "shield_a", cost = 3, req = {}, block = { "shield_b", "shield_c", "shield_d" }, reqany = false, pos = { 1, 1 },
 			mod = { shield = 1.5, shield_cd = 1.25 }, icon = icons.shield_a, active = { icons.shield_a }, group = "shield" },
-		
+
 
 		{ name = "outside_buff", cost = 1, req = {}, reqany = false, pos = { 4, 4 }, mod = {}, active = false },
 	},
@@ -164,7 +164,7 @@ Stats
 /*if SERVER then
 	RoundStat( "106recontain" )
 		:InitialValue( false )
-		:Show( true, 0, 100 )
+		:Show( true, 0, 1000 )
 end*/
 
 --[[-------------------------------------------------------------------------

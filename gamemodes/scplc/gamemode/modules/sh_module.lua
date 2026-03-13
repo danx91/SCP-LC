@@ -7,10 +7,10 @@ GM.Website 	= "https://github.com/danx91/SCP-LC"
 --[[-------------------------------------------------------------------------
 Global values
 ---------------------------------------------------------------------------]]
-DATE = "04/03/2026"
+DATE = "13/03/2026"
 SIGNATURE = "b001200r0"
 VERSION = SLCVersion().name
-BLEEDING_EDGE = 1
+BLEEDING_EDGE = 2
 
 SCPS = {}
 CLASSES = {}

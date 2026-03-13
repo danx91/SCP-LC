@@ -1,6 +1,6 @@
 SWEP.Base 			= "weapon_scp_base"
 SWEP.PrintName		= "SCP-173"
-SWEP.Stat 			= RoundStat( "173" ):Show( true, 0, 4 )
+SWEP.Stat 			= RoundStat( "scp_173" ):ShowByRef( 25 )
 
 SWEP.HoldType		= "normal"
 
@@ -25,7 +25,7 @@ SWEP.DecoyLimit 	= 1
 
 function SWEP:SetupDataTables()
 	self:CallBaseClass( "SetupDataTables" )
-	
+
 	self:NetworkVar( "Bool", "Freeze" )
 	self:NetworkVar( "Bool", "InStealth" )
 	self:NetworkVar( "Entity", "Statue" )
@@ -120,11 +120,11 @@ function SWEP:Think()
 
 		return
 	end
-	
+
 	if !self.KillerEntity then
 		self.KillerEntity = owner
 	end
-	
+
 	local horror_dist = self.HorrorDistance * self:GetUpgradeMod( "horror_dist", 1 )
 	horror_dist = horror_dist * horror_dist
 
@@ -254,7 +254,7 @@ gas_trace.output = gas_trace
 
 function SWEP:PrimaryAttack()
 	if ROUND.preparing or ROUND.post or self:GetInStealth() then return end
-	
+
 	self:SetNextPrimaryFire( CurTime() + self.GasCooldown * self:GetUpgradeMod( "gas_cd", 1 ) )
 
 	local emit_ent = self:GetFreeze() and self:GetStatue() or self:GetOwner()
@@ -478,7 +478,7 @@ SCPHook( "SCP173", "SLCPlayerFootstep", function( ply, foot, snd )
 	if !IsValid( wep ) then return end
 
 	if wep:GetFreeze() or wep:GetInStealth() then return true end
-	
+
 	local ct = CurTime()
 	if !ply.Next173Step or ply.Next173Step < ct then
 		ply.Next173Step = ct + 0.9

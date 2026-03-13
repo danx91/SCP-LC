@@ -1,6 +1,6 @@
 SWEP.Base 			= "weapon_scp_base"
 SWEP.PrintName		= "SCP-066"
-SWEP.Stat 			= RoundStat( "066" ):Show( true, 0, 3 )
+SWEP.Stat 			= RoundStat( "scp_066" ):ShowByRef( 30 )
 
 SWEP.HoldType		= "normal"
 
@@ -158,16 +158,16 @@ function SWEP:DashThink()
 	local ent_pos = ent:GetPos() + ent:OBBCenter()
 	local dir = dash_trace.HitPos - ent_pos
 	dir.z = 0
-	
+
 	local attach_ang = dir:Angle()
 	attach_ang.y = attach_ang.y + ent:GetAngles().y
-	
+
 	controller.Start( owner, "scp066_stop" )
 
 	owner:SetMoveType( MOVETYPE_NONE )
 	owner:SetPos( ent_pos + attach_ang:Forward() * 15 )
 	owner:SetParent( ent )
-	
+
 	self.DashActive = false
 	self.CurrentAttach = { ent, ent:TimeSignature() }
 	self:SetDetachTime( ct + self.DashDetachTime * self:GetUpgradeMod( "detach_time", 1 ) )
@@ -315,7 +315,7 @@ function SWEP:CanAttack()
 
 	for i, v in ipairs( player.GetAll() ) do
 		if !self:CanTargetPlayer( v ) or v:GetPos():DistToSqr( pos ) > radius or !v:TestVisibility( owner ) then continue end
-		
+
 		any = true
 
 		local wep = v:GetActiveWeapon()
@@ -353,14 +353,14 @@ function SWEP:CleanupDash( soft )
 	self.CurrentAttach = nil
 	self.DashActive = false
 	self:SetDetachTime( 0 )
-	
+
 	local owner = self:GetOwner()
 	controller.Stop( owner )
 	owner:SetParent( nil )
 	owner:SetMoveType( MOVETYPE_WALK )
 
 	if soft then return end
-	
+
 	self.Attached = nil
 end
 
@@ -461,7 +461,7 @@ DefineUpgradeSystem( "scp066", {
 			mod = { eric_cd = 0.8 }, icon = icons.eirc },
 		{ name = "eric2", cost = 2, req = { "eric1" }, reqany = false, pos = { 1.25, 2 },
 			mod = { eric_cd = 0.5 }, icon = icons.eirc },
-		
+
 		{ name = "music1", cost = 1, req = { "eric1" }, reqany = false, pos = { 2, 2 },
 			mod = { music_cd = 0.9, music_range = 1.1 }, icon = icons.music },
 		{ name = "music2", cost = 2, req = { "music1" }, reqany = false, pos = { 2, 3 },
@@ -483,7 +483,7 @@ DefineUpgradeSystem( "scp066", {
 		{ name = "boost3", cost = 2, req = { "boost2" }, reqany = false, pos = { 4, 3 },
 			mod = { boost_dur = 1.5, boost_power = 1.2 }, icon = icons.boost },
 
-		
+
 		{ name = "outside_buff", cost = 1, req = {}, reqany = false, pos = { 1, 4 }, mod = {}, active = false },
 	},
 	rewards = { --17 + 1 points -> 60% = 11 (-1 base) = 10 points
@@ -620,7 +620,7 @@ controller.Register( "scp066_dash", {
 		local wep = ply:GetSCPWeapon()
 		if !IsValid( wep ) then return end
 
-		local on_ground = ply:IsOnGround() 
+		local on_ground = ply:IsOnGround()
 		if !self.InAir and !on_ground then
 			self.InAir = true
 		end

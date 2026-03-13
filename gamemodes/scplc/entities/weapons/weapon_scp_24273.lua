@@ -1,6 +1,6 @@
 SWEP.Base 			= "weapon_scp_base"
 SWEP.PrintName		= "SCP-2427-3"
-SWEP.Stat 			= RoundStat( "24273" ):Show( true, 0, 5 )
+SWEP.Stat 			= RoundStat( "scp_24273" ):ShowByRef( 20 )
 
 SWEP.HoldType		= "melee"
 
@@ -178,11 +178,11 @@ evidence_trace.output = evidence_trace
 
 function SWEP:EvidenceThink()
 	local ent = self:GetView()
-	
+
 	if !ent then
 		self:SetLookedAt( NULL )
 		self:SetEvidence( 0 )
-		
+
 		return
 	end
 
@@ -252,7 +252,7 @@ function SWEP:DashThink()
 	local owner = self:GetOwner()
 
 	if !controller.IsEnabled( owner, "scp24273_dash" ) then return end
-	
+
 	if self.DashTime < ct or owner:GetPos():DistToSqr( self.DashStart ) > self.DashMaxDistance ^ 2 then
 		controller.Stop( owner )
 		return
@@ -360,7 +360,7 @@ function SWEP:SpecialThink()
 		self:SetSpecial( 0 )
 		self:RestrictMode( 2 )
 		owner:StopDisableControls( "scp24273_special" )
-		
+
 		self:CleanupTargets()
 
 		return
@@ -461,7 +461,7 @@ end
 SWEP.SpectateFly = 0
 function SWEP:SecondaryAttack()
 	if CLIENT or ROUND.preparing or ROUND.post then return end
-	
+
 	local ct = CurTime()
 	local spectate = self:GetSpectateTime()
 	if ( spectate > 0 and spectate < ct or self.SpectateFly >= ct ) and !self:CanAttack() then return end
@@ -500,7 +500,7 @@ function SWEP:SecondaryAttack()
 		if path == true then
 			return
 		end
-		
+
 		for i, v in ipairs( path ) do
 			path[i] = v:GetCenter() + Vector( 0, 0, 64 )
 		end
@@ -525,7 +525,7 @@ function SWEP:SecondaryAttack()
 		self.SpectatePathTime = path_time
 		self.SpectateFly = ct + fly_time
 		self:SetSpectateYaw( owner:GetAngles().y )
-		
+
 		owner:DisableControls( "scp24273_spectate", bit.bor( IN_ATTACK2, CAMERA_MASK ) )
 		owner:DisableControls( "scp24273_spectate_fly" )
 
@@ -642,7 +642,7 @@ function SWEP:DealDamage( ply, dmg )
 	end
 
 	info:SetAttacker( self:GetOwner() )
-	
+
 	ply:TakeDamageInfo( info )
 end
 
@@ -722,7 +722,7 @@ function SWEP:CalcView( ply, cur_pos, cur_ang, fov )
 
 		local target = self:GetSpectateEntity()
 		if !IsValid( target ) then return end
-				
+
 		return target:EyePos(), cur_ang, fov, true//target:EyeAngles()
 	end
 
@@ -740,7 +740,7 @@ function SWEP:CalcView( ply, cur_pos, cur_ang, fov )
 	local dt = FrameTime()
 	local dir = target - self.CameraPosition
 	dir:Normalize()
-	
+
 	local prev_ang = self.CameraAngle
 	local ang = dir:Angle()
 
@@ -1187,7 +1187,7 @@ controller.Register( "scp24273_follow", {
 		dir.z = 0
 
 		//dir:Normalize()
-		
+
 		mv:SetMoveAngles( dir:Angle() )
 		//mv:SetVelocity( dir * mv:GetMaxSpeed() )
 	end,

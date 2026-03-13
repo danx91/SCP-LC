@@ -1,6 +1,6 @@
 SWEP.Base 			= "weapon_scp_base"
 SWEP.PrintName		= "SCP-457"
-SWEP.Stat 			= RoundStat( "457" ):Show( true, 0, 5 )
+SWEP.Stat 			= RoundStat( "scp_457" ):ShowByRef( 20 )
 
 SWEP.HoldType		= "normal"
 
@@ -202,7 +202,7 @@ local function calc_flame( start, endpos )
 end
 
 function SWEP:GenerateFlames()
-	
+
 end
 
 function SWEP:IgniteTick()

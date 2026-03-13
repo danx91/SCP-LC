@@ -64,3 +64,19 @@ function ShuffleTable( tab )
 		tab[i], tab[j] = tab[j], tab[i]
 	end
 end
+
+function ConcatKeys( tab, sep )
+	sep = sep or ", "
+
+	local str
+
+	for k, v in pairs( tab ) do
+		if !str then
+			str = tostring( k )
+		else
+			str = str..sep..tostring( k )
+		end
+	end
+
+	return str or ""
+end

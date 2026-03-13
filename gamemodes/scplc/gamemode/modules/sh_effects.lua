@@ -410,7 +410,7 @@ end
 --[[-------------------------------------------------------------------------
 Bleeding
 ---------------------------------------------------------------------------]]
-local bleed_stat = RoundStat( "bleed" ):Show( true, 0, 0.4 )
+RoundStat( "bleeding" ):ShowByRef( 300 )
 
 local decal_up = Vector( 0, 0, 10 )
 local decal_down = Vector( 0, 0, -30 )
@@ -446,7 +446,7 @@ EFFECTS.RegisterEffect( "bleeding", {
 		end
 
 		ply:TakeDamageInfo( dmg )
-		bleed_stat:AddValue( tier, { effect = "bleeding", attacker = att } )
+		AddRoundStatValue( "bleeding", tier, { effect = "bleeding", victim = ply, attacker = att } )
 
 		if self.next_decal and self.next_decal > CurTime() then return end
 		self.next_decal = CurTime() + ( 4 - tier ) * 0.75
@@ -509,7 +509,7 @@ EFFECTS.RegisterEffect( "heavy_bleeding", {
 		end
 
 		ply:TakeDamageInfo( dmg )
-		bleed_stat:AddValue( 2, { effect = "heavy_bleeding", attacker = att } )
+		AddRoundStatValue( "bleeding", 2, { effect = "heavy_bleeding", victim = ply, attacker = att } )
 
 		if self.next_decal and self.next_decal > CurTime() then return end
 		self.next_decal = CurTime() + 1
@@ -700,7 +700,7 @@ end )
 --[[-------------------------------------------------------------------------
 Poison
 ---------------------------------------------------------------------------]]
-local poison_stat = RoundStat( "poison" ):Show( true, 0, 0.6 )
+RoundStat( "poison" ):ShowByRef( 200 )
 
 EFFECTS.RegisterEffect( "poison", {
 	duration = 30,
@@ -763,7 +763,7 @@ EFFECTS.RegisterEffect( "poison", {
 			end
 
 			ply:TakeDamageInfo( dmg )
-			poison_stat:AddValue( tier, { attacker = att } )
+			AddRoundStatValue( "poison", tier, { attacker = att } )
 		end
 	end,
 	wait = 1.5,

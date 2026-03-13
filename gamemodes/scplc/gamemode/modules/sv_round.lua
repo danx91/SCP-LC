@@ -400,9 +400,9 @@ function GM:SLCPostround( winner )
 
 		for i, v in ipairs( GetRoundSummary() ) do
 			if !v[2] or v[2] == true then
-				sb:append( ";stat_", v[1] )
+				sb:append( ";@ROUND_STATS.", v[1] )
 			else
-				sb:append( ";stat_", v[1], "$", v[2] )
+				sb:append( ";@ROUND_STATS.", v[1], "$", v[2] )
 			end
 		end
 

@@ -106,7 +106,7 @@ function SWEP:PrimaryAttack()
 	local dur = vm:SequenceDuration() / self.AttackSpeed
 	self:SetNextPrimaryFire( ct + dur + 0.1 )
 	self:SetNextIdle( ct + dur )
-	
+
 	self:SetAttack( ct + dur * 0.3 )
 	self:EmitSound( "Weapon_Crowbar.Single" )
 end

@@ -149,10 +149,6 @@ function GM:DoPlayerDeath( ply, attacker, dmginfo )
 	print( txt )
 end
 
-local kill_stat = GetRoundStat( "kill" )
-local rdm_stat = GetRoundStat( "rdm" )
-
-
 /*
 kill
 kill_rdm
@@ -187,13 +183,6 @@ local function kill_message( ply, kind, reward, team_name, victim_nick )
 	end
 end
 
-	/*
-	PlayerMessage( string.format( "rdm$%d,%s,%s#200,25,25", reward, "@TEAMS."..tname, EscapeMessage( victim:Nick() ) ), attacker )
-	PlayerMessage( string.format( "kill$%d,%s,%s", reward, "@TEAMS."..tname, EscapeMessage( victim:Nick() ) ), attacker )
-	PlayerMessage( string.format( "kill_n$%s,%s", "@TEAMS."..tname, EscapeMessage( victim:Nick() ) ), attacker )
-	PlayerMessage( string.format( "assist$%d,%s", v, EscapeMessage( victim:Nick() ) ), k )
-	*/
-
 function GM:PlayerDeath( victim, inflictor, attacker )
 	local pprop = victim.StoredProperties or {}
 	victim.StoredProperties = nil
@@ -204,16 +193,26 @@ function GM:PlayerDeath( victim, inflictor, attacker )
 
 	local victim_team = victim:SCPTeam()
 	local reward_pool = isnumber( pprop.reward_override ) and pprop.reward_override or SCPTeams.GetReward( victim_team ) * 2
-	local rdm_support_cap = reward_pool * 0.5
+	local half_pool = reward_pool * 0.5
 	print( "KILL - get rewards", reward_pool )
 
 	local rewards, support_rewards, killer = victim.Logger:GetRewards( reward_pool )
-	local stat_killer = killer or attacker
+	killer = killer or attacker
 
-	kill_stat:AddValue( 1, { victim = victim, killer = stat_killer } )
+	if victim != killer and IsValid( killer ) and killer:IsPlayer() then
+		local killer_team = killer:SCPTeam()
 
-	if IsValid( stat_killer ) and stat_killer != victim and stat_killer:IsPlayer() and SCPTeams.IsAlly( stat_killer:SCPTeam(), victim_team ) then
-		rdm_stat:AddValue( 1, { victim = victim, killer = stat_killer } )
+		local kill_stat = SCPTeams.GetStat( killer_team, "kill" )
+		if kill_stat then
+			kill_stat:AddValue( 1, { victim = victim, killer = killer } )
+		end
+
+		if killer != victim and SCPTeams.IsAlly( killer:SCPTeam(), victim_team ) then
+			local rdm_stat = SCPTeams.GetStat( killer_team, "kill_rdm" )
+			if rdm_stat then
+				rdm_stat:AddValue( 1, { victim = victim, killer = killer } )
+			end
+		end
 	end
 
 	if rewards then
@@ -225,7 +224,7 @@ function GM:PlayerDeath( victim, inflictor, attacker )
 
 		for ply, data in pairs( rewards ) do
 			local is_killer = ply == killer
-			local reward = math.max( data.reward, -rdm_support_cap )
+			local reward = math.max( data.reward, -half_pool )
 
 			if !is_killer then
 				local suppress, override = hook.Run( "SLCKillAssist", ply, victim, data.pct, reward, killer )
@@ -243,7 +242,7 @@ function GM:PlayerDeath( victim, inflictor, attacker )
 		end
 
 		for ply, reward in pairs( support_rewards ) do
-			reward = math.min( reward, rdm_support_cap )
+			reward = math.min( reward, half_pool )
 
 			local suppress, override = hook.Run( "SLCKillSupport", ply, victim, reward, killer )
 			if suppress == true or skip_rewards then continue end
@@ -465,12 +464,12 @@ function GM:PlayerUse( ply, ent )
 			return false
 		end
 
-		local omega = GetRoundStat( "omega_warhead" )
+		local omega = GetRoundProperty( "omega_warhead_activated" )
 		if omega and data.omega_disable then
 			return false
 		end
 
-		local alpha = GetRoundStat( "alpha_warhead" )
+		local alpha = GetRoundProperty( "alpha_warhead_activated" )
 		if alpha and data.alpha_disable then
 			return false
 		end

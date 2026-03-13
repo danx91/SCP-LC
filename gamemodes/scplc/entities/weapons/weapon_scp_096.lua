@@ -1,6 +1,6 @@
 SWEP.Base 			= "weapon_scp_base"
 SWEP.PrintName		= "SCP-096"
-SWEP.Stat 			= RoundStat( "096" ):Show( true, 0, 5 )
+SWEP.Stat 			= RoundStat( "scp_096" ):ShowByRef( 20 )
 
 SWEP.HoldType		= "normal"
 
@@ -54,7 +54,7 @@ SWEP.ActTranslate = {
 
 function SWEP:SetupDataTables()
 	self:CallBaseClass( "SetupDataTables" )
-	
+
 	self:NetworkVar( "Int", "Targets" )
 	self:NetworkVar( "Int", "RegenStacks" )
 	self:NetworkVar( "Float", "PassiveCooldown" )
@@ -108,13 +108,13 @@ function SWEP:Think()
 	if regen == 0 then
 		if self.NextRegenStack <= ct then
 			local stack_delay = self.RegenStacksDelay * self:GetUpgradeMod( "regen_stacks", 1 )
-	
+
 			self.NextRegenStack = self.NextRegenStack + stack_delay
-	
+
 			if self.NextRegenStack <= ct then
 				self.NextRegenStack = ct + stack_delay
 			end
-	
+
 			self:SetRegenStacks( self:GetRegenStacks() + 1 )
 		end
 	else
@@ -203,7 +203,7 @@ function SWEP:Think()
 			end
 		end
 	end
-	
+
 	if rage <= 0 or rage >= ct or !self.RageReady then return end
 	if !self:CheckTargets() then return end
 
@@ -277,7 +277,7 @@ function SWEP:Think()
 	if door_ent:GetClass() == "prop_dynamic" then
 		door_ent = door_ent:GetParent()
 	end
-	
+
 	local class = door_ent:GetClass()
 	if class_whitelist[class] then return end
 	if class != "func_door" and class != "func_door_rotating" or IsDoorDestroyed( door_ent ) then return end
@@ -303,7 +303,7 @@ end
 
 function SWEP:PrimaryAttack()
 	if CLIENT or ROUND.preparing or ROUND.post then return end
-	
+
 	local rage = self:GetRage()
 	local ct = CurTime()
 
@@ -336,7 +336,7 @@ end
 
 function SWEP:SpecialAttack()
 	if CLIENT or ROUND.preparing or ROUND.post then return end
-	
+
 	local ct = CurTime()
 	local rage = self:GetRage()
 	if rage <= 0 or rage >= ct then return end
@@ -470,7 +470,7 @@ function SWEP:ResetState()
 
 	local owner = self:GetOwner()
 	if !IsValid( owner ) then return end
-	
+
 	owner:PopSpeed( "SLC_SCP096Rage", true )
 	owner:StopSound( "SCP096.Scream" )
 	owner:StopSound( "SCP096.Maul" )
@@ -632,11 +632,11 @@ SCPHook( "SCP096", "PostEntityTakeDamage", function( ent, dmg )
 
 	local attacker = dmg:GetAttacker()
 	if !IsValid( attacker ) or !attacker:IsPlayer() or attacker == ent or !wep:HasUpgrade( "rage" ) then return end
-	
+
 	if !wep.DamageLog[attacker] or wep.DamageLog[attacker][2] < ct then
 		wep.DamageLog[attacker] = { 0, ct + wep:GetUpgradeMod( "rage_time" ) }
 	end
-	
+
 	wep.DamageLog[attacker][1] = wep.DamageLog[attacker][1] + dmg:GetDamage()
 
 	if wep.DamageLog[attacker][1] >= wep:GetUpgradeMod( "rage_dmg" ) then

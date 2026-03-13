@@ -108,9 +108,9 @@ function SWEP:PrimaryAttack()
 
 	self:SetNextPrimaryFire( ct + dur * ( powered and self.AttackDelayPowered or self.AttackDelay ) )
 	self.LastAttackPowered = powered
-	
+
 	owner:DoAttackEvent()
-	
+
 	self:SwingAttack( {
 		path_start = self.AttackPathStart,
 		path_end = self.AttackPathEnd,
@@ -142,7 +142,7 @@ function SWEP:PrimaryAttack()
 					bounds = self.AttackFallbackBounds,
 				}
 			end
-			
+
 			if ent:IsPlayer() then
 				util.Decal( "Impact.Flesh", tr.HitPos + tr.HitNormal * 20, tr.HitPos - tr.HitNormal * 20, owner )
 
@@ -151,7 +151,7 @@ function SWEP:PrimaryAttack()
 				if battery < 0 then
 					battery = 0
 				end
-	
+
 				self:SetBattery( battery )
 			end
 
@@ -200,11 +200,11 @@ function SWEP:ImpactEffect( tr )
 	if CLIENT then return end
 
 	self:DispatchImpactTrace( tr, DMG_CLUB )
-	
+
 	local data = EffectData()
 	data:SetNormal( tr.HitNormal )
 	data:SetOrigin( tr.HitPos + tr.HitNormal * 4 )
-	
+
 	if self:GetBattery() <= 0 and !self.LastAttackPowered then return end
 
 	util.Effect( "StunstickImpact", data, false, true )

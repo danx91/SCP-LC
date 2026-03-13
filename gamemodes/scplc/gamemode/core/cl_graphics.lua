@@ -981,7 +981,7 @@ function draw.MultilineText( x, y, text, font, color, maxWidth, margin, dist, al
 		local tw = 0
 
 		if !simulate then
-			if justify and i != n then --TODO save justify data
+			if justify and i != n then
 				local total_w = surface.GetTextSize( string.gsub( final[i], " ", "" ) )
 				local words = string.Explode( " ", final[i] )
 				local word_count = #words - 1

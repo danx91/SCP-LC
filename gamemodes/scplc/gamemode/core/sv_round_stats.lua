@@ -32,8 +32,8 @@ Types:
 	CallbackFunction [function]
 		@param		[string]				name				Name of the stat/group
 		@param		[number/boolean]		value				Current value of stat/group - for groups it's always numerical (bools are converted to 0/1)
-		@param		[number/boolean]		diff				Value past threshold (always positive past threshold and negative before threshold, equal to value for bools)
-																for groups it's always numerical (bools are converted to 0/1)
+		@param		[number/boolean]		diff				Value past threshold (nil if no threshold, always positive past threshold and negative before threshold,
+																equal to value for bools). For groups it's always numerical (bools are converted to 0/1)
 		@param		[any/GroupContext]		context				Context passed by function that changed the state, for groups it's always table
 		@param		[any]					data				Name of the stat/group
 
@@ -124,7 +124,7 @@ do
 	--[[---------------------------------------------------------------------------
 	RoundStatBase:Show( show, weight_add, weight_mul )
 
-	Setups visibility of stat/grouo with optional weight calculation params
+	Setups visibility of stat/group with optional weight calculation params
 	Weight is calculted with following formula: value * weight_mul + weight_add
 
 	@param		[boolean]		show				Whether to show in round summary
@@ -135,18 +135,45 @@ do
 	---------------------------------------------------------------------------]]--
 	function RoundStatBase:Show( show, weight_add, weight_mul )
 		if !isbool( show ) then argerror( 1, "Show", "boolean", type( show ) ) end
-		if weight_add and !isnumber( weight_add ) then argerror( 2, "Show", "nil or boolean", type( weight_add ) ) end
-		if weight_mul and !isnumber( weight_mul ) then argerror( 3, "Show", "nil or boolean", type( weight_mul ) ) end
+		if weight_add and !isnumber( weight_add ) then argerror( 2, "Show", "nil or number", type( weight_add ) ) end
+		if weight_mul and !isnumber( weight_mul ) then argerror( 3, "Show", "nil or number", type( weight_mul ) ) end
 
-		//if !_LANG_DEFAULT.ROUND_STATS[self.name] then
+		if !_LANG_DEFAULT.ROUND_STATS[self.name] then
 			SLCErrorMessage( "RoundStat '%s' is missing it's language entry", self.name )
-		//end
+		end
 
-		self.show = false
+		self.show = show
 		self.weight_add = weight_add or self.weight_add
 		self.weight_mul = weight_mul or self.weight_mul
 
 		return self
+	end
+
+	--[[---------------------------------------------------------------------------
+	RoundStatBase:ShowByRef( ref, bias )
+
+	Helper function to calculate weight_add and weight_mul using reference value and bias
+	This function assumes 100 as goal for all stats, so when stat is equal to ref + bias, weight will be equal to 100
+
+	@param		[type]			ref					Reference value
+	@param		[type]			bias				Bias value
+
+	@return		[self]			self				-
+	---------------------------------------------------------------------------]]--
+	function RoundStatBase:ShowByRef( ref, bias )
+		if !isnumber( ref ) then argerror( 1, "Show", "nil or number", type( ref ) ) end
+		if bias and !isnumber( bias ) then argerror( 2, "Show", "nil or number", type( bias ) ) end
+
+		assert( ref != 0, "ref cannot be 0" )
+
+		local mul = 100 / ref
+		local add = 0
+
+		if bias then
+			add = -mul * bias
+		end
+
+		return self:Show( true, add, mul )
 	end
 
 	--[[---------------------------------------------------------------------------
@@ -181,7 +208,7 @@ do
 	function RoundStatBase:AddCallback( key, data )
 		local t = type( key )
 
-		if t != "string" and t != "Entity" then argerror( 1, "AddCallback", "string or Entity", type( key ) ) end
+		if t != "string" and TypeID( key ) != TYPE_ENTITY then argerror( 1, "AddCallback", "string or Entity", type( key ) ) end
 		if !istable( data ) then argerror( 2, "AddCallback", "table", type( data ) ) end
 
 		if !isfunction( data.callback ) then fielderror( "callback", 2, "AddCallback", "function", type( data.callback ) ) end
@@ -243,7 +270,6 @@ do
 		error( "GetValue() must be implemented in subclass", 2 )
 	end
 
-
 	--[[---------------------------------------------------------------------------
 	RoundStatBase:GetWeight()
 
@@ -252,7 +278,13 @@ do
 	@return		[number]		weight				Weight of stat/group
 	---------------------------------------------------------------------------]]--
 	function RoundStatBase:GetWeight()
-		return tonumber( self:GetValue() ) * self.weight_mul + self.weight_add
+		local value = self:GetValue()
+
+		if self.type == "boolean" then
+			value = value and 1 or 0
+		end
+
+		return value * self.weight_mul + self.weight_add
 	end
 
 	-- Internal - don't call
@@ -299,12 +331,30 @@ do
 
 		if self.type == "boolean" then
 			diff = value
-		else
+		elseif tab.threshold then
 			diff = ( value - tab.threshold ) * tab.direction
 		end
 
 		tab.fired = true
 		tab.callback( self.name, value, diff, context, self.data )
+	end
+
+	-- Internal - don't call
+	function RoundStatBase:DebugInfo( indent )
+		local i = string.rep( "\t", indent or 0 )
+		print( i..string.format(
+			"Name: %s, Kind: %s, Type: %s, Initial: %s, Show: %s (add: %.4f, mul: %.4f), Value: %s, Weight: %.4f",
+			self.name, self.kind, self.type, self.initial, self.show, self.weight_add, self.weight_mul, self:GetValue(), self:GetWeight()
+		) )
+
+		print( i.."Exclude: "..ConcatKeys( self.exclude ) )
+		print( i..string.format( "Callbacks (%d):", table.Count( self.callbacks ) ) )
+		for k, v in pairs( self.callbacks ) do
+			print( i..string.format(
+				"\tName: %s, Threshold: %s, Mode: %d, Round reset: %s, Fired: %s",
+				k, v.threshold, v.mode, v.round_reset, v.fired
+			) )
+		end
 	end
 end
 
@@ -442,6 +492,7 @@ do
 		self.property = "slc_stat_group_"..name
 		self.operator = operator or ROUND_STAT_OP_SUM
 		self.collect = collect or ROUND_STAT_COLLECT_ALL
+		self.stats = {}
 
 		ROUND_STAT_GROUPS[name] = self
 	end
@@ -465,13 +516,14 @@ do
 		local value = old_value
 
 		for i, v in ipairs( istable( name ) and name or { name } ) do
-			local stat = ROUND_STATS[name]
+			local stat = ROUND_STATS[v]
 			if !stat then
-				SLCErrorMessage( "Attepmted to use nonexisting round stat '%s' in group '%s'", name, self.name )
+				SLCErrorMessage( "Attepmted to use nonexisting round stat '%s' in group '%s'", v, self.name )
 				continue
 			end
 
-			if self.callbacks[key] then continue end
+			if stat.callbacks[key] then print( "CB ALREADY EXISTS" ) continue end
+			table.insert( self.stats, v )
 
 			stat:AddCallback( key, {
 				mode = ROUND_STAT_MODE_ALWAYS,
@@ -593,6 +645,15 @@ do
 
 		return value
 	end
+
+	function RoundStatGroup:DebugInfo( indent )
+		RoundStatBase.DebugInfo( self, indent )
+
+		local i = string.rep( "\t", indent or 0 )
+		print( i..string.format( "Operator: %d, Collect: %d, Stats in group: %s",
+			self.operator, self.collect, table.concat( self.stats, ", " )
+		) )
+	end
 end
 
 --[[-------------------------------------------------------------------------
@@ -604,6 +665,27 @@ end
 
 function GetRoundStatGroup( name )
 	return ROUND_STAT_GROUPS[name]
+end
+
+function GetRoundStatValue( name )
+	local stat = ROUND_STATS[name]
+	if !stat then return end
+
+	return stat:GetValue()
+end
+
+function SetRoundStatValue( name, value, context )
+	local stat = ROUND_STATS[name]
+	if !stat then return end
+
+	stat:SetValue( value, context )
+end
+
+function AddRoundStatValue( name, value, context )
+	local stat = ROUND_STATS[name]
+	if !stat then return end
+
+	stat:AddValue( value, context )
 end
 
 function ClearRoundStats()
@@ -658,6 +740,8 @@ local function stat_sort( a, b )
 end
 
 function GetRoundSummary( num_stats )
+	num_stats = num_stats or 6
+
 	local show_stats = {}
 
 	for _, stat in pairs( ROUND_STATS ) do
@@ -701,7 +785,7 @@ function GetRoundSummary( num_stats )
 			break
 		end
 
-		for _, name in ipairs( stat.exclude ) do
+		for name, _ in pairs( stat.exclude ) do
 			blocked[name] = true
 		end
 	end
@@ -709,33 +793,26 @@ function GetRoundSummary( num_stats )
 	return final_list
 end
 
+function RoundStatsDebug( indent )
+	indent = indent or 0
+
+	local i = string.rep( "\t", indent )
+	print( i.."Round Stats:" )
+	for k, v in pairs( ROUND_STATS ) do
+		v:DebugInfo( indent + 1 )
+	end
+
+	print( i.."Round Stat Groups:" )
+	for k, v in pairs( ROUND_STAT_GROUPS ) do
+		v:DebugInfo( indent + 1 )
+	end
+end
+
 --[[-------------------------------------------------------------------------
 Base round stats
 ---------------------------------------------------------------------------]]
-hook.Add( "SLCCoreLoaded", "SLCBaseRoundStats", function()
-	// Temp
-	RoundStat( "kill" )
-		:Show( true, 0, 1 )
-
-	RoundStat( "rdm" )
-		:Show( true, 0, 10 )
-
-	RoundStat( "dmg" )
-		:Show( true, 0, 0.01 )
-
-	RoundStat( "rdmdmg" )
-		:Show( true, 0, 0.1 )
-
-	// TODO Auto Register
-	-- RegisterRoundStat( "kill", { init = 0, ref = 30, importance = 80 } )
-	-- RegisterRoundStat( "rdm", { init = 0, ref = 5, importance = 60 } )
-	-- RegisterRoundStat( "rdmdmg", { init = 0, ref = 1250, importance = 50 } )
-	-- RegisterRoundStat( "dmg", { init = 0, ref = 7500, importance = 30 } )
-	-- RegisterRoundStat( "escapes", { init = 0, ref = 12, importance = 60 } )
-	-- RegisterRoundStat( "escorts", { init = 0, ref = 9, importance = 60 } )
-
-
-	RoundStat( "106recontain" )
+hook.Add( "SLCLanguagesLoaded", "SLCBaseRoundStats", function()
+	RoundStat( "recontain106" )
 		:InitialValue( false )
 		:Show( true, 0, 1000 )
 

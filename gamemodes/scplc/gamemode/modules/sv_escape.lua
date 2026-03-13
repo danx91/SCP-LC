@@ -1,9 +1,6 @@
 --[[-------------------------------------------------------------------------
 Escape system
 ---------------------------------------------------------------------------]]
-local escape_stat = RoundStat( "escapes" ):Show( true, 0, 5 )
-local escort_stat = RoundStat( "escapes" ):Show( true, 0, 10 )
-
 ESCAPE_STATUS = ESCAPE_STATUS or 0 -- 0 - no escape; 1 - escape; 2 - blocked;
 ESCAPE_TIMER = ESCAPE_TIMER or 0
 LAST_ESCAPE = LAST_ESCAPE or {}
@@ -31,7 +28,7 @@ local function GetEscapeData()
 		local override = v:GetProperty( "escape_override" )
 		if override == false then continue end
 
-		if override or SCPTeams.CanEscape( team ) or GetRoundStat( "alpha_warhead" ) then
+		if override or SCPTeams.CanEscape( team ) or GetRoundProperty( "alpha_warhead_activated" ) then
 			table.insert( players, v )
 		end
 	end
@@ -82,7 +79,7 @@ hook.Add( "Tick", "SLCEscapeCheck", function()
 		TransmitEscapeInfo( LAST_ESCAPE )
 		LAST_ESCAPE = {}
 		LAST_ESCAPE_LOOKUP = {}
-		
+
 		//print( "Escape aborted!" )
 		return
 	else
@@ -139,10 +136,10 @@ hook.Add( "Tick", "SLCEscapeCheck", function()
 		ESCAPE_TIMER = 0
 		LAST_ESCAPE = {}
 		LAST_ESCAPE_LOOKUP = {}
-		
+
 		TransmitEscapeInfo( tab )
 
-		if GetRoundStat( "alpha_warhead" ) then
+		if GetRoundProperty( "alpha_warhead_activated" ) then
 			local xp = CVAR.slc_xp_alpha_escape:GetInt()
 			local min, max = string.match( CVAR.slc_xp_escape:GetString(), "^(%d+),(%d+)$" )
 			local time_xp = 0
@@ -185,7 +182,10 @@ hook.Add( "Tick", "SLCEscapeCheck", function()
 				v:SetSCPClass( "spectator" )
 				v.DeathScreen = CurTime() + INFO_SCREEN_DURATION
 
-				escape_stat:AddValue( 1, { player = v, type = "alpha" } )
+				local stat = SCPTeams.GetStat( team, "escape" )
+				if stat then
+					stat:AddValue( 1, { player = v, type = "alpha" } )
+				end
 			end
 		else
 			local t = GetTimer( "SLCRound" )
@@ -263,7 +263,10 @@ hook.Add( "Tick", "SLCEscapeCheck", function()
 					v:SetSCPClass( "spectator" )
 					v.DeathScreen = CurTime() + INFO_SCREEN_DURATION
 
-					escape_stat:AddValue( 1, { player = v, type = "normal" } )
+					local stat = SCPTeams.GetStat( team, "escape" )
+					if stat then
+						stat:AddValue( 1, { player = v, type = "normal" } )
+					end
 				end
 
 				CheckRoundEnd()
@@ -416,14 +419,16 @@ function PlayerEscort( ply )
 			v:KillSilent()
 			v:SkipNextSuicide()
 
-
 			v:SetSCPTeam( TEAM_SPEC )
 			v:SetSCPClass( "spectator" )
-			
-			v.DeathScreen = CurTime() + INFO_SCREEN_DURATION
-		end
 
-		escort_stat:AddValue( num )
+			v.DeathScreen = CurTime() + INFO_SCREEN_DURATION
+
+			local stat = SCPTeams.GetStat( team, "escort" )
+			if stat then
+				stat:AddValue( 1, { escorted = v, escorting = ply } )
+			end
+		end
 
 		local points = num * CVAR.slc_points_escort:GetInt()
 

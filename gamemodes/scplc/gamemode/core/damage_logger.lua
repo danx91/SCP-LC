@@ -76,8 +76,6 @@ do
 		if type( info ) != "CTakeDamageInfo" then argerror( 1, "DamageTaken", "CTakeDamageInfo", type( info ) ) end
 		if type( dmg_original ) != "number" then argerror( 2, "DamageTaken", "number", type( dmg_original ) ) end
 
-		print( "DMG TAKEN" )
-
 		local dmg_final = info:GetDamage()
 		if dmg_final <= 0 then return end
 
@@ -154,7 +152,7 @@ do
 	end
 
 	--[[---------------------------------------------------------------------------
-	DamageLogger:AssitstEvent( ply, power, timeout, id, override )
+	DamageLogger:AssistEvent( ply, power, timeout, id, override )
 
 	Adds assist event to logger
 	Assist events are used to store non-damage events that should grant assist reward
@@ -165,10 +163,10 @@ do
 
 	@return		[nil]			-					-
 	---------------------------------------------------------------------------]]--
-	function DamageLogger:AssitstEvent( ply, power, timeout )
-		if type( ply ) != "Player" then argerror( 1, "AssitstEvent", "Player", type( ply ) ) end
-		if type( power ) != "number" then argerror( 2, "AssitstEvent", "number", type( power ) ) end
-		if timeout and type( timeout ) != "number" then argerror( 3, "AssitstEvent", "nil or number", type( timeout ) ) end
+	function DamageLogger:AssistEvent( ply, power, timeout )
+		if type( ply ) != "Player" then argerror( 1, "AssistEvent", "Player", type( ply ) ) end
+		if type( power ) != "number" then argerror( 2, "AssistEvent", "number", type( power ) ) end
+		if timeout and type( timeout ) != "number" then argerror( 3, "AssistEvent", "nil or number", type( timeout ) ) end
 
 		local tab = self.assist_events[ply]
 		if !tab then
@@ -304,11 +302,15 @@ do
 		if TypeID( killer ) != TYPE_ENTITY then argerror( 1, "Finish", "Entity", type( killer ) ) end
 		if type( info ) != "CTakeDamageInfo" then argerror( 2, "Finish", "CTakeDamageInfo", type( info ) ) end
 
+		local killer_valid = IsValid( killer )
+		local killer_is_player = killer_valid and killer:IsPlayer()
+		local killer_name = killer_is_player and killer:Nick() or killer:GetName()
+
 		local taken_by_player = self:CollectTakenByPlayer()
 
 		self.death_details = {
 			killer = killer,
-			killer_name = killer:GetName(),
+			killer_name = killer_name,
 			inflictor = info:GetInflictor(),
 
 			//damage_taken = self.damage_taken_events,
@@ -351,7 +353,13 @@ do
 			} )
 		end
 
-		net.SendTable( "DeathInfo", { dealt = send_dealt, taken = send_taken, by_player = send_by_player } )
+		net.SendTable( "DeathInfo", {
+			dealt = send_dealt,
+			taken = send_taken,
+			by_player = send_by_player,
+			killer = killer:GetName(),
+			team = killer_is_player and killer:SCPTeam() or nil
+		}, self.Player )
 
 		self:Reset()
 
@@ -372,6 +380,10 @@ do
 	@return		[table<Player, RewardData>]	-					Kill and assist rewards
 	@return		[table<Player, number>]		-					Support rewards
 	---------------------------------------------------------------------------]]--
+	local function damage_sort( a, b )
+		return a.total > b.total
+	end
+
 	local function remainder_sort( a, b )
 		return a.remainder > b.remainder
 	end
@@ -383,10 +395,11 @@ do
 		if !details then return end
 
 		local damage_taken = details.taken_by_player
-		if #damage_taken == 0 then return end
 
 		local killer = details.killer
 		local assist_by_player = DamageLogger.CollectEvents( details.assist_events )
+
+		if #damage_taken == 0 and table.Count( assist_by_player ) == 0 then return end
 
 		if killer == self.Player or !IsValid( killer ) or !killer:IsPlayer() then
 			killer = nil
@@ -399,15 +412,13 @@ do
 		for i, v in ipairs( damage_taken ) do
 			if !IsValid( v.ply ) then continue end
 
-			if !killer then
-				killer = v.ply
-			end
-
 			local ply_total = v.total
 			local assist_ally = 0
 			local assist_enemy = 0
 
 			local assist = assist_by_player[v.ply]
+			assist_by_player[v.ply] = nil
+
 			if assist then
 				ply_total = ply_total + assist.total
 				assist_ally = assist.ally
@@ -422,6 +433,31 @@ do
 				rdm_pct = ( v.ally + assist_ally ) / ply_total,
 				enemy_pct = ( v.enemy + assist_enemy ) / ply_total,
 			}
+		end
+
+		local needs_sorting = false
+
+		for ply, data in pairs( assist_by_player ) do
+			local data_total = data.total
+
+			total = total + data_total
+
+			table.insert( kill_data, {
+				ply = ply,
+				total = data_total,
+				rdm_pct = data.ally / data_total,
+				enemy_pct = data.enemy / data_total
+			} )
+
+			needs_sorting = true
+		end
+
+		if needs_sorting then
+			table.sort( kill_data, damage_sort )
+		end
+
+		if !killer then
+			killer = kill_data[1].ply
 		end
 
 		print( "PHASE 1 - prepare data", total )
@@ -441,7 +477,7 @@ do
 			local dmg_pct = v.total / total
 			local raw_reward = dmg_pct * reward_pool
 			local int_reward = math.floor( raw_reward )
-			local ply_reward = math.Round( int_reward * ( v.enemy_pct - 2 * v.rdm_pct ) ) //REVIEW: truncate?
+			local ply_reward = math.Round( int_reward * ( v.enemy_pct - 2 * v.rdm_pct ) )
 
 			rewards[v.ply] = { reward = ply_reward, dmg = v.total, pct = dmg_pct }
 			remainders[i] = { ply = v.ply, remainder = raw_reward - int_reward }
@@ -546,11 +582,6 @@ do
 	end
 
 	-- Internal - don't call
-	local function damage_sort( a, b )
-		return a.total > b.total
-	end
-
-	-- Internal - don't call
 	function DamageLogger:CollectTakenByPlayer()
 		local by_player = {}
 		local id_map = {}
@@ -647,7 +678,65 @@ do
 	end
 
 	function DamageLogger.Print( data )
-		//TODO
+		local lang = LANG.MISC.logger
+
+		local dealt = StringTable()
+			:AddColumn( lang.nick, "s", nil, 15 )
+			:AddColumn( lang.damage, "i", nil, 5 )
+			:AddColumn( lang.rdm, "s" )
+
+		for i, v in ipairs( data.dealt ) do
+			dealt:AddRow( v.ply, v.dmg, v.rdm and "x" or "" )
+		end
+
+		local taken_recnet = StringTable()
+			:AddColumn( lang.nick, "s", nil, 15 )
+			:AddColumn( lang.total, "i", nil, 5 )
+			:AddColumn( lang.original, "i", nil, 5 )
+			:AddColumn( lang.defense, "s", "- ", 5 )
+			:AddColumn( lang.hp, "i", nil, 5 )
+			:AddColumn( lang.rdm, "s", nil )
+
+		for i, v in ipairs( data.taken ) do
+			taken_recnet:AddRow( v.ply, v.dmg, v.orig, math.Round( ( 1 - v.dmg / v.orig ) * 100 ).."%", v.hp, v.rdm and "x" or "" )
+		end
+
+		local taken_by_player = StringTable()
+			:AddColumn( lang.nick, "s", nil, 15 )
+			:AddColumn( lang.total, "i", nil, 5 )
+			:AddColumn( lang.rdm, "i", nil, 5 )
+
+		for i, v in ipairs( data.by_player ) do
+			taken_by_player:AddRow( v.ply, v.total, v.rdm )
+		end
+
+		print( "\n\n\n" )
+		print( lang.death_log )
+		print( lang.killer, data.killer )
+		print( lang.killer_team, data.team and SCPTeams.GetName( data.team ) or "-" )
+		print()
+
+		local dealt_len = #data.dealt
+		if dealt_len > 0 then
+			print( string.format( lang.recent_dealt, dealt_len ) )
+			dealt:Print()
+			print()
+		end
+
+		local taken_len = #data.taken
+		if taken_len > 0 then
+			print( string.format( lang.recent_taken, taken_len ) )
+			taken_recnet:Print()
+			print()
+		end
+
+		local by_player_len = #data.by_player
+		if by_player_len > 0 then
+			print( string.format( lang.top_taken, by_player_len ) )
+			taken_by_player:Print()
+		end
+
+		print( "\n\n\n" )
 	end
 
 	setmetatable( DamageLogger, { __call = function( class, ... )
@@ -670,9 +759,9 @@ hook.Add( "SLCCoreLoaded", "SLCDamageLogger", function()
 	end
 end )
 
-for i, v in ipairs( player.GetAll() ) do
+/*for i, v in ipairs( player.GetAll() ) do
 	DamageLogger( v )
-end
+end*/
 
 /*
 lua_run Entity(1).Logger:DamageTaken(  )

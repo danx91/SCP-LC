@@ -28,10 +28,8 @@
 	}
 ]]
 
-if slc_classes_fully_registered and slc_classes_fully_registered > CurTime() then return end --DEBUG function
-
-local gwarn = true
-local cwarn = true
+local groups_allowed = false
+local classes_allowed = false
 
 local SuppWeightList = {}
 
@@ -53,8 +51,7 @@ local SupportData = {}
 function AddClassGroup( name, weight, spawn )
 	if !name or !weight then return end
 
-	assert_warn( !gwarn, "Using 'AddClassGroup' function outside 'RegisterClassGroups' hook can cause errors!" )
-
+	assert( groups_allowed, "'AddClassGroup' have to be called inside 'RegisterClassGroups' hook" )
 	assert( name != "SUPPORT", "Forbidden group name: 'SUPPORT'! To add support group use 'AddSupportGroup' function instead" )
 	assert( !string.match( name, "%s" ), "Group name can not contain any whitespace characters!" )
 	assert( SelectClasses[name] == nil, "Group '"..name.."' is already registered!" )
@@ -90,7 +87,7 @@ end
 function AddSupportGroup( name, weight, spawn, max, callback, spawnrule )
 	if !name or !weight then return end
 
-	assert_warn( !gwarn, "Using 'AddSupportGroup' function outside 'RegisterClassGroups' hook can cause errors!" )
+	assert( groups_allowed, "'AddSupportGroup' have to be called inside 'RegisterClassGroups' hook" )
 
 	assert( !string.match( name, "%s" ), "Group name can not contain any whitespace characters!" )
 	assert( SelectClasses.SUPPORT[name] == nil, "Group '"..name.."' is already registered!" )
@@ -142,16 +139,13 @@ function GetSupportData( name )
 end
 
 function RegisterClass( name, group, model, data, support )
-	//if !name or !group or !model or !data then return end
-
-	assert_warn( !cwarn, "Using 'RegisterClass' function outside 'RegisterPlayerClasses' hook can cause errors!" )
-
-	local usetab = support and SelectClasses.SUPPORT or SelectClasses
+	assert( classes_allowed, "'RegisterClass' have to be called inside 'RegisterPlayerClasses' hook" )
 
 	assert( group != "SUPPORT", "Forbidden group name: 'SUPPORT'! To register support class use 'RegisterSupportClass' function instead" )
 	assert( !string.match( name, "%s" ), "Class name can not contain any whitespace characters!" )
+
+	local usetab = support and SelectClasses.SUPPORT or SelectClasses
 	assert( group == true or usetab[group] != nil, "Invalid group: "..group )
-	--assert( usetab[group][name] == nil, "Class '"..name.."' is already registered!" )
 
 	if AllClasses[name] and !usetab[group][name] then
 		local tab = table.Copy( AllClasses[name] )
@@ -159,7 +153,7 @@ function RegisterClass( name, group, model, data, support )
 		tab.support = support
 
 		usetab[group][name] = tab
-		print( "Class '"..name.."' is already registered in another group! Copying old data to new group, provided new data is discarded!" )
+		SLCErrorMessage( "Class '", name, "' is already registered in another group! Copying old data to new group, provided new data is discarded!" )
 		return
 	end
 
@@ -266,12 +260,9 @@ function SelectSupportGroup()
 end
 
 hook.Add( "SLCGamemodeLoaded", "SLCRegisterClasses", function()
-	if slc_classes_fully_registered and slc_classes_fully_registered > CurTime() then return end
-	slc_classes_fully_registered = CurTime() + 1
-
-	gwarn = false
+	groups_allowed = true
 	hook.Run( "SLCRegisterClassGroups" )
-	gwarn = true
+	groups_allowed = false
 
 	if file.Exists( "slc/classes_data.txt", "DATA" ) then
 		local override = LoadINI( "slc/classes_data.txt" )
@@ -305,9 +296,9 @@ hook.Add( "SLCGamemodeLoaded", "SLCRegisterClasses", function()
 		v.percent = v.weight / total
 	end
 
-	cwarn = false
+	classes_allowed = true
 	hook.Run( "SLCRegisterPlayerClasses" )
-	cwarn = true
+	classes_allowed = false
 
 	for group, classes in pairs( SelectClasses ) do
 		if group == "SUPPORT" then continue end

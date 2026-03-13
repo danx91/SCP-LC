@@ -1,6 +1,6 @@
 SWEP.Base 			= "weapon_scp_base"
 SWEP.PrintName		= "SCP-049-2"
-SWEP.Stat 			= RoundStat( "0492" ):Show( true, 0, 5 )
+SWEP.Stat 			= RoundStat( "scp_0492" ):ShowByRef( 20 )
 
 SWEP.HoldType 		= "knife"
 
@@ -45,7 +45,7 @@ end
 
 function SWEP:SetupDataTables()
 	self:CallBaseClass( "SetupDataTables" )
-	
+
 	self:NetworkVar( "Entity", "SCP049" )
 	self:NetworkVar( "Vector", "SCP049Position" )
 	self:NetworkVar( "Int", "ZombieType" )
@@ -109,7 +109,7 @@ function SWEP:Think()
 	end
 
 	if CLIENT then return end
-	
+
 	if self.Next049Update <= ct and self:GetProtection() < ct then
 		self.Next049Update = ct + 1
 
@@ -153,7 +153,7 @@ function SWEP:SecondaryAttack()
 
 	local ct = CurTime()
 	local secondary = self.ZombieData.secondary
-	
+
 	if secondary == "heavy" then
 		local primary_cd = ct + self:DoAttack( true, self:GetUpgradeMod( "secondary_dmg", 1 ) )
 		if self:GetNextPrimaryFire() < primary_cd then
@@ -253,7 +253,7 @@ function SWEP:DoAttack( strong, mod )
 
 				if !ent:IsPlayer() then
 					self:EmitSound( "SCP0492.HitWall" )
-					
+
 					if SERVER then
 						SuppressHostEvents( NULL )
 						self:SCPDamageEvent( ent, strong and 100 or 50 )
@@ -303,7 +303,7 @@ end
 function SWEP:DoRapidAttack()
 	local owner = self:GetOwner()
 	local vm = owner:GetViewModel()
-	
+
 	local speed = 4
 	local attacks = 8
 	local dur = vm:SequenceDuration( 2 ) / speed
@@ -509,7 +509,7 @@ local indicator = Material( "slc/hud/scp/0492/indicator.png", "smooth" )
 local text_color = Color( 255, 25, 25 )
 function SWEP:DrawSCPHUD()
 	if self:GetProtection() >= CurTime() then return end
-	
+
 	local scp = self:GetSCP049()
 	if !IsValid( scp ) or !scp:Alive() or scp:SCPTeam() != TEAM_SCP then return end
 
@@ -705,11 +705,11 @@ if CLIENT then
 			:SetColor( Color( 236, 170, 27 ) )
 			:SetTextFunction( function( swep )
 				local time = swep:GetBoost() - CurTime()
-	
+
 				if time < 0 then
 					time = 0
 				end
-				
+
 				return math.Round( time )
 			end )
 			:SetProgressFunction( function( swep )
@@ -737,12 +737,12 @@ if CLIENT then
 
 	local hud_assassin = SCPHUDObject( "SCP0492_assassin" )
 	hud_assassin:AddCommonSkills()
-	
+
 	hud_assassin:AddSkill( "light_attack" )
 		:SetButton( "attack" )
 		:SetMaterial( "slc/hud/scp/0492/light.png", "smooth" )
 		:SetCooldownFunction( "GetNextPrimaryFire" )
-	
+
 	hud_assassin:AddSkill( "rapid" )
 		:SetButton( "attack2" )
 		:SetMaterial( "slc/hud/scp/0492/rapid.png", "smooth" )
@@ -752,12 +752,12 @@ if CLIENT then
 
 	local hud_boomer = SCPHUDObject( "SCP0492_boomer" )
 	hud_boomer:AddCommonSkills()
-	
+
 	hud_boomer:AddSkill( "heavy_attack" )
 		:SetButton( "attack" )
 		:SetMaterial( "slc/hud/scp/0492/heavy.png", "smooth" )
 		:SetCooldownFunction( "GetNextPrimaryFire" )
-	
+
 	hud_boomer:AddSkill( "explode" )
 		:SetButton( "attack2" )
 		:SetMaterial( "slc/hud/scp/0492/explode.png", "smooth" )
@@ -777,7 +777,7 @@ if CLIENT then
 			if time < 0 then
 				time = 0
 			end
-			
+
 			return math.Round( time )
 		end )
 		:SetProgressFunction( function( swep )
@@ -789,12 +789,12 @@ if CLIENT then
 
 	local hud_heavy = SCPHUDObject( "SCP0492_heavy" )
 	hud_heavy:AddCommonSkills()
-	
+
 	hud_heavy:AddSkill( "heavy_attack" )
 		:SetButton( "attack" )
 		:SetMaterial( "slc/hud/scp/0492/heavy.png", "smooth" )
 		:SetCooldownFunction( "GetNextPrimaryFire" )
-	
+
 	hud_heavy:AddSkill( "shot" )
 		:SetButton( "attack2" )
 		:SetMaterial( "slc/hud/scp/0492/shot.png", "smooth" )

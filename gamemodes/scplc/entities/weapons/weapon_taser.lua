@@ -36,7 +36,7 @@ function SWEP:PrimaryAttack()
 	if not self:CanPrimaryAttack() then return end
 
 	self:TakePrimaryAmmo( 1 )
-	
+
 	self:SendWeaponAnim( ACT_VM_PRIMARYATTACK )
 	self:GetOwner():GetViewModel():SetPlaybackRate( 1 )
 	self:EmitSound( self.Primary.Sound )
@@ -51,7 +51,7 @@ function SWEP:PrimaryAttack()
 	fxdata:SetStart( self.Owner:GetShootPos() )
 	fxdata:SetOrigin( trace.HitPos )
 	fxdata:SetNormal( trace.HitNormal )
-	
+
 	if CLIENT and IsFirstTimePredicted() then
 		util.Effect( "effect_zeus_muzzleflash", fxdata )
 	elseif SERVER then
@@ -64,14 +64,14 @@ function SWEP:PrimaryAttack()
 
 	if trace.Hit and self:GetPos():DistToSqr( trace.HitPos ) < 90000 then
 		self:EmitSound( self.Primary.HitSound )
-	
-		self:MakeImpactEffect( fxdata )	
+
+		self:MakeImpactEffect( fxdata )
 		if CLIENT and IsFirstTimePredicted() then
 			util.Effect( "tooltracer", fxdata )
 			util.Effect( "ManHackSparks", fxdata )
 			util.Effect( "StunstickImpact", fxdata )
 		end
-		
+
 		if trace.Entity then
 			local ent = trace.Entity
 			local dmginfo = DamageInfo()
@@ -80,7 +80,7 @@ function SWEP:PrimaryAttack()
 			dmginfo:SetDamageType( DMG_SHOCK )
 			dmginfo:SetDamageForce( self:GetOwner():EyeAngles():Forward() * 1 )
 			dmginfo:SetInflictor( self )
-			
+
 			if SERVER then ent:TakeDamageInfo( dmginfo ) end
 		end
 	else
@@ -153,7 +153,7 @@ function SWEP:DrawWorldModel()
     //self:SetRenderOrigin( self:GetPos() )
     //self:SetRenderAngles( self:GetAngles() )
 
-    
+
 
     self:DrawModel()
 end

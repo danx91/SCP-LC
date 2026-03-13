@@ -107,6 +107,8 @@ function StringTable:AddColumn( name, specifier, flags, length, precision )
 	self.NumColumns = self.NumColumns + 1
 
 	self.Rows[1][self.NumColumns] = name
+
+	return self
 end
 
 function StringTable:AddRow( ... )
@@ -130,6 +132,8 @@ function StringTable:AddRow( ... )
 	end
 
 	table.insert( self.Rows, args )
+
+	return self
 end
 
 function StringTable:ParseRow( num )

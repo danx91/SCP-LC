@@ -21,7 +21,7 @@ if CLIENT then
 	SWEP.SelectColor = Color( 255, 210, 0, 255 )
 end
 
-function SWEP:SetupDataTables()	
+function SWEP:SetupDataTables()
 	self:NetworkVar( "Float", "NextIdle" )
 	self:NetworkVar( "Float", "ComboTime" )
 
@@ -116,7 +116,7 @@ function SWEP:PrimaryAttack()
 	local dur = vm:SequenceDuration() / self.AttackSpeed
 	self:SetNextPrimaryFire( ct + dur + 0.1 )
 	self:SetNextIdle( ct + dur )
-	
+
 	self:SetCombo( ( combo + 1 ) % 3 )
 	self:SetComboTime( ct + dur + 0.75 )
 
@@ -141,7 +141,7 @@ function SWEP:PrimaryAttack()
 			if IsValid( ent ) then
 				if ent_filter[ent] then return end
 				ent_filter[ent] = true
-				
+
 				if ent:IsPlayer() then
 					self:EmitSound( "Weapon_Knife.Hit" )
 

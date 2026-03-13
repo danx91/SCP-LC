@@ -31,7 +31,7 @@ local function setup_collision_106( ent )
 			return
 		end
 	end
-	
+
 	ent.ignorecollide106 = true
 end
 
@@ -126,10 +126,10 @@ local function scp106_tp_func( self, ent )
 	end
 
 	if status then
-		local tab = !GetRoundStat( "omega_warhead" ) and (
-				GetGasPower( ZONE_HCZ ) == 0 and pos_106tp_hcz or ( GetRoundStat( "alpha_warhead" ) or GetGasPower( ZONE_EZ ) == 0 ) and pos_106tp_ez
+		local tab = !GetRoundProperty( "omega_warhead_activated" ) and (
+				GetGasPower( ZONE_HCZ ) == 0 and pos_106tp_hcz or ( GetRoundProperty( "alpha_warhead_activated" ) or GetGasPower( ZONE_EZ ) == 0 ) and pos_106tp_ez
 			) or pos_106tp_surf
-		
+
 		ent:SetPos( tab[SLCRandom( #tab )] )
 	else
 		ent:SetPos( pos_106tp_pd[SLCRandom( #pos_106tp_pd )] )
@@ -251,7 +251,6 @@ function TranslateDoorModel( ent, breach_ang )
 			OrderVectors( mins, other_mins )
 			OrderVectors( other_maxs, maxs )
 
-			
 			pos = ( mins + maxs ) / 2
 			//debugoverlay.Box( pos, mins - pos, maxs - pos, 15, Color( 0, 0, 255, 20 ) )
 		end
@@ -392,7 +391,7 @@ hook.Add( "SLCPreround", "Site19Preround", function()
 		elseif mapid == 3034 or mapid == 3551 then --Make forest teleports bigger
 			v:UseTriggerBounds( true, 32 )
 		end
-		
+
 		if remove_name[name] or remove_mapid[mapid] then
 			v:Remove()
 		end

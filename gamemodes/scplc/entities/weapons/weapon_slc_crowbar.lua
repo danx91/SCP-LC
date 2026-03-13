@@ -123,7 +123,7 @@ function SWEP:PrimaryAttack()
 					bounds = self.AttackFallbackBounds,
 				}
 			end
-			
+
 			if ent:IsPlayer() then
 				util.Decal( "Impact.Flesh", tr.HitPos + tr.HitNormal * 20, tr.HitPos - tr.HitNormal * 20, owner )
 			end

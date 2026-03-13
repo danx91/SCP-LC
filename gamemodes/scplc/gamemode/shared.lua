@@ -1,3 +1,6 @@
+//if SLC_PREVENT_RELOAD and SLC_PREVENT_RELOAD > CurTime() then return end
+//SLC_PREVENT_RELOAD = CurTime() + 0.5
+
 BASE_LUA_PATH = GM.FolderName
 BASE_GAMEMODE_PATH = GM.FolderName.."/gamemode"
 
@@ -47,7 +50,7 @@ function LoadFolder( path, t, realm )
 				if SERVER then
 					AddCSLuaFile( path.."/"..f )
 				end
-	
+
 				if t then
 					print( t..f )
 				end
@@ -176,7 +179,7 @@ if file.Exists( MAP_CONFIG_PATH.."/"..map..".lua", "LUA" ) then
 		if SERVER then
 			AddCSLuaFile( overrides )
 		end
-	
+
 		include( overrides )
 	end
 else

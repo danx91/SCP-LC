@@ -21,7 +21,7 @@ function ENT:Initialize()
 	if SERVER then
 		self:PhysicsInit( SOLID_VPHYSICS )
 
-		if GetRoundStat( "omega_warhead" ) or GetRoundStat( "alpha_warhead" ) then
+		if GetRoundProperty( "omega_warhead_activated" ) or GetRoundProperty( "alpha_warhead_activated" ) then
 			self:SetStartTime( -1 )
 			self:SetFinishTime( -1 )
 		else
@@ -29,7 +29,7 @@ function ENT:Initialize()
 			self:SetStartTime( ct )
 			self:SetFinishTime( ct + CVAR.slc_time_goc_device:GetFloat() )
 
-			SetRoundStat( "goc_countdown", true )
+			SetRoundProperty( "goc_countdown", true )
 			EnableZoneVentilation( ZONE_WARHEAD )
 		end
 	end
@@ -83,12 +83,12 @@ end
 
 function ENT:OnTakeDamage( dmginfo )
 	if self:GetDestroyed() or self:Finished() then return end
-	
+
 	local att = dmginfo:GetAttacker()
 	if !IsValid( att ) or !att:IsPlayer() or SCPTeams.IsAlly( att:SCPTeam(), TEAM_GOC ) then return end
 
 	self:SetDestroyed( true )
-	SetRoundStat( "goc_countdown", false )
+	SetRoundProperty( "goc_countdown", false )
 	DisableZoneVentilation( ZONE_WARHEAD )
 
 	local data = EffectData()

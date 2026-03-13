@@ -1,6 +1,6 @@
 SWEP.Base 			= "weapon_scp_base"
 SWEP.PrintName		= "SCP-939"
-SWEP.Stat 			= RoundStat( "939" ):Show( true, 0, 5 )
+SWEP.Stat 			= RoundStat( "scp_939" ):ShowByRef( 20 )
 
 SWEP.HoldType		= "normal"
 
@@ -78,7 +78,7 @@ function SWEP:Think()
 
 			for i, ply in ipairs( FindInCylinder( v.pos, trail_radius, -32, 64, nil, MASK_SOLID_BRUSHONLY, player.GetAll() ) ) do
 				if filter[ply] or ply == owner or !self:CanTargetPlayer( ply ) then continue end
-	
+
 				filter[ply] = true
 				ply:ApplyEffect( "amnc227", owner, trail_dmg )
 			end
@@ -113,7 +113,7 @@ function SWEP:PrimaryAttack()
 	local owner = self:GetOwner()
 	local owner_pos = owner:GetPos()
 	local owner_ang = owner:GetAngles()
-	
+
 	owner_ang.p = 0
 	owner_ang.r = 0
 
@@ -278,22 +278,22 @@ end )
 if SERVER then
 	SCPHook( "SCP939", "EntityEmitSound", function( data )
 		if data.Volume == 0 then return end
-	
+
 		local pos = data.Pos or IsValid( data.Entity ) and data.Entity:GetPos()
 		if !pos then return end
 
 		local n = 1
 		local tab = {}
-	
+
 		for i, v in ipairs( player.GetAll() ) do
 			if v:SCPClass() != CLASSES.SCP939 or !v:TestPVS( pos ) then continue end
-	
+
 			tab[n] = v
 			n = n + 1
 		end
-	
+
 		if n == 1 then return end
-	
+
 		net.Start( "SCP939Sound" )
 			net.WriteVector( pos )
 			net.WriteFloat( data.SoundLevel )

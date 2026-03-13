@@ -176,7 +176,7 @@ function DestroyDoor( ent, breach_ang, ignore_moving )
 
 		orig_groups[i] = v:GetCollisionGroup()
 		v:SetCollisionGroup( COLLISION_GROUP_WORLD )
-		
+
 		orig_solids[i] = v:GetSolid()
 		v:SetSolid( SOLID_NONE )
 
@@ -587,7 +587,7 @@ hook.Add( "SLCPreround", "SLCFuseBox", function()
 			elseif istable( v.fuse ) then
 				box:SetFuse( SLCRandom( v.fuse[1], v.fuse[2] ) )
 			end
-			
+
 			box:Spawn()
 
 			SLC_FUSE_BOXES[v.name] = box
@@ -605,7 +605,7 @@ end )
 
 hook.Add( "SLCButtonUse", "SLCFuseBox", function( ply, ent, data, omni )
 	if !data.fuse_box or CVAR.slc_disable_fuseboxes:GetInt() != 0 then return end
-	
+
 	local tab = istable( data.fuse_box ) and data.fuse_box or { data.fuse_box }
 	local rok = false
 

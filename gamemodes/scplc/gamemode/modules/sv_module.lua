@@ -6,7 +6,7 @@ function GM:PlayerSpray( ply )
 end
 
 function GM:ShutDown()
-	
+	//
 end
 
 function GM:SCPDamage( ply, ent, dmg )
@@ -27,7 +27,7 @@ function GM:GetFallDamage( ply, speed )
 end
 
 function GM:Think()
-	
+	//
 end
 
 function GM:PlayerPostThink( ply )
@@ -354,9 +354,11 @@ end )
 concommand.Add( "slc_debuginfo", function( ply, cmd, args )
 	if !IsValid( ply ) or ply:IsListenServerHost() then
 		print( "=== DEBUG INFO ===" )
-		print( "Round:" )
+		print( "Round" )
 		PrintTable( ROUND, 1 )
-		print( "\nPlayers" )
+		print( "Round Stats" )
+		RoundStatsDebug( 1 )
+		print( "Players" )
 		for _, v in ipairs( player.GetAll() ) do
 			print( "->", v, v:Nick(), v:SteamID() )
 			print( "\tGeneral info -> ", v:SCPTeam(), v:SCPClass(), v:Alive(), v:IsAFK(), v:GetModel(), v:GetObserverMode(), v:GetObserverTarget() )

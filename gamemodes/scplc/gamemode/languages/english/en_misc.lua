@@ -98,35 +98,67 @@ lang.NCRegistry = {
 	alpha_escape = "You escaped before warhead exploded",
 
 	mvp = "MVP: %s with score: %i",
-	stat_kill = "Players killed: %i",
-	stat_rdm = "RDM kills: %i",
-	stat_rdmdmg = "RDM damage: %i",
-	stat_dmg = "Damage dealt: %i",
-	stat_bleed = "Bleeding damage: %i",
-	stat_106recontain = "SCP-106 has been recontained",
-	stat_escapes = "Escaped players: %i",
-	stat_escorts = "Players escorted: %i",
-	stat_023 = "Players killed by SCP-023: %i",
-	stat_049 = "Players cured by SCP-049: %i",
-	stat_0492 = "Players mauled by zombies: %i",
-	stat_058 = "Players killed by SCP-058: %i",
-	stat_066 = "Masterpieces played by SCP-066: %i",
-	stat_096 = "Players killed by shy guy: %i",
-	stat_106 = "Players teleported to Pocket Dimension: %i",
-	stat_173 = "Snapped necks: %i",
-	stat_457 = "Players burned alive: %i",
-	stat_682 = "Players killed by overgrown reptile: %i",
-	stat_8602 = "Players killed by SCP-860-2: %i",
-	stat_939 = "SCP-939 preys: %i",
-	stat_966 = "Players put to sleep: %i",
-	stat_3199 = "Assassinations by SCP-3199: %i",
-	stat_24273 = "People judged by SCP-2427-3: %i",
-	stat_omega_warhead = "Omega warhead has been detonated",
-	stat_alpha_warhead = "Alpha warhead has been detonated",
-	stat_goc_warhead = "GOC device was activated",
 }
 
 lang.NCFailed = "Failed to access NCRegistry with key: %s"
+
+--[[-------------------------------------------------------------------------
+Round Stats
+---------------------------------------------------------------------------]]
+lang.ROUND_STATS = {
+	recontain106 = "SCP-106 has been recontained",
+	omega_warhead = "Omega warhead has been detonated",
+	alpha_warhead = "Alpha warhead has been detonated",
+	goc_warhead = "GOC device has been activated",
+
+	total_kills = "Total players killed: %i",
+	total_rdms = "Total RDM kills: %i",
+	total_damage = "Total dmaage dealt: %i",
+	total_rdm_damage = "Total RDM damage: %i",
+	total_escapes = "Total escapees: %i",
+	total_escorts = "Total players escorted: %i",
+
+	bleeding = "Bleeding damage: %i",
+	poison = "Poison damage: %i",
+
+	scp_023 = "Players killed by SCP-023: %i",
+	scp_049 = "Players cured by SCP-049: %i",
+	scp_0492 = "Players mauled by zombies: %i",
+	scp_058 = "Players killed by SCP-058: %i",
+	scp_066 = "Masterpieces played by SCP-066: %i",
+	scp_096 = "Players killed by shy guy: %i",
+	scp_106 = "Players teleported to Pocket Dimension: %i",
+	scp_173 = "Snapped necks: %i",
+	scp_457 = "Players burned alive by SCP-457: %i",
+	scp_682 = "Players killed by overgrown reptile: %i",
+	scp_8602 = "Players killed by SCP-860-2: %i",
+	scp_939 = "SCP-939 preys: %i",
+	scp_966 = "Players put to sleep: %i",
+	scp_3199 = "Assassinations by SCP-3199: %i",
+	scp_24273 = "Judgements made by SCP-2427-3: %i",
+}
+
+local team_groups = {
+	scp = "SCPs",
+	staff = "staff",
+	classd_ci = "insurgents",
+	goc = "GOC",
+}
+
+local stat_types = {
+	_kills = "Kills by ",
+	_rdm = "RDMs by",
+	_dmg = "Damage dealt by ",
+	_rdmdmg = "RDM damage dealt by ",
+	_escape = "Escapes by ",
+	_escort = "Escorted ",
+}
+
+for group, name in pairs( team_groups ) do
+	for suffix, text in pairs( stat_types ) do
+		lang.ROUND_STATS[group..suffix] = text..name..": %i"
+	end
+end
 
 --[[-------------------------------------------------------------------------
 Main menu
@@ -706,6 +738,24 @@ Navigate to 'steamapps/common/GarrysMod/garrysmod/cache/workshop/resource/fonts'
 misc.xp = {
 	summary = "Experience summary",
 	total = "Total",
+}
+
+misc.logger = {
+	death_log = "Death Log",
+	killer = "Killer:",
+	killer_team = "Killer team:",
+
+	recent_dealt = "Dealt damage (%i recent):",
+	recent_taken = "Taken damage (%i recent):",
+	top_taken = "Total taken damage (top %i):",
+
+	nick = "Nick",
+	damage = "Damage",
+	rdm = "RDM",
+	total = "Total",
+	original = "Original",
+	defense = "Defense",
+	hp = "HP (before)"
 }
 
 --[[-------------------------------------------------------------------------

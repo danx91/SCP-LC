@@ -1,6 +1,6 @@
 SWEP.Base 			= "weapon_scp_base"
 SWEP.PrintName		= "SCP-058"
-SWEP.Stat 			= RoundStat( "058" ):Show( true, 0, 5 )
+SWEP.Stat 			= RoundStat( "scp_058" ):ShowByRef( 20 )
 
 SWEP.HoldType		= "melee"
 
@@ -25,7 +25,7 @@ SWEP.ExplosionSlowTime = 3
 
 function SWEP:SetupDataTables()
 	self:CallBaseClass( "SetupDataTables" )
-	
+
 	self:NetworkVar( "Bool", "Explode" )
 	self:NetworkVar( "Int", "ShotStacks" )
 	self:NetworkVar( "Float", "NextStack" )
@@ -40,7 +40,7 @@ end
 SWEP.AttackSlow = 0
 function SWEP:Think()
 	self:SwingThink()
-	
+
 	if !SERVER then return end
 
 	local ct = CurTime()
@@ -78,7 +78,7 @@ function SWEP:PrimaryAttack()
 
 	local ct = CurTime()
 	local owner = self:GetOwner()
-	
+
 	self:SetNextPrimaryFire( ct + self.AttackCooldown - self:GetUpgradeMod( "prim_cd", 0 ) )
 
 	owner:DoAnimationEvent( ACT_HL2MP_GESTURE_RANGE_ATTACK_MELEE )
@@ -94,7 +94,7 @@ function SWEP:PrimaryAttack()
 	end
 
 	self:EmitSound( "npc/zombie/claw_miss1.wav" )
-	
+
 	self:SwingAttack( {
 		path_start = path_start,
 		path_end = path_end,

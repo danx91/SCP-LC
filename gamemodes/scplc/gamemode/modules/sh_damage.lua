@@ -268,9 +268,6 @@ function GM:ScalePlayerDamage( ply, hitgroup, info )
 
 end
 
-local dmg_stat = GetRoundStat( "dmg" )
-local rdmdmg_stat = GetRoundStat( "rdmdmg" )
-
 local function handle_player_damage( target, info )
 	local attacker = info:GetAttacker()
 	if hook.Run( "PlayerShouldTakeDamage", target, attacker ) == false then return true end //REVIEW test if called by default?
@@ -285,10 +282,17 @@ local function handle_player_damage( target, info )
 				if handle_scps( target, info, attacker ) == true then return true end
 
 				local dmg_orig = info:GetDamage()
-				dmg_stat:AddValue( dmg_orig )
+
+				local dmg_stat = SCPTeams.GetStat( attacker:SCPTeam(), "damage" )
+				if dmg_stat then
+					dmg_stat:AddValue( dmg_orig, { victim = target, attacker = attacker } )
+				end
 
 				if SCPTeams.IsAlly( attacker:SCPTeam(), target:SCPTeam() ) then
-					rdmdmg_stat:AddValue( dmg_orig )
+					local rdmdmg_stat = SCPTeams.GetStat( attacker:SCPTeam(), "damage_rdm" )
+					if rdmdmg_stat then
+						rdmdmg_stat:AddValue( dmg_orig, { victim = target, attacker = attacker } )
+					end
 				end
 			end
 		end

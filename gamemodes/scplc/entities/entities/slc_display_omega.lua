@@ -21,7 +21,7 @@ function ENT:Think()
 		local ct = CurTime()
 		local state = self:GetState()
 
-		if state != STATE_COUNTDOWN and state != STATE_NONE and GetRoundStat( "omega_warhead" ) then
+		if state != STATE_COUNTDOWN and state != STATE_NONE and GetRoundProperty( "omega_warhead_activated" ) then
 			self.Waiting = 0
 
 			self.Usable = false

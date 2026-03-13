@@ -135,7 +135,7 @@ function SWEP:Deploy()
 	self.BoneRotation:Zero()
 
 	if CLIENT then return end
-	
+
 	local owner = self:GetOwner()
 	if !IsValid( owner ) then return end
 
@@ -409,7 +409,7 @@ controller.Register( "particle_cannon", {
 		end
 
 		local state = wep:WeaponState()
-		
+
 		if state == STATE.IDLE then
 			self:Stop()
 			return
