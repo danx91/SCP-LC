@@ -149,14 +149,6 @@ function GM:DoPlayerDeath( ply, attacker, dmginfo )
 	print( txt )
 end
 
-/*
-kill
-kill_rdm
-kill_n
-assist
-assist_rdm
-support
-*/
 local function kill_message( ply, kind, reward, team_name, victim_nick )
 	if reward == 0 then
 		kind = kind.."_n"
@@ -192,8 +184,56 @@ function GM:PlayerDeath( victim, inflictor, attacker )
 	if ROUND.post then return end
 
 	local victim_team = victim:SCPTeam()
-	local reward_pool = isnumber( pprop.reward_override ) and pprop.reward_override or SCPTeams.GetReward( victim_team ) * 2
-	local half_pool = reward_pool * 0.5
+	local base_pool, max_pool = SCPTeams.GetReward( victim_team )
+	local reward_pool
+
+	print( "Calc pool", victim )
+
+	if isnumber( pprop.reward_override ) then
+		print( "Use override" )
+		reward_pool = pprop.reward_override
+	elseif isnumber( pprop.slc_frags ) then
+		print( "Use normal" )
+		local victim_score = pprop.slc_frags
+		local team_score = SCPTeams.GetScore( victim_team )
+		local min_score = CVAR.slc_kill_pool_min:GetInt()
+
+		print( victim_score, team_score, min_score, base_pool )
+
+		if team_score < min_score then
+			team_score = min_score
+		end
+
+		local personal_part = victim_score / ( max_pool + min_score )
+		print( "PP", personal_part )
+		if personal_part > 1 then
+			personal_part = 1
+		end
+
+		local team_part = victim_score / math.sqrt( team_score )
+		print( "TP",team_part )
+		if team_part > 1 then
+			team_part = 1
+		end
+
+		reward_pool = math.Round( Lerp( personal_part * 0.7 + team_part * 0.3, base_pool, max_pool ) )
+		print( "init pool", reward_pool )
+
+		if reward_pool > victim_score then
+			if victim_score > base_pool then
+				reward_pool = victim_score
+			else
+				reward_pool = base_pool
+			end
+		end
+
+		print( "final pool", reward_pool )
+	else
+		print( "Use base" )
+		reward_pool = base_pool
+	end
+
+	local half_pool = math.ceil( base_pool * 0.5 )
 	print( "KILL - get rewards", reward_pool )
 
 	local rewards, support_rewards, killer = victim.Logger:GetRewards( reward_pool )

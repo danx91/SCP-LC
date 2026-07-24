@@ -170,4 +170,4 @@ function SWEP:PlayActivity( act, speed )
 end
 
 AddWeaponLoadout( "weapon_slc_crowbar", nil, "melee_mid" )
-MarkAsWeapon( "weapon_slc_crowbar" )
+MarkAsWeapon( "weapon_slc_crowbar", "melee" )

@@ -96,13 +96,13 @@ RegisterEntityTable( "ActionQueue", {
 		ActionQueueThink = function( self )
 			local ct = CurTime()
 			local a_finish = self:GetActionFinish()
-			
+
 			if a_finish != 0 and a_finish < ct then
 				//print( "FINISH ACTION", self:GetState() )
 				if #self.ActionQueue > 0 then
 					local new = table.remove( self.ActionQueue, 1 )
 					local prev = self:GetState()
-					
+
 					self:SetState( new.state or 0 )
 					self:SetActionStart( ct )
 					self:SetActionFinish( ct + ( new.duration or 0 ) )
@@ -157,7 +157,7 @@ RegisterEntityTable( "Lootable", {
 				if IsValid( ply.ActiveLootable ) then
 					ply.ActiveLootable.Listeners[ply] = nil
 				end
-		
+
 				self.Listeners[ply] = true
 				ply.ActiveLootable = self
 
@@ -167,7 +167,7 @@ RegisterEntityTable( "Lootable", {
 					ent = self,
 					loot = {}
 				}
-		
+
 				local cache = self.PlayersCache[ply]
 				if !cache then
 					cache = {}

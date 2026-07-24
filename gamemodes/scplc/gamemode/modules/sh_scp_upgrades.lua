@@ -139,6 +139,8 @@ function InstallUpgradeSystem( name, swep )
 	end
 
 	swep.AddScore = function( self, score )
+		if GetRoundRule( "no-scp-upgrades" ) then return end
+
 		self.UpgradeSystemRegistry.score = self.UpgradeSystemRegistry.score + score
 
 		local count = #upg.rewards
@@ -214,6 +216,7 @@ function InstallUpgradeSystem( name, swep )
 	end
 
 	swep.CanBuyUpgrade = function( self, u_name )
+		if GetRoundRule( "no-scp-upgrades" ) then return false end
 		if self:HasUpgrade( u_name ) then return false end
 		if !self:UpgradeUnlocked( u_name ) then return false end
 		//if self:UpgradeBlocked( u_name ) then return false end
@@ -225,6 +228,8 @@ function InstallUpgradeSystem( name, swep )
 	end
 
 	swep.BuyUpgrade = function( self, id )
+		if GetRoundRule( "no-scp-upgrades" ) then return end
+
 		local upgrade = upg.upgrades[id]
 		if upgrade then
 			if self:CanBuyUpgrade( upgrade.name ) then
@@ -367,7 +372,7 @@ if CLIENT then
 		local mx, my = input.GetCursorPos()
 		if mx >= x and mx <= x + w and my >= y and my <= y + h then
 			if input.IsMouseDown( MOUSE_LEFT )then
-				
+
 				if button_next then
 					button_next = false
 					return 2 --LMB
@@ -521,7 +526,7 @@ if CLIENT then
 			//render.PushFilterMin( TEXFILTER.LINEAR )
 			//render.PushFilterMag( TEXFILTER.LINEAR )
 			PushFilters( TEXFILTER.LINEAR )
-			
+
 			local icon = wep.UpgradeIconsOverride and wep.UpgradeIconsOverride[v.name] or v.icon
 			if icon then
 				surface.SetDrawColor( color_white )
@@ -644,7 +649,7 @@ if CLIENT then
 
 					if !wep.cached_description[info.name] then
 						local parser_data = custom_skill_parsers[info.name] and custom_skill_parsers[info.name]( wep, clang, info )
-						
+
 						wep.cached_description[info.name] = string.gsub( dsc, "%[([%/%+%-%%]?)(%+?)([%w_]+)%]", function( prefix, plus, name )
 							local value = parser_data and parser_data[name] or info.mod[name]
 
@@ -760,6 +765,8 @@ if CLIENT then
 	hook.Add( "DrawOverlay", "SCPUpgradesOverlay", drawUpgrades )
 
 	function ShowSCPUpgrades()
+		if GetRoundRule( "no-scp-upgrades" ) then return end
+
 		local wep = LocalPlayer():GetSCPWeapon()
 		if wep.UpgradeSystemMounted then
 			HUDSCPUpgradesOpen = true

@@ -40,8 +40,7 @@ function ENT:OnTakeDamage( dmg )
 	local attacker = dmg:GetAttacker()
 	if !IsValid( attacker ) or !attacker:IsPlayer() or !SCPTeams.HasInfo( attacker:SCPTeam(), SCPTeams.INFO_STAFF ) then return end
 
-	local n = math.min( self.DestroyPenalty, attacker:Frags() )
-	attacker:AddFrags( -n )
+	attacker:AddFrags( -self.DestroyPenalty )
 	PlayerMessage( string.format( "property_dmg$%d#200,25,25", self.DestroyPenalty ), attacker )
 end
 

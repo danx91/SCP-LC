@@ -202,8 +202,7 @@ function SCPSkillObjectInstance:Draw( x, y, s )
 		surface.DrawCooldownRectCW( x, y, s, s, 1 - cd_pct )
 
 		if cd_text and GetSettingsValue( "scp_hud_skill_time" ) then
-			draw.SimpleText( cd_text, "SCPScaledHUDSmall_Blur", x + s * 0.5, y + s * 0.5, color_black, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
-			draw.SimpleText( cd_text, "SCPScaledHUDSmall", x + s * 0.5, y + s * 0.5, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+			draw.OutlinedText( cd_text, "SCPScaledHUDSmall", x + s * 0.5, y + s * 0.5, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, color_black )
 		end
 	end
 
@@ -217,15 +216,11 @@ function SCPSkillObjectInstance:Draw( x, y, s )
 	self:ParseButton()
 
 	if self.ButtonName then
-		draw.SimpleText( LANG.MISC.buttons[self.ButtonName] or string.upper( self.ButtonName ), "SCPScaledHUDVSmall_Blur", x + s - 8, y + s, color_black, TEXT_ALIGN_RIGHT, TEXT_ALIGN_BOTTOM )
-		draw.SimpleText( LANG.MISC.buttons[self.ButtonName] or string.upper( self.ButtonName ), "SCPScaledHUDVSmall_Blur", x + s - 8, y + s, color_black, TEXT_ALIGN_RIGHT, TEXT_ALIGN_BOTTOM )
-		draw.SimpleText( LANG.MISC.buttons[self.ButtonName] or string.upper( self.ButtonName ), "SCPScaledHUDVSmall", x + s - 8, y + s, color_white, TEXT_ALIGN_RIGHT, TEXT_ALIGN_BOTTOM )
+		draw.OutlinedText( LANG.MISC.buttons[self.ButtonName] or string.upper( self.ButtonName ), "SCPScaledHUDVSmall", x + s - 8, y + s, color_white, TEXT_ALIGN_RIGHT, TEXT_ALIGN_BOTTOM, color_black, 3, 2 )
 	end
 
 	if self.Text then
-		draw.SimpleText( self.Text, "SCPScaledHUDVSmall_Blur", x + s - 8, y, color_black, TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP )
-		draw.SimpleText( self.Text, "SCPScaledHUDVSmall_Blur", x + s - 8, y, color_black, TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP )
-		draw.SimpleText( self.Text, "SCPScaledHUDVSmall", x + s - 8, y, color_white, TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP )
+		draw.OutlinedText( self.Text, "SCPScaledHUDVSmall", x + s - 8, y, color_white, TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP, color_black, 3, 2 )
 	end
 
 	self:Description( x, y, s, s )
@@ -274,9 +269,7 @@ function SCPSkillObjectInstance:DrawBar( x, y, h )
 	if self.Text then
 		local text_x = start_x + w + h * 0.5
 		local text_y = y + h * 0.5 - 4
-		draw.SimpleText( self.Text, "SCPScaledHUDSmall_Blur", text_x, text_y, color_black, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER )
-		draw.SimpleText( self.Text, "SCPScaledHUDSmall_Blur", text_x, text_y, color_black, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER )
-		draw.SimpleText( self.Text, "SCPScaledHUDSmall", text_x, text_y, color_white, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER )
+		draw.OutlinedText( self.Text, "SCPScaledHUDSmall", text_x, text_y, color_white, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER, color_black, 3, 2 )
 	end
 
 	surface.SetAlphaMultiplier( 1 )
@@ -325,7 +318,7 @@ function SCPSkillObject:Create( hud )
 	} )
 
 	tab:ParseButton()
-	
+
 	return tab
 end
 
@@ -410,7 +403,7 @@ function SCPHUDObjectInstance:Notify( name, dur, snd )
 	local ct = CurTime()
 	self.Notification = name
 	self.NotificationTime = ct + dur
-	
+
 	if snd and self.NotificationSound < ct then
 		self.NotificationSound = ct + dur
 		surface.PlaySound( snd )
@@ -487,10 +480,7 @@ function SCPHUDObjectInstance:Draw()
 		end
 
 		local text = self.Lang and self.Lang[self.Notification] or LANG.SCPHUD[self.Notification] or self.Notification
-
-		draw.SimpleText( text, "SCPScaledHUDSmall_Blur", w * 0.5, y - self.Margin, color_black, TEXT_ALIGN_CENTER, TEXT_ALIGN_BOTTOM )
-		draw.SimpleText( text, "SCPScaledHUDSmall_Blur", w * 0.5, y - self.Margin, color_black, TEXT_ALIGN_CENTER, TEXT_ALIGN_BOTTOM )
-		draw.SimpleText( text, "SCPScaledHUDSmall", w * 0.5, y - self.Margin, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_BOTTOM )
+		draw.OutlinedText( text, "SCPScaledHUDSmall", w * 0.5, y - self.Margin, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_BOTTOM, color_black, 3, 2 )
 
 		surface.SetAlphaMultiplier( 1 )
 	end
@@ -615,7 +605,6 @@ function SCPHUDObject:AddCommonSkills()
 			else
 				buff = string.format( lang.buff, MarkupBuilder.StaticPrint( math.Round( mods.regen_scale * 100, 1 ).."%", color_green ),
 					MarkupBuilder.StaticPrint( math.Round( mods.heal_scale * 100, 1 ).."%", color_green ) )
-					
 			end
 
 			return {

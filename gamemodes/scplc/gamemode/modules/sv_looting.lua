@@ -1,4 +1,5 @@
 SLCLootPools = SLCLootPools or {}
+SLCLootPoolOverrides = SLCLootPoolOverrides or {}
 SLCLootProcessors = SLCLootProcessors or {}
 SLCLootFunctions = {}
 
@@ -44,28 +45,86 @@ function AddItemToLootPool( name, item_tab )
 	table.insert( pool.items, item_tab )
 end
 
+function OverrideLootPool( name, data )
+	SLCLootPoolOverrides[name] = data
+
+	for _, v in ipairs( data.items ) do
+		if v.max and v.max > 0 then
+			data.copy = true
+			break
+		end
+	end
+end
+
+function OverrideLootItem( selector, data )
+	local selector_fn = selector == true or isfunction( selector ) and selector or function( item )
+		if selector.class != nil and selector.class != item.class then return false end
+		if selector.weight != nil and selector.weight != item.weight then return false end
+		if selector.value != nil and selector.value != item.value then return false end
+		if selector.max != nil and selector.max != item.max then return false end
+
+		return true
+	end
+
+	local data_is_func = isfunction( data )
+	local data_is_table = istable( data )
+
+	for name, pool in pairs( SLCLootPoolOverrides ) do
+		for i, item in rpairs( pool.items ) do
+			if selector_fn == true or selector_fn( item ) then
+				if data == nil then
+					table.remove( pool.items, i )
+				elseif data_is_func then
+					pool.items[i] = data( item )
+				elseif data_is_table then
+					pool.items[i] = data
+				end
+			end
+		end
+	end
+end
+
+hook.Add( "SLCRoundCleanup", "SLCClearLootingOverrides", function()
+	SLCLootPoolOverrides = table.Copy( SLCLootPools )
+end )
+
 function GenerateLootTable( name, num )
 	local result = {}
 
-	if !SLCLootPools[name] then return result end
-	local tab
-	
-	if SLCLootPools[name].copy then
-		tab = table.Copy( SLCLootPools[name] )
-	else
-		tab = SLCLootPools[name]
+	local tab = SLCLootPoolOverrides[name]
+	if !tab then return result end
+
+	if tab.copy then
+		tab = table.Copy( tab )
 	end
-	
+
 	local total_weight = 0
 	for _, v in ipairs( tab.items ) do
 		total_weight = total_weight + v.weight
 	end
 
+	if total_weight == 0 then return result end
+
+	local loot_value = GetRoundModifier( "loot-value", 1 )
+
+	local total_max = tab.max or -1
+	if total_max > 0 then
+		total_max = math.StochasticRound( total_max * loot_value )
+	end
+
+	local value_limit = tab.value_limit or -1
+	if value_limit > 0 then
+		value_limit = math.StochasticRound( value_limit * loot_value )
+	end
+
 	local total = 0
 	local value = 0
 	local all = {}
+
 	for i = 1, num do
-		if SLCRandom() >= tab.chance then continue end
+		local chance = 1 - ( 1 - tab.chance ) ^ loot_value
+		if SLCRandom() >= chance then continue end
+
 		total = total + 1
 
 		local rng = SLCRandom( total_weight )
@@ -82,7 +141,7 @@ function GenerateLootTable( name, num )
 			else
 				local loadout = string.match( v.class, "^loadout:(.+)$" )
 				if loadout then
-					class = GetLoadoutWeapon( loadout, true )
+					class = ResolveWeapon( loadout )
 				else
 					class = v.class
 				end
@@ -108,10 +167,15 @@ function GenerateLootTable( name, num )
 
 			value = value + ( v.value or 0 )
 
-			if v.max and v.max > 0 then
+			local item_max = v.max or -1
+			if item_max > 0 then
+				item_max = math.StochasticRound( item_max * loot_value )
+			end
+
+			if item_max > 0 then
 				all[n] = ( all[n] or 0 ) + 1
 
-				if all[n] >= v.max then
+				if all[n] >= item_max then
 					total_weight = total_weight - v.weight
 					v.weight = 0
 				end
@@ -120,11 +184,11 @@ function GenerateLootTable( name, num )
 			break
 		end
 
-		if tab.max and tab.max > 0 and total >= tab.max then
+		if total_max > 0 and total >= total_max then
 			break
 		end
 
-		if tab.value_limit and tab.value_limit > 0 and value >= tab.value_limit then
+		if value_limit > 0 and value >= value_limit then
 			break
 		end
 	end
@@ -158,7 +222,7 @@ net.Receive( "SLCLooting", function( len, ply )
 					if obj.func then
 						result, upd, wep = obj.func( ply, obj.info.class, obj.info.data, obj.ntd )
 					end
-					
+
 					if result == nil and !upd then
 						if !IsValid( wep ) and ply:GetFreeInventory() > 0 and hook.Run( "SLCCanPickupWeaponClass", ply, obj.info.class ) != false then
 							wep = ply:Give( obj.info.class )
@@ -194,7 +258,7 @@ net.Receive( "SLCLooting", function( len, ply )
 								else
 									upd = true
 								end
-								
+
 								if obj.post then obj.post( ply, pwep, obj.info.data, obj.ntd ) end
 							end
 						end
@@ -202,6 +266,8 @@ net.Receive( "SLCLooting", function( len, ply )
 
 					if result then
 						ent.LootItems[item] = nil
+
+						if ent.CheckRemove then ent:CheckRemove() end
 
 						local send = {}
 
@@ -765,7 +831,6 @@ AddLootPool( "medbay", {
 		{ class = "item_slc_ephedrine_big", weight = 2 },
 		{ class = "item_slc_hemostatic_big", weight = 2 },
 		{ class = "item_slc_antidote_big", weight = 2 },
-		
 	}
 } )
 

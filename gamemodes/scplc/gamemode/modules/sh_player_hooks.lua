@@ -5,27 +5,27 @@ end
 function GM:PlayerButtonDown( ply, button )
 	if SERVER then
 		numpad.Activate( ply, button )
-		
+
 		local rt = RealTime()
-		
+
 		if !ply.SLCAFKTimer then
 			ply.SLCAFKTimer = 0
 		end
-		
+
 		if ply.SLCAFKTimer <= rt then
 			if ply:IsAFK() then
 				ply:SetIsAFK( false )
 				QueueInsert( ply ) --insert player back to spawn queue
 				CheckRoundStart()
-				
+
 				PlayerMessage( "afk_end", ply )
 			end
-			
+
 			ply.SLCAFKTimer = rt
 			ply.AFKWarned = false
 		end
 	end
-	
+
 	if CLIENT and IsFirstTimePredicted() then
 		SLCAFKWarning = false
 
@@ -41,12 +41,22 @@ function GM:PlayerButtonDown( ply, button )
 			if ply:SCPTeam() == TEAM_SPEC then
 				HUDSpectatorInfo = true
 			end
-		elseif button == GetBindButton( "upgrade_tree_button" ) and hook.Run( "SLCCanUseBind", "scp_tree" ) != false then
+		end
+
+		if button == GetBindButton( "upgrade_tree_button" ) and hook.Run( "SLCCanUseBind", "scp_tree" ) != false then
 			ShowSCPUpgrades()
-		elseif button == GetBindButton( "ppshop_button" ) and hook.Run( "SLCCanUseBind", "class_viewer" ) != false then
+		end
+
+		if button == GetBindButton( "ppshop_button" ) and hook.Run( "SLCCanUseBind", "class_viewer" ) != false then
 			OpenClassViewer()
-		elseif button == GetBindButton( "settings_button" ) and hook.Run( "SLCCanUseBind", "settings" ) != false then
+		end
+
+		if button == GetBindButton( "settings_button" ) and hook.Run( "SLCCanUseBind", "settings" ) != false then
 			OpenSettingsWindow()
+		end
+
+		if button == GetBindButton( "skip_summary_button" ) and hook.Run( "SLCCanUseBind", "skip_summary" ) != false then
+			RunGUISkinFunction( "round_summary", "skip" )
 		end
 	end
 end
@@ -63,7 +73,9 @@ function GM:PlayerButtonUp( ply, button )
 			if ply:SCPTeam() == TEAM_SPEC then
 				HUDSpectatorInfo = false
 			end
-		elseif button == GetBindButton( "upgrade_tree_button" ) then
+		end
+
+		if button == GetBindButton( "upgrade_tree_button" ) then
 			HideSCPUpgrades()
 		end
 	end
@@ -102,7 +114,7 @@ if CLIENT then
 
 		if !tr.Hit or !IsValid( tr.Entity ) then return end
 		if !tr.Entity.CSUse then return end
-		
+
 		tr.Entity:CSUse( ply )
 	end )
 end
@@ -167,7 +179,7 @@ function GM:PlayerCanPickupWeapon( ply, wep )
 
 	local class = wep:GetClass()
 	local has = false
-	
+
 	for k, v in pairs( ply:GetWeapons() ) do
 		if v:GetClass() == class then
 			has = true
@@ -435,7 +447,7 @@ if !SLCStepSoundsAdded then
 
 		local tab = sound.GetProperties( v )
 		local orig = tab.name
-		
+
 		tab.name = orig.."Walk"
 		tab.level = 70
 		tab.volume = 0.7
@@ -488,7 +500,7 @@ function GM:OnPlayerHitGround( ply, water, floater, speed )
 	ply:PlayStepSound()
 
 	if speed <= threshold then return true end
-	
+
 	if !water then
 		if speed > 300 then
 			local ang = math.min( speed - 300, 750 ) * 0.03

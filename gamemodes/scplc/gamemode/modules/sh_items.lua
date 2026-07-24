@@ -339,7 +339,7 @@ AddSyringe( "item_slc_hemostatic", {
 
 	can_use = function( self, target, owner )
 		if !target:Alive() or !target:IsHuman() or target:HasEffect( "hemostatic" ) then return end
-		if hook.Run( "SLCCanHeal", target, owner, "ephedrine" ) == false then return end
+		if hook.Run( "SLCCanHeal", target, owner, "hemostatic" ) == false then return end
 
 		return true
 	end,
@@ -380,7 +380,7 @@ AddSyringe( "item_slc_antidote", {
 
 	can_use = function( self, target, owner )
 		if !target:Alive() or !target:IsHuman() or target:HasEffect( "antidote" ) then return end
-		if hook.Run( "SLCCanHeal", target, owner, "ephedrine" ) == false then return end
+		if hook.Run( "SLCCanHeal", target, owner, "antidote" ) == false then return end
 
 		return true
 	end,

@@ -1,4 +1,4 @@
-if !ulx or !ULib then 
+if !ulx or !ULib then
 	print( "# > ULX or ULib not found" )
 	return
 end
@@ -53,7 +53,7 @@ function InitializeSCPULX()
 			ULib.tsayError( ply, "Round is not active!", true )
 			return
 		end
-		
+
 		if !plyt:IsActive() then
 			ULib.tsayError( ply, "Player "..plyt:Nick().." is inactive! Force spawn failed", true )
 			return
@@ -341,7 +341,7 @@ function InitializeSCPULX()
 	function ulx.punish( ply, target )
 		if !target:Alive() then return end
 
-		target:SetFrags( 0 )
+		target:ClearFrags( math.min( target:Frags(), 0 ) )
 
 		target:ForceSuicideQueue()
 		target:Kill()
@@ -363,8 +363,8 @@ function InitializeSCPULX()
 		end
 
 		if !IsValid( target ) or !target:Alive() then return end
-		
-		target:SetFrags( 0 )
+
+		target:ClearFrags( math.min( target:Frags(), 0 ) )
 
 		target:ForceSuicideQueue()
 		target:Kill()
@@ -396,7 +396,7 @@ function InitializeSCPULX()
 			ULib.tsayError( ply, "Round is not active!", true )
 			return
 		end
-		
+
 		if !target:IsActive() then
 			ULib.tsayError( ply, "Player "..target:Nick().." is inactive! Force spawn failed", true )
 			return
@@ -414,7 +414,48 @@ function InitializeSCPULX()
 	local spawnd = ulx.command( ULX_CAT, "ulx spawnd", ulx.spawnd, "!spawnd" )
 	spawnd:addParam{ type = ULib.cmds.PlayerArg, hint = "Target" }
 	spawnd:defaultAccess( ULib.ACCESS_ADMIN )
-	spawnd:help( "Slay player skipping low priority queue" )
+	spawnd:help( "Spawn player as default Class D" )
+
+	--[[-------------------------------------------------------------------------
+	Force round
+	---------------------------------------------------------------------------]]
+	function ulx.forceround( ply, roundtype )
+		ForceRoundType( roundtype )
+		ulx.fancyLogAdmin( ply, "#A forced round type: #s", roundtype )
+	end
+
+	local forceround = ulx.command( ULX_CAT, "ulx forceround", ulx.forceround, "!forceround" )
+	forceround:addParam{ type = ULib.cmds.StringArg, hint = "Round type" }
+	forceround:defaultAccess( ULib.ACCESS_SUPERADMIN )
+	forceround:help( "Force round type" )
+
+	--[[-------------------------------------------------------------------------
+	Force rule
+	---------------------------------------------------------------------------]]
+	/*function ulx.forcerule( ply, roundrule, enabled )
+		ForceRoundRule( roundrule, enabled )
+		ulx.fancyLogAdmin( ply, "#A forced round rule #s (#s)", roundrule, tostring( enabled ) )
+	end
+
+	local forcerule = ulx.command( ULX_CAT, "ulx forcerule", ulx.forcerule, "!forcerule" )
+	forcerule:addParam{ type = ULib.cmds.StringArg, hint = "Round rule" }
+	forcerule:addParam{ type = ULib.cmds.BoolArg, hint = "Enabled" }
+	forcerule:defaultAccess( ULib.ACCESS_SUPERADMIN )
+	forcerule:help( "Force round rule" )*/
+
+	--[[-------------------------------------------------------------------------
+	Force modifier
+	---------------------------------------------------------------------------]]
+	/*function ulx.forcemodifier( ply, modifier, value )
+		ForceRoundModifier( modifier, value )
+		ulx.fancyLogAdmin( ply, "#A forced round modifier #s with value #s", modifier, value )
+	end
+
+	local forcemodifier = ulx.command( ULX_CAT, "ulx forcemodifier", ulx.forcemodifier, "!forcemodifier" )
+	forcemodifier:addParam{ type = ULib.cmds.StringArg, hint = "Round modifier" }
+	forcemodifier:addParam{ type = ULib.cmds.NumArg, hint = "Value" }
+	forcemodifier:defaultAccess( ULib.ACCESS_SUPERADMIN )
+	forcemodifier:help( "Force round modifier" )*/
 end
 
 hook.Add( "SetupForceSCP", "ULXForceSCP", function()

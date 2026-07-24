@@ -11,7 +11,6 @@ util.AddNetworkString( "InitialIDs" )
 util.AddNetworkString( "PlayerCleanup" )
 util.AddNetworkString( "DropVest" )
 util.AddNetworkString( "CameraDetect" )
-util.AddNetworkString( "CenterMessage" )
 util.AddNetworkString( "PlayerCommand" )
 util.AddNetworkString( "PlayerEffect" )
 util.AddNetworkString( "RefreshPlayerEffect" )
@@ -38,6 +37,7 @@ util.AddNetworkString( "SLCDataTable" )
 net.AddTableChannel( "SLCPlayerMeta" )
 net.AddTableChannel( "SLCGameruleData" )
 net.AddTableChannel( "SLCInfoScreen" )
+net.AddTableChannel( "SLCRoundSummary" )
 --[[-------------------------------------------------------------------------
 Receivers
 ---------------------------------------------------------------------------]]
@@ -45,59 +45,7 @@ net.Receive( "PlayerReady", function( len, ply )
 	if ply.FullyLoaded and !DEVELOPER_MODE then return end
 
 	SendSCPList( ply )
-
-	if ROUND.active then
-		if ROUND.post then
-			local t = GetTimer( "SLCPostround" )
-			if IsValid( t ) then
-				net.Start( "RoundInfo" )
-					net.WriteTable{
-						status = "post",
-						time = CurTime() + t:GetRemainingTime(),
-						duration = t:GetTime(),
-						name = ROUND.roundtype.name,
-					}
-				net.Send( ply )
-			end
-		elseif ROUND.infoscreen then
-			local t = GetTimer( "SLCSetup" )
-			if IsValid( t ) then
-				net.Start( "RoundInfo" )
-					net.WriteTable{
-						status = "inf",
-						time = CurTime() + t:GetRemainingTime(),
-						duration = t:GetTime(),
-						name = ROUND.roundtype.name,
-					}
-				net.Send( ply )
-			end
-		elseif ROUND.preparing then
-			local t = GetTimer( "SLCPreround" )
-			if IsValid( t ) then
-				net.Start( "RoundInfo" )
-					net.WriteTable{
-						status = "pre",
-						time = CurTime() + t:GetRemainingTime(),
-						duration = t:GetTime(),
-						name = ROUND.roundtype.name,
-					}
-				net.Send( ply )
-			end
-		else
-			local t = GetTimer( "SLCRound" )
-			if IsValid( t ) then
-				net.Start( "RoundInfo" )
-					net.WriteTable{
-						status = "live",
-						time = CurTime() + t:GetRemainingTime(),
-						duration = t:GetTime(),
-						name = ROUND.roundtype.name,
-					}
-				net.Send( ply )
-			end
-		end
-	end
-
+	SendRoundInfo( ply )
 	TransmitSCPHooks( ply )
 
 	ply.FullyLoaded = true
@@ -123,10 +71,9 @@ net.Receive( "WeaponDnD", function( len, ply )
 	if ctrl and ctrl[1] < CurTime() then
 		return
 	end
-	
+
 	local wep1 = net.ReadEntity()
 	local wep2 = net.ReadEntity()
-
 
 	if IsValid( wep1 ) and IsValid( wep2 ) then
 		if wep1:GetOwner() == ply and wep2:GetOwner() == ply then

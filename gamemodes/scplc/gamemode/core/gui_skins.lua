@@ -22,11 +22,11 @@ if CLIENT then
 		SLCSkinsTargets[target] = true
 	end
 
-	function RunGUISkinFunction( target, fn, name )
+	function RunGUISkinFunction( target, fn, name, ... )
 		name = name or GetSettingsValue( "hud_skin_"..target )
 
 		if name and SLCSkins[name] and SLCSkins[name][target] and SLCSkins[name][target][fn] then
-			return SLCSkins[name][target][fn]()
+			return SLCSkins[name][target][fn]( ... )
 		end
 
 		/*if SLCSkins.default[target] and SLCSkins.default[target][fn] then
@@ -34,20 +34,20 @@ if CLIENT then
 		end*/
 	end
 
-	function CreateGUIElement( target )
-		RunGUISkinFunction( target, "create" )
+	function CreateGUIElement( target, ... )
+		RunGUISkinFunction( target, "create", nil, ... )
 	end
 
-	function RemoveGUIElement( target )
-		RunGUISkinFunction( target, "remove" )
+	function RemoveGUIElement( target, ... )
+		RunGUISkinFunction( target, "remove", nil, ... )
 	end
 
-	function ShowGUIElement( target )
-		RunGUISkinFunction( target, "show" )
+	function ShowGUIElement( target, ... )
+		RunGUISkinFunction( target, "show", nil, ... )
 	end
 
-	function HideGUIElement( target )
-		RunGUISkinFunction( target, "hide" )
+	function HideGUIElement( target, ... )
+		RunGUISkinFunction( target, "hide", nil, ... )
 	end
 
 	print( "\tLoading GUI Skins:" )
@@ -71,7 +71,7 @@ if CLIENT then
 				for k, v in pairs( SLCSkinsTargets ) do
 					local entry = GetSettingsEntry( "hud_skin_"..k )
 					if !entry then continue end
-	
+
 					if entry.value != new then
 						all = false
 						break

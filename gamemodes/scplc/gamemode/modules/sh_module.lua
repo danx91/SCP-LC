@@ -8,9 +8,9 @@ GM.Website 	= "https://github.com/danx91/SCP-LC"
 Global values
 ---------------------------------------------------------------------------]]
 DATE = "13/03/2026"
-SIGNATURE = "b001200r0"
+SIGNATURE = "b001203r0"
 VERSION = SLCVersion().name
-BLEEDING_EDGE = 2
+BLEEDING_EDGE = true
 
 SCPS = {}
 CLASSES = {}
@@ -68,6 +68,7 @@ SLCCVar( "slc_auto_destroy_gatea", { "general", "time" }, 300, { FCVAR_NOTIFY, F
 SLCCVar( "slc_time_looting", { "general", "time" }, 1.5, { FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED }, "The time required to identify a single item while looting (seconds)", 0.1, nil, tonumber )
 SLCCVar( "slc_time_swapping", { "general", "time" }, 1.5, { FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REPLICATED }, "The time required to swap item from EQ to backpack and vice versa", 0, nil, tonumber )
 SLCCVar( "slc_blink_delay", "general", 5, { FCVAR_NOTIFY, FCVAR_ARCHIVE }, "The delay between eye blinks", 1, nil, tonumber )
+SLCCVar( "slc_kill_pool_min", { "general", "xp" }, 20, { FCVAR_ARCHIVE }, "", 0, nil, tonumber )
 
 //FEATURES
 SLCCVar( "slc_door_unblocker", "feature", 1, { FCVAR_ARCHIVE }, "This feature will try to move away any potential items that may get stuck between doors. Set to 1 to enable", nil, nil, tonumber )
@@ -103,7 +104,10 @@ SLCCVar( "slc_xp_increase", "xp", 1250, { FCVAR_NOTIFY, FCVAR_ARCHIVE, FCVAR_REP
 SLCCVar( "slc_points_xp", "xp", 50, { FCVAR_ARCHIVE }, "Number of XP that single point is worth", 0, nil, tonumber )
 SLCCVar( "slc_xp_escape", "xp", "500,1750", { FCVAR_ARCHIVE }, "XP granted on escape. Accepted format: minimum,maximum", nil, nil, cvar_checker( 2 ) )
 SLCCVar( "slc_xp_round", "xp", "100,150,200", { FCVAR_ARCHIVE }, "XP for playing on the server. First value for spectators, second for alive players, third for players that are alive after half of the round", nil, nil, cvar_checker( 3 ) )
-SLCCVar( "slc_xp_win", "xp", "1500,1000", { FCVAR_ARCHIVE }, "XP granted to team that won the round. First value for alive players, second for dead ones.", nil, nil, cvar_checker( 2 ) )
+SLCCVar( "slc_xp_finish", "xp", 1000, { FCVAR_ARCHIVE }, "XP granted to players for playing the round", nil, nil, tonumber )
+SLCCVar( "slc_xp_winners", "xp", "180,100,40", { FCVAR_ARCHIVE, FCVAR_REPLICATED }, "XP multiplier (in percents) granted to players in winning teams. Values are in order: 1st, 2nd and 3rd team", nil, nil, cvar_checker( 3 ) )
+SLCCVar( "slc_xp_stats_alpha", "xp", 0.04, { FCVAR_ARCHIVE }, "Specifies how fast winner selection will adapt to new scores", 0, 1, tonumber )
+SLCCVar( "slc_xp_stats_min_players", "xp", 6, { FCVAR_ARCHIVE }, "Minimum number of players for score adapatation to work", 1, nil, tonumber )
 SLCCVar( "slc_points_escort", "xp", 2, { FCVAR_ARCHIVE }, "Points granted for escorting players", 0, nil, tonumber )
 SLCCVar( "slc_dailyxp_amount", "xp", 2500, { FCVAR_ARCHIVE }, "Amount of daily XP boost", 0, nil, tonumber )
 SLCCVar( "slc_dailyxp_mul", "xp", 0.5, { FCVAR_ARCHIVE }, "Multiplier of daily XP boost", 0.1, nil, tonumber )

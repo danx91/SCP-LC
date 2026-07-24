@@ -224,7 +224,7 @@ function SWEP:PlayActivity( act, speed )
 end
 
 AddWeaponLoadout( "weapon_slc_stunstick", nil, "melee_mid" )
-MarkAsWeapon( "weapon_slc_stunstick" )
+MarkAsWeapon( "weapon_slc_stunstick", "melee" )
 
 if SERVER then return end
 

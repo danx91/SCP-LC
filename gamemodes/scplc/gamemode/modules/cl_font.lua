@@ -145,16 +145,7 @@ function RebuildScaledFonts( scale )
 		antialias = true,
 		weight = 500,
 		extended = true,
-	} )
-
-	SLCCreateFont( "SCPScaledHUDVSmall_Blur", {
-		font = font,
-		size = w * 0.017 * scale * size_prim,
-		antialias = true,
-		weight = 500,
-		extended = true,
-		blursize = 4,
-	} )
+	}, 4 )
 
 	SLCCreateFont( "SCPScaledHUDSmall", {
 		font = font,
@@ -162,16 +153,7 @@ function RebuildScaledFonts( scale )
 		antialias = true,
 		weight = 500,
 		extended = true,
-	} )
-
-	SLCCreateFont( "SCPScaledHUDSmall_Blur", {
-		font = font,
-		size = w * 0.020 * scale * size_prim,
-		antialias = true,
-		weight = 500,
-		extended = true,
-		blursize = 4,
-	} )
+	}, 4 )
 
 	SLCCreateFont( "SCPScaledHUDMedium", {
 		font = font,
@@ -179,7 +161,7 @@ function RebuildScaledFonts( scale )
 		antialias = true,
 		weight = 500,
 		extended = true,
-	} )
+	}, 4 )
 
 	SLCCreateFont( "SCPScaledHUDBig", {
 		font = font,
@@ -187,7 +169,7 @@ function RebuildScaledFonts( scale )
 		antialias = true,
 		weight = 500,
 		extended = true,
-	} )
+	}, 4 )
 
 	SLCCreateFont( "SCPScaledNumbersVBig", {
 		font = font_digit,

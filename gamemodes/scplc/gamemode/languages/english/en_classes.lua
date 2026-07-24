@@ -17,10 +17,18 @@ teams.CI = "CI"
 teams.GOC = "GOC"
 teams.SCP = "SCP"
 
+local groups = {}
+lang.TEAM_GROUPS = groups
+
+groups.scp = "SCPs"
+groups.staff = "Foundation"
+groups.classd_ci = "Insurgents"
+groups.goc = "GOC"
+
 --[[-------------------------------------------------------------------------
 Classes
 ---------------------------------------------------------------------------]]
-lang.UNK_CLASSES = { 
+lang.UNK_CLASSES = {
 	CLASSD = "Unknown Class D",
 	SCI = "Unknown Scientist",
 	GUARD = "Unknown Guard",

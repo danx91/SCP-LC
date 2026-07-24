@@ -1,6 +1,8 @@
 SLC_ITEMS_DATA = SLC_ITEMS_DATA or {}
+SLC_ITEMS_DATA_DEFINITIONS = SLC_ITEMS_DATA_DEFINITIONS or {}
 SLC_ITEMS_AUTOSPAWN = SLC_ITEMS_AUTOSPAWN or {}
 SLC_ITEMS_FUNCTION = SLC_ITEMS_FUNCTION or {}
+SLC_ITEMS_OVERRIDES = SLC_ITEMS_OVERRIDES or {}
 
 /*
 	data = {
@@ -53,6 +55,47 @@ local function calc_weight( tab )
 	return total
 end
 
+local function process_item( key, value )
+	local k_type = type( key )
+	local v_type = type( value )
+
+	local mode = 0
+
+	if k_type == "number" then
+		if v_type == "string" then
+			mode = 1
+		elseif v_type == "table" then
+			mode = 3
+		end
+	elseif k_type == "string" then
+		if v_type == "number" then
+			mode = 2
+		elseif v_type == "table" then
+			mode = 3
+		end
+	end
+
+	if mode == 1 then --item class
+		return {
+			class = value,
+			weight = 1,
+		}
+	elseif mode == 2 then --weighted item
+		return {
+			class = key,
+			weight = value
+		}
+	elseif mode == 3 then --advanced item
+		return {
+			class = value.class or isstring( key ) and key,
+			weight = value.weight,
+			max = value.max,
+			post_tab = value.post_tab,
+			post_func = value.post_func,
+		}
+	end
+end
+
 local function process_rule( data )
 	local tab = {}
 
@@ -74,43 +117,7 @@ local function process_rule( data )
 		local tmp = {}
 
 		for k, v in pairs( item ) do
-			local k_type = type( k )
-			local v_type = type( v )
-
-			local mode = 0
-
-			if k_type == "number" then
-				if v_type == "string" then
-					mode = 1
-				elseif v_type == "table" then
-					mode = 3
-				end
-			elseif k_type == "string" then
-				if v_type == "number" then
-					mode = 2
-				elseif v_type == "table" then
-					mode = 3
-				end
-			end
-	
-			if mode == 1 then --item class
-				table.insert( tmp, {
-					class = v
-				} )
-			elseif mode == 2 then --weighted item
-				table.insert( tmp, {
-					class = k,
-					weight = v
-				} )
-			elseif mode == 3 then --advanced item
-				table.insert( tmp, {
-					class = v.class or isstring(k) and k,
-					weight = v.weight,
-					max = v.max,
-					post_tab = v.post_tab,
-					post_func = v.post_func,
-				} )
-			end
+			table.insert( tmp, process_item( k, v ) )
 		end
 
 		tab.items = tmp
@@ -124,13 +131,20 @@ local function process_rule( data )
 	return tab
 end
 
-function ItemSpawnRule( name, data, auto )
+function ItemSpawnRule( name, data, auto, dest )
+	if !dest then
+		SLC_ITEMS_DATA_DEFINITIONS[name] = data
+	end
+
+	dest = dest or SLC_ITEMS_DATA
+
 	if data.item then
 		local tab = process_rule( data )
 		if tab and tab.spawns then
-			SLC_ITEMS_DATA[name] = {
+			dest[name] = {
 				items = { tab },
 				condition = data.condition,
+				tags = CreateLookupTable( data.tags or {} ),
 			}
 
 			if auto then
@@ -149,7 +163,7 @@ function ItemSpawnRule( name, data, auto )
 		for i, v in pairs( data.item_set ) do
 			local r = process_rule( v )
 			if r then
-				r.weight = v.weight
+				r.weight = v.weight or 1
 				r.spawns = r.spawns or data.spawns
 
 				if data.spawns then
@@ -158,12 +172,13 @@ function ItemSpawnRule( name, data, auto )
 			end
 		end
 
-		SLC_ITEMS_DATA[name] = {
+		dest[name] = {
 			items = tmp,
 			weight_data = calc_weight( tmp ),
 			post_tab = data.post_tab,
 			post_func = data.post_func,
 			condition = data.condition,
+			tags = CreateLookupTable( data.tags or {} ),
 		}
 
 		if auto then
@@ -171,6 +186,130 @@ function ItemSpawnRule( name, data, auto )
 		end
 	end
 end
+
+function OverrideSpawnRule( name, data )
+	if data.copy then
+		data = table.Copy( data )
+
+		if istable( data.copy ) then
+			data.copy = CreateLookupTable( data.copy )
+		end
+
+		local def = SLC_ITEMS_DATA_DEFINITIONS[name]
+		if !def then return end
+
+		for k, v in pairs( def ) do
+			if ( data.copy == true or data.copy[k] ) and !data[k] then
+				if istable( v ) then
+					data[k] = table.Copy( v )
+				else
+					data[k] = v
+				end
+			end
+		end
+	end
+
+	ItemSpawnRule( name, data, false, SLC_ITEMS_OVERRIDES )
+end
+
+function OverrideSpawnRuleTag( tags, data )
+	if !istable( tags ) then tags = { tags } end
+
+	for name, v in pairs( SLC_ITEMS_DATA ) do
+		for _, tag in ipairs( tags ) do
+			if tag == true or v.tags[tag] then
+				OverrideSpawnRule( name, data )
+				break
+			end
+		end
+	end
+end
+
+function OverrideSpawnRuleItem( selector, replacement )
+	local selector_fn = selector == true or isfunction( selector ) and selector or function( tags, item )
+		if selector.tags then
+			local has = false
+
+			for i, v in ipairs( selector.tags ) do
+				if tags[v] then
+					has = true
+					break
+				end
+			end
+
+			if !has then return false end
+		end
+
+		if selector.class != nil and selector.class != item.class then return false end
+		if selector.weight != nil and selector.weight != item.weight then return false end
+		if selector.max != nil and selector.max != item.max then return false end
+
+		return true
+	end
+
+	local repl_type = type( replacement )
+	local repl_is_func = repl_type == "function"
+	local repl_is_table = repl_type == "table"
+	local repl_is_str = repl_type == "string"
+	local repl_is_nil = replacement == nil
+
+	for name, rule in pairs( SLC_ITEMS_OVERRIDES ) do
+		local rule_modified = false
+
+		for set_idx, set in rpairs( rule.items ) do
+			local set_modified = false
+
+			if set.item and ( repl_is_str or repl_is_nil ) and ( selector_fn == true or selector_fn( rule.tags, nil, set.item ) ) then
+				if repl_is_nil then
+					table.remove( rule.items, set_idx )
+					rule_modified = true
+				else
+					set.item = replacement
+				end
+
+				continue
+			end
+
+			if !set.items then continue end
+
+			for item_idx, item in rpairs( set.items ) do
+				if selector_fn == true or selector_fn( rule.tags, item, item.class ) then
+					if replacement == nil then
+						table.remove( set.items, item_idx )
+						set_modified = true
+					elseif repl_is_func then
+						set.items[item_idx] = replacement( item )
+						set_modified = true
+					elseif repl_is_table then
+						set.items[item_idx] = replacement
+						set_modified = true
+					end
+				end
+			end
+
+			if set_modified then
+				if #set.items == 0 then
+					table.remove( rule.items, set_idx )
+					rule_modified = true
+				else
+					set.weight_data = calc_weight( set.items )
+				end
+			end
+		end
+
+		if rule_modified then
+			if #rule.items == 0 then
+				SLC_ITEMS_OVERRIDES[name] = nil
+			else
+				rule.weight_data = calc_weight( rule.items )
+			end
+		end
+	end
+end
+
+hook.Add( "SLCRoundCleanup", "SLCClearSpawnRulesOverrides", function()
+	SLC_ITEMS_OVERRIDES = table.Copy( SLC_ITEMS_DATA )
+end )
 
 local function select_item( tab )
 	if !tab or !tab.items then return end
@@ -217,7 +356,7 @@ local function apply_table( item, tab )
 end
 
 function SpawnUsingRule( name )
-	local rule = SLC_ITEMS_DATA[name]
+	local rule = SLC_ITEMS_OVERRIDES[name]
 	if !rule then return end
 
 	if rule.condition and rule.condition() == false then return end
@@ -225,19 +364,20 @@ function SpawnUsingRule( name )
 	local tab = table.Copy( select_item( rule ) )
 	if !tab then return end
 
+	local loot_value = GetRoundModifier( "loot-value", 1 )
+
 	local amount = tab.amount or tab.rand_amount and SLCRandom( tab.rand_amount[1], tab.rand_amount[2] ) or #tab.spawns
+
+	amount = math.StochasticRound( amount * loot_value )
+
 	local counter = {}
 
 	for i = 1, amount do
 		local slen = #tab.spawns
+		if slen == 0 then break end
 
 		local post_tab = tab.post_tab or rule.post_tab
 		local post_func = tab.post_func or rule.post_func
-
-		if slen == 0 then
-			break
-		end
-
 		local ent_class
 
 		if tab.item then
@@ -255,10 +395,11 @@ function SpawnUsingRule( name )
 			local class = item.class
 			ent_class = class
 
-			if item.max then
+			local item_max = item.max and math.StochasticRound( item.max * loot_value )
+			if item_max then
 				counter[class] = counter[class] and counter[class] + 1 or 1
 
-				if counter[class] >= item.max then
+				if counter[class] >= item_max then
 					table.remove( tab.items, num )
 					tab.weight_data = tab.weight_data - item.weight
 				end
@@ -270,7 +411,7 @@ function SpawnUsingRule( name )
 		local fn_name = table.remove( args, 1 )
 
 		if key == "loadout" and fn_name then
-			ent_class = GetLoadoutWeapon( fn_name, true )
+			ent_class = ResolveWeapon( fn_name )
 		end
 
 		if ent_class == "_none" then
@@ -418,127 +559,31 @@ local function GAS_POST( item, i )
 end
 
 function GM:SpawnItems()
-	local post = { Dropped = 0 }
-	//local post_dnc = { Dropped = 0, _dnc = true }
-
-	if USE_LEGACY_ITEMS_SPAWN then
-		--[[-------------------------------------------------------------------------
-		Weapons
-		---------------------------------------------------------------------------]]
-		SpawnItemGeneric( "weapon_slc_pc", SPAWN_PARTICLE_CANNON, -1, post )
-
-		SpawnItemGeneric( { "cw_deagle", "cw_makarov", "cw_mr96", "cw_p99" }, SPAWN_PISTOLS, -1, post )
-		SpawnItemGeneric( { "cw_g36c", "cw_ump45", "cw_mp5", "cw_mac11" }, SPAWN_SMGS, -1, post )
-		SpawnItemGeneric( { "cw_ak74", "cw_ar15", "cw_m14", "cw_scarh", "cw_l85a2", "cw_g3a3" }, SPAWN_RIFLES, -1, post )
-		SpawnItemGeneric( { "cw_shorty", "cw_m3super90", "cw_xm1014_official", "cw_saiga12k_official" }, SPAWN_PUMP, -1, post )
-		SpawnItemGeneric( "cw_svd_official", SPAWN_SNIPER, -1, post )
-
-		SpawnItemGeneric( "weapon_slc_crowbar", SPAWN_MELEE, 3, post )
-
-		SpawnItemGeneric( "cw_ammo_kit_regular", SPAWN_AMMO_CW, -1, { AmmoCapacity = 20 } )
-
-		--[[-------------------------------------------------------------------------
-		SCP Items
-		---------------------------------------------------------------------------]]
-		SpawnItemSingle( "item_scp_714", SPAWN_714 )
-		SpawnItemSingle( "item_scp_1025", SPAWN_1025 )
-
-		SpawnItemGeneric( "item_scp_500", SPAWN_500, 3, post )
-
-		--[[-------------------------------------------------------------------------
-		Vests
-		---------------------------------------------------------------------------]]
-		for k,v in pairs( SPAWN_VEST ) do
-			VEST.Create( VEST.GetRandomVest(), v - Vector( 0, 0, 10 ) )
-		end
-
-		--[[-------------------------------------------------------------------------
-		Omnitools
-		---------------------------------------------------------------------------]]
-		for k, v in pairs( OMNITOOLS ) do
-			local spawns = table.Copy( v.spawns )
-
-			local amt = istable( v.amount ) and SLCRandom( v.amount[1], v.amount[2] ) or v.amount
-			for i = 1, amt do
-				local len = #spawns
-
-				if len == 0 then
-					break
-				end
-
-				local omnitool = ents.Create( "item_slc_omnitool" )
-				if IsValid( omnitool ) then
-					omnitool:SetPos( table.remove( spawns, SLCRandom( len ) ) )
-					omnitool:Spawn()
-					omnitool.Dropped = 0
-
-					local chip
-					local rng = SLCRandom()
-					if rng < 0.05 then --5%
-						chip = SelectChip( 3 )
-					elseif rng < 0.2 then --15%
-						chip = SelectChip( 2 )
-					elseif rng < 0.6 then --40%
-						chip = SelectChip( 1 )
-					end
-
-					if chip then
-						local obj = GetChip( chip )
-						omnitool:SetChipData( obj, GenerateAccessOverride( obj ) )
-					end
-				end
-			end
-		end
-
-		--[[-------------------------------------------------------------------------
-		Chips
-		---------------------------------------------------------------------------]]
-		for k, v in pairs( CHIPS ) do
-			local spawns = table.Copy( v.spawns )
-			local amount = v.amount
-
-			if istable( amount ) then
-				amount = SLCRandom( amount[1], amount[2] )
-			end
-
-			for i = 1, amount do
-				local len = #spawns
-
-				if len == 0 then
-					break
-				end
-
-				local chip = CreateChip( SelectChip( v.level ) )
-				if IsValid( chip ) then
-					chip:SetPos( table.remove( spawns, SLCRandom( len ) ) )
-					chip:Spawn()
-					chip.Dropped = 0
-				end
-			end
-		end
-	end
-
 	--[[-------------------------------------------------------------------------
 	Auto-spawn
 	---------------------------------------------------------------------------]]
-	for k, v in pairs( SLC_ITEMS_AUTOSPAWN ) do
-		SpawnUsingRule( k )
+	if !GetRoundRule( "no-loose-loot" ) then
+		for k, v in pairs( SLC_ITEMS_AUTOSPAWN ) do
+			SpawnUsingRule( k )
+		end
 	end
 
 	--[[-------------------------------------------------------------------------
 	Lootables
 	---------------------------------------------------------------------------]]
-	for k, v in pairs( LOOTABLES ) do
-		local ent = ents.Create( "slc_lootable" )
-		if IsValid( ent ) then
-			ent:SetShouldRender( false )
-			ent:SetPos( v.pos )
-			ent:Spawn()
+	if !GetRoundRule( "no-looting" ) then
+		for k, v in pairs( LOOTABLES ) do
+			local ent = ents.Create( "slc_lootable" )
+			if IsValid( ent ) then
+				ent:SetShouldRender( false )
+				ent:SetPos( v.pos )
+				ent:Spawn()
 
-			ent:GenerateLoot( v.width, v.height, v.loot_pool )
+				ent:GenerateLoot( v.width, v.height, v.loot_pool )
 
-			if v.bounds then
-				ent:SetCollisionBounds( v.bounds.mins, v.bounds.maxs )
+				if v.bounds then
+					ent:SetCollisionBounds( v.bounds.mins, v.bounds.maxs )
+				end
 			end
 		end
 	end
@@ -623,5 +668,5 @@ ItemSpawnFunction( "syringe", function( args )
 	local small_list, big_list = GetSyringes()
 
 	local use_list = chance > 0 and SLCRandom( 100 ) <= chance and big_list or small_list
-	return ents.Create( use[SLCRandom( #use_list )] )
+	return ents.Create( use_list[SLCRandom( #use_list )] )
 end )

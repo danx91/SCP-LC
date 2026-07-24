@@ -1,6 +1,10 @@
 SLC_WEAPONS_REG = {}
 SLC_OTHER_WEAPONS_REG = SLC_OTHER_WEAPONS_REG or {}
 SLC_LOADOUTS = {}
+SLC_LOADOUT_OVERRIDES = SLC_LOADOUT_OVERRIDES or {
+	classes = {},
+	loadouts = {},
+}
 
 /*
 data = {
@@ -16,12 +20,13 @@ MarkAsWeapon( class )
 
 Marks SWEP as weapon
 
-@param		[type]			class				Weapon class
+@param		[string]		class				Weapon class
+@param		[string]		tag					Optional, tag
 
 @return		[nil]			-					-
 ---------------------------------------------------------------------------]]--
-function MarkAsWeapon( class )
-	SLC_OTHER_WEAPONS_REG[class] = true
+function MarkAsWeapon( class, tag )
+	SLC_OTHER_WEAPONS_REG[class] = tag or true
 end
 
 
@@ -59,7 +64,6 @@ function AddWeaponLoadout( weapon_class, ammo, ... )
 		table.insert( SLC_LOADOUTS[v], tab )
 	end
 end
-
 
 --[[---------------------------------------------------------------------------
 AddLoadoutWeapon( class, ammo, ... )
@@ -143,6 +147,82 @@ function GetLoadout( name )
 end
 
 
+local function select_weighted( tab )
+	local dice = SLCRandom( tab._total )
+	local total = 0
+
+	for i, v in ipairs( tab ) do
+		if !v.weight then continue end
+
+		total = total + v.weight
+		if total >= dice then
+			return v
+		end
+	end
+end
+
+--[[---------------------------------------------------------------------------
+ResolveWeapon( class, ammo )
+
+Resolves weapon using loadouts and loadout overrides
+
+@param		[string]		class				Class or loadout to resolve
+@param		[number]		ammo				Ammo
+
+@return		[string]		-					New class
+@return		[number]		-					New ammo
+---------------------------------------------------------------------------]]--
+function ResolveWeapon( class, ammo, no_override )
+	//print( "resolving", class, ammo, no_override )
+	local strict_loadout = false
+
+	local loadout, important = string.match( class, "^loadout:(.-)(!?)$" )
+	if loadout then
+		//print( "lo matched", loadout, important )
+		strict_loadout = true
+		class = loadout
+	else
+		loadout, important = string.match( class, "^(.-)(!)$" )
+		if loadout then
+			class = loadout
+		end
+	end
+
+	if important == "!" then
+		//print( "IMPORTANT" )
+		no_override = true
+	end
+
+	local l_wep, l_ammo = GetLoadoutWeapon( class, true, no_override )
+	//print( "GOT LO", l_wep, l_ammo )
+	if l_wep != nil then
+		class = l_wep
+	elseif strict_loadout then
+		//print( "ret - strict" )
+		return
+	end
+
+	local override = !no_override and ( SLC_LOADOUT_OVERRIDES.classes[class] or SLC_LOADOUT_OVERRIDES.classes[true] )
+	if override then
+		//print( "using override", override )
+		local tab = select_weighted( override )
+		if tab then
+			//print( "GOT", tab.class )
+			local r_ammo
+			class, r_ammo = ResolveWeapon( tab.class, nil, true )
+			//print( "RESOLVE", class )
+
+			class = class or tab.class
+			l_ammo = r_ammo or tab.ammo or l_ammo
+		end
+	end
+
+	if class == "__nothing" then /*print( "GOT NOTHING" )*/ return end
+
+	//print( "RET", class )
+	return class, ammo or l_ammo
+end
+
 --[[---------------------------------------------------------------------------
 GetLoadoutWeapon( name, use_weights )
 
@@ -155,37 +235,24 @@ If use_weights is true, a weighted random selection is made only among weapons w
 
 @return		[string, number]	-					Selected weapon class and default mags
 ---------------------------------------------------------------------------]]--
-function GetLoadoutWeapon( name, use_weights )
-	local lo = SLC_LOADOUTS[name]
-	if !lo then return end
+function GetLoadoutWeapon( name, use_weights, no_override )
+	//print( "getting loadout", name, use_weights, no_override )
+	local lo = !no_override and ( SLC_LOADOUT_OVERRIDES.loadouts[name] or SLC_LOADOUT_OVERRIDES.loadouts[true] ) or SLC_LOADOUTS[name]
+	if !lo then /*print( "NO LO" )*/ return end
 
 	if lo._total == 0 then
+		//print( "foce no weights" )
 		use_weights = false
 	end
 
-	local tab
-	if use_weights then
-		local dice = SLCRandom( lo._total )
-		local total = 0
+	local tab = use_weights and select_weighted( lo ) or lo[SLCRandom( #lo )]
+	if !tab then /*print( "no tabs" )*/ return end
 
-		for i, v in ipairs( lo ) do
-			if !v.weight then continue end
-
-			total = total + v.weight
-			if total >= dice then
-				tab = v
-				break
-			end
-		end
-	else
-		tab = lo[SLCRandom( #lo )]
-	end
-
-	if !tab then return end
-
-	local other = string.match( tab.class, "^loadout:(.+)$" )
+	local other, other_important = string.match( tab.class, "^loadout:(.-)(!?)$" )
+	//print( "other", other, other_important )
 	if other then
-		local class, ammo = GetLoadoutWeapon( other, use_weights )
+		local class, ammo = GetLoadoutWeapon( other, use_weights, other_important == "!" )
+		//print( "other resolved", class )
 		if class then
 			return class, ammo
 		end
@@ -193,6 +260,87 @@ function GetLoadoutWeapon( name, use_weights )
 
 	return tab.class, tab.ammo
 end
+
+
+--[[---------------------------------------------------------------------------
+OverrideLoadout( loadout, ammo, ... )
+
+Overrides single loadout or all loadouts if true is passed as first argument. Single override has priority over global one
+
+@param		[string/true]	loadout				Loadout name or true to override all loadouts
+@param		[number]		ammo				New ammo
+@param		[string]		...					New weapons or loadouts
+
+@return		[nil]			-					-
+---------------------------------------------------------------------------]]--
+function OverrideLoadout( loadout, ammo, ... )
+	local override = SLC_LOADOUT_OVERRIDES.loadouts[loadout]
+	if !override then
+		override = { _total = 0 }
+		SLC_LOADOUT_OVERRIDES.loadouts[loadout] = override
+	end
+
+	for k, v in pairs( { ... } ) do
+		local c, w = string.match( v, "^(.+):(%d+)$" )
+		w = w and tonumber( w )
+
+		if !c or !w then
+			c = v
+			w = false
+		else
+			override._total = override._total + w
+		end
+
+		table.insert( override, {
+			class = c,
+			ammo = ammo,
+			weight = w
+		} )
+	end
+end
+
+
+--[[---------------------------------------------------------------------------
+OverrideLoadoutWeapon( class, ammo, ... )
+
+Overrides single weapon or all weapons if true is passed as first argument. Single override has priority over global one
+
+@param		[string/true]	class				Weapon class or true to override all weapons
+@param		[number]		ammo				New ammo
+@param		[string]		...					New weapon classes or loadout. If loadout is passed, it will be resolved without overrides
+
+@return		[nil]			-					-
+---------------------------------------------------------------------------]]--
+function OverrideLoadoutWeapon( class, ammo, ... )
+	local override = SLC_LOADOUT_OVERRIDES.classes[class]
+	if !override then
+		override = { _total = 0 }
+		SLC_LOADOUT_OVERRIDES.classes[class] = override
+	end
+
+	for k, v in pairs( { ... } ) do
+		local c, w = string.match( v, "^(.+):(%d+)$" )
+		w = w and tonumber( w )
+
+		if !c or !w then
+			c = v
+			w = 1
+		end
+
+		override._total = override._total + w
+
+		table.insert( override, {
+			class = c,
+			ammo = ammo,
+			weight = w,
+		} )
+	end
+end
+
+hook.Add( "SLCRoundCleanup", "SLCClearLoadoutOverrides", function()
+	SLC_LOADOUT_OVERRIDES.classes = {}
+	SLC_LOADOUT_OVERRIDES.loadouts = {}
+end )
 
 if hook.Run( "SLCLoadout" ) then return end
 
@@ -223,6 +371,11 @@ end )
 hook.Add( "SLCEntityTakeDamage", "SLCCWSniperReductionForIdiots", function( ent, dmg )
 	local ent_class = ent:GetClass()
 	if ent_class == "cw_ammo_kit_regular" or ent_class == "cw_ammo_kit_small" then return true end
+
+	local infl = dmg:GetInflictor()
+	if !IsValid( infl ) then return end
+
+	if infl:GetClass() == "cw_kk_ins2_damage_phys" then return true end
 
 	/*local att = dmg:GetAttacker()
 	if !IsValid( att ) then return end
@@ -268,7 +421,7 @@ local function add_cw_weapon( class, stats, ... )
 	if type( args[1] ) == "number" then ammo = table.remove( args, 1 ) end
 
 	if !noreg then
-		SLC_WEAPONS_REG[class] = true
+		SLC_WEAPONS_REG[class] = "range"
 	end
 
 	if #args > 0 then

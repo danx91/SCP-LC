@@ -87,7 +87,7 @@ function PLAYER:Cleanup( norem, round_reset )
 	self:SetTimeSignature( sig )
 
 	if round_reset then
-		self:SetFrags( 0 )
+		self:ClearFrags()
 	end
 
 	net.Ping( "SLCPlayerSync", sig, self )
@@ -124,14 +124,8 @@ function PLAYER:DropEQ()
 end
 
 local function give_player_weapon( ply, class, ammo )
-	local loadout = string.match( class, "^loadout:(.+)$" )
-	if loadout then
-		local l_wep, l_ammo = GetLoadoutWeapon( loadout, true )
-		if !l_wep then return end
-
-		class = l_wep
-		ammo = ammo or l_ammo
-	end
+	class, ammo = ResolveWeapon( class, ammo )
+	if !class then return end
 
 	local wep = ply:Give( class )
 	if IsValid( wep ) then
@@ -166,6 +160,9 @@ end
 local function setup_player_internal( self, class, spawn )
 	self:UnSpectate()
 	self:Cleanup()
+
+	class = table.Copy( class )
+	self.ClassData = class
 
 	self:Spawn()
 	self:SetPos( spawn )
@@ -220,6 +217,8 @@ local function setup_player_internal( self, class, spawn )
 			give_player_weapon( self, v, class.ammo[v] )
 		end
 	end
+
+	class.health = class.health * GetRoundModifier( "health-value", 1 )
 
 	self:SetMaxHealth( class.health )
 	self:SetHealth( class.health )
@@ -278,8 +277,6 @@ local function setup_player_internal( self, class, spawn )
 		self:ApplyEffect( "spawn_protection" )
 	end
 
-	self.ClassData = table.Copy( class )
-
 	if class.vest then
 		self:EquipVest( class.vest, true )
 	end
@@ -324,68 +321,68 @@ function PLAYER:EquipVest( vest, silent, dur )
 	end
 
 	local data = VEST.GetData( vest )
-	if data then
-		if !hook.Run( "SLCArmorPickedUp", self ) then
-			self:SetVest( vest )
-			self:SetVestDurability( dur or data.durability or -1 )
+	if !data then return end
 
-			local use_model
-			local callback = VEST.GetCallback( vest )
-			if callback then
-				use_model = callback( self, vest, data )
+	if hook.Run( "SLCArmorPickedUp", self ) then return end
+
+	self:SetVest( vest )
+	self:SetVestDurability( dur or data.durability or -1 )
+
+	local use_model
+	local callback = VEST.GetCallback( vest )
+	if callback then
+		use_model = callback( self, vest, data )
+	end
+
+	local bodygroups = {}
+	for i = 0, self:GetNumBodyGroups() - 1 do
+		bodygroups[i] = self:GetBodygroup( i )
+	end
+
+	self:SetProperty( "vest_old_model", { self:GetModel(), self:GetSkin(), bodygroups } )
+	self:SetModel( use_model or istable( data.model ) and table.Random( data.model ) or data.model )
+
+	if data.skin then
+		self:SetSkin( data.skin )
+	end
+
+	if data.bodygroups then
+		for k, v in pairs( data.bodygroups ) do
+			if isstring( k ) then
+				k = self:FindBodygroupByName( k )
 			end
 
-			local bodygroups = {}
-			for i = 0, self:GetNumBodyGroups() - 1 do
-				bodygroups[i] = self:GetBodygroup( i )
-			end
+			if k < 0 then continue end
 
-			self:SetProperty( "vest_old_model", { self:GetModel(), self:GetSkin(), bodygroups } )
-			self:SetModel( use_model or istable( data.model ) and table.Random( data.model ) or data.model )
+			if v == "?" then
+				v = SLCRandom( self:GetBodygroupCount( k ) )
+			elseif isstring( v ) then
+				local r1, r2 = string.match( v, "^(%d+):(%d+)$" )
 
-			if data.skin then
-				self:SetSkin( data.skin )
-			end
+				r1 = tonumber( r1 )
+				r2 = tonumber( r2 )
 
-			if data.bodygroups then
-				for k, v in pairs( data.bodygroups ) do
-					if isstring( k ) then
-						k = self:FindBodygroupByName( k )
-					end
-
-					if k < 0 then continue end
-
-					if v == "?" then
-						v = SLCRandom( self:GetBodygroupCount( k ) )
-					elseif isstring( v ) then
-						local r1, r2 = string.match( v, "^(%d+):(%d+)$" )
-
-						r1 = tonumber( r1 )
-						r2 = tonumber( r2 )
-
-						if r1 and r2 then
-							v = SLCRandom( r1, r2 )
-						else
-							v = tonumber( v )
-						end
-					end
-
-					if !isnumber( v ) then continue end
-
-					self:SetBodygroup( k, v )
+				if r1 and r2 then
+					v = SLCRandom( r1, r2 )
+				else
+					v = tonumber( v )
 				end
 			end
 
-			self:PushSpeed( data.mobility, data.mobility, -1, "SLC_Vest" )
+			if !isnumber( v ) then continue end
 
-			if !silent then
-				PlayerMessage( "vestpickup", self )
-				self:EmitSound( "SLCPlayer.Vest" )
-			end
-
-			return true
+			self:SetBodygroup( k, v )
 		end
 	end
+
+	self:PushSpeed( data.mobility, data.mobility, -1, "SLC_Vest" )
+
+	if !silent then
+		PlayerMessage( "vestpickup", self )
+		self:EmitSound( "SLCPlayer.Vest" )
+	end
+
+	return true
 end
 
 function PLAYER:DropVest( silent )
@@ -852,7 +849,9 @@ function PLAYER:PlayerDropWeapon( class, all, force )
 	if !IsValid( wep ) then return end
 
 	if wep.Droppable == false then return end
-	if !force and ( wep.PreventDropping == true or wep.CanDrop and wep:CanDrop() == false or hook.Run( "SLCPlayerCanDropWeapon", self, class, all ) == false
+	if !force and ( wep.PreventDropping == true
+		or wep.CanDrop and wep:CanDrop() == false
+		or hook.Run( "SLCPlayerCanDropWeapon", self, class, all ) == false
 		or wep.eq_slot and wep.eq_slot > 6 ) then return end
 
 	if wep.Stacks and wep.Stacks > 1 then
@@ -1453,15 +1452,48 @@ Player_AddFrags = Player_AddFrags or PLAYER.AddFrags
 function PLAYER:AddFrags( f )
 	if hook.Run( "SLCAddFrags", self, f ) == true then return end
 
-	if f > 0 then
-		local team = self:SCPTeam()
-		if team != TEAM_SPEC then
-			SCPTeams.AddScore( team, f )
-		end
+	Player_AddFrags( self, f )
+	self:SetProperty( "slc_frags", self:GetProperty( "slc_frags", 0 ) + f )
+	self:SetSCPData( "slc_saved_frags", self:Frags() )
+
+	local group = SCPTeams.GetGroup( self:SCPTeam() )
+
+	local group_frags_total = self:GetProperty( "slc_group_frags_total", {} )
+	group_frags_total[group] = ( group_frags_total[group] or 0 ) + f
+
+	if f <= 0 then return end
+
+	local group_frags = self:GetProperty( "slc_group_frags", {} )
+	group_frags[group] = ( group_frags[group] or 0 ) + f
+
+	local t = self:SCPTeam()
+	if t != TEAM_SPEC then
+		SCPTeams.AddScore( t, f )
+	end
+end
+
+function PLAYER:ClearFrags( frags )
+	if frags then
+		self:SetFrags( frags )
+		self:SetSCPData( "slc_saved_frags", frags )
 	end
 
-	Player_AddFrags( self, f )
+	self:SetProperty( "slc_group_frags", {} )
+	self:SetProperty( "slc_group_frags_total", {} )
 end
+
+function PLAYER:RoundFrags()
+	local group_frags = self:GetProperty( "slc_group_frags_total", {} )
+	local frags = 0
+
+	for k, v in pairs( group_frags ) do
+		frags = frags + v
+	end
+
+	return frags
+end
+
+SLCOnLoad( "slc_saved_frags", 0, PLAYER.SetFrags )
 
 function PLAYER:AddClassPoints( cp )
 	self:SetClassPoints( self:ClassPoints() + cp )
@@ -1599,7 +1631,7 @@ function PLAYER:AddSanity( s )
 	self:SetSanity( math.Clamp( sanity + s, 0, maxsanity ) )
 end
 
-function PLAYER:AddHealth( heal, healer )
+function PLAYER:AddHealth( heal, healer, heal_power )
 	local hp = self:Health()
 	local hp_missing = self:GetMaxHealth() - hp
 
@@ -1615,7 +1647,7 @@ function PLAYER:AddHealth( heal, healer )
 	self:SetHealth( new_hp )
 
 	if IsValid( healer ) then
-		heal = self.Logger:HealingEvent( healer, heal, hp_missing )
+		heal = self.Logger:HealingEvent( healer, heal, heal_power, hp_missing )
 	end
 
 	return new_hp, heal

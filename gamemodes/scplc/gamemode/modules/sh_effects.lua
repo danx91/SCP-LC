@@ -1774,11 +1774,11 @@ end )
 
 hook.Add( "SLCScaleHealing", "SLCEffectsScaleHeal", function( ply, source, heal )
 	if ply:HasEffect( "fracture" ) then
-		return 0
+		return 0, heal * 0.5
 	end
 
 	if ply:HasEffect( "deep_wounds" ) then
-		return heal * 0.25
+		return heal * 0.25, heal * 0.75
 	end
 end )
 

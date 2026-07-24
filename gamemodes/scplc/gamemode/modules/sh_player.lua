@@ -4,22 +4,24 @@ local PLAYER = FindMetaTable( "Player" )
 SLCProperties
 ---------------------------------------------------------------------------]]
 SLCKeepProperties = SLCKeepProperties or {}
+SLCPersistentProperties = SLCPersistentProperties or {}
 
 PROPERTY_KEEP_ROUND = 0
-PROPERTY_KEEP_ALWAYS = 1
+PROPERTY_KEEP_ROUND_PERSISTENT = 1
+PROPERTY_KEEP_ALWAYS = 2
 
 function PLAYER:ResetProperties( round_reset )
 	if !self.SLCProperties then self.SLCProperties = {} end
 
 	for k, v in pairs( self.SLCProperties ) do
 		local keep = SLCKeepProperties[k]
-		if !keep or keep == PROPERTY_KEEP_ROUND and round_reset then
+		if !keep or keep != PROPERTY_KEEP_ALWAYS and round_reset then
 			self.SLCProperties[k] = nil
 		end
 	end
 end
 
-function PLAYER:SetProperty( key, value, sync, keep )
+function PLAYER:SetProperty( key, value, sync )
 	if !self.SLCProperties then self.SLCProperties = {} end
 
 	if SERVER and sync then
@@ -27,6 +29,14 @@ function PLAYER:SetProperty( key, value, sync, keep )
 			net.WriteString( key )
 			net.WriteTable( { value } )
 		net.Send( self )
+	end
+
+	if SLCKeepProperties[key] == PROPERTY_KEEP_ROUND_PERSISTENT then
+		if !SLCPersistentProperties[self] then
+			SLCPersistentProperties[self] = {}
+		end
+
+		SLCPersistentProperties[self][key] = value
 	end
 
 	self.SLCProperties[key] = value
@@ -64,6 +74,10 @@ function BindPlayerProperty( func, key, def, data )
 		self:SetProperty( key, val, sync )
 	end
 end
+
+hook.Add( "SLCRoundCleanup", "SLCCleanupPersistentProperties", function()
+	SLCPersistentProperties = {}
+end )
 
 --[[-------------------------------------------------------------------------
 Hold manager
@@ -173,7 +187,7 @@ function PLAYER:StopDisableControls( id )
 	local mask = -1
 	for k, v in pairs( self.DisableControlsRegistry ) do
 		mask = bit.band( mask, v )
-		
+
 		if mask == 0 then break end
 	end
 
@@ -230,12 +244,34 @@ function SLCDatabaseProperty( func, key, def, db, sync )
 	SLCAccessor( func, { db_key = db_key, ignore_dt = true } )
 end
 
-hook.Add( "PlayerInitialSpawn", "SLCDatabaseProperties", function( ply )
+SLCDatabaseOnLoad = SLCDatabaseOnLoad or {}
+
+function SLCOnLoad( key, def, cb )
+	SLCDatabaseOnLoad[key] = { def = def, cb = cb }
+end
+
+hook.Add( "PlayerInitialSpawn", "SLCLoadPropertiesAndDatabse", function( ply )
 	for key, data in pairs( SLCDatabaseProperties ) do
 		ply:GetSCPData( data.db_key, data.def ):Then( function( val )
 			if !IsValid( ply ) then return end
 			ply:SetProperty( key, val, data.sync )
 		end )
+	end
+
+	for key, data in pairs( SLCDatabaseOnLoad ) do
+		ply:GetSCPData( key, data.def ):Then( function( val )
+			if !IsValid( ply ) then return end
+			data.cb( ply, val )
+		end )
+	end
+
+	local pers = SLCPersistentProperties[ply]
+	if pers then
+		if !ply.SLCProperties then ply.SLCProperties = {} end
+
+		for k, v in pairs( pers ) do
+			ply.SLCProperties[k] = v
+		end
 	end
 end )
 
@@ -363,7 +399,7 @@ function PLAYER:CheckHazmat( dmg, full )
 
 			self:SetVestDurability( dur )
 		end
-		
+
 		return !full or dur > 0
 	end
 
@@ -408,11 +444,11 @@ end
 
 function PLAYER:GetSCPWeapon()
 	local wep = self:GetProperty( "scp_weapon" )
-	if wep then return wep end
+	if IsValid( wep ) then return wep end
 
 	for i, v in ipairs( self:GetWeapons() ) do
 		if v.SCP then
-			self:SetProperty( "scp_weapon", v )			
+			self:SetProperty( "scp_weapon", v )
 			return v
 		end
 	end
@@ -438,6 +474,8 @@ end
 Base functions
 ---------------------------------------------------------------------------]]
 KeepPlayerProperty( "slc_xp_categories", PROPERTY_KEEP_ROUND )
+KeepPlayerProperty( "slc_group_frags", PROPERTY_KEEP_ROUND_PERSISTENT )
+KeepPlayerProperty( "slc_group_frags_total", PROPERTY_KEEP_ROUND_PERSISTENT )
 
 BindPlayerProperty( "Blink", "slc_blink", false )
 BindPlayerProperty( "NextBlink", "slc_next_blink", -1 )
@@ -449,7 +487,7 @@ BindPlayerProperty( "SCPNoRagdoll", "scp_no_ragdoll", false )
 BindPlayerProperty( "SCPChase", "scp_chase_active", false )
 BindPlayerProperty( "ChaseLevel", "scp_chase_level", 0 )
 
-BindPlayerProperty( "InitialTeam", "slc_initial_team", 0, { keep = PROPERTY_KEEP_ROUND } )
+BindPlayerProperty( "InitialTeam", "slc_initial_team", 0, { keep = PROPERTY_KEEP_ROUND_PERSISTENT } )
 
 BindPlayerProperty( "SCPHuman", "scp_is_human", false, { sync = true } )
 BindPlayerProperty( "SCPDisableOverload", "scp_disable_overload", false, { sync = true } )

@@ -22,7 +22,7 @@ lang.NRegistry = {
 	rxpspec = "You received %i experience for playing on this server!",
 	rxpplay = "You received %i experience for staying alive in the round!",
 	rxpplus = "You received %i experience for surviving more than half of the round!",
-	roundxp = "You received %i experience for your points",
+	roundxp = "You received %i experience for your points and gameplay",
 	gateexplode = "Time to Gate A explosion: %i",
 	explodeterminated = "Gate A explosion has been terminated",
 	r106used = "SCP-106 recontain procedure can be triggered only once per round",
@@ -39,8 +39,6 @@ lang.NRegistry = {
 	levelup = "You leveled up! Your current level: %i",
 	healplayer = "You received %i points for healing other player",
 	detectscp = "You received %i points for detecting SCPs",
-	winxp = "You received %i experience because your initial team won the game",
-	winalivexp = "You received %i experience because your team won the game",
 	upgradepoints = "You received new upgrade point(s)! Press '%s' to open SCP upgrade menu",
 	omega_detonation = "OMEGA Warhead detonation in %i seconds. Get on the surface or proceed to the blast shelter immediately!",
 	alpha_detonation = "ALPHA Warhead detonation in %i seconds. Get in the facility or proceed to the evacuation immediately!",
@@ -80,27 +78,6 @@ lang.NRegistry = {
 }
 
 lang.NFailed = "Failed to access NRegistry with key: %s"
-
---[[-------------------------------------------------------------------------
-NCRegistry
----------------------------------------------------------------------------]]
-lang.NCRegistry = {
-	escaped = "You escaped!",
-	escapeinfo = "Good job! You escaped in %s",
-	escapexp = "You received %i experience",
-	escort = "You have been escorted!",
-	roundend = "Round ended!",
-	nowinner = "No winner in this round!",
-	roundnep = "Not enough players!",
-	roundwin = "Round winner: %s",
-	roundwinmulti = "Round winners: [RAW]",
-	shelter_escape = "You survived explosion in blast shelter",
-	alpha_escape = "You escaped before warhead exploded",
-
-	mvp = "MVP: %s with score: %i",
-}
-
-lang.NCFailed = "Failed to access NCRegistry with key: %s"
 
 --[[-------------------------------------------------------------------------
 Round Stats
@@ -159,6 +136,18 @@ for group, name in pairs( team_groups ) do
 		lang.ROUND_STATS[group..suffix] = text..name..": %i"
 	end
 end
+
+--[[-------------------------------------------------------------------------
+Round Summary
+---------------------------------------------------------------------------]]
+lang.ROUND_SUMMARY = {
+	round_end = "Round has ended!",
+	no_winner = "No winners in this round!",
+	score = "Score",
+	mvp = "MVP",
+	no_stats = "No stats to show",
+	skip = "Press [%s] to skip summary"
+}
 
 --[[-------------------------------------------------------------------------
 Main menu
@@ -452,7 +441,8 @@ lang.settings = {
 		upgrade_tree_button = "SCP Upgrade Tree",
 		ppshop_button = "Class Viewer",
 		settings_button = "Gamemode Settings",
-		scp_special = "SCP Special Ability"
+		scp_special = "SCP Special Ability",
+		skip_summary_button = "Skip Round Summary"
 	},
 
 	config = {
@@ -476,6 +466,7 @@ lang.settings = {
 		hud_escort = "Show escort zones",
 		hud_timer_always = "Always show time",
 		hud_stamina_always = "Always show stamina",
+		hud_show_round_summary = "Show round summary",
 		eq_instant_desc = "Instant item description in EQ",
 		scp106_spots = "Always show SCP-106 teleport spots",
 
@@ -500,6 +491,7 @@ lang.settings = {
 		hud_skin_scoreboard = "Scoreboard",
 		hud_skin_hud = "HUD",
 		hud_skin_eq = "Equipment",
+		hud_skin_round_summary = "Round summary",
 
 		hud_skin_main_options = {
 			custom = "Custom",

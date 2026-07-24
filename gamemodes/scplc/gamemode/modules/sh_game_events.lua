@@ -29,7 +29,7 @@ if SERVER then
 			net.WriteBool( !!reset )
 			net.WriteTable( SLC_GAS )
 			net.WriteTable( SLC_GAS_VENT )
-		
+
 		if ply then
 			net.Send( ply )
 		else
@@ -48,6 +48,8 @@ if SERVER then
 	end
 
 	hook.Add( "SLCRound", "SLCGasZones", function( time )
+		if GetRoundRule( "no-gas" ) then return end
+
 		local zones = {}
 
 		for k, v in pairs( SLC_GAS_ZONES ) do
@@ -112,7 +114,7 @@ if SERVER then
 			end
 
 			if fast <= 0 then return end
-			
+
 			local rate_reduction = #SLCZones.GetPlayersInZone( zone )
 			if z[4] > 0 and z[4] < fast_rate then
 				rate_reduction = math.ceil( fast_rate * rate_reduction / z[4] )
@@ -197,7 +199,7 @@ if CLIENT then
 
 		local ply = LocalPlayer()
 		if !ply:Alive() and ply:GetObserverMode() == OBS_MODE_NONE then return end
-		
+
 		local vent = false
 		local ct = CurTime()
 		local pct = 0

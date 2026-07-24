@@ -15,6 +15,13 @@ net.ReceiveTable( "SLCInfoScreen", function( data )
 	hook.Run( "SLCCloseMinigames" )
 end )
 
+net.ReceiveTable( "SLCRoundSummary", function( data )
+	if !GetSettingsValue( "hud_show_round_summary" ) then return end
+
+	ROUND_SUMMARY = data
+	ShowGUIElement( "round_summary" )
+end )
+
 net.Receive( "PlayerReady", function( len )
 	LocalPlayer().playermeta = net.ReadTable()
 end )
@@ -32,14 +39,14 @@ net.Receive( "SCPList", function( len )
 
 	for i, v in ipairs( data ) do
 		local name = v.name
-		
+
 		CLASSES[name] = name
 		SCPStats[name] = v
 
 		if !v.hide then
 			table.insert( ShowSCPs, v )
 		end
-		
+
 		local nice_name = lang[name]
 		if !nice_name then
 			numbers[name] = { 0, 0 }
@@ -74,10 +81,6 @@ net.Receive( "PlayerMessage", function( len )
 	local center = net.ReadBool()
 
 	PlayerMessage( msg, nil, center )
-end )
-
-net.Receive( "CenterMessage", function( len )
-	CenterMessage( net.ReadString() )
 end )
 
 net.Receive( "SLCChatPrint", function( len )
@@ -123,7 +126,7 @@ net.Receive( "PlayerCleanup", function( len )
 		hook.Run( "SLCPlayerCleanup", ply )
 
 		ply:ResetProperties()
-		
+
 		if ply == LocalPlayer() then
 			ClearPlayerIDs()
 		end
@@ -131,57 +134,26 @@ net.Receive( "PlayerCleanup", function( len )
 end )
 
 net.Receive( "RoundInfo", function( len )
-	local data = net.ReadTable()
+	local status = net.ReadUInt( 3 )
 
-	if data.name then
-		ROUND.name = data.name
-	end
+	ROUND.roundtype = net.ReadString()
+	ROUND.duration = net.ReadFloat()
+	ROUND.time = net.ReadFloat()
+	ROUND.modifiers = net.ReadTable()
+	ROUND.rules = net.ReadTable()
 
-	local status = data.status
+	ROUND.active = status != ROUND_STATUS_INACTIVE
 
-	if status == "off" then
-		CENTERMESSAGES = {}
+	ROUND.preparing = status == ROUND_STATUS_PREPARING
+	ROUND.post = status == ROUND_STATUS_POST
+	ROUND.aftermatch = status == ROUND_STATUS_AFTERMATCH
+	ROUND.infoscreen = status == ROUND_STATUS_INFO
+
+	if status == ROUND_STATUS_INACTIVE or status == ROUND_STATUS_INFO then
 		hook.Run( "SLCRoundCleanup" )
-
-		ROUND.active = false
-		ROUND.preparing = false
-		ROUND.infoscreen = false
-		ROUND.post = false
-		ROUND.name = ""
-		ROUND.time = 0
-		ROUND.duration = 0
-	elseif status == "live" then
-		ROUND.active = true
-		ROUND.time = data.time
-		ROUND.duration = data.duration
-		ROUND.preparing = false
-		ROUND.infoscreen = false
-		ROUND.post = false
-	elseif status == "inf" then
-		CENTERMESSAGES = {}
-		hook.Run( "SLCRoundCleanup" )
-		
-		ROUND.active = true
-		ROUND.time = data.time
-		ROUND.duration = data.duration
-		ROUND.preparing = true
-		ROUND.infoscreen = true
-		ROUND.post = false
-	elseif status == "pre" then
-		ROUND.active = true
-		ROUND.time = data.time
-		ROUND.duration = data.duration
-		ROUND.preparing = true
-		ROUND.infoscreen = false
-		ROUND.post = false
-	elseif status == "post" then
-		ROUND.active = true
-		ROUND.time = data.time
-		ROUND.duration = data.duration
-		ROUND.preparing = false
-		ROUND.infoscreen = false
-		ROUND.post = true
-
+		HideGUIElement( "round_summary" )
+		ROUND_SUMMARY = nil
+	elseif status == ROUND_STATUS_POST then
 		SLCWindowAlert()
 	end
 end )
@@ -232,7 +204,7 @@ net.Receive( "SLCXPSummary", function( len )
 		if !general_index then
 			general_index = table.insert( tab, { 0, "general" } )
 		end
-		
+
 		tab[general_index][1] = tab[general_index][1] + v
 	end
 

@@ -1,10 +1,16 @@
 ROUND = {
-	name = "",
+	roundtype = "",
 	time = 0,
+
 	preparing = false,
 	post = false,
 	active = false,
-	properties = {}
+	aftermatch = false,
+	infoscreen = false,
+
+	properties = {},
+	modifiers = {},
+	rules = {},
 }
 
 SCPStats = {}
@@ -553,7 +559,7 @@ if BLEEDING_EDGE then
 	local be_color = Color( 255, 255, 255, 15 )
 
 	hook.Add( "DrawOverlay", "SLCBleedingEdge", function()
-		local _, th = draw.SimpleText( VERSION.." BLEEDING EDGE v"..BLEEDING_EDGE, "SCPHUDVBig", 16, 16, be_color, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
+		local _, th = draw.SimpleText( VERSION.." BLEEDING EDGE", "SCPHUDVBig", 16, 16, be_color, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
 		draw.SimpleText( "This is experimental release, things might not work", "SCPHUDSmall", 16, 16 + th, be_color, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
 	end )
 end

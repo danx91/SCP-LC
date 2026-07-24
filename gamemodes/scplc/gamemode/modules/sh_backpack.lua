@@ -32,7 +32,7 @@ function BACKPACK.Create( name, pos )
 	if !data then return end
 
 	local bp = ents.Create( "item_slc_backpack" )
-	
+
 	bp.WorldModel = data.model
 	bp:SetBackpack( id )
 
@@ -48,7 +48,11 @@ end
 --[[-------------------------------------------------------------------------
 Base backpacks
 ---------------------------------------------------------------------------]]
-BACKPACK.Register( "small", "models/fallout 3/backpack_1.mdl", 3 )
-BACKPACK.Register( "medium", "models/fallout 3/backpack_2.mdl", 4 )
-BACKPACK.Register( "large", "models/fallout 3/backpack_4.mdl", 5 )
-BACKPACK.Register( "huge", "models/fallout 3/backpack_6.mdl", 6 )
+hook.Add( "SLCRegisterBackpacks", "SLCDefaultBackpacks", function()
+	BACKPACK.Register( "small", "models/fallout 3/backpack_1.mdl", 3 )
+	BACKPACK.Register( "medium", "models/fallout 3/backpack_2.mdl", 4 )
+	BACKPACK.Register( "large", "models/fallout 3/backpack_4.mdl", 5 )
+	BACKPACK.Register( "huge", "models/fallout 3/backpack_6.mdl", 6 )
+end )
+
+hook.Run( "SLCRegisterBackpacks" )

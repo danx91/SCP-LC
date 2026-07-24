@@ -87,6 +87,18 @@ function GetActivePlayers()
 	return tab
 end
 
+function GetAlivePlayers()
+	local tab = {}
+
+	for i, v in ipairs( player.GetAll() ) do
+		if v:Alive() and v:SCPTeam() != TEAM_SPEC then
+			table.insert( tab, v )
+		end
+	end
+
+	return tab
+end
+
 function PlayerMessage( msg, ply, center )
 	if !msg or msg == "" then return end
 	if ply and !IsValid( ply ) then return end
@@ -94,20 +106,6 @@ function PlayerMessage( msg, ply, center )
 	net.Start( "PlayerMessage" )
 	net.WriteString( msg )
 	net.WriteBool( center or false )
-
-	if ply then
-		net.Send( ply )
-	else
-		net.Broadcast()
-	end
-end
-
-function CenterMessage( msg, ply )
-	if !msg or msg == "" then return end
-	if ply and !IsValid( ply ) then return end
-
-	net.Start( "CenterMessage" )
-	net.WriteString( msg )
 
 	if ply then
 		net.Send( ply )

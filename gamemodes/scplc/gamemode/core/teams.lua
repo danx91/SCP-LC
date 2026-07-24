@@ -8,6 +8,7 @@ SCPTeams = {
 	GROUPS = {},
 	GROUPS_LOOKUP = {},
 	GROUP_STATS = {},
+	GROUPS_DATA = {},
 }
 
 local info_num = 0
@@ -175,7 +176,7 @@ function SCPTeams.HasInfo( team, info )
 	return bit.band( data.info, info ) == info
 end
 
-function SCPTeams.GetGroup( team, group )
+function SCPTeams.GetGroup( team )
 	local data = SCPTeams.REGISTRY[team]
 	if !data then return end
 
@@ -257,6 +258,8 @@ function SCPTeams.SetupAllies( tab, ally )
 end
 
 function SCPTeams.SetupNeutral( tab, neutral )
+	assert( relations_allowed, "'SetupNeutral' have to be called inside 'SLCSetupTeams' hook" )
+
 	if !istable( tab ) then
 		tab = { tab }
 	end
@@ -281,6 +284,8 @@ function SCPTeams.SetupNeutral( tab, neutral )
 end
 
 function SCPTeams.SetupEnemy( tab, enemy )
+	assert( relations_allowed, "'SetupEnemy' have to be called inside 'SLCSetupTeams' hook" )
+
 	if !istable( tab ) then
 		tab = { tab }
 	end
@@ -313,6 +318,19 @@ function SCPTeams.Relation( team1, team2 )
 	end
 
 	return false
+end
+
+function SCPTeams.PlayerRelation( ply1, ply2 )
+	local override = ply1:GetProperty( "relation_override" )
+
+	if override then
+		local use, result = override( ply1, ply2 )
+		if use then
+			return result
+		end
+	end
+
+	return SCPTeams.Relation( ply1:SCPTeam(), ply2:SCPTeam() )
 end
 
 function SCPTeams.PlayerDamageRelation( ply1, ply2 )
@@ -494,9 +512,74 @@ function SCPTeams.HighestScore()
 	return group
 end
 
+local function zscore_sort( a, b )
+	if a.zscore == b.zscore then
+		return a.score > b.score
+	end
+
+	return a.zscore > b.zscore
+end
+
+function SCPTeams.TeamsZScore()
+	local scores = {}
+	local ply_count = #GetActivePlayers()
+
+	if ply_count <= 0 then return scores end
+
+	print( "Calc z-score", ply_count )
+
+	for group, score in pairs( SCPTeams.SCORE ) do
+		local score_norm = score / ply_count
+		if score_norm <= 0 then continue end
+
+		local data = SCPTeams.GROUPS_DATA[group]
+		if !data then
+			data = { mean = score_norm, var = ( score_norm * 0.25 ) ^ 2 }
+			SCPTeams.GROUPS_DATA[group] = data
+		end
+
+		local stddev = math.sqrt( data.var )
+		local zscore = ( score_norm - data.mean ) / math.max( stddev, 0.001 )
+		print( group, score, score_norm, data.mean, data.var, stddev, zscore )
+
+		table.insert( scores, { group = group, score = score, score_norm = score_norm, zscore = zscore } )
+	end
+
+	table.sort( scores, zscore_sort )
+	print( "zscores" )
+	PrintTable( scores )
+
+	return scores
+end
+
 function SCPTeams.ResetScore()
 	for k, v in pairs( SCPTeams.SCORE ) do
 		SCPTeams.SCORE[k] = 0
+	end
+end
+
+local sqlite_insert = "INSERT INTO scplc_teams_data(team, mean, var) VALUES (?, ?, ?) ON CONFLICT(team) DO UPDATE SET mean = ?2, var = ?3;"
+local mysql_insert = "INSERT INTO scplc_teams_data(team, mean, var) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE mean = ?2, var = ?3;"
+
+function SCPTeams.UpdateScoreData()
+	local alpha = CVAR.slc_xp_stats_alpha:GetFloat()
+	local ply_count = #GetActivePlayers()
+	print( "Updating scores", alpha, ply_count )
+
+	if ply_count < math.max( CVAR.slc_xp_stats_min_players:GetInt(), 0 ) then print( "Not enough players - discard" ) return end
+
+	for k, v in pairs( SCPTeams.GROUPS_DATA ) do
+		local score_norm = ( SCPTeams.SCORE[k] or 0 ) / ply_count
+		if score_norm <= 0 then continue end
+
+		print( "Updating", k, score_norm, v.mean, v.var )
+
+		v.var = ( 1 - alpha ) * v.var + alpha * ( score_norm - v.mean ) ^ 2
+		v.mean = v.mean + alpha * ( score_norm - v.mean )
+
+		print( "New", v.mean, v.var )
+
+		SLCDatabase:FormatQuery( SLCDatabase.MySQL and mysql_insert or sqlite_insert, k, v.mean, v.var )
 	end
 end
 
@@ -571,100 +654,104 @@ end
 --[[-------------------------------------------------------------------------
 Base teams
 ---------------------------------------------------------------------------]]
-//SCPTeams.AddTeamInfo( "ALIVE" ) 	// Unused atm
-SCPTeams.AddTeamInfo( "HUMAN" )
-SCPTeams.AddTeamInfo( "SCP" )
-SCPTeams.AddTeamInfo( "STAFF" )
+hook.Add( "SLCSetupTeams", "SLCDefaultTeams", function()
+	//SCPTeams.AddTeamInfo( "ALIVE" ) 	// Unused atm
+	SCPTeams.AddTeamInfo( "HUMAN" )
+	SCPTeams.AddTeamInfo( "SCP" )
+	SCPTeams.AddTeamInfo( "STAFF" )
 
-SCPTeams.Register( "SPEC", {
-	color = Color( 150, 150, 150 ),
-	reward = 0,
-	group = false,
-} )
+	SCPTeams.Register( "SPEC", {
+		color = Color( 150, 150, 150 ),
+		reward = 0,
+		group = false,
+	} )
 
-SCPTeams.Register( "CLASSD", {
-	color = Color( 242, 125, 25 ),
-	reward = 2,
-	max_reward = 20,
-	can_escape = true,
-	info = SCPTeams.INFO_HUMAN,
-	group = "classd_ci",
-} )
+	SCPTeams.Register( "CLASSD", {
+		color = Color( 242, 125, 25 ),
+		reward = 2,
+		max_reward = 10,
+		can_escape = true,
+		info = SCPTeams.INFO_HUMAN,
+		group = "classd_ci",
+	} )
 
-SCPTeams.Register( "SCI", {
-	color = Color( 60, 200, 220 ),
-	reward = 2,
-	max_reward = 20,
-	can_escape = true,
-	info = { SCPTeams.INFO_HUMAN, SCPTeams.INFO_STAFF },
-	group = "staff",
-} )
+	SCPTeams.Register( "SCI", {
+		color = Color( 60, 200, 220 ),
+		reward = 2,
+		max_reward = 10,
+		can_escape = true,
+		info = { SCPTeams.INFO_HUMAN, SCPTeams.INFO_STAFF },
+		group = "staff",
+	} )
 
-SCPTeams.Register( "GUARD", {
-	color = Color( 30, 75, 110 ),
-	reward = 3,
-	max_reward = 25,
-	can_escape = false,
-	info = { SCPTeams.INFO_HUMAN, SCPTeams.INFO_STAFF },
-	group = "staff",
-} )
+	SCPTeams.Register( "GUARD", {
+		color = Color( 30, 75, 110 ),
+		reward = 3,
+		max_reward = 15,
+		can_escape = false,
+		info = { SCPTeams.INFO_HUMAN, SCPTeams.INFO_STAFF },
+		group = "staff",
+	} )
 
-SCPTeams.Register( "MTF", {
-	color = Color( 10, 20, 80 ),
-	reward = 4,
-	max_reward = 30,
-	can_escape = false,
-	info = { SCPTeams.INFO_HUMAN, SCPTeams.INFO_STAFF },
-	group = "staff",
-} )
+	SCPTeams.Register( "MTF", {
+		color = Color( 10, 20, 80 ),
+		reward = 4,
+		max_reward = 20,
+		can_escape = false,
+		info = { SCPTeams.INFO_HUMAN, SCPTeams.INFO_STAFF },
+		group = "staff",
+	} )
 
-SCPTeams.Register( "CI", {
-	color = Color( 10, 80, 5 ),
-	reward = 4,
-	max_reward = 30,
-	can_escape = false,
-	info = { SCPTeams.INFO_HUMAN },
-	group = "classd_ci",
-} )
+	SCPTeams.Register( "CI", {
+		color = Color( 10, 80, 5 ),
+		reward = 4,
+		max_reward = 20,
+		can_escape = false,
+		info = { SCPTeams.INFO_HUMAN },
+		group = "classd_ci",
+	} )
 
-SCPTeams.Register( "GOC", {
-	color = Color( 80, 5, 130 ),
-	reward = 4,
-	max_reward = 30,
-	can_escape = false,
-	info = { SCPTeams.INFO_HUMAN },
-	group = "goc",
-} )
+	SCPTeams.Register( "GOC", {
+		color = Color( 80, 5, 130 ),
+		reward = 4,
+		max_reward = 20,
+		can_escape = false,
+		info = { SCPTeams.INFO_HUMAN },
+		group = "goc",
+	} )
 
-SCPTeams.Register( "SCP", {
-	color = Color( 100, 0, 0 ),
-	reward = 10,
-	max_reward = 75,
-	can_escape = true,
-	info = {},
-	group = "scp",
-	stat_ref_scale = 3,
-	stat_bias_scale = 0,
-} )
+	SCPTeams.Register( "SCP", {
+		color = Color( 100, 0, 0 ),
+		reward = 10,
+		max_reward = 50,
+		can_escape = true,
+		info = {},
+		group = "scp",
+		stat_ref_scale = 3,
+		stat_bias_scale = 0,
+	} )
+end )
 
 hook.Run( "SLCSetupTeams" )
 register_allowed = false
 
-SCPTeams.SetupNeutral( TEAM_GOC, true )
-SCPTeams.SetupNeutral( { TEAM_CLASSD, TEAM_SCI, TEAM_GUARD }, TEAM_GOC )
-SCPTeams.SetupNeutral( { TEAM_CLASSD, TEAM_SCI } )
+hook.Add( "SLCTeamsRelations", "SLCDefaultRelations", function()
+	for k, v in pairs( SCPTeams.GROUPS ) do
+		SCPTeams.SetupAllies( v )
+	end
 
-SCPTeams.SetupEnemy( TEAM_GOC, { TEAM_SCP, TEAM_CI } )
+	SCPTeams.SetupNeutral( TEAM_GOC, true )
+	SCPTeams.SetupNeutral( { TEAM_CLASSD, TEAM_SCI, TEAM_GUARD }, TEAM_GOC )
+	SCPTeams.SetupNeutral( { TEAM_CLASSD, TEAM_SCI } )
 
-SCPTeams.SetupEscort( TEAM_MTF, TEAM_SCI )
-SCPTeams.SetupEscort( TEAM_GUARD, TEAM_SCI )
-SCPTeams.SetupEscort( TEAM_CI, TEAM_CLASSD )
+	SCPTeams.SetupEnemy( TEAM_GOC, { TEAM_SCP, TEAM_CI } )
+
+	SCPTeams.SetupEscort( TEAM_MTF, TEAM_SCI )
+	SCPTeams.SetupEscort( TEAM_GUARD, TEAM_SCI )
+	SCPTeams.SetupEscort( TEAM_CI, TEAM_CLASSD )
+end )
 
 hook.Run( "SLCTeamsRelations" )
-
-for k, v in pairs( SCPTeams.GROUPS ) do
-	SCPTeams.SetupAllies( v )
-end
 
 relations_allowed = false
 
@@ -741,3 +828,41 @@ hook.Add( "SLCLanguagesLoaded", "SLCTeamRoundStats", function()
 	RoundStatGroup( "total_escapes", ROUND_STAT_OP_SUM, ROUND_STAT_COLLECT_POS ):AddStat( escape_names ):ShowByRef( 20 )
 	RoundStatGroup( "total_escorts", ROUND_STAT_OP_SUM, ROUND_STAT_COLLECT_POS ):AddStat( escort_names ):ShowByRef( 8 )
 end )
+
+hook.Add( "SLCDatabaseInit", "SLCTeamsDatabase", function( db )
+	db:Query( [[
+		CREATE TABLE IF NOT EXISTS scplc_teams_data (
+			team TEXT PRIMARY KEY,
+			mean ]]..( db.MySQL and "FLOAT" or "REAL" )..[[ NOT NULL,
+			var ]]..( db.MySQL and "FLOAT" or "REAL" )..[[ NOT NULL
+		);
+	]] )
+
+	db:Query( "SELECT * FROM scplc_teams_data;" ):Then( function( data )
+		if !data then return end
+
+		for i, v in ipairs( data ) do
+			SCPTeams.GROUPS_DATA[v.team] = { mean = v.mean, var = v.var }
+		end
+	end )
+end )
+
+hook.Add( "SLCFactoryReset", "ResetTeamsDB", function()
+	print( "Dropping teams data table..." )
+	SLCDatabase:Query( "DROP TABLE scplc_teams_data;" )
+end )
+
+if SERVER then
+	concommand.Add( "slc_team_stats", function()
+		local stats = StringTable()
+			:AddColumn( "Group", "s" )
+			:AddColumn( "Mean", "f", nil, nil, 3 )
+			:AddColumn( "Var", "f", nil, nil, 3 )
+
+		for k, v in pairs( SCPTeams.GROUPS_DATA ) do
+			stats:AddRow( k, v.mean, v.var )
+		end
+
+		stats:Print()
+	end )
+end

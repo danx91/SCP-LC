@@ -17,7 +17,7 @@ local function add_button( text, func, pnl, dock )
 
 	btn:SetText( "" )
 	btn:Dock( dock or TOP )
-	
+
 	btn.DoClick = function( this )
 		if func and this:IsEnabled() and !IsValid( pnl.LockIfValid ) then
 			func( this )
@@ -154,7 +154,7 @@ html, body {
 	pnl.Logo = logo
 
 	logo:Dock( TOP )
-	
+
 	logo.Paint = function( this, pw, ph )
 		local dh = pw * logo_ratio
 
@@ -182,7 +182,7 @@ html, body {
 		OpenSettingsWindow()
 		pnl.LockIfValid = SLC_SETTINGS_WINDOW
 		SLC_SETTINGS_WINDOW.Think = function( this )
-			if !this:HasFocus() and !IsValid( SLC_POPUP ) and !IsValid( SLC_SETTINGS_WINDOW ) then
+			if !this:HasFocus() and !IsValid( SLC_POPUP ) then
 				this:MakePopup()
 			end
 		end
@@ -273,7 +273,7 @@ html, body {
 
 		vbar:SetHideButtons( true )
 		vbar:SetWide( 10 )
-		
+
 		local m = h * 0.01
 		vbar:DockMargin( 0, m, m, m )
 		vbar.Paint = function( this, pw, ph )

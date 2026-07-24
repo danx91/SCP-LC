@@ -69,7 +69,7 @@ local function draw_admin_hud()
 	if !IsValid( target ) then return end
 
 	local w, h = ScrW(), ScrH()
-	
+
 	local admin_w = w * 0.3
 	local admin_h = h * 0.5
 	local mat_h = admin_w / target_ratio
@@ -154,7 +154,7 @@ end
 local stamina_visible = false
 local stamina_pct = 0
 local last_stamina = 0
-local last_extra_xp = 0
+local last_extra_hp = 0
 
 local pulse = 0
 
@@ -168,7 +168,7 @@ local function draw_hud()
 	local w, h = ScrW(), ScrH()
 	local scale = GetHUDScale()
 	local ct = CurTime()
-	
+
 	local offset_y = GetSettingsValue( "hud_windowed_mode" ) and h * 0.0275 or 0
 
 	local total_h = h * 0.15 * scale
@@ -201,7 +201,7 @@ local function draw_hud()
 	local max_hp = ply:GetMaxHealth()
 	local extra_hp = math.ceil( ply:GetExtraHealth() )
 	local max_extra_hp = ply:GetMaxExtraHealth()
-	local has_extra_hp = extra_hp > 0 and max_extra_hp > 0 or last_extra_xp > 0
+	local has_extra_hp = extra_hp > 0 and max_extra_hp > 0 or last_extra_hp > 0
 
 	if hp <  max_hp * ( ply:SCPTeam() == TEAM_SCP and 0.1 or 0.25 ) then
 		if pulse <= 0 then
@@ -226,13 +226,13 @@ local function draw_hud()
 	if has_extra_hp then
 		local extra_hp_pct = extra_hp / max_extra_hp
 
-		last_extra_xp = Lerp( RealFrameTime() * 4, last_extra_xp, extra_hp_pct )
+		last_extra_hp = Lerp( RealFrameTime() * 4, last_extra_hp, extra_hp_pct )
 
-		if last_extra_xp != last_extra_xp then --NaN protection
-			last_extra_xp = extra_hp_pct
+		if last_extra_hp != last_extra_hp then --NaN protection
+			last_extra_hp = extra_hp_pct
 		end
 
-		render.SetScissorRect( hp_x, hp_y + hp_size * ( 1 - last_extra_xp ), hp_x + hp_size, hp_y + hp_size, true )
+		render.SetScissorRect( hp_x, hp_y + hp_size * ( 1 - last_extra_hp ), hp_x + hp_size, hp_y + hp_size, true )
 
 		surface.SetDrawColor( 160, 230, 40 )
 		surface.SetMaterial( mat_hp_bar )
@@ -303,7 +303,7 @@ local function draw_hud()
 	else
 		surface.SetMaterial( mat_battery )
 	end
-	
+
 	surface.DrawTexturedRect( bat_x, bat_y, bat_w, bat_h )
 
 	--[[-------------------------------------------------------------------------
@@ -348,11 +348,11 @@ local function draw_hud()
 		local ammo_w = ammo_h * ammo_ratio
 		local ammo_x = start_x + total_w * 0.847
 		local ammo_y = start_y + total_h - ammo_h
-		
+
 		surface.SetDrawColor( 255, 255, 255 )
 		surface.SetMaterial( mat_ammo )
 		surface.DrawTexturedRect( ammo_x, ammo_y, ammo_w, ammo_h )
-		
+
 		local ammo = wep.GetCustomClip and wep:GetCustomClip() or wep:Clip1()
 		local ammo_txt = wep.GetCustomClip and ammo or ( ammo.." / "..ply:GetAmmoCount( wep:GetPrimaryAmmoType() ) )
 
@@ -372,7 +372,7 @@ local function draw_hud()
 	local boost = boost_time > ct
 
 	last_stamina = Lerp( RealFrameTime() * 6, last_stamina, stamina )
-	
+
 	local stamina_h = h * 0.04 * scale
 	local stamina_w = stamina_h * stamina_ratio
 	local stamina_x = ( w - stamina_w ) * 0.5

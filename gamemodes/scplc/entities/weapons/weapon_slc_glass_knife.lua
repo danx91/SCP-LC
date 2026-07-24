@@ -220,4 +220,4 @@ function SWEP:DestroyWeapon( pos )
 end
 
 AddWeaponLoadout( "weapon_slc_glass_knife", nil, "melee_low" )
-MarkAsWeapon( "weapon_slc_glass_knife" )
+MarkAsWeapon( "weapon_slc_glass_knife", "melee" )

@@ -429,7 +429,7 @@ hook.Add( "SLCGamemodeLoaded", "SLCSettings", function()
 				v.value = v.default
 			end
 		end
-		
+
 		processSettingsEntry( k )
 	end
 
@@ -443,6 +443,7 @@ hook.Add( "SLCRegisterSettings", "SLCBaseSettings", function()
 	RegisterSettingsEntry( "upgrade_tree_button", "bind", "bind:+zoom" )
 	RegisterSettingsEntry( "ppshop_button", "bind", "key:F1" )
 	RegisterSettingsEntry( "settings_button", "bind", "none" )
+	RegisterSettingsEntry( "skip_summary_button", "bind", "none" )
 end )
 
 hook.Add( "SLCFactoryReset", "SLCSettingsReset", function()
@@ -763,15 +764,15 @@ function AddConfigControl( parent, data, marg )
 
 			local old = data.value
 			data.value = value
-			
+
 			if data.data.callback then
 				if data.data.callback( value, old, data.name ) == true then return end
 			end
-			
+
 			if data.cvar then
 				data.cvar:SetString( value )
 			end
-			
+
 			processSettingsEntry( data.name )
 			SaveSettings()
 		end
@@ -884,7 +885,7 @@ AddSettingsPanel( "reset", function( parent )
 			if i == 1 then
 				SLC_SETTINGS_WINDOW:Close()
 				hook.Run( "SLCFactoryReset" )
-			end	
+			end
 		end, LANG.settings.popup_continue, LANG.settings.popup_cancel )
 	end
 

@@ -253,6 +253,26 @@ function math.Dec2Bin( dec )
 		   string.char( bit.band( dec, 255 ) )
 end
 
+function math.RandNormal( mu, sigma )
+	local u1 = SLCRandom()
+	local u2 = SLCRandom()
+
+	local z = math.sqrt( -2 * math.log( u1 ) ) * math.cos( 2 * math.pi * u2 )
+
+	return mu + sigma * z
+end
+
+function math.StochasticRound( n )
+	local lower = math.floor( n )
+	local frac = n - lower
+
+	if SLCRandom() < frac then
+		return lower + 1
+	else
+		return lower
+	end
+end
+
 --[[-------------------------------------------------------------------------
 Simple Matrix
 ---------------------------------------------------------------------------]]

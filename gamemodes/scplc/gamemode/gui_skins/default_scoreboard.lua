@@ -42,7 +42,7 @@ local header_items = {
 		local lp = LocalPlayer()
 
 		if IsValid( ply ) and ( ply == lp or !lp:Alive() ) then
-			return  math.Clamp( ply:Frags(), 0, 9999 )
+			return  math.Clamp( ply:Frags(), -999, 9999 )
 		end
 
 		return "--"
@@ -430,7 +430,7 @@ end
 AddGUISkin( "scoreboard", "default", {
 	create = function()
 		create_scoreboard()
-		
+
 		hook.Add( "SLCLanguageChanged", "Scoreboard.Default.Lang", function()
 			create_scoreboard()
 		end )
@@ -575,7 +575,7 @@ function PANEL:Init()
 
 		local max = self.Slider:GetWide()
 		local x = math.Clamp( self.Slider:ScreenToLocal( gui.MouseX(), 0 ), 0, max )
-		
+
 		this:SetX( self.Slider:GetX() + x - this:GetWide() * 0.5 )
 
 		local val = x / max

@@ -160,7 +160,6 @@ hook.Add( "Tick", "SLCEscapeCheck", function()
 			end
 
 			for k, v in ipairs( tab ) do
-				//CenterMessage( string.format( "offset:75;escaped#255,0,0,SCPHUDVBig;alpha_escape;escapexp$%d", xp ), v )
 				if hook.Run( "SLCPlayerEscaped", v, true ) == true then continue end
 
 				local team = v:SCPTeam()
@@ -329,6 +328,7 @@ function StartAftermatch( endcheck )
 		support_timer:Destroy()
 	end
 
+	ROUND.status = ROUND_STATUS_AFTERMATCH
 	ROUND.aftermatch = true
 
 	AddTimer( "SLCAftermatch", 1, 0, function()

@@ -57,7 +57,7 @@ Enums:
 do
 	RoundStatBase = {}
 	RoundStatBase.__index = RoundStatBase
-	RoundStatBase = setmetatable( RoundStatBase, {
+	setmetatable( RoundStatBase, {
 		__call = function( class, ... )
 			local obj = setmetatable( {}, class )
 			if obj.Initialize then obj:Initialize( ... ) end
@@ -364,7 +364,7 @@ RoundStat Object
 do
 	RoundStat = {}
 	RoundStat.__index = RoundStat
-	RoundStat = setmetatable( RoundStat, {
+	setmetatable( RoundStat, {
 		__index = RoundStatBase,
 		__call = function( class, ... )
 			local obj = setmetatable( {}, class )
@@ -461,7 +461,7 @@ Enums:
 do
 	RoundStatGroup = {}
 	RoundStatGroup.__index = RoundStatGroup
-	RoundStatGroup = setmetatable( RoundStatGroup, {
+	setmetatable( RoundStatGroup, {
 		__index = RoundStatBase,
 		__call = function( class, ... )
 			local obj = setmetatable( {}, class )
@@ -711,8 +711,8 @@ function GetRoundMVP()
 	local best_score = 0
 
 	for i, v in ipairs( player.GetAll() ) do
-		local frags = v:Frags()
-		if frags > best_score then
+		local frags = v:RoundFrags()
+		if frags > 0 and frags > best_score then
 			best_score = frags
 			best_player = v
 		end

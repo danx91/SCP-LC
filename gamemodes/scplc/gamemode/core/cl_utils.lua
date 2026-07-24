@@ -66,7 +66,7 @@ function PlayerMessage( msg, ply, center )
 				rawtext = string.gsub( raw, "%.", "," )
 				continue
 			end
-			
+
 			local tabinfo = string.match( v, "^@(.+)$" )
 			if tabinfo then
 				local tab = LANG
@@ -170,224 +170,6 @@ hook.Add( "HUDPaint", "CenterPlayerMessage", function()
 			xalign = TEXT_ALIGN_CENTER,
 			yalign = TEXT_ALIGN_CENTER,
 		}
-	end
-end )
---[[-------------------------------------------------------------------------
-CenterMessage
----------------------------------------------------------------------------]]
-CENTERMESSAGES = {}
-
-/*---------------------------------------------------------------------------
-CenterMessage( msg, ply )
-
-Powerful function that draws translated text on screen center.
-Time, font and default font can be changed. Also supports multiline disaplay. New messages are queued.
-
-@param 		[string] 		msg 		The message. Message structure is described below.
-@param 		[Player] 		ply 		This argument is only for shared usage compatibility.
-										In order to work, must be nil or local player
-
-@return 	[nil]			- 			-
-
-
-Message structure:
-	(first 5 points are same as in PlayerMessage)
-	1. Message base: "ncregistry_key" - the only required part of message
-	2. Color and font: "rest_of_message#r,g,b,font" where r, g and b are numbers in range 0-255, font is optional. If used, must be last part of message
-	3. Text formating: "ncregistry_key$value1,value2" is equivalent to string.format( "ncregistry_value", value1, value2 )
-	4. Accessing LANG table: a @ character can be used to access LANG table (instead of ncregistry_key or insted of value afte '$')
-	Example: "ncregistry_key$value1,@sometab.somevalue" is equal to string.format( "ncregistry_value", value1, LANG.sometab.somevalue )
-	5. RAW text: if one of arguments after '$' will be 'raw:sometext' then 'sometext' will be saved as RAW text. After processing whole message
-	every '[RAW]' will be replaced with RAW text. NOTE: Every '.' in RAW text will be replaced with ','
-
-	6.Every line of text is separated by ';'. Example: 'ncregistry_key$value1,value2;another_ncregistry_key$value3' will display 2 text rows
-	7. Special arguments are: 'font:font_name' to override default font for whole message, 'time:number' to override display time in seconds (default: 10)
-	Example: 'ncregistry_key$value1,value2#255,0,0;another_ncregistry_key$value3;3rd_ncregistry_key#0,0,255,Font2';font:Font1 - 1st and 2nd row will be drawn with Font1,
-	3rd one with Font2
-	8. Each text line can specify font override. See example above
----------------------------------------------------------------------------*/
-function CenterMessage( msg, ply )
-	if ply and ply != LocalPlayer() then return end
-
-	local gfont = "SCPHUDMedium"
-	//local gcolor = Color( 255, 255, 255 )
-	local time = 10
-	local yoffset = 0
-	local lines = {}
-
-	for s in string.gmatch( msg, "[^;]+" ) do
-		local line = {}
-
-		local g = string.match( s, "^font:([%w%p]+)$" )
-		if g then
-			gfont = g
-			continue
-		end
-
-		local t = string.match( s, "^time:(%d+)$" )
-		if t then
-			time = tonumber( t )
-			continue
-		end
-
-		local yoff = string.match( s, "^offset:(-?%d+)$" )
-		if yoff then
-			yoffset = tonumber( yoff ) / 1000
-			continue
-		end
-
-		/*local gclr = string.match( s, "^offset:(%d+)$" )
-		if gclr then
-			
-		end*/
-
-		local nmsg, cr, cg, cb, f = string.match( s, "^(.-)%#(%d*),(%d*),(%d*),([%w%p]*)$" )
-
-		if !nmsg then
-			nmsg, cr, cg, cb = string.match( s, "^(.-)%#(%d*),(%d*),(%d*)$" )
-		end
-
-		if nmsg then
-			cr = tonumber( cr )
-
-			if cr then
-				line.color = Color( cr, tonumber( cg ) or cr, tonumber( cb ) or cr )
-			end
-
-			if f and f != "" then
-				line.font = f or gfont
-			end
-
-			s = nmsg
-		end
-
-		local name, func = string.match( s, "^(.-)$(.+)" )
-		local rawtext = ""
-
-		if name then
-			local args = {}
-
-			for v in string.gmatch( func, "[^,]+" ) do
-				local raw = string.match( v, "raw:(.+)" )
-				if raw then
-					rawtext = string.gsub( raw, "%.", "," )
-					continue
-				end
-
-				local tabinfo = string.match( v, "^@(.+)$" )
-				if tabinfo then
-					local tab = LANG
-
-					if tabinfo then
-						for subtable in string.gmatch( tabinfo, "[^%.]+" ) do
-							if !istable( tab ) or !tab[subtable] then
-								break
-							end
-
-							tab = tab[subtable]
-						end
-					end
-
-					table.insert( args, !istable( tab ) and tab or tabinfo )
-				else
-					table.insert( args, v )
-				end
-			end
-
-			local translated
-			local tabinfo = string.match( name, "^@(.+)$" )
-			if tabinfo then
-				local tab = LANG
-
-				if tabinfo then
-					for subtable in string.gmatch( tabinfo, "[^%.]+" ) do
-						if !istable( tab ) or !tab[subtable] then
-							break
-						end
-
-						tab = tab[subtable]
-					end
-				end
-
-				if !istable( tab ) then
-					translated = tab
-				end
-			else
-				translated = LANG.NCRegistry[name]
-			end
-
-			if translated then
-				translated = string.gsub( translated, "%[RAW%]", rawtext )
-			 	line.txt = string.format( translated, unpack( args ) )
-			else
-				print( string.format( LANG.NCFailed, tostring( name ) ) )
-			end
-		else
-			local text
-			local tabinfo = string.match( s, "^@(.+)$" )
-			if tabinfo then
-				local tab = LANG
-
-				if tabinfo then
-					for subtable in string.gmatch( tabinfo, "[^%.]+" ) do
-						if !istable( tab ) or !tab[subtable] then
-							break
-						end
-
-						tab = tab[subtable]
-					end
-				end
-
-				if !istable( tab ) then
-					text = tab
-				end
-			else
-				text = LANG.NCRegistry[s]
-			end
-
-			if text then
-				line.txt = text
-			else
-				print( string.format( LANG.NCFailed, tostring( s ) ) )
-			end
-		end
-
-		if line.txt and line.txt != "" then
-			line.txt = RestoreMessage( line.txt )
-			table.insert( lines, line )
-		end
-	end
-
-	table.insert( CENTERMESSAGES, { time = 0, duration = time, font = gfont, yoffset = yoffset, lines = lines } )
-end
-
-hook.Add( "HUDPaint", "CenterMessage", function()
-	if #CENTERMESSAGES > 0 then
-		local msg = CENTERMESSAGES[1]
-		local time = msg.time
-
-		if time == 0 then
-			msg.time = CurTime() + msg.duration
-		elseif time < CurTime() then
-			table.remove( CENTERMESSAGES, 1 )
-			return
-		end
-
-		local w, h = ScrW(), ScrH()
-
-		local y = h * ( 0.3 + msg.yoffset )
-		for k, v in pairs( msg.lines ) do
-			local _, th = draw.Text{
-				text = v.txt,
-				pos = { w * 0.5, y },
-				color = v.color or color_white,
-				font = v.font or msg.font,
-				xalign = TEXT_ALIGN_CENTER,
-				yalign = TEXT_ALIGN_TOP,
-			}
-
-			y = y + th
-		end
 	end
 end )
 
@@ -558,7 +340,7 @@ hook.Add( "HUDPaint", "SLCWheelMenu", function()
 		end
 
 		SLCDrawRing( cx, cy, outer, thickness, 1 / seg, -ang * ( i - 1 ), 0, 1, 200, 200, 200 )
-		
+
 		if tab.mat then
 			surface.SetDrawColor( 255, 255, 255 )
 			surface.SetMaterial( GetMaterial( tab.mat, "smooth" ) )
@@ -630,7 +412,7 @@ function ProgressBar( enable, maxvalue, text, tick, id )
 	if enable then
 		if text and string.sub( text, 1, 5 ) == "lang:" then
 			local tab = LANG
-			
+
 			for k, v in ipairs( string.Explode( ".", string.sub( text, 6 ) ) ) do
 				tab = tab[v]
 
@@ -877,7 +659,7 @@ function CreateIndicator( model, nodraw, rendergroup, rendermode, shouldremove )
 	if rendermode then
 		mdl:SetRenderMode( rendermode )
 	end
-	
+
 	mdl:SetNoDraw( nodraw )
 
 	for i = 1, #mdl:GetMaterials() do

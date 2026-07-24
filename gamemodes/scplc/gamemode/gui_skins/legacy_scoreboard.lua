@@ -270,7 +270,7 @@ local function createPlayerTab( ply, pnl )
 		local lp = LocalPlayer()
 
 		if IsValid( ply ) and ( ply == lp or !lp:Alive() ) then
-			text = math.Clamp( ply:Frags(), 0, 9999 )
+			text = math.Clamp( ply:Frags(), -999, 9999 )
 		end
 
 		draw.Text{

@@ -83,18 +83,18 @@ function SWEP:Think()
 
 		local rnd = SLCRandom() * 2 - 1
 		local heal = self.HealDmg + math.ceil( self.HealRand * rnd )
+		local heal_power = heal
 
-		local override = hook.Run( "SLCScaleHealing", target, owner, heal )
-		if isnumber( override ) then
-			heal = override
-		end
+		local override, power_override = hook.Run( "SLCScaleHealing", target, owner, heal )
+
+		heal = isnumber( override ) and override or heal
+		heal_power = isnumber( power_override ) and power_override or heal
 
 		local old_health = target:Health()
 		local max_health = target:GetMaxHealth()
 
 		heal = math.min( heal, max_health - old_health )
-		target:AddHealth( heal )
-		target.Logger:HealingEvent( owner, heal, old_health )
+		target:AddHealth( heal, owner, heal_power )
 		hook.Run( "SLCHealed", target, owner, heal )
 
 		local charges = self:GetCharges() - 1

@@ -5,6 +5,7 @@ Weapon Groups
 ---------------------------------------------------------------------------]]
 SLC_WEAPON_GROUP_OVERRIDE = {}
 SLC_WEAPON_GROUP_LIMITS = {}
+SLC_ROUND_WEAPON_GROUP_LIMITS = {}
 
 function AddWeaponToGroup( class, ... )
 	if !SLC_WEAPON_GROUP_OVERRIDE[class] then
@@ -30,6 +31,14 @@ function SetWeaponGroupLimit( group, limit )
 	SLC_WEAPON_GROUP_LIMITS[group] = limit
 end
 
+function SetRoundWeaponGroupLimit( group, limit )
+	SLC_ROUND_WEAPON_GROUP_LIMITS[group] = limit
+end
+
+hook.Add( "SLCRoundCleanup", "SLCCleanupGroupLimits", function()
+	SLC_ROUND_WEAPON_GROUP_LIMITS = {}
+end )
+
 local function weapon_value( class, key, wep )
 	if wep then
 		return wep[key]
@@ -49,7 +58,6 @@ local function weapon_value( class, key, wep )
 		class = data.Base
 	until !class or done[class]
 end
-
 
 function WeaponInAnyGroup( class, wep )
 	local override = SLC_WEAPON_GROUP_OVERRIDE[class]
@@ -133,7 +141,7 @@ function TestWeaponGroup( class, other, wep )
 	for group in pairs( wep_group ) do
 		if !other_group[group] then continue end
 
-		local limit = SLC_WEAPON_GROUP_LIMITS[group] or 1
+		local limit = SLC_ROUND_WEAPON_GROUP_LIMITS[group] or SLC_WEAPON_GROUP_LIMITS[group] or 1
 		if limit <= 1 then
 			return true, 1
 		end
@@ -168,10 +176,12 @@ end
 Misc
 ---------------------------------------------------------------------------]]
 function WEAPON:IsAttackWeapon()
-	local class = self:GetClass()
+	return IsAttackWeaponClass( self:GetClass() )
+end
 
-	if SLC_WEAPONS_REG[class] then return true end
-	if SLC_OTHER_WEAPONS_REG[class] then return true end
+function IsAttackWeaponClass( class )
+	local tag = SLC_WEAPONS_REG[class] or SLC_OTHER_WEAPONS_REG[class]
+	if tag then return true, tag end
 
 	return false
 end
@@ -185,7 +195,7 @@ function WEAPON:ResetViewModelBones()
 
 	local vm = owner:GetViewModel()
 	if !IsValid( vm ) then return end
-	
+
 	vm:ResetBones()
 end
 
@@ -238,21 +248,21 @@ function WEAPON:SwingThink()
 		end
 
 		local owner = self:GetOwner()
-	
+
 		local aimvec = owner:GetAimVector()
 		local aimang = aimvec:Angle()
 		local plyang = owner:GetAngles()
-	
+
 		local df = ( data.fov_end - data.fov_start ) * ( data.last_id - 1 ) / ( data.num - 1 )
 		local ds = ( data.path_end - data.path_start ) * ( data.last_id - 1 ) / ( data.num - 1 )
 		local dd = ( data.dist_end - data.dist_start ) * ( data.last_id - 1 ) / ( data.num - 1 )
-	
+
 		local pos = owner:GetShootPos() + aimang:Forward() * ( ds.x + data.path_start.x ) + aimang:Right() * ( ds.y + data.path_start.y ) + aimang:Up() * ( ds.z + data.path_start.z )
 		aimang:RotateAroundAxis( aimang:Up(), data.fov_start + df )
-	
+
 		trace_tbl.start = pos
 		trace_tbl.endpos = pos + aimang:Forward() * ( data.dist_start + dd )
-	
+
 		if data.correct_mins then
 			trace_tbl.mins = plyang:Forward() * data.mins.x + plyang:Right() * data.mins.y + plyang:Up() * data.mins.z
 			//print( trace_tbl.mins )
@@ -299,7 +309,7 @@ function WEAPON:SwingThink()
 					trace_tbl.filter = center.filter or data.filter or owner
 
 					_DrawNextTrace = true
-					
+
 					owner:LagCompensation( true )
 					util.TraceHull( trace_tbl )
 					owner:LagCompensation( false )
@@ -319,7 +329,7 @@ function WEAPON:SwingThink()
 			end
 		end
 	end
-	
+
 	if id >= data.num then
 		if data.cb_end then
 			data.cb_end( trace_tbl )
@@ -341,7 +351,7 @@ function WEAPON:TranslateViewModelAttachment( orig, inverse )
 	local view = render.GetViewSetup()
 	local vec = view.origin
 	local ang = view.angles
-	
+
 	local worldx = math.tan( view.fov * math.pi / 360 )
 	local viewx = math.tan( view.fovviewmodel * math.pi / 360 )
 

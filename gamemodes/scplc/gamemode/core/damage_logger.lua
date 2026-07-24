@@ -36,8 +36,8 @@ Types:
 ---------------------------------------------------------------------------]]
 do
 	local MAX_DEALT_HISTORY = 10
-	local HEALING_EVENTS_TIMEOUT = 60
-	local SUPPORT_THRESHOLD = 200
+	local HEALING_EVENTS_TIMEOUT = 90
+	local SUPPORT_THRESHOLD = 100
 
 	DamageLogger = {}
 
@@ -90,8 +90,12 @@ do
 			relation = SCPTeams.PlayerDamageRelation( attacker, self.Player )
 		end
 
-		if !relation or attacker == self.Player then
+		print( "Got damage", !IsValid( attacker ), !attacker_is_player, !relation, attacker == self.Player )
+		if !IsValid( attacker ) or !attacker_is_player or !relation or attacker == self.Player then
 			self.healable_pool = self.healable_pool + dmg_final
+			print( "new pool", self.healable_pool )
+		else
+			self.redemption_pool = self.redemption_pool + dmg_final
 		end
 
 		table.insert( self.damage_taken_events, {
@@ -110,7 +114,7 @@ do
 			timestamp = CurTime(),
 		} )
 
-		if attacker_valid then
+		if attacker_is_player then
 			attacker.Logger:DamageDealt( self.Player, dmg_final, dmg_original )
 		end
 	end
@@ -168,6 +172,8 @@ do
 		if type( power ) != "number" then argerror( 2, "AssistEvent", "number", type( power ) ) end
 		if timeout and type( timeout ) != "number" then argerror( 3, "AssistEvent", "nil or number", type( timeout ) ) end
 
+		if ply == self.Player then return end
+
 		local tab = self.assist_events[ply]
 		if !tab then
 			tab = {}
@@ -203,6 +209,8 @@ do
 		if type( power ) != "number" then argerror( 2, "SupportEvent", "number", type( power ) ) end
 		if timeout and type( timeout ) != "number" then argerror( 3, "SupportEvent", "nil or number", type( timeout ) ) end
 
+		if ply == self.Player then return end
+
 		local tab = self.support_events[ply]
 		if !tab then
 			tab = {}
@@ -219,6 +227,51 @@ do
 	end
 
 	--[[---------------------------------------------------------------------------
+	DamageLogger:RedemptionEvent( ply, power, source )
+
+	Description
+
+	@param		[Player]		ply					-
+	@param		[number]		power				-
+	@param		[any]			source				-
+
+	@return		[nil]			-					-
+	---------------------------------------------------------------------------]]--
+	function DamageLogger:RedemptionEvent( ply, power, source )
+		if type( ply ) != "Player" then argerror( 1, "RedemptionEvent", "Player", type( ply ) ) end
+		if type( power ) != "number" then argerror( 2, "RedemptionEvent", "number", type( power ) ) end
+
+		if ply == self.Player then return end
+
+		print( "Redemption event", power, self.redemption_pool, source )
+
+		local pool = self.redemption_pool
+		if pool <= 0 then return end
+
+		if power > pool then
+			power = pool
+		end
+
+		self.redemption_pool = pool - power
+
+		print( "Final redemption", power, self.redemption_pool )
+
+		local tab = self.redemption_events[ply]
+		if !tab then
+			tab = {}
+			self.redemption_events[ply] = tab
+		end
+
+		table.insert( tab, {
+			power = power,
+			source = source or "generic",
+			relation = SCPTeams.PlayerDamageRelation( ply, self.Player ),
+
+			timestamp = CurTime(),
+		} )
+	end
+
+	--[[---------------------------------------------------------------------------
 	DamageLogger:HealingEvent( ply, power, timeout )
 
 	Adds healing event to logger
@@ -226,16 +279,18 @@ do
 
 	@param		[Player]		ply					Player who healed
 	@param		[number]		heal				Healed HP
+	@param		[number]		heal_power			Optional, heal power override for events like healing fracture - heal = 0, but it should count towards support
 	@param		[number]		missing_hp			Optional, HP missing prior to healing, can be skipped ONLY if event is added BEFORE adding HP
 
 	@return		[number]		-					True non-RDM healed damage
 	---------------------------------------------------------------------------]]--
-	function DamageLogger:HealingEvent( ply, heal, missing_hp )
+	function DamageLogger:HealingEvent( ply, heal, heal_power, missing_hp )
 		if type( ply ) != "Player" then argerror( 1, "HealingEvent", "Player", type( ply ) ) end
 		if type( heal ) != "number" then argerror( 2, "HealingEvent", "number", type( heal ) ) end
-		if missing_hp and type( missing_hp ) != "number" then argerror( 3, "HealingEvent", "nil or number", type( missing_hp ) ) end
+		if heal_power and type( heal_power ) != "number" then argerror( 3, "HealingEvent", "nil or number", type( heal_power ) ) end
+		if missing_hp and type( missing_hp ) != "number" then argerror( 4, "HealingEvent", "nil or number", type( missing_hp ) ) end
 
-		print( "Heal event", heal, self.healable_pool, missing_hp )
+		heal_power = heal_power or 0
 
 		if !missing_hp then
 			missing_hp = self.Player:GetMaxHealth() - self.Player:Health()
@@ -245,6 +300,10 @@ do
 			missing_hp = 0
 		end
 
+		self:RedemptionEvent( ply, heal, "heal" )
+
+		print( "Heal event", heal, self.healable_pool, missing_hp )
+
 		if self.healable_pool > missing_hp then
 			self.healable_pool = missing_hp
 		end
@@ -253,15 +312,14 @@ do
 			heal = self.healable_pool
 		end
 
-		print( "Heal final", heal )
+		print( "Heal final", heal, self.healable_pool - heal )
 
-		if heal <= 0 then
+		if heal <= 0 and heal_power <= 0 then
 			return 0
 		end
 
 		self.healable_pool = self.healable_pool - heal
-
-		self:SupportEvent( ply, heal, HEALING_EVENTS_TIMEOUT )
+		self:SupportEvent( ply, math.max( heal, heal_power ), HEALING_EVENTS_TIMEOUT )
 
 		return heal
 	end
@@ -304,7 +362,7 @@ do
 
 		local killer_valid = IsValid( killer )
 		local killer_is_player = killer_valid and killer:IsPlayer()
-		local killer_name = killer_is_player and killer:Nick() or killer:GetName()
+		local killer_name = killer_is_player and killer:Nick() or killer_valid and killer:GetName() or "NULL"
 
 		local taken_by_player = self:CollectTakenByPlayer()
 
@@ -316,6 +374,7 @@ do
 			//damage_taken = self.damage_taken_events,
 			taken_by_player = taken_by_player,
 			assist_events = self.assist_events,
+			redemption_events = self.redemption_events,
 			kills = self.kills,
 		}
 
@@ -357,13 +416,13 @@ do
 			dealt = send_dealt,
 			taken = send_taken,
 			by_player = send_by_player,
-			killer = killer:GetName(),
+			killer = killer_name,
 			team = killer_is_player and killer:SCPTeam() or nil
 		}, self.Player )
 
 		self:Reset()
 
-		if IsValid( killer ) and killer:IsPlayer() then
+		if killer_is_player then
 			killer.Logger:AddKill( self.Player )
 		end
 
@@ -398,6 +457,7 @@ do
 
 		local killer = details.killer
 		local assist_by_player = DamageLogger.CollectEvents( details.assist_events )
+		local redemption_by_player = DamageLogger.CollectEvents( details.redemption_events )
 
 		if #damage_taken == 0 and table.Count( assist_by_player ) == 0 then return end
 
@@ -413,25 +473,42 @@ do
 			if !IsValid( v.ply ) then continue end
 
 			local ply_total = v.total
-			local assist_ally = 0
-			local assist_enemy = 0
+			local dmg_ally = v.ally
+			local dmg_enemy = v.enemy
+			print( "base", v.ply, dmg_ally, dmg_enemy, ply_total )
 
 			local assist = assist_by_player[v.ply]
 			assist_by_player[v.ply] = nil
 
 			if assist then
 				ply_total = ply_total + assist.total
-				assist_ally = assist.ally
-				assist_enemy = assist.enemy
+				dmg_ally = dmg_ally + assist.ally
+				dmg_enemy = dmg_enemy + assist.enemy
 			end
+
+			print( "+ assist", v.ply, dmg_ally, dmg_enemy, ply_total )
+
+			local redemption = redemption_by_player[v.ply]
+			if redemption then
+				local tmp = redemption.ally
+
+				if tmp > dmg_ally then
+					tmp = dmg_ally
+				end
+
+				ply_total = ply_total - tmp
+				dmg_ally = dmg_ally - tmp
+			end
+
+			print( "+ redemption", v.ply, dmg_ally, dmg_enemy, ply_total )
 
 			total = total + ply_total
 
 			kill_data[i] = {
 				ply = v.ply,
 				total = ply_total,
-				rdm_pct = ( v.ally + assist_ally ) / ply_total,
-				enemy_pct = ( v.enemy + assist_enemy ) / ply_total,
+				rdm_pct = dmg_ally / ply_total,
+				enemy_pct = dmg_enemy / ply_total,
 			}
 		end
 
@@ -464,7 +541,8 @@ do
 		PrintTable( kill_data )
 
 		// 2. Calculate rewards
-		local point_for_killer = SCPTeams.PlayerDamageRelation( killer, self.Player ) == nil
+		local killer_relation = SCPTeams.PlayerDamageRelation( killer, self.Player )
+		local point_for_killer = killer_relation == true and -1 or killer_relation == nil and 1
 		if point_for_killer then
 			reward_pool = reward_pool - 1
 		end
@@ -475,12 +553,13 @@ do
 
 		for i, v in ipairs( kill_data ) do
 			local dmg_pct = v.total / total
+			local rdm_ratio = v.enemy_pct - 2 * v.rdm_pct
 			local raw_reward = dmg_pct * reward_pool
 			local int_reward = math.floor( raw_reward )
-			local ply_reward = math.Round( int_reward * ( v.enemy_pct - 2 * v.rdm_pct ) )
+			local ply_reward = math.Round( int_reward * rdm_ratio )
 
 			rewards[v.ply] = { reward = ply_reward, dmg = v.total, pct = dmg_pct }
-			remainders[i] = { ply = v.ply, remainder = raw_reward - int_reward }
+			remainders[i] = { ply = v.ply, remainder = raw_reward - int_reward, ratio = rdm_ratio }
 
 			remaining_pool = remaining_pool - int_reward
 		end
@@ -490,7 +569,7 @@ do
 				rewards[killer] = { reward = 0, dmg = 0, pct = 0 }
 			end
 
-			rewards[killer].reward = rewards[killer].reward + 1
+			rewards[killer].reward = rewards[killer].reward + point_for_killer
 		end
 
 		print( "PHASE 2 - rewards first pass", remaining_pool )
@@ -503,7 +582,7 @@ do
 		for i, v in ipairs( remainders ) do
 			if remaining_pool <= 0 then break end
 
-			rewards[v.ply].reward = rewards[v.ply].reward + 1
+			rewards[v.ply].reward = rewards[v.ply].reward + ( v.ratio == 0 and 0 or v.ratio < 0 and -2 or 1 )
 			remaining_pool = remaining_pool - 1
 		end
 
@@ -527,8 +606,11 @@ do
 				total_power = SUPPORT_THRESHOLD
 			end
 
+			local half_reward = math.ceil( reward.reward * 0.5 )
+
 			for supporting_ply, power_data in pairs( support_by_player ) do
-				local support_reward = math.floor( reward.reward * 0.5 * ( power_data.ally + power_data.neutral ) / total_power )
+				local support_reward = math.floor( half_reward * ( power_data.ally + power_data.neutral ) / total_power )
+				print( "support", supporting_ply, reward.reward, total_power, reward.reward * 0.5 * ( power_data.ally + power_data.neutral ) / total_power )
 
 				if rewards[supporting_ply] then
 					rewards[supporting_ply].reward = rewards[supporting_ply].reward + support_reward
@@ -567,6 +649,7 @@ do
 	---------------------------------------------------------------------------]]--
 	function DamageLogger:Reset( round_reset )
 		self.healable_pool = 0
+		self.redemption_pool = 0
 
 		self.kills = {}
 
@@ -575,6 +658,7 @@ do
 
 		self.assist_events = {}
 		self.support_events = {}
+		self.redemption_events = {}
 
 		if round_reset then
 			self.death_details = nil
@@ -655,7 +739,7 @@ do
 			local ply_power_neutral = 0
 
 			for i, v in ipairs( events ) do
-				if v.timeout > 0 and v.timeout < ct then continue end
+				if v.timeout and v.timeout > 0 and v.timeout < ct then continue end
 
 				ply_power_total = ply_power_total + v.power
 

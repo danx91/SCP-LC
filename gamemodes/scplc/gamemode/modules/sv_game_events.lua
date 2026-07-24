@@ -414,7 +414,6 @@ local function omega_shelter()
 	local xp = CVAR.slc_xp_omega_shelter:GetInt()
 	for i, v in ipairs( SCPTeams.GetPlayersByInfo( SCPTeams.INFO_HUMAN ) ) do
 		if v:GetPos():WithinAABox( OMEGA_SHELTER[1], OMEGA_SHELTER[2] ) then
-			//CenterMessage( string.format( "offset:75;escaped#255,0,0,SCPHUDVBig;shelter_escape;escapexp$%d", xp ), v )
 			InfoScreen( v, "escaped", INFO_SCREEN_DURATION, {
 				"escape3",
 				{ "escape_xp", "text;"..xp }

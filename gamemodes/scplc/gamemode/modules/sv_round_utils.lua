@@ -37,21 +37,26 @@ local function select_weighted( tab, total_weight, rem )
 	end
 end
 
-local function assign_scps( plys, num )
+local function assign_scps( plys, num, multibreach )
 	if num <= 0 then return {} end
 
 	local skip_filter = CVAR.slc_scp_filter_last:GetInt() != 1
+	local scp_exclude = GetRoundProperty( "slc_exclude_scps", {} )
 	local scp_list = {}
 
 	-- Filter last round SCP
 	//print( "Collecting SCPS", skip_filter )
 	for i, v in ipairs( SCPS ) do
-		if skip_filter or !ROUND.LastRoundSCPs or !ROUND.LastRoundSCPs[v] then
-			//print( "Add", v )
-			table.insert( scp_list, v )
-		else
-			//print( "Skip", v )
-		end
+		if !skip_filter and ROUND.LastRoundSCPs and ROUND.LastRoundSCPs[v] then continue end
+		if scp_exclude[v] then continue end
+
+		table.insert( scp_list, v )
+	end
+
+	local multi_scp
+
+	if multibreach then
+		multi_scp = scp_list[SLCRandom( #scp_list )]
 	end
 
 	-- Calculate select chances
@@ -113,7 +118,7 @@ local function assign_scps( plys, num )
 			break
 		end
 
-		local scp = table.remove( scp_list, SLCRandom( #scp_list ) )
+		local scp = multi_scp or table.remove( scp_list, SLCRandom( #scp_list ) )
 		local obj = GetSCP( scp )
 
 		//print( "Selected", ply, scp )
@@ -143,9 +148,9 @@ function get_player_classes( plys, groups )
 	for _, ply in ipairs( plys ) do
 		local ply_tab = {}
 		player_classes[ply] = ply_tab
-	
+
 		//print( "> "..tostring( ply ) )
-	
+
 		for group, classes in pairs( groups ) do
 			//print( "  > "..group )
 
@@ -292,18 +297,13 @@ function assign_classes( groups, assigned_groups, player_classes )
 		local group_tab = groups[group]
 		local group_total = #plys
 
-		//print( "Processing", group, #plys )
-
 		for i, ply in ipairs( plys ) do
-			//print( "  > "..tostring(ply) )
 			local ply_classes = player_classes[ply][group]
 
 			while ply_classes.total_weight > 0 do
 				local tmp_class = select_weighted( ply_classes, true )
 				local tmp_data = group_tab[tmp_class]
 				local select_group = tmp_data.select_group or tmp_class
-
-				//Msg( "    > "..tmp_class )
 
 				if !classes_in_use[tmp_class] then
 					classes_in_use[tmp_class] = 0
@@ -340,7 +340,7 @@ function assign_classes( groups, assigned_groups, player_classes )
 	return assigned_classes
 end
 
-function SetupPlayers()
+function SetupPlayers( multibreach )
 	local active_plys = GetActivePlayers()
 	local plys_num = #active_plys
 	local scp_num = 0
@@ -355,8 +355,12 @@ function SetupPlayers()
 	//print( "==================================" )
 
 	//print( "=== Assigning SCPs ===" )
-	local assigned_scps = assign_scps( active_plys, scp_num )
-	hook.Run( "SLCAlterAssignedSCPs", assigned_scps )
+	local assigned_scps
+
+	if !GetRoundRule( "no-scp" ) then
+		assigned_scps = assign_scps( active_plys, scp_num, multibreach )
+		hook.Run( "SLCAlterAssignedSCPs", assigned_scps )
+	end
 	//print( "==================================" )
 
 	for i, v in ipairs( active_plys ) do
@@ -394,20 +398,22 @@ function SetupPlayers()
 		scps = {}
 	}
 
-	local penalty = CVAR.slc_scp_penalty:GetInt()
-	local ppenalty = CVAR.slc_scp_premium_penalty:GetInt()
+	if assigned_scps then
+		local penalty = CVAR.slc_scp_penalty:GetInt()
+		local ppenalty = CVAR.slc_scp_premium_penalty:GetInt()
 
-	for ply, scp in pairs( assigned_scps ) do
-		local obj = GetSCP( scp )
-		obj:SetupPlayer( ply )
-		
-		ply:SetSCPPenalty( ply:IsPremium() and ppenalty or penalty )
-		
-		ply:SetInitialTeam( TEAM_SCP )
-		table.insert( initial_teams_plys.scps, ply )
-		initial_teams.scps[ply] = { TEAM_SCP, TEAM_SCP }
+		for ply, scp in pairs( assigned_scps ) do
+			local obj = GetSCP( scp )
+			obj:SetupPlayer( ply )
 
-		print( "Spawning '"..ply:Nick().."' as '"..obj.name.."' [SCP]" )
+			ply:SetSCPPenalty( ply:IsPremium() and ppenalty or penalty )
+
+			ply:SetInitialTeam( TEAM_SCP )
+			table.insert( initial_teams_plys.scps, ply )
+			initial_teams.scps[ply] = { TEAM_SCP, TEAM_SCP }
+
+			print( "Spawning '"..ply:Nick().."' as '"..obj.name.."' [SCP]" )
+		end
 	end
 	//print( "==================================" )
 	//print( "=== Spawning classes ===" )
@@ -699,7 +705,7 @@ function SpawnSupport( group_override )
 
 	//Get support group and its data
 	local group_name, group_data
-	
+
 	if group_override then
 		group_name = group_override
 		group_data = GetSupportData( group_override )
@@ -787,7 +793,6 @@ function SpawnSupport( group_override )
 		end
 
 		if available_classes.total_weight <= 0 then
-			//print( "Player has no support classes", ply, group_name )
 			table.insert( unused_players, ply )
 			continue
 		end

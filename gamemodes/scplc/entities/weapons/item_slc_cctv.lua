@@ -162,6 +162,8 @@ hook.Add( "ShouldDrawLocalPlayer", "SLCCCTVRender", function( ply )
 	if ply.InCCTVRender then return true end
 end )
 
+SWEP.NextTextLine = 0
+
 function SWEP:PrimaryAttack()
 	if self:GetBattery() <= 0 or !self:CanEnable() or self:GetState() == STATE_LOADING then return end
 

@@ -158,4 +158,4 @@ function SWEP:DrawWorldModel()
     self:DrawModel()
 end
 
-MarkAsWeapon( "weapon_taser" )
+MarkAsWeapon( "weapon_taser", "defense" )

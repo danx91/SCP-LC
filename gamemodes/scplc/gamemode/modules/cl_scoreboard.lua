@@ -57,7 +57,6 @@ local custom_badges = {
 		color = Color( 190, 50, 150 ),
 		func = "76561198110788144"
 	},*/
-	
 }
 
 --[[-------------------------------------------------------------------------
@@ -104,7 +103,7 @@ local function fetch_web_badges()
 			badges = badges + 1
 			users = users + #v.ids
 		end
-		
+
 		web_badges_status = 2
 		print( "Badges fully loaded!", "Badges: "..badges, "Users: "..users )
 	end, function( err )
@@ -206,7 +205,7 @@ end
 
 function GM:ScoreboardShow()
 	if RunGUISkinFunction( "eq", "is_visible" ) then return end
-	
+
 	ScoreboardVisible = true
 	ShowGUIElement( "scoreboard" )
 end

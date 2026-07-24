@@ -63,6 +63,16 @@ local SHADER_MATRIX = Matrix()
 --[[-------------------------------------------------------------------------
 Internal - sets parameters of the shader and draws it
 ---------------------------------------------------------------------------]]
+local function srgb_to_linear( x )
+	/*if x <= 0.04045 then
+		return x / 12.92
+	else
+		return ( ( x + 0.055 ) / 1.055 ) ^ 2.4
+	end*/
+
+	return x ^ 2.2
+end
+
 local function draw_circle_shader(
 	x, 			y, 				size,
 	radius, 	inner_radius, 	cap_radius,
@@ -94,9 +104,9 @@ local function draw_circle_shader(
 	local h_eff = (r_eff - i_eff) * 0.5
 
 	SHADER_MATRIX:SetUnpacked(
-		radius, 		cap_radius,	math.sin( rotation_rad ),		outline_r / 255,
-		inner_radius, 	r_eff,		math.cos( rotation_rad ),		outline_g / 255,
-		outline, 		i_eff,		math.sin( corrected_angle ), 	outline_b / 255,
+		radius, 		cap_radius,	math.sin( rotation_rad ),		srgb_to_linear( outline_r / 255 ),
+		inner_radius, 	r_eff,		math.cos( rotation_rad ),		srgb_to_linear( outline_g / 255 ),
+		outline, 		i_eff,		math.sin( corrected_angle ), 	srgb_to_linear( outline_b / 255 ),
 		angle,			h_eff,		math.cos( corrected_angle ),	texture and 1 or 0
 	)
 

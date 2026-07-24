@@ -483,4 +483,4 @@ sound.Add( {
 	channel = CHAN_STATIC,
 } )
 
-MarkAsWeapon( "weapon_slc_pc" )
+MarkAsWeapon( "weapon_slc_pc", "range" )

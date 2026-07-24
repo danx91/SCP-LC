@@ -5,7 +5,7 @@ It follows MDN description of promise and guarantees:
 	2. Callbacks will be called even if they were added after promise was resolved or rejected
 	3. Multiple callbacks can be added. They will be invoked one after another, in the order in which they were added
 	4. IMPORTANT: All LUA errors inside promise ARE REDIRECTED to catch method and will produce no error!
-	5. Returning promise in Finally, adds it to execution chain, but returned value is ignored
+	5. Returning promise in Finally, adds it to the execution chain, but returned value is ignored
 
 Promises support chaining and internal error catching.
 For more info how to use promises, visit: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Using_promises
@@ -68,7 +68,7 @@ local function error_handler( err )
 	print( "Error in promise:" )
 	print( debug.traceback( err, 2 ) )
 	print()
-	
+
 	return err
 end
 

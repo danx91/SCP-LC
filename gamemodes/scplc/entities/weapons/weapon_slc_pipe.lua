@@ -186,4 +186,4 @@ function SWEP:DoAttack()
 end
 
 AddWeaponLoadout( "weapon_slc_pipe", nil, "melee_low" )
-MarkAsWeapon( "weapon_slc_pipe" )
+MarkAsWeapon( "weapon_slc_pipe", "melee" )

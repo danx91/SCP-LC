@@ -61,7 +61,7 @@ end
 
 function SLCInitializeMySQL()
 	if mysqloo then return end
-	
+
 	print( "Loading MySQL..." )
 
 	require( "mysqloo" )
@@ -236,7 +236,7 @@ function SQL:FormatQueryString( query, ... )
 
 	return string.gsub( query, "%?([%!%d]*)", function( num )
 		local raw = false
-		
+
 		if num[1] == "!" then
 			raw = true
 			num = tonumber( string.sub( num, 2 ) )
@@ -261,7 +261,7 @@ function SQL:FormatQueryString( query, ... )
 		elseif raw then
 			return self:Escape( rep )
 		else
-			return "'"..self:Escape( rep ).."'" 
+			return "'"..self:Escape( rep ).."'"
 		end
 	end )
 end
@@ -272,7 +272,7 @@ function SQL:FormatTableString( query, tab )
 	for k, v in pairs( tab ) do
 		local key = self:Escape( k )
 		local value = v
-		
+
 		if isbool( value ) then
 			value = value and "TRUE" or "FALSE"
 		elseif !isnumber( value ) then

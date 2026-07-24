@@ -266,8 +266,13 @@ local function setup_scp_internal( self, ply, ... )
 
 	ply:SetModelScale( basestats.model_scale or 1 )
 
-	ply:SetHealth( basestats.base_health or 1500 )
-	ply:SetMaxHealth( basestats.max_health or 1500 )
+	local health_mult = GetRoundModifier( "health-value", 1 )
+
+	basestats.base_health = ( basestats.base_health or 1500 ) * health_mult
+	basestats.max_health = ( basestats.max_health or 1500 ) * health_mult
+
+	ply:SetHealth( basestats.base_health )
+	ply:SetMaxHealth( basestats.max_health )
 
 	ply:SetBaseSpeed( basestats.base_speed or 200, basestats.run_speed or basestats.base_speed or 200, 0.4 )
 	ply:SetJumpPower( basestats.jump_power or 200 )
@@ -304,7 +309,7 @@ local function setup_scp_internal( self, ply, ... )
 	ply.SCPData = basestats
 
 	hook.Run( "SLCSCPSetup", ply, self.name )
-	
+
 	if self.post then
 		self.post( ply, ... )
 	end

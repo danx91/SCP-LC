@@ -266,6 +266,8 @@ function assert_warn( b, s )
 	if !b then
 		SLCErrorMessage( "WARNING! "..s.."\n" )
 	end
+
+	return b
 end
 
 function printf( ... )

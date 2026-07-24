@@ -43,20 +43,12 @@ function ENT:Initialize()
 	end
 end
 
-ENT.NCheck = 0
-function ENT:Think()
-	if CLIENT then return end
+function ENT:CheckRemove()
+	self:CheckListeners()
 
-	local rt = RealTime()
-	if self.NCheck <= rt then
-		self.NCheck = rt + 1
-
-		self:CheckListeners()
-
-		if self.RemoveOnEmpty and !next( self.LootItems ) then
-			self:DropAllListeners()
-			self:Remove()
-		end
+	if self.RemoveOnEmpty and !next( self.LootItems ) then
+		self:DropAllListeners()
+		self:Remove()
 	end
 end
 

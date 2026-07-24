@@ -239,6 +239,7 @@ if SERVER then
 			Vector( -1444.00, 3328.00, 47.00 ),
 			Vector( 1687.00, 4177.00, 11.00 ),
 		},
+		tags = { "item", "weapon", "scp" },
 		post_tab = post,
 	}, true )
 
@@ -247,6 +248,7 @@ if SERVER then
 		spawns = {
 			Vector( 2403.00, 880.00, 42.00 )
 		},
+		tags = { "item", "scp" },
 		post_tab = post,
 	}, true )
 
@@ -255,6 +257,7 @@ if SERVER then
 		spawns = {
 			Vector( 2400.00, 1295.00, 50.00 )
 		},
+		tags = { "item", "scp" },
 		post_tab = post,
 	}, true )
 
@@ -280,6 +283,7 @@ if SERVER then
 			Vector( -3711.00, 3161.00, 11.00 ),
 			Vector( -527.00, 4436.00, -24.00 ),
 		},
+		tags = { "loot", "item", "scp", "healing" },
 		post_tab = post,
 	}, true )
 
@@ -305,6 +309,7 @@ if SERVER then
 			Vector( -444.00, 4262.00, 11.00 ),
 			Vector( 989.00, 3014.00, 11.00 ),
 		},
+		tags = { "scp", "hazard" },
 		post_tab = post,
 	}, true )
 
@@ -321,6 +326,7 @@ if SERVER then
 			Vector( -34.00, 807.00, 11.00 ),
 			Vector( 1408.00, -1131.00, 45.00 ),
 		},
+		tags = { "loot", "item", "access" },
 		post_tab = post,
 	}, true )
 
@@ -332,6 +338,7 @@ if SERVER then
 			Vector( 4466.00, 525.00, 11.00 ),
 			Vector( 4125.00, 2257.00, 47.00 ),
 		},
+		tags = { "loot", "item", "access" },
 		post_tab = post,
 	}, true )
 
@@ -341,6 +348,7 @@ if SERVER then
 		spawns = {
 			Vector( 436.00, 3346.00, -77.00 ),
 		},
+		tags = { "loot", "item", "access" },
 		post_tab = post,
 	}, true )
 
@@ -360,6 +368,7 @@ if SERVER then
 			Vector( -334.00, 790.00, 40.00 ),
 			Vector( -1473.00, 305.00, -117.00 ),
 		},
+		tags = { "loot", "item", "access" },
 		post_tab = post,
 	}, true )
 
@@ -373,6 +382,7 @@ if SERVER then
 			Vector( 769.00, 153.00, 11.00 ),
 			Vector( 484.00, -330.00, 11.00 ),
 		},
+		tags = { "loot", "item", "access" },
 		post_tab = post,
 	}, true )
 
@@ -389,6 +399,7 @@ if SERVER then
 			Vector( -1376.00, -18.00, 228.00 ),
 			Vector( -1134.00, 1918.00, 132.00 ),
 		},
+		tags = { "loot", "item", "access" },
 		post_tab = post,
 	}, true )
 
@@ -402,6 +413,7 @@ if SERVER then
 			Vector( 2276.00, 2369.00, 11.00 ),
 			Vector( 2078.00, 4109.00, 12.00 ),
 		},
+		tags = { "loot", "item", "access" },
 		post_tab = post,
 	}, true )
 
@@ -415,6 +427,7 @@ if SERVER then
 			Vector( 2009.00, 1604.00, 47.00 ),
 			Vector( 5544.00, 613.00, -61.00 ),
 		},
+		tags = { "loot", "item", "access" },
 		post_tab = post,
 	}, true )
 
@@ -426,6 +439,7 @@ if SERVER then
 			Vector( 1713.00, 3941.00, 47.00 ),
 			Vector( -988.00, 2667.00, 24.00 ),
 		},
+		tags = { "loot", "item", "access" },
 		post_tab = post,
 	}, true )
 
@@ -443,6 +457,7 @@ if SERVER then
 			Vector( 1138.00, 657.00, 11.00 ),
 			Vector( -1567.00, -524.00, 40.00 ),
 		},
+		tags = { "loot", "item", "electrical" },
 		post_tab = post,
 	}, true )
 
@@ -456,6 +471,7 @@ if SERVER then
 			Vector( 2262.00, 1608.00, 39.00 ),
 			Vector( 2365.00, 5038.00, -245.00 ),
 		},
+		tags = { "loot", "item", "electrical" },
 		post_tab = post,
 	}, true )
 
@@ -468,6 +484,7 @@ if SERVER then
 			Vector( -1850.00, 2471.00, -117.00 ),
 			Vector( -2559.00, 4120.00, 267.00 ),
 		},
+		tags = { "loot", "item", "electrical" },
 		post_tab = post,
 	}, true )
 
@@ -497,6 +514,7 @@ if SERVER then
 			Vector( 2676.00, 100.00, 47.00 ),
 			Vector( 1150.00, 721.00, 11.00 ),
 		},
+		tags = { "loot", "item", "healing" },
 		post_tab = post,
 	}, true )
 
@@ -524,6 +542,7 @@ if SERVER then
 			Vector( 450.00, -77.00, 11.00 ),
 			Vector( -41.00, 1990.00, 139.00 ),
 		},
+		tags = { "loot", "item" },
 		post_tab = post,
 	}, true )
 
@@ -544,6 +563,7 @@ if SERVER then
 			Vector( 2811.00, 1659.00, 11.00 ),
 			Vector( 2918.00, 3252.00, -372.00 ),
 		},
+		tags = { "loot", "item" },
 		post_tab = post,
 	}, true )
 
@@ -555,6 +575,7 @@ if SERVER then
 			Vector( -1022.00, 3952.00, -53.00 ),
 			Vector( 1428.00, 1948.00, 47.00 ),
 		},
+		tags = { "loot", "item" },
 		post_tab = post,
 	}, true )
 
@@ -574,6 +595,7 @@ if SERVER then
 			Vector( 2625.00, -1132.00, -21.00 ),
 			Vector( 765.00, 1850.00, 139.00 ),
 		},
+		tags = { "loot", "item", "weapon", "melee" },
 		post_tab = post,
 	}, true )
 
@@ -585,6 +607,7 @@ if SERVER then
 			Vector( 5510.00, 250.00, 12.00 ),
 			Vector( 4582.00, 3719.00, 11.00 ),
 		},
+		tags = { "loot", "item", "weapon", "melee" },
 		post_tab = post,
 	}, true )
 
@@ -610,6 +633,7 @@ if SERVER then
 			Vector( 5307.00, 4708.00, -1100.00 ),
 			Vector( 5334.00, 3762.00, -1090.00 ),
 		},
+		tags = { "loot", "item", "valuable" },
 		post_tab = post,
 	}, true )
 	--[[-------------------------------------------------------------------------
@@ -651,6 +675,7 @@ if SERVER then
 			Vector( -1238.00, 3750.00, -60.00 ),
 			Vector( -3843.00, 2296.00, 11.00 ),
 		},
+		tags = { "loot", "item" },
 		post_tab = post,
 	}, true )
 
@@ -696,6 +721,7 @@ if SERVER then
 			Vector( 1300.00, -1550.00, 11.00 ),
 			Vector( 1450.00, -1550.00, 11.00 ),
 		},
+		tags = { "ammo" },
 		post_tab = {
 			ResupplyMultiplier = 8,
 			AmmoCapacity = 15
@@ -719,6 +745,7 @@ if SERVER then
 			Vector( -751.00, 4351.00, -53.00 ),
 			Vector( 873.00, 4574.00, 11.00 ),
 		},
+		tags = { "ammo" },
 		post_tab = {
 			ResupplyMultiplier = 2,
 			AmmoCapacity = 5
@@ -736,6 +763,7 @@ if SERVER then
 			Vector( -2600.00, 7216.00, 3115.00 ),
 			Vector( 622.00, 6723.00, 2187.00 ),
 		},
+		tags = { "ammo" },
 		post_tab = {
 			ResupplyMultiplier = 4,
 			AmmoCapacity = 10
@@ -750,6 +778,7 @@ if SERVER then
 		spawns = {
 			Vector( 3577.00, 1715.00, 60.00 )
 		},
+		tags = { "loot", "item", "weapon", "superweapon", "gun", "valuable" },
 		post_tab = post,
 	}, true )
 
@@ -769,6 +798,7 @@ if SERVER then
 			Vector( 480.00, 2468.00, 47.00 ),
 			Vector( 786.00, 4579.00, 11.00 ),
 		},
+		tags = { "loot", "item", "weapon", "gun" },
 		post_tab = post,
 	}, true )
 
@@ -784,6 +814,7 @@ if SERVER then
 			Vector( 7416.00, 5633.00, -1141.00 ),
 			Vector( 6514.00, 3686.00, -1139.00 ),
 		},
+		tags = { "loot", "item", "weapon", "gun" },
 		post_tab = post,
 	}, true )
 
@@ -795,6 +826,7 @@ if SERVER then
 			Vector( -3146.00, 5326.00, 2187.00 ),
 			Vector( -678.00, 4916.00, 2571.00 ),
 		},
+		tags = { "loot", "item", "weapon", "gun" },
 		post_tab = post,
 	}, true )
 
@@ -806,6 +838,7 @@ if SERVER then
 			Vector( -5549.00, 2768.00, 2571.00 ),
 			Vector( -7349.00, 1725.00, 2571.00 ),
 		},
+		tags = { "loot", "item", "weapon", "gun" },
 		post_tab = post,
 	}, true )
 
@@ -819,6 +852,7 @@ if SERVER then
 			Vector( -2521.00, 6610.00, 3115.00 ),
 			Vector( -2741.00, 7375.00, 3115.00 ),
 		},
+		tags = { "loot", "item", "weapon", "gun" },
 		post_tab = post,
 	}, true )
 
@@ -839,6 +873,7 @@ if SERVER then
 			Vector( 1350, -1406, 52 ),
 			Vector( 1275, -1406, 52 ),
 		},
+		tags = { "loot", "item", "weapon", "gun" },
 		post_tab = post,
 	}, true )
 
@@ -859,6 +894,7 @@ if SERVER then
 			Vector( 1350, -1700, 52 ),
 			Vector( 1275, -1700, 52 ),
 		},
+		tags = { "loot", "item", "weapon", "gun" },
 		post_tab = post,
 	}, true )
 
@@ -867,6 +903,7 @@ if SERVER then
 		spawns = {
 			Vector( 1585.00, -1563.00, 11.00 )
 		},
+		tags = { "loot", "item", "weapon", "gun" },
 		post_tab = post,
 	}, true )
 
@@ -900,6 +937,7 @@ if SERVER then
 			Vector( 404.00, 2466.00, 1.00 ),
 			Vector( -2975.00, 3776.00, 257.00 ),
 		},
+		tags = { "vest", "protection" },
 		post_tab = post,
 	}, true )
 
@@ -917,6 +955,7 @@ if SERVER then
 
 			Vector( -798.00, 3045.00, 20.00 ),
 		},
+		tags = { "vest", "protection" },
 		post_tab = post,
 	}, true )
 
@@ -944,6 +983,7 @@ if SERVER then
 			Vector( -447.00, 2203.00, 11.00 ),
 			Vector( -2201.00, 3010.00, 11.00 ),
 		},
+		tags = { "item", "utility" },
 		post_tab = post,
 	}, true )
 end

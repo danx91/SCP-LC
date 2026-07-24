@@ -28,7 +28,7 @@ function ENT:Initialize()
 		self:PhysicsInit( SOLID_NONE )
 
 		self:EmitSound( "General.BurningObject" )
-		
+
 		if self:Get_DieTime() == 0 then
 			self:Set_DieTime( CurTime() + self:Get_BurnTime() )
 		end
@@ -114,13 +114,13 @@ function ENT:Think()
 
 	if self.Radius <= 0 or self.Power < 20 then return end
 
-	for k, v in pairs( FindInCylinder( self:GetPos() + self.Offset, self.Radius, -48, 48, nil, MASK_SOLID_BRUSHONLY, player.GetAll() ) ) do
+	for k, v in ipairs( FindInCylinder( self:GetPos() + self.Offset, self.Radius, -48, 48, nil, MASK_SOLID_BRUSHONLY, player.GetAll() ) ) do
 		if !v:IsPlayer() or v == parent or v:SCPTeam() == TEAM_SPEC or !self.HurtOwner and v == owner then continue end
 		if IsValid( owner ) and owner:IsPlayer() and owner:SCPTeam() == TEAM_SCP and v:SCPTeam() == TEAM_SCP then continue end
 
 		if final_dmg > 0 then
 			local dmg = DamageInfo()
-			
+
 			dmg:SetDamage( final_dmg * 0.5 )
 			dmg:SetDamageType( DMG_BURN )
 			dmg:SetInflictor( self )

@@ -78,6 +78,7 @@ hook.Add( "SLCRegisterSettings", "SLCHUDSettings", function()
 	RegisterSettingsEntry( "hud_hl2_crosshair", "switch", false, nil, "hud_config" )
 	RegisterSettingsEntry( "hud_timer_always", "switch", false, nil, "hud_config" )
 	RegisterSettingsEntry( "hud_stamina_always", "switch", false, nil, "hud_config" )
+	RegisterSettingsEntry( "hud_show_round_summary", "switch", true, nil, "hud_config" )
 
 	RegisterSettingsEntry( "hud_windowed_mode", "switch", false, nil, "skins" )
 	RegisterSettingsEntry( "hud_escort", "switch", true, {
@@ -440,7 +441,7 @@ function GM:DrawOverlay()
 
 				while sum > 0 do
 					local rem = math.min( sum, show_xp + 1 )
-					
+
 					if rem <= show_xp then
 						show_xp = show_xp - rem
 					else
@@ -695,7 +696,7 @@ end
 Escape zones
 ---------------------------------------------------------------------------]]
 
-local function draw_stripped_box( x, y, w, h, len, dist, thick ) 
+local function draw_stripped_box( x, y, w, h, len, dist, thick )
 	local x_num = math.floor( ( w - dist * 4 ) / len )
 	local x_len = ( w - dist - thick * 2 ) / x_num
 
@@ -768,7 +769,7 @@ function draw_escort_zones()
 		cam.End3D2D()
 
 		local ang = Angle( 0, 0, 90 )
-		
+
 		ang.y = ( ply:GetPos() - p_mid ):Angle().y + 90
 
 		if alpha2 < alpha then
