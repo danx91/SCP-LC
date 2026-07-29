@@ -17,10 +17,18 @@ teams.CI = "CI"
 teams.GOC = "GOC"
 teams.SCP = "SCP"
 
+local groups = {}
+lang.TEAM_GROUPS = groups
+
+groups.scp = "SCPs"
+groups.staff = "Fundacja"
+groups.classd_ci = "Buntownicy"
+groups.goc = "GOC"
+
 --[[-------------------------------------------------------------------------
 Classes
 ---------------------------------------------------------------------------]]
-lang.UNK_CLASSES = { 
+lang.UNK_CLASSES = {
 	CLASSD = "Nieznana Klasa D",
 	SCI = "Nieznany Naukowiec",
 	GUARD = "Nieznany Ochroniarz",
@@ -756,7 +764,7 @@ Eskortowany przez: Nikogo
 Przegląd:
 Jednostka Rebelii Chaosu. Wyższy potencjał bojowy. Wejdź do placówki, pomóż klasie D i zabij personel placówki.
 ]],
-	
+
 	cimedic = [[Poziom trudności: Średni
 Wytrzymałość: Wysoka
 Zwinność: Wysoka

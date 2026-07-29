@@ -2,16 +2,18 @@
 Round Modifiers
 ---------------------------------------------------------------------------]]
 hook.Add( "SLCRegisterRoundModifiers", "SLCBaseRoundModifiers", function()
-	RegisterRoundModifier( "loot-value", 0.1, 3, 1, 0.85, false, 0.7 )
-	RegisterRoundModifier( "health-value", 0.1, 3, 1, 0.33, false, 0.25 )
+	RegisterRoundModifier( "loot-value", 0.1, 3, 1, 0.85, false, 0.666 )
+	RegisterRoundModifier( "health-value", 0.1, 3, 1, 0.5, false, 0.2 )
 
-	RegisterRoundModifier( "light-value", 1, 16, 12, 0.5, true, 0.5 )
+	RegisterRoundModifier( "light-value", 1, 16, 12, 1, true, 0.333 )
 
 	RegisterRoundModifier( "time-value", -2, 2, 0, 0.75, false, 0.05 )
 	RegisterRoundModifier( "gravity-value", 0.1, 1.5, 1, 0.75, false, 0.05 )
 end )
 
 hook.Add( "SLCRoundInit", "SLCBaseModifiers", function()
+	if CLIENT then return end
+
 	local light_value = GetRoundModifier( "light-value", 12 )
 	engine.LightStyle( 0, string.char( 97 + light_value ) )
 	BroadcastLua( "render.RedownloadAllLightmaps( true )" )
@@ -42,11 +44,14 @@ hook.Add( "SLCRegisterRoundRules", "SLCBaseRoundRules", function()
 			end
 
 			return { class = "loadout:melee_mid!", weight = item.weight, value = item.value, max = item.max }
-		end ) --TEST
+		end )
 
-		OverrideLoadoutWeapon( true, nil, "loadout:melee_mid" ) --TEST
+		OverrideLoadoutWeapon( function( class )
+			local is_wep, tag = IsAttackWeaponClass( class )
+			if is_wep and tag != "melee" then return "loadout:melee_mid" end
+		end )
 
-		OverrideSpawnRuleTag( { "ammo", "gun" }, { item = "loadout:melee_mid!", copy = true } ) --TEST
+		OverrideSpawnRuleTag( { "ammo", "gun" }, { item = "loadout:melee_mid!", copy = true } )
 		OverrideSpawnRuleItem( function( item )
 			local is_wep, tag = IsAttackWeaponClass( item.class )
 			if is_wep and tag != "melee" then return true end
@@ -54,14 +59,14 @@ hook.Add( "SLCRegisterRoundRules", "SLCBaseRoundRules", function()
 			return false
 		end, function( item )
 			return { class = "loadout:melee_mid!", weight = item.weight, max = item.max }
-		end ) --TEST
+		end )
 
-		SetRoundWeaponGroupLimit( "melee", 2 ) --TEST
+		SetRoundWeaponGroupLimit( "melee", 2 )
 
 		AddRoundHook( "SLCScaleDamage", "SLCMeleeOnlyRoundRule", function( target, info )
 			if target:SCPTeam() != TEAM_SCP then return end
 			info:ScaleDamage( 4 )
-		end ) --TEST
+		end )
 	end )
 
 	RegisterRoundRule( "lifesteal-only", 0.05, nil, nil, function()
@@ -69,8 +74,9 @@ hook.Add( "SLCRegisterRoundRules", "SLCBaseRoundRules", function()
 			return item.class == "item_slc_medkit" or item.class == "item_slc_medkitplus"
 		end, nil )
 
-		OverrideLoadoutWeapon( "item_slc_medkit", nil, "__nothing" )
-		OverrideLoadoutWeapon( "item_slc_medkitplus", nil, "__nothing" )
+		OverrideLoadoutWeapon( function( class )
+			if class == "item_slc_medkit" or class == "item_slc_medkitplus" then return "__nothing" end
+		end )
 
 		OverrideSpawnRuleItem( function( tags, item_tab, item_class )
 			return item_class == "item_slc_medkit" or item_class == "item_slc_medkitplus"
@@ -84,19 +90,15 @@ hook.Add( "SLCRegisterRoundRules", "SLCBaseRoundRules", function()
 
 		AddRoundHook( "PostEntityTakeDamage", "SLCLifestealRoundRule", function( target, info )
 			if !IsValid( target ) or !target:IsPlayer() or info:IsDamageType( DMG_DIRECT ) then return end
+			if target:SCPTeam() == TEAM_SCP then return end
 
 			local attacker = info:GetAttacker()
 			if !IsValid( attacker ) or !attacker:IsPlayer() then return end
+			if attacker:SCPTeam() == TEAM_SCP then return end
 
 			if SCPTeams.PlayerRelation( attacker, target ) != nil then return end --REVIEW PlayerDamageRelation
 
-			local heal = info:GetDamage()
-
-			if target:SCPTeam() == TEAM_SCP then
-				heal = heal * 0.1
-			else
-				heal = heal * 0.75
-			end
+			local heal = info:GetDamage() * 0.5
 
 			local health = attacker:Health() + heal
 			local max_health = attacker:GetMaxHealth()

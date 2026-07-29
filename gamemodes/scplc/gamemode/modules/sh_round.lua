@@ -62,11 +62,3 @@ function PrintSCPNotice( tab )
 		end
 	end
 end
-
-function GetRoundModifier( id, def )
-	return ROUND.modifiers[id] or def
-end
-
-function GetRoundRule( id )
-	return ROUND.rules[id]
-end

@@ -124,7 +124,7 @@ local team_groups = {
 
 local stat_types = {
 	_kills = "Kills by ",
-	_rdm = "RDMs by",
+	_rdm = "RDMs by ",
 	_dmg = "Damage dealt by ",
 	_rdmdmg = "RDM damage dealt by ",
 	_escape = "Escapes by ",
@@ -147,6 +147,51 @@ lang.ROUND_SUMMARY = {
 	mvp = "MVP",
 	no_stats = "No stats to show",
 	skip = "Press [%s] to skip summary"
+}
+
+--[[-------------------------------------------------------------------------
+Round intro
+---------------------------------------------------------------------------]]
+lang.ROUND_INTRO = {
+	round_type = "Round type",
+	round_modifiers = "Active round modifiers",
+	round_rules = "Active round rules",
+
+	modifier_levels = {
+		vlow = "Very low",
+		low = "Low",
+		normal = "Normal",
+		high = "High",
+		vhigh = "Very high",
+	},
+}
+
+--[[-------------------------------------------------------------------------
+Round modifiers
+---------------------------------------------------------------------------]]
+lang.ROUND_TYPES = {
+	["default"] = "Containment Breach",
+	["multi"] = "MultiBreach",
+}
+
+--[[-------------------------------------------------------------------------
+Round modifiers
+---------------------------------------------------------------------------]]
+lang.ROUND_MODIFIERS = {
+	["loot-value"] = "Loot value",
+	["health-value"] = "Health value",
+	["light-value"] = "Light level",
+	["time-value"] = "Time anomaly",
+	["gravity-value"] = "Gravity anomaly",
+}
+
+--[[-------------------------------------------------------------------------
+Round rules
+---------------------------------------------------------------------------]]
+lang.ROUND_RULES = {
+	["melee-only"] = "Melee only",
+	["lifesteal-only"] = "No healing, Lifesteal only",
+	["no-armor"] = "No armors",
 }
 
 --[[-------------------------------------------------------------------------

@@ -89,7 +89,7 @@ do
 	end
 
 	function RoundType:EndCheck()
-		print( "Endcheck" )
+		//print( "Endcheck" )
 		local alive_players = GetAlivePlayers()
 
 		for _, ply1 in ipairs( alive_players ) do

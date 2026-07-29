@@ -145,6 +145,7 @@ function ItemSpawnRule( name, data, auto, dest )
 				items = { tab },
 				condition = data.condition,
 				tags = CreateLookupTable( data.tags or {} ),
+				ignore_loot_value = data.ignore_loot_value,
 			}
 
 			if auto then
@@ -179,6 +180,7 @@ function ItemSpawnRule( name, data, auto, dest )
 			post_func = data.post_func,
 			condition = data.condition,
 			tags = CreateLookupTable( data.tags or {} ),
+			ignore_loot_value = data.ignore_loot_value,
 		}
 
 		if auto then
@@ -364,7 +366,7 @@ function SpawnUsingRule( name )
 	local tab = table.Copy( select_item( rule ) )
 	if !tab then return end
 
-	local loot_value = GetRoundModifier( "loot-value", 1 )
+	local loot_value =  rule.ignore_loot_value and 1 or GetRoundModifier( "loot-value", 1 )
 
 	local amount = tab.amount or tab.rand_amount and SLCRandom( tab.rand_amount[1], tab.rand_amount[2] ) or #tab.spawns
 

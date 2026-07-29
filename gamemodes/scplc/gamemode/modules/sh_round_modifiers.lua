@@ -109,6 +109,23 @@ function SelectRoundModifiers( force, whitelist, use_blacklist )
 	end
 end
 
+function GetRoundModifier( id, def )
+	local value = ROUND.modifiers[id] or def
+	local norm, base
+
+	local mod = ROUND_MODIFIERS[id]
+	if mod then
+		if !value then
+			value = mod.base
+		end
+
+		norm = ( value - mod.min ) / ( mod.max - mod.min )
+		base = mod.base
+	end
+
+	return value, norm, base
+end
+
 --[[-------------------------------------------------------------------------
 Round rules
 ---------------------------------------------------------------------------]]
@@ -269,6 +286,10 @@ function SelectRoundRules( force, whitelist, use_blacklist )
 			exclude_lookup[v] = true
 		end
 	end
+end
+
+function GetRoundRule( id )
+	return ROUND.rules[id]
 end
 
 --[[-------------------------------------------------------------------------

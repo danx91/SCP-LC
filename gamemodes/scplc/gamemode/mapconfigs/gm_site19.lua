@@ -250,6 +250,7 @@ if SERVER then
 		},
 		tags = { "item", "scp" },
 		post_tab = post,
+		ignore_loot_value = true,
 	}, true )
 
 	ItemSpawnRule( "scp1025", {
@@ -259,6 +260,7 @@ if SERVER then
 		},
 		tags = { "item", "scp" },
 		post_tab = post,
+		ignore_loot_value = true,
 	}, true )
 
 	ItemSpawnRule( "scp500", {
@@ -311,6 +313,7 @@ if SERVER then
 		},
 		tags = { "scp", "hazard" },
 		post_tab = post,
+		ignore_loot_value = true,
 	}, true )
 
 	--[[-------------------------------------------------------------------------
@@ -780,6 +783,7 @@ if SERVER then
 		},
 		tags = { "loot", "item", "weapon", "superweapon", "gun", "valuable" },
 		post_tab = post,
+		ignore_loot_value = true,
 	}, true )
 
 	ItemSpawnRule( "pistols", {

@@ -156,6 +156,52 @@ net.Receive( "RoundInfo", function( len )
 	elseif status == ROUND_STATUS_POST then
 		SLCWindowAlert()
 	end
+
+	if status == ROUND_STATUS_PREPARING then --REMOVE
+		local round_type = ROUND.roundtype or "?"
+		chat.AddText( LANG.ROUND_INTRO.round_type, ": ", Color( 200, 0, 200 ), LANG.ROUND_TYPES[round_type] or round_type )
+
+		local rules
+
+		for k, v in pairs( ROUND.rules ) do
+			if !v then continue end
+			local lng = LANG.ROUND_RULES[k] or k
+
+			if !rules then
+				rules = lng
+			else
+				rules = rules..", "..lng
+			end
+		end
+
+		if rules then
+			chat.AddText( LANG.ROUND_INTRO.round_rules, ": ", Color( 200, 0, 200 ), rules )
+		end
+
+		local mods = {}
+
+		for k, v in pairs( ROUND.modifiers ) do
+			local value, norm, base = GetRoundModifier( k )
+			if value == base then continue end
+
+			local lkey
+			if norm < 0.2 then lkey = "vlow"
+			elseif norm < 0.4 then lkey = "low"
+			elseif norm < 0.6 then lkey = "normal"
+			elseif norm < 0.8 then lkey = "high"
+			else lkey = "vhigh" end
+
+			table.insert( mods, { "\t> ", LANG.ROUND_MODIFIERS[k] or k, ": ", Color( 200, 0, 200 ), LANG.ROUND_INTRO.modifier_levels[lkey] or lkey } )
+		end
+
+		if #mods > 0 then
+			chat.AddText( LANG.ROUND_INTRO.round_modifiers, ": " )
+
+			for i, v in ipairs( mods ) do
+				chat.AddText( unpack( v ) )
+			end
+		end
+	end
 end )
 
 net.Receive( "SLCRoundProperties", function( len )

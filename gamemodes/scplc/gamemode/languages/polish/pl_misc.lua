@@ -8,9 +8,11 @@ lang.NRegistry = {
 	scpwait = "Musisz poczekać %i rundy aby zagrać jako SCP",
 	abouttostart = "Gra rozpocznie się za %i sekund!",
 	kill = "Otrzymujesz %d punktów za zabójstwo %s: %s!",
+	kill_rdm = "Tracisz %d punktów za zabójstwo %s: %s!",
 	kill_n = "Zabiłeś %s: %s!",
 	assist = "Otrzymujesz %d punktów za asystę w zabójstwie gracza: %s!",
-	rdm = "Tracisz %d punktów za zabójstwo %s: %s!",
+	assist_rdm = "Tracisz %d punktów za asystę w zabójstwie gracza: %s!",
+	kill_supp = "Otrzymujesz %d punktów za pomoc w zabójstwie gracza %s!",
 	acc_denied = "Brak dostępu",
 	acc_granted = "Dostęp przyznany",
 	acc_omnitool = "Do obsługi tych drzwi wymagany jest Omnitool",
@@ -37,8 +39,6 @@ lang.NRegistry = {
 	levelup = "Awansowałeś! Twój aktualny poziom: %i",
 	healplayer = "Otrzymujesz %i punktów za leczenie innych graczy",
 	detectscp = "Otrzymujesz %i punktów za wykrycie SCP",
-	winxp = "Otrzymujesz %i doświadczenia ponieważ twoja początkowa drużyna wygrała rundę",
-	winalivexp = "Otrzymujesz %i doświadczenia ponieważ twoja drużyna wygrała rundę",
 	upgradepoints = "Otrzymałeś punkt ulepszeń! Naciśnij '%s' aby otworzyć menu ulepszeń SCP",
 	omega_detonation = "Detonacja głowicy OMEGA za %i sekund. Wyjdź na powierzchnię lub natychmiastowo udaj się do schronu!",
 	alpha_detonation = "Detonacja głowicy ALPHA za %i sekund. Wejdź do placówki lub natychmiastowo udaj się do ewakuacji!",
@@ -80,51 +80,119 @@ lang.NRegistry = {
 lang.NFailed = "Nie udało się uzyskać dostępu do NRegistry z kluczem: %s"
 
 --[[-------------------------------------------------------------------------
-NCRegistry
+Round Stats
 ---------------------------------------------------------------------------]]
-lang.NCRegistry = {
-	escaped = "Uciekłeś!",
-	escapeinfo = "Dobra robota! Uciekłeś w %s",
-	escapexp = "Otrzymujesz %i doświadczenia",
-	escort = "Zostałeś odeskortowany!",
-	roundend = "Runda zakończona!",
-	nowinner = "Brak zwycięzcy w tej rundzie!",
-	roundnep = "Niewystarczająca liczba graczy!",
-	roundwin = "Zwycięzca rundy: %s",
-	roundwinmulti = "Zwycięzcy rundy: [RAW]",
-	shelter_escape = "Przeżyłeś eksplozję w schronie przeciwwybuchowym",
-	alpha_escape = "Uciekłeś przed wybuchem głowicy ALPHA",
+lang.ROUND_STATS = {
+	recontain106 = "SCP-106 has been recontained",
+	omega_warhead = "Omega warhead has been detonated",
+	alpha_warhead = "Alpha warhead has been detonated",
+	goc_warhead = "GOC device has been activated",
 
-	mvp = "MVP: %s z wynikiem: %i",
-	stat_kill = "Zabici gracze: %i",
-	stat_rdm = "Zabójstwa RDM: %i",
-	stat_rdmdmg = "Obrażenia RDM: %i",
-	stat_dmg = "Zadane obrażenia: %i",
-	stat_bleed = "Obrażenia od krwawienia: %i",
-	stat_106recontain = "SCP-106 został zabezpieczony",
-	stat_escapes = "Graczy uciekło: %i",
-	stat_escorts = "Graczy odeskortowano: %i",
-	stat_023 = "Nagłe zgony spowodowane przez SCP-023: %i",
-	stat_049 = "Gracze \"wyleczeni\" przez SCP-049: %i",
-	stat_0492 = "Gracze zmasakrowani przez zombie: %i",
-	stat_058 = "Gracze zabici przez SCP-058: %i",
-	stat_066 = "Gracze zabici przez głośną muzykę: %i",
-	stat_096 = "Gracze zabici przez SCP-096: %i",
-	stat_106 = "Gracze przeteleportowani do wymiaru łuzowego: %i",
-	stat_173 = "Złamane karki przez SCP-173: %i",
-	stat_457 = "Spaleni gracze: %i",
-	stat_682 = "Gracze zabici przez SCP-682: %i",
-	stat_8602 = "Gracze przybici do ściany przez SCP-860-2: %i",
-	stat_939 = "Ofiary SCP-939: %i",
-	stat_966 = "Gracze rozszarpani przez SCP-966: %i",
-	stat_3199 = "Zabójstwa dokonane przez SCP-3199: %i",
-	stat_24273 = "Osoby osądzone przez SCP-2427-3: %i",
-	stat_omega_warhead = "Głowica OMEGA została zdetonowana",
-	stat_alpha_warhead = "Głowica ALPHA została zdetonowana",
-	stat_goc_warhead = "Urządzenie GOC zostało aktywowane",
+	total_kills = "Zabici gracze: %i",
+	total_rdms = "Zabójstwa RDM: %i",
+	total_damage = "Zadane obrażenia: %i",
+	total_rdm_damage = "Obrażenia RDM: %i",
+	total_escapes = "Łącznie uciekinierów: %i",
+	total_escorts = "Łącznie odeskortowanych: %i",
+
+	bleeding = "Obrażenia od krwawienia: %i",
+	poison = "Obrażenia od trucizny: %i",
+
+	scp_023 = "Gracze zabici przez SCP-023: %i",
+	scp_049 = "Gracze wyleczeni przez SCP-049: %i",
+	scp_0492 = "Gracze zmasakrowani przez zombie: %i",
+	scp_058 = "Gracze zabici przez SCP-058: %i",
+	scp_066 = "Ilość zagranych arcydzieł przez SCP-066: %i",
+	scp_096 = "Gracze zabici przez nieśmiałego typa: %i",
+	scp_106 = "Gracze przeteleportowani do wymiaru łuzowego: %i",
+	scp_173 = "Złamane karki: %i",
+	scp_457 = "Gracze spaleni żywcem przez SCP-457: %i",
+	scp_682 = "Gracze zabici przez przerośniętego jaszczura: %i",
+	scp_8602 = "Gracze zabici przez SCP-860-2: %i",
+	scp_939 = "Ofiary SCP-939: %i",
+	scp_966 = "Uspani gracze: %i",
+	scp_3199 = "Zabójstwa dokonane przez SCP-3199: %i",
+	scp_24273 = "Osądy wydane przez SCP-2427-3: %i",
 }
 
-lang.NCFailed = "Nie udało się uzyskać dostępu do NCRegistry z kluczem: %s"
+local team_groups = {
+	scp = "SCP",
+	staff = "personel",
+	classd_ci = "buntowników",
+	goc = "GOC",
+}
+
+local stat_types = {
+	_kills = "Zabójstwa przez ",
+	_rdm = "RDMy przez ",
+	_dmg = "Obrażenia zadane przez ",
+	_rdmdmg = "Obrazenia bratobójcze ",
+	_escape = "Eskorty przez ",
+	_escort = "Odeskortowani ",
+}
+
+for group, name in pairs( team_groups ) do
+	for suffix, text in pairs( stat_types ) do
+		lang.ROUND_STATS[group..suffix] = text..name..": %i"
+	end
+end
+
+--[[-------------------------------------------------------------------------
+Round Summary
+---------------------------------------------------------------------------]]
+lang.ROUND_SUMMARY = {
+	round_end = "Koniec rundy!",
+	no_winner = "Brak zwucięzców w tej rundzie!",
+	score = "Wynik",
+	mvp = "MVP",
+	no_stats = "Brak statystyk do pokazania",
+	skip = "Naciśnij [%s] aby pominąć podsumowanie"
+}
+
+--[[-------------------------------------------------------------------------
+Round intro
+---------------------------------------------------------------------------]]
+lang.ROUND_INTRO = {
+	round_type = "Typ rundy",
+	round_modifiers = "Aktywne modyfikatory rundy",
+	round_rules = "Aktywne zasady rundy",
+
+	modifier_levels = {
+		vlow = "Bardzo niski",
+		low = "Niski",
+		normal = "Normalny",
+		high = "Wysoki",
+		vhigh = "Bardzo wysoki",
+	},
+}
+
+--[[-------------------------------------------------------------------------
+Round modifiers
+---------------------------------------------------------------------------]]
+lang.ROUND_TYPES = {
+	["default"] = "Containment Breach",
+	["multi"] = "MultiBreach",
+}
+
+--[[-------------------------------------------------------------------------
+Round modifiers
+---------------------------------------------------------------------------]]
+lang.ROUND_MODIFIERS = {
+	["loot-value"] = "Wartość lootu",
+	["health-value"] = "Wartość zdrowia",
+	["light-value"] = "Poziom światła",
+	["time-value"] = "Anomalia czasowa",
+	["gravity-value"] = "Anomalia grawitacyjna",
+}
+
+--[[-------------------------------------------------------------------------
+Round rules
+---------------------------------------------------------------------------]]
+lang.ROUND_RULES = {
+	["melee-only"] = "Tylko broń biała",
+	["lifesteal-only"] = "Brak leczenia, tylko kradzież",
+	["no-armor"] = "Brak pancerzy",
+}
 
 --[[-------------------------------------------------------------------------
 Main menu
@@ -418,9 +486,10 @@ lang.settings = {
 		upgrade_tree_button = "Drzewko umiejętności SCP",
 		ppshop_button = "Przeglądaj klasy",
 		settings_button = "Ustawienia trybu gry",
-		scp_special = "Specjalne umiejętności SCP"
+		scp_special = "Specjalne umiejętności SCP",
+		skip_summary_button = "Pomiń podsumowanie rundy",
 	},
-	
+
 	config = {
 		search_indicator = "Wskaźnik przeszukiwania",
 		scp_hud_skill_time = "Pokaż czas odnowienia umiejętności SCP",
@@ -442,6 +511,7 @@ lang.settings = {
 		hud_escort = "Pokaż strefy eskorty",
 		hud_timer_always = "Zawsze pokazuj czas",
 		hud_stamina_always = "Zawsze pokazuj wytrzymałość",
+		hud_show_round_summary = "Pokaż podsumowanie rundy",
 		eq_instant_desc = "Natychmiastowy opis przedmiotu w EQ",
 		scp106_spots = "Zawsze pokazuj miejsca teleportacji SCP-106",
 
@@ -461,11 +531,12 @@ lang.settings = {
 			vsmall = "Bardzo mała",
 			imretard = "Minimalna",
 		},
-		
+
 		hud_skin_main = "Główny",
 		hud_skin_scoreboard = "Tablica wyników",
 		hud_skin_hud = "HUD",
 		hud_skin_eq = "Ekwipunek",
+		hud_skin_round_summary = "Podsumowanie rundy",
 
 		hud_skin_main_options = {
 			custom = "Niestandardowy",
@@ -699,6 +770,29 @@ misc.font = {
 To problem z gmodem i nie mogę go naprawić. Aby to naprawić, musisz ręcznie usunąć niektóre pliki.
 Przejdź do 'steamapps/common/GarrysMod/garrysmod/cache/workshop/resource/fonts' i usuń następujące pliki: 'impacted.ttf', 'ds-digital.ttf' and 'unispace.ttf']],
 	ok = "OK"
+}
+
+misc.xp = {
+	summary = "Podsumowanie doświadczenia",
+	total = "Łącznie",
+}
+
+misc.logger = {
+	death_log = "Logi śmierci",
+	killer = "Zabójca:",
+	killer_team = "Drużyna zabójcy:",
+
+	recent_dealt = "Zadane obrażenia (ostatnie %i):",
+	recent_taken = "Otrzymane obrażenia (ostatnie %i):",
+	top_taken = "Łączne otrzymane obrażenia (największych %i):",
+
+	nick = "Nick",
+	damage = "Obrazenia",
+	rdm = "RDM",
+	total = "Łącznie",
+	original = "Oryginalnie",
+	defense = "Obrona",
+	hp = "HP (przed)"
 }
 
 --[[-------------------------------------------------------------------------
