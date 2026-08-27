@@ -206,9 +206,7 @@ do
 	@return		[self]			self				-
 	---------------------------------------------------------------------------]]--
 	function RoundStatBase:AddCallback( key, data )
-		local t = type( key )
-
-		if t != "string" and TypeID( key ) != TYPE_ENTITY then argerror( 1, "AddCallback", "string or Entity", type( key ) ) end
+		if type( key ) != "string" and TypeID( key ) != TYPE_ENTITY then argerror( 1, "AddCallback", "string or Entity", type( key ) ) end
 		if !istable( data ) then argerror( 2, "AddCallback", "table", type( data ) ) end
 
 		if !isfunction( data.callback ) then fielderror( "callback", 2, "AddCallback", "function", type( data.callback ) ) end

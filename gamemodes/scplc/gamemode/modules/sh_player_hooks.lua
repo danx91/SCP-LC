@@ -32,8 +32,8 @@ function GM:PlayerButtonDown( ply, button )
 		if button == GetBindButton( "eq_button" ) and hook.Run( "SLCCanUseBind", "eq" ) != false then
 
 			if CanShowEQ() then
-				//ShowEQ()
 				ShowGUIElement( "eq" )
+				hook.Run( "SLCOnEQOpen" )
 			end
 
 			HUDDrawInfo = true
@@ -57,6 +57,7 @@ function GM:PlayerButtonDown( ply, button )
 
 		if button == GetBindButton( "skip_summary_button" ) and hook.Run( "SLCCanUseBind", "skip_summary" ) != false then
 			RunGUISkinFunction( "round_summary", "skip" )
+			RunGUISkinFunction( "round_info", "skip" )
 		end
 	end
 end
@@ -67,6 +68,7 @@ function GM:PlayerButtonUp( ply, button )
 	if CLIENT and IsFirstTimePredicted() then
 		if button == GetBindButton( "eq_button" ) then
 			HideGUIElement( "eq" )
+			hook.Run( "SLCOnEQClose" )
 
 			HUDDrawInfo = false
 

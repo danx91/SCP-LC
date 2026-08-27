@@ -1,4 +1,4 @@
-ROUND = {
+ROUND = ROUND or {
 	roundtype = "",
 	time = 0,
 
@@ -46,7 +46,7 @@ timer.Create( "SLCHeartbeat", 2, 0, function()
 
 	local t = ply:SCPTeam()
 	if t == TEAM_SPEC or t == TEAM_SCP then return end
-	if ply:Health() >= 25 or ply:GetExtraHealth() > 0 or ply:GetStaminaBoost() > CurTime() then return end
+	if ply:Health() / ply:GetMaxHealth() >= 0.2 or ply:GetExtraHealth() > 0 or ply:GetStaminaBoost() > CurTime() then return end
 
 	ply:EmitSound( "SLCPlayer.Heartbeat" )
 end)

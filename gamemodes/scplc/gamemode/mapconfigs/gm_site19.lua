@@ -2310,6 +2310,9 @@ BUTTONS = {
 		name = "Tesla",
 		pos = { Vector( -2451.989990, 4078.00, 310.25 ), Vector( -2451.979980, 4078.00, 310.50 ) },
 		disabled = true,
+		accept_input = function( ent, input, activator, caller, data )
+			if GetRoundRule( "disable-tesla" ) and input != "PressIn" then return true end
+		end
 	},
 
 	--SCP use disallow

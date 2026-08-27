@@ -453,6 +453,8 @@ function math.CubicBezierYFromX( x1, y1, x2, y2, precision )
 	precision = precision or 0.0001
 
 	return function( x )
+		x = math.Clamp( x, 0, 1 )
+
 		local upper = 1
 		local lower = 0
 		local n = ( upper + lower ) / 2
@@ -479,6 +481,8 @@ function math.CubicBezierXFromY( x1, y1, x2, y2, precision )
 	precision = precision or 0.0001
 
 	return function( y )
+		y = math.Clamp( y, 0, 1 )
+
 		local upper = 1
 		local lower = 0
 		local n = ( upper + lower ) / 2

@@ -700,7 +700,9 @@ function PANEL:Think()
 
 		if self.HoverTime == 0 then
 			self.HoverTime = RealTime()
-		elseif instant or self.HoverTime < RealTime() - 0.5 then
+		end
+
+		if instant or self.HoverTime < RealTime() - 0.5 then
 			SLCToolTip( self.Tooltip )
 		end
 	else

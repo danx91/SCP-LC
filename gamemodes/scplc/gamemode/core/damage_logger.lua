@@ -241,12 +241,12 @@ do
 		if type( ply ) != "Player" then argerror( 1, "RedemptionEvent", "Player", type( ply ) ) end
 		if type( power ) != "number" then argerror( 2, "RedemptionEvent", "number", type( power ) ) end
 
-		if ply == self.Player then return end
+		if ply == self.Player then return 0 end
 
 		print( "Redemption event", power, self.redemption_pool, source )
 
 		local pool = self.redemption_pool
-		if pool <= 0 then return end
+		if pool <= 0 then return 0 end
 
 		if power > pool then
 			power = pool
@@ -269,6 +269,8 @@ do
 
 			timestamp = CurTime(),
 		} )
+
+		return power
 	end
 
 	--[[---------------------------------------------------------------------------
@@ -280,6 +282,7 @@ do
 	@param		[Player]		ply					Player who healed
 	@param		[number]		heal				Healed HP
 	@param		[number]		heal_power			Optional, heal power override for events like healing fracture - heal = 0, but it should count towards support
+													heal power will be always equal to whichever is greater 'heal_power' or 'heal'
 	@param		[number]		missing_hp			Optional, HP missing prior to healing, can be skipped ONLY if event is added BEFORE adding HP
 
 	@return		[number]		-					True non-RDM healed damage
@@ -290,7 +293,7 @@ do
 		if heal_power and type( heal_power ) != "number" then argerror( 3, "HealingEvent", "nil or number", type( heal_power ) ) end
 		if missing_hp and type( missing_hp ) != "number" then argerror( 4, "HealingEvent", "nil or number", type( missing_hp ) ) end
 
-		heal_power = heal_power or 0
+		heal_power = math.max( heal_power or 0, heal )
 
 		if !missing_hp then
 			missing_hp = self.Player:GetMaxHealth() - self.Player:Health()
@@ -302,7 +305,7 @@ do
 
 		self:RedemptionEvent( ply, heal, "heal" )
 
-		print( "Heal event", heal, self.healable_pool, missing_hp )
+		print( "Heal event", heal, self.healable_pool, missing_hp, heal_power )
 
 		if self.healable_pool > missing_hp then
 			self.healable_pool = missing_hp
@@ -312,14 +315,15 @@ do
 			heal = self.healable_pool
 		end
 
-		print( "Heal final", heal, self.healable_pool - heal )
+		print( "Heal final", heal, self.healable_pool - heal, heal_power )
 
-		if heal <= 0 and heal_power <= 0 then
-			return 0
+		if heal > 0 then
+			self.healable_pool = self.healable_pool - heal
 		end
 
-		self.healable_pool = self.healable_pool - heal
-		self:SupportEvent( ply, math.max( heal, heal_power ), HEALING_EVENTS_TIMEOUT )
+		if heal_power > 0 then
+			self:SupportEvent( ply, heal_power, HEALING_EVENTS_TIMEOUT )
+		end
 
 		return heal
 	end

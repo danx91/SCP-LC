@@ -514,61 +514,157 @@ if SERVER then
 	end )
 
 	function RegisterButton( data, ent, override )
-		if IsValid( ent ) then
-			if override or !BUTTONS_CACHE[ent] then
-				BUTTONS_CACHE[ent] = data
+		if !IsValid( ent ) or !istable( data ) then return end
 
-				//print( "Button cached", ent )
-				//PrintTable( data )
-			end
+		if override or !BUTTONS_CACHE[ent] then
+			BUTTONS_CACHE[ent] = data
+		end
+
+		if data.name then
+			CacheButtonByName( data.name, data )
 		end
 	end
 
-	function GetButton( name )
+	function GetButton( name_or_ent )
+		if isstring( name_or_ent ) then
+			return CacheButtonByName( name_or_ent )
+		elseif TypeID( name_or_ent ) == TYPE_ENTITY and name_or_ent:IsValid() then
+			return CacheButtonByEntity( name_or_ent )
+		end
+	end
+
+	function CacheButtonByName( name, data )
 		local cache = BUTTONS_NAME_CACHE[name]
 
-		if cache == false then
-			return
-		elseif cache then
-			return cache
+		if !DEVELOPER_MODE then
+			if cache == false then
+				return
+			elseif cache then
+				return cache
+			end
 		end
 
-		for k, v in pairs( BUTTONS ) do
-			if v.name != name then continue end
-
-			local btn_pos = v.pos
-			if istable( btn_pos ) then
-				local ret = {}
-
-				for _, tab_pos in pairs( btn_pos ) do
-					for _, ent in ipairs( ents.GetAll() ) do
-						if ent:GetPos() == tab_pos then
-							table.insert( ret, ent )
-							break
-						end
-					end
+		if !data then
+			for k, v in pairs( BUTTONS ) do
+				if v.name == name then
+					data = v
+					break
 				end
+			end
+		end
 
-				BUTTONS_NAME_CACHE[name] = ret
-				return ret
-			else
+		if !data then
+			BUTTONS_NAME_CACHE[name] = false
+			return
+		end
+
+		if istable( data.pos ) then
+			local ret = {}
+
+			for _, tab_pos in pairs( data.pos ) do
 				for _, ent in ipairs( ents.GetAll() ) do
-					local pos = ent:GetPos()
-					if pos == v.pos or v.tolerance and pos:IsInTolerance( v.pos, v.tolerance ) then
-						BUTTONS_NAME_CACHE[name] = ent
-						return ent
+					if ent:GetPos() == tab_pos then
+						if !BUTTONS_CACHE[ent] then
+							BUTTONS_CACHE[ent] = data
+						end
+
+						table.insert( ret, ent )
+						break
 					end
 				end
 			end
 
-			BUTTONS_NAME_CACHE[name] = false
-			return
+			BUTTONS_NAME_CACHE[name] = ret
+			return ret
 		end
+
+		for _, ent in ipairs( ents.GetAll() ) do
+			local pos = ent:GetPos()
+			if pos == data.pos or data.tolerance and pos:IsInTolerance( data.pos, data.tolerance ) then
+				BUTTONS_NAME_CACHE[name] = ent
+
+				if !BUTTONS_CACHE[ent] then
+					BUTTONS_CACHE[ent] = data
+				end
+
+				return ent
+			end
+		end
+
+		BUTTONS_NAME_CACHE[name] = false
+	end
+
+	function CacheButtonByEntity( ent )
+		local cache = BUTTONS_CACHE[ent]
+
+		if !DEVELOPER_MODE then
+			if cache == false then
+				return
+			elseif cache then
+				return cache
+			end
+		end
+
+		local pos = ent:GetPos()
+		local name = ent:GetName()
+		local map_id = ent:MapCreationID()
+
+		local data
+
+		for _, v in ipairs( BUTTONS ) do
+			if v.ent_name and v.ent_name == name then
+				RegisterButton( v, ent, true )
+				data = v
+
+				break
+			end
+
+			if v.ent_id and v.ent_id == map_id then
+				RegisterButton( v, ent, true )
+				data = v
+
+				break
+			end
+
+			local btn_pos = v.pos
+
+			if istable( btn_pos ) then
+				local any = false
+
+				for _, tab_pos in pairs( btn_pos ) do
+					if pos == tab_pos then
+						RegisterButton( v, ent, true )
+						data = v
+						any = true
+
+						break
+					end
+				end
+
+				if any then break end
+			else
+				if pos == v.pos or v.tolerance and pos:IsInTolerance( v.pos, v.tolerance ) then
+					RegisterButton( v, ent, true )
+					data = v
+					break
+				end
+			end
+		end
+
+		return data
 	end
 
 	hook.Add( "SLCRoundCleanup", "SLCClearDoorCache", function()
 		BUTTONS_CACHE = {}
 		BUTTONS_NAME_CACHE = {}
+	end )
+
+	hook.Add( "SLCPreround", "SLCAutoRegisterButtons", function()
+		for k, v in pairs( BUTTONS ) do
+			if !v.name or !v.accept_input and !v.auto_cache then continue end
+
+			CacheButtonByName( v.name )
+		end
 	end )
 end
 

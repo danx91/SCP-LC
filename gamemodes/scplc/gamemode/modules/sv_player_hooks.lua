@@ -421,7 +421,7 @@ function GM:PlayerUse( ply, ent )
 	end
 
 	--Override hook
-	local data = BUTTONS_CACHE[ent]
+	local data = CacheButtonByEntity( ent )
 	local _, override, result = hook.Run( "SLCUseOverride", ply, ent, data )
 
 	if override != nil then
@@ -430,57 +430,10 @@ function GM:PlayerUse( ply, ent )
 
 	if result then
 		if !data then
-			BUTTONS_CACHE[ent] = result
+			RegisterButton( result, ent )
 		end
 
 		data = result
-	end
-
-	--Cache door
-	if !data and !ent.ButtonCacheChecked or DEVELOPER_MODE then
-		ent.ButtonCacheChecked = true
-
-		local pos = ent:GetPos()
-		local name = ent:GetName()
-		local map_id = ent:MapCreationID()
-		for _, v in pairs( BUTTONS ) do
-			if v.ent_name and v.ent_name == name then
-				data = v
-				RegisterButton( v, ent, true )
-				break
-			end
-
-			if v.ent_id and v.ent_id == map_id then
-				data = v
-				RegisterButton( v, ent, true )
-				break
-			end
-
-			local btn_pos = v.pos
-
-			if istable( btn_pos ) then
-				local registered = false
-
-				for _, tab_pos in pairs( btn_pos ) do
-					if pos == tab_pos then
-						data = v
-						RegisterButton( v, ent, true )
-						registered = true
-						break
-					end
-				end
-
-				if registered then
-					break
-				end
-			else
-				if pos == v.pos or v.tolerance and pos:IsInTolerance( v.pos, v.tolerance ) then
-					data = v
-					RegisterButton( v, ent, true )
-					break
-				end
-			end
-		end
 	end
 
 	--Door cooldown
@@ -557,7 +510,6 @@ function GM:AcceptInput( ent, input, activator, caller, data )
 	end
 
 	local btn_data = BUTTONS_CACHE[ent]
-
 	if btn_data and btn_data.accept_input and btn_data.accept_input( ent, input, activator, caller, data ) == true then
 		return true
 	end

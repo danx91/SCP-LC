@@ -24,17 +24,17 @@ local badge_ratio = mat_badge:Width() / mat_badge:Height()
 		{ "staff", 86 },
 		{ "classd_ci", 12 },
 	},
-	stats = {},
-	mvp = {nil, 0},
-	-- mvp = { Entity( 1 ), 69 },
-	-- stats = {
-	-- 	{ "recontain106", true },
-	-- 	{ "scp_kills", 13 },
-	-- 	{ "staff_dmg", 2137 },
-	-- 	{ "classd_ci_rdm", 7 },
-	-- 	{ "scp_682", 8 },
-	-- 	{ "scp_173", 21 },
-	-- },
+	-- stats = {},
+	-- mvp = {nil, 0},
+	mvp = { Entity( 1 ), 69 },
+	stats = {
+		{ "recontain106", true },
+		{ "scp_kills", 13 },
+		{ "staff_dmg", 2137 },
+		{ "classd_ci_rdm", 7 },
+		{ "scp_682", 8 },
+		{ "scp_173", 21 },
+	},
 	duration = 10,
 }*/
 
@@ -63,7 +63,7 @@ local function draw_phase1( total_w, draw_y )
 	local tw, th
 
 	if !istable( ROUND_SUMMARY.winners ) or #ROUND_SUMMARY.winners == 0 then
-		tw, th = draw.OutlinedText( LANG.ROUND_SUMMARY.no_winner, "SCPScaledHUDMedium", center_x, draw_y, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP, color_black, 2, 2 )
+		tw, th = draw.OutlinedText( LANG.ROUND_SUMMARY.no_winner, "SCPHUDMedium", center_x, draw_y, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP, color_black, 2, 2 )
 		draw_y = draw_y + th
 	else
 		local badge_end = draw_y
@@ -84,20 +84,20 @@ local function draw_phase1( total_w, draw_y )
 			surface.SetMaterial( mat_badge )
 			surface.DrawTexturedRectRotated( badge_x, badge_y + badge_offset_y, badge_w, badge_mat_h, 180 )
 
-			tw, th = draw.OutlinedText( "#"..i, "SCPScaledHUDBig", badge_x, badge_y, color_winners[i], TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP, color_black, 2, 2 )
+			tw, th = draw.OutlinedText( "#"..i, "SCPHUDBig", badge_x, badge_y, color_winners[i], TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP, color_black, 2, 2 )
 			badge_y = badge_y + th
 
-			tw, th = draw.OutlinedText( LANG.TEAM_GROUPS[group] or group, "SCPScaledHUDVSmall", badge_x, badge_y, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP, color_black, 2, 2 )
+			tw, th = draw.OutlinedText( LANG.TEAM_GROUPS[group] or group, "SCPHUDVSmall", badge_x, badge_y, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP, color_black, 2, 2 )
 			badge_y = badge_y + th + 8
 
 			surface.SetMaterial( mat )
 			surface.DrawTexturedRect( badge_x - logo_size * 0.5, badge_y, logo_size, logo_size )
 			badge_y = badge_y + logo_size + 8
 
-			tw, th = draw.OutlinedText( LANG.ROUND_SUMMARY.score, "SCPScaledHUDVSmall", badge_x, badge_y, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP, color_black, 2, 2 )
+			tw, th = draw.OutlinedText( LANG.ROUND_SUMMARY.score, "SCPHUDVSmall", badge_x, badge_y, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP, color_black, 2, 2 )
 			badge_y = badge_y + th
 
-			tw, th = draw.OutlinedText( score, "SCPScaledHUDMedium", badge_x, badge_y, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP, color_black, 2, 2 )
+			tw, th = draw.OutlinedText( score, "SCPHUDMedium", badge_x, badge_y, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP, color_black, 2, 2 )
 			badge_y = badge_y + th - badge_offset_y + 8
 
 			surface.SetMaterial( mat_badge )
@@ -119,16 +119,16 @@ local function draw_phase1( total_w, draw_y )
 		local avatar_mat = AvatarMaterial( mvp )
 		local avatar_r = badge_w * 0.24
 
-		tw, th = draw.OutlinedText( LANG.ROUND_SUMMARY.mvp, "SCPScaledHUDBig", center_x, draw_y, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP, color_black, 2, 2 )
+		tw, th = draw.OutlinedText( LANG.ROUND_SUMMARY.mvp, "SCPHUDBig", center_x, draw_y, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP, color_black, 2, 2 )
 		draw_y = draw_y + th
 
 		surface.SetDrawColor( 255, 255, 255, 255 )
 		SLCDrawCircle( center_x, draw_y + avatar_r, avatar_r, 1, 0, avatar_mat, 2, 255, 255, 255 )
 		draw_y = draw_y + avatar_r
 
-		tw, th = draw.OutlinedText( mvp:Nick(), "SCPScaledHUDMedium", center_x - avatar_r - 16, draw_y, color_white, TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER, color_black, 2, 2 )
-		tw, th = draw.OutlinedText( LANG.ROUND_SUMMARY.score, "SCPScaledHUDSmall", center_x + avatar_r + 16, draw_y, color_white, TEXT_ALIGN_LEFT, TEXT_ALIGN_BOTTOM, color_black, 2, 2 )
-		tw, th = draw.OutlinedText( score, "SCPScaledHUDMedium", center_x + avatar_r + 16 + tw * 0.5, draw_y, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP, color_black, 2, 2 )
+		tw, th = draw.OutlinedText( mvp:Nick(), "SCPHUDMedium", center_x - avatar_r - 16, draw_y, color_white, TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER, color_black, 2, 2 )
+		tw, th = draw.OutlinedText( LANG.ROUND_SUMMARY.score, "SCPHUDSmall", center_x + avatar_r + 16, draw_y, color_white, TEXT_ALIGN_LEFT, TEXT_ALIGN_BOTTOM, color_black, 2, 2 )
+		tw, th = draw.OutlinedText( score, "SCPHUDMedium", center_x + avatar_r + 16 + tw * 0.5, draw_y, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP, color_black, 2, 2 )
 
 		draw_y = draw_y + avatar_r
 	else
@@ -147,7 +147,7 @@ local function draw_phase2( total_w, draw_y )
 	local _, th
 
 	if #ROUND_SUMMARY.stats == 0 then
-		_, th = draw.OutlinedText( LANG.ROUND_SUMMARY.no_stats, "SCPScaledHUDMedium", center_x, draw_y, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, color_black, 2, 2 )
+		_, th = draw.OutlinedText( LANG.ROUND_SUMMARY.no_stats, "SCPHUDMedium", center_x, draw_y, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, color_black, 2, 2 )
 		draw_y = draw_y + th
 
 		return draw_y
@@ -159,7 +159,7 @@ local function draw_phase2( total_w, draw_y )
 
 		local stat_text = string.format( LANG.ROUND_STATS[stat_id] or stat_id, stat_value )
 
-		_, th = draw.OutlinedText( stat_text, "SCPScaledHUDSmall", center_x, draw_y, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, color_black, 2, 2 )
+		_, th = draw.OutlinedText( stat_text, "SCPHUDSmall", center_x, draw_y, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER, color_black, 2, 2 )
 		draw_y = draw_y + th
 	end
 
@@ -215,7 +215,7 @@ local function draw_summary()
 
 	surface.SetAlphaMultiplier( global_alpha )
 
-	local _, th = draw.OutlinedText( LANG.ROUND_SUMMARY.round_end, "SCPScaledHUDBig", w * 0.5, draw_y, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP, color_black, 2, 2 )
+	local _, th = draw.OutlinedText( LANG.ROUND_SUMMARY.round_end, "SCPHUDBig", w * 0.5, draw_y, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP, color_black, 2, 2 )
 	draw_y = draw_y + th + 8
 
 	if duration < 3 then return end
@@ -256,9 +256,8 @@ local function draw_summary()
 	local _, skip_bind = GetBindButton( "skip_summary_button" )
 	if skip_bind then
 		local skip_text = string.format( LANG.ROUND_SUMMARY.skip, string.upper( skip_bind ) )
-		draw.OutlinedText( skip_text, "SCPScaledHUDVSmall", w * 0.5, draw_y, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP, color_black, 2, 2 )
+		draw.OutlinedText( skip_text, "SCPHUDVSmall", w * 0.5, draw_y, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_TOP, color_black, 2, 2 )
 	end
-
 
 	surface.SetAlphaMultiplier( old_mult )
 
@@ -286,6 +285,7 @@ AddGUISkin( "round_summary", "default", {
 	end,
 	skip = function()
 		if !ROUND_SUMMARY then return end
+
 		local ct = CurTime()
 		ROUND_SUMMARY.start_time = CurTime() - ROUND_SUMMARY.duration * ( ct - ROUND_SUMMARY.start_time > ROUND_SUMMARY.duration * 0.5 and 1 or 0.5 ) - 0.1
 	end,

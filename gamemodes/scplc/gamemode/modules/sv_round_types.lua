@@ -16,6 +16,7 @@ Types:
 		@field		[table]		blacklist		Optional, rules that are banned during this round, shouldn't be used together with whitelist
 ---------------------------------------------------------------------------]]
 local function lookup_all( tab )
+	if tab.force then tab.force = CreateLookupTable( tab.force ) end
 	if tab.whitelist then tab.whitelist = CreateLookupTable( tab.whitelist ) end
 	if tab.blacklist then tab.blacklist = CreateLookupTable( tab.blacklist ) end
 

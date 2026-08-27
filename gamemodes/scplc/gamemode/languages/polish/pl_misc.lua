@@ -152,15 +152,24 @@ lang.ROUND_SUMMARY = {
 --[[-------------------------------------------------------------------------
 Round intro
 ---------------------------------------------------------------------------]]
-lang.ROUND_INTRO = {
+lang.ROUND_INFO = {
 	round_type = "Typ rundy",
-	round_modifiers = "Aktywne modyfikatory rundy",
-	round_rules = "Aktywne zasady rundy",
+	round_modifiers = "Modyfikatory",
+	round_rules = "Zasady",
+	round_rules_long = "Aktywne zasady rundy",
+
+	no_modifiers = "Brak modyfikatorów",
+	no_modifiers_desc = "W tej rundzie nie ma aktywnych modyfikatorów - wszystkie wartości pozostają na podstawowym poziomie.",
+
+	no_rules = "Brak zasad",
+	no_rules_desc = "Brak specjalnych zasad rozgrywki w tej rundzie.",
 
 	modifier_levels = {
+		unchanged = "Bez zmian",
 		vlow = "Bardzo niski",
 		low = "Niski",
-		normal = "Normalny",
+		normal_up = "Normalny (+)",
+		normal_down = "Normalny (-)",
 		high = "Wysoki",
 		vhigh = "Bardzo wysoki",
 	},
@@ -170,28 +179,89 @@ lang.ROUND_INTRO = {
 Round modifiers
 ---------------------------------------------------------------------------]]
 lang.ROUND_TYPES = {
-	["default"] = "Containment Breach",
-	["multi"] = "MultiBreach",
+	["default"] = {
+		name = "Containment Breach",
+		desc = MarkupBuilder()
+			:Print( "Jest to " ):Print( "standardowa runda", Color( 200, 200, 0 ) ):Print( ", która dosztarcza zbalansowanej rozgrywki. Ta runda nie posiada żadnych specjalnych zmian." )
+			:ToString(),
+	},
+	["multi"] = {
+		name = "MultiBreach",
+		desc = MarkupBuilder()
+			:Print( "Jest to " ):Print( "runda MultiBreach", Color( 200, 200, 0 ) ):Print( ". Posiada takie same zasady jak " ):Print( "stadardowa runda", Color( 200, 200, 0 ) )
+			:Print( " ale " ):Print( "wszystkie SCP są takie same", Color( 200, 200, 0 ) ):Print( "." )
+			:ToString(),
+	},
 }
 
 --[[-------------------------------------------------------------------------
 Round modifiers
 ---------------------------------------------------------------------------]]
 lang.ROUND_MODIFIERS = {
-	["loot-value"] = "Wartość lootu",
-	["health-value"] = "Wartość zdrowia",
-	["light-value"] = "Poziom światła",
-	["time-value"] = "Anomalia czasowa",
-	["gravity-value"] = "Anomalia grawitacyjna",
+	["loot-value"] = {
+		name = "Wartość lootu",
+		desc = MarkupBuilder()
+			:Print( "Ten modyfikator zmienia ilość " ):Print( "luźnych przedmiotów", Color( 200, 200, 0 ) ):Print( " oraz " ):Print( "przedmiotów w kontenerach", Color( 200, 200, 0 ) )
+			:Print( "." )
+			:ToString(),
+	},
+	["health-value"] = {
+		name = "Wartość zdrowia",
+		desc = MarkupBuilder()
+			:Print( "Ten modyfikator zmienia wartosć " ):Print( "zdrowia", Color( 200, 200, 0 ) ):Print( " dla wszystkich klas, w tym SCP" )
+			:ToString(),
+	},
+	["light-value"] = {
+		name = "Poziom oświetlenia",
+		desc = MarkupBuilder()
+			:Print( "Ten modyfikator zmienia " ):Print( "jasność oświetlenia", Color( 200, 200, 0 ) ):Print( " na całej mapie." )
+			:ToString(),
+	},
+	["time-value"] = {
+		name = "Anomalia czasowa",
+		desc = MarkupBuilder()
+			:Print( "Ten modyfikator wpłwa na " ):Print( "prędkość czasu", Color( 200, 200, 0 ) ):Print( " podczas trwania całej rundy." )
+			:ToString(),
+	},
+	["gravity-value"] = {
+		name = "Anomalia grawitacyjna",
+		desc = MarkupBuilder()
+			:Print( "Ten modyfikator wpływa na " ):Print( "siłę grawitacji", Color( 200, 200, 0 ) ):Print( " na całej mapie." )
+			:ToString(),
+	},
 }
 
 --[[-------------------------------------------------------------------------
 Round rules
 ---------------------------------------------------------------------------]]
 lang.ROUND_RULES = {
-	["melee-only"] = "Tylko broń biała",
-	["lifesteal-only"] = "Brak leczenia, tylko kradzież",
-	["no-armor"] = "Brak pancerzy",
+	["melee-only"] = {
+		name = "Broń biała",
+		desc = MarkupBuilder()
+			:Print( "Podczas tej rundy, cała " ):Print( "broń zasięgowa", Color( 200, 200, 0 ) ):Print( " jest zastąpiona " ):Print( "bronią białą", Color( 200, 200, 0 ) )
+			:Print( ". Ta zasada wpływa zarówno na początkowe przedmioty klas, przedmioty na mapie oraz przedmioty w kontenerach." )
+			:ToString(),
+	},
+	["lifesteal-only"] = {
+		name = "Kradzież życia",
+		desc = MarkupBuilder()
+			:Print( "Podczas tej rundy, całe " ):Print( "leczenie jest wyłączone", Color( 200, 200, 0 ) ):Print( " dla wszystkich graczy (poza SCP)." )
+			:Print( " Dodatkowo, "):Print( "zadawanie poprawnych obrażeń leczy o procent wartości zadanych obrażeń", Color( 200, 200, 0 )  )
+			:Print( " (SCP są wykluczone w obie strony)." )
+			:ToString(),
+	},
+	["no-armor"] = {
+		name = "Brak pancerzy",
+		desc = MarkupBuilder()
+			:Print( "Ta zasada " ):Print( "usuwa wszystkie pancerze", Color( 200, 200, 0 ) ):Print( ". Dotyczy to zarówno ekwipunku klas jak i przedmiotów na mapie." )
+			:ToString(),
+	},
+	["disable-tesla"] = {
+		name = "Wyłączone tesle",
+		desc = MarkupBuilder()
+			:Print( "Wszytkie tesle są " ):Print( "wyłączone", Color( 200, 200, 0 ) ):Print( " w tej rundzie." )
+			:ToString(),
+	},
 }
 
 --[[-------------------------------------------------------------------------
@@ -512,6 +582,8 @@ lang.settings = {
 		hud_timer_always = "Zawsze pokazuj czas",
 		hud_stamina_always = "Zawsze pokazuj wytrzymałość",
 		hud_show_round_summary = "Pokaż podsumowanie rundy",
+		hud_show_round_info = "Tryb informacji o rundzie",
+		hud_round_info_modified = "Ukryj niezmienione modyfikatory w informacji o rundzie",
 		eq_instant_desc = "Natychmiastowy opis przedmiotu w EQ",
 		scp106_spots = "Zawsze pokazuj miejsca teleportacji SCP-106",
 
@@ -542,7 +614,13 @@ lang.settings = {
 			custom = "Niestandardowy",
 			default = "Domyślny",
 			legacy = "Przestarzały",
-		}
+		},
+
+		hud_show_round_info_options = {
+			fullscreen = "Pełny ekran",
+			side = "Widok boczny",
+			hidden = "Ukryte",
+		},
 	},
 }
 

@@ -160,6 +160,8 @@ function SWEP:PrimaryAttack()
 				end )
 			end
 		elseif selected == 2 then
+			if GetRoundRule( "disable-tesla" ) then return end
+
 			if SERVER then
 				ComTab_Transmit()
 				self:GetOwner():EmitSound( "scp_lc/announcements/tesla_request.ogg", 85, 100, 0.5 )
@@ -172,6 +174,9 @@ function SWEP:PrimaryAttack()
 					PlayPA( string.format( "scp_lc/announcements/tesla%i.ogg", SLCRandom( 3 ) ), 9 )
 
 					local btn = GetButton( "Tesla" )
+					if btn and istable( btn ) then
+						btn = btn[1]
+					end
 
 					if IsValid( btn ) then
 						btn:Fire( "PressIn" )
@@ -199,7 +204,7 @@ function SWEP:PrimaryAttack()
 			AddTimer( "ComTabIntercom", dur, 1, function()
 				if G_COM_TABLET_DATA.IntercomPlayer != owner then return end
 				G_COM_TABLET_DATA.IntercomPlayer = nil
-	
+
 				TransmitSound( "scp_lc/misc/v_end.ogg", true, 1 )
 				UnPausePA()
 			end )
@@ -237,7 +242,7 @@ function SWEP:SecondaryAttack()
 	if self:GetState() != STATE.IDLE then return end
 
 	self:SetNextSecondaryFire( CurTime() + 0.1 )
-	
+
 	local selected = self:GetSelected() + 1
 
 	if selected > #OPTIONS then
@@ -256,7 +261,7 @@ if SERVER then
 
 	function ComTab_Transmit()
 		local tab = {}
-		
+
 		for i, v in ipairs( player.GetAll() ) do
 			if v:HasWeapon( "item_slc_commander_tablet" ) then
 				table.insert( tab, v )
@@ -315,7 +320,6 @@ if CLIENT then
 				self:DrawScreen( -357.5, -225, 715, 450 )
 
 				render.SetStencilEnable( false )
-				
 			cam.End3D2D()
 		end
 	end
@@ -377,7 +381,7 @@ if CLIENT then
 		end
 
 		local _, hh = draw.SimpleText( self.Lang.detected, "SLCTabletLarge", x + 16, y + 4, color_white, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
-		
+
 		local tw, th
 		local dy = y + 4 + hh
 

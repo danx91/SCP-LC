@@ -79,6 +79,8 @@ hook.Add( "SLCRegisterSettings", "SLCHUDSettings", function()
 	RegisterSettingsEntry( "hud_timer_always", "switch", false, nil, "hud_config" )
 	RegisterSettingsEntry( "hud_stamina_always", "switch", false, nil, "hud_config" )
 	RegisterSettingsEntry( "hud_show_round_summary", "switch", true, nil, "hud_config" )
+	RegisterSettingsEntry( "hud_show_round_info", "dropbox", "fullscreen", { list = { "fullscreen", "side", "hidden" } }, "hud_config" )
+	RegisterSettingsEntry( "hud_round_info_modified", "switch", true, nil, "hud_config" )
 
 	RegisterSettingsEntry( "hud_windowed_mode", "switch", false, nil, "skins" )
 	RegisterSettingsEntry( "hud_escort", "switch", true, {

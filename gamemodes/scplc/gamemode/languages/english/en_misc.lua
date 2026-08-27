@@ -152,15 +152,24 @@ lang.ROUND_SUMMARY = {
 --[[-------------------------------------------------------------------------
 Round intro
 ---------------------------------------------------------------------------]]
-lang.ROUND_INTRO = {
-	round_type = "Round type",
-	round_modifiers = "Active round modifiers",
-	round_rules = "Active round rules",
+lang.ROUND_INFO = {
+	round_type = "Round Type",
+	round_modifiers = "Modifiers",
+	round_rules = "Rules",
+	round_rules_long = "Active Round Rules",
+
+	no_modifiers = "No modifiers",
+	no_modifiers_desc = "There are no active modifiers during this round - all values stay at the default level.",
+
+	no_rules = "No rules",
+	no_rules_desc = "There are no special rules during this round.",
 
 	modifier_levels = {
+		unchanged = "Unchanged",
 		vlow = "Very low",
 		low = "Low",
-		normal = "Normal",
+		normal_up = "Normal (+)",
+		normal_down = "Normal (-)",
 		high = "High",
 		vhigh = "Very high",
 	},
@@ -170,28 +179,89 @@ lang.ROUND_INTRO = {
 Round modifiers
 ---------------------------------------------------------------------------]]
 lang.ROUND_TYPES = {
-	["default"] = "Containment Breach",
-	["multi"] = "MultiBreach",
+	["default"] = {
+		name = "Containment Breach",
+		desc = MarkupBuilder()
+			:Print( "This is " ):Print( "standard round", Color( 200, 200, 0 ) ):Print( " and provides balanced gameplay. This round features no special behaviour. " )
+			:ToString(),
+	},
+	["multi"] = {
+		name = "MultiBreach",
+		desc = MarkupBuilder()
+			:Print( "This is " ):Print( "MultiBreach round", Color( 200, 200, 0 ) ):Print( ". This round follows rules of " ):Print( "standard round", Color( 200, 200, 0 ) )
+			:Print( " but " ):Print( "all SCPs are the same", Color( 200, 200, 0 ) ):Print( "." )
+			:ToString(),
+	},
 }
 
 --[[-------------------------------------------------------------------------
 Round modifiers
 ---------------------------------------------------------------------------]]
 lang.ROUND_MODIFIERS = {
-	["loot-value"] = "Loot value",
-	["health-value"] = "Health value",
-	["light-value"] = "Light level",
-	["time-value"] = "Time anomaly",
-	["gravity-value"] = "Gravity anomaly",
+	["loot-value"] = {
+		name = "Loot value",
+		desc = MarkupBuilder()
+			:Print( "This modifier alters amount of " ):Print( "loose loot", Color( 200, 200, 0 ) ):Print( " and " ):Print( "items in loot containers", Color( 200, 200, 0 ) )
+			:Print( "." )
+			:ToString(),
+	},
+	["health-value"] = {
+		name = "Health value",
+		desc = MarkupBuilder()
+			:Print( "This modifier alters value of " ):Print( "health", Color( 200, 200, 0 ) ):Print( " for all classes including SCPs." )
+			:ToString(),
+	},
+	["light-value"] = {
+		name = "Light value",
+		desc = MarkupBuilder()
+			:Print( "This modifier alters " ):Print( "light level", Color( 200, 200, 0 ) ):Print( " on the whole map." )
+			:ToString(),
+	},
+	["time-value"] = {
+		name = "Time anomaly",
+		desc = MarkupBuilder()
+			:Print( "This modifier alters the " ):Print( "speed of time", Color( 200, 200, 0 ) ):Print( " during the whole round." )
+			:ToString(),
+	},
+	["gravity-value"] = {
+		name = "Gravity anomaly",
+		desc = MarkupBuilder()
+			:Print( "This modifier alters the " ):Print( "gravity power", Color( 200, 200, 0 ) ):Print( " across whole map." )
+			:ToString(),
+	},
 }
 
 --[[-------------------------------------------------------------------------
 Round rules
 ---------------------------------------------------------------------------]]
 lang.ROUND_RULES = {
-	["melee-only"] = "Melee only",
-	["lifesteal-only"] = "No healing, Lifesteal only",
-	["no-armor"] = "No armors",
+	["melee-only"] = {
+		name = "Melee only",
+		desc = MarkupBuilder()
+			:Print( "During this round, all " ):Print( "ranged weapons", Color( 200, 200, 0 ) ):Print( " are replaced with " ):Print( "melee weapons", Color( 200, 200, 0 ) )
+			:Print( ". This rule affects all weapons including class loadouts, map loot and loot containers." )
+			:ToString(),
+	},
+	["lifesteal-only"] = {
+		name = "Lifesteal only",
+		desc = MarkupBuilder()
+			:Print( "During this round, all " ):Print( "healing is disabled", Color( 200, 200, 0 ) ):Print( " for all players (excluding SCPs)." )
+			:Print( " Additionally, "):Print( "dealing non-RDM damage heals for the percentage of dealt damage ", Color( 200, 200, 0 )  )
+			:Print( " (SCPs are excluded in both ways)." )
+			:ToString(),
+	},
+	["no-armor"] = {
+		name = "No armor",
+		desc = MarkupBuilder()
+			:Print( "This rule " ):Print( "rmoves all armor", Color( 200, 200, 0 ) ):Print( ". This includes both class loadouts and map loot." )
+			:ToString(),
+	},
+	["disable-tesla"] = {
+		name = "Tesla disabled",
+		desc = MarkupBuilder()
+			:Print( "All teslas are " ):Print( "disabled", Color( 200, 200, 0 ) ):Print( " in this round." )
+			:ToString(),
+	},
 }
 
 --[[-------------------------------------------------------------------------
@@ -512,6 +582,8 @@ lang.settings = {
 		hud_timer_always = "Always show time",
 		hud_stamina_always = "Always show stamina",
 		hud_show_round_summary = "Show round summary",
+		hud_show_round_info = "Round info mode",
+		hud_round_info_modified = "Hide unchanged modifiers in round info",
 		eq_instant_desc = "Instant item description in EQ",
 		scp106_spots = "Always show SCP-106 teleport spots",
 
@@ -542,7 +614,13 @@ lang.settings = {
 			custom = "Custom",
 			default = "Default",
 			legacy = "Legacy",
-		}
+		},
+
+		hud_show_round_info_options = {
+			fullscreen = "Fullscreen",
+			side = "Side view",
+			hidden = "Hidden",
+		},
 	},
 }
 

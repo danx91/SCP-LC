@@ -183,7 +183,7 @@ function SLCDrawRing( x, y, radius, thickness, fill, rotation, cap_radius, textu
 end
 
 --[[---------------------------------------------------------------------------
-SLCDrawCircle( x, y, radius, fill, rotation, outline, outline_r, outline_g, outline_b )
+SLCDrawCircle( x, y, radius, fill, rotation, texture, outline, outline_r, outline_g, outline_b )
 
 Draws circle or pie.
 

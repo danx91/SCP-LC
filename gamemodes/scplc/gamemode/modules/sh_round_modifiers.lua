@@ -1,46 +1,97 @@
+--[[-------------------------------------------------------------------------
+Round Modifiers
+
+Types:
+	RoundModifierData [table]
+		@field		[number]			min				Minimum value of modifier
+		@field		[number]			max				Maximum value of modifier - must be greater than 'min'
+		@field		[number]			base			Base value of modifier - must be greater than 'min' and lower than 'max'
+		@field		[number]			spread			Spread of the value. Must be in the range [0, 1]
+		@field		[boolean/number]	rounding		Optional, if specified, rounding step. If true, value of 1 will be used. e.g. 0.25 will round to .0, .25, .5, .75
+		@field		[number]			chance			Optional, specifies chance to use this modifier. If rng fails, base value will be used
+		@field		[boolean]			hidden			Optonal, if true, this modifier will not show in the round info
+		@field		[boolean]			normalize		Optonal, if true, this modifier value will be normalized equally:
+															true: whole range is equally divided
+															false/nil: left and right side of base value are divided independently
+---------------------------------------------------------------------------]]
 ROUND_MODIFIERS = ROUND_MODIFIERS or {}
 
 --[[---------------------------------------------------------------------------
-RegisterRoundModifier( id, min, max, base, spread, rounding, chance )
+RegisterRoundModifier( id, data )
 
 Registers round modifier. Value will be selected randomly using normal distribution
 
-@param		[string]			id					ID of the modifier
-@param		[number]			min					Minimum value of modifier
-@param		[number]			max					Maximum value of modifier - must be greater than 'min'
-@param		[number]			base				Base value of modifier - must be greater than 'min' and lower than 'max'
-@param		[number]			spread				Spread of the value. Must be in the range [0, 1]
-@param		[boolean/number]	rounding			Optional, if specified, rounding step. If true, value of 1 will be used. e.g. 0.25 will round to .0, .25, .5, .75
-@param		[number]			chance				Optional, specifies chance to use this modifier. If rng fails, base value will be used
+@param		[string]				id					ID of the modifier
+@param		[RoundModifierData]		data				-
 
-@return		[nil]				-					-
+
+@return		[nil]					-					-
 ---------------------------------------------------------------------------]]--
-function RegisterRoundModifier( id, min, max, base, spread, rounding, chance )
-	assert( min < max, "RegisterRoundModifier value of min must be lower than max" )
-	assert( base > min, "RegisterRoundModifier value of base must be greater than min" )
-	assert( base < max, "RegisterRoundModifier value of base must be lower than max" )
-	assert( spread >= 0 and spread <= 1, "RegisterRoundModifier value of spread must be in the [0, 1] interval" )
-	assert( spread >= 0 and spread <= 1, "RegisterRoundModifier value of spread must be in the [0, 1] interval" )
+function RegisterRoundModifier( id, data )
+	if type( id ) != "string" then argerror( 1, "RegisterRoundModifier", "string", type( id ) ) end
+	if !istable( data ) then argerror( 2, "RegisterRoundModifier", "table", type( data ) ) end
 
-	local step = isnumber( rounding ) and rounding or rounding == true and 1 or false
+	if !isnumber( data.min ) then fielderror( "min", 2, "RegisterRoundModifier", "number", type( data.min ) ) end
+	if !isnumber( data.max ) then fielderror( "max", 2, "RegisterRoundModifier", "number", type( data.max ) ) end
+	if !isnumber( data.base ) then fielderror( "base", 2, "RegisterRoundModifier", "number", type( data.base ) ) end
+	if !isnumber( data.spread ) then fielderror( "spread", 2, "RegisterRoundModifier", "number", type( data.spread ) ) end
+	if data.rounding and !isnumber( data.rounding ) and !isbool( data.rounding ) then
+		fielderror( "rounding", 2, "RegisterRoundModifier", "number or boolean or nil", type( data.rounding ) )
+	end
+	if data.chance and !isnumber( data.chance ) then fielderror( "chance", 2, "RegisterRoundModifier", "number or nil", type( data.chance ) ) end
+	if data.hidden and !isbool( data.hidden ) then fielderror( "hidden", 2, "RegisterRoundModifier", "boolean or nil", type( data.hidden ) ) end
+	if data.normalize and !isbool( data.normalize ) then fielderror( "normalize", 2, "RegisterRoundModifier", "boolean or nil", type( data.normalize ) ) end
+
+	assert( data.min < data.max, "RegisterRoundModifier value of min must be lower than max" )
+	assert( data.base >= data.min, "RegisterRoundModifier value of base must be greater or equal to min" )
+	assert( data.base <= data.max, "RegisterRoundModifier value of base must be lower or equal to max" )
+	assert( data.spread >= 0 and data.spread <= 1, "RegisterRoundModifier value of spread must be in the [0, 1] interval" )
+	assert( data.spread >= 0 and data.spread <= 1, "RegisterRoundModifier value of spread must be in the [0, 1] interval" )
+
+	local step = isnumber( data.rounding ) and data.rounding or data.rounding == true and 1 or false
 	if step then
-		assert( min % step == 0, "RegisterRoundModifier value of min must be divisible by value of rounding" )
-		assert( max % step == 0, "RegisterRoundModifier value of max must be divisible by value of rounding" )
-		assert( base % step == 0, "RegisterRoundModifier value of step must be divisible by value of rounding" )
+		assert( data.min % step == 0, "RegisterRoundModifier value of min must be divisible by value of rounding" )
+		assert( data.max % step == 0, "RegisterRoundModifier value of max must be divisible by value of rounding" )
+		assert( data.base % step == 0, "RegisterRoundModifier value of step must be divisible by value of rounding" )
 	end
 
 	local tab = {}
 	ROUND_MODIFIERS[id] = tab
 
-	local tmp = ( base - min ) / ( max - min )
+	local offset = nil
+	local flip = false
 
-	tab.min = min
-	tab.max = max
-	tab.base = base
+	tab.orig_base = data.base
+	tab.orig_min = data.min
+	tab.orig_max = data.max
+
+	if data.base == data.min or data.base == data.max then
+		data = table.Copy( data )
+
+		if data.base == data.max then
+			flip = true
+		end
+
+		offset = data.min
+
+		data.base = 0
+		data.max = data.max - offset
+		data.min = -data.max
+		data.normalize = true
+	end
+
+	local tmp = ( data.base - data.min ) / ( data.max - data.min )
+
+	tab.min = data.min
+	tab.max = data.max
+	tab.base = data.base
 	tab.center = math.log( tmp / ( 1 - tmp ) )
-	tab.sigma = spread * 2
+	tab.offset = offset
+	tab.flip = flip
+	tab.sigma = data.spread * 2
 	tab.step = step
-	tab.chance = chance or 1
+	tab.chance = data.chance or 1
+	tab.hidden = data.hidden
 end
 
 
@@ -53,7 +104,7 @@ Restores all modifiers to their base values
 ---------------------------------------------------------------------------]]--
 function ClearRoundModifiers()
 	for k, v in pairs( ROUND_MODIFIERS ) do
-		ROUND.modifiers[k] = v.base
+		ROUND.modifiers[k] = v.orig_base
 	end
 end
 
@@ -65,8 +116,18 @@ function RandomizeRoundModifier( id )
 	local u = 1 / ( 1 + math.exp( -( mod.center + z ) ) )
 	local value = mod.min + u * ( mod.max - mod.min )
 
+	if mod.offset then
+		value = math.abs( value )
+
+		if mod.flip then
+			value = mod.max - value
+		end
+
+		value = value + mod.offset
+	end
+
 	if mod.step then
-		value = math.Clamp( math.StochasticRound( value / mod.step ) * mod.step, mod.min, mod.max )
+		value = math.Clamp( math.StochasticRound( value / mod.step ) * mod.step, mod.orig_min, mod.orig_max )
 	end
 
 	print( "Modifier randomize", id, value )
@@ -97,12 +158,12 @@ function SelectRoundModifiers( force, whitelist, use_blacklist )
 				RandomizeRoundModifier( k )
 			else
 				local val = v.step and math.StochasticRound( force[k] / v.step ) * v.step or force[k]
-				ROUND.modifiers[k] = math.Clamp( val, v.min, v.max )
+				ROUND.modifiers[k] = math.Clamp( val, v.orig_min, v.orig_max )
 				print( "force val", k, force[k], ROUND.modifiers[k] )
 			end
 		elseif v.chance <= 0 or SLCRandom() >= v.chance or whitelist and ( !use_blacklist and !whitelist[k] or use_blacklist and whitelist[k] ) then
 			print( "Modifier keep base", k )
-			ROUND.modifiers[k] = v.base
+			ROUND.modifiers[k] = v.orig_base
 		else
 			RandomizeRoundModifier( k )
 		end
@@ -112,51 +173,84 @@ end
 function GetRoundModifier( id, def )
 	local value = ROUND.modifiers[id] or def
 	local norm, base
+	local hidden = true
 
 	local mod = ROUND_MODIFIERS[id]
 	if mod then
+		base = mod.orig_base
+		hidden = mod.hidden
+
 		if !value then
-			value = mod.base
+			value = base
 		end
 
-		norm = ( value - mod.min ) / ( mod.max - mod.min )
-		base = mod.base
+		if mod.normalize then
+			norm = ( value - mod.orig_min ) / ( mod.orig_max - mod.orig_min )
+		elseif value < base then
+			norm = ( value - mod.orig_min ) / ( base - mod.orig_min ) * 0.5
+		else
+			norm = ( value - base ) / ( mod.orig_max - base ) * 0.5 + 0.5
+		end
+
+		if norm != norm then
+			norm = 0.5
+		end
 	end
 
-	return value, norm, base
+	return value, norm, base, hidden or false
 end
 
 --[[-------------------------------------------------------------------------
 Round rules
+
+Types:
+	RoundRuleData [table]
+		@field		[number]			chance				Optional, chance of selection from 0 to 1. Rule with chance 0 will never be selected
+															and rule with chance 1 will always be selected if other conditions are met
+		@field		[boolean/table]		exclude				Optional, if true, no other rules will be randomly selected;
+															if false, all rules are allowed;
+															if table, all rules inside table will be excluded from random selection
+															NOTE: Selection is done in random order and all exclusions are assumed as mutual e.g. if A excludes B, B is assumed
+															to exclude A or 'solo' rule cannot be selected if there is any other already selected rule
+															To create unusual combinations of rules, create dedicated round type and force them
+		@field		[function]			condition			Optional, function to decide whenever this rule can be selected. Return true to allow
+		@field		[function]			callback			Optional, callback that will be called right after selection.
+															That's the right place to modify things and register round hooks.
+		@field		[boolean]			hidden				Optonal, if true, this rule will not show in the round info
+
 ---------------------------------------------------------------------------]]
 ROUND_RULES = ROUND_RULES or {}
 
 --[[---------------------------------------------------------------------------
-RegisterRoundRule( id, weight, exclude, condition, cb )
+RegisterRoundRule( id, data )
 
 Registers new round rule
 
 @param		[string]			id					ID of the rule
-@param		[number]			chance				Chance of selection from 0 to 1. Rule with chance 0 will never be selected
-													and rule with chance 1 will always be selected if other conditions are met
-@param		[boolean/table]		exclude				Optional, if true, no other rules will be randomly selected;
-													if false, all rules are allowed;
-													if table, all rules inside table will be excluded from random selection
-													NOTE: Selection is done in random order and all exclusions are assumed as mutual e.g. if A excludes B, B is assumed
-													to exclude A or 'solo' rule cannot be selected if there is any other already selected rule
-													To create unusual combinations of rules, create dedicated round type and force them
-@param		[function]			condition			Optional, function to decide whenever this rule can be selected. Return true to allow
-@param		[function]			cb					Optional, callback that will be called right after selection.
-													That's the right place to modify things and register round hooks.
+@param		[RoundRuleData]		data				-
 
 @return		[nil]				-					-
 ---------------------------------------------------------------------------]]--
-function RegisterRoundRule( id, chance, exclude, condition, cb )
+function RegisterRoundRule( id, data )
+	if type( id ) != "string" then argerror( 1, "RegisterRoundRule", "string", type( id ) ) end
+	if !istable( data ) then argerror( 2, "RegisterRoundRule", "table", type( data ) ) end
+
+	if data.chance and !isnumber( data.chance ) then fielderror( "chance", 2, "RegisterRoundRule", "number or nil", type( data.chance ) ) end
+	if data.exclude and !istable( data.exclude ) and !isbool( data.exclude ) then
+		fielderror( "exclude", 2, "RegisterRoundRule", "table or boolean or nil", type( data.exclude ) )
+	end
+	if data.condition and !isfunction( data.condition ) then fielderror( "condition", 2, "RegisterRoundRule", "function or nil", type( data.condition ) ) end
+	if data.callback and !isfunction( data.callback ) then fielderror( "callback", 2, "RegisterRoundRule", "function or nil", type( data.callback ) ) end
+	if data.hidden and !isbool( data.hidden ) then fielderror( "hidden", 2, "RegisterRoundRule", "boolean or nil", type( data.hidden ) ) end
+
+	data = data or {}
+
 	ROUND_RULES[id] = {
-		chance = chance or 0,
-		exclude = exclude or false,
-		condition = condition,
-		callback = cb,
+		chance = data.chance or 0,
+		exclude = data.exclude or false,
+		condition = data.condition,
+		callback = data.callback,
+		hidden = data.hidden,
 	}
 end
 
@@ -221,7 +315,7 @@ function SelectRoundRules( force, whitelist, use_blacklist )
 	local exclude_lookup = {}
 	local exclude_all = false
 
-	for _, rule in ipairs( force or {} ) do
+	for rule, _ in ipairs( force or {} ) do
 		force_lookup[rule] = true
 		ActivateRoundRule( rule, true )
 		print( "Forcing rule", rule )
@@ -289,7 +383,14 @@ function SelectRoundRules( force, whitelist, use_blacklist )
 end
 
 function GetRoundRule( id )
-	return ROUND.rules[id]
+	local rule = ROUND_RULES[id]
+	local hidden = true
+
+	if rule then
+		hidden = rule.hidden
+	end
+
+	return ROUND.rules[id], hidden or false
 end
 
 --[[-------------------------------------------------------------------------

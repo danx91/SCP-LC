@@ -69,37 +69,42 @@ local function checkForConflicts()
 	end
 end
 
-local function processSettingsEntry( k )
+local function processSettingsEntry( k, no_hook )
 	local v = SLC_SETTINGS[k]
-	if v then
-		if v.cvar then
-			v.value = v.cvar:GetString()
+	if !v then return end
+
+	if v.cvar then
+		v.value = v.cvar:GetString()
+	end
+
+	if v.stype == "bind" then
+		v.key_conflict = false
+
+		local code, key, bind = translateButton( v.value )
+		if code and key then
+			v.key_code = code
+			v.key = key
+		else
+			v.key_code = nil
+			v.key = nil
 		end
 
-		if v.stype == "bind" then
-			v.key_conflict = false
+		v.bind = bind
+	elseif v.stype == "switch" then
+		v.value = tobool( v.value )
+	elseif v.stype == "dropbox" and v.data.parse then
+		v.value = v.data.parse( v.value ) or v.value
+	end
 
-			local code, key, bind = translateButton( v.value )
-			if code and key then
-				v.key_code = code
-				v.key = key
-			else
-				v.key_code = nil
-				v.key = nil
-			end
-
-			v.bind = bind
-		elseif v.stype == "switch" then
-			v.value = tobool( v.value )
-		elseif v.stype == "dropbox" and v.data.parse then
-			v.value = v.data.parse( v.value ) or v.value
-		end
+	if !no_hook then
+		hook.Run( "SLCSettingsChanged."..k, v.value )
+		hook.Run( "SLCSettingsChanged", k, v.value )
 	end
 end
 
 local function processAllSettings()
 	for k, v in pairs( SLC_SETTINGS ) do
-		processSettingsEntry( k )
+		processSettingsEntry( k, true )
 	end
 
 	checkForConflicts()
@@ -410,7 +415,7 @@ hook.Add( "SLCGamemodeLoaded", "SLCSettings", function()
 
 	local data = {}
 
-	if !file.Exists( "slc/client_settings.json", "data" ) then
+	if !file.Exists( "slc/client_settings.json", "DATA" ) then
 		file.Write( "slc/client_settings.json", util.TableToJSON( DEFAULT_SETTINGS ) )
 	else
 		local tab = util.JSONToTable( file.Read( "slc/client_settings.json" ) )
@@ -430,7 +435,7 @@ hook.Add( "SLCGamemodeLoaded", "SLCSettings", function()
 			end
 		end
 
-		processSettingsEntry( k )
+		processSettingsEntry( k, true )
 	end
 
 	checkForConflicts()
