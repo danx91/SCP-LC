@@ -9,25 +9,6 @@ THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR I
 */
 
 float4x4 cModelViewProj     : register(c4);
-const float4x4 cViewProj    : register(c11);
-
-#define RADIUS              cViewProj[0].x
-#define INNER_RADIUS        cViewProj[0].y
-#define OUTLINE             cViewProj[0].z
-#define ANGLE               cViewProj[0].w
-
-#define CAP_RADIUS          cViewProj[1].x
-#define R_EFF               cViewProj[1].y
-#define I_EFF               cViewProj[1].z
-#define H_EFF               cViewProj[1].w
-
-#define SIN_ROT             cViewProj[2].x
-#define COS_ROT             cViewProj[2].y
-#define SIN_ANG             cViewProj[2].z
-#define COS_ANG             cViewProj[2].w
-
-#define OUTLINE_COLOR       cViewProj[3].xyz
-#define USE_TEXTURE         cViewProj[3].w
 
 struct VS_INPUT
 {
@@ -41,12 +22,12 @@ struct VS_OUTPUT
     float4 pos              : POSITION;
     float2 uv               : TEXCOORD0;
     float4 color            : TEXCOORD1;
-    float3 outline_color    : TEXCOORD2;
 };
 
 inline float3 sRGBToLinear(float3 srgb)
 {
     return pow(max(srgb, 0.0), 2.2);
+    //return ( srgb <= 0.04045f ) ? ( srgb / 12.92f ) : ( pow( ( srgb + 0.055f ) / 1.055f, 2.4f ) )
 }
 
 VS_OUTPUT main( const VS_INPUT v )
@@ -58,7 +39,6 @@ VS_OUTPUT main( const VS_INPUT v )
     o.color     = v.color;
 
     o.color.rgb     = sRGBToLinear(o.color.rgb);
-    o.outline_color = sRGBToLinear(OUTLINE_COLOR);
 
     return o;
 }

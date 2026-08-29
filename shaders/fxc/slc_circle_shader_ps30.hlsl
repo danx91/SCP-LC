@@ -65,7 +65,6 @@ struct PS_INPUT
     float4 pos              : POSITION;
     float2 uv               : TEXCOORD0;
     float4 color            : TEXCOORD1;
-    float3 outline_color    : TEXCOORD2;
 };
 
 sampler BaseTexture         : register(s0);
@@ -172,7 +171,7 @@ float4 main(PS_INPUT i) : COLOR
 
     float4 finalColor   = USE_TEXTURE == 1 ? tex2D(BaseTexture, i.uv) * i.color : i.color;
 
-    finalColor.rgb      = lerp(i.outline_color, finalColor.rgb, fillWeight);
+    finalColor.rgb      = lerp(OUTLINE_COLOR, finalColor.rgb, fillWeight);
     finalColor.a       *= outerAlpha;
 
     return finalColor;
